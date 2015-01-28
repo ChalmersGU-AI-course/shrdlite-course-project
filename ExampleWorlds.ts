@@ -35,8 +35,8 @@ ExampleWorlds["complex"] = {
         "put all balls beside every ball",
         "put a box beside all objects",
         "put all red objects above a yellow object on the floor",
-        "put all yellow objects under a red object under an object",
-    ],
+        "put all yellow objects under a red object under an object"
+    ]
 };
 
 
@@ -69,8 +69,8 @@ ExampleWorlds["medium"] = {
         "put all boxes on the floor",
         "put the large plank under the blue brick",
         "move all bricks on a table",
-        "move all balls inside a large box",
-    ],
+        "move all balls inside a large box"
+    ]
 };
 
 
@@ -99,8 +99,8 @@ ExampleWorlds["small"] = {
         "take a blue object",
         "take the white ball",
         "put all boxes on the floor",
-        "move all balls inside a large box",
-    ],
+        "move all balls inside a large box"
+    ]
 };
 
 
@@ -129,6 +129,6 @@ ExampleWorlds["impossible"] = {
         "sbox2":   { "form":"box",     "size":"small",  "color":"blue"  }
     },
     "examples": [
-        "this is just an impossible world",
-    ],
+        "this is just an impossible world"
+    ]
 };

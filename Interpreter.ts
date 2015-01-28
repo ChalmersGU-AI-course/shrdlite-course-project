@@ -10,7 +10,7 @@ module Interpreter {
         var interpretations : Result[] = [];
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
-            intprt.int = interpretCommand(intprt.prs, currentState);
+            intprt.intp = interpretCommand(intprt.prs, currentState);
             interpretations.push(intprt);
         });
         if (interpretations.length) {
@@ -21,12 +21,12 @@ module Interpreter {
     }
 
 
-    export interface Result extends Parser.Result {int:Literal[][];}
+    export interface Result extends Parser.Result {intp:Literal[][];}
     export interface Literal {pol:boolean; rel:string; args:string[];}
 
 
     export function interpretationToString(res : Result) : string {
-        return res.int.map((lits) => {
+        return res.intp.map((lits) => {
             return lits.map((lit) => literalToString(lit)).join(" & ");
         }).join(" | ");
     }
@@ -51,11 +51,11 @@ module Interpreter {
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
-        var int : Literal[][] = [[
+        var intprt : Literal[][] = [[
             {pol: true, rel: "ontop", args: [a, "floor"]},
-            {pol: true, rel: "holding", args: [b]},
+            {pol: true, rel: "holding", args: [b]}
         ]];
-        return int;
+        return intprt;
     }
 
 

@@ -10,7 +10,7 @@ module Planner {
         var plans : Result[] = [];
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
-            plan.plan = planInterpretation(plan.int, currentState);
+            plan.plan = planInterpretation(plan.intp, currentState);
             plans.push(plan);
         });
         if (plans.length) {
@@ -18,7 +18,6 @@ module Planner {
         } else {
             throw new Planner.Error("Found no plans");
         }
-        return plans;
     }
 
 
@@ -40,7 +39,7 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(int : Interpreter.Literal[][], state : WorldState) : string[] {
+    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         // This function returns a dummy plan involving a random stack
         do {
             var pickstack = getRandomInt(state.stacks.length);
