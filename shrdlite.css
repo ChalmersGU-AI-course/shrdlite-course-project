@@ -1,0 +1,89 @@
+
+#theworld {
+    width: 800px;
+}
+
+#theworld, #dialogue {
+    height: 500px;
+}
+
+h1 { 
+    margin: 0;
+}
+
+body {
+    background-color: #edf;
+    font-family: Palatino,serif;
+    margin: 0 20px;
+}
+
+#theworld {
+    background-color: #cbe;
+}
+
+#maincontent td {
+    border: 4px solid black;
+    padding: 0; 
+}
+
+#maincontent {
+    border-spacing: 20px;
+}
+
+#dialogue {
+    overflow: scroll;
+    background-color: #fafaff;
+}
+
+.system {
+    color: darkred;
+}
+
+.user {
+    font-style: italic;
+    color: darkgreen;
+}
+
+.error {
+    background-color: yellow;
+    color: red;
+}
+
+#dialogue p {
+    margin: 4px 10px;
+    padding: 0;
+}
+
+#maincontent, #dialogue input, #dialogue select {
+    width: 100%;
+}
+
+#footer {
+    font-size: smaller;
+}
+
+#debugdiv {
+    text-align: right;
+    float: right;
+    margin: 10px 20px;
+}
+
+#debug {
+    display: none;
+    background-color: #ccf;
+    border-collapse: collapse;
+}
+
+#debug td {
+    border: 1px black solid;
+    vertical-align: top;
+    padding: 2px;
+    font-size: smaller;
+}
+
+#license {
+    color: #555;
+    text-align: left;
+    margin: 10px 20px;
+}
+
