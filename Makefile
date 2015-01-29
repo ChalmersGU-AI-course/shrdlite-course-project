@@ -14,9 +14,9 @@ help:
 clean:
 	rm -f $(TSFILES:%.ts=%.js) *.map
 
-all: html ajax ansi offline
+all: $(TARGETS)
 
-html ajax ansi offline: %: shrdlite-%.js
+$(TARGETS): %: shrdlite-%.js
 
 %.js: %.ts $(TSFILES)
 	tsc --out $@ $<
