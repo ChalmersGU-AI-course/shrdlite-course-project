@@ -59,7 +59,7 @@ you can create a CGI script that the HTML file communicates with.
 To be able to use this, you need a local webserver (read below how), 
 and to make the following minor change to the file `shrdlite.html`:
 
-- comment the line importing the file `shrdlite-html.js`, and 
+- comment the line importing the file `shrdlite-html.js`, and
   instead uncomment the line importing the file `shrdlite-ajax.js`
 
 
@@ -103,8 +103,16 @@ For information about the language, please visit the official site:
 Additional information
 -----------------------
 
-Here are two TypeScript libraries that define different kinds of collections
-(including heaps and/or priority queues):
+There is a Makefile if you want to use the GNU Make system. Here's what it can do:
+
+- `make clean`: Removes all auto-generated Javascript files
+- `make all`: Calls TypeScript and Closure for each target
+- `make html | ajax | ansi | offline`:
+  Calls TypeScript and Closure for the given target,
+  i.e., it compiles the file `shrdlite-X.ts` into `shrdlite-X.js`
+
+You probably want to use some kind of collection datatype (such as a heap
+and/or priority queue), so here are two possible TypeScript libraries:
 
 - [TypeScript-STL] (https://github.com/vovazolotoy/TypeScript-STL)
 - [typescript-collections] (https://github.com/basarat/typescript-collections)
