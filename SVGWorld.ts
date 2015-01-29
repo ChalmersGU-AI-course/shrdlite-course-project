@@ -31,6 +31,34 @@ class SVGWorld implements World {
     }
 
     //////////////////////////////////////////////////////////////////////
+    // Public constants that can be played around with
+
+    public dialogueHistory = 100;    // max nr. utterances
+    public floorThickness = 10;     // pixels
+    public wallSeparation = 4;     // pixels
+    public armSize = 0.2;         // of stack width
+    public animationPause = 0.1; // seconds
+    public promptPause = 0.5;   // seconds
+    public ajaxTimeout = 5;    // seconds
+    public armSpeed = 1000;   // pixels per second
+
+    // There is no way of setting male/female voice,
+    // so this is one way of having different voices for user/system:
+    public voices = {
+        "system": {"lang": "en-GB", "rate": 1.1}, // British English, slightly faster
+        "user": {"lang": "en-US"},  // American English
+    };
+
+    // HTML id's for different containers
+    public containers = {
+        world: $('#theworld'),
+        dialogue: $('#dialogue'),
+        inputform: $('#dialogue form'),
+        userinput: $('#dialogue form input:text'),
+        inputexamples: $('#dialogue form select'),
+    };
+
+    //////////////////////////////////////////////////////////////////////
     // Public methods
 
     public readUserInput(prompt, callback) {
@@ -157,33 +185,6 @@ class SVGWorld implements World {
         }
         performNextAction();
     }
-
-    //////////////////////////////////////////////////////////////////////
-    // Private constants that can be played around with
-
-    private dialogueHistory = 100;    // max nr. utterances
-    private floorThickness = 10;     // pixels
-    private wallSeparation = 4;     // pixels
-    private armSize = 0.2;         // of stack width
-    private animationPause = 0.1; // seconds
-    private promptPause = 0.5;   // seconds
-    private ajaxTimeout = 5;    // seconds
-    private armSpeed = 1000;   // pixels per second
-
-    // There is no way of setting male/female voice,
-    // so this is one way of having different voices for user/system:
-    private voices = {"system": {"lang": "en-GB", "rate": 1.1}, // British English, slightly faster
-                      "user": {"lang": "en-US"},  // American English
-                     };
-
-    // HTML id's for different containers
-    private containers = {
-        world: $('#theworld'),
-        dialogue: $('#dialogue'),
-        inputform: $('#dialogue form'),
-        userinput: $('#dialogue form input:text'),
-        inputexamples: $('#dialogue form select'),
-    };
 
     //////////////////////////////////////////////////////////////////////
     // Private variables & constants
