@@ -37,8 +37,8 @@ class SVGWorld implements World {
     public floorThickness = 10;     // pixels
     public wallSeparation = 4;     // pixels
     public armSize = 0.2;         // of stack width
-    public animationPause = 0.1; // seconds
-    public promptPause = 0.5;   // seconds
+    public animationPause = 0.01;// seconds
+    public promptPause = 0.1;   // seconds
     public ajaxTimeout = 5;    // seconds
     public armSpeed = 1000;   // pixels per second
 
