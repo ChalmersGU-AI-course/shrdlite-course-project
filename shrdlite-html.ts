@@ -4,38 +4,57 @@
 ///<reference path="lib/jquery.d.ts" />
 
 var defaultWorld = 'small';
-var useSpeech = true;
+var defaultSpeech = false;
 
 $(function(){
-    $('#exampleworlds').empty();
+    var current = getURLParameter('world');
+    if (!(current in ExampleWorlds)) {
+        current = defaultWorld;
+    }
+    var speech = (getURLParameter('speech') || "").toLowerCase();
+    var useSpeech = (speech == 'true' || speech == '1' || defaultSpeech);
+
+    $('#currentworld').text(current);
+    $('<a>').text('reset')
+        .attr('href', '?world=' + current + '&speech=' + useSpeech)
+        .appendTo($('#resetworld'));
+    $('#otherworlds').empty();
     for (var wname in ExampleWorlds) {
-        $('<input type="submit">').val(wname)
-            .click(changeCurrentWorld)
-            .appendTo($('#exampleworlds'));
+        if (wname !== current) {
+            $('<a>').text(wname)
+                .attr('href', '?world=' + wname + '&speech=' + useSpeech)
+                .appendTo($('#otherworlds'))
+                .after(' ');
+        }
     }
+    $('<a>').text(useSpeech ? 'turn off' : 'turn on')
+        .attr('href', '?world=' + current + '&speech=' + (!useSpeech))
+        .appendTo($('#togglespeech'));
 
-    var name = getURLParameter('world');
-    if (!(name in ExampleWorlds)) {
-        name = defaultWorld;
-    }
-
-    var world = new SVGWorld(ExampleWorlds[name], useSpeech);
+    var world = new SVGWorld(ExampleWorlds[current], useSpeech);
     Shrdlite.interactive(world);
 });
 
 
-function changeCurrentWorld() : void {
-    var name = this.value;
-    if (confirm("Do you want to reset to the " + name + " world?")) {
-        var url = window.location.href.split('?')[0];
-        window.location.href = url + '?world=' + name;
-    }
+// Adapted from: http://www.openjs.com/scripts/events/exit_confirmation.php
+function goodbye(e) {
+	if(!e) e = window.event;
+	// e.cancelBubble is supported by IE - this will kill the bubbling process.
+	e.cancelBubble = true;
+
+    // This is displayed in the dialog:
+	e.returnValue = 'Are you certain?\nYou cannot undo this, you know.'; 
+
+	// e.stopPropagation works in Firefox.
+	if (e.stopPropagation) {
+		e.stopPropagation();
+		e.preventDefault();
+	}
 }
+window.onbeforeunload = goodbye;
 
 
-// Borrowed from:
-// http://www.jquerybyexample.net/2012/06/get-url-parameters-using-jquery.html
-
+// Adapted from: http://www.jquerybyexample.net/2012/06/get-url-parameters-using-jquery.html
 function getURLParameter(sParam) : string {
     var sPageURL = window.location.search.slice(1);
     var sURLVariables = sPageURL.split('&');
