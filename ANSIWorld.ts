@@ -24,8 +24,11 @@ class ANSIWorld implements World {
         this.readlineInterface.question("[" + this.inputCounter + "] " + prompt, callback);
     }
 
-    public printSystemOutput(output) {
+    public printSystemOutput(output, participant?) {
         this.outputCounter++;
+        if (participant == "user") {
+            output = '"' + output + '"';
+        }
         console.log(this.gotoxy(0, this.worldHeight + 3) + this.clearline() + 
                     "[" + this.outputCounter + "] " + output);
     }
@@ -34,8 +37,11 @@ class ANSIWorld implements World {
         this.printSystemOutput("DEBUG: " + info);
     }
 
-    public printError(error) {
-        this.printSystemOutput("ERROR: " + error);
+    public printError(error, message?) {
+        if (message) {
+            error += ": " + message;
+        }
+        this.printSystemOutput(error, "error");
     }
 
     public printWorld(callback? : ()=>void) {

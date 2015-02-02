@@ -14,14 +14,14 @@ module Parser {
         } catch(err) {
             if ('offset' in err) {
                 throw new Parser.Error(
-                    'Parsing failed (at position ' + err.offset + ': "' +
-                        parsestr.slice(0, err.offset) + '<HERE>' + parsestr.slice(err.offset) + '")');
+                    'Parsing failed after ' + err.offset + ' characters', err.offset);
+                // parsestr.slice(0, err.offset) + '<HERE>' + parsestr.slice(err.offset);
             } else {
                 throw err;
             }
         }
         if (!results.length) {
-            throw new Parser.Error('Parsing failed (incomplete input: "' + parsestr + '<HERE>")');
+            throw new Parser.Error('Incomplete input', parsestr.length);
         }
         return results.map((c) => {
             return {input: input, prs: clone(c)};

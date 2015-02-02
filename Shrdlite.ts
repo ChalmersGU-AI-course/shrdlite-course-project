@@ -37,7 +37,7 @@ module Shrdlite {
             var parses : Parser.Result[] = Parser.parse(utterance);
         } catch(err) {
             if (err instanceof Parser.Error) {
-                world.printError("Parsing error: " + err.message);
+                world.printError("Parsing error", err.message);
                 return;
             } else {
                 throw err;
@@ -52,7 +52,7 @@ module Shrdlite {
             var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
         } catch(err) {
             if (err instanceof Interpreter.Error) {
-                world.printError("Interpretation error: " + err.message);
+                world.printError("Interpretation error", err.message);
                 return;
             } else {
                 throw err;
@@ -67,7 +67,7 @@ module Shrdlite {
             var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
         } catch(err) {
             if (err instanceof Planner.Error) {
-                world.printError("Planning error: " + err.message);
+                world.printError("Planning error", err.message);
                 return;
             } else {
                 throw err;

@@ -38,7 +38,7 @@ class SVGWorld implements World {
     public wallSeparation = 4;     // pixels
     public armSize = 0.2;         // of stack width
     public animationPause = 0.01;// seconds
-    public promptPause = 0.1;   // seconds
+    public promptPause = 0.5;   // seconds
     public ajaxTimeout = 5;    // seconds
     public armSpeed = 1000;   // pixels per second
 
@@ -98,9 +98,12 @@ class SVGWorld implements World {
         console.log(info);
     }
 
-    public printError(error) {
-        console.error("ERROR:", error);
-        this.printSystemOutput("ERROR: " + error, "error", "ERROR");
+    public printError(error, message?) {
+        console.error(error, message);
+        if (message) {
+            error += ": " + message;
+        }
+        this.printSystemOutput(error, "error");
     }
 
     public printWorld(callback?) {

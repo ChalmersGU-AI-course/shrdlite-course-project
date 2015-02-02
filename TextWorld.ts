@@ -12,7 +12,10 @@ class TextWorld implements World {
         throw "Not implemented!";
     }
 
-    public printSystemOutput(output) {
+    public printSystemOutput(output, participant?) {
+        if (participant == "user") {
+            output = '"' + output + '"';
+        }
         console.log(output);
     }
 
@@ -20,8 +23,8 @@ class TextWorld implements World {
         console.log(info);
     }
 
-    public printError(error) {
-        console.error("ERROR:", error);
+    public printError(error, message?) {
+        console.error(error, message);
     }
 
     public printWorld(callback? : ()=>void) {
