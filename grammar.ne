@@ -35,11 +35,11 @@ function R(obj) {
 
 ## Grammar rules
 
-main --> will_you:? please:? basic_command please:?  {% R(2) %}  
+main --> will_you:? please:? command please:?  {% R(2) %}  
 
-basic_command --> take entity           {% R({cmd:"take", ent:1}) %}
-basic_command --> move  it    location  {% R({cmd:"put", loc:2}) %}
-basic_command --> move entity location  {% R({cmd:"move", ent:1, loc:2}) %}
+command --> take entity           {% R({cmd:"take", ent:1}) %}
+command --> move  it    location  {% R({cmd:"put", loc:2}) %}
+command --> move entity location  {% R({cmd:"move", ent:1, loc:2}) %}
 
 location --> relation entity  {% R({rel:0, ent:1}) %}
 

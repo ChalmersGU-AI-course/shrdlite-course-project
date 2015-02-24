@@ -4,11 +4,16 @@
 function id(x) {return x[0]; }
 
 
-function update_object(obj, children) {
+// Create a Javascript object by instantiating children
+// Example:
+// updateObject({a:2, b:{c:1, d:0}}, ['x', 'y', 'z'])
+// ==> {a:'z', b:{c:'y', d:'x'}}
+
+function updateObject(obj, children) {
     if (typeof obj == "object") {
         var result = obj.constructor();
         for (var key in obj) {
-            result[key] = update_object(obj[key], children);
+            result[key] = updateObject(obj[key], children);
         }
         return result;
     } else if (typeof obj == "number") {
@@ -18,16 +23,18 @@ function update_object(obj, children) {
     }
 }
 
+// Wrapper function for updating Nearley parse results
+
 function R(obj) {
-    return function(d){return update_object(obj, d)}
+    return function(d){return updateObject(obj, d)}
 }
 
 var grammar = {
     ParserRules: [
-    {"name": "main", "symbols": [" ebnf$1", " ebnf$2", "basic_command", " ebnf$3"], "postprocess":  R(2) },
-    {"name": "basic_command", "symbols": ["take", "entity"], "postprocess":  R({cmd:"take", ent:1}) },
-    {"name": "basic_command", "symbols": ["move", "it", "location"], "postprocess":  R({cmd:"put", loc:2}) },
-    {"name": "basic_command", "symbols": ["move", "entity", "location"], "postprocess":  R({cmd:"move", ent:1, loc:2}) },
+    {"name": "main", "symbols": [" ebnf$1", " ebnf$2", "command", " ebnf$3"], "postprocess":  R(2) },
+    {"name": "command", "symbols": ["take", "entity"], "postprocess":  R({cmd:"take", ent:1}) },
+    {"name": "command", "symbols": ["move", "it", "location"], "postprocess":  R({cmd:"put", loc:2}) },
+    {"name": "command", "symbols": ["move", "entity", "location"], "postprocess":  R({cmd:"move", ent:1, loc:2}) },
     {"name": "location", "symbols": ["relation", "entity"], "postprocess":  R({rel:0, ent:1}) },
     {"name": "entity", "symbols": ["quantifierSG", "objectSG"], "postprocess":  R({quant:0, obj:1}) },
     {"name": "entity", "symbols": ["quantifierPL", "objectPL"], "postprocess":  R({quant:0, obj:1}) },
