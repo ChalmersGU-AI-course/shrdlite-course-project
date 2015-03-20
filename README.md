@@ -66,6 +66,17 @@ For information about the language, please visit the official site:
 
 - <http://www.typescriptlang.org/>
 
+### Using another language that can be compiled to Javascript
+
+The surrounding code for the Shrdlite project is all written in TypeScript,
+which is an argument for continuing with that language. But there are other
+alternatives that should be possible to use, such as:
+
+- [CoffeeScript](http://coffeescript.org) is like a more readable version 
+  of Javascript, with a very simple one-to-one translation into Javascript.
+
+- [PureScript](http://www.purescript.org) is very inspired from Haskell, with 
+  static types, higher-order functions and Haskell-like syntax.
 
 Using Ajax CGI and a local web server
 --------------------------------------
