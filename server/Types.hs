@@ -18,10 +18,10 @@ module Types where
 
 -- * Output types
 
--- | We send [Action] to the web interface as an answer
+-- | We send @[Action]@ to the web interface as an answer
 data Action =
-  What String -- Description of what we are doing
-       [Commands] -- Commands executing above description
+  Action String -- Description of what we are doing
+         [Commands] -- Commands executing above description
 
 -- | What the robot arm is to do.
 data Commands
