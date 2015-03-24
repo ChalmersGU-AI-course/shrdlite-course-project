@@ -1,6 +1,26 @@
 {-# LANGUAGE OverloadedStrings #-}
 {- |
 
+This module contains the types needed to represent the parse tree of
+the grammar of Shrdlite.
+
+The types defined in this module are exactly the interfaces from the
+file @Parser.ts@ except for 'Object' which is turned in to a proper
+sum type since Haskell has great support for them (in the original
+code there is a comment that it really should be a sum type but
+TypeScript does not support them).
+
+We also define instances of 'FromJSON' for each of the types
+here. 'FromJSON' is class from the aeson package for encoding and
+decoding JSON structures with great speed. The documentation for aeson
+contains a great guide on how to write the instances that are below,
+see
+<http://hackage.haskell.org/package/aeson-0.8.0.2/docs/Data-Aeson.html>.
+
+Here is an example that is a grammar generated from "put the black
+ball in a box on the floor" and then parsed from JSON sent from the
+web interface into a nice Haskell AST.
+
 > example :: Command
 > example =
 >   Command "move"
@@ -26,9 +46,14 @@ module Types.Parser where
 import Control.Applicative
 
 -- from aeson
-import qualified Data.Aeson as A
+-- hide due to conflicts with our own types
 import Data.Aeson hiding (Object, Result)
+-- but we still need to reference the hidden types
+import qualified Data.Aeson as A
 
+-- * All the nice types
+
+-- | The resulting grammar AST from a parsed @input@.
 data Result =
   Result {r_input :: String -- ^ what the input was
          ,r_prs :: Command -- ^ grammar tree
@@ -98,29 +123,26 @@ instance FromJSON Object where
   parseJSON _ = empty
 
 
+-- * Some examples
+
 -- "put the black ball in a box on the floor"
 -- -> move the black ball inside any box that is on top of the floor
 example :: Command
 example =
   Command "move"
-          (Just $
-           Entity "the"
-                  (Specified (Just "black")
-                             (Just "ball")
-                             Nothing))
-          (Just $
-           Location "inside"
-                    (Entity "any"
-                            (Located
-                               (Location "ontop"
-                                         (Entity
-                                            "the"
-                                            (Specified Nothing (Just "floor") Nothing)))
-                               (Specified Nothing (Just "box") Nothing))))
+          (Just (Entity "the"
+                        (Specified (Just "black")
+                                   (Just "ball")
+                                   Nothing)))
+          (Just (Location "inside"
+                          (Entity "any"
+                                  (Located (Location "ontop"
+                                                     (Entity "the"
+                                                             (Specified Nothing
+                                                                        (Just "floor")
+                                                                        Nothing)))
+                                           (Specified Nothing (Just "box") Nothing)))))
 
 
 
 exampljson = "{ \"cmd\": \"move\", \"ent\": { \"obj\": { \"color\": \"black\", \"form\": \"ball\", \"size\": null }, \"quant\": \"the\" }, \"loc\": { \"ent\": { \"obj\": { \"loc\": { \"ent\": { \"obj\": { \"color\": null, \"form\": \"floor\", \"size\": null }, \"quant\": \"the\" }, \"rel\": \"ontop\" }, \"obj\": { \"color\": null, \"form\": \"box\", \"size\": null } }, \"quant\": \"any\" }, \"rel\": \"inside\" } }"
-
-hej :: Maybe Command
-hej = decode exampljson
