@@ -51,6 +51,8 @@ library
 
   build-depends:   base >=4.6 && <4.8
                  , containers
+                 , aeson >= 0.8
+                 , bytestring
   default-language:    Haskell2010
 
 executable server
