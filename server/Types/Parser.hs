@@ -1,5 +1,24 @@
--- |
+{- |
 
+> example :: Command
+> example =
+>   Command "move"
+>           (Just $
+>            Entity "the"
+>                   (Specified (Just "black")
+>                              (Just "ball")
+>                              Nothing))
+>           (Just $
+>            Location "inside"
+>                     (Entity "any"
+>                             (Located
+>                                (Location "ontop"
+>                                          (Entity
+>                                             "the"
+>                                             (Specified Nothing (Just "floor") Nothing)))
+>                                (Specified Nothing (Just "box") Nothing))))
+>
+-}
 module Types.Parser where
 
 data Result =
