@@ -57,9 +57,10 @@ executable server
   other-extensions: OverloadedStrings
 
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.5 && <4.8
-                     , scotty
-                     , wai-middleware-static
+  build-depends:       base >=4.6 && <4.8
+                     , scotty >= 0.9.1
+                     , wai-middleware-static >= 0.6.0
+                     , transformers
 
   -- Directories containing source files.
   -- hs-source-dirs:
