@@ -47,9 +47,10 @@ cabal-version:       >=1.10
 
 
 library
-  exposed-modules: Types
+  exposed-modules: Types, Types.Parser, Types.World
 
   build-depends:   base >=4.6 && <4.8
+                 , containers
   default-language:    Haskell2010
 
 executable server

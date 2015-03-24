@@ -2,8 +2,6 @@
 module Types where
 
 
--- * Input types
-
 --intprt
 --stacks
 --holding
@@ -11,10 +9,6 @@ module Types where
 --objects
 --utterance
 --parses
-
-
---data Object =
-
 
 -- * Output types
 
