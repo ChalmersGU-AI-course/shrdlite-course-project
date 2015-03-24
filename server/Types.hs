@@ -1,5 +1,8 @@
+-- | Types for all inputs and outputs
 module Types where
 
+
+-- * Input types
 
 --intprt
 --stacks
@@ -10,15 +13,19 @@ module Types where
 --parses
 
 
---data Objects = 
+--data Object =
 
 
+-- * Output types
+
+-- | We send [Action] to the web interface as an answer
 data Action =
-  What String [Commands]
+  What String -- Description of what we are doing
+       [Commands] -- Commands executing above description
 
-data Commands =
-    R
-  | L
-  | D
-  | U
-
+-- | What the robot arm is to do.
+data Commands
+  = R  -- ^ Move right
+  | L  -- ^ Move left
+  | P  -- ^ Pick up
+  | D  -- ^ Drop
