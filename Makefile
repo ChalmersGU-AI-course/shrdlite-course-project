@@ -23,3 +23,8 @@ $(TARGETS): %: shrdlite-%.js
 
 grammar.js: grammar.ne
 	nearleyc $< > $@
+
+test:
+	@./node_modules/.bin/mocha -u bdd
+
+.PHONY: test
