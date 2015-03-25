@@ -21,5 +21,5 @@ cabal run
 ./dist/build/server/server
 ~~~
 
-When the server is running the web interface is visible at
+When the server is running the web interface is available at
 <http://localhost:8000/shrdlite.html>
