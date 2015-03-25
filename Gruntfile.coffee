@@ -4,7 +4,7 @@
 
     typescript:
       default:
-        src: '*.ts'
+        src: 'shrdlite-html.ts'
         dest: 'shrdlite-html.js'
         options:
           module: 'amd'
