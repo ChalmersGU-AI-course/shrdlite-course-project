@@ -1,0 +1,12 @@
+{
+  "name": "shrdlite-course-project",
+  "version": "0.0.0",
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-shell": "^1.1.2",
+    "grunt-typescript": "^0.6.1",
+    "nearley": "^1.2.1",
+    "typescript": "^1.4.1"
+  }
+}
