@@ -2,8 +2,8 @@
 // Interface definitions for worlds
 
 interface ObjectDefinition {
-    form: string; 
-    size: string; 
+    form: string;
+    size: string;
     color: string;
 }
 
