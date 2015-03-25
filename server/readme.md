@@ -23,3 +23,16 @@ cabal run
 
 When the server is running the web interface is available at
 <http://localhost:8000/shrdlite.html>
+
+
+# Libraries used
+
+- [scotty][scotty] and [wai-middleware-static][wai] for web server.
+- [aeson][aeson] to parse JSON into Haskell types.
+- [psqueues][psq] for priority queues for the A* implementation, maybe.
+
+
+[scotty]: http://hackage.haskell.org/package/scotty
+[wai]: http://hackage.haskell.org/package/wai-middleware-static
+[aeson]: http://hackage.haskell.org/package/aeson
+[psq]: http://hackage.haskell.org/package/psqueues
