@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/patriques82/shrdlite-course-project",
   "devDependencies": {
+    "chai": "^2.1.2",
     "mocha": "^2.2.1",
     "should": "^5.2.0"
   },
