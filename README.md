@@ -43,6 +43,26 @@ and the robot planner. What you are given are stubs that return
 a dummy interpretation resp. a dummy plan. Your goal is to implement
 the interpreter and the planner so that the robot behaves as it should.
 
+Building the project
+--------------------
+Either use make as described below, or use grunt. At first, everything under the *Installation* section below must be installed. When the prerequisites are there, the *npm install* command must be run in the project root before building the first time. Then, bbuilding everything is done by running the command **grunt**. In order to automatically rebuild when something changes, run *grunt watch*. Jasmine is used to run the unit tests, which is available through the **grunt test** target.
+
+**Installation**
+**nodejs** *sudo apt-get install nodejs* (might also need a "ln -s /usr/bin/nodejs /usr/bin/node")
+
+**npm** *sudo apt-get install npm*
+
+**grunt** *sudo npm install -g grunt-cli*
+
+**nearleyc** *sudo npm install -g nearleyc*
+
+**Windows**
+**nodejs** and **npm** http://nodejs.org/download/
+
+**grunt** *npm install -g grunt-cli*
+
+**nearleyc** *npm install -g nearleyc*
+
 
 Compiling to Javascript or using Ajax CGI
 ------------------------------------------
