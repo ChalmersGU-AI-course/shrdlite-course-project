@@ -17,3 +17,13 @@ function drawGrid(grid, tileSize, context) {
         }
     }
 }
+var Neighbor = (function () {
+    function Neighbor() {
+    }
+    return Neighbor;
+})();
+var GridAStarNode = (function () {
+    function GridAStarNode() {
+    }
+    return GridAStarNode;
+})();

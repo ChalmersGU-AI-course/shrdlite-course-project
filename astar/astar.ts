@@ -38,3 +38,27 @@ function drawGrid(grid, tileSize, context) {
 		}
 	}
 }
+
+class Neighbor {
+	node: AStarNode;
+	distance: number;
+}
+
+interface AStarNode {
+	getNeighbors(): Neighbor[];
+
+	getHeuristicTo(other: AStarNode): number;
+}
+
+class GridAStarNode implements AStarNode {
+	x: number;
+	y: number;
+}
+
+interface AStarGraph {
+	nodes: AStarNode[];
+
+	searchPath(start: AStarNode, end: AStarNode): AStarNode[];
+	//distanceFn: (a: AStarNode, b: AStarNode) => number;
+	//heuristicFn: (a: AStarNode, b: AStarNode) => number;
+}
