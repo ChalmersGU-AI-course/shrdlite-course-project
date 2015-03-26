@@ -6,5 +6,6 @@ Tests for implementation of shrdlite
 - To run test in this folder run `make test`.
 
 The tests build on the testing frameworks:
-[Mocha] (https://github.com/mochajs/mocha) and
-[Should] (https://github.com/tj/should.js)
+[Mocha] (https://github.com/mochajs/mocha),
+[Should] (https://github.com/tj/should.js) and
+[Chai] (http://chaijs.com/)

@@ -7,6 +7,7 @@ import chai = require('chai');
 
 var expect = chai.expect;
 
+// Example test
 describe('User Model Unit Tests:', () => {
 
   describe('2 + 4', () => {
@@ -22,4 +23,6 @@ describe('User Model Unit Tests:', () => {
   });
 
 });
+
+
 
