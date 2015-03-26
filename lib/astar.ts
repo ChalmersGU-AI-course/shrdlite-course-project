@@ -5,13 +5,17 @@
 module aStar {
 	export function aStar(fromState : WorldState, toState : WorldState) : int {
 		var evaluatedStates = new collections.Set<WorldState>(); 
-		var statesToEvalute = new collections.PriorityQueue<WorldState>();
+		var statesToEvalute = new collections.PriorityQueue<WorldState>(compareStates : ICompareFunction<WorldState>);
 		var pathToState = new collections.Map<WorldState, WorldState>();
-		var costToState : int[];
-		var optimalCost : int = getDistance(fromState, toState);
-
-		costToState[0] = 0;
+		var g_score = new collections.Map<WorldState, int>();
+		var f_score = new collections.Map<WorldState, int>();
+		//var costToState : int[];
+		//var optimalCost : int = getDistance(fromState, toState);
+		//costToState[0] = 0;
 		statesToEvalute.add(fromState);
+		g_score.add(fromState, 0);
+		f_score.add(fromState, g_score.getValue(fromState) + getDistance(fromState, toState);
+
 
 		while(!statesToEvalute.isEmpty()) {
 			currentState = statesToEvalute.dequeue();
@@ -33,4 +37,6 @@ module aStar {
 	function getDistance(from: WorldState, to: WorldState) : int {
 		return 1;
 	}
+
+	function comparestates(a : wo)
 }
