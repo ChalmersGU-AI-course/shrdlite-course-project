@@ -25,6 +25,8 @@ grammar.js: grammar.ne
 	nearleyc $< > $@
 
 test:
+	tsc --out test.js test/*.ts
 	@./node_modules/.bin/mocha
+	rm -f test/*.js
 
 .PHONY: test

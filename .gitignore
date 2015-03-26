@@ -1,5 +1,4 @@
 shrdlite-*.js
-World.js
 *.DS_Store
 test/*.js
 node_modules/*

@@ -8,14 +8,14 @@ var jsfile = process.argv[1].replace(/^.*\//, "");
 var worldname = process.argv[2];
 var utterance = process.argv[3];
 
-var usage = "Usage: " + nodename + " " + jsfile + 
+var usage = "Usage: " + nodename + " " + jsfile +
     " (" + Object.keys(ExampleWorlds).join(" | ") + ")" +
     " (utterance | example no.)";
 
 if (process.argv.length != 4 || !ExampleWorlds[worldname]) {
     console.error(usage);
     process.exit(1);
-} 
+}
 
 var world = new TextWorld(ExampleWorlds[worldname]);
 
