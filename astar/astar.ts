@@ -1,3 +1,5 @@
+/// <reference path="collections.ts" />
+
 var canvas = <HTMLCanvasElement>document.getElementById('gridCanvas');
 var context = canvas.getContext("2d");
 
@@ -40,17 +42,17 @@ function drawGrid(grid, tileSize, context) {
 }
 
 class Neighbor {
-	node: AStarNode;
+	node: Node;
 	distance: number;
 }
 
-interface AStarNode {
+interface Node {
 	neighbors: Neighbor[];
 
-	getHeuristicTo(other: AStarNode): number;
+	getHeuristicTo(other: Node): number;
 }
 
-class GridNode implements AStarNode {
+class GridNode implements Node {
 	x: number;
 	y: number;
 	neighbors: Neighbor[];
@@ -61,7 +63,7 @@ class GridNode implements AStarNode {
 		this.neighbors = [];
 	}
 
-	getHeuristicTo(other) {
+	getHeuristicTo(other: Node) {
 		return Math.sqrt(
 			Math.abs(this.x - other.x) +
 			Math.abs(this.y - other.y));
@@ -69,11 +71,11 @@ class GridNode implements AStarNode {
 }
 
 interface Graph {
-	//nodes: AStarNode[];
+	//nodes: Node[];
 
-	searchPath(start: AStarNode, end: AStarNode): AStarNode[];
-	//distanceFn: (a: AStarNode, b: AStarNode) => number;
-	//heuristicFn: (a: AStarNode, b: AStarNode) => number;
+	searchPath(start: Node, end: Node): Node[];
+	//distanceFn: (a: Node, b: Node) => number;
+	//heuristicFn: (a: Node, b: Node) => number;
 }
 
 class GridGraph implements Graph {
@@ -146,10 +148,19 @@ class GridGraph implements Graph {
 	}
 
 	searchPath(start, end) {
-		var queue: Node[];
-		queue.push(start);
+		var queue = new collections.PriorityQueue<Node>();
+		var visited = new collections.Set<Node>();
 
-		
+		queue.enqueue(start);
+
+		while (queue.peek()) {
+			var current = queue.dequeue();
+
+			var nNeighbors = current.neighbors.length;
+			for (var i = 0; i < nNeighbors; i++) {
+				console.log(current.neighbors[i]);
+			}
+		}
 
 		return [];
 	}
