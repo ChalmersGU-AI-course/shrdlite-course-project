@@ -14,6 +14,17 @@
           references: [
             'lib/*.d.ts'
           ]
+      offline:
+        src: 'shrdlite-offline.ts'
+        dest: 'shrdlite-offline.js'
+        options:
+          module: 'amd'
+          target: 'es5'
+          sourceMap: true
+          declarations: false
+          references: [
+            'lib/*.d.ts'
+          ]
     shell:
       nearleyc:
         command: 'nearleyc grammar.ne > grammar.js'
@@ -27,3 +38,4 @@
   grunt.loadNpmTasks 'grunt-shell'
 
   grunt.registerTask 'default', ['typescript:default', 'shell:nearleyc']
+  grunt.registerTask 'offline', ['typescript:offline', 'shell:nearleyc']
