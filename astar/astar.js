@@ -28,6 +28,37 @@ var GridData = (function () {
     }
     return GridData;
 })();
+var QueueElement = (function () {
+    function QueueElement(node, cost) {
+        this.node = null;
+        this.cost = 0;
+        this.node = node;
+        this.cost = cost;
+    }
+    return QueueElement;
+})();
+// class EntryComparer implements ICompareFunction<Entry> {
+// 	compare(a: Entry, b: Entry): number {
+// 	    if (a.cost < b.cost) {
+// 	        return -1;
+// 	    } else if (a.cost === b.cost) {
+// 	        return 0;
+// 	    } else {
+// 	        return 1;
+// 	    }
+// 	}
+// }
+function entryCompare(a, b) {
+    if (a.cost < b.cost) {
+        return -1;
+    }
+    else if (a.cost === b.cost) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
 var GridNode = (function () {
     function GridNode(x, y) {
         this.data = new GridData();
@@ -40,7 +71,7 @@ var GridNode = (function () {
     };
     GridNode.prototype.getHeuristicTo = function (other) {
         var o = other.getData();
-        return Math.sqrt(Math.abs(this.data.x - o.x) + Math.abs(this.data.y - o.y));
+        return Math.sqrt(Math.abs(this.data.x - o.x) ^ 2 + Math.abs(this.data.y - o.y) ^ 2);
     };
     return GridNode;
 })();
@@ -105,14 +136,14 @@ var GridGraph = (function () {
         }
     };
     GridGraph.prototype.searchPath = function (start, end) {
-        var queue = new collections.PriorityQueue();
+        var queue = new collections.PriorityQueue(entryCompare);
         var visited = new collections.Set();
-        queue.enqueue(start);
+        queue.enqueue(new QueueElement(start, 0));
         while (queue.peek()) {
             var current = queue.dequeue();
-            var nNeighbors = current.neighbors.length;
+            var nNeighbors = current.node.neighbors.length;
             for (var i = 0; i < nNeighbors; i++) {
-                console.log(current.neighbors[i]);
+                console.log(current.node.neighbors[i]);
             }
         }
         return [];

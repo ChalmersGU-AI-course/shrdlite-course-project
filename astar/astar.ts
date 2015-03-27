@@ -59,6 +59,38 @@ class GridData {
 	y: number;
 }
 
+class QueueElement {
+	node: GridNode = null;
+	cost: number = 0;
+
+	constructor (node, cost) {
+		this.node = node;
+		this.cost = cost;
+	}
+}
+
+// class EntryComparer implements ICompareFunction<Entry> {
+// 	compare(a: Entry, b: Entry): number {
+// 	    if (a.cost < b.cost) {
+// 	        return -1;
+// 	    } else if (a.cost === b.cost) {
+// 	        return 0;
+// 	    } else {
+// 	        return 1;
+// 	    }
+// 	}
+// }
+
+function entryCompare(a: QueueElement, b: QueueElement): number {
+        if (a.cost < b.cost) {
+            return -1;
+        } else if (a.cost === b.cost) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
 class GridNode implements INode<GridData> {
 	data: GridData;
 
@@ -77,9 +109,9 @@ class GridNode implements INode<GridData> {
 
 	getHeuristicTo(other: INode<GridData>) : number{
 		var o: GridData = other.getData();
-		return //Math.sqrt(
-			Math.abs(this.data.x - o.x) +
-			Math.abs(this.data.y - o.y));
+		return Math.sqrt(
+			Math.abs(this.data.x - o.x)^2 +
+			Math.abs(this.data.y - o.y)^2);
 	}
 }
 
@@ -161,17 +193,17 @@ class GridGraph implements Graph<GridData> {
 	}
 
 	searchPath(start, end) {
-		var queue = new collections.PriorityQueue<GridNode>();
+		var queue = new collections.PriorityQueue<QueueElement>(entryCompare);
 		var visited = new collections.Set<GridNode>();
 
-		queue.enqueue(start);
+		queue.enqueue(new QueueElement(start, 0));
 
 		while (queue.peek()) {
 			var current = queue.dequeue();
 
-			var nNeighbors = current.neighbors.length;
+			var nNeighbors = current.node.neighbors.length;
 			for (var i = 0; i < nNeighbors; i++) {
-				console.log(current.neighbors[i]);
+				console.log(current.node.neighbors[i]);
 			}
 		}
 
