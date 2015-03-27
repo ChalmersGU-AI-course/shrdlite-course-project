@@ -29,7 +29,13 @@ class Astar {
 
     private reconstruct_path(came_from : number[], goal:number):number[]{
         var result_path:number[];
-        //TODO
+        result_path.push(goal);
+        
+        while(came_from[goal] > 0){
+        	goal = came_from[goal];
+        	result_path.push[goal];
+        }
+        
         return result_path;
     }
 
