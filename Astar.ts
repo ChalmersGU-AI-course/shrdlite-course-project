@@ -6,11 +6,30 @@ class Astar {
         this.mnodes = nodes;
         this.medges = edges;
     }
+    //For 8 puzzle
     private heuristic_cost_estimate(current : number, goal : number) : number{
-        
+        var manhattanDist:number = 0;
+        /*for(var i=0;i<N;i++){
+            manhattanDist = current
+        }*/
+        var N:number = Math.sqrt(current.length)
+        for(var x=0;x<N;x++){
+            for(var y=0;y<N;y++){
+                var currentValue:number = current[y*N + x];
+
+                if(currentValue){ //0 is the empty block
+                    var target:number = goal.indexOf(currentValue);
+                    
+                    manhattanDist += Math.abs(x - target / N) + Math.abs(y - target % N) 
+                }
+            }
+        }
         //TODO
-        return 0;
+        return manhattanDist;
     }
+
+
+
 
     private getMinFScore(fscore : number[]){
         var result : number;
