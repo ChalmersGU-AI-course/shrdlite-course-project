@@ -2312,3 +2312,170 @@ var collections;
     })();
     collections.BSTree = BSTree; // end of BSTree
 })(collections || (collections = {})); // End of module 
+/// <reference path="collections.ts" />
+var astar;
+(function (astar) {
+    var GraphNode = (function () {
+        function GraphNode(data) {
+            this.neighbors = [];
+            this.data = null;
+            this.data = data;
+        }
+        GraphNode.prototype.addNeighborNode = function (node, distance) {
+            this.neighbors.push(new Neighbor(node, distance));
+        };
+        GraphNode.prototype.getData = function () {
+            return this.data;
+        };
+        return GraphNode;
+    })();
+    astar.GraphNode = GraphNode;
+    var Neighbor = (function () {
+        function Neighbor(node, distance) {
+            this.node = null;
+            this.distance = 0;
+            this.node = node;
+            this.distance = distance;
+        }
+        return Neighbor;
+    })();
+    var QueueElement = (function () {
+        function QueueElement(node, cost) {
+            this.node = null;
+            this.cost = 0;
+            this.node = node;
+            this.cost = cost;
+        }
+        return QueueElement;
+    })();
+    function entryCompare(a, b) {
+        if (a.cost < b.cost) {
+            return -1;
+        }
+        else if (a.cost === b.cost) {
+            return 0;
+        }
+        else {
+            return 1;
+        }
+    }
+    var Graph = (function () {
+        function Graph(heuristic) {
+            this.heuristic = null;
+            this.nodes = [];
+            this.heuristic = heuristic;
+        }
+        Graph.prototype.createNode = function (data) {
+            return new GraphNode(data);
+        };
+        Graph.prototype.addNode = function (node) {
+            this.nodes.push(node);
+        };
+        Graph.prototype.searchPath = function (start, end) {
+            var queue = new collections.PriorityQueue(entryCompare);
+            var visited = new collections.Set();
+            queue.enqueue(new QueueElement(start, 0));
+            while (queue.peek()) {
+                var current = queue.dequeue();
+                var nNeighbors = current.node.neighbors.length;
+                for (var i = 0; i < nNeighbors; i++) {
+                    console.log(current.node.neighbors[i]);
+                }
+            }
+            return [];
+        };
+        return Graph;
+    })();
+    astar.Graph = Graph;
+})(astar || (astar = {}));
+/// <reference path="astar.ts" />
+var canvas = document.getElementById('gridCanvas');
+var context = canvas.getContext("2d");
+function drawGrid(grid, tileSize, context) {
+    var h = grid.length;
+    var w = grid[1].length;
+    for (var x = 0; x < w; x++) {
+        for (var y = 0; y < h; y++) {
+            if (grid[y][x] == 0) {
+                context.fillStyle = "#999";
+            }
+            else {
+                context.fillStyle = "black";
+            }
+            context.fillRect(x * tileSize, y * tileSize, tileSize - 1, tileSize - 1);
+        }
+    }
+}
+var grid = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1], [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
+var height = grid.length;
+var width = grid[1].length;
+drawGrid(grid, 20, context);
+var NodeData = (function () {
+    function NodeData(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    return NodeData;
+})();
+var Heuristic = (function () {
+    function Heuristic() {
+    }
+    Heuristic.prototype.getHeuristic = function (a, b) {
+        var dataA = a.getData();
+        var dataB = b.getData();
+        return Math.sqrt(Math.abs(dataA.x - dataB.x) ^ 2 + Math.abs(dataA.y - dataB.y) ^ 2);
+    };
+    return Heuristic;
+})();
+var a = new astar.Graph(new Heuristic());
+// create nodes based on given grid
+var gridNodes = [];
+for (var y = 0; y < height; y++) {
+    gridNodes.push([]);
+    for (var x = 0; x < width; x++) {
+        gridNodes[y].push(null);
+        if (grid[y][x] === 0) {
+            // Walkable cell, create node at this coordinate
+            var node = a.createNode(new NodeData(x, y));
+            gridNodes[y][x] = node;
+            a.addNode(node);
+        }
+    }
+}
+for (var x = 0; x < width; x++) {
+    for (var y = 0; y < height; y++) {
+        // add neighbors if node exists
+        var current = gridNodes[y][x];
+        if (current !== null) {
+            // west
+            if (x !== 0) {
+                var n = gridNodes[y][x - 1];
+                if (n) {
+                    current.addNeighborNode(n, 1);
+                }
+            }
+            // east
+            if (x % width !== 0) {
+                var n = gridNodes[y][x + 1];
+                if (n) {
+                    current.addNeighborNode(n, 1);
+                }
+            }
+            // north
+            if (y !== 0) {
+                var n = gridNodes[y - 1][x];
+                if (n) {
+                    current.addNeighborNode(n, 1);
+                }
+            }
+            // south
+            if (y % height !== 0) {
+                var n = gridNodes[y + 1][x];
+                if (n) {
+                    current.addNeighborNode(n, 1);
+                }
+            }
+        }
+    }
+}
+a.searchPath(gridNodes[1][1], gridNodes[3][3]);

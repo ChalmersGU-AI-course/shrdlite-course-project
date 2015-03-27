@@ -1,87 +1,45 @@
 /// <reference path="collections.ts" />
 
-var canvas = <HTMLCanvasElement>document.getElementById('gridCanvas');
-var context = canvas.getContext("2d");
+module astar {
 
+    export class GraphNode<T> {
+        neighbors: Neighbor<T>[] = [];
+        data: T = null;
 
-var grid = 
-[[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
- [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
- [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
- [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
- [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1],
- [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
- [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
- [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
- [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
- [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
- [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1],
- [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
- [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
- [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
- [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
- [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
+        constructor (data: T) {
+            this.data = data;
+        }
 
-drawGrid(grid, 20, context);
+        addNeighborNode(node: GraphNode<T>, distance: number) {
+            this.neighbors.push(new Neighbor<T>(node, distance));
+        }
 
-function drawGrid(grid, tileSize, context) {
-	var h = grid.length;
-	var w = grid[1].length;
+        getData(): T {
+            return this.data;
+        }
+    }
 
-	for (var x = 0; x < w; x++) {
-		for (var y = 0; y < h; y++) {
-			if (grid[y][x] == 0) {
-				context.fillStyle = "#999";
-			} else {
-				context.fillStyle = "black";
-			}
+    class Neighbor<T> {
+        node: GraphNode<T> = null;
+        distance: number = 0;
 
-			context.fillRect(x*tileSize, y*tileSize, tileSize-1, tileSize-1);
-		}
-	}
-}
+        constructor (node, distance) {
+            this.node = node;
+            this.distance = distance;
+        }
+    }
 
-interface INode<T> {
-	neighbors: Neighbor<T>[];
+    class QueueElement<T> {
+        node: GraphNode<T> = null;
+        cost: number = 0;
 
-	getData(): T;
+        constructor (node, cost) {
+            this.node = node;
+            this.cost = cost;
+        }
+    }
 
-	getHeuristicTo(other: INode<T>): number;
-}
-
-class Neighbor<T> {
-	node: INode<T>;
-	distance: number;
-}
-
-class GridData {
-	x: number;
-	y: number;
-}
-
-class QueueElement {
-	node: GridNode = null;
-	cost: number = 0;
-
-	constructor (node, cost) {
-		this.node = node;
-		this.cost = cost;
-	}
-}
-
-// class EntryComparer implements ICompareFunction<Entry> {
-// 	compare(a: Entry, b: Entry): number {
-// 	    if (a.cost < b.cost) {
-// 	        return -1;
-// 	    } else if (a.cost === b.cost) {
-// 	        return 0;
-// 	    } else {
-// 	        return 1;
-// 	    }
-// 	}
-// }
-
-function entryCompare(a: QueueElement, b: QueueElement): number {
+    function entryCompare<T>(a: QueueElement<T>, b: QueueElement<T>): number {
         if (a.cost < b.cost) {
             return -1;
         } else if (a.cost === b.cost) {
@@ -91,129 +49,43 @@ function entryCompare(a: QueueElement, b: QueueElement): number {
         }
     }
 
-class GridNode implements INode<GridData> {
-	data: GridData;
+    export interface IGraphHeuristic<T> {
+        getHeuristic(a: GraphNode<T>, b: GraphNode<T>): number;
+    }
 
-	neighbors: Neighbor<GridData>[];
+    export class Graph<T> {
+        heuristic: IGraphHeuristic<T> = null;
+        nodes: GraphNode<T>[] = [];
 
-	constructor(x: number, y: number) {
-		this.data = new GridData();
-		this.data.x = x;
-		this.data.y = y;
-		this.neighbors = [];
-	}
+        constructor(heuristic: IGraphHeuristic<T>) {
+            this.heuristic = heuristic;
+        }
 
-	getData() : GridData {
-		return this.data;
-	}
+        createNode(data: T): GraphNode<T> {
+            return new GraphNode<T>(data);
+        }
 
-	getHeuristicTo(other: INode<GridData>) : number{
-		var o: GridData = other.getData();
-		return Math.sqrt(
-			Math.abs(this.data.x - o.x)^2 +
-			Math.abs(this.data.y - o.y)^2);
-	}
+        addNode(node: GraphNode<T>) {
+            this.nodes.push(node);
+        }
+
+        searchPath(start: GraphNode<T>, end: GraphNode<T>): GraphNode<T>[] {
+
+            var queue = new collections.PriorityQueue<QueueElement<T>>(entryCompare);
+            var visited = new collections.Set<GraphNode<T>>();
+
+            queue.enqueue(new QueueElement<T>(start, 0));
+
+            while (queue.peek()) {
+                var current = queue.dequeue();
+
+                var nNeighbors = current.node.neighbors.length;
+                for (var i = 0; i < nNeighbors; i++) {
+                    console.log(current.node.neighbors[i]);
+                }
+            }
+
+            return [];
+        }
+    }
 }
-
-interface Graph<T> {
-	//nodes: Node[];
-
-	searchPath(start: INode<T>, end: INode<T>): INode<T>[];
-	//distanceFn: (a: Node, b: Node) => number;
-	//heuristicFn: (a: Node, b: Node) => number;
-}
-
-class GridGraph implements Graph<GridData> {
-	nodes: GridNode[][];
-
-	private getNeighbor(nodes, x, y) {
-		if (nodes[y][x] != null) {
-			var n = new Neighbor<GridData>();
-			n.node = nodes[y][x];
-			n.distance = 1;
-			return n;
-		}
-	}
-
-	constructor(grid) {
-		var h = grid.length;
-		var w = grid[1].length;
-
-		this.nodes = [];
-
-		// create nodes based on given grid
-		for (var y = 0; y < h; y++) {
-			this.nodes.push([]);
-			for (var x = 0; x < w; x++) {
-				this.nodes[y].push(null);
-				if (grid[y][x] === 0) {
-					this.nodes[y][x] = new GridNode(x, y);
-				}
-			}
-		}
-
-		// set neighbors
-		for (var x = 0; x < w; x++) {
-			for (var y = 0; y < h; y++) {
-				// add neighbors if node exists
-				if (this.nodes[y][x] != null) {
-					var current = this.nodes[y][x];
-					// west
-					if (x !== 0) {
-						var n = this.getNeighbor(this.nodes, x-1, y);
-						if (n) {
-							current.neighbors.push(n);
-						}
-					}
-					// east
-					if (x % w !== 0) {
-						var n = this.getNeighbor(this.nodes, x+1, y);
-						if (n) {
-							current.neighbors.push(n);
-						}
-					}
-					// north
-					if (y !== 0) {
-						var n = this.getNeighbor(this.nodes, x, y-1);
-						if (n) {
-							current.neighbors.push(n);
-						}
-					}
-					// south
-					if (y % h !== 0) {
-						var n = this.getNeighbor(this.nodes, x, y+1);
-						if (n) {
-							current.neighbors.push(n);
-						}
-					}
-					this.nodes[y][x] = current;
-				}
-			}
-		}
-	}
-
-	searchPath(start, end) {
-		var queue = new collections.PriorityQueue<QueueElement>(entryCompare);
-		var visited = new collections.Set<GridNode>();
-
-		queue.enqueue(new QueueElement(start, 0));
-
-		while (queue.peek()) {
-			var current = queue.dequeue();
-
-			var nNeighbors = current.node.neighbors.length;
-			for (var i = 0; i < nNeighbors; i++) {
-				console.log(current.node.neighbors[i]);
-			}
-		}
-
-		return [];
-	}
-}
-
-var a: GridGraph = new GridGraph(grid);
-a.searchPath(a.nodes[1][1], a.nodes[3][3]);
-
-var b = a.nodes[3][3];
-var c = a.nodes[3];
-console.log(c.indexOf(b));
