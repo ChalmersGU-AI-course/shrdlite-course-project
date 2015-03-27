@@ -2315,21 +2315,24 @@ var collections;
 /// <reference path="collections.ts" />
 var astar;
 (function (astar) {
-    var GraphNode = (function () {
-        function GraphNode(data) {
+    var Node = (function () {
+        function Node(data) {
             this.neighbors = [];
             this.data = null;
             this.data = data;
         }
-        GraphNode.prototype.addNeighborNode = function (node, distance) {
-            this.neighbors.push(new Neighbor(node, distance));
-        };
-        GraphNode.prototype.getData = function () {
+        Node.prototype.getData = function () {
             return this.data;
         };
-        return GraphNode;
+        Node.prototype.getNeighbors = function () {
+            return this.neighbors;
+        };
+        Node.prototype.addNeighborNode = function (node, distance) {
+            this.neighbors.push(new Neighbor(node, distance));
+        };
+        return Node;
     })();
-    astar.GraphNode = GraphNode;
+    astar.Node = Node;
     var Neighbor = (function () {
         function Neighbor(node, distance) {
             this.node = null;
@@ -2339,9 +2342,10 @@ var astar;
         }
         return Neighbor;
     })();
+    astar.Neighbor = Neighbor;
     var QueueElement = (function () {
         function QueueElement(node, cost) {
-            this.node = null;
+            this.node = null; // should maybe include predecessor list?
             this.cost = 0;
             this.node = node;
             this.cost = cost;
@@ -2365,9 +2369,6 @@ var astar;
             this.nodes = [];
             this.heuristic = heuristic;
         }
-        Graph.prototype.createNode = function (data) {
-            return new GraphNode(data);
-        };
         Graph.prototype.addNode = function (node) {
             this.nodes.push(node);
         };
@@ -2377,9 +2378,9 @@ var astar;
             queue.enqueue(new QueueElement(start, 0));
             while (queue.peek()) {
                 var current = queue.dequeue();
-                var nNeighbors = current.node.neighbors.length;
-                for (var i = 0; i < nNeighbors; i++) {
-                    console.log(current.node.neighbors[i]);
+                var neighbors = current.node.getNeighbors();
+                for (var i = 0; i < neighbors.length; i++) {
+                    console.log(neighbors[i]);
                 }
             }
             return [];
@@ -2391,6 +2392,10 @@ var astar;
 /// <reference path="astar.ts" />
 var canvas = document.getElementById('gridCanvas');
 var context = canvas.getContext("2d");
+// create abstract grid representation (no nodes here)
+var grid = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1], [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
+var height = grid.length;
+var width = grid[1].length;
 function drawGrid(grid, tileSize, context) {
     var h = grid.length;
     var w = grid[1].length;
@@ -2406,10 +2411,8 @@ function drawGrid(grid, tileSize, context) {
         }
     }
 }
-var grid = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1], [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
-var height = grid.length;
-var width = grid[1].length;
 drawGrid(grid, 20, context);
+// create graph to be used for path finding
 var NodeData = (function () {
     function NodeData(x, y) {
         this.x = x;
@@ -2420,7 +2423,7 @@ var NodeData = (function () {
 var Heuristic = (function () {
     function Heuristic() {
     }
-    Heuristic.prototype.getHeuristic = function (a, b) {
+    Heuristic.prototype.get = function (a, b) {
         var dataA = a.getData();
         var dataB = b.getData();
         return Math.sqrt(Math.abs(dataA.x - dataB.x) ^ 2 + Math.abs(dataA.y - dataB.y) ^ 2);
@@ -2436,7 +2439,7 @@ for (var y = 0; y < height; y++) {
         gridNodes[y].push(null);
         if (grid[y][x] === 0) {
             // Walkable cell, create node at this coordinate
-            var node = a.createNode(new NodeData(x, y));
+            var node = new astar.Node(new NodeData(x, y));
             gridNodes[y][x] = node;
             a.addNode(node);
         }

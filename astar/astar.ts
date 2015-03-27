@@ -2,25 +2,31 @@
 
 module astar {
 
-    export class GraphNode<T> {
-        neighbors: Neighbor<T>[] = [];
-        data: T = null;
+    export interface INodeData {}
 
-        constructor (data: T) {
+    export class Node {
+        private neighbors: Neighbor[] = [];
+        private data: INodeData = null;
+
+        constructor (data: INodeData) {
             this.data = data;
         }
 
-        addNeighborNode(node: GraphNode<T>, distance: number) {
-            this.neighbors.push(new Neighbor<T>(node, distance));
+        getData(): INodeData {
+            return this.data;
         }
 
-        getData(): T {
-            return this.data;
+        getNeighbors(): Neighbor[] {
+            return this.neighbors;
+        }
+
+        addNeighborNode(node: Node, distance: number) {
+            this.neighbors.push(new Neighbor(node, distance));
         }
     }
 
-    class Neighbor<T> {
-        node: GraphNode<T> = null;
+    export class Neighbor {
+        node: Node = null;
         distance: number = 0;
 
         constructor (node, distance) {
@@ -29,8 +35,8 @@ module astar {
         }
     }
 
-    class QueueElement<T> {
-        node: GraphNode<T> = null;
+    class QueueElement {
+        node: Node = null; // should maybe include predecessor list?
         cost: number = 0;
 
         constructor (node, cost) {
@@ -39,7 +45,7 @@ module astar {
         }
     }
 
-    function entryCompare<T>(a: QueueElement<T>, b: QueueElement<T>): number {
+    function entryCompare(a: QueueElement, b: QueueElement): number {
         if (a.cost < b.cost) {
             return -1;
         } else if (a.cost === b.cost) {
@@ -49,39 +55,35 @@ module astar {
         }
     }
 
-    export interface IGraphHeuristic<T> {
-        getHeuristic(a: GraphNode<T>, b: GraphNode<T>): number;
+    export interface IHeuristic {
+        get(a: Node, b: Node): number;
     }
 
-    export class Graph<T> {
-        heuristic: IGraphHeuristic<T> = null;
-        nodes: GraphNode<T>[] = [];
+    export class Graph {
+        private heuristic: IHeuristic = null;
+        private nodes: Node[] = [];
 
-        constructor(heuristic: IGraphHeuristic<T>) {
+        constructor(heuristic: IHeuristic) {
             this.heuristic = heuristic;
         }
 
-        createNode(data: T): GraphNode<T> {
-            return new GraphNode<T>(data);
-        }
-
-        addNode(node: GraphNode<T>) {
+        addNode(node: Node) {
             this.nodes.push(node);
         }
 
-        searchPath(start: GraphNode<T>, end: GraphNode<T>): GraphNode<T>[] {
+        searchPath(start: Node, end: Node): Node[] {
 
-            var queue = new collections.PriorityQueue<QueueElement<T>>(entryCompare);
-            var visited = new collections.Set<GraphNode<T>>();
+            var queue = new collections.PriorityQueue<QueueElement>(entryCompare);
+            var visited = new collections.Set<Node>();
 
-            queue.enqueue(new QueueElement<T>(start, 0));
+            queue.enqueue(new QueueElement(start, 0));
 
             while (queue.peek()) {
                 var current = queue.dequeue();
 
-                var nNeighbors = current.node.neighbors.length;
-                for (var i = 0; i < nNeighbors; i++) {
-                    console.log(current.node.neighbors[i]);
+                var neighbors = current.node.getNeighbors();
+                for (var i = 0; i < neighbors.length; i++) {
+                    console.log(neighbors[i]);
                 }
             }
 

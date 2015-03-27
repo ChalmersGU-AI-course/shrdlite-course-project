@@ -3,23 +3,8 @@
 var canvas = <HTMLCanvasElement>document.getElementById('gridCanvas');
 var context = canvas.getContext("2d");
 
-function drawGrid(grid, tileSize, context) {
-	var h = grid.length;
-	var w = grid[1].length;
 
-	for (var x = 0; x < w; x++) {
-		for (var y = 0; y < h; y++) {
-			if (grid[y][x] == 0) {
-				context.fillStyle = "#999";
-			} else {
-				context.fillStyle = "black";
-			}
-
-			context.fillRect(x*tileSize, y*tileSize, tileSize-1, tileSize-1);
-		}
-	}
-}
-
+// create abstract grid representation (no nodes here)
 var grid = 
 [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
  [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
@@ -41,9 +26,27 @@ var grid =
 var height = grid.length;
 var width = grid[1].length;
 
+function drawGrid(grid, tileSize, context) {
+	var h = grid.length;
+	var w = grid[1].length;
+
+	for (var x = 0; x < w; x++) {
+		for (var y = 0; y < h; y++) {
+			if (grid[y][x] == 0) {
+				context.fillStyle = "#999";
+			} else {
+				context.fillStyle = "black";
+			}
+
+			context.fillRect(x*tileSize, y*tileSize, tileSize-1, tileSize-1);
+		}
+	}
+}
+
 drawGrid(grid, 20, context);
 
-class NodeData {
+// create graph to be used for path finding
+class NodeData implements astar.INodeData {
     x: number;
     y: number;
 
@@ -53,11 +56,11 @@ class NodeData {
     }
 }
 
-class Heuristic implements astar.IGraphHeuristic<NodeData> {
+class Heuristic implements astar.IHeuristic {
 
-	getHeuristic(a: astar.GraphNode<NodeData>, b: astar.GraphNode<NodeData>): number {
-		var dataA = a.getData();
-		var dataB = b.getData();
+	get(a: astar.Node, b: astar.Node): number {
+		var dataA = <NodeData>a.getData();
+		var dataB = <NodeData>b.getData();
 
         return Math.sqrt(
             Math.abs(dataA.x - dataB.x)^2 +
@@ -65,7 +68,7 @@ class Heuristic implements astar.IGraphHeuristic<NodeData> {
 	}
 }
 
-var a = new astar.Graph<NodeData>(new Heuristic());
+var a = new astar.Graph(new Heuristic());
 
 // create nodes based on given grid
 var gridNodes = [];
@@ -78,7 +81,7 @@ for (var y = 0; y < height; y++) {
 
 		if (grid[y][x] === 0) {
 			// Walkable cell, create node at this coordinate
-			var node = a.createNode(new NodeData(x,y));
+			var node = new astar.Node(new NodeData(x,y));
 			gridNodes[y][x] = node;
 			a.addNode(node);
 		}
