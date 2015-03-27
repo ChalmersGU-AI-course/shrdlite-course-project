@@ -1,6 +1,6 @@
 class Astar {
     mnodes:Array<Array<number>>;
-    medges:[][];
+    medges:number[][];
 
     constructor(nodes:Array<Array<number>>, edges:number [][]){
         this.mnodes = nodes;
@@ -50,7 +50,6 @@ class Astar {
         var openset : number [];
         openset[0] = start;       // The set of tentative nodes to be evaluated, initially containing the start node
         var came_from : number [];    // The map of navigated nodes.
-        var result : number [];
         
         var g_score : number [];
         var f_score : number [];
@@ -90,6 +89,6 @@ class Astar {
             
         }
             
-        return result; 
+        return reconstruct_path(came_from, goal); 
     }
 }
