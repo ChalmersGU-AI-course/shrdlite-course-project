@@ -8,9 +8,9 @@ module Graph {
   // The interface of a graph, where the nodes have identifiers of type
   // Id and where the edge cost have type Cost
   export interface Graph<Id,Cost> {
-    nodes: Node<Id>[];                      // The nodes in the graph
-    (node: Node<Id>): Node<Id>[];           // Neighbours
-    (start: Node<Id>, end: Node<Id>): Cost; // Edge cost
+    nodes: Node<Id>[];                               // The nodes in the graph
+    neighbours(node: Node<Id>): Node<Id>[];          // Neighbours
+    edge_cost(start: Node<Id>, end: Node<Id>): Cost; // Edge cost
   }
 }
 

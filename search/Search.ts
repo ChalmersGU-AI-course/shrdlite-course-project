@@ -5,6 +5,6 @@ import N=Graph.Node
 
 module Search {
   export interface Search<Id, Cost, Path> {
-    (graph: G<Id, Cost>, start: N<Id>, end: N<Id>): Path
+    search(graph: G<Id, Cost>, start: N<Id>, end: N<Id>): Path
   }
 }
