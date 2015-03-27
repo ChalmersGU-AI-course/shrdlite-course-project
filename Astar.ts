@@ -1,7 +1,10 @@
 class Astar {
-    mgraph:Array<Array<number>>;
-    constructor(graph:Array<Array<number>>){
-        this.mgraph = graph;
+    mnodes:Array<Array<number>>;
+    medges:[][];
+
+    constructor(nodes:Array<Array<number>>, edges:number [][]){
+        this.mnodes = nodes;
+        this.medges = edges;
     }
     private heuristic_cost_estimate(current : number, goal : number) : number{
         
@@ -32,12 +35,13 @@ class Astar {
 
     private neighbor_nodes(current : number): number[]{
         var result : number[];
+        result = this.mnodes[current];
         return result;
     }
 
     private cost(from:number, to:number): number{
         var result:number;
-        
+        result = this.medges[from][to];
         return result;
     }
     
