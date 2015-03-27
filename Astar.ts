@@ -1,7 +1,7 @@
 class Astar {
-    mgraph:number[][];
-    constructor(graph:number[][]){
-        mgraph = graph;
+    mgraph:Array<Array<number>>;
+    constructor(graph:Array<Array<number>>){
+        this.mgraph = graph;
     }
     private heuristic_cost_estimate(current : number, goal : number) : number{
         
