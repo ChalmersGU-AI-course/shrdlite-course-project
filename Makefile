@@ -13,7 +13,7 @@ help:
 
 clean:
 	rm -f $(TSFILES:%.ts=%.js) *.map
-	rm -f test/*.js
+	rm -f test/*.js astar/*.js
 
 all: $(TARGETS)
 
