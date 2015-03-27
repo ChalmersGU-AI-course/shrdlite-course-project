@@ -1,13 +1,15 @@
-module Astar {
-    
-
-    export function heuristic_cost_estimate(current : number, goal : number) : number{
+class Astar {
+    mgraph:number[][];
+    constructor(graph:number[][]){
+        mgraph = graph;
+    }
+    private heuristic_cost_estimate(current : number, goal : number) : number{
         
         //TODO
         return 0;
     }
 
-    export function getMinFScore(fscore : number[]){
+    private getMinFScore(fscore : number[]){
         var result : number;
         result=fscore[0];
         var index : number = 0;
@@ -22,24 +24,24 @@ module Astar {
         return indexout;    
     }
 
-    export function reconstruct_path(came_from : number[], goal:number):number[]{
+    private reconstruct_path(came_from : number[], goal:number):number[]{
         var result_path:number[];
         //TODO
         return result_path;
     }
 
-    export function neighbor_nodes(current : number): number[]{
+    private neighbor_nodes(current : number): number[]{
         var result : number[];
         return result;
     }
 
-    export function cost(from:number, to:number): number{
+    private cost(from:number, to:number): number{
         var result:number;
         
         return result;
     }
     
-    export function star (start: number, goal : number): number[]{
+    public star (start: number, goal : number): number[]{
         var closedset : number [];   // The set of nodes already evaluated.
         var openset : number [];
         openset[0] = start;       // The set of tentative nodes to be evaluated, initially containing the start node
