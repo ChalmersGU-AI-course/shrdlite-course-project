@@ -27,6 +27,17 @@ module Astar {
         //TODO
         return result_path;
     }
+
+    export function neighbor_nodes(current : number): number[]{
+        var result : number[];
+        return result;
+    }
+
+    export function cost(from:number, to:number): number{
+        var result:number;
+        
+        return result;
+    }
     
     export function star (start: number, goal : number): number[]{
         var closedset : number [];   // The set of nodes already evaluated.
@@ -42,32 +53,37 @@ module Astar {
         f_score[start] = g_score[start] + heuristic_cost_estimate(start, goal);
         
         while (openset.length){
-            current = getMinFScore(openset);
-            if(current === goal)
+            var current = getMinFScore(openset);
+            if(current === goal){
                 return reconstruct_path(came_from, goal);
-            
+            }
+            var index = openset.indexOf(current);
+            if(index != undefined){
+                openset.splice(index, 1);   
+            }
+            closedset.push(current);
+            var currentNeighbors = neighbor_nodes(current);
+            var i : number = 0;
+            while(i < currentNeighbors.length){
+                var neighbor = currentNeighbors[i];
+                if(closedset.indexOf(neighbor) < 0){
+                    var tentative_g_score : number = g_score[current] + cost(current,neighbor); // distance between c and n
+                    if(openset.indexOf(neighbor) === -1 || tentative_g_score < g_score[neighbor]){
+                        came_from[neighbor] = current;
+                        g_score[neighbor] = tentative_g_score;
+                        f_score[neighbor] = g_score[neighbor] + heuristic_cost_estimate(neighbor, goal);
+                        if(openset.indexOf(neighbor) == -1){
+                            openset.push(neighbor);
+                        }
+                    }
+                
+                }
+                
+                i++;
+            }
             
         }
-        
- 
-        remove current from openset
-        add current to closedset
-        for each neighbor in neighbor_nodes(current)
-            if neighbor in closedset
-                continue
-            tentative_g_score := g_score[current] + dist_between(current,neighbor)
- 
-            if neighbor not in openset or tentative_g_score < g_score[neighbor] 
-                came_from[neighbor] := current
-                g_score[neighbor] := tentative_g_score
-                f_score[neighbor] := g_score[neighbor] + heuristic_cost_estimate(neighbor, goal)
-                if neighbor not in openset
-                    add neighbor to openset
- 
-        return failure
-        
-        
-        
+            
         return result; 
     }
 }
