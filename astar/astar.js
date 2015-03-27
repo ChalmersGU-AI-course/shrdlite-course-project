@@ -23,14 +23,24 @@ var Neighbor = (function () {
     }
     return Neighbor;
 })();
+var GridData = (function () {
+    function GridData() {
+    }
+    return GridData;
+})();
 var GridNode = (function () {
     function GridNode(x, y) {
-        this.x = x;
-        this.y = y;
+        this.data = new GridData();
+        this.data.x = x;
+        this.data.y = y;
         this.neighbors = [];
     }
+    GridNode.prototype.getData = function () {
+        return this.data;
+    };
     GridNode.prototype.getHeuristicTo = function (other) {
-        return Math.sqrt(Math.abs(this.x - other.x) + Math.abs(this.y - other.y));
+        var o = other.getData();
+        return Math.sqrt(Math.abs(this.data.x - o.x) + Math.abs(this.data.y - o.y));
     };
     return GridNode;
 })();
@@ -110,6 +120,7 @@ var GridGraph = (function () {
     return GridGraph;
 })();
 var a = new GridGraph(grid);
+a.searchPath(a.nodes[1][1], a.nodes[3][3]);
 var b = a.nodes[3][3];
 var c = a.nodes[3];
 console.log(c.indexOf(b));

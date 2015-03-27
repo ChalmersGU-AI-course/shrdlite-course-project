@@ -41,49 +41,62 @@ function drawGrid(grid, tileSize, context) {
 	}
 }
 
-class Neighbor {
-	node: Node;
+interface INode<T> {
+	neighbors: Neighbor<T>[];
+
+	getData(): T;
+
+	getHeuristicTo(other: INode<T>): number;
+}
+
+class Neighbor<T> {
+	node: INode<T>;
 	distance: number;
 }
 
-interface Node {
-	neighbors: Neighbor[];
-
-	getHeuristicTo(other: Node): number;
-}
-
-class GridNode implements Node {
+class GridData {
 	x: number;
 	y: number;
-	neighbors: Neighbor[];
+}
+
+class GridNode implements INode<GridData> {
+	data: GridData;
+
+	neighbors: Neighbor<GridData>[];
 
 	constructor(x: number, y: number) {
-		this.x = x;
-		this.y = y;
+		this.data = new GridData();
+		this.data.x = x;
+		this.data.y = y;
 		this.neighbors = [];
 	}
 
-	getHeuristicTo(other: Node) {
-		return Math.sqrt(
-			Math.abs(this.x - other.x) +
-			Math.abs(this.y - other.y));
+	getData() : GridData {
+		return this.data;
+	}
+
+	getHeuristicTo(other: INode<GridData>) : number{
+		var o: GridData = other.getData();
+		return //Math.sqrt(
+			Math.abs(this.data.x - o.x) +
+			Math.abs(this.data.y - o.y));
 	}
 }
 
-interface Graph {
+interface Graph<T> {
 	//nodes: Node[];
 
-	searchPath(start: Node, end: Node): Node[];
+	searchPath(start: INode<T>, end: INode<T>): INode<T>[];
 	//distanceFn: (a: Node, b: Node) => number;
 	//heuristicFn: (a: Node, b: Node) => number;
 }
 
-class GridGraph implements Graph {
+class GridGraph implements Graph<GridData> {
 	nodes: GridNode[][];
 
 	private getNeighbor(nodes, x, y) {
 		if (nodes[y][x] != null) {
-			var n = new Neighbor();
+			var n = new Neighbor<GridData>();
 			n.node = nodes[y][x];
 			n.distance = 1;
 			return n;
@@ -148,8 +161,8 @@ class GridGraph implements Graph {
 	}
 
 	searchPath(start, end) {
-		var queue = new collections.PriorityQueue<Node>();
-		var visited = new collections.Set<Node>();
+		var queue = new collections.PriorityQueue<GridNode>();
+		var visited = new collections.Set<GridNode>();
 
 		queue.enqueue(start);
 
@@ -167,6 +180,7 @@ class GridGraph implements Graph {
 }
 
 var a: GridGraph = new GridGraph(grid);
+a.searchPath(a.nodes[1][1], a.nodes[3][3]);
 
 var b = a.nodes[3][3];
 var c = a.nodes[3];
