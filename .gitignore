@@ -1,6 +1,7 @@
 # Typescript build stuff
 shrdlite-*.js
 *.map
+/*.js
 
 # Visual Studio project stuff
 [Dd]ebug/
