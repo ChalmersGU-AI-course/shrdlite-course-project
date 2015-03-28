@@ -7,13 +7,15 @@ var AStar;
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     // Types
     var Node = (function () {
-        function Node(label, neighbours, neighbourCosts, cost, previous) {
+        function Node(label, neighbours, neighbourCosts, heuristic, cost, previous) {
+            if (heuristic === void 0) { heuristic = 0; }
             if (cost === void 0) { cost = Infinity; }
             if (previous === void 0) { previous = null; }
             this.label = label;
             this.neighbours = neighbours;
             this.neighbourCosts = neighbourCosts;
             this.cost = cost;
+            this.heuristic = heuristic;
             this.previous = previous;
         }
         return Node;
@@ -24,8 +26,14 @@ var AStar;
     function astar(s, t) {
         function getBest() {
             // Return Node in todo-list with minimum cost
-            return todo.reduce(function (currMin, n) {
-                return (n.cost <= currMin.cost) ? n : currMin;
+            return todo.reduce(function (currMin, v) {
+                var vVal = v.cost + v.heuristic;
+                var minVal = currMin.cost + currMin.heuristic;
+                if (v.label === "g" || v.label === "h") {
+                    console.log("checking if to return ", v.label);
+                    console.log("cost:", v.cost, "heuristic:", v.heuristic, "vVal:", vVal, "minVal:", minVal);
+                }
+                return (vVal <= minVal) ? v : currMin;
             }, new Node(null, null, null, Infinity));
         }
         var todo = [s], done = [];
@@ -46,9 +54,15 @@ var AStar;
                     n.previous = v;
                 }
             }
-            // Mark node v as visited
-            todo.splice(todo.indexOf(v), 1);
-            done.push(v);
+            // When we remove t from the frontier, we're done
+            if (v === t) {
+                todo = [];
+            }
+            else {
+                // Mark node v as visited
+                todo.splice(todo.indexOf(v), 1);
+                done.push(v);
+            }
         }
         // Retrieve path
         var path = [];
@@ -64,22 +78,38 @@ var AStar;
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     // Test cases
     // Creates an example graph and runs AStar on it
-    function testGraph() {
-        // Define graph
-        var a = new Node("a", [], []);
-        var b = new Node("b", [], []);
-        var c = new Node("c", [], []);
-        var d = new Node("d", [], []);
-        var e = new Node("e", [], []);
+    function testCase1() {
+        // Define graph, with perfect heuristics
+        // Right side (should be visited)
+        var a = new Node("a", [], [], 3);
+        var b = new Node("b", [], [], 2);
+        var c = new Node("c", [], [], 1);
+        var d = new Node("d", [], [], 0);
+        var e = new Node("e", [], [], 4);
+        // Left side (should not be visited, due to heuristics)
+        var f = new Node("f", [], [], 3.5);
+        var g = new Node("g", [], [], 4.5);
+        var h = new Node("h", [], [], 4.5);
         var nodes = [a, b, c, d, e];
-        var edges = [[a, b, 1], [b, c, 1], [c, d, 1], [a, e, 1], [e, d, 4]];
+        var edges = [[a, b, 1], [b, c, 1], [c, d, 1], [a, e, 1], [e, d, 4], [a, f, 0.5], [f, g, 1], [g, h, 1], [h, f, 1]]; // Left side
         initGraph(nodes, edges); // Updates node objects to be a proper graph
-        console.log("Running astar test ... ");
+        console.log("Running astar correctness test ... ");
         var path = astar(a, d);
         var correctPath = [a, b, c, d];
-        console.log(arrayEquals(path, correctPath) ? "... passed!" : "... FAILED!");
+        if (!test(arrayEquals(path, correctPath)))
+            console.log("nodes: ", nodes);
+        console.log("Running astar heuristics test ... ");
+        if (!test(g.previous === null && h.previous === null)) {
+            console.log("nodes: ", nodes);
+            console.log("g.previous:", g.previous);
+            console.log("h.previous:", h.previous);
+        }
     }
-    AStar.testGraph = testGraph;
+    AStar.testCase1 = testCase1;
+    function test(test) {
+        console.log(test ? "... passed!" : "... FAILED!");
+        return test;
+    }
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     // Utility functions
     // Creates a graph from a list of blank nodes and edges.
