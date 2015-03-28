@@ -74,6 +74,18 @@ module astar {
         get(a: Node, b: Node): number;
     }
 
+    export class Result {
+        found: boolean = false;
+        path: Node[] = [];
+        visited: Node[] = [];
+
+        constructor(found: boolean, path: Node[], visited: Node[]) {
+            this.found = found;
+            this.path = path;
+            this.visited = visited;
+        }
+    }
+
     export class Graph {
         private heuristic: IHeuristic = null;
         private nodes: Node[] = [];
@@ -91,23 +103,22 @@ module astar {
             this.nodes.push(node);
         }
 
-        searchPath(start: Node, end: Node): Node[] {
+        searchPath(start: Node, goal: Node): Result {
 
             var queue = new collections.PriorityQueue<QueueElement>(entryCompare);
             var visited = [];
+            var visitedCost = [];
 
-            queue.enqueue(new QueueElement([start],0,this.heuristic.get(start,end)));
+            queue.enqueue(new QueueElement([start],0,this.heuristic.get(start,goal)));
             visited.push(start);
-
-            var iteration = 0;
+            visitedCost.push(0);
 
             while (queue.peek()) {
                 var currentElement = queue.dequeue();
-                var path = currentElement.path;
-                var currentNode = path[path.length-1];
+                var currentNode = currentElement.path[currentElement.path.length-1];
 
-                if (currentNode === end) {
-                    return path;
+                if (currentNode === goal) {
+                    return new Result(true, currentElement.path, visited);
                 } else {
                     var neighbors = currentNode.getNeighbors();
 
@@ -116,21 +127,22 @@ module astar {
                         var neighbor = neighbors[i];
                         var newCost = currentElement.cost + neighbor.distance;
 
-                        if (visited.indexOf(neighbor.node) === -1)
+                        var firstOccurance = visited.indexOf(neighbor.node);
+
+                        if (firstOccurance === -1 || newCost < visitedCost[firstOccurance])
                         {
-                            var newPriority = newCost + this.heuristic.get(neighbor.node, end);
+                            var newPriority = newCost + this.heuristic.get(neighbor.node, goal);
                             var newPath = currentElement.path.concat(neighbor.node);
                             
                             queue.enqueue(new QueueElement(newPath, newCost, newPriority));
                             visited.push(neighbor.node);
+                            visitedCost.push(newCost);
                         }
                     }
                 }
-
-                iteration++;
             }
 
-            return [];
+            return new Result(false, [], visited);
         }
     }
 }

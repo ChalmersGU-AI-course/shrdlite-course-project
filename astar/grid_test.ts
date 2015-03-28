@@ -26,7 +26,7 @@ var grid =
 var height = grid.length;
 var width = grid[1].length;
 
-function drawGrid(grid, tileSize, context, path) {
+function drawGrid(grid, tileSize, context, path, visited) {
 	var h = grid.length;
 	var w = grid[1].length;
 
@@ -40,6 +40,13 @@ function drawGrid(grid, tileSize, context, path) {
 
 			context.fillRect(x*tileSize, y*tileSize, tileSize-1, tileSize-1);
 		}
+	}
+
+	for (var i = 0; i < visited.length; i++) {
+		var current = visited[i];
+		context.fillStyle = "blue";
+
+		context.fillRect(current.data.x*tileSize, current.data.y*tileSize, tileSize-1, tileSize-1)
 	}
 
 	for (var i = 0; i < path.length; i++) {
@@ -61,12 +68,17 @@ class NodeData implements astar.INodeData {
     }
 }
 
+class DijkstraHeuristic implements astar.IHeuristic {
+	
+	get(a: astar.Node, b: astar.Node): number {
+        return 0;
+	}
+}
+
 class EuclidianHeuristic implements astar.IHeuristic {
 
 	get(a: astar.Node, b: astar.Node): number {
 
-		if (a === null) console.log("WTF");
-		if (b === null) console.log("WTF");
 		var dataA = <NodeData>a.getData();
 		var dataB = <NodeData>b.getData();
 
@@ -79,11 +91,12 @@ class EuclidianHeuristic implements astar.IHeuristic {
 class ManhattanHeuristic implements astar.IHeuristic {
 
 	get(a: astar.Node, b: astar.Node): number {
+
 		var dataA = <NodeData>a.getData();
 		var dataB = <NodeData>b.getData();
 
         return Math.abs(dataA.x - dataB.x) +
-            Math.abs(dataA.y - dataB.y);
+        	Math.abs(dataA.y - dataB.y);
 	}
 }
 
@@ -147,6 +160,8 @@ for (var x = 0; x < width; x++) {
 	}
 }
 
-var path = a.searchPath(gridNodes[1][1], gridNodes[3][19]);
+var result = a.searchPath(gridNodes[1][1], gridNodes[3][19]);
 
-drawGrid(grid, 20, context, path);
+console.log("Path found: " + result.found);
+
+drawGrid(grid, 20, context, result.path, result.visited);
