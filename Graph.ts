@@ -10,8 +10,8 @@ class Graph {
 
     findPath(start : number, goal : number) : [number, number][] //Returns a list of edges
     {
-        if (start > this.noOfNodes || start <= 0 || goal > this.noOfNodes || goal < 0)
-            throw new RangeError("node does not exist");
+        if (start > this.noOfNodes || start < 0 || goal > this.noOfNodes || goal < 0)
+            throw new RangeError("Node does not exist");
 
 	    var closedset = []; //list
 	    var openset = start; //list
@@ -57,6 +57,10 @@ class Graph {
             }
         }
         */
+
+        //Dummy: Just a test path for the view
+        return [[36, 6], [6, 38], [38, 9], [9, 34]];
+
         return null; //No path was found
 	}
 
