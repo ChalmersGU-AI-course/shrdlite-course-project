@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>A*</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4">
+                <h1>void *</h1>
+                <div class="form-horizontal">
+                    
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-addon">From:</div>
+                            <select class="form-control" id="from">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-addon">To:</div>
+                            <select class="form-control" id="to"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button type="submit" class="btn btn-default" id="route">Find shortest route</button>
+                        </div>
+                    </div>
+                </div>
+                <p id="result">
+                    No data
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- scripts here for speed -->
+    
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="lib/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="astar.js"></script>
+</body>
+</html>
