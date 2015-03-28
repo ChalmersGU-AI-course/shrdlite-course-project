@@ -2438,17 +2438,27 @@ var NodeData = (function () {
     }
     return NodeData;
 })();
-var Heuristic = (function () {
-    function Heuristic() {
+var EuclidianHeuristic = (function () {
+    function EuclidianHeuristic() {
     }
-    Heuristic.prototype.get = function (a, b) {
+    EuclidianHeuristic.prototype.get = function (a, b) {
         var dataA = a.getData();
         var dataB = b.getData();
         return Math.sqrt(Math.pow(Math.abs(dataA.x - dataB.x), 2) + Math.pow(Math.abs(dataA.y - dataB.y), 2));
     };
-    return Heuristic;
+    return EuclidianHeuristic;
 })();
-var a = new astar.Graph(new Heuristic());
+var ManhattanHeuristic = (function () {
+    function ManhattanHeuristic() {
+    }
+    ManhattanHeuristic.prototype.get = function (a, b) {
+        var dataA = a.getData();
+        var dataB = b.getData();
+        return Math.abs(dataA.x - dataB.x) + Math.abs(dataA.y - dataB.y);
+    };
+    return ManhattanHeuristic;
+})();
+var a = new astar.Graph(new EuclidianHeuristic());
 // create nodes based on given grid
 var gridNodes = [];
 for (var y = 0; y < height; y++) {

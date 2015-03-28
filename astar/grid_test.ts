@@ -61,7 +61,7 @@ class NodeData implements astar.INodeData {
     }
 }
 
-class Heuristic implements astar.IHeuristic {
+class EuclidianHeuristic implements astar.IHeuristic {
 
 	get(a: astar.Node, b: astar.Node): number {
 		var dataA = <NodeData>a.getData();
@@ -73,7 +73,18 @@ class Heuristic implements astar.IHeuristic {
 	}
 }
 
-var a = new astar.Graph(new Heuristic());
+class ManhattanHeuristic implements astar.IHeuristic {
+
+	get(a: astar.Node, b: astar.Node): number {
+		var dataA = <NodeData>a.getData();
+		var dataB = <NodeData>b.getData();
+
+        return Math.abs(dataA.x - dataB.x) +
+            Math.abs(dataA.y - dataB.y);
+	}
+}
+
+var a = new astar.Graph(new EuclidianHeuristic());
 
 // create nodes based on given grid
 var gridNodes = [];
