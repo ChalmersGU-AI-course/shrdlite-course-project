@@ -26,7 +26,7 @@ var grid =
 var height = grid.length;
 var width = grid[1].length;
 
-function drawGrid(grid, tileSize, context) {
+function drawGrid(grid, tileSize, context, path) {
 	var h = grid.length;
 	var w = grid[1].length;
 
@@ -41,9 +41,14 @@ function drawGrid(grid, tileSize, context) {
 			context.fillRect(x*tileSize, y*tileSize, tileSize-1, tileSize-1);
 		}
 	}
-}
 
-drawGrid(grid, 20, context);
+	for (var i = 0; i < path.length; i++) {
+		var current = path[i];
+		context.fillStyle = "red";
+
+		context.fillRect(current.data.x*tileSize, current.data.y*tileSize, tileSize-1, tileSize-1)
+	}
+}
 
 // create graph to be used for path finding
 class NodeData implements astar.INodeData {
@@ -128,4 +133,6 @@ for (var x = 0; x < width; x++) {
 	}
 }
 
-console.log(a.searchPath(gridNodes[1][1], gridNodes[10][3]));
+var path = a.searchPath(gridNodes[1][1], gridNodes[3][3]);
+
+drawGrid(grid, 20, context, path);
