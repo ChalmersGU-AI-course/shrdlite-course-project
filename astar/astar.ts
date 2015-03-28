@@ -85,10 +85,10 @@ module astar {
                 path = currentElement.path;
                 var currentNode = path[path.length-1];
 
-                if(currentNode===end){
+                if (currentNode === end) {
                     break;
                 }
-                else{
+                else {
                     var neighbors = currentNode.getNeighbors();
                     for (var i = 0; i < neighbors.length; i++) {
                         var currentNeighbor = neighbors[i];

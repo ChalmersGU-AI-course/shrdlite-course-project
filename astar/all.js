@@ -2410,7 +2410,7 @@ var context = canvas.getContext("2d");
 var grid = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1], [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
 var height = grid.length;
 var width = grid[1].length;
-function drawGrid(grid, tileSize, context) {
+function drawGrid(grid, tileSize, context, path) {
     var h = grid.length;
     var w = grid[1].length;
     for (var x = 0; x < w; x++) {
@@ -2424,8 +2424,12 @@ function drawGrid(grid, tileSize, context) {
             context.fillRect(x * tileSize, y * tileSize, tileSize - 1, tileSize - 1);
         }
     }
+    for (var i = 0; i < path.length; i++) {
+        var current = path[i];
+        context.fillStyle = "red";
+        context.fillRect(current.data.x * tileSize, current.data.y * tileSize, tileSize - 1, tileSize - 1);
+    }
 }
-drawGrid(grid, 20, context);
 // create graph to be used for path finding
 var NodeData = (function () {
     function NodeData(x, y) {
@@ -2440,7 +2444,7 @@ var Heuristic = (function () {
     Heuristic.prototype.get = function (a, b) {
         var dataA = a.getData();
         var dataB = b.getData();
-        return Math.sqrt(Math.abs(dataA.x - dataB.x) ^ 2 + Math.abs(dataA.y - dataB.y) ^ 2);
+        return Math.sqrt(Math.pow(Math.abs(dataA.x - dataB.x), 2) + Math.pow(Math.abs(dataA.y - dataB.y), 2));
     };
     return Heuristic;
 })();
@@ -2495,4 +2499,5 @@ for (var x = 0; x < width; x++) {
         }
     }
 }
-console.log(a.searchPath(gridNodes[1][1], gridNodes[10][3]));
+var path = a.searchPath(gridNodes[3][3], gridNodes[3][10]);
+drawGrid(grid, 20, context, path);

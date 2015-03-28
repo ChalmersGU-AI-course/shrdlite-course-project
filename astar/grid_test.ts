@@ -68,8 +68,8 @@ class Heuristic implements astar.IHeuristic {
 		var dataB = <NodeData>b.getData();
 
         return Math.sqrt(
-            Math.abs(dataA.x - dataB.x)^2 +
-            Math.abs(dataA.y - dataB.y)^2);
+            Math.pow(Math.abs(dataA.x - dataB.x), 2) +
+            Math.pow(Math.abs(dataA.y - dataB.y), 2));
 	}
 }
 
@@ -133,6 +133,6 @@ for (var x = 0; x < width; x++) {
 	}
 }
 
-var path = a.searchPath(gridNodes[1][1], gridNodes[3][3]);
+var path = a.searchPath(gridNodes[3][3], gridNodes[3][10]);
 
 drawGrid(grid, 20, context, path);
