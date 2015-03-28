@@ -3,4 +3,3 @@ shrdlite-*.js
 node_modules/*
 test/*.js
 astar/*.js
-!lib/

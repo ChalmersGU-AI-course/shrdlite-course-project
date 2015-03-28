@@ -5,25 +5,35 @@ import C = require('./collections');
 
 export module AS { // AStar
 
-  export class ANodeDict<T extends Heuristic> {
-    dict: C.collections.Dictionary<string, ANode<T>>;
-    set(name: string, node: ANode<T>): ANode<T> {
-      return this.dict.setValue(name, node);
+  interface HashTable<T extends Heuristic> {
+    [key: number]: ANode<T>;
+  }
+
+  export class Graph<T extends Heuristic> {
+    table: HashTable<T>;
+    set(node: ANode<T>): ANode<T> {
+      var k = key(node.state, node.cost);
+      this.table[k] = node;
+      return node;
     }
-    get(name: string): ANode<T> {
-      return this.dict.getValue(name);
+    get(k: number): ANode<T> {
+      return this.table[k];
     }
     constructor() {
-      this.dict = new C.collections.Dictionary<string, ANode<T>>();
+      this.table = [];
     }
+  }
+
+  export function key<T extends Heuristic>(state: T, cost: number): number {
+    return state.toNumber() + cost;
   }
 
   export class ANode<T extends Heuristic> {
     state: T;
-    prev: string;   // just one node enables a walk back to start to return the path.
-    next: string[]; // list of possible nodes to walk to
+    prev: number;   // (id of node) just one node enables a walk back to start to return the path.
+    next: number[]; // (ids) list of possible nodes to walk to
     cost: number;
-    constructor(state: T, prev: string, next: string[], cost=0) {
+    constructor(state: T, prev: number, next: number[], cost=0) {
       this.state = state;
       this.prev = prev;
       this.next = next;
@@ -34,6 +44,20 @@ export module AS { // AStar
   export interface Heuristic {
     heuristic(goal: Heuristic): number; // compare length to goal
     match(goal: Heuristic): boolean;    // see if goal is found
+    toNumber(): number;
+  }
+
+  // http://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
+  // Helper function to enable easier toNumber implementation for Heuristic type
+  export function hash(s: string): number {
+    var hash = 0;
+    if (s.length == 0) return hash;
+    for (var i = 0; i < s.length; i++) {
+      var chr = s.charCodeAt(i);
+      hash = ((hash << 5) - hash) + chr;
+      hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
   }
 
   /*
@@ -47,7 +71,7 @@ export module AS { // AStar
    */
   export function search<T extends Heuristic>(start: ANode<T>,
                                               goal: T,
-                                              dict: ANodeDict<T>): T[] {
+                                              graph: Graph<T>): T[] {
     var frontier = new C.collections.PriorityQueue<ANode<T>>(compClosure(goal));
     frontier.enqueue(start);
 
@@ -55,10 +79,10 @@ export module AS { // AStar
       var n : ANode<T> = frontier.dequeue();
       if(n) {                     // check if node is undefined
         if(n.state.match(goal)) {
-          return path<T>(n, dict);
+          return path<T>(n, graph);
         }
         for(var i=0; i<n.next.length; i++) { // for all neighbours
-          var _neighbour = dict.get(n.next[i]);
+          var _neighbour = graph.get(n.next[i]);
           frontier.enqueue(_neighbour);
         }
       } else {
@@ -69,13 +93,15 @@ export module AS { // AStar
 
 
   //////////////////////////////////////////////////////////////////////
-  // private classes and functions
+  // private functions
+
 
   function compClosure<T extends Heuristic>(goal: T) {
     /*
      * Comparing function
      */
     function compare<T extends Heuristic>(a: ANode<T>, b: ANode<T>): number {
+      // cost = g + h
       var aCost = a.cost + a.state.heuristic(goal);
       var bCost = b.cost + b.state.heuristic(goal);
       var res;
@@ -94,15 +120,14 @@ export module AS { // AStar
    * extracts the path from the ANode back to start node
    */
   function path<T extends Heuristic>(n: ANode<T>,
-                                     dict: ANodeDict<T>): T[] {
+                                     graph: Graph<T>): T[] {
     var _path: T[] = [];
     var _n: ANode<T> = n;
     while(_n != null) {
       _path.push(_n.state)
-      _n = dict.get(_n.prev);
+      _n = graph.get(_n.prev);
     }
     return _path.reverse();
   }
-
 
 }

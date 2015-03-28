@@ -16,6 +16,9 @@ module AStarTest {
     heuristic(goal: City) { // ignores the argument
       return this.h;
     }
+    toNumber() {
+      return A.AS.hash(this.name) + this.h;
+    }
     constructor(name: string, h: number) {
       this.name = name;
       this.h = h;
@@ -35,44 +38,48 @@ module AStarTest {
   var bucharest = new City( "Bucharest", 0   );
 
   // Romainia map (Start point Arad)
+  var graph = new A.AS.Graph<City>();
 
-  var dict = new A.AS.ANodeDict<City>();
+  //                             state      previous                next        cost
+  graph.set(new A.AS.ANode<City>(bucharest, A.AS.key(pitesti, 317), [],         418));
+  graph.set(new A.AS.ANode<City>(craiova,   A.AS.key(pitesti, 317), [],         455));
+  graph.set(new A.AS.ANode<City>(rimnicu,   A.AS.key(pitesti, 317), [],         414));
 
-  dict.set("pitesti_bucharest",  new A.AS.ANode<City>(bucharest, "rimnicu_pitesti", [], 418));
-  dict.set("pitesti_craiova",    new A.AS.ANode<City>(craiova, "rimnicu_pitesti", [], 455));
-  dict.set("pitesti_rimnicu",    new A.AS.ANode<City>(rimnicu, "rimnicu_pitesti", [], 414));
+  graph.set(new A.AS.ANode<City>(craiova,   A.AS.key(rimnicu, 220), [],         366));
+  graph.set(new A.AS.ANode<City>(pitesti,   A.AS.key(rimnicu, 220),
+    [A.AS.key(bucharest, 418), A.AS.key(craiova, 455), A.AS.key(rimnicu, 414)], 317));
+  graph.set(new A.AS.ANode<City>(sibiu,     A.AS.key(rimnicu, 220), [],         300));
 
-  dict.set("rimnicu_craiova",    new A.AS.ANode<City>(craiova, "sibiu_rimnicu", [], 366));
-  dict.set("rimnicu_pitesti",    new A.AS.ANode<City>(pitesti, "sibiu_rimnicu", ["pitesti_bucharest", "pitesti_craiova", "pitesti_rimnicu"], 317));
-  dict.set("rimnicu_sibiu",      new A.AS.ANode<City>(sibiu, "sibiu_rimnicu", [], 300));
+  graph.set(new A.AS.ANode<City>(sibiu,     A.AS.key(fagaras, 239), [],         338));
+  graph.set(new A.AS.ANode<City>(bucharest, A.AS.key(fagaras, 239), [],         450));
 
-  dict.set("fagaras_sibiu",      new A.AS.ANode<City>(sibiu, "sibiu_fagaras", [], 338));
-  dict.set("fagaras_bucharest",  new A.AS.ANode<City>(bucharest, "sibiu_fagaras", [], 450));
+  graph.set(new A.AS.ANode<City>(arad,      A.AS.key(sibiu, 140),   [],         280));
+  graph.set(new A.AS.ANode<City>(fagaras,   A.AS.key(sibiu, 140),
+    [A.AS.key(sibiu, 338), A.AS.key(bucharest, 450)],                           239));
+  graph.set(new A.AS.ANode<City>(oradea,    A.AS.key(sibiu, 140),   [],         291));
+  graph.set(new A.AS.ANode<City>(rimnicu,   A.AS.key(sibiu, 140),
+    [A.AS.key(craiova, 366), A.AS.key(pitesti, 317), A.AS.key(sibiu, 300)],     220));
 
-  dict.set("sibiu_arad",         new A.AS.ANode<City>(arad, "arad_sibiu", [], 280));
-  dict.set("sibiu_fagaras",      new A.AS.ANode<City>(fagaras, "arad_sibiu", ["fagaras_sibiu", "fagaras_bucharest"], 239));
-  dict.set("sibiu_oradea",       new A.AS.ANode<City>(oradea, "arad_sibiu", [], 291));
-  dict.set("sibiu_rimnicu",      new A.AS.ANode<City>(rimnicu, "arad_sibiu", ["rimnicu_craiova", "rimnicu_pitesti", "rimnicu_sibiu"], 220));
+  graph.set(new A.AS.ANode<City>(sibiu,     A.AS.key(arad, 0),
+    [A.AS.key(arad, 280), A.AS.key(fagaras, 239), A.AS.key(oradea, 291), A.AS.key(rimnicu, 220)], 140));
+  graph.set(new A.AS.ANode<City>(timisoara, A.AS.key(arad, 0),      [],         118));
+  graph.set(new A.AS.ANode<City>(zerind,    A.AS.key(arad, 0),      [],         75));
 
-  dict.set("arad_sibiu",         new A.AS.ANode<City>(sibiu, "arad", ["sibiu_arad", "sibiu_fagaras", "sibiu_oradea", "sibiu_rimnicu"], 140));
-  dict.set("arad_timisoara",     new A.AS.ANode<City>(timisoara, "arad", [], 118));
-  dict.set("arad_zerind",        new A.AS.ANode<City>(zerind, "arad", [], 75));
-
-  dict.set("arad",               new A.AS.ANode<City>(arad, null, ["arad_sibiu", "arad_timisoara", "arad_zerind"], 0));
-
+  graph.set(new A.AS.ANode<City>(arad,      null,
+    [A.AS.key(sibiu, 140), A.AS.key(timisoara, 118), A.AS.key(zerind, 75)],     0));
 
   var expect = chai.expect;
 
   describe('AStar', () => {
+    var aradn: A.AS.ANode<City> = graph.get(A.AS.key(arad, 0));
     describe('heuristic', () => {
-      it('should return the correct heuristic value of the city', (done) => {
-        expect(arad.heuristic(null)).to.equals(366);
-        done();
-      });
-      it('should return a path to Bucharest', (done) => {
-        var arad = dict.get("arad");
-        var path = A.AS.search(arad, bucharest, dict);
-        expect(path[path.length-1].name).to.equals("Bucharest");
+      it('path should be: Arad -> Sibiu -> Rimnicu -> Pitesti -> Bucharest', (done) => {
+        var path: City[] = A.AS.search(aradn, bucharest, graph);
+        expect(path[0].name).to.equals("Arad");
+        expect(path[1].name).to.equals("Sibiu");
+        expect(path[2].name).to.equals("Rimnicu");
+        expect(path[3].name).to.equals("Pitesti");
+        expect(path[4].name).to.equals("Bucharest");
         done();
       });
     });
