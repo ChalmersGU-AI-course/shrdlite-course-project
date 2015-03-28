@@ -2319,6 +2319,9 @@ var astar;
         function Node(data) {
             this.neighbors = [];
             this.data = null;
+            if (data === null) {
+                console.log("Invalid argument!");
+            }
             this.data = data;
         }
         Node.prototype.getData = function () {
@@ -2328,6 +2331,10 @@ var astar;
             return this.neighbors;
         };
         Node.prototype.addNeighborNode = function (node, distance) {
+            if (node === null || distance === 0) {
+                console.log("Invalid argument!");
+                return;
+            }
             this.neighbors.push(new Neighbor(node, distance));
         };
         return Node;
@@ -2345,9 +2352,12 @@ var astar;
     astar.Neighbor = Neighbor;
     var QueueElement = (function () {
         function QueueElement(path, cost, priority) {
-            this.path = []; // should maybe include predecessor list?
+            this.path = [];
             this.cost = 0;
             this.priority = 0;
+            if (path === null) {
+                console.log("Invalid argument!");
+            }
             this.path = path;
             this.cost = cost;
             this.priority = priority;
@@ -2372,32 +2382,41 @@ var astar;
             this.heuristic = heuristic;
         }
         Graph.prototype.addNode = function (node) {
+            if (node === null) {
+                console.log("Invalid argument!");
+                return;
+            }
             this.nodes.push(node);
         };
         Graph.prototype.searchPath = function (start, end) {
             var queue = new collections.PriorityQueue(entryCompare);
-            //var visited = new collections.Set<Node>();
-            var path = [];
+            var visited = [];
             queue.enqueue(new QueueElement([start], 0, this.heuristic.get(start, end)));
+            visited.push(start);
+            var iteration = 0;
             while (queue.peek()) {
                 var currentElement = queue.dequeue();
-                path = currentElement.path;
+                var path = currentElement.path;
                 var currentNode = path[path.length - 1];
                 if (currentNode === end) {
-                    break;
+                    return path;
                 }
                 else {
                     var neighbors = currentNode.getNeighbors();
                     for (var i = 0; i < neighbors.length; i++) {
-                        var currentNeighbor = neighbors[i];
-                        var newCost = currentElement.cost + currentNeighbor.distance;
-                        var newPriority = newCost + this.heuristic.get(currentNeighbor.node, end);
-                        var newPath = currentElement.path.concat(currentNeighbor.node);
-                        queue.enqueue(new QueueElement(newPath, newCost, newPriority));
+                        var neighbor = neighbors[i];
+                        var newCost = currentElement.cost + neighbor.distance;
+                        if (visited.indexOf(neighbor.node) === -1) {
+                            var newPriority = newCost + this.heuristic.get(neighbor.node, end);
+                            var newPath = currentElement.path.concat(neighbor.node);
+                            queue.enqueue(new QueueElement(newPath, newCost, newPriority));
+                            visited.push(neighbor.node);
+                        }
                     }
                 }
+                iteration++;
             }
-            return path;
+            return [];
         };
         return Graph;
     })();
@@ -2442,9 +2461,13 @@ var EuclidianHeuristic = (function () {
     function EuclidianHeuristic() {
     }
     EuclidianHeuristic.prototype.get = function (a, b) {
+        if (a === null)
+            console.log("WTF");
+        if (b === null)
+            console.log("WTF");
         var dataA = a.getData();
         var dataB = b.getData();
-        return Math.sqrt(Math.pow(Math.abs(dataA.x - dataB.x), 2) + Math.pow(Math.abs(dataA.y - dataB.y), 2));
+        return Math.sqrt(Math.pow(dataA.x - dataB.x, 2) + Math.pow(dataA.y - dataB.y, 2));
     };
     return EuclidianHeuristic;
 })();
@@ -2509,5 +2532,5 @@ for (var x = 0; x < width; x++) {
         }
     }
 }
-var path = a.searchPath(gridNodes[3][3], gridNodes[3][10]);
+var path = a.searchPath(gridNodes[1][1], gridNodes[3][19]);
 drawGrid(grid, 20, context, path);

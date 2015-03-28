@@ -64,12 +64,15 @@ class NodeData implements astar.INodeData {
 class EuclidianHeuristic implements astar.IHeuristic {
 
 	get(a: astar.Node, b: astar.Node): number {
+
+		if (a === null) console.log("WTF");
+		if (b === null) console.log("WTF");
 		var dataA = <NodeData>a.getData();
 		var dataB = <NodeData>b.getData();
 
         return Math.sqrt(
-            Math.pow(Math.abs(dataA.x - dataB.x), 2) +
-            Math.pow(Math.abs(dataA.y - dataB.y), 2));
+            Math.pow(dataA.x - dataB.x,2) +
+            Math.pow(dataA.y - dataB.y,2));
 	}
 }
 
@@ -144,6 +147,6 @@ for (var x = 0; x < width; x++) {
 	}
 }
 
-var path = a.searchPath(gridNodes[3][3], gridNodes[3][10]);
+var path = a.searchPath(gridNodes[1][1], gridNodes[3][19]);
 
 drawGrid(grid, 20, context, path);
