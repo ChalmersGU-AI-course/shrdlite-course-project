@@ -1,3 +1,5 @@
 shrdlite-*.js
 
 tsconfig.json
+
+TEST/*.js
