@@ -15,9 +15,17 @@ $('#route').click(function () {
     var to = $('#to').find(":selected").index();
     var path = G.findPath(from, to);
 
+    if (path != null)
+    {
+        $('#result').text('');
+        $('#result').append(Europe.NodeNames[path[0][0]] + ' ');
+        for (var i in path)
+            $('#result').append(Europe.NodeNames[path[i][1]] + ' ');
+    }
+    else
+    {
+        $('#result').text('No route possible');
+    }
 
-    $('#result').text('');
-    $('#result').append(Europe.NodeNames[path[0][0]] + ' ');
-    for (var i in path)
-        $('#result').append(Europe.NodeNames[path[i][1]] + ' ');
+
 });
