@@ -1,5 +1,6 @@
 shrdlite-*.js
 *.DS_Store
 node_modules/*
-*.js
+test/*.js
+astar/*.js
 !lib/
