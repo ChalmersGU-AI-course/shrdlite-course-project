@@ -128,4 +128,4 @@ for (var x = 0; x < width; x++) {
 	}
 }
 
-a.searchPath(gridNodes[1][1], gridNodes[3][3]);
+console.log(a.searchPath(gridNodes[1][1], gridNodes[10][3]));

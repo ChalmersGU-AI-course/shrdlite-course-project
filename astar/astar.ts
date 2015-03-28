@@ -36,19 +36,21 @@ module astar {
     }
 
     class QueueElement {
-        node: Node = null; // should maybe include predecessor list?
+        path: Node[] = []; // should maybe include predecessor list?
         cost: number = 0;
+        priority: number = 0;
 
-        constructor (node, cost) {
-            this.node = node;
+        constructor (path, cost, priority) {
+            this.path = path;
             this.cost = cost;
+            this.priority = priority;
         }
     }
 
     function entryCompare(a: QueueElement, b: QueueElement): number {
-        if (a.cost < b.cost) {
+        if (a.priority > b.priority) {
             return -1;
-        } else if (a.cost === b.cost) {
+        } else if (a.priority === b.priority) {
             return 0;
         } else {
             return 1;
@@ -74,20 +76,31 @@ module astar {
         searchPath(start: Node, end: Node): Node[] {
 
             var queue = new collections.PriorityQueue<QueueElement>(entryCompare);
-            var visited = new collections.Set<Node>();
-
-            queue.enqueue(new QueueElement(start, 0));
+            //var visited = new collections.Set<Node>();
+            var path = [];
+            queue.enqueue(new QueueElement([start],0,this.heuristic.get(start,end)));
 
             while (queue.peek()) {
-                var current = queue.dequeue();
+                var currentElement = queue.dequeue();
+                path = currentElement.path;
+                var currentNode = path[path.length-1];
 
-                var neighbors = current.node.getNeighbors();
-                for (var i = 0; i < neighbors.length; i++) {
-                    console.log(neighbors[i]);
+                if(currentNode===end){
+                    break;
+                }
+                else{
+                    var neighbors = currentNode.getNeighbors();
+                    for (var i = 0; i < neighbors.length; i++) {
+                        var currentNeighbor = neighbors[i];
+                        var newCost = currentElement.cost + currentNeighbor.distance;
+                        var newPriority = newCost + this.heuristic.get(currentNeighbor.node,end);
+                        var newPath = currentElement.path.concat(currentNeighbor.node);
+                        queue.enqueue(new QueueElement(newPath, newCost, newPriority));
+                    }
                 }
             }
 
-            return [];
+            return path;
         }
     }
 }

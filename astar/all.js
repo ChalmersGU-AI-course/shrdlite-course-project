@@ -2344,19 +2344,21 @@ var astar;
     })();
     astar.Neighbor = Neighbor;
     var QueueElement = (function () {
-        function QueueElement(node, cost) {
-            this.node = null; // should maybe include predecessor list?
+        function QueueElement(path, cost, priority) {
+            this.path = []; // should maybe include predecessor list?
             this.cost = 0;
-            this.node = node;
+            this.priority = 0;
+            this.path = path;
             this.cost = cost;
+            this.priority = priority;
         }
         return QueueElement;
     })();
     function entryCompare(a, b) {
-        if (a.cost < b.cost) {
+        if (a.priority > b.priority) {
             return -1;
         }
-        else if (a.cost === b.cost) {
+        else if (a.priority === b.priority) {
             return 0;
         }
         else {
@@ -2374,16 +2376,28 @@ var astar;
         };
         Graph.prototype.searchPath = function (start, end) {
             var queue = new collections.PriorityQueue(entryCompare);
-            var visited = new collections.Set();
-            queue.enqueue(new QueueElement(start, 0));
+            //var visited = new collections.Set<Node>();
+            var path = [];
+            queue.enqueue(new QueueElement([start], 0, this.heuristic.get(start, end)));
             while (queue.peek()) {
-                var current = queue.dequeue();
-                var neighbors = current.node.getNeighbors();
-                for (var i = 0; i < neighbors.length; i++) {
-                    console.log(neighbors[i]);
+                var currentElement = queue.dequeue();
+                path = currentElement.path;
+                var currentNode = path[path.length - 1];
+                if (currentNode === end) {
+                    break;
+                }
+                else {
+                    var neighbors = currentNode.getNeighbors();
+                    for (var i = 0; i < neighbors.length; i++) {
+                        var currentNeighbor = neighbors[i];
+                        var newCost = currentElement.cost + currentNeighbor.distance;
+                        var newPriority = newCost + this.heuristic.get(currentNeighbor.node, end);
+                        var newPath = currentElement.path.concat(currentNeighbor.node);
+                        queue.enqueue(new QueueElement(newPath, newCost, newPriority));
+                    }
                 }
             }
-            return [];
+            return path;
         };
         return Graph;
     })();
@@ -2481,4 +2495,4 @@ for (var x = 0; x < width; x++) {
         }
     }
 }
-a.searchPath(gridNodes[1][1], gridNodes[3][3]);
+console.log(a.searchPath(gridNodes[1][1], gridNodes[10][3]));
