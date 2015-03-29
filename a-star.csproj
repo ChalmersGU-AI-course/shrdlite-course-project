@@ -24,6 +24,7 @@
     <Content Include="astar.html" />
     <Content Include="europe.svg" />
     <Content Include="lib\jquery-1.11.0.min.js" />
+    <Content Include="europe_raw.txt" />
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>

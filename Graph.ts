@@ -65,7 +65,7 @@ class Graph {
         */
 
         //Dummy: Just a test path for the view
-        return [[start, 10], [10, 15], [15, 14], [14, goal]];
+        return [[start, 9], [10, 13], [13, 12], [12, goal]];
 
         return undefined; //No path was found
 	}
