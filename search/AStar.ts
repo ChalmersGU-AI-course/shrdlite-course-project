@@ -57,8 +57,6 @@ module Search {
           var n: N = ns[i][0];
           var cost: number = ns[i][1];
 
-          console.log(cost);
-
           // Retrieve the info associated with the neighbour.
           ni = info.getValue(n);
 
