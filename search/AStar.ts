@@ -5,7 +5,6 @@
 module Search {
 
   export function aStar<N>( heuristic?:  Heuristic
-                          , nodeEquals?: (a: N, b:N) => boolean
                           , nodeShow?:   (a: N)      => string
                           ) : Search {
 
