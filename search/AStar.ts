@@ -119,7 +119,7 @@ module Search {
     }
     ns.push(n);
 
-    return ns;
+    return ns.reverse();
   }
 
   function itemCompareFunction<N>(a: N, b: N): number {
