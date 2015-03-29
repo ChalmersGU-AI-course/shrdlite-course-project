@@ -1,16 +1,22 @@
+interface GraphNode {
+    name: string;
+    x: number;
+    y: number;
+}
+
 class Graph {
-    noOfNodes: number;
+    nodes: GraphNode[];
     edges: [number, number][][]; //A list of tuples for every node
-    
-    constructor(noOfNodes : number, edges : [number, number][][])
+
+    constructor(nodes: GraphNode[], edges: [number, number][][])
     {
-        this.noOfNodes = noOfNodes;
+        this.nodes = nodes;
 	    this.edges = edges;
     }
 
     findPath(start : number, goal : number) : [number, number][] //Returns a list of edges
     {
-        if (start > this.noOfNodes || start < 0 || goal > this.noOfNodes || goal < 0)
+        if (start > this.nodes.length || start < 0 || goal > this.nodes.length || goal < 0)
             throw new RangeError("Node does not exist");
 
 	    var closedset = []; //list
@@ -71,13 +77,13 @@ class Graph {
 
     getNeighbours(node : number) : [number, number][]
     {
-        if (node < 0 || node >= this.noOfNodes)
+        if (node < 0 || node >= this.nodes.length)
             throw new RangeError("Node does not exist");
 
         return this.edges[node];
     }
 
     get NoOfNodes() : number {
-        return this.noOfNodes;
+        return this.nodes.length;
     }
 }
