@@ -8,19 +8,18 @@ class Graph {
     nodes: GraphNode[];
     edges: [number, number][][]; //A list of tuples for every node
 
-    constructor(nodes: GraphNode[], edges: [number, number][][])
-    {
+    constructor(nodes: GraphNode[], edges: [number, number][][]) {
         this.nodes = nodes;
-	    this.edges = edges;
+        this.edges = edges;
     }
 
-    findPath(start : number, goal : number) : [number, number][] //Returns a list of edges
+    findPath(start: number, goal: number): [number, number][] //Returns a list of edges
     {
         if (start > this.nodes.length || start < 0 || goal > this.nodes.length || goal < 0)
             throw new RangeError("Node does not exist");
 
-	    var closedset = []; //list
-	    var openset = start; //list
+        var closedset = []; //list
+        var openset = start; //list
         var came_from = []; //matris typ
 
         /*
@@ -68,22 +67,20 @@ class Graph {
         return [[start, 9], [10, 13], [13, 12], [12, goal]];
 
         return undefined; //No path was found
-	}
+    }
 
-    heuristicCost(current : number, goal : number) : number
-    {
+    heuristicCost(current: number, goal: number): number {
         return 0;
     }
 
-    getNeighbours(node : number) : [number, number][]
-    {
+    getNeighbours(node: number): [number, number][] {
         if (node < 0 || node >= this.nodes.length)
             throw new RangeError("Node does not exist");
 
         return this.edges[node];
     }
 
-    get NoOfNodes() : number {
+    get NoOfNodes(): number {
         return this.nodes.length;
     }
 }

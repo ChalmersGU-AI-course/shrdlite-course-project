@@ -39,8 +39,7 @@ function init(): void {
             ctx.beginPath();
             ctx.moveTo(startNode.x, startNode.y);
 
-            for (var i in path)
-            {
+            for (var i in path) {
                 $('#result').append(Europe.Nodes[path[i][1]].name + ' ');
                 ctx.lineTo(Europe.Nodes[path[i][1]].x, Europe.Nodes[path[i][1]].y);
             }
