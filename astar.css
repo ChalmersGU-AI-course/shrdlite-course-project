@@ -1,0 +1,12 @@
+﻿@import url("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css");
+@import url("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css");
+
+.row-md-offset-1 { margin-top: 5px; }
+.row-md-offset-2 { margin-top: 10px; }
+.row-md-offset-3 { margin-top: 15px; }
+.row-md-offset-4 { margin-top: 30px; }
+.row-md-offset-5 { margin-top: 40px; }
+.row-md-offset-6 { margin-top: 60px; }
+.row-md-offset-7 { margin-top: 80px; }
+.row-md-offset-8 { margin-top: 100px; }
+.row-md-offset-9 { margin-top: 150px; }

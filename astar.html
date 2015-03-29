@@ -2,52 +2,51 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>A*</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="astar.css">
 </head>
 <body>
     <div class="container">
         <div class="page-header">
-            <h1>A-Star <small>by void *</small></h1>
+            <h1>A-star <small>by void *</small></h1>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4">
+                <p class="text-center">Please enter which nodes you wish to travel between</p>
+            </div>
         </div>
         <div class="row">
             <div class="col-md-4 col-md-offset-4">
-                <div class="panel panel-default">
-                    <div class="panel-body">
-                        <p>Please enter witch nodes you wish to travel between</p>
-                        <div class="form-horizontal">
-                            <div class="form-group">
-                                <div class="input-group">
-                                    <div class="input-group-addon">From:</div>
-                                    <select class="form-control" id="from"></select>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <div class="input-group">
-                                    <div class="input-group-addon">To:</div>
-                                    <select class="form-control" id="to"></select>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <div class="col-sm-offset-2 col-sm-10">
-                                    <button type="submit" class="btn btn-default" id="route">Find shortest path</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-footer" id="result">
-                        No calculation has been done yet
-                    </div>
+                <div class="input-group">
+                    <div class="input-group-addon">From:</div>
+                    <select class="form-control" id="from"></select>
                 </div>
             </div>
-            <div id="map">
+        </div>
+        <div class="row row-md-offset-2">
+            <div class="col-md-4 col-md-offset-4">
+                <div class="input-group">
+                    <div class="input-group-addon">To:</div>
+                    <select class="form-control" id="to"></select>
+                </div>
             </div>
+        </div>
+        <div class="row row-md-offset-2">
+            <div class="col-md-4 col-md-offset-4">
+                <button type="submit" class="btn btn-block btn-primary" id="route">Find shortest path</button>
+            </div>
+        </div>
+    </div>
+    <div class="panel panel-default center-block row-md-offset-2" style="width:632px;">
+        <div class="panel-body">
+            <div class="center-block" id="map" style="width:600px;"></div>
+        </div>
+        <div class="panel-footer">
+            <p id="result">None</p>
         </div>
     </div>
 
     <!-- scripts here for speed -->
-    
-    <!--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>-->
     <script type="text/javascript" src="lib/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="astar.js"></script>
 </body>
