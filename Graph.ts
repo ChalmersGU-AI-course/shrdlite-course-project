@@ -65,9 +65,9 @@ class Graph {
         */
 
         //Dummy: Just a test path for the view
-        return [[36, 6], [6, 38], [38, 9], [9, 34]];
+        return [[start, 10], [10, 15], [15, 14], [14, goal]];
 
-        return null; //No path was found
+        return undefined; //No path was found
 	}
 
     heuristicCost(current : number, goal : number) : number
