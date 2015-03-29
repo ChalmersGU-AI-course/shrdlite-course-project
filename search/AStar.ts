@@ -3,16 +3,15 @@
 ///<reference path="../lib/collections"/>
 
 module Search {
+  export function aStar<N>( heuristic?: Heuristic<N>
+                          , nodeShow?: (a: N) => string
+                          ) : Search<N, N[]> {
 
-  export function aStar<N>( heuristic?:  Heuristic
-                          , nodeShow?:   (a: N)      => string
-                          ) : Search {
-
-    return function ( neighbours: (node: N) => [N, number]
+    return function ( neighbours: (node: N) => [N, number][]
                     , start: N
                     , end: (node: N) => boolean
                     ) : N[] {
-      var h :(node: N) => number = heuristic || zeroHeuristic;
+      var h: (node: N) => number = heuristic || zeroHeuristic;
 
       // "Open set", the nodes that should be evaluated.
       var open = new collections.PriorityQueue<[N, number]>(itemCompareFunction);
@@ -52,10 +51,13 @@ module Search {
 
         // Iterate over the neighbours of the current node.
         var ni: AStarInfo<N>;
-        for ( var neighbour in neighbours(current) ) {
+        var ns: [N, number][] = neighbours(current);
+        for ( var i in ns ) {
           // Extract the node and cost from the neighbour.
-          var n: N = neighbour[0];
-          var cost: number = neighbour[1];
+          var n: N = ns[i][0];
+          var cost: number = ns[i][1];
+
+          console.log(cost);
 
           // Retrieve the info associated with the neighbour.
           ni = info.getValue(n);
@@ -106,18 +108,22 @@ module Search {
     }
   }
 
-  function buildPath<N>(info: collections.Dictionary<N,AStarInfo<N>>, N) : N[] {
-    return undefined;
+  function buildPath<N>(info: collections.Dictionary<N,AStarInfo<N>>, node: N) : N[] {
+    var ns: N[] = [];
+    var n: N = node;
+    var i: AStarInfo<N> = info.getValue(n);
+    while ( i.parent ) {
+      ns.push(n);
+      n = i.parent;
+      i = info.getValue(n);
+    }
+    ns.push(n);
+
+    return ns;
   }
 
   function itemCompareFunction<N>(a: N, b: N): number {
-    if (a[1] < b[1]) {
-      return -1;
-    } else if (a[1] > b[1]) {
-      return 1;
-    } else {
-      return 0;
-    }
+    return b[1] - a[1];
   }
 
   interface AStarInfo<N> {
