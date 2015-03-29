@@ -17,7 +17,7 @@ module Search {
 
       // "Open set", the nodes that should be evaluated.
       var open = new collections.PriorityQueue<[N, number]>(itemCompareFunction);
-
+      // Information associated with each node.
       var info = new collections.Dictionary<N, AStarInfo<N>>(nodeShow);
 
       // Add the start node to the open set.
