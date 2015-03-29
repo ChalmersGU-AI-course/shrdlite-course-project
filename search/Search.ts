@@ -1,10 +1,8 @@
-///<reference path="./Graph.ts" />
 
 module Search {
-  import G = Graph.Graph;
-  import N = Graph.Node;
-
-  export interface Search<Id, Cost, Path> {
-    search(graph: G<Id, Cost>, start: N<Id>, end: N<Id>): Path
-  }
+  export type Search = <N,Path>( neighbours: (node: N) => [N, number]
+                               , start: N
+                               , end: (node: N) => boolean
+                               ) => Path;
 }
+
