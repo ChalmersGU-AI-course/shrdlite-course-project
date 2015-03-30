@@ -1,9 +1,6 @@
 ///<reference path="Astar.ts"/>
 
-
-
-
-class Shortestpath implements Astar.Graph<number[]>{   // index 0 = x, index 1 = y
+class Shortestpath implements Graph{   // index 0 = x, index 1 = y
     _nodeValues : Array<number[]>;
     _nodeneighbors : Array<Array<number>>;   //neighboring nodes to index node 
     _edges : Array<Array<number>>;        //from index node a to index node b
@@ -36,7 +33,7 @@ class Shortestpath implements Astar.Graph<number[]>{   // index 0 = x, index 1 =
 
 
 var sp = new Shortestpath();
-var as = new Astar.AstarSearch<number[]>(sp);
+var as = new AstarSearch(sp);
 
 for(var i = 0 ; i < 4; i ++){
     console.log("hello");   
