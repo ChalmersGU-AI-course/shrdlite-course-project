@@ -2,10 +2,13 @@
 
 module Neighbour { 
 
+	/*
+    *	Lists possible next states for a given state
+    */
 	export function listNeighbours(currentState : WorldState) : WorldState[] {
 		var nlist : WorldState[]=[];
 
-		if(currentState.holding==null && !currentState.stacks[currentState.arm].length){
+		if(currentState.holding==null && currentState.stacks[currentState.arm].length){
 			var n : WorldState = copyObject(currentState);
 			n.holding = n.stacks[n.arm].pop();
 			nlist.push(n);
@@ -15,6 +18,7 @@ module Neighbour {
 			n.holding=null;
 			nlist.push(n);
 		}
+		//TODO: Stacks may not be fixed to 5. 
 		if(currentState.arm > 0){
 			var n : WorldState = copyObject(currentState);
 			n.arm = n.arm-1;
@@ -29,6 +33,9 @@ module Neighbour {
 		return nlist;
 	}
 
+	/*
+	*	Returns a deep copy of an object.
+	*/
 	function copyObject<T> (object:T): T {
     var objectCopy = <T>{};
 
