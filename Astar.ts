@@ -32,10 +32,9 @@
         private reconstruct_path(came_from : number[], goal:number):number[]{
             var result_path:number[] = [];
             result_path.push(goal);
-            
             while(came_from[goal] > 0){
             	goal = came_from[goal];
-            	result_path.push[goal];
+            	result_path.push(goal);
             }
             
             return result_path;
@@ -85,6 +84,7 @@
                         var tentative_g_score : number = g_score[current] + this.cost(current,neighbor); // distance between c and n
                         if(openset.indexOf(neighbor) == -1 || tentative_g_score < g_score[neighbor]){
                             came_from[neighbor] = current;
+
                             g_score[neighbor] = tentative_g_score;
                             f_score[neighbor] = g_score[neighbor] + this.mGraph.heuristic_cost_estimate(neighbor, goal);
                             if(openset.indexOf(neighbor) == -1){
@@ -98,7 +98,8 @@
                 }
                 
             }
-                
+            console.log("came_from: " + came_from.toString());   
+
             return this.reconstruct_path(came_from, goal); 
         }
     }
@@ -137,8 +138,7 @@ class Shortestpath implements Graph{   // index 0 = x, index 1 = y
 
 var sp = new Shortestpath();
 var as = new AstarSearch(sp);
-var res = as.star(0,4);
-for(var i = 0 ; i < 4; i ++){
-    console.log("\n n: " + res[i]);   
-}
+var res = as.star(0,5);
+console.log("res: " + res.toString());   
+
 //}
