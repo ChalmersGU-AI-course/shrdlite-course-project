@@ -1,9 +1,10 @@
 ﻿///<reference path="lib/jquery.d.ts"/>
 ///<reference path="europe.ts"/>
 ///<reference path="Graph.ts"/>
+///<reference path="Maze.ts"/>
 
 function init(): void {
-    
+
     //plot map
 
     var canv = document.createElement("canvas");
@@ -22,6 +23,10 @@ function init(): void {
     }
 
     var G = new Graph(Europe.Nodes, Europe.Edges);
+    var M = new Maze(32, 32);
+
+    var ME = M.getEdges(1);
+
 
     $('#route').click(function () {
         var from = $('#from').find(":selected").index();

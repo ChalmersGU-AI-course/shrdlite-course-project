@@ -1,7 +1,7 @@
 ﻿///<reference path="Graph.ts"/>
 
-class Europe {
-    static Nodes: GraphNode[] = [
+module Europe {
+    export var Nodes: GraphNode[] = [
         { name: 'Albania', x: 324, y: 426 },
         { name: 'Andorra', x: 133, y: 408 },
         { name: 'Austria', x: 260, y: 344 },
@@ -48,7 +48,7 @@ class Europe {
         { name: 'Vatican City', x: 242, y: 421 }
     ];
 
-    static Edges: [number, number][][] = [
+    export var Edges: [number, number][][] = [
         [[0, 32], [0, 14], [0, 27], [0, 20]],
         [[1, 12], [1, 38]],
         [[2, 13], [2, 8], [2, 36], [2, 15], [2, 37], [2, 18], [2, 40], [2, 22]],
