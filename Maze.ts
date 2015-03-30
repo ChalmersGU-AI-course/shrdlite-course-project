@@ -12,7 +12,7 @@ class Maze {
         return this.generate(seed);
     }
 
-    getNodes(): GraphNode[]{
+    getNodes(): GraphNode[] {
         var nodes: GraphNode[] = new Array(this.width * this.height);
 
         for (var x = 0; x < this.width; ++x)
@@ -44,9 +44,8 @@ class Maze {
                 if (x > 0)
                     edges[c].push([c, this.no(x - 1, y), rnd.nextRange(1, 100)]);
 
-                if (x < this.width -1)
+                if (x < this.width - 1)
                     edges[c].push([c, this.no(x + 1, y), rnd.nextRange(1, 100)]);
-
             }
         }
 
