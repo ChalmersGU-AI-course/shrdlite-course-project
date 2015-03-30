@@ -28,15 +28,8 @@ function postProcess<T>(order : Array<Vertex<T>>, finish : number){
 
     var stack = new collections.Stack<T>();
 
-    // var iter = 0;
     for(var x : number = finish; x >= 0; x = order[x].previous){
-
         stack.push(order[x].state);
-        // iter = iter + 1;
-        // if(iter > 20){
-        //     return "Ouch END. x = " + x ;
-        // }
-
     }
     var str = "";
     while(! stack.isEmpty()){
@@ -54,25 +47,20 @@ function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, i
 
     var order : Array<Vertex<T>> = [];
 
-    // var visited = new collections.Set<T>() ;
+    var visited = new collections.Set<T>() ;
     queue.enqueue({
         state : start,
         cost : 0,
         previous : -1
     });
 
-    if(isGoal(start)){
-        return "Already..." ;
-    }
-
-    var str = "";
-
     for( var x = 0 ; ! queue.isEmpty(); ++x){
-        // if(x > 25){
-        //     return "Not so good :P " + current.cost + "; " + str;
-        // }
 
         var current : Vertex<T> = queue.dequeue();
+        if(visited.contains(current.state)){
+            continue;
+        }
+        visited.add(current.state);
 
         order[x] = current ;
 
@@ -91,6 +79,8 @@ function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, i
             });
         }
     }
+
+    alert("No solution found!");
 
     return undefined;
 }
