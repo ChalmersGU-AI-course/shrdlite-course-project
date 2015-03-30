@@ -3,16 +3,16 @@
 ///<reference path="lib/collections.ts"/>
 
 class Maze {
-    constructor(private width: number, private height: number) {
+    public constructor(private width: number, private height: number) {
         this.width = Math.max(width, 1);
         this.height = Math.max(height, 1);
     }
 
-    getEdges(seed: number): [number, number][][] {
+    public getEdges(seed: number): [number, number][][] {
         return this.generate(seed);
     }
 
-    getNodes(): GraphNode[]{
+    public getNodes(): GraphNode[] {
         var nodes: GraphNode[] = new Array(this.width * this.height);
 
         for (var x = 0; x < this.width; ++x)
@@ -22,7 +22,7 @@ class Maze {
         return nodes;
     }
 
-    generate(seed: number) {
+    private generate(seed: number) {
         //Create a grid graph with different random edge costs and then make it a MST
         var rnd = new Random(seed);
 
@@ -32,32 +32,35 @@ class Maze {
         for (var x = 0; x < this.width; ++x) {
             for (var y = 0; y < this.height; ++y) {
 
-                var c: number = this.no(x, y);
+                var c: number = this.xy2node(x, y);
                 edges[c] = new Array();
 
                 if (y > 0)
-                    edges[c].push([c, this.no(x, y - 1), rnd.nextRange(1, 100)]);
+                    edges[c].push([c, this.xy2node(x, y - 1), rnd.nextRange(1, 100)]);
 
                 if (y < this.height - 1)
-                    edges[c].push([c, this.no(x, y + 1), rnd.nextRange(1, 100)]);
+                    edges[c].push([c, this.xy2node(x, y + 1), rnd.nextRange(1, 100)]);
 
                 if (x > 0)
-                    edges[c].push([c, this.no(x - 1, y), rnd.nextRange(1, 100)]);
+                    edges[c].push([c, this.xy2node(x - 1, y), rnd.nextRange(1, 100)]);
 
-                if (x < this.width -1)
-                    edges[c].push([c, this.no(x + 1, y), rnd.nextRange(1, 100)]);
-
+                if (x < this.width - 1)
+                    edges[c].push([c, this.xy2node(x + 1, y), rnd.nextRange(1, 100)]);
             }
         }
 
         return this.prim(edges, 0);
     }
 
-    no(x: number, y: number): number {
+    public xy2node(x: number, y: number): number {
         return y * this.width + x;
     }
 
-    prim(edges: [number, number, number][][], start: number): [number, number][][] {
+    public node2xy(nodeNo: number): [number, number]{
+        return [nodeNo % this.width, Math.floor(nodeNo / this.width)];
+    }
+
+    private prim(edges: [number, number, number][][], start: number): [number, number][][] {
         var best_cost: number[] = new Array(edges.length);
         var parent: number[] = new Array(edges.length);
         var q = new collections.PriorityQueue<[number, number, number]>(
@@ -74,12 +77,12 @@ class Maze {
         }
 
         while (!q.isEmpty()) {
-            var u: [number, number, number] = q.dequeue();
+            var u: [number, number, number] = q.dequeue(); // [0: from, 1: to, 2: cost]
             var from = u[0];
             var to = u[1];
             var cost = u[2];
 
-            if (cost < best_cost[to]) { // [0: from, 1: to, 2: cost]
+            if (cost < best_cost[to]) {
                 best_cost[to] = cost;
                 parent[to] = from;
             }
@@ -87,7 +90,13 @@ class Maze {
 
         var p: [number, number][][] = new Array(parent.length);
         for (var i = 0; i < parent.length; ++i) {
-            p.push([[parent[i], i], [i, parent[i]]]);
+            if (p[i] == undefined)
+                p[i] = new Array();
+            if (p[parent[i]] == undefined)
+                p[parent[i]] = new Array();
+
+            p[i].push([i, parent[i]]);
+            p[parent[i]].push([parent[i], i]);
         }
 
         return p;

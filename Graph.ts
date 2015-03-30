@@ -58,7 +58,7 @@ class Graph {
 	    
 	    var current_neighbours = this.getNeighbours(current);
 
-	    
+
             for (var i = 0; i < current_neighbours.length; ++i) {
                 if (this.find(closedset,current_neighbours[i][1]))
                   continue;
