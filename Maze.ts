@@ -22,7 +22,7 @@ class Maze {
         return nodes;
     }
 
-    generate(seed: number) {
+    private generate(seed: number) {
         //Create a grid graph with different random edge costs and then make it a MST
         var rnd = new Random(seed);
 
@@ -53,11 +53,11 @@ class Maze {
         return this.prim(edges, 0);
     }
 
-    no(x: number, y: number): number {
+    private no(x: number, y: number): number {
         return y * this.width + x;
     }
 
-    prim(edges: [number, number, number][][], start: number): [number, number][][] {
+    private prim(edges: [number, number, number][][], start: number): [number, number][][] {
         var best_cost: number[] = new Array(edges.length);
         var parent: number[] = new Array(edges.length);
         var q = new collections.PriorityQueue<[number, number, number]>(
