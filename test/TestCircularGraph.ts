@@ -54,7 +54,7 @@ n5.neighbours.push([n4, 1]);
 
 n4.neighbours.push([n6, 3]);
 
-n5.neighbours.push([n6, 2]);
+n5.neighbours.push([n6, 1]);
 
 
 var start = n1;
