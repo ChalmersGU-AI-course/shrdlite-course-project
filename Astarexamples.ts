@@ -1,11 +1,6 @@
 ///<reference path="Astar.ts"/>
 
-var sp = new Shortestpath();
-var as = new Astar.AstarSearch<number[]>(sp);
 
-for(var i = 0 ; i < 4; i ++){
-    console.log("hello");   
-}
 
 
 class Shortestpath implements Astar.Graph<number[]>{   // index 0 = x, index 1 = y
@@ -37,6 +32,14 @@ class Shortestpath implements Astar.Graph<number[]>{   // index 0 = x, index 1 =
         //Manhathan distance
         return Math.abs(gol[0] - cur[0]) + Math.abs(gol[1] - cur[1]);
     }
+}
+
+
+var sp = new Shortestpath();
+var as = new Astar.AstarSearch<number[]>(sp);
+
+for(var i = 0 ; i < 4; i ++){
+    console.log("hello");   
 }
 
 /*
