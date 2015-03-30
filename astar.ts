@@ -2,13 +2,25 @@
 
 module Astar
 {
-	export class Path<T>
+	export class SearchResult<T>
 	{
+		success:boolean;
+		nodesVisited:number;
 		nodes: T[];
-		constructor(n :T[]) 
+
+		constructor(n? :T[], nvis?:number) 
 		{
 			this.nodes = n;
+			this.nodesVisited = nvis;
+			if(n) this.success = true;
+			else  this.success = false;
 		}
+	}
+
+	export interface Node
+	{
+		equals(object : Node) : boolean;
+		toString() : string;
 	}
 
 	/**
@@ -19,14 +31,18 @@ module Astar
 	 * @param equals	- a function that can determine equality.
 	 * @param heuristic - a guess for how close a node is to the end node.
 	 */
-	export function findPath<T>(start : T, end : T, 
-								gen : (t : T) => T[],
-								equals : (t0 : T, t1 : T) => boolean,
-								tstring : (t : T) => string,
-								heuristic : (t : T, e : T) => number)  : Path<T>
+	export function findPath<T extends Node>(start : T, 
+											  end : T, 
+											  gen : (t : T) => T[],
+											  heuristic : (t : T, e : T) => number)  : SearchResult<T>
 	{
-		var known  = new collections.Dictionary<T, number>(tstring);
+		//Simple case:
+		if(start.equals(end)) 
+		{
+			return new SearchResult<T>([start, end], 0);
+		}
 
+		var known  = new collections.Dictionary<T, number>();
 		var dist:number[]   = [];
 		var prev:number[]  	= [];
 		var nodes:T[]		= [];
@@ -54,25 +70,25 @@ module Astar
 		prev.push(-1);
 		nodes.push(start);
 		known.setValue(start, count++);
-		var firstNeighbours = gen(start);
-		for(var i = 0; i < firstNeighbours.length; i++)
+		var adj = gen(start);
+		for(var i = 0; i < adj.length; i++)
 		{
-			dist.push(1 + heuristic(firstNeighbours[i], end));
+			dist.push(1 + heuristic(adj[i], end));
 			prev.push(0);
-			nodes.push(firstNeighbours[i]);
-			known.setValue(firstNeighbours[i], count++);
-			pQueue.enqueue(firstNeighbours[i]);
+			nodes.push(adj[i]);
+			known.setValue(adj[i], count++);
+			pQueue.enqueue(adj[i]);
 		}
 
 		if(pQueue.isEmpty())
 		{
-			return null;
+			return new SearchResult<T>();
 		}
 
+		var iterations: number    = 1;
 		var node : T = pQueue.dequeue();
-		while(!equals(node, end))
+		while(!node.equals(end))
 		{
-			console.log(node);
 			var previous = known.getValue(node);
 			var adjacent = gen(node);
 			for(var i = 0; i < adjacent.length; i++)
@@ -103,6 +119,7 @@ module Astar
 				break;
 
 			node = pQueue.dequeue();
+			iterations++;
 		}
 
 		if(known.containsKey(end))
@@ -115,11 +132,11 @@ module Astar
 				current = prev[current];
 			}
 
-			return new Path<T>(path.reverse());
+			return new SearchResult<T>(path.reverse(), iterations);
 		}
 		else 
 		{
-			return null;			
+			return new SearchResult<T>();
 		}
 	}
 }

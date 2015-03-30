@@ -15,7 +15,7 @@ var grid =
 ];
 
 
-class Cell
+class Cell implements Astar.Node
 {
 	x : number;
 	y : number;
@@ -25,11 +25,18 @@ class Cell
 		this.x = x;
 		this.y = y;
 	}
-}
 
-function cellString(cell : Cell) : string
-{
-	return cell.x.toString() + "|" + cell.y.toString();
+	equals(object : Astar.Node) : boolean
+	{
+		var cell = <Cell>object;
+		return cell.x == this.x &&
+			   cell.y == this.y;
+	}
+
+	toString() : string
+	{
+		return this.x.toString() + "|" + this.y.toString();
+	}
 }
 
 function generator(cell : Cell) : Cell[]
@@ -77,9 +84,14 @@ function abs(a : number)
 		return -a;
 }
 
-function heuristic(cell : Cell, goal : Cell) : number
+function manhatan(cell : Cell, goal : Cell) : number
 {
 	return abs(goal.x - cell.x) + abs(goal.y - cell.y);
+}
+
+function pointDist(a : Cell, b : Cell) : number
+{
+	return Math.sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
 }
 
 function nullheuristic(cell : Cell, goal : Cell) : number
@@ -87,17 +99,45 @@ function nullheuristic(cell : Cell, goal : Cell) : number
 	return 0;
 }
 
-function equals(a : Cell, b : Cell) : boolean
+function rand(m : number)
 {
-	return a.x === b.x && a.y === b.y;
+	return Math.floor(Math.random() * m);
 }
 
-var path = Astar.findPath<Cell>(new Cell(5,2), new Cell(5, 9), 
-								generator, equals, cellString, 
-								heuristic);
-
-for(var i = 0; i < path.nodes.length; i++)
+function enforce(exp : boolean, msg : string)
 {
-
-	pCell(path.nodes[i]);
+	if(!exp)
+	{
+		msg = msg || "Failed";
+		throw msg; 
+	}
 }
+
+function testHeuristic(numTests : number, heur : (a : Cell, b : Cell) => number, heurName : string)
+{
+	console.log("\nStarting tests for", heurName);
+	for(var i = 0; i < numTests; i++)
+	{
+		var start = new Cell(rand(10), rand(10));
+		var end   = new Cell(rand(10), rand(10));
+
+		var apath = Astar.findPath(start, end, generator, heur);
+		var dpath = Astar.findPath(start, end, generator, nullheuristic);
+
+
+
+		enforce(apath.success == dpath.success && apath.success, "Astar failed.");
+		enforce(apath.nodes.length == dpath.nodes.length, "Length differs")
+		enforce(apath.nodes[0].equals(start), "Does not start at the start node!");
+		enforce(apath.nodes[apath.nodes.length - 1].equals(end), "Does not end at the end node!");
+		enforce(dpath.nodes[0].equals(start), "Does not start at the start node!");
+		enforce(dpath.nodes[dpath.nodes.length - 1].equals(end), "Does not end at the end node!");
+
+		console.log("\nTest", i, "\n");
+		console.log("Between ", start, " and ", end);
+		console.log("Nodes visited Astar:", apath.nodesVisited, "Dijkstra's algorithm:", dpath.nodesVisited);			
+	}
+}
+
+testHeuristic(10, manhatan, "Manhatan");
+testHeuristic(10, pointDist, "Point distance");
