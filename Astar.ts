@@ -1,10 +1,33 @@
-class Astar {
-    mnodes:Array<Array<number>>;
-    medges:number[][];
+public interface graph<T>{
+    private _nodes : Array<Array<T>>;
+    private _edges : number[][];
+    
+    getneighbors(node: T):Array<T>;
+    
+    getcost(from: T,to:T):number;
 
-    constructor(nodes:Array<Array<number>>, edges:number [][]){
-        this.mnodes = nodes;
-        this.medges = edges;
+    get nodes(): Array<Array<T>>{
+        return this._nodes;
+    }
+    
+    set nodes(n: Array<Array<T>>) {
+        this._edges = n;
+    }
+
+    get edges(): number[][]{
+        return this._edges;
+    }
+    
+    set edges(e: number[][]) {
+        this._edges = e;
+    }
+}
+
+class Astar <T>{
+    mGraph<T> : graph<T>;
+
+    constructor(g : graph<T>){
+        this.mGraph<T> = g;
     }
     //For 8 puzzle
     private heuristic_cost_estimate(current : number, goal : number) : number{
@@ -27,9 +50,6 @@ class Astar {
         //TODO
         return manhattanDist;
     }
-
-
-
 
     private getMinFScore(fscore : number[]){
         var result : number;
@@ -60,13 +80,13 @@ class Astar {
 
     private neighbor_nodes(current : number): number[]{
         var result : number[];
-        result = this.mnodes[current];
+        result = this.mGraph.getneighbors(current);
         return result;
     }
 
     private cost(from:number, to:number): number{
         var result:number;
-        result = this.medges[from][to];
+        result = this.mGraph.getcost(from,to);
         return result;
     }
     

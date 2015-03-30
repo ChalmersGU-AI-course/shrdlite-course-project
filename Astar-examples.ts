@@ -1,33 +1,12 @@
+///<reference path="Astar.ts"/>
+
 class Astar-examples {
     constructor();
 
     
 }
 
-interface neighbors<T>{
-    getneighbors(instate: T):Array<T>;
-}
 
-public interface graph<T> extends neighbors{
-    private _nodes : Array<Array<T>>;
-    private _edges : number[][];
-        
-    get nodes(): Array<Array<T>>{
-        return this._nodes;
-    }
-    
-    set nodes(n: Array<Array<T>>) {
-        this._edges = n;
-    }
-
-    get edges(): number[][]{
-        return this._edges;
-    }
-    
-    set edges(e: number[][]) {
-        this._edges = e;
-    }
-}
 
 public class eightpuzzle implements  graph<number[][]>, neighbors<number[][]>{
     initstate : number[][];
