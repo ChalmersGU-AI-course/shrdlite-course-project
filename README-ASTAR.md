@@ -4,6 +4,11 @@ A STAR IMPLEMENTATION
 Examples has been integrated with the shrdlite-offline.ts file 
 use by typing "node shrdlite-offline.js ASTAR #city-to-start-from"
 
+To implement this lab we chose to have a single file for the A* algorithm which holds all interesting functions that are needed.
+
+As heuristics we are using the direct path from the cities to the city of Bucharest.
+See image below.
+
 |City indexes |City names  |
 | ----- | ------ |
 |0.  |  Arad|
