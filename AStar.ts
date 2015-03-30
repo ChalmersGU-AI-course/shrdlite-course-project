@@ -76,6 +76,9 @@ module AStar {
         var l2 = new Graph<string>([], "boras");
         var l3 = new Graph<string>([], "jonkoping");
         var l4 = new Graph<string>([], "stockholm");
+        var l5 = new Graph<string>([], "malmo");
+        var l6 = new Graph<string>([], "varnamo");
+        var l7 = new Graph<string>([], "mellerud");
 
 
         l1.addEdge({cost: 4,  end: l2});
@@ -85,10 +88,23 @@ module AStar {
         l3.addEdge({cost: 23, end: l1});
         l2.addEdge({cost: 42, end: l4});
 
+        l1.addEdge({cost: 4,  end: l5});
+        l1.addEdge({cost: 8,  end: l6});
+        l3.addEdge({cost: 15, end: l7});
+        l5.addEdge({cost: 16, end: l2});
+        l6.addEdge({cost: 23, end: l3});
+        l7.addEdge({cost: 42, end: l3});
+
         return astarSearch<string>(l1
                                    ,function(a : string){
                                        if(a == "gothenburg") {
                                            return Math.sqrt(4*4 + 15*15);
+                                       } else if(a == "malmo"){
+                                           return Math.sqrt(16*16+15*15);
+                                       } else if(a == "varnamo"){
+                                           return 15;
+                                       } else if(a == "mellerud"){
+                                           return 42-16;
                                        } else if(a == "boras") {
                                            return 14;
                                        } else if(a == "jonkoping") {
@@ -98,7 +114,7 @@ module AStar {
                                        }
                                    },
                                    function(a : string){
-                                       return a == "ilovelamp";
+                                       return a == "stockholm";
                                    })
     }
 
