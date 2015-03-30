@@ -68,9 +68,9 @@ module Search {
               open: true,
               closed: false,
               parent: current,
-              f: ci.g + cost + h(current),
+              f: ci.g + cost + h(n),
               g: ci.g + cost,
-              h: h(current)
+              h: h(n)
             }
           } else { // We have seen the node before
 
@@ -83,7 +83,7 @@ module Search {
             // Update the information if the current path is better
             // than the last.
             if ( ci.g + cost < ni.g ) {
-              ni.open = true;
+              ni.open = true;   //WHY PUT IT IN OPEN SET AGAIN? TO RE-EVALUATE THE POSITION IN THE PRIORITY QUEUE?
               ni.parent = current;
               ni.g = ci.g + cost;
               ni.f = ni.g + ni.h;

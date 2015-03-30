@@ -1,2 +1,4 @@
 shrdlite-*.js
 
+*.bat
+*.cmd
