@@ -1,1 +1,0 @@
-tsc collections.ts -d
