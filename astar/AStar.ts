@@ -27,6 +27,15 @@ module AStar {
         }
     }
 
+    class Edge {
+        start : Node;
+        end : Node;
+        constructor (start : Node, end : Node) {
+            this.start = start;
+            this.end = end;
+        }
+    }
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     // A* algorithm
 

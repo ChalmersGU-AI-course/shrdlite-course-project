@@ -4,8 +4,6 @@
 ///<reference path="../lib/collections.ts"/>
 var AStar;
 (function (AStar) {
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Types
     var Node = (function () {
         function Node(label, neighbours, neighbourCosts, heuristic, cost, previous) {
             if (heuristic === void 0) { heuristic = 0; }
@@ -21,11 +19,15 @@ var AStar;
         return Node;
     })();
     AStar.Node = Node;
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-    // A* algorithm
+    var Edge = (function () {
+        function Edge(start, end) {
+            this.start = start;
+            this.end = end;
+        }
+        return Edge;
+    })();
     function astar(s, t) {
         function getBest() {
-            // Return Node in todo-list with minimum cost
             return todo.reduce(function (currMin, v) {
                 var vVal = v.cost + v.heuristic;
                 var minVal = currMin.cost + currMin.heuristic;
@@ -36,35 +38,31 @@ var AStar;
                 return (vVal <= minVal) ? v : currMin;
             }, new Node(null, null, null, Infinity));
         }
-        var todo = [s], done = [];
-        // Start node's cost from start node is 0
+        var todo = [
+            s
+        ], done = [];
         s.cost = 0;
         s.previous = null;
         while (todo.length > 0) {
             var v = getBest();
             for (var nKey in v.neighbours) {
                 var n = v.neighbours[nKey];
-                // Add to todo if not already visited
                 if (done.indexOf(n) === -1)
                     todo.push(n);
-                // Update if path through v is better
                 var newCost = v.neighbourCosts[nKey] + v.cost;
                 if (newCost <= n.cost) {
                     n.cost = newCost;
                     n.previous = v;
                 }
             }
-            // When we remove t from the frontier, we're done
             if (v === t) {
                 todo = [];
             }
             else {
-                // Mark node v as visited
                 todo.splice(todo.indexOf(v), 1);
                 done.push(v);
             }
         }
-        // Retrieve path
         var path = [];
         var v = t;
         while (v !== s) {
@@ -75,27 +73,78 @@ var AStar;
         return path;
     }
     AStar.astar = astar;
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Test cases
-    // Creates an example graph and runs AStar on it
     function testCase1() {
-        // Define graph, with perfect heuristics
-        // Right side (should be visited)
         var a = new Node("a", [], [], 3);
         var b = new Node("b", [], [], 2);
         var c = new Node("c", [], [], 1);
         var d = new Node("d", [], [], 0);
         var e = new Node("e", [], [], 4);
-        // Left side (should not be visited, due to heuristics)
         var f = new Node("f", [], [], 3.5);
         var g = new Node("g", [], [], 4.5);
         var h = new Node("h", [], [], 4.5);
-        var nodes = [a, b, c, d, e];
-        var edges = [[a, b, 1], [b, c, 1], [c, d, 1], [a, e, 1], [e, d, 4], [a, f, 0.5], [f, g, 1], [g, h, 1], [h, f, 1]]; // Left side
-        initGraph(nodes, edges); // Updates node objects to be a proper graph
+        var nodes = [
+            a,
+            b,
+            c,
+            d,
+            e
+        ];
+        var edges = [
+            [
+                a,
+                b,
+                1
+            ],
+            [
+                b,
+                c,
+                1
+            ],
+            [
+                c,
+                d,
+                1
+            ],
+            [
+                a,
+                e,
+                1
+            ],
+            [
+                e,
+                d,
+                4
+            ],
+            [
+                a,
+                f,
+                0.5
+            ],
+            [
+                f,
+                g,
+                1
+            ],
+            [
+                g,
+                h,
+                1
+            ],
+            [
+                h,
+                f,
+                1
+            ]
+        ];
+        initGraph(nodes, edges);
         console.log("Running astar correctness test ... ");
         var path = astar(a, d);
-        var correctPath = [a, b, c, d];
+        var correctPath = [
+            a,
+            b,
+            c,
+            d
+        ];
         if (!test(arrayEquals(path, correctPath)))
             console.log("nodes: ", nodes);
         console.log("Running astar heuristics test ... ");
@@ -110,10 +159,6 @@ var AStar;
         console.log(test ? "... passed!" : "... FAILED!");
         return test;
     }
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Utility functions
-    // Creates a graph from a list of blank nodes and edges.
-    // More specifically, updates all nodes by adding the neighbour references/costs specified in edges
     function initGraph(nodes, edges) {
         for (var eKey in edges) {
             var e = edges[eKey];
@@ -124,9 +169,6 @@ var AStar;
             v2.neighbourCosts.push(c);
         }
     }
-    // Can't extend prototype in typescript? :(
-    //Array.prototype.shallowEquals = ...
-    // Compares shallowly if two arrays are equal
     function arrayEquals(first, second) {
         if (!first || !second)
             return false;
@@ -138,7 +180,6 @@ var AStar;
         }
         return true;
     }
-    // (Not used)
     function listMinus(a, b) {
         var newA = a.slice(0);
         return newA.filter(function (o) {
@@ -146,4 +187,3 @@ var AStar;
         });
     }
 })(AStar || (AStar = {}));
-//# sourceMappingURL=AStar.js.map
