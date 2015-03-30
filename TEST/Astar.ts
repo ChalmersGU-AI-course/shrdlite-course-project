@@ -71,6 +71,11 @@ function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, i
 
     for( var x = 0 ; ! queue.isEmpty(); ++x){
 
+        // if(x > 25){
+        //     alert("Stopping early.")
+        //     return postProcess<T>(order, x);
+        // }
+
         var current : Vertex<T> = queue.dequeue();
         if(visited.contains(current.state)){
             continue;
