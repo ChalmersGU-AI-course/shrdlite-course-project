@@ -24,22 +24,37 @@ interface Vertex<T>{
     previous : number ;
 }
 
-function postProcess<T>(order : Array<Vertex<T>>, finish : number){
+function postProcess<T>(order : Array<Vertex<T>>, finish : number) : T[]{
 
     var stack = new collections.Stack<T>();
 
     for(var x : number = finish; x >= 0; x = order[x].previous){
         stack.push(order[x].state);
     }
-    var str = "";
+    // var str = "";
+    var result = Array<T>();
     while(! stack.isEmpty()){
         var s = stack.pop();
-        str = str + " " + s ;
+        result.push(s);
+        // str = str + " " + s ;
     }
-    return str ;
+    return result;
+    // return str ;
 }
 
-function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, isGoal : Goal<T>){
+/**
+* A-star algorithm.
+*
+* f = function returning the Neighbouring states of a certain state
+* c = function returning the cost of travelling from one state to another
+* h = heuristic function
+* start = initial state
+* isGoal = function returning true for every accepting state
+*          and false for every non-accepting state.
+*
+* returns a list of states, ie the lowest cost path from the initial state.
+*/
+function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, isGoal : Goal<T>) : T[]{
 
     var queue = new collections.PriorityQueue<Vertex<T>>( (a, b) => {
         return b.cost + h(b.state) - a.cost - h(a.state);
@@ -82,29 +97,5 @@ function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, i
 
     alert("No solution found!");
 
-    return undefined;
-}
-
-//-----------------------------
-
-var goal = 10;
-
-function dummyF(x : number) : [number] {
-    return [x+1,x-1];
-}
-
-function dummyCost(x, y) {
-    return 1;
-}
-
-function dummyH(x : number) : number{
-    return goal - x - 1;
-}
-
-function dummyGoal(x) : boolean{
-    return x == goal;
-}
-
-function dummyCall(){
-    return astar<number>(dummyF, dummyCost, dummyH, 0, dummyGoal)
+    return [];
 }

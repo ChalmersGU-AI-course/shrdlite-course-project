@@ -4,6 +4,9 @@
 
 //-- Definitions ----------------------------------------
 
+/**
+* Simple vector-like class.
+*/
 class PositionXY{
     constructor(public x : number, public y : number){
     }
