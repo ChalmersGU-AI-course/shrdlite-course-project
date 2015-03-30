@@ -35,6 +35,10 @@
           declarations: false
           references: [
           ]
+      tests:
+        src: 'tests/*.ts'
+        dst: 'tests/'
+        
     shell:
       nearleyc:
         command: 'nearleyc grammar.ne > grammar.js'
@@ -57,4 +61,4 @@
 
   grunt.registerTask 'default', ['typescript:astarLab', 'typescript:default', 'shell:nearleyc']
   grunt.registerTask 'offline', ['typescript:offline', 'shell:nearleyc']
-  grunt.registerTask 'astarLab', ['typescript:astarLab', 'mocha:astarLab']
+  grunt.registerTask 'astarLab', ['typescript:astarLab', 'typescript:tests', 'mocha:astarLab']

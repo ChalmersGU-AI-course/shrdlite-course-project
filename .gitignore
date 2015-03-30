@@ -5,3 +5,8 @@ grammar.js
 node_modules
 *.map
 grammar.js
+lib/collections.js
+tests/AstarTests.js
+grammar.js
+AstarLab.js
+Astar.js

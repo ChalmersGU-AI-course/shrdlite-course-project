@@ -1,3 +1,4 @@
+///<reference path="Astar.ts"/>
 declare var _:any;
 
 class BoardPosition {
