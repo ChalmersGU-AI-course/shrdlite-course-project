@@ -5,8 +5,8 @@
 import chai = require('chai');
 import A = require('../astar/AStar-tryout');
 
-module AStarTest1 {
-  class PuzzleState implements A.AS.Heuristic {
+export module AStarEuclidian {
+  export class PuzzleState implements A.AS.Heuristic {
     puzzle: number[][];
     h: number;
     heuristic(goal: PuzzleState) {
@@ -22,19 +22,13 @@ module AStarTest1 {
       return sum;
     }
     match(goal: PuzzleState) {
-      return true; // TODO
+	return this.puzzle == goal.puzzle;
     }
     constructor(matrix: number[][]) {
       this.puzzle = matrix;
     }
-    toNumber() {
-      return 0; // TODO
-    }
   }
-
 
   var firstMatrix = [[7, 2, 4], [5, 0, 6], [8, 3, 1]];
   var firstState = new PuzzleState(firstMatrix);
-
-
 }
