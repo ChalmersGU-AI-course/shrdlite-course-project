@@ -28,10 +28,15 @@ class PState{
     }
 }
 
+// var pStart : PState = new PState(
+//         [[7,2,4],
+//          [5,0,6],
+//          [8,3,1]], 1, 1);
+
 var pStart : PState = new PState(
-        [[7,2,4],
-         [5,0,6],
-         [8,3,1]], 1, 1);
+        [[3,5,1],
+         [4,8,7],
+         [6,0,2]], 2, 1);
 
 var pGoal : PState = new PState(
         [[0,1,2],
@@ -39,7 +44,7 @@ var pGoal : PState = new PState(
          [6,7,8]], 0, 0);
 
 function puzzleGoal(a : PState){
-    return pGoal == a;
+    return pGoal.toString() == a.toString();
 }
 
 function manhattan(i : number, j : number, x : number){
@@ -51,9 +56,9 @@ function manhattan(i : number, j : number, x : number){
 
 function puzzleHeuristic(a : PState) : number{
     var sum = 0;
-    for (var i in a){
-        for (var j in a[i]){
-            sum = sum + manhattan(i,j,a[i][j]);
+    for (var i in a.matr){
+        for (var j in a.matr[i]){
+            sum = sum + manhattan(i,j,a.matr[i][j]);
         }
     }
     return sum;
