@@ -1,7 +1,7 @@
 ///<reference path="Parser.ts"/>
 ///<reference path="SVGWorld.ts"/>
 ///<reference path="ExampleWorlds.ts"/>
-///<reference path="lib/jquery.d.ts" />
+///<reference path="../lib/jquery.d.ts" />
 
 // Replace this with the URL to your CGI script:
 var ajaxScript = "cgi-bin/shrdlite_cgi.py";
