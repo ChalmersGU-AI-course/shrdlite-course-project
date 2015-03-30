@@ -3,7 +3,7 @@
 
 
 interface Neighbours<T>{
-    (state : T) : [T] ;
+    (state : T) : T[] ;
 }
 
 interface Cost<T>{
