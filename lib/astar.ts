@@ -4,12 +4,12 @@
 // A-Star A-team implementation by Team Dandelion
 
 module aStar {
-    export function aStar(fromState : WorldState, toState : WorldState) : number {
-        var evaluatedStates = new collections.Set<WorldState>(); 
-        var statesToEvalute = new collections.PriorityQueue<WorldState>(compareStates);
-        var pathToState = new collections.Dictionary<WorldState, WorldState>();
-        var g_score = new collections.Dictionary<WorldState, number>();
-        var f_score = new collections.Dictionary<WorldState, number>();
+    export function aStar(fromNode : Node, toNode : Node) : number {
+        var evaluatedNodes = new collections.Set<Nodes>(); 
+        var nodesToEvaluate = new collections.PriorityQueue<Node>();
+        var pathToState = new collections.Dictionary<Node, Node>();
+        var g_score = new collections.Dictionary<Node, number>();
+        var f_score = new collections.Dictionary<Node, number>();
         //var costToState : int[];
         //var optimalCost : int = getDistance(fromState, toState);
         //costToState[0] = 0;
@@ -35,24 +35,29 @@ module aStar {
         return -1;
     }
 
-    // Takes two worldstates and returns the abstract distance between them.
-    function getDistance(from: WorldState, to: WorldState) : number {
-        return 1;
+    interface StarNode extends Node {
+        distanceTo : int;
+        pathTo : Edge[];
+        
     }
 
-    function compareStates(a : WorldState, b : WorldState) : number {
-        return 1;
+    interface Node {
+        id : int;
+        xPos : int;
+        yPos : int;
+
+        function distanceTo(to: Node) : double {
+            return Math.sqrt(Math.pow(this.xPos-to.xPos, 2)+Math.pow(this.yPos-to.yPos, 2));
+        }
     }
 
-    interface ExtendedWorldState extends World.WorldState {
-        costToState : int;
-        pathToState : WorldState[];
+    interface Edge {
+        cost : int;
+        fromNode : int;
+        endNode : int
 
-
-        abstractDist : int;
-
-        function int compareTo(first : ExtendedWorldState, second : ExtendedWorldState) {
-            return 1;
+        function int compareTo(otherEdge : Edge) {
+            return this.cost-otherEdge.cost;
         }
     }
 }
