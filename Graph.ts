@@ -52,7 +52,7 @@ class Graph {
 	    openset.splice(it,1); //splice removes the element at index
 
 	   
-	    current_neighbours = this.getNeighbours(current);
+	    //current_neighbours = this.getNeighbours(current);
 	
 	    /*
             for (var i = 0; i < current_neighbours.length; ++i) {
