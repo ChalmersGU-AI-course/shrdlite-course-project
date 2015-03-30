@@ -1,139 +1,109 @@
-public interface graph<T>{
-    private _nodes : Array<Array<T>>;
-    private _edges : number[][];
-    
-    getneighbors(node: T):Array<T>;
-    
-    getcost(from: T,to:T):number;
-
-    get nodes(): Array<Array<T>>{
-        return this._nodes;
+module Astar{
+    export interface graph<T>{
+        _nodeValues : Array<T>;
+        _nodeneighbors : Array<Array<number>>;   //neighboring nodes to index node 
+        _edges : Array<Array<number>>;        //from index node a to index node b
+        
+        getneighbors(node: number):Array<number>;
+        
+        getcost(from: number,to:number):number;
+        
+        heuristic_cost_estimate(current : number, goal : number) : number;
+        
     }
     
-    set nodes(n: Array<Array<T>>) {
-        this._edges = n;
-    }
-
-    get edges(): number[][]{
-        return this._edges;
-    }
+    export class AstarSearch <T>{
+        mGraph : graph<T>;
     
-    set edges(e: number[][]) {
-        this._edges = e;
-    }
-}
-
-class Astar <T>{
-    mGraph<T> : graph<T>;
-
-    constructor(g : graph<T>){
-        this.mGraph<T> = g;
-    }
-    //For 8 puzzle
-    private heuristic_cost_estimate(current : number, goal : number) : number{
-        var manhattanDist:number = 0;
-        /*for(var i=0;i<N;i++){
-            manhattanDist = current
-        }*/
-        var N:number = Math.sqrt(current.length)
-        for(var x=0;x<N;x++){
-            for(var y=0;y<N;y++){
-                var currentValue:number = current[y*N + x];
-
-                if(currentValue){ //0 is the empty block
-                    var target:number = goal.indexOf(currentValue);
-                    
-                    manhattanDist += Math.abs(x - target / N) + Math.abs(y - target % N) 
+        constructor(g : graph<T>){
+            this.mGraph = g;
+        }
+    
+        private getMinFScore(fscore : number[]){
+            var result : number;
+            result=fscore[0];
+            var index : number = 0;
+            var indexout : number = 0;
+            fscore.forEach(fs => {
+                if(fs < result){
+                    result = fs;
+                    indexout = index;
                 }
-            }
+                index ++;}
+            );
+            return indexout;    
         }
-        //TODO
-        return manhattanDist;
-    }
-
-    private getMinFScore(fscore : number[]){
-        var result : number;
-        result=fscore[0];
-        var index : number = 0;
-        var indexout : number = 0;
-        fscore.forEach(fs => {
-            if(fs < result){
-                result = fs;
-                indexout = index;
-            }
-            index ++;}
-        );
-        return indexout;    
-    }
-
-    private reconstruct_path(came_from : number[], goal:number):number[]{
-        var result_path:number[];
-        result_path.push(goal);
-        
-        while(came_from[goal] > 0){
-        	goal = came_from[goal];
-        	result_path.push[goal];
-        }
-        
-        return result_path;
-    }
-
-    private neighbor_nodes(current : number): number[]{
-        var result : number[];
-        result = this.mGraph.getneighbors(current);
-        return result;
-    }
-
-    private cost(from:number, to:number): number{
-        var result:number;
-        result = this.mGraph.getcost(from,to);
-        return result;
-    }
     
-    public star (start: number, goal : number): number[]{
-        var closedset : number [];   // The set of nodes already evaluated.
-        var openset : number [];
-        openset[0] = start;       // The set of tentative nodes to be evaluated, initially containing the start node
-        var came_from : number [];    // The map of navigated nodes.
-        
-        var g_score : number [];
-        var f_score : number [];
-        g_score[start] = 0;
-        
-        f_score[start] = g_score[start] + heuristic_cost_estimate(start, goal);
-        
-        while (openset.length){
-            var current = getMinFScore(openset);
-            if(current === goal){
-                return reconstruct_path(came_from, goal);
+        private reconstruct_path(came_from : number[], goal:number):number[]{
+            var result_path:number[];
+            result_path.push(goal);
+            
+            while(came_from[goal] > 0){
+            	goal = came_from[goal];
+            	result_path.push[goal];
             }
-            var index = openset.indexOf(current);
-            if(index != undefined){
-                openset.splice(index, 1);   
-            }
-            closedset.push(current);
-            var currentNeighbors = neighbor_nodes(current);
-            var i : number = 0;
-            while(i < currentNeighbors.length){
-                var neighbor = currentNeighbors[i];
-                if(closedset.indexOf(neighbor) < 0){
-                    var tentative_g_score : number = g_score[current] + cost(current,neighbor); // distance between c and n
-                    if(openset.indexOf(neighbor) === -1 || tentative_g_score < g_score[neighbor]){
-                        came_from[neighbor] = current;
-                        g_score[neighbor] = tentative_g_score;
-                        f_score[neighbor] = g_score[neighbor] + heuristic_cost_estimate(neighbor, goal);
-                        if(openset.indexOf(neighbor) == -1){
-                            openset.push(neighbor);
+            
+            return result_path;
+        }
+    
+        private neighbor_nodes(current : number): number[]{
+            var result : number[];
+            result = this.mGraph.getneighbors(current);
+            return result;
+        }
+    
+        private cost(from:number, to:number): number{
+            var result:number;
+            result = this.mGraph.getcost(from,to);
+            //if cost -1 then we throw error ?
+            return result;
+        }
+        
+        public star (start: number, goal : number): number[]{
+            var closedset : number [];   // The set of nodes already evaluated.
+            var openset : number [];
+            openset[0] = start;       // The set of tentative nodes to be evaluated, initially containing the start node
+            var came_from : number [];    // The map of navigated nodes.
+            
+            var g_score : number [];
+            var f_score : number [];
+            g_score[start] = 0;
+            
+            f_score[start] = g_score[start] + this.mGraph.heuristic_cost_estimate(start, goal);
+            
+            while (openset.length){
+                var current = this.getMinFScore(openset);
+                if(current === goal){
+                    return this.reconstruct_path(came_from, goal);
+                }
+                var index = openset.indexOf(current);
+                if(index != undefined){
+                    openset.splice(index, 1);   
+                }
+                closedset.push(current);
+                var currentNeighbors = this.neighbor_nodes(current);
+                var i : number = 0;
+                while(i < currentNeighbors.length){
+                    var neighbor = currentNeighbors[i];
+                    if(closedset.indexOf(neighbor) < 0){
+                        var tentative_g_score : number = g_score[current] + this.cost(current,neighbor); // distance between c and n
+                        if(openset.indexOf(neighbor) === -1 || tentative_g_score < g_score[neighbor]){
+                            came_from[neighbor] = current;
+                            g_score[neighbor] = tentative_g_score;
+                            f_score[neighbor] = g_score[neighbor] + this.mGraph.heuristic_cost_estimate(neighbor, goal);
+                            if(openset.indexOf(neighbor) == -1){
+                                openset.push(neighbor);
+                            }
                         }
+                    
                     }
-                
+                    
+                    i++;
                 }
                 
-                i++;
             }
-            
+                
+            return this.reconstruct_path(came_from, goal); 
         }
-            
-        return reconstruct_path(came_from, goal); 
     }
 }
