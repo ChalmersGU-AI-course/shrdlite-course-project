@@ -18,6 +18,8 @@ class Graph {
         if (start > this.nodes.length || start < 0 || goal > this.nodes.length || goal < 0)
             throw new RangeError("Node does not exist");
 
+	console.log("start: ",start,"\n goal: ",goal);
+	
         var closedset = []; //list
         var openset = []
 	openset[0]=start; //list
@@ -32,45 +34,51 @@ class Graph {
 	    f_score[i]=-1;
 
 	var g_score = []; //could maybe use = new int[f_score.length] for pre allocation
-	g_score[start]=0;
+	for(var i=0; i < this.nodes.length ; ++i)
+	    g_score[i]=0;
+
 
 	//min heap på f_score
 	f_score[start] = g_score[start] + this.heuristicCost(start,goal);
 
 	//loop commented out to not get stuck in inf loop
-        //while (openset.length != 0) {
+        while (openset.length != 0) {
             var current: number = this.indexOfSmallest(f_score);//hitta elementet med lägst värde i f_score, sätt current till dess index
 	    
             if (current == goal) {
-                //hurray
+                console.log("Hurray!")
 		return came_from;
             }
-
+	    
             //find current in openset and remove that element and add to closed
             var it:number = this.find(openset,current);
             closedset.push(openset[it]);
 	    openset.splice(it,1); //splice removes the element at index
+	    
+	    
+	    var current_neighbours = this.getNeighbours(current);
 
-	   
-	    current_neighbours = this.getNeighbours(current);
-	
-	    /*
+	    
             for (var i = 0; i < current_neighbours.length; ++i) {
-                if (closedSet.contains(current_neighbours[i]))
-                    continue;
+                if (this.find(closedset,current_neighbours[i][1]))
+                  continue;
 
+		var edge_between_cost=this.cost(this.nodes[current],this.nodes[current_neighbours[0][1]]);
+
+		
                 var tentative_g_score = g_score[current] + edge_between_cost;
 
-                if (!openset.contains(current_neighbours[i]) || tenative_g_score < g_score[current_neighbours[i]]) {
+                if (this.find(openset,current_neighbours[i][1])==-1 || tentative_g_score < g_score[current_neighbours[i][1]]) {
                     //spara undan hur du kom hit
-                    g_score[current_neighbours[i]] = tenative_g_score;
-                    f_score[current_neighbours[i]] = g_score[current_neighbours[i]] + heuristicCost[current_neighbour[i], goal];
-                    if (openset.contains(current_neighbour[i]))
-                        openset.add(current_neighbour[i]);
+		    //came_from[] something, left to do
+                    g_score[current_neighbours[i][1]] = tentative_g_score;
+                    f_score[current_neighbours[i][1]] = g_score[current_neighbours[i][1]] + this.heuristicCost[current_neighbours[i][1], goal];
+                    if ( this.find(openset,current_neighbours[i][1]) != -1 )
+                        openset.push(current_neighbours[i][1]);
                 }
             }
         }
-        */
+        
 
         //Dummy: Just a test path for the view
         return [[start, 9], [10, 13], [13, 12], [12, goal]];
@@ -79,7 +87,7 @@ class Graph {
     }
 
     heuristicCost(current: number, goal: number): number {
-        return 0;
+        return this.cost(this.nodes[current],this.nodes[goal]);
     }
 
     getNeighbours(node: number): [number, number][] {
@@ -87,6 +95,10 @@ class Graph {
             throw new RangeError("Node does not exist");
 
         return this.edges[node];
+    }
+
+    cost( node1 : GraphNode, node2 : GraphNode) {
+	return Math.sqrt( (node1.x - node2.x) * (node1.x - node2.x) + (node1.y - node2.y) * (node1.y - node2.y));
     }
 
     //returns index of smallest non negative element
@@ -97,6 +109,7 @@ class Graph {
 	}
 	return lowest;
     }
+    //returns -1 if value not in arr
     find(arr:number[],value:number) {
 	var index = -1;
 	for (var i = 0; i < arr.length; ++i) {
