@@ -1,4 +1,4 @@
-/// <reference path="typescript-collections.ts" />
+/// <reference path="lib/typescript-collections/collections.ts" />
 /// <reference path="../World.ts" />
 
 // A-Star A-team implementation by Team Dandelion
