@@ -15,9 +15,7 @@ clean:
 	rm -f $(TSFILES:%.ts=%.js) *.map
 
 astar:
-	tsc -target ES5 Graph.ts
-	tsc -target ES5  europe.ts
-	tsc -target ES5 astar.ts
+	tsc -target ES5 --out astar.js astar.ts
 
 all: $(TARGETS)
 
