@@ -14,11 +14,10 @@ var show = "Hello World!!!" ;
 function testMain(){
     // show = "$ " + dummyCall();
     // show = "$ " + graphRun();
-    // show = "$ " + puzzleHeuristic(pStart) + ", " + puzzleHeuristic(pGoal);
-    var ns = puzzleNeighbours(pStart);
-    // show = "$ " + pStart + " $$$$$ " + ns;
-    // show = "$ " + puzzleHeuristic(ns[0]);
-    show = "$ start heuristic: " + puzzleHeuristic(pStart) + "<p>"+ runPuzzle() ;
+    var res = runPuzzle();
+    show = "$ start heuristic: " + puzzleHeuristic(pStart) +
+            "<p> path length: " + res.length +
+            "<p>"+ res;
 
     document.getElementById("demo").innerHTML = show;
 }

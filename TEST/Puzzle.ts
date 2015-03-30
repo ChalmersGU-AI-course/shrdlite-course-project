@@ -5,7 +5,6 @@
 
 class PState{
     constructor(public matr : number[][], public iz : number, public jz : number){
-
     }
 
     /**
@@ -28,15 +27,15 @@ class PState{
     }
 }
 
-// var pStart : PState = new PState(
-//         [[7,2,4],
-//          [5,0,6],
-//          [8,3,1]], 1, 1);
-
 var pStart : PState = new PState(
-        [[3,5,1],
-         [4,8,7],
-         [6,0,2]], 2, 1);
+        [[7,2,4],
+         [5,0,6],
+         [8,3,1]], 1, 1);
+
+// var pStart : PState = new PState(
+//         [[8,3,1],
+//          [0,5,7],
+//          [4,6,2]], 1, 0);
 
 var pGoal : PState = new PState(
         [[0,1,2],

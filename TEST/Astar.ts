@@ -42,6 +42,14 @@ function postProcess<T>(order : Array<Vertex<T>>, finish : number) : T[]{
     // return str ;
 }
 
+function oops<T>(order : Array<Vertex<T>>) : T[]{
+    var result = [];
+    for (var n in order){
+        result.push(order[n].state);
+    }
+    return result;
+}
+
 /**
 * A-star algorithm.
 *
@@ -71,9 +79,10 @@ function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, i
 
     for( var x = 0 ; ! queue.isEmpty(); ++x){
 
-        if(x > 5175){
+        if(x > 15000){
             alert("Stopping early after " + x + " iterations. Size of queue: " + queue.size() + " current cost: " + current.cost);
-            return postProcess<T>(order, x);
+            // return postProcess<T>(order, x);
+            return oops(order);
         }
 
         var current : Vertex<T> = queue.dequeue();
@@ -85,6 +94,9 @@ function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, i
         order[x] = current ;
 
         if(isGoal(current.state)){
+            if(x > 1000){
+                alert("Completed but it took " + x + " iterations!");
+            }
             return postProcess<T>(order, x);
         }
 
