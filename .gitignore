@@ -3,3 +3,5 @@ shrdlite-*.js
 grammar.js
 
 node_modules
+*.map
+grammar.js

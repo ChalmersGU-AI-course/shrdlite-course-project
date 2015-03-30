@@ -25,9 +25,26 @@
           references: [
             'lib/*.d.ts'
           ]
+      astarLab:
+        src: 'AstarLab.ts'
+        dst: 'AstarLab.js'
+        options:
+          module: 'amd'
+          target: 'es5'
+          sourceMap: false
+          declarations: false
+          references: [
+          ]
     shell:
       nearleyc:
         command: 'nearleyc grammar.ne > grammar.js'
+
+    mocha:
+      astarLab:
+        src: [ 'tests/astarlab_runner.html' ]
+        options:
+          run: true
+
         
     watch:
       files: [ '*.ts' ]
@@ -36,6 +53,8 @@
   grunt.loadNpmTasks 'grunt-typescript'
   grunt.loadNpmTasks 'grunt-contrib-watch'
   grunt.loadNpmTasks 'grunt-shell'
+  grunt.loadNpmTasks 'grunt-mocha'
 
-  grunt.registerTask 'default', ['typescript:default', 'shell:nearleyc']
+  grunt.registerTask 'default', ['typescript:astarLab', 'typescript:default', 'shell:nearleyc']
   grunt.registerTask 'offline', ['typescript:offline', 'shell:nearleyc']
+  grunt.registerTask 'astarLab', ['typescript:astarLab', 'mocha:astarLab']
