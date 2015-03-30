@@ -1,14 +1,17 @@
 ///<reference path="Astar.ts"/>
 
 var sp = new Shortestpath();
-var as = new AstarSearch<number[]>(sp);
+var as = new Astar.AstarSearch<number[]>(sp);
 
 for(var i = 0 ; i < 4; i ++){
     console.log("hello");   
 }
 
 
-class Shortestpath implements graph<number[]>{   // index 0 = x, index 1 = y
+class Shortestpath implements Astar.Graph<number[]>{   // index 0 = x, index 1 = y
+    _nodeValues : Array<number[]>;
+    _nodeneighbors : Array<Array<number>>;   //neighboring nodes to index node 
+    _edges : Array<Array<number>>;        //from index node a to index node b
 
     constructor(){
         this._nodeValues = [[1,1],[1,2],[2,3],[3,2],[4,2],[5,5]];
@@ -17,22 +20,22 @@ class Shortestpath implements graph<number[]>{   // index 0 = x, index 1 = y
         
     }
     getneighbors(node: number):Array<number>{
-        return this._nodeneighbors.get(node);
+        return this._nodeneighbors[node];
     }
     
     getcost(from: number,to:number):number{
-        var index = this._nodeneighbors.get(from).indexof(to);
+        var index = this._nodeneighbors[from].indexOf(to);
         if(index >= 0){
-            return this._edges.get(index);
+            return this._edges[from][index];
         }
         return -1;
     }
     
     heuristic_cost_estimate(current : number, goal : number) : number{
-        var cur = this._nodeValues.get(current);
-        var gol = this._nodeValues.get(goal);
+        var cur = this._nodeValues[current];
+        var gol = this._nodeValues[goal];
         //Manhathan distance
-        return Math.abs(gol.get(0) - cur.get(0)) + Math.abs(gol.get(1) - cur.get(1));
+        return Math.abs(gol[0] - cur[0]) + Math.abs(gol[1] - cur[1]);
     }
 }
 
@@ -123,5 +126,5 @@ class eightpuzzle implements  graph<number[][]>, neighbors<number[][]>{
             }
         }    
         return nstate;
-    }*/
-}
+    }
+}*/

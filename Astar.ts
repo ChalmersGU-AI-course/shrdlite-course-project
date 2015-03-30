@@ -1,9 +1,9 @@
 module Astar{
-    export interface graph<T>{
-        _nodeValues : Array<T>;
+    export interface Graph<T>{
+        /*_nodeValues : Array<T>;
         _nodeneighbors : Array<Array<number>>;   //neighboring nodes to index node 
         _edges : Array<Array<number>>;        //from index node a to index node b
-        
+        */
         getneighbors(node: number):Array<number>;
         
         getcost(from: number,to:number):number;
@@ -13,9 +13,9 @@ module Astar{
     }
     
     export class AstarSearch <T>{
-        mGraph : graph<T>;
+        mGraph : Graph<T>;
     
-        constructor(g : graph<T>){
+        constructor(g : Graph<T>){
             this.mGraph = g;
         }
     
