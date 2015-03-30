@@ -4,7 +4,7 @@
 
 module Search {
   export function aStar<N>( heuristic?: Heuristic<N>
-                          , nodeShow?: (a: N) => string
+                          , key?: (a: N) => string
                           ) : Search<N, N[]> {
 
     return function ( neighbours: (node: N) => [N, number][]
@@ -16,7 +16,7 @@ module Search {
       // "Open set", the nodes that should be evaluated.
       var open = new collections.PriorityQueue<[N, number]>(itemCompareFunction);
       // Information associated with each node.
-      var info = new collections.Dictionary<N, AStarInfo<N>>(nodeShow);
+      var info = new collections.Dictionary<N, AStarInfo<N>>(key);
 
       // Add the start node to the open set.
       open.add([start, 0]);
@@ -95,7 +95,7 @@ module Search {
             open.add([n, ni.f]);
           }
 
-          // Store the update information.
+          // Store the updated information.
           info.setValue(n, ni);
         }
 
