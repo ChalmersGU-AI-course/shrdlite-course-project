@@ -2,3 +2,5 @@ shrdlite-*.js
 
 *.bat
 *.cmd
+test/*.js
+test/dist
