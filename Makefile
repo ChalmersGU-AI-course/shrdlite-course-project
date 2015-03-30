@@ -1,3 +1,4 @@
+export PATH := node_modules/.bin:$(PATH)
 
 TARGETS = html ajax ansi offline
 
@@ -6,20 +7,28 @@ TARGETS = html ajax ansi offline
 .PHONY: help clean all $(TARGETS)
 
 
-TSFILES = $(wildcard *.ts)
+DIST = dist
+SOURCE = src
+TSFILES = $(wildcard $(SOURCE)/*.ts)
 
 help:
-	@echo "make help | clean | all | $(TARGETS:%=% |) ..."
+	@echo "make help | clean | all | start | $(TARGETS:%=% |) ..."
 
 clean:
-	rm -f $(TSFILES:%.ts=%.js) *.map
+	rm -f $(DIST)/*.js
 
-all: $(TARGETS)
+all: node_modules $(TARGETS)
 
-$(TARGETS): %: shrdlite-%.js
+$(TARGETS): %: $(DIST)/shrdlite-%.js $(DIST)/grammar.js
 
-%.js: %.ts $(TSFILES)
+$(DIST)/%.js: $(SOURCE)/%.ts $(TSFILES)
 	tsc --out $@ $<
 
-grammar.js: grammar.ne
+$(DIST)/grammar.js: $(SOURCE)/grammar.ne
 	nearleyc $< > $@
+
+node_modules:
+	npm install
+
+start: all
+	python -m SimpleHTTPServer 8000

@@ -1,0 +1,9 @@
+{
+  "name": "shrdlite-course-project",
+  "version": "1.0.0",
+  "dependencies": {
+    "nearley": "^1.2.1",
+    "typescript": "^1.4.1"
+  },
+  "private": true
+}
