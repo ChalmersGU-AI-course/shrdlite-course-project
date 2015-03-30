@@ -71,9 +71,9 @@ function generator(cell : Cell) : Cell[]
 	return cells;
 }
 
-function pCell(cell : Cell) : void
-{ 
-	console.log("X: ", cell.x, " Y: " , cell.y);
+function nullheuristic(cell : Cell, goal : Cell) : number
+{
+	return 0;
 }
 
 function abs(a : number)
@@ -82,21 +82,6 @@ function abs(a : number)
 		return a;
 	else 
 		return -a;
-}
-
-function manhatan(cell : Cell, goal : Cell) : number
-{
-	return abs(goal.x - cell.x) + abs(goal.y - cell.y);
-}
-
-function pointDist(a : Cell, b : Cell) : number
-{
-	return Math.sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
-}
-
-function nullheuristic(cell : Cell, goal : Cell) : number
-{
-	return 0;
 }
 
 function rand(m : number)
@@ -113,6 +98,25 @@ function enforce(exp : boolean, msg : string)
 	}
 }
 
+function validMove(from : Cell, to : Cell)
+{
+	return abs(from.x - to.x) <= 1 && 
+		   abs(from.y - to.y) <= 1;
+}
+
+function enforceAstarResult(start : Cell, end : Cell, sRes : Astar.SearchResult<Cell>)
+{
+	enforce(sRes.success, "Astar failed.");
+	enforce(sRes.nodes[0].equals(start), "Does not start at the start node!");
+	enforce(sRes.nodes[sRes.nodes.length - 1].equals(end), "Does not end at the end node!");
+	
+	//Walk the path.
+	for(var i = 0; i < sRes.nodes.length - 1; i++)
+	{
+		enforce(validMove(sRes.nodes[i], sRes.nodes[i + 1]), "Invalid move in path!");
+	}
+}
+
 function testHeuristic(numTests : number, heur : (a : Cell, b : Cell) => number, heurName : string)
 {
 	console.log("\nStarting tests for", heurName);
@@ -124,14 +128,10 @@ function testHeuristic(numTests : number, heur : (a : Cell, b : Cell) => number,
 		var apath = Astar.findPath(start, end, generator, heur);
 		var dpath = Astar.findPath(start, end, generator, nullheuristic);
 
-
-
-		enforce(apath.success == dpath.success && apath.success, "Astar failed.");
+		enforceAstarResult(start, end, apath);
+		enforceAstarResult(start, end, dpath);
 		enforce(apath.nodes.length == dpath.nodes.length, "Length differs")
-		enforce(apath.nodes[0].equals(start), "Does not start at the start node!");
-		enforce(apath.nodes[apath.nodes.length - 1].equals(end), "Does not end at the end node!");
-		enforce(dpath.nodes[0].equals(start), "Does not start at the start node!");
-		enforce(dpath.nodes[dpath.nodes.length - 1].equals(end), "Does not end at the end node!");
+
 
 		console.log("\nTest", i, "\n");
 		console.log("Between ", start, " and ", end);
@@ -139,5 +139,22 @@ function testHeuristic(numTests : number, heur : (a : Cell, b : Cell) => number,
 	}
 }
 
+
+function manhatan(cell : Cell, goal : Cell) : number
+{
+	return abs(goal.x - cell.x) + abs(goal.y - cell.y);
+}
+
+function pointDist(a : Cell, b : Cell) : number
+{
+	return Math.sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
+}
+
+function worstGuess(a : Cell, b : Cell) : number
+{
+	return -manhatan(a, b);
+}
+
 testHeuristic(10, manhatan, "Manhatan");
 testHeuristic(10, pointDist, "Point distance");
+testHeuristic(10, worstGuess, "Really bad guess");
