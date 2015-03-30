@@ -19,9 +19,13 @@ var End : PositionXY;
 
 //-- Functions ----------------------------------------
 
-var graph = new collections.Dictionary<PositionXY, collections.Dictionary<PositionXY, number>>();
+function makeGraph<T>(){
+    return new collections.Dictionary<T, collections.Dictionary<T, number>>();
+}
 
-function addPosition(a : PositionXY){
+var graph = makeGraph<PositionXY>();
+
+function addPosition<T>(a : PositionXY){
     graph.setValue(a, new collections.Dictionary<PositionXY, number>());
 }
 
