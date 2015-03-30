@@ -8,13 +8,13 @@ module AStar {
   export class Path<S>{
     constructor(private path : Graph<S>[]){}
     push(g:Graph<S>):Path<S>{
-	return new Path(this.path.concat([g]));
+  return new Path(this.path.concat([g]));
     }
     weight():number{
       return this.path.length;
     }
       peek():Graph<S> {
-	  return this.path[this.path.length - 1];
+    return this.path[this.path.length - 1];
       }
   }
 
@@ -28,19 +28,19 @@ module AStar {
 
   export function astarSearch<S>(graph:Graph<S>,h:Heuristic<S>,goal:Goal<S>){
       var frontier = new collections.PriorityQueue<Path<S>>(function(a,b) {
-	  return (b.weight() + h(b.peek().state)) -  (a.weight() + h(a.peek().state))
+    return (b.weight() + h(b.peek().state)) -  (a.weight() + h(a.peek().state))
       });
       frontier.add(new Path<S>([graph]));
 
       while(!frontier.isEmpty()) {
-	  var p = frontier.dequeue();
-	  if(goal(p.peek().state)) {
-	      return p;
-	  } else {
-	      for( var i = 0; i < p.peek().children.length; i++ ) {
-		  frontier.add( p.push(p.peek().children[i]));
-	      }
-	  }
+    var p = frontier.dequeue();
+    if(goal(p.peek().state)) {
+        return p;
+    } else {
+        for( var i = 0; i < p.peek().children.length; i++ ) {
+      frontier.add( p.push(p.peek().children[i]));
+        }
+    }
       }
   }
 
