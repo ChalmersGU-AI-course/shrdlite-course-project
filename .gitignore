@@ -1,3 +1,4 @@
 shrdlite-*.js
 dist/*
+!.gitkeep
 node_modules
