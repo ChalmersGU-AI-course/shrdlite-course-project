@@ -16,11 +16,11 @@ module Astar
 	 * @param start 	- The starting point
 	 * @param end		- The target destination
 	 * @param gen   	- function used to generate all adjacent nodes of a node.
-	 * @param heuristic - ls
+	 * @param heuristic - a guess for how close a node is to the end node.
 	 */
 	export function findPath<T>(start : T, end : T, 
 								gen : (t : T) => T[],
-								heuristic : (t : T) => number)  : Path<T>
+								heuristic : (t : T, e : T) => number)  : Path<T>
 	{
 		var known  = new collections.Dictionary<T, number>();
 		var back   = new collections.Dictionary<number, T>();
@@ -59,7 +59,7 @@ module Astar
 			var adjacent = gen(node);
 			for(var n in adjacent)
 			{
-				var distance = dist[previous] + 1 + heuristic(n);
+				var distance = dist[previous] + 1 + heuristic(n, end);
 				if(!known.containsKey(n))
 				{
 					dist.push(distance);
