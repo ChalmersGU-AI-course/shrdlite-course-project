@@ -1,6 +1,6 @@
 ///<reference path="World.ts"/>
 
-module Auxiliary { 
+module Neighbour { 
 
 	export function listNeighbours(currentState : WorldState) : WorldState[] {
 		var nlist : WorldState[]=[];
