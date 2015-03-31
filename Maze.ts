@@ -60,21 +60,21 @@ class Maze {
         return [nodeNo % this.width, Math.floor(nodeNo / this.width)];
     }
 
-    private prim(edges: [number, number, number][][], start: number): [number, number][][] {
-        var best_cost: number[] = new Array(edges.length);
+    private prim(edges: [number, number, number][][], start: number): [number, number][][]{
+        var found: boolean[] = new Array(edges.length);
         var parent: number[] = new Array(edges.length);
         var q = new collections.PriorityQueue<[number, number, number]>(
             function (a, b): number {
                 return a[2] < b[2] ? 1 : -1;
             });
 
+        for (var i = 0; i < found.length; ++i)
+            found[i] = false;
 
-        for (var i = 0; i < best_cost.length; ++i) {
-            best_cost[i] = Number.POSITIVE_INFINITY;
+        for (var i = 0; i < edges[start].length; ++i)
+            var s = q.enqueue(edges[start][i]);
 
-            for (var j = 0; j < edges[i].length; ++j)
-                var s = q.enqueue(edges[i][j]);
-        }
+
 
         while (!q.isEmpty()) {
             var u: [number, number, number] = q.dequeue(); // [0: from, 1: to, 2: cost]
@@ -82,9 +82,12 @@ class Maze {
             var to = u[1];
             var cost = u[2];
 
-            if (cost < best_cost[to]) {
-                best_cost[to] = cost;
+            if (!found[to]) {
+                found [to]= true;
                 parent[to] = from;
+
+                for (var i = 0; i < edges[to].length; ++i)
+                    var s = q.enqueue(edges[to][i]);
             }
         }
 
