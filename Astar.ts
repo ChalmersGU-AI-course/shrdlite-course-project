@@ -1,16 +1,18 @@
-    interface Graph{
+    interface Graph<T>{
         getneighbors(node: number):Array<number>;
         
         getcost(from: number,to:number):number;
         
         heuristic_cost_estimate(current : number, goal : number) : number;
         
+        specialIndexOf(obj:T):number;
+        
     }
     
-    class AstarSearch {
-        mGraph : Graph;
+    class AstarSearch <T>{
+        mGraph : Graph<T>;
     
-        constructor(g : Graph){
+        constructor(g : Graph<T>){
             this.mGraph = g;
         }
     
@@ -77,8 +79,7 @@
                 }
                 closedset.push(current);
                 var currentNeighbors = this.neighbor_nodes(current);
-                var i : number = 0;
-                while(i < currentNeighbors.length){
+                for(var i = 0; i < currentNeighbors.length; i++){
                     var neighbor = currentNeighbors[i];
                     if(closedset.indexOf(neighbor) < 0){
                         var tentative_g_score : number = g_score[current] + this.cost(current,neighbor); // distance between c and n
@@ -91,38 +92,90 @@
                                 openset.push(neighbor);
                             }
                         }
-                    
                     }
-                    
-                    i++;
                 }
-                
             }
             console.log("came_from: " + came_from.toString());   
 
-            return this.reconstruct_path(came_from, goal); 
+            return []; 
         }
     }
 
-class Shortestpath implements Graph{   // index 0 = x, index 1 = y
+class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     _nodeValues : Array<number[]>;
     _nodeneighbors : Array<Array<number>>;   //neighboring nodes to index node 
     _edges : Array<Array<number>>;        //from index node a to index node b
+    _width : number;
+    _heigth : number;
 
-    constructor(){
-        this._nodeValues = [[1,1],[1,2],[2,3],[3,2],[4,2],[5,5]];
+    constructor(size:number, wall:boolean, hole:number){
+        this._width = size;
+        this._heigth = size;
+        this._nodeValues = [];
+        //this._nodeValues = [[1,1],[1,2],[2,3],[3,2],[4,2],[5,5]];
+        var index = 0;
+        for(var i = 0; i < this._width; i++){
+            for(var j = 0; j < this._heigth; j++){
+                this._nodeValues[index] = [i,j];  
+                index ++;  
+            }
+        }
+        if(wall){
+            this.makewall(hole);    
+        }
+        
+        
         this._nodeneighbors = [[1,2],[4],[3],[5],[]];
         this._edges         = [[2,3],[2],[3],[3],[]];
         
     }
+    
+    makewall(hole:number){
+        //make a wall
+        for(var i = 1; i < 9; i++){
+            if(i != hole){
+                this._nodeValues.splice(this.specialIndexOf([10-i,i]),1);
+            }
+        }
+    }
+    
     getneighbors(node: number):Array<number>{
-        return this._nodeneighbors[node];
+        var cur = this._nodeValues[node];
+        var neig :Array<number> = [];
+        var found;
+        if(cur[0]>0){
+            found = this.specialIndexOf([cur[0]-1,cur[1]]);
+            if(found >= 0){
+                neig.push(found);  
+            }
+        }
+        if(cur[0]<this._width){
+            found = this.specialIndexOf([cur[0]+1,cur[1]]);
+            if (found >= 0){
+                neig.push(found);
+            }
+        }
+        if(cur[1]>0){
+            found = this.specialIndexOf([cur[0],cur[1]-1]);
+            if (found >= 0){
+                neig.push(found);
+            }
+        }
+        if(cur[1]<this._heigth){
+            found = this.specialIndexOf([cur[0],cur[1]+1]);
+            if (found >= 0){
+                neig.push(found);
+            }
+        }
+        return neig;
     }
     
     getcost(from: number,to:number):number{
+        return 1;
         var index = this._nodeneighbors[from].indexOf(to);
         if(index >= 0){
-            return this._edges[from][index];
+            return 1;
+            //return this._edges[from][index];
         }
         return -1;
     }
@@ -133,12 +186,37 @@ class Shortestpath implements Graph{   // index 0 = x, index 1 = y
         //Manhathan distance
         return Math.abs(gol[0] - cur[0]) + Math.abs(gol[1] - cur[1]);
     }
+    
+    specialIndexOf(obj:number[]):number {    
+        for (var i = 0; i < this._nodeValues.length; i++) {
+            if (this._nodeValues[i][0] == obj[0] && this._nodeValues[i][1] == obj[1]) {
+                return i;
+            }
+        }
+        return -1;
+    }
 }
 
 
-var sp = new Shortestpath();
-var as = new AstarSearch(sp);
-var res = as.star(0,5);
-console.log("res: " + res.toString());   
-
+var sp = new Shortestpath(10, true, 0);// 10x10 map, true for wall and 5 for hole in wall 
+var as = new AstarSearch<number[]>(sp);
+var start = sp.specialIndexOf([2,2]);
+var end = sp.specialIndexOf([6,6]);
+console.log("Start: " +start +" End: " + end);
+var res = as.star(start,end);
+if(res.length == 0){
+    console.log("no path found");
+}else{
+    var conv = [];
+    for(var i = 0 ; i < res.length; i ++){
+        conv[i]= sp._nodeValues[res[i]];
+    }
+    conv = conv.reverse();
+    conv.forEach(c => {
+        console.log("(" + c+")");   
+    
+        });
+    console.log("Path length: " + conv.length);
+    console.log("res: (" + conv.toString()+")");   
+}
 //}
