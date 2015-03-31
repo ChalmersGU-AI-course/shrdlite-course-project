@@ -10,6 +10,8 @@ App.controller('AstarController', ['$scope', function($scope) {
 	$scope.boards = [];
 	$scope.heuristics = [
 		{name: "None", func: function(board) { return 0; }},
+		{name: "Number of bricks out of place", func: NumBricksOutOfPlace},
+		{name: "Total manhattan distance", func: TotalManhattanDistance},
 	];
 	$scope.selectedHeuristic = $scope.heuristics[0];
 
@@ -23,9 +25,11 @@ App.controller('AstarController', ['$scope', function($scope) {
 
 	$scope.plan = function() {
 		var start = new Date().getTime();
-		//var astarResult = Astar(something, something, something)
+		var astarResult = Astar($scope.boards[0], IsGoalBoard, $scope.selectedHeuristic.func);
 		var end = new Date().getTime();
 		$scope.timeTaken = end - start;
+		$scope.numExpandedNodes = astarResult.NumExpandedNodes;
+		$scope.boards = astarResult.Path.Nodes;
 	}
 
 	$scope.prev = function() {
