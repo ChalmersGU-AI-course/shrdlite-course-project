@@ -42,8 +42,7 @@ class Graph {
 	f_score[start] = g_score[start] + this.heuristicCost(start,goal);
 
 	//loop commented out to not get stuck in inf loop
-        //while (openset.length != 0) {
-	for(var ii=0;ii<2;++ii){
+        while (openset.length != 0) {
             //var current: number = this.indexOfSmallest(f_score);//hitta elementet med lägst värde i f_score, sätt current till dess index
 	    var current: number = this.indexOfSmallestRestricted(f_score,openset);
 	    console.log("size of set: ",openset.length,"current: ",current);
@@ -57,10 +56,6 @@ class Graph {
             closedset.push(openset[it]);
 	    openset.splice(it,1); //splice removes the element at index
 
-	    console.log("Openset:");
-	    for(var i=0;i<openset.length;++i)
-		console.log(openset[i]);
-	    
 	    var current_neighbours = this.getNeighbours(current);
 
 
