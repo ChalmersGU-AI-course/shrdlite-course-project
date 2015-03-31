@@ -1,5 +1,6 @@
 
 TARGETS = html ajax ansi offline
+OWN     = AStar
 
 .DELETE_ON_ERROR:
 
@@ -14,9 +15,11 @@ help:
 clean:
 	rm -f $(TSFILES:%.ts=%.js) *.map
 
-all: $(TARGETS)
+all: $(TARGETS) $(OWN)
+
 
 $(TARGETS): %: shrdlite-%.js
+$(OWN)    : %: %.js
 
 %.js: %.ts $(TSFILES)
 	tsc --out $@ $<
