@@ -9,21 +9,18 @@ import java.util.Set;
 
 public abstract class AbstractNode implements Comparable<AbstractNode>{
 	private final String name;
-//	private final int x, y;
 	private int fcost, gcost;
 	private AbstractNode parent; // Previous node in the graph when using the algorithm
 	private Map<AbstractNode, Integer> neighbors;
 	
-	public AbstractNode(String name/*, int x, int y*/){
+	public AbstractNode(String name){
 		this.name = name;
-//		this.x = x;
-//		this.y = y;
 		this.gcost = Integer.MAX_VALUE; //Initialize to make the algorithm work
 		this.neighbors = new HashMap<AbstractNode, Integer>(); //Neighbors of the node
 	}
 
 	
-	/*
+	/**
 	 * A* algorithm (a formal description can be found at http://en.wikipedia.org/wiki/A*_search_algorithm)
 	 * 
 	 * @start The start node
@@ -43,11 +40,6 @@ public abstract class AbstractNode implements Comparable<AbstractNode>{
 		while(!openset.isEmpty()){
 			AbstractNode current = AbstractNode.minFcost(openset);
 			
-//			DEBUG: who´s the minFcost
-//			System.out.println("=============");
-//			System.out.println("min F="+current);
-//			END_DEBUG
-//			
 			if(current.equals(goal)){
 				return AbstractNode.reconstructPath(start, goal);
 			}
@@ -69,32 +61,18 @@ public abstract class AbstractNode implements Comparable<AbstractNode>{
 					}
 				}
 			}
-//			DEBUG: Info about the openset
-//
-//			for(Node n: openset){
-//				System.out.println("-----------");
-//				System.out.println(n);
-//				System.out.println("parent="+n.getParent());
-//				System.out.println("g="+n.getGcost());
-//				System.out.println("f="+n.getFcost());
-//			}
-//			END_DEBUG
 		}
 		return new LinkedList<AbstractNode>();
 	}
 	
-	/*
-	 * Example of heuristic: Euclidean distance
+	/**
+	 * Heuristic function
 	 * 
-	 * @n1 node 1
 	 * @n2 node 2
-	 * @return Euclidean distance between the two nodes
 	 */
-	public abstract int heuristic(AbstractNode n2);//{
-//		return (int) Math.sqrt(Math.pow((n1.getX()-n2.getX()), 2)+Math.pow((n1.getY()-n2.getY()), 2));
-//	}
+	public abstract int heuristic(AbstractNode n2);
 
-	/*
+	/**
 	 * Reconstruct the path from the start to goal node.
 	 * Take the parent of current node, add itself to the list and\
 	 * then repeat with "current" as the parent until "current" is the start node.
@@ -112,7 +90,7 @@ public abstract class AbstractNode implements Comparable<AbstractNode>{
 		return path;
 	}
 	
-	/*
+	/**
 	 * Prints the path taken
 	 * 
 	 * @path the path
@@ -126,8 +104,11 @@ public abstract class AbstractNode implements Comparable<AbstractNode>{
 		
 	}
 	
-	/*
-	 * Returns the element in @openset that has the least fcost
+	/**
+	 * Returns the node with minimal fcost
+	 * 
+	 * @openset the open set for astar
+	 * @return the element in @openset that has the least fcost
 	 */
 	public static AbstractNode minFcost(Set<AbstractNode> openset) {
 		return (AbstractNode)(Collections.min(openset));
@@ -138,17 +119,6 @@ public abstract class AbstractNode implements Comparable<AbstractNode>{
 	public String getName() {
 		return name;
 	}
-
-
-//	public int getX() {
-//		return x;
-//	}
-//
-//
-//	public int getY() {
-//		return y;
-//	}
-
 
 	public int getFcost() {
 		return fcost;
@@ -199,12 +169,7 @@ public abstract class AbstractNode implements Comparable<AbstractNode>{
 			return 0;
 		}
 	}
-	
-//	@Override
-//	public boolean equals(Object n) {
-//		return this.x == ((Node)n).getX() && this.y == ((Node)n).getY(); 
-//	}
-	
+		
 	@Override
 	public String toString() {
 		return name;
