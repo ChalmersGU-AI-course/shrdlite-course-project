@@ -36,7 +36,7 @@ module AStar {
         }
     }
 
-    class Edge {
+    export class Edge {
         start : Node;
         end : Node;
         cost: number;
