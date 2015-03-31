@@ -1,6 +1,7 @@
 /// <reference path="collections.ts" />
 module AStar {
-
+ 
+    //A graph contains a state of type S and a list of edges to its neighbours
     export class Graph<S>{
         constructor(public children : Edge<S>[], public state : S){}
 
@@ -8,18 +9,27 @@ module AStar {
             this.children.push(e);
         }
     }
-
+ 
+    //A path contains the total cost of the path and a list of
+    //visited nodes
     export class Path<S>{
         cost : number;
         constructor(private path : Graph<S>[]){this.cost = 0;}
+
+        //Returns a new path containing the graph contained in edge
+        //appeneded to the old path
         push(e:Edge<S>):Path<S>{
             var p = new Path(this.path.concat([e.end])); 
             p.cost = this.cost + e.cost;
             return p;
         }
+
+        //Returns the cost of the path
         weight():number{
             return this.cost;
         }
+
+        //Retrieves the last object on the path
         peek():Graph<S> {
             return this.path[this.path.length - 1];
         }
@@ -38,6 +48,7 @@ module AStar {
         end  : Graph<S>;
     }
 
+    //A* search function
     export function astarSearch<S>(graph:Graph<S>,h:Heuristic<S>,goal:Goal<S>){
         var frontier = new collections.PriorityQueue<Path<S>>(function(a,b) {
             return (b.weight() + h(b.peek().state)) -  (a.weight() + h(a.peek().state))
@@ -57,7 +68,7 @@ module AStar {
     }
     
 
-//Simple test
+    //Simple test
     export function test(){
         var g1 = new Graph<number>([],4);
         var g2 = new Graph([],3);
@@ -95,8 +106,8 @@ module AStar {
         l6.addEdge({cost: 23, end: l3});
         l7.addEdge({cost: 42, end: l3});
 
-        return astarSearch<string>(l1
-                                   ,function(a : string){
+        return astarSearch<string>(l1 //Start node
+                                   ,function(a : string){ //H(n)
                                        if(a == "gothenburg") {
                                            return Math.sqrt(4*4 + 15*15);
                                        } else if(a == "malmo"){
@@ -112,7 +123,7 @@ module AStar {
                                        } else if(a == "stockholm") {
                                            return 0;
                                        }
-                                   },
+                                   }, //Goal
                                    function(a : string){
                                        return a == "stockholm";
                                    })
