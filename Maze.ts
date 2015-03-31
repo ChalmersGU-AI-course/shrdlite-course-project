@@ -8,8 +8,8 @@ class Maze {
         this.height = Math.max(height, 1);
     }
 
-    public getEdges(seed: number): [number, number][][] {
-        return this.generate(seed);
+    public getEdges(seed: number, balance: number): [number, number][][]{
+        return this.generate(seed, balance);
     }
 
     public getNodes(): GraphNode[] {
@@ -22,9 +22,12 @@ class Maze {
             return nodes;
     }
 
-    private generate(seed: number) {
+    private generate(seed: number, balance: number) {
         //Create a grid graph with different random edge costs and then make it a MST
         var rnd = new Random(seed);
+
+        var xstrength = balance*100 - 1;
+        var ystrength = 100 - xstrength;
 
         var edges: [number, number, number][][];
         edges = new Array();
@@ -36,16 +39,16 @@ class Maze {
                 edges[c] = new Array();
 
                 if (y > 0)
-                    edges[c].push([c, this.xy2node(x, y - 1), rnd.nextRange(1, 100)]);
+                    edges[c].push([c, this.xy2node(x, y - 1), rnd.nextRange(1, ystrength)]);
 
                 if (y < this.height - 1)
-                    edges[c].push([c, this.xy2node(x, y + 1), rnd.nextRange(1, 100)]);
+                    edges[c].push([c, this.xy2node(x, y + 1), rnd.nextRange(1, ystrength)]);
 
                 if (x > 0)
-                    edges[c].push([c, this.xy2node(x - 1, y), rnd.nextRange(1, 100)]);
+                    edges[c].push([c, this.xy2node(x - 1, y), rnd.nextRange(1, xstrength)]);
 
                 if (x < this.width - 1)
-                    edges[c].push([c, this.xy2node(x + 1, y), rnd.nextRange(1, 100)]);
+                    edges[c].push([c, this.xy2node(x + 1, y), rnd.nextRange(1, xstrength)]);
             }
         }
 

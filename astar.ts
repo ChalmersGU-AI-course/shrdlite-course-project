@@ -16,6 +16,9 @@ function genMaze(ctx: CanvasRenderingContext2D, canvas_width: number, canvas_hei
     var width: number = $('#width').val();
 
     var height: number = $('#height').val();
+    var balance: number = $('#balance').val();
+
+
 
     var grid_size = Math.min(canvas_width / width, canvas_height / height);
 
@@ -28,7 +31,7 @@ function genMaze(ctx: CanvasRenderingContext2D, canvas_width: number, canvas_hei
 
     
 
-    var ME = M.getEdges(seed);
+    var ME = M.getEdges(seed, balance);
     var MN = M.getNodes();
 
     var GM = new Graph(MN, ME);
@@ -163,6 +166,8 @@ function init(): void {
     $('#generate').click(function () {
         genMaze(ctx2, canvas_width, canvas_width);
     });
+
+    genMaze(ctx2, canvas_width, canvas_width);
 };
 
 $(document).ready(init);
