@@ -42,8 +42,10 @@ class Graph {
 	f_score[start] = g_score[start] + this.heuristicCost(start,goal);
 
 	//loop commented out to not get stuck in inf loop
-        while (openset.length != 0) {
-            var current: number = this.indexOfSmallest(f_score);//hitta elementet med lägst värde i f_score, sätt current till dess index
+        //while (openset.length != 0) {
+	for(var ii=0;ii<2;++ii){
+            //var current: number = this.indexOfSmallest(f_score);//hitta elementet med lägst värde i f_score, sätt current till dess index
+	    var current: number = this.indexOfSmallestRestricted(f_score,openset);
 	    console.log("size of set: ",openset.length,"current: ",current);
             if (current == goal) {
                 console.log("Hurray!")
@@ -54,6 +56,10 @@ class Graph {
             var it:number = this.find(openset,current);
             closedset.push(openset[it]);
 	    openset.splice(it,1); //splice removes the element at index
+
+	    console.log("Openset:");
+	    for(var i=0;i<openset.length;++i)
+		console.log(openset[i]);
 	    
 	    var current_neighbours = this.getNeighbours(current);
 
@@ -72,7 +78,7 @@ class Graph {
                     //spara undan hur du kom hit
 		    //came_from[] something, left to do
                     g_score[current_neighbours[i][1]] = tentative_g_score;
-                    f_score[current_neighbours[i][1]] = g_score[current_neighbours[i][1]] + this.heuristicCost[current_neighbours[i][1], goal];
+                    f_score[current_neighbours[i][1]] = g_score[current_neighbours[i][1]] + this.heuristicCost(current_neighbours[i][1], goal);
 
                     if ( this.find(openset,current_neighbours[i][1]) == -1 )
 		    {
@@ -112,6 +118,18 @@ class Graph {
 	}
 	return lowest;
     }
+    
+    indexOfSmallestRestricted(arr:number[],oset:number[]) {
+	var lowest = 0;
+	var index = 0;
+	for(var i=0;i<oset.length;++i)
+	{
+	    index=oset[i];
+	    if ( (arr[index] < arr[lowest] && arr[index]>=0 ) || (arr[index]>=0 && arr[lowest]==-1) ) lowest = index;
+	}
+	return lowest;	
+    }
+    
     //returns -1 if value not in arr
     find(arr:number[],value:number) {
 	var index = -1;
