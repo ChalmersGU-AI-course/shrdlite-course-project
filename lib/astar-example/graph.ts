@@ -49,11 +49,13 @@ class GraphNode {
 	private id : number;
 	private xPos : number;
 	private yPos : number;
+	private name : string;
 
-	constructor(id : number, xPos : number, yPos : number) {
+	constructor(id : number, xPos : number, yPos : number, name : string) {
 		this.id = id;
 		this.xPos = xPos;
 		this.yPos = yPos;
+		this.string = string;
 	}
 
 	distanceTo(to : GraphNode) : number {
@@ -70,6 +72,11 @@ class GraphNode {
 
 	getY() : number {
 		return this.yPos;
+	}
+
+	getName() : string {
+		return this.name;
+	
 	}
 }
 
