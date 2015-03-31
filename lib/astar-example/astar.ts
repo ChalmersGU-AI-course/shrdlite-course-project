@@ -2,55 +2,33 @@
 /// <reference path="../astar-example/graph.ts" />
 
 module aStar {
-    export function aStar(graph : Graph, fromNode : GraphNode, toNode : GraphNode) : number {
+    export function aStar(graph : Graph, fromNode : GraphNode, toNode : GraphNode) : Edge[] {
         if(!graph.contains(fromNode) && !graph.contains(toNode)) {
             // ERROR, nodes are not in graph.
         }
 
-        /*  A*
-        put the starting node on the open list (you can leave its f at zero)
-
-        while the open list is not empty
-            generate q's 8 successors and set their parents to q
-            for each successor
-                if successor is the goal, stop the search
-                successor.g = q.g + distance between successor and q
-                successor.h = distance from goal to successor
-                successor.f = successor.g + successor.h
-
-                if a node with the same position as successor is in the OPEN list \
-                    which has a lower f than successor, skip this successor
-                if a node with the same position as successor is in the CLOSED list \ 
-                    which has a lower f than successor, skip this successor
-                otherwise, add the node to the open list
-            end
-            push q on the closed list
-        end
-        */
-
-        var evaluatedNodes = new collections.Set<StarNode>(); 
+        // We dont care about evaluated nodes because we want our astar to handle non-monotonic heuristic functions.
+        // var evaluatedNodes = new collections.Set<StarNode>(); 
         var nodesToEvaluate = new collections.PriorityQueue<StarNode>()
         
-        var sFrom = new StarNode(fromNode, 0);
+        var sFrom = new StarNode(fromNode, 0, fromNode.distanceTo(toNode));
 
         nodesToEvaluate.add(sFrom); // Should be a StarNode
         
         while(!nodesToEvaluate.isEmpty()) {
             var currentNode = nodesToEvaluate.dequeue();
+            if(currentNode.equals(toNode)) {
+                return currentNode.getPath();
+            }
+
             for(var currentNeighbor in graph.getNeighborsTo(currentNode)) {
-                if(currentNeighbor == toNode) {
-                    // We're done.
-                } else {
-                    var starN = new StarNode(currentNeighbor, currentNode.getDistance());
-
-                    if(nodesToEvaluate.contains(starN)) {
-
-                    }
-                }
+                var newDistance = currentNode.getDistance() + graph.getCostForEdge(currentNode, currentNeighbor);
+                var starNeighbor = new StarNode(currentNeighbor, newDistance, currentNeighbor.getDistance(toNode));
+                nodesToEvaluate.add(starNeighbor);
             }
         }
 
-        return 1;
+        return null;
     }
 
     class StarNode extends GraphNode {
@@ -58,11 +36,19 @@ module aStar {
         heuristicDistance : number;
         pathTo : Edge[];
 
-        constructor(node : GraphNode, distance : number) {
+        constructor(node : GraphNode, distance : number, heuristic : number) {
             super(node.getId(), node.getX(), node.getY());
             this.distanceSoFar = distance;
-            this.heuristicDistance = 0; // TODO
+            this.heuristicDistance = heuristic;
 
+        }
+
+        getPath() : Edge[] {
+            return this.pathTo.slice();   
+        }
+
+        equals(otherNode : GraphNode) : boolean {
+            return this.getId() == otherNode.getId();
         }
 
         StarNodeToString() : string {
@@ -71,6 +57,14 @@ module aStar {
 
         getDistance() : number {
             return this.distanceSoFar;
+        }
+
+        getTotalDistance() : number {
+            return this.distanceSoFar+this.heuristicDistance;
+        }
+
+        compareTo(otherNode : StarNode) : number {
+            return this.getTotalDistance()-otherNode.getTotalDistance();
         }
     }
 }

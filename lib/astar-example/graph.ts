@@ -36,6 +36,17 @@ class Graph {
 		}
 		return neighbors.toArray();
 	}
+
+	getCostForEdge(firstNode : GraphNode, secondNode : GraphNode) : number {
+		for(var e in this.edges) {
+			if(e.getFromNode.equals(firstNode) && e.getEndNode.equals(secondNode)
+			|| e.getFromNode.equals(secondNode) && e.getEndNode.equals(firstNode)) {
+				return e.getCost;
+			}
+		}
+
+		return -1;
+	}
 }
 
 class GraphNode {
@@ -87,5 +98,9 @@ class Edge {
 
 	getEndNode() : GraphNode {
 		return this.endNode;
+	}
+
+	getCost() : number {
+		return cost;
 	}
 }
