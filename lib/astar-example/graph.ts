@@ -31,6 +31,18 @@ class GraphNode {
 	distanceTo(to : GraphNode) : number {
 		return Math.sqrt(Math.pow(this.xPos-to.xPos, 2)+Math.pow(this.yPos-to.yPos, 2));
 	}
+
+	getId() : number {
+		return this.id;
+	}
+
+	getX() : number {
+		return this.xPos;
+	}
+
+	getY() : number {
+		return this.yPos;
+	}
 }
 
 class Edge {

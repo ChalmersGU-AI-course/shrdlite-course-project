@@ -3,9 +3,9 @@
 
 module aStar {
     export function aStar(graph : Graph, fromNode : GraphNode, toNode : GraphNode) : number {
-        if(!graph.existsInGraph(fromNode) && !graph.existsInGraph(toNode)) {
+        //if(!graph.existsInGraph(fromNode) && !graph.existsInGraph(toNode)) {
             // ERROR, nodes are not in graph.
-        }
+        //}
 
         /*  A*
         put the starting node on the open list (you can leave its f at zero)
@@ -38,7 +38,7 @@ module aStar {
         
         while(!nodesToEvaluate.isEmpty()) {
             var currentNode = nodesToEvaluate.dequeue();
-            for(n in graph.getNeighborsTo(currentNode)) {
+            /*for(n in graph.getNeighborsTo(currentNode)) {
                 if(n == toNode) {
                     // We're done.
                 } else {
@@ -48,7 +48,7 @@ module aStar {
 
                     }
                 }
-            }
+            }*/
         }
 
         return 1;
@@ -60,13 +60,14 @@ module aStar {
         pathTo : Edge[];
 
         constructor(node : GraphNode) {
-            this.id = node.id;
-            this.xPos = node.xPos;
-            this.yPos = node.yPos;
+            super(node.getId(), node.getX(), node.getY());
+            this.distanceSoFar = 0;
+            this.heuristicDistance = 0; // TODO
+
         }
-        
-        StarNodeToString() {
-            return this.id;
+
+        StarNodeToString() : string {
+            return this.getId.toString();
         }
     }
 }
