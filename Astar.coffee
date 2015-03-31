@@ -1,3 +1,6 @@
+# TODO: Include priority queue lib to html
+# https://github.com/adamhooper/js-priority-queue
+
 # "Enum" of the possible moves
 # E.g: Move.LEFT
 Move =
