@@ -1,8 +1,8 @@
-/// <reference path="lib/typescript-collections/collections.ts" />
-/// <reference path="../graph.ts" />
+/// <reference path="../typescript-collections/collections.ts" />
+/// <reference path="../astar-example/graph.ts" />
 
 module aStar {
-    export function aStar(graph : Graph, fromNode : Node, toNode : Node) : int {
+    export function aStar(graph : Graph, fromNode : GraphNode, toNode : GraphNode) : number {
         if(!graph.existsInGraph(fromNode) && !graph.existsInGraph(toNode)) {
             // ERROR, nodes are not in graph.
         }
@@ -42,7 +42,7 @@ module aStar {
                 if(n == toNode) {
                     // We're done.
                 } else {
-                    var starN = new StarNode(n, )
+                    // var starN = new StarNode(n);
 
                     if(nodesToEvaluate.contains(starN)) {
 
@@ -50,14 +50,22 @@ module aStar {
                 }
             }
         }
+
+        return 1;
     }
 
-    class StarNode extends Node {
-        distanceSoFar : int;
-        heuristicDistance : int;
+    class StarNode extends GraphNode{
+        distanceSoFar : number;
+        heuristicDistance : number;
         pathTo : Edge[];
 
-        function StarNodeToString() {
+        constructor(node : GraphNode) {
+            this.id = node.id;
+            this.xPos = node.xPos;
+            this.yPos = node.yPos;
+        }
+        
+        StarNodeToString() {
             return this.id;
         }
     }

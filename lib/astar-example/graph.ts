@@ -1,50 +1,50 @@
-/// <reference path="/lib/typescript-collections/collections.ts" />
+/// <reference path="../typescript-collections/collections.ts" />
 
 class Graph {
-	private var edges = new collections.Set<Edge>();
-	private var nodes = new collections.Set<Node>();
+	private edges = new collections.Set<Edge>();
+	private nodes = new collections.Set<GraphNode>();
 
 	constructor(argument) {
 		// code...
 	}
 
 	addEdge(newEdge : Edge) {
-		edges.add(newEdge);
+		this.edges.add(newEdge);
 	}
 
-	addNode(newNode : Node) {
-		nodes.add(newNode);
+	addNode(newNode : GraphNode) {
+		this.nodes.add(newNode);
 	}
 }
 
-class Node {
-	private id : int;
-	private xPos : int;
-	private yPos : int;
+class GraphNode {
+	private id : number;
+	private xPos : number;
+	private yPos : number;
 
-	constructor(id : int, xPos : int, yPos : int) {
+	constructor(id : number, xPos : number, yPos : number) {
 		this.id = id;
 		this.xPos = xPos;
 		this.yPos = yPos;
 	}
 
-	distanceTo(to : Node) : double {
+	distanceTo(to : GraphNode) : number {
 		return Math.sqrt(Math.pow(this.xPos-to.xPos, 2)+Math.pow(this.yPos-to.yPos, 2));
 	}
 }
 
 class Edge {
-	private cost : int;
-	private fromNode : int;
-	private endNode : int;
+	private cost : number;
+	private fromNode : number;
+	private endNode : number;
 
-	constructor(cost : int, fromNode : Node, toNode : Node) {
+	constructor(cost : number, fromNode : number, toNode : number) {
 		this.cost = cost;
 		this.fromNode = fromNode;
-		this.endNode = endNode;
+		this.endNode = toNode;
 	}
 
-	compareTo(otherEdge : Edge) : int {
+	compareTo(otherEdge : Edge) : number {
 		return this.cost-otherEdge.cost;
 	}
 }
