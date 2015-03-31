@@ -1,17 +1,16 @@
-/// <reference path="shrdlite-course-project\vendor\collections.ts" />
-
+/// <reference path="vendor\collections.ts" />
 module Astar {      
-  
-  interface Node{
-    fscore: number
-    gscore: number 
+    //n.state:,
+    //n.parent:,
+    //n.action:,
+ export class Node{
+    fscore: number;
+    gscore: number;  // PATH-COST:
+    children: [Node]
+    constructor(g:number,nodes:[Node]){
+      this.children = nodes
+    }
   }
-
-  interface Graph{
-      nodes() : [Node];
-      getAdj(n:Node) : [Node]; 
-  }
-
   interface Functions{
     heuristic_approx(n1:Node, n2:Node) : number
     dist_between(n1:Node, n2:Node) : number
@@ -22,7 +21,7 @@ TODO: config priority que to sort by f(x)
 
 AStar :: Graph -> Path
 */
- export function Astar(start: Node, goal: Node, graph :Graph, functions : Functions): Node[]{
+ export function Astar(start: Node, goal:Node, functions : Functions): Node[]{
     //Node comparion function
     function comp(a:Node,b:Node){
       if (a.fscore < b.fscore)
@@ -33,7 +32,6 @@ AStar :: Graph -> Path
         return 0;
       }
     }
-
     // Initilization Vendor Types 
     var closedset = new collections.Set<Node>(); // nodes allready evaluated.
     var openset = new collections.Set<Node>(); // nodes to be evaluated.
@@ -44,7 +42,6 @@ AStar :: Graph -> Path
     start.fscore = start.gscore + functions.heuristic_approx(start,goal);
     openset.add(start);
     queue.add(start); 
-    
     // Variable initiations moved outside reduce redundancy 
     var current : Node
     var neighbors :[Node]
@@ -71,7 +68,6 @@ AStar :: Graph -> Path
               }
               path.reverse
               return path.toArray()
-              
         }
         /*
         All modyfing actions preformed on the set, will also have to be preformed
@@ -81,14 +77,11 @@ AStar :: Graph -> Path
         openset.remove(current)
         queue.dequeue() 
         closedset.add(current)
-        neighbors = graph.getAdj(current) // expand the node that is first in the queue.
-
+        neighbors = current.children // expand the node that is first in the queue.
          /*
         All the neigbors are checked. in several ways    
-        */
-         
+        */ 
         for(var neighbor in neighbors){
-            
             if (!closedset.contains(neighbor)){
                 g_score = current.gscore + functions.dist_between(current,neighbor) 
             }else{ // else if - is to prefer. 
