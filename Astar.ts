@@ -48,17 +48,18 @@ class AstarResult<T> {
 function PathCompare<T>(p0: Path<T>, p1: Path<T>): number {
 	var p0Cost = p0.Cost + p0.HeuristicCost;
 	var p1Cost = p1.Cost + p1.HeuristicCost;
-	if (p0 < p1) {
-		return -1;
-	} else if (p0 == p1) {
+	if (p0Cost < p1Cost) {
+		return 1;
+	} else if (p0Cost == p1Cost) {
 		return 0;
 	}
-	return 1;
+	return -1;
 }
 
 function Astar<T>(start: INode<T>, isGoal: GoalFunction<INode<T>>, heuristic: HeuristicFunction<INode<T>>): AstarResult<INode<T>> {
 	var frontier = new collections.PriorityQueue<Path<INode<T>>>(PathCompare);
 	var numExpandedNodes = 0;
+	frontier.enqueue(new Path([start], 0, 0));
 	while (!frontier.isEmpty()) {
 		var path = frontier.dequeue();
 		var currentNode = path.Last();
