@@ -18,7 +18,7 @@ module Heuristics{
                 totChange = dStack + 2; 
             }
         }
-		return 0;
+		return totChange;
 	}
 
 	export function stackSearch(objectId, state : WorldState) : number {
