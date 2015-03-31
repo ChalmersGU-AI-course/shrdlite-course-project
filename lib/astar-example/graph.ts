@@ -4,10 +4,6 @@ class Graph {
 	private edges = new collections.Set<Edge>();
 	private nodes = new collections.Set<GraphNode>();
 
-	constructor(argument) {
-		// code...
-	}
-
 	addEdge(newEdge : Edge) {
 		if (this.nodes.contains(newEdge.getFromNode()) && this.nodes.contains(newEdge.getEndNode())) {
 			this.edges.add(newEdge);
@@ -41,7 +37,7 @@ class Graph {
 		for(var e in this.edges) {
 			if(e.getFromNode.equals(firstNode) && e.getEndNode.equals(secondNode)
 			|| e.getFromNode.equals(secondNode) && e.getEndNode.equals(firstNode)) {
-				return e.getCost;
+				return e.getCost();
 			}
 		}
 
@@ -101,6 +97,6 @@ class Edge {
 	}
 
 	getCost() : number {
-		return cost;
+		return this.cost;
 	}
 }

@@ -6,14 +6,13 @@ module aStar {
         if(!graph.contains(fromNode) && !graph.contains(toNode)) {
             // ERROR, nodes are not in graph.
         }
-
-        // We dont care about evaluated nodes because we want our astar to handle non-monotonic heuristic functions.
-        // var evaluatedNodes = new collections.Set<StarNode>(); 
+        
+        var evaluatedNodes = new collections.Set<StarNode>(); 
         var nodesToEvaluate = new collections.PriorityQueue<StarNode>()
         
         var sFrom = new StarNode(fromNode, 0, fromNode.distanceTo(toNode));
 
-        nodesToEvaluate.add(sFrom); // Should be a StarNode
+        nodesToEvaluate.add(sFrom);
         
         while(!nodesToEvaluate.isEmpty()) {
             var currentNode = nodesToEvaluate.dequeue();
@@ -22,9 +21,11 @@ module aStar {
             }
 
             for(var currentNeighbor in graph.getNeighborsTo(currentNode)) {
-                var newDistance = currentNode.getDistance() + graph.getCostForEdge(currentNode, currentNeighbor);
-                var starNeighbor = new StarNode(currentNeighbor, newDistance, currentNeighbor.getDistance(toNode));
-                nodesToEvaluate.add(starNeighbor);
+                if(!evaluatedNodes.contains(currentNeighbor)) {
+                    var newDistance = currentNode.getDistance() + graph.getCostForEdge(currentNode, currentNeighbor);
+                    var starNeighbor = new StarNode(currentNeighbor, newDistance, currentNeighbor.getDistance(toNode));
+                    nodesToEvaluate.add(starNeighbor);
+                }
             }
         }
 
