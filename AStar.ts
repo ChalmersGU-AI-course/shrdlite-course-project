@@ -33,6 +33,10 @@ module AStar {
         peek():Graph<S> {
             return this.path[this.path.length - 1];
         }
+
+        getPath() : Graph<S>[] {
+            return this.path;
+        }
     }
 
     export interface Heuristic<S> {
@@ -49,7 +53,7 @@ module AStar {
     }
 
     //A* search function
-    export function astarSearch<S>(graph:Graph<S>,h:Heuristic<S>,goal:Goal<S>){
+    export function astarSearch<S>(graph:Graph<S>,h:Heuristic<S>,goal:Goal<S>) : Path<S>{
         var frontier = new collections.PriorityQueue<Path<S>>(function(a,b) {
             return (b.weight() + h(b.peek().state)) -  (a.weight() + h(a.peek().state))
         });
@@ -82,7 +86,7 @@ module AStar {
     
 
     //Complicated test geolocations
-    export function geoTest() {
+    export function geoTest() : string[] {
         var l1 = new Graph<string>([], "gothenburg");
         var l2 = new Graph<string>([], "boras");
         var l3 = new Graph<string>([], "jonkoping");
@@ -106,7 +110,7 @@ module AStar {
         l6.addEdge({cost: 23, end: l3});
         l7.addEdge({cost: 42, end: l3});
 
-        return astarSearch<string>(l1 //Start node
+        var res =  astarSearch<string>(l1 //Start node
                                    ,function(a : string){ //H(n)
                                        if(a == "gothenburg") {
                                            return Math.sqrt(4*4 + 15*15);
@@ -126,7 +130,14 @@ module AStar {
                                    }, //Goal
                                    function(a : string){
                                        return a == "stockholm";
-                                   })
+                                   });
+        var resPath : string[];
+        resPath = [];
+        for (var i = 0; i < res.getPath().length; i++) {
+            var g = res.getPath()[i];
+            resPath.push(g.state);
+        }
+        return resPath;
     }
 
 }

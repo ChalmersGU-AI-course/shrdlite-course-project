@@ -1,6 +1,6 @@
 
 TARGETS = html ajax ansi offline
-OWN     = AStar
+OWN     = AStar collections
 
 .DELETE_ON_ERROR:
 

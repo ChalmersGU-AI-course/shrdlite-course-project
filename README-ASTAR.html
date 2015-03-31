@@ -17,6 +17,12 @@
       toHide.style.display = "none";
       
     }
+
+    function test() {
+        var res = AStar.geoTest();
+        console.log(res);
+        document.getElementById("res").innerHTML = "Result: " + res;
+    }
   </script>
 </head>
 <body>
@@ -91,8 +97,9 @@
     </table>
 
     <h3>Test the solution</h3>
-    <p>To run the test and see the result, open your browser console and press the button below. The path found will be output to the log.</p>
-    <button onclick="console.log(AStar.geoTest()); ">Run the geo test.</button>
+    <p>To run the test and see the result, press the button below.</p>
+     <p id="res"></p>
+     <button onclick="test();">Run the geo test.</button>  
   </div>
 </body>
 </html>
