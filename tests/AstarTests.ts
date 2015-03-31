@@ -1,7 +1,7 @@
 ///<reference path="../Astar.ts"/>
-declare var chai:any;
-declare var describe:any;
-declare var it:any;
+///<reference path="../lib/mocha.d.ts"/>
+///<reference path="../lib/chai.d.ts"/>
+
 var assert = chai.assert;
 
 class TestNode implements INode<TestNode> {
