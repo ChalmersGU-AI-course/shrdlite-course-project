@@ -19,6 +19,32 @@
   </script>
 </head>
 <body>
+  <div id="descr">
+    <p>
+      A* Laboration <br>
+      Group 10 (Traveling salesmen O(n)) - Simon Lindhén, Johan Nilsson Hansen, Alexander Persson
+    </p>
+    <p>
+      How to run:
+      Follow the instructions further down.
+    </p>
+    <p>
+      Important files:
+      <ul>
+      <li>AStar.ts       - The TypeScript file with our implementation of the A* search algorithm.</li>
+      <li>collections.ts - The data structure library we have chosen to utilize. 
+                           Defines the PriorityQueue class necessary for implementing A*.</li>
+      </ul>
+    </p>
+    <p>
+      Example: <br>
+      Our example is a geographical one, involving several Swedish cities and the connections
+      between them. The cities are modeles as nodes in a graph, and the connections are
+      represented as the archs connecting the nodes. The distance between the cities act
+      as arch costs, and as such the cost of a path is the sum of all arch costs along the path.
+      The heuristic value associated to each node is the an underestimate of the remaining cost to get from
+      that city to the goal. The starting city is Göteborg and the goal city is Stockholm.
+    </p>
   <div id="noAstar">
     <h2>You have not compiled AStar yet</h2>
     <p>To compile the A* files run: tsc --module commonjs AStar.ts. Then refresh the page.</p>
