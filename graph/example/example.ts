@@ -80,7 +80,7 @@ class GridGraph{
         return astar.compute(this.graph, startPos, endPos);
     }
 
-    useStraightLineHeuristics() {
+    useEuclideanDistanceHeuristics() {
         this.graph.setHeuristicsFun((node: graphmodule.GraphNode<Tuple>) => {
                 this.graph.nodes.forEach(
                     function forEachNodeAgain(node2: graphmodule.GraphNode<Tuple>) {
@@ -128,14 +128,38 @@ class GridGraph{
 
 }
 
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 0, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 0, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 0, 0, 0, 1, 1, 1],
+        [1, 1, 1, 1, 0, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 0, 1, 0, 1, 1, 1],
+        [1, 1, 1, 1, 0, 1, 0, 1, 1, 1],
+        [1, 1, 1, 1, 0, 1, 0, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 0, 1, 1, 1]
+        
 function runExample(element: HTMLElement) {
     var gridGraph = new GridGraph();
     
-    element.innerHTML += "StraigtLine Best Path from (1,1) to (9,7):";
+    element.innerHTML += "Graph used (gridGraph):";
     element.innerHTML += "<br>";
-    gridGraph.useStraightLineHeuristics();
+    
+    element.innerHTML += "&#9633;&#9633;&#9633;&#9633;&#9633;&#9633;&#9633;&#9633;&#9633;&#9633<br>";
+    element.innerHTML += "&#9633;&#9633;&#9633;&#9633;&#9633;&#9633;&#9633;&#9633;&#9633;&#9633<br>";
+    element.innerHTML += "&#9633;&#9633;&#9633;&#9633;&#9632;&#9633;&#9633;&#9633;&#9633;&#9633<br>";
+    element.innerHTML += "&#9633;&#9633;&#9633;&#9633;&#9632;&#9633;&#9633;&#9633;&#9633;&#9633<br>";
+    element.innerHTML += "&#9633;&#9633;&#9633;&#9633;&#9632;&#9632;&#9632;&#9633;&#9633;&#9633<br>";
+    element.innerHTML += "&#9633;&#9633;&#9633;&#9633;&#9632;&#9633;&#9633;&#9633;&#9633;&#9633<br>";
+    element.innerHTML += "&#9633;&#9633;&#9633;&#9633;&#9632;&#9633;&#9632;&#9633;&#9633;&#9633<br>";
+    element.innerHTML += "&#9633;&#9633;&#9633;&#9633;&#9632;&#9633;&#9632;&#9633;&#9633;&#9633<br>";
+    element.innerHTML += "&#9633;&#9633;&#9633;&#9633;&#9632;&#9633;&#9632;&#9633;&#9633;&#9633<br>";
+    element.innerHTML += "&#9633;&#9633;&#9633;&#9633;&#9633;&#9633;&#9632;&#9633;&#9633;&#9633<br>";
+    
+    element.innerHTML += "Euclidian distance Best Path from (1,1) to (9,7):";
+    element.innerHTML += "<br>";
+    gridGraph.useEuclideanDistanceHeuristics();
     element.innerHTML += gridGraph.computePath("1,1", "9,7");
-    element.innerHTML += "<br>";
     element.innerHTML += "<br>";
 
     element.innerHTML += "Manhattan Best Path from (1,1) to (9,7):";
