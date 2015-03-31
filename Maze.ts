@@ -13,13 +13,13 @@ class Maze {
     }
 
     public getNodes(): GraphNode[] {
-        var nodes: GraphNode[] = new Array(this.width * this.height);
+        var nodes: GraphNode[] = new Array(this.width * this.height); 
 
-        for (var x = 0; x < this.width; ++x)
-            for (var y = 0; y < this.width; ++y)
-                nodes.push({ name: x.toString() + y.toString(), x: x, y: x });
+        for (var y = 0; y < this.height; ++y)
+            for (var x = 0; x < this.width; ++x)
+                nodes[y*this.width+x] = { name: x.toString() + y.toString(), x: x, y: x }; 
 
-        return nodes;
+            return nodes;
     }
 
     private generate(seed: number) {
@@ -53,7 +53,7 @@ class Maze {
     }
 
     public xy2node(x: number, y: number): number {
-        return y * this.width + x;
+        return y * this.width + x; 
     }
 
     public node2xy(nodeNo: number): [number, number]{
