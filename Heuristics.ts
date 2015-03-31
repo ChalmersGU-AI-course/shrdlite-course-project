@@ -15,7 +15,7 @@ module Heuristics{
                 if(dStack < 0){
                 	dStack = -dStack;
                 }
-                totChange = dStack + 2; 
+                totChange = totChange + dStack + 2; 
             }
         }
 		return totChange;
