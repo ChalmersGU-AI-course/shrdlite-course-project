@@ -17,7 +17,7 @@ class Maze {
 
         for (var y = 0; y < this.height; ++y)
             for (var x = 0; x < this.width; ++x)
-                nodes[y*this.width+x] = { name: x.toString() + y.toString(), x: x, y: x }; 
+                nodes[y*this.width+x] = { name: x.toString() + y.toString(), x: x, y: y }; 
 
             return nodes;
     }
