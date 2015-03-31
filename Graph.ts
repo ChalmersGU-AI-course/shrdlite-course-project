@@ -44,7 +44,7 @@ class Graph {
 	//loop commented out to not get stuck in inf loop
         while (openset.length != 0) {
             var current: number = this.indexOfSmallest(f_score);//hitta elementet med lägst värde i f_score, sätt current till dess index
-	    
+	    console.log("size of set: ",openset.length,"current: ",current);
             if (current == goal) {
                 console.log("Hurray!")
 		return came_from;
@@ -55,12 +55,12 @@ class Graph {
             closedset.push(openset[it]);
 	    openset.splice(it,1); //splice removes the element at index
 	    
-	    
 	    var current_neighbours = this.getNeighbours(current);
 
 
             for (var i = 0; i < current_neighbours.length; ++i) {
-                if (this.find(closedset,current_neighbours[i][1]))
+		
+		if (this.find(closedset,current_neighbours[i][1]) != -1)
                   continue;
 
 		var edge_between_cost=this.cost(this.nodes[current],this.nodes[current_neighbours[0][1]]);
@@ -68,13 +68,16 @@ class Graph {
 		
                 var tentative_g_score = g_score[current] + edge_between_cost;
 
-                if (this.find(openset,current_neighbours[i][1])==-1 || tentative_g_score < g_score[current_neighbours[i][1]]) {
+                if ( (this.find(openset,current_neighbours[i][1])==-1 ) || tentative_g_score < g_score[current_neighbours[i][1]]) {		    
                     //spara undan hur du kom hit
 		    //came_from[] something, left to do
                     g_score[current_neighbours[i][1]] = tentative_g_score;
                     f_score[current_neighbours[i][1]] = g_score[current_neighbours[i][1]] + this.heuristicCost[current_neighbours[i][1], goal];
-                    if ( this.find(openset,current_neighbours[i][1]) != -1 )
+
+                    if ( this.find(openset,current_neighbours[i][1]) == -1 )
+		    {
                         openset.push(current_neighbours[i][1]);
+		    }
                 }
             }
         }
