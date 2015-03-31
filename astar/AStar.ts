@@ -69,6 +69,7 @@ module AStar {
 
     export function astar(s: Node, t : Node, nodes : Node[]) : Node[] {
 
+        /*
         function getBest() : Node {
             // Return Node in todo-list with minimum cost
             return todo.reduce((currMin : Node, v : Node) => {
@@ -77,25 +78,39 @@ module AStar {
                 return (vVal<=minVal)?v:currMin;
             }, new Node(null,null,null,Infinity));
         }
+        */
 
-        var todo     : Node[]   = [s]
-          , done     : Node[]   = []
-          ;
+        var compFunc : collections.ICompareFunction<Node> = function(a:Node, b: Node){
+            return (b.cost+b.heuristic)-(a.cost+a.heuristic);
+        };
+
+        var frontier : collections.PriorityQueue<Node> = new collections.PriorityQueue<Node>(compFunc);
+
+        frontier.add(s);
+
+        var done     : Node[]   = [];
         // Start node's cost from start node is 0
         s.cost = 0;
         s.previous = null;
 
-        while (todo.length > 0) {
-            var v = getBest();
+        while (!frontier.isEmpty()) {
+            var v = frontier.dequeue();
+
+            if(v.label === "f") {
+                console.log("nej!"+v.cost+v.heuristic);
+                console.log(frontier.peek());
+            }
+
+            //TODO the prio queue is never updated when a nodes cost is updated
 
             // Possibly update neighbours of node we're visiting now
             for (var eKey in v.neighbours) {
                 var edge : Edge = v.neighbours[eKey]
                  ,  n    : Node = edge.end;
 
-                // Add to todo if not already visited
+                // Add to frontier if not already visited
                 if (done.indexOf(n) === -1)
-                    todo.push(n);
+                    frontier.add(n);
 
                 // Update if path through v is better
                 var newCost = edge.cost + v.cost;
@@ -107,10 +122,9 @@ module AStar {
 
             // When we remove t from the frontier, we're done
             if (v === t) {
-                todo = [];
+                frontier.clear();
+                console.log("done!"+!frontier.isEmpty());
             } else {
-                // Mark node v as visited
-                todo.splice(todo.indexOf(v),1);
                 done.push(v);
             }
 
