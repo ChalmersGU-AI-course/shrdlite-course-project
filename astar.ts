@@ -13,12 +13,6 @@ function init(): void {
     $('#map').append(canv);
     var ctx = canv.getContext('2d');
 
-    var canv2 = document.createElement("canvas");
-    canv2.width = 1030;
-    canv2.height = 1030;
-    $('#maze').append(canv2);
-    var ctx2 = canv2.getContext('2d');
-
     var bild = new Image();
     bild.src = "europe.svg";
     bild.onload = function () { ctx.drawImage(bild, 0, 0, 600, 513); };
@@ -29,32 +23,57 @@ function init(): void {
     }
 
     var G = new Graph(Europe.Nodes, Europe.Edges);
-    var M = new Maze(32, 32);
+
+
+
+
+
+    var width = 32;
+    var height = 32;
+
+    var canvas_width = 1024;
+    var canvas_height = 1024;
+
+    var grid_size = Math.min(canvas_width / width, canvas_height / height);
+
+    var grid_width = grid_size * width;
+    var grid_height = grid_size * height;
+
+    var canv2 = document.createElement("canvas");
+    canv2.width = canvas_width + 1;
+    canv2.height = canvas_height + 1;
+    $('#maze').append(canv2);
+    var ctx2 = canv2.getContext('2d');
+
+    var M = new Maze(width, height);
 
     var ME = M.getEdges(1);
+    var MN = M.getNodes();
+
+    var GM = new Graph(MN, ME);
+
+    GM.findPath(0, MN.length - 1);
+
 
     ctx2.lineWidth = 1;
-
-    for (var x = 0; x <= 32; ++x) {
+    ctx2.strokeStyle = "black";
+    for (var x = 0; x <= width; ++x) {
         ctx2.beginPath();
-        ctx2.moveTo(x * 32, 0);
-        ctx2.lineTo(x * 32, 32 * 32);
-        ctx2.strokeStyle = "black";
+        ctx2.moveTo(x * grid_size, 0);
+        ctx2.lineTo(x * grid_size, grid_height);
         ctx2.stroke();
     }
 
-    for (var y = 0; y <= 32; ++y) {
+    for (var y = 0; y <= height; ++y) {
         ctx2.beginPath();
-        ctx2.moveTo(0, y * 32);
-        ctx2.lineTo(32 * 32, y * 32);
-        ctx2.strokeStyle = "black";
+        ctx2.moveTo(0, y * grid_size);
+        ctx2.lineTo(grid_width, y * grid_size);
         ctx2.stroke();
     }
-
-    ctx2.lineWidth = 2;
-
-    for (var x = 0; x < 32; ++x) {
-        for (var y = 0; y < 32; ++y) {
+    
+    ctx2.strokeStyle = "white";
+    for (var x = 0; x < width; ++x) {
+        for (var y = 0; y < height; ++y) {
             var nodeNo: number = M.xy2node(x, y);
 
             var edges: [number, number][] = ME[nodeNo];
@@ -64,31 +83,26 @@ function init(): void {
 
                 if (c[0] > x) {
                     ctx2.beginPath();
-                    ctx2.moveTo(x * 32 + 32, y * 32 + 1);
-                    ctx2.lineTo(x * 32 + 32, y * 32 + 32 - 1);
-                    ctx2.strokeStyle = "white";
+                    ctx2.moveTo((x + 1) * grid_size, y * grid_size + 1);
+                    ctx2.lineTo((x + 1) * grid_size, (y + 1) * grid_size - 1);
                     ctx2.stroke();
                 }
                 if (c[0] < x) {
                     ctx2.beginPath();
-                    ctx2.moveTo(x * 32, y * 32 + 1);
-                    ctx2.lineTo(x * 32, y * 32 + 32 - 1);
-                    
-                    ctx2.strokeStyle = "white";
+                    ctx2.moveTo(x * grid_size, y * grid_size + 1);
+                    ctx2.lineTo(x * grid_size, (y + 1) * grid_size - 1);
                     ctx2.stroke();
                 }
                 if (c[1] < y) {
                     ctx2.beginPath();
-                    ctx2.moveTo(x * 32 + 1, y * 32);
-                    ctx2.lineTo(x * 32 + 32 - 1, y * 32);
-                    ctx2.strokeStyle = "white";
+                    ctx2.moveTo(x * grid_size + 1, y * 32);
+                    ctx2.lineTo((x + 1) * grid_size - 1, y * 32);
                     ctx2.stroke();
                 }
                 if (c[1] > y) {
                     ctx2.beginPath();
-                    ctx2.moveTo(x * 32 + 1, y * 32 + 32);
-                    ctx2.lineTo(x * 32 + 32 - 1, y * 32 + 32);
-                    ctx2.strokeStyle = "white";
+                    ctx2.moveTo(x * grid_size + 1, (y + 1) * grid_size);
+                    ctx2.lineTo((x + 1) * grid_size - 1, (y + 1) * grid_size);
                     ctx2.stroke();
                 }
             }
