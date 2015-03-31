@@ -37,3 +37,4 @@ shrdlite-*.js
 .Trashes
 ehthumbs.db
 Thumbs.db
+*.js
