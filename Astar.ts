@@ -16,7 +16,7 @@ interface GoalFunction<T> {
 }
 
 interface HeuristicFunction<T> {
-	(node: T): number;
+	(nodeFrom: T, nodeTo: T): number;
 }
 
 class Path<T> {
@@ -59,6 +59,8 @@ function PathCompare<T>(p0: Path<T>, p1: Path<T>): number {
 function Astar<T>(start: INode<T>, isGoal: GoalFunction<INode<T>>, heuristic: HeuristicFunction<INode<T>>): AstarResult<INode<T>> {
 	var frontier = new collections.PriorityQueue<Path<INode<T>>>(PathCompare);
 	var numExpandedNodes = 0;
+	var startPath : Path<INode<T>> = new Path<INode<T>>([start], 0, 0);
+	frontier.enqueue(startPath);
 	while (!frontier.isEmpty()) {
 		var path = frontier.dequeue();
 		var currentNode = path.Last();
@@ -68,7 +70,7 @@ function Astar<T>(start: INode<T>, isGoal: GoalFunction<INode<T>>, heuristic: He
 		var neighbours = currentNode.Neighbours();
 		for (var i = 0; i < neighbours.length; ++i) {
 			var neighbour = neighbours[i];
-			var heuristicCost = heuristic(neighbour.Node);
+			var heuristicCost = heuristic(currentNode, neighbour.Node);
 			var newPath = path.Add(neighbour.Node, neighbour.Cost, heuristicCost);
 			frontier.enqueue(newPath);
 
