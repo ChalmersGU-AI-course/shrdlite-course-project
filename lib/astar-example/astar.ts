@@ -38,7 +38,7 @@ module aStar {
         pathTo : Edge[];
 
         constructor(node : GraphNode, distance : number, heuristic : number) {
-            super(node.getId(), node.getX(), node.getY());
+            super(node.getId(), node.getX(), node.getY(), "");
             this.distanceSoFar = distance;
             this.heuristicDistance = heuristic;
 

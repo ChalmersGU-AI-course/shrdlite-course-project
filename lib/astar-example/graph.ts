@@ -4,6 +4,10 @@ class Graph {
 	private edges = new collections.Set<Edge>();
 	private nodes = new collections.Set<GraphNode>();
 
+	constructor() {
+
+	}
+	
 	addEdge(newEdge : Edge) {
 		if (this.nodes.contains(newEdge.getFromNode()) && this.nodes.contains(newEdge.getEndNode())) {
 			this.edges.add(newEdge);
@@ -55,7 +59,7 @@ class GraphNode {
 		this.id = id;
 		this.xPos = xPos;
 		this.yPos = yPos;
-		this.string = string;
+		this.name = name;
 	}
 
 	distanceTo(to : GraphNode) : number {
