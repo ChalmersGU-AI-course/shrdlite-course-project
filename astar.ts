@@ -3,6 +3,103 @@
 ///<reference path="Graph.ts"/>
 ///<reference path="Maze.ts"/>
 
+function genMaze(ctx: CanvasRenderingContext2D, canvas_width: number, canvas_height: number): void {
+
+
+
+
+
+
+
+    var seed: number = $('#seed').val();
+
+    var width: number = $('#width').val();
+
+    var height: number = $('#height').val();
+
+    var grid_size = Math.min(canvas_width / width, canvas_height / height);
+
+    var grid_width = grid_size * width;
+    var grid_height = grid_size * height;
+
+
+    var M = new Maze(width, height);
+
+
+    
+
+    var ME = M.getEdges(seed);
+    var MN = M.getNodes();
+
+    var GM = new Graph(MN, ME);
+
+
+
+
+    ctx.clearRect(0, 0, canvas_width + 1, canvas_height + 1);
+
+
+    ctx.lineWidth = 1;
+    ctx.shadowBlur = 1;
+
+    ctx.strokeStyle = "black";
+
+
+
+    for (var x = 0; x <= width; ++x) {
+        ctx.beginPath();
+        ctx.moveTo(x * grid_size + 0.5, 0.5);
+        ctx.lineTo(x * grid_size + 0.5, grid_height + 0.5);
+        ctx.stroke();
+    }
+
+    for (var y = 0; y <= height; ++y) {
+        ctx.beginPath();
+        ctx.moveTo(0.5, y * grid_size + 0.5);
+        ctx.lineTo(grid_width + 0.5, y * grid_size + 0.5);
+        ctx.stroke();
+    }
+
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+    for (var x = 0; x < width; ++x) {
+        for (var y = 0; y < height; ++y) {
+            var nodeNo: number = M.xy2node(x, y);
+
+            var edges: [number, number][] = ME[nodeNo];
+            for (var i = 0; i < edges.length; ++i) {
+                var e = edges[i];
+                var c = M.node2xy(e[1]);
+
+                if (c[0] > x) {
+                    ctx.beginPath();
+                    ctx.moveTo((x + 1) * grid_size + 0.5, y * grid_size + 1 + 0.5);
+                    ctx.lineTo((x + 1) * grid_size + 0.5,(y + 1) * grid_size - 1 + 0.5);
+                    ctx.stroke();
+                }
+                if (c[0] < x) {
+                    ctx.beginPath();
+                    ctx.moveTo(x * grid_size + 0.5, y * grid_size + 1 + 0.5);
+                    ctx.lineTo(x * grid_size + 0.5,(y + 1) * grid_size - 1 + 0.5);
+                    ctx.stroke();
+                }
+                if (c[1] < y) {
+                    ctx.beginPath();
+                    ctx.moveTo(x * grid_size + 1 + 0.5, y * grid_size + 0.5);
+                    ctx.lineTo((x + 1) * grid_size - 1 + 0.5, y * grid_size + 0.5);
+                    ctx.stroke();
+                }
+                if (c[1] > y) {
+                    ctx.beginPath();
+                    ctx.moveTo(x * grid_size + 1 + 0.5,(y + 1) * grid_size + 0.5);
+                    ctx.lineTo((x + 1) * grid_size - 1 + 0.5,(y + 1) * grid_size + 0.5);
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+}
+
 function init(): void {
 
     //plot map
@@ -24,96 +121,7 @@ function init(): void {
 
     var G = new Graph(Europe.Nodes, Europe.Edges);
 
-
-
-
-
-    var width = 2;
-    var height = 2;
-
-    var canvas_width = 1024;
-    var canvas_height = 1024;
-
-    var grid_size = Math.min(canvas_width / width, canvas_height / height);
-
-    var grid_width = grid_size * width;
-    var grid_height = grid_size * height;
-
-    var canv2 = document.createElement("canvas");
-    canv2.width = canvas_width + 1;
-    canv2.height = canvas_height + 1;
-    $('#maze').append(canv2);
-    var ctx2 = canv2.getContext('2d');
-
-    var M = new Maze(width, height);
-
-    var ME = M.getEdges(1);
-    var MN = M.getNodes();
-
-    var GM = new Graph(MN, ME);
-
-
-
-    ctx2.lineWidth = 1;
-    ctx2.shadowBlur = 1;
-
-    ctx2.strokeStyle = "black";
-    for (var x = 0; x <= width; ++x) {
-        ctx2.beginPath();
-        ctx2.moveTo(x * grid_size, 0);
-        ctx2.lineTo(x * grid_size, grid_height);
-        ctx2.stroke();
-    }
-
-    for (var y = 0; y <= height; ++y) {
-        ctx2.beginPath();
-        ctx2.moveTo(0, y * grid_size);
-        ctx2.lineTo(grid_width, y * grid_size);
-        ctx2.stroke();
-    }
-    
-    ctx2.strokeStyle = "white";
-    ctx2.lineWidth = 2;
-    for (var x = 0; x < width; ++x) {
-        for (var y = 0; y < height; ++y) {
-            var nodeNo: number = M.xy2node(x, y);
-
-            var edges: [number, number][] = ME[nodeNo];
-            for (var i = 0; i < edges.length; ++i) {
-                var e = edges[i];
-                var c = M.node2xy(e[1]);
-
-                if (c[0] > x) {
-                    ctx2.beginPath();
-                    ctx2.moveTo((x + 1) * grid_size, y * grid_size + 1);
-                    ctx2.lineTo((x + 1) * grid_size, (y + 1) * grid_size - 1);
-                    ctx2.stroke();
-                }
-                if (c[0] < x) {
-                    ctx2.beginPath();
-                    ctx2.moveTo(x * grid_size, y * grid_size + 1);
-                    ctx2.lineTo(x * grid_size, (y + 1) * grid_size - 1);
-                    ctx2.stroke();
-                }
-                if (c[1] < y) {
-                    ctx2.beginPath();
-                    ctx2.moveTo(x * grid_size + 1, y * 32);
-                    ctx2.lineTo((x + 1) * grid_size - 1, y * 32);
-                    ctx2.stroke();
-                }
-                if (c[1] > y) {
-                    ctx2.beginPath();
-                    ctx2.moveTo(x * grid_size + 1, (y + 1) * grid_size);
-                    ctx2.lineTo((x + 1) * grid_size - 1, (y + 1) * grid_size);
-                    ctx2.stroke();
-                }
-            }
-        }
-    }
-
-
     $('#route').click(function () {
-        GM.findPath(0, MN.length - 1);
 
         var from = $('#from').find(":selected").index();
         var to = $('#to').find(":selected").index();
@@ -140,6 +148,20 @@ function init(): void {
         else {
             $('#result').text('No route possible');
         }
+    });
+
+
+    var canvas_width = 640;
+    var canvas_height = 640;
+
+    var canv2 = document.createElement("canvas");
+    canv2.width = canvas_width + 1;
+    canv2.height = canvas_height + 1;
+    $('#maze').append(canv2);
+    var ctx2 = canv2.getContext('2d');
+
+    $('#generate').click(function () {
+        genMaze(ctx2, canvas_width, canvas_width);
     });
 };
 
