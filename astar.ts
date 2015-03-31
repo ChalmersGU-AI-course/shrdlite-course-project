@@ -2,18 +2,141 @@
 
 module Astar
 {
-	export class Path<T>
+	export class SearchResult<T>
 	{
+		success:boolean;
+		nodesVisited:number;
 		nodes: T[];
-		constructor(i : number) { }
+
+		constructor(n? :T[], nvis?:number) 
+		{
+			this.nodes = n;
+			this.nodesVisited = nvis;
+			if(n) this.success = true;
+			else  this.success = false;
+		}
 	}
 
-	export function findPath<T>(start : T, end : T, 
-								gen : (t : T) => T[],
-								heuristic : (t : T) => number)  : Path<T>
+	export interface Node
 	{
+		equals(object : Node) : boolean;
+		toString() : string;
+	}
 
+	/**
+	 * Finds the shortest path between start and end if such a path exists.
+	 * @param start 	- The starting point
+	 * @param end		- The target destination
+	 * @param gen   	- function used to generate all adjacent nodes of a node.
+	 * @param equals	- a function that can determine equality.
+	 * @param heuristic - a guess for how close a node is to the end node.
+	 */
+	export function findPath<T extends Node>(start : T, 
+											  end : T, 
+											  gen : (t : T) => T[],
+											  heuristic : (t : T, e : T) => number)  : SearchResult<T>
+	{
+		//Simple case:
+		if(start.equals(end)) 
+		{
+			return new SearchResult<T>([start, end], 0);
+		}
+
+		var known  = new collections.Dictionary<T, number>();
+		var dist:number[]   = [];
+		var prev:number[]  	= [];
+		var nodes:T[]		= [];
+		var count:number    = 0;
+
+		var comparer = (a : T, b : T) => 
+		{
+			var idx0  = known.getValue(a);
+			var idx1  = known.getValue(b);
+
+			var val0  = dist[idx0];
+			var val1  = dist[idx1];
+
+			if(val0 > val1)
+				return -1;
+			else if(val0 < val1)
+				return 1;
+			else 
+				return 0;
+		}
+
+		var pQueue = new collections.PriorityQueue<T>(comparer);
 		
-		return new Path<T>(0);
+		dist.push(heuristic(start, end));
+		prev.push(-1);
+		nodes.push(start);
+		known.setValue(start, count++);
+		var adj = gen(start);
+		for(var i = 0; i < adj.length; i++)
+		{
+			dist.push(1 + heuristic(adj[i], end));
+			prev.push(0);
+			nodes.push(adj[i]);
+			known.setValue(adj[i], count++);
+			pQueue.enqueue(adj[i]);
+		}
+
+		if(pQueue.isEmpty())
+		{
+			return new SearchResult<T>();
+		}
+
+		var iterations: number    = 1;
+		var node : T = pQueue.dequeue();
+		while(!node.equals(end))
+		{
+			var previous = known.getValue(node);
+			var adjacent = gen(node);
+			for(var i = 0; i < adjacent.length; i++)
+			{
+				var n 		 = adjacent[i];
+				var distance = dist[previous] + 1 + heuristic(n, end) - heuristic(node, end);
+				if(!known.containsKey(n))
+				{
+					dist.push(distance);
+					prev.push(previous);
+					nodes.push(n);
+					known.setValue(n, count++);
+					pQueue.enqueue(n);
+				}
+				else 
+				{
+
+					var current = known.getValue(n);
+					if(dist[current] > distance)
+					{
+						dist[current] = distance;
+						prev[current] = previous;
+					}
+				}
+			}
+
+			if(pQueue.isEmpty())
+				break;
+
+			node = pQueue.dequeue();
+			iterations++;
+		}
+
+		if(known.containsKey(end))
+		{
+			var current = known.getValue(end);
+			var path:T[] = [];
+			while(current != -1)
+			{
+				path.push(nodes[current]);
+				current = prev[current];
+			}
+
+			return new SearchResult<T>(path.reverse(), iterations);
+		}
+		else 
+		{
+			return new SearchResult<T>();
+		}
 	}
 }
