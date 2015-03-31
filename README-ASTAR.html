@@ -1,0 +1,31 @@
+<html>
+<head>
+  <title>A* README</title>
+  <script src="collections.js"></script>
+  <script type="text/javascript">var AStar = false;</script>
+  <script src="AStar.js"></script>
+  <script type="text/javascript">
+    window.onload = function(){
+
+      var toHide;
+      if(AStar === false)
+        toHide = document.getElementById("suchAstar");
+      else
+        toHide = document.getElementById("noAstar");
+      toHide.style.display = "none";
+      
+    }
+  </script>
+</head>
+<body>
+  <div id="noAstar">
+    <h2>You have not compiled astar yet</h2>
+    <p>To compile the A* files run: tsc --module commonjs AStar.ts. Then refresh the page.</p>
+  </div>
+  <div id="suchAstar">
+    <h2>You have compiled AStar.</h2>
+    <p>The graph:</p>
+    <img src="graph.jpg"/>
+  </div>
+</body>
+</html>
