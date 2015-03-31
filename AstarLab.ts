@@ -102,7 +102,7 @@ function FindEmptyCell(board: Board): BoardPosition {
 	return null;
 }
 
-function TotalManhattanDistance(board: Board): number {
+function TotalManhattanDistance(fromBoard: Board, board: Board): number {
 	var distance = 0;
 
 	for (var i = 0; i < board.Rows.length; ++i) {
@@ -121,7 +121,7 @@ function TotalManhattanDistance(board: Board): number {
 	return distance;
 }
 
-function NumBricksOutOfPlace(board: Board): number {
+function NumBricksOutOfPlace(fromBoard: Board, board: Board): number {
 	var matchedArray = _.zip(_.range(1, board.Width * board.Height - 1), _.rest(_.flatten(board.Rows)));
 	var count = _.countBy(matchedArray, function(item) { return String(item[0] === item[1]); });
 	return count['false'];
