@@ -16,34 +16,29 @@ module Astar {
     heuristic_approx(n1:Node, n2:Node) : number
     dist_between(n1:Node, n2:Node) : number
   }
-
-  export class Path{
-   // start : Node
-   // goal : Node 
-   // steps : [Node]
-  }
-
-/*
-retrive_path :: ? -> Path
-Todo: everything.
-*/
-
-  function retrive_path():Path {
-    return{}
-  }
-
 /*
 Implementation: Strongly inspired by the wikipedia pseduocode
 TODO: config priority que to sort by f(x) 
 
 AStar :: Graph -> Path
 */
- export function Astar(start: Node, goal: Node, graph :Graph, functions : Functions): Path{
+ export function Astar(start: Node, goal: Node, graph :Graph, functions : Functions): Node[]{
+    //Node comparion function
+    function comp(a:Node,b:Node){
+      if (a.fscore < b.fscore)
+        return -1;
+      else if (a.fscore > b.fscore)
+        return 1;
+      else{
+        return 0;
+      }
+    }
+
     // Initilization Vendor Types 
     var closedset = new collections.Set<Node>(); // nodes allready evaluated.
     var openset = new collections.Set<Node>(); // nodes to be evaluated.
-    var queue =  new collections.PriorityQueue<Node>(); // workes in paralell with opensset
-    
+    var queue =  new collections.PriorityQueue<Node>(comp); // workes in paralell with opensset
+    var came_from = new collections.Dictionary<Node, Node>();
     // Initial calculations 
     start.gscore = 0; // the inital distace 
     start.fscore = start.gscore + functions.heuristic_approx(start,goal);
@@ -68,7 +63,15 @@ AStar :: Graph -> Path
         */
         current = queue.dequeue(); 
         if(current === goal){
-          return retrive_path() 
+          var path = new collections.LinkedList<Node>();
+            path.add(current)
+              while(came_from.getValue(current)){
+                current = came_from.getValue(current)
+                path.add(current);
+              }
+              path.reverse
+              return path.toArray()
+              
         }
         /*
         All modyfing actions preformed on the set, will also have to be preformed
@@ -90,6 +93,7 @@ AStar :: Graph -> Path
                 g_score = current.gscore + functions.dist_between(current,neighbor) 
             }else{ // else if - is to prefer. 
             if (!openset.contains(neighbor) || neighbor.gscore < g_score){ // checks if the new path is better 
+              came_from.setValue(neighbor,current)
               neighbor.gscore = g_score
               neighbor.fscore = neighbor.gscore + functions.heuristic_approx(start,goal);
                 if (!openset.contains(neighbor)){
