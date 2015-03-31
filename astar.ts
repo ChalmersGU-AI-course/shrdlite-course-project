@@ -64,30 +64,30 @@ function init(): void {
 
                 if (c[0] > x) {
                     ctx2.beginPath();
-                    ctx2.moveTo(x * 32 + 32, y * 32);
-                    ctx2.lineTo(x * 32 + 32, y * 32 + 32);
+                    ctx2.moveTo(x * 32 + 32, y * 32 + 1);
+                    ctx2.lineTo(x * 32 + 32, y * 32 + 32 - 1);
                     ctx2.strokeStyle = "white";
                     ctx2.stroke();
                 }
                 if (c[0] < x) {
                     ctx2.beginPath();
-                    ctx2.moveTo(x * 32, y * 32);
-                    ctx2.lineTo(x * 32, y * 32 + 32);
+                    ctx2.moveTo(x * 32, y * 32 + 1);
+                    ctx2.lineTo(x * 32, y * 32 + 32 - 1);
                     
                     ctx2.strokeStyle = "white";
                     ctx2.stroke();
                 }
                 if (c[1] < y) {
                     ctx2.beginPath();
-                    ctx2.moveTo(x * 32, y * 32);
-                    ctx2.lineTo(x * 32 + 32, y * 32);
+                    ctx2.moveTo(x * 32 + 1, y * 32);
+                    ctx2.lineTo(x * 32 + 32 - 1, y * 32);
                     ctx2.strokeStyle = "white";
                     ctx2.stroke();
                 }
                 if (c[1] > y) {
                     ctx2.beginPath();
-                    ctx2.moveTo(x * 32, y * 32 + 32);
-                    ctx2.lineTo(x * 32 + 32, y * 32 + 32);
+                    ctx2.moveTo(x * 32 + 1, y * 32 + 32);
+                    ctx2.lineTo(x * 32 + 32 - 1, y * 32 + 32);
                     ctx2.strokeStyle = "white";
                     ctx2.stroke();
                 }
