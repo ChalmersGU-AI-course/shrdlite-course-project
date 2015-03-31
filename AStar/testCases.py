@@ -48,7 +48,7 @@ class SquareGrid:
   def neighbors(self, id):
     (x, y) = id
     results = [(x+1, y), (x, y-1), (x-1, y), (x, y+1)]
-    if (x + y) % 2 == 0: results.reverse() # aesthetics
+    # if (x + y) % 2 == 0: results.reverse() # aesthetics
     results = filter(self.in_bounds, results)
     results = filter(self.passable, results)
     return results
@@ -105,41 +105,46 @@ def printPath(goal, start, came_from, cost_so_far):
 
 ##############################################################################
 def testcase1():
-  goal  = (7,8)
-  start = (1,4)
-  diagram4 = GridWithWeights(10, 10)
-  diagram4.walls = [(1, 7), (1, 8), (2, 7), (2, 8), (3, 7), (3, 8)]
-  diagram4.weights = {loc: 5 for loc in [(3, 4), (3, 5), (4, 1), (4, 2),
-                                         (4, 3), (4, 4), (4, 5), (4, 6), 
-                                         (4, 7), (4, 8), (5, 1), (5, 2),
-                                         (5, 3), (5, 4), (5, 5), (5, 6), 
-                                         (5, 7), (5, 8), (6, 2), (6, 3), 
-                                         (6, 4), (6, 5), (6, 6), (6, 7), 
-                                         (7, 3), (7, 4), (7, 5)]}
+  goal  = (4,4)
+  start = (0,0)
+  diagram = GridWithWeights(5, 5)
+  diagram.walls = [(1, 1), (1, 2), (3, 4)]
+  #
+  #       S 
+  #       . #
+  #       . #
+  #       . . . . .
+  #           #   E
+  came_from, cost_so_far = a_star_search(diagram, start, goal)
+  printPath(goal,start, came_from, cost_so_far)
 
-  came_from, cost_so_far = a_star_search(diagram4, start, goal)
-
+def testcase2():
+  goal  = (4,4)
+  start = (0,0)
+  diagram = GridWithWeights(5, 5)
+  diagram.walls = [(1, 1), (1, 2), (1, 3), (1,4), (3,0), (2,2), (2,3), (2,4),(3,2)]
+  #
+  #       S . . # 
+  #         # . . .
+  #         # # # .
+  #         # #   .
+  #         # #   E
+  came_from, cost_so_far = a_star_search(diagram, start, goal)
   printPath(goal,start, came_from, cost_so_far)
 
 
-#### Bergman-kod
-def testcase2():
-  goal  = (9,9)
+def testcase3():
+  goal  = (4,4)
   start = (0,0)
-  diagram4 = GridWithWeights(10, 10)
-  diagram4.walls = [(1, 0), (1, 5), (2, 3), (2, 7), (2, 8), (3, 1), (3,2), (3,3), ]
-  diagram4.weights = {loc: 5 for loc in [(3, 4), (3, 5), (4, 1), (4, 2),
-                                         (4, 3), (4, 4), (4, 5), (4, 6), 
-                                         (4, 7), (4, 8), (5, 1), (5, 2),
-                                         (5, 3), (5, 4), (5, 5), (5, 6), 
-                                         (5, 7), (5, 8), (6, 2), (6, 3), 
-                                         (6, 4), (6, 5), (6, 6), (6, 7), 
-                                         (7, 3), (7, 4), (7, 5)]}
+  diagram = GridWithWeights(5, 5)
+  diagram.walls = [(1, 1), (1, 2), (3, 4)]
+  # diagram4.weights = {loc: 5 for loc in [(3, 4), (3, 5), (4, 1), (4, 2),
+  #                                        (4, 3), (4, 4), (4, 5), (4, 6), 
+  #                                        (4, 7), (4, 8), (5, 1), (5, 2),
+  #                                        (5, 3), (5, 4), (5, 5), (5, 6), 
+  #                                        (5, 7), (5, 8), (6, 2), (6, 3), 
+  #                                        (6, 4), (6, 5), (6, 6), (6, 7), 
+  #                                        (7, 3), (7, 4), (7, 5)]}
 
-  came_from, cost_so_far = a_star_search(diagram4, start, goal)
-
-  printPath(goal,start, came_from, cost_so_far)c
-######
-
-testcase1()
+testcase2()
 
