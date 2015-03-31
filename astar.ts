@@ -3,14 +3,26 @@
 ///<reference path="Graph.ts"/>
 ///<reference path="Maze.ts"/>
 
-function genMaze(ctx: CanvasRenderingContext2D, canvas_width: number, canvas_height: number): void {
+function mazePathPrint(ctx: CanvasRenderingContext2D, path: [number, number][], g: Graph, gridsize: number) {
+    var nodes: GraphNode[] = g.nodes;
+
+    var start = nodes[path[0][0]];
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "blue";
+
+    ctx.beginPath();
+    ctx.moveTo(start.x * gridsize + 0.5 + gridsize / 2, start.y * gridsize + 0.5 + gridsize / 2);
 
 
+    for (var i = 0; i < path.length; ++i) {
+        var n = nodes[path[i][1]];
+        ctx.lineTo(n.x * gridsize + 0.5 + gridsize / 2, n.y * gridsize + 0.5 + gridsize / 2);
+    }
+    ctx.stroke();
+}
 
-
-
-
-
+function genMaze(ctx: CanvasRenderingContext2D, canvas_width: number, canvas_height: number): Graph {
     var seed: number = $('#seed').val();
 
     var width: number = $('#width').val();
@@ -26,15 +38,15 @@ function genMaze(ctx: CanvasRenderingContext2D, canvas_width: number, canvas_hei
     var grid_height = grid_size * height;
 
 
-    var M = new Maze(width, height);
+    var maze = new Maze(width, height);
 
 
     
 
-    var ME = M.getEdges(seed, balance);
-    var MN = M.getNodes();
+    var edges = maze.getEdges(seed, balance);
+    var nodes = maze.getNodes();
 
-    var GM = new Graph(MN, ME);
+    var graph = new Graph(nodes, edges);
 
 
 
@@ -67,12 +79,12 @@ function genMaze(ctx: CanvasRenderingContext2D, canvas_width: number, canvas_hei
     ctx.lineWidth = 2;
     for (var x = 0; x < width; ++x) {
         for (var y = 0; y < height; ++y) {
-            var nodeNo: number = M.xy2node(x, y);
+            var nodeNo: number = maze.xy2node(x, y);
 
-            var edges: [number, number][] = ME[nodeNo];
-            for (var i = 0; i < edges.length; ++i) {
-                var e = edges[i];
-                var c = M.node2xy(e[1]);
+            var n: [number, number][] = edges[nodeNo];
+            for (var i = 0; i < n.length; ++i) {
+                var e = n[i];
+                var c = maze.node2xy(e[1]);
 
                 if (c[0] > x) {
                     ctx.beginPath();
@@ -101,6 +113,8 @@ function genMaze(ctx: CanvasRenderingContext2D, canvas_width: number, canvas_hei
             }
         }
     }
+
+    return graph;
 }
 
 function init(): void {
@@ -163,11 +177,17 @@ function init(): void {
     $('#maze').append(canv2);
     var ctx2 = canv2.getContext('2d');
 
+
+    var mazeGraph: Graph = genMaze(ctx2, canvas_width, canvas_width);
+
+    mazePathPrint(ctx2, [[0, 1], [1, 2], [2, 34]], mazeGraph, 20);
+
     $('#generate').click(function () {
         genMaze(ctx2, canvas_width, canvas_width);
     });
 
-    genMaze(ctx2, canvas_width, canvas_width);
+    
+    
 };
 
 $(document).ready(init);
