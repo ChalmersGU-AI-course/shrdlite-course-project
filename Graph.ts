@@ -48,7 +48,21 @@ class Graph {
 	    console.log("size of set: ",openset.length,"current: ",current);
             if (current == goal) {
                 console.log("Hurray!")
-		return came_from;
+		//[[start, 9], [10, 13], [13, 12], [12, goal]]
+		var path =[];//: [][number, number];
+		var cur=goal;
+		while(cur != start)
+		{
+		    path.push( [came_from[cur], cur] );
+		    cur=came_from[cur];
+		}
+		var pathI=[];
+		for(var i=0;i<path.length;++i)
+		{
+		    pathI[i]=path[path.length-1-i];
+		}
+		
+		return pathI;
             }
 	    
             //find current in openset and remove that element and add to closed
@@ -72,6 +86,7 @@ class Graph {
                 if ( (this.find(openset,current_neighbours[i][1])==-1 ) || tentative_g_score < g_score[current_neighbours[i][1]]) {		    
                     //spara undan hur du kom hit
 		    //came_from[] something, left to do
+		    came_from[current_neighbours[i][1]]=current;
                     g_score[current_neighbours[i][1]] = tentative_g_score;
                     f_score[current_neighbours[i][1]] = g_score[current_neighbours[i][1]] + this.heuristicCost(current_neighbours[i][1], goal);
 
@@ -85,7 +100,7 @@ class Graph {
         
 
         //Dummy: Just a test path for the view
-        return [[start, 9], [10, 13], [13, 12], [12, goal]];
+        //return [[start, 9], [10, 13], [13, 12], [12, goal]];
 
         return undefined; //No path was found
     }
