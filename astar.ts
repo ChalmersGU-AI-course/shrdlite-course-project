@@ -28,8 +28,8 @@ function init(): void {
 
 
 
-    var width = 32;
-    var height = 32;
+    var width = 2;
+    var height = 2;
 
     var canvas_width = 1024;
     var canvas_height = 1024;
@@ -52,10 +52,11 @@ function init(): void {
 
     var GM = new Graph(MN, ME);
 
-    GM.findPath(0, MN.length - 1);
 
 
     ctx2.lineWidth = 1;
+    ctx2.shadowBlur = 1;
+
     ctx2.strokeStyle = "black";
     for (var x = 0; x <= width; ++x) {
         ctx2.beginPath();
@@ -72,6 +73,7 @@ function init(): void {
     }
     
     ctx2.strokeStyle = "white";
+    ctx2.lineWidth = 2;
     for (var x = 0; x < width; ++x) {
         for (var y = 0; y < height; ++y) {
             var nodeNo: number = M.xy2node(x, y);
@@ -109,7 +111,10 @@ function init(): void {
         }
     }
 
+
     $('#route').click(function () {
+        GM.findPath(0, MN.length - 1);
+
         var from = $('#from').find(":selected").index();
         var to = $('#to').find(":selected").index();
         var path = G.findPath(from, to);
