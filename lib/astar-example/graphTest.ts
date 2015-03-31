@@ -34,4 +34,4 @@ schweden.addEdge(new Edge(12, gbg, kalmar));
 schweden.addEdge(new Edge(10, malmo, gbg));
 schweden.addEdge(new Edge(14, kalmar, malmo));
 
-console.log(aStar.aStar(schweden, malmo, kiruna).toString());
+aStar.aStar(schweden, malmo, kiruna);

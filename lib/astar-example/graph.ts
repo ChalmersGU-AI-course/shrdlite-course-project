@@ -1,7 +1,7 @@
 /// <reference path="../typescript-collections/collections.ts" />
 
 class Graph {
-	private edges = new collections.Set<Edge>();
+	private edges = new collections.Set<Edge>(Edge.edgeToString);
 	private nodes = new collections.Set<GraphNode>();
 
 	constructor() {
@@ -15,6 +15,8 @@ class Graph {
 			throw "can't place an edge between nonexistent nodes :(";
 			
 		}
+		
+		console.log(this.edges.toArray());
 	}
 
 	addNode(newNode : GraphNode) {
@@ -27,12 +29,18 @@ class Graph {
 
 	getNeighborsTo(node : GraphNode) : GraphNode[] {
 		var neighbors = new collections.Set<GraphNode>();
-		for(var e in this.edges) {
-			if(e.fromNode == node) {
-				neighbors.add(e.toNode);
-			} else if(e.toNode == node) {
-				neighbors.add(e.fromNode);
+
+		console.log(this.edges.toArray().length);
+
+		for (var i = this.edges.toArray().length - 1; i >= 0; i--) {
+			var e = this.edges.toArray()[i];
+
+			if(e.getFromNode().equals(node)) {
+				neighbors.add(e.getEndNode());
+			} else if(e.getEndNode().equals(node)) {
+				neighbors.add(e.getFromNode());
 			}
+
 		}
 		return neighbors.toArray();
 	}
@@ -82,6 +90,10 @@ class GraphNode {
 		return this.name;
 	
 	}
+
+	equals(otherNode : GraphNode) : boolean {
+		return this.getId() == otherNode.getId();
+	}
 }
 
 class Edge {
@@ -109,5 +121,18 @@ class Edge {
 
 	getCost() : number {
 		return this.cost;
+	}
+
+	edgeToString(edge : Edge) : string {
+		var fromNodeX = edge.fromNode.getX();
+		var fromNodeY = edge.fromNode.getY();
+		var endNodeX  = edge.endNode.getX();
+		var endNodeY  = edge.endNode.getY();
+
+		if(fromNodeX < endNodeX) {
+			return fromNodeX + fromNodeY + " " + endNodeX + endNodeY;
+		} else {
+			return endNodeX + endNodeY + " " + fromNodeX + fromNodeY;
+		}
 	}
 }

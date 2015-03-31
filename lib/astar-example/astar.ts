@@ -13,9 +13,9 @@ module aStar {
         var sFrom = new StarNode(fromNode, 0, fromNode.distanceTo(toNode));
 
         nodesToEvaluate.add(sFrom);
-        
         while(!nodesToEvaluate.isEmpty()) {
             var currentNode = nodesToEvaluate.dequeue();
+            
             if(currentNode.equals(toNode)) {
                 return currentNode.getPath();
             }
