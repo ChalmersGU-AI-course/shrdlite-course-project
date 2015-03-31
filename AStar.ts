@@ -102,7 +102,7 @@ module AStar {
                                        } else if(a == "malmo"){
                                            return Math.sqrt(16*16+15*15);
                                        } else if(a == "varnamo"){
-                                           return 15;
+                                           return 32;
                                        } else if(a == "mellerud"){
                                            return 42-16;
                                        } else if(a == "boras") {
