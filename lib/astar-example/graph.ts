@@ -9,7 +9,12 @@ class Graph {
 	}
 
 	addEdge(newEdge : Edge) {
-		this.edges.add(newEdge);
+		if (nodes.contains(newEdge.getFromNode()) && nodes.contains(newEdge.getToNode())) {
+			this.edges.add(newEdge);
+		} else {
+			throw "can't place an edge between nonexistent nodes :(";
+			
+		}
 	}
 
 	addNode(newNode : GraphNode) {
@@ -31,12 +36,16 @@ class GraphNode {
 	distanceTo(to : GraphNode) : number {
 		return Math.sqrt(Math.pow(this.xPos-to.xPos, 2)+Math.pow(this.yPos-to.yPos, 2));
 	}
+
+	getID() : number {
+		return id;
+	}
 }
 
 class Edge {
 	private cost : number;
-	private fromNode : number;
-	private endNode : number;
+	private fromNode : GraphNode;
+	private endNode : GraphNode;
 
 	constructor(cost : number, fromNode : number, toNode : number) {
 		this.cost = cost;
@@ -46,5 +55,13 @@ class Edge {
 
 	compareTo(otherEdge : Edge) : number {
 		return this.cost-otherEdge.cost;
+	}
+
+	getFromNode() : GraphNode {
+		return fromNode;
+	}
+
+	getToNode() : GraphNode {
+		return toNode;
 	}
 }
