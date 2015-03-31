@@ -2,6 +2,7 @@
  * Created by Niklas on 2015-03-27.
  */
 ///<reference path="../lib/collections.ts"/>
+///<reference path="../lib/lodash.d.ts"/>
 
 
 module AStar {
@@ -11,45 +12,68 @@ module AStar {
 
     export class Node  {
         label: string;
-        neighbours: Node[];
-        neighbourCosts: number[];
+        neighbours: Edge[];
         cost:number;
         heuristic:number;
         previous: Node;
-        constructor (label : string, neighbours : Node[], neighbourCosts : number[],
+        constructor (label : string, neighbours : Edge[],
                      heuristic: number=0, cost:number=Infinity, previous:Node=null) {
             this.label = label;
             this.neighbours = neighbours;
-            this.neighbourCosts = neighbourCosts;
             this.cost = cost;
             this.heuristic = heuristic;
             this.previous = previous;
+        }
+
+        // Convenience function for creating many nodes.
+        // Sets all neighbour lists to []
+        public static createNodes(data : [[string,number]]) : Node[] {
+            var nodes = [];
+            for (var key in data) {
+                nodes.push(new Node(data[key][0], [], data[key][1]));
+            }
+            return nodes;
         }
     }
 
     class Edge {
         start : Node;
         end : Node;
-        constructor (start : Node, end : Node) {
+        cost: number;
+        constructor (start : Node, end : Node, cost : number) {
             this.start = start;
-            this.end = end;
+            this.end   = end;
+            this.cost  = cost;
+        }
+
+        // Creates a new edge which goes in the opposite direction of this one.
+        // If no cost is given, the new edge recieves the same cost as this one
+        public complement(cost? : number) : Edge {
+            if (!(_.isFinite(cost))) cost = 1;
+            return new Edge(this.end, this.start, this.cost);
+        }
+
+        // Convenience function for creating many edges
+        public static createEdges(data : [[Node,Node,number]]) : Edge[] {
+            var edges = [];
+            for (var key in data) {
+                var e = new Edge(data[key][0], data[key][1], data[key][2]);
+                edges.push(e);
+            }
+            return edges;
         }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     // A* algorithm
 
-    export function astar(s: Node, t : Node) : Node[] {
+    export function astar(s: Node, t : Node, nodes : Node[]) : Node[] {
 
         function getBest() : Node {
             // Return Node in todo-list with minimum cost
             return todo.reduce((currMin : Node, v : Node) => {
                 var vVal    = v.cost       + v.heuristic;
                 var minVal  = currMin.cost + currMin.heuristic;
-                if (v.label === "g" || v.label === "h") {
-                    console.log("checking if to return ",v.label);
-                    console.log("cost:",v.cost,"heuristic:",v.heuristic,"vVal:",vVal,"minVal:",minVal);
-                }
                 return (vVal<=minVal)?v:currMin;
             }, new Node(null,null,null,Infinity));
         }
@@ -65,15 +89,16 @@ module AStar {
             var v = getBest();
 
             // Possibly update neighbours of node we're visiting now
-            for (var nKey in v.neighbours) {
-                var n = v.neighbours[nKey];
+            for (var eKey in v.neighbours) {
+                var edge : Edge = v.neighbours[eKey]
+                 ,  n    : Node = edge.end;
 
                 // Add to todo if not already visited
                 if (done.indexOf(n) === -1)
                     todo.push(n);
 
                 // Update if path through v is better
-                var newCost = v.neighbourCosts[nKey] + v.cost;
+                var newCost = edge.cost + v.cost;
                 if (newCost<=n.cost) {
                     n.cost     = newCost;
                     n.previous = v;
@@ -96,6 +121,9 @@ module AStar {
         var v = t;
         while (v !== s) {
             path.unshift(v);
+            if (!v.previous) {
+                console.log(v);
+            }
             v = v.previous;
         }
         path.unshift(s);
@@ -111,23 +139,23 @@ module AStar {
 
         // Define graph, with perfect heuristics
         // Right side (should be visited)
-        var a = new Node("a", [], [], 3);
-        var b = new Node("b", [], [], 2);
-        var c = new Node("c", [], [], 1);
-        var d = new Node("d", [], [], 0);
-        var e = new Node("e", [], [], 4);
+        var a = new Node("a", [], 3);
+        var b = new Node("b", [], 2);
+        var c = new Node("c", [], 1);
+        var d = new Node("d", [], 0);
+        var e = new Node("e", [], 4);
         // Left side (should not be visited, due to heuristics)
-        var f = new Node("f", [], [], 3.5);
-        var g = new Node("g", [], [], 4.5);
-        var h = new Node("h", [], [], 4.5);
-        var nodes = [a,b,c,d,e];
-        var edges : [[Node,Node,number]] = [[a,b,1], [b,c,1], [c,d,1], [a,e,1], [e,d,4], // Right side
-                                            [a,f,0.5], [f,g,1], [g,h,1], [h,f,1]]; // Left side
+        var f = new Node("f", [], 3.5);
+        var g = new Node("g", [], 4.5);
+        var h = new Node("h", [], 4.5);
+        var nodes = [a,b,c,d,e,f,g,h];
+        var edges = Edge.createEdges([[a,b,1], [b,c,1], [c,d,1], [a,e,1], [e,d,4], // Right side
+                                            [a,f,0.5], [f,g,1], [g,h,1], [h,f,1]]); // Left side
 
         initGraph(nodes, edges); // Updates node objects to be a proper graph
 
         console.log("Running astar correctness test ... ");
-        var path = astar(a, d);
+        var path = astar(a, d, nodes);
         var correctPath = [a,b,c,d];
         if (!test(arrayEquals(path, correctPath)))
             console.log("nodes: ",nodes);
@@ -151,14 +179,13 @@ module AStar {
 
     // Creates a graph from a list of blank nodes and edges.
     // More specifically, updates all nodes by adding the neighbour references/costs specified in edges
-    function initGraph(nodes : Node[], edges : [[Node,Node,number]]) {
+    function initGraph(nodes : Node[], edges : Edge[]) {
         for (var eKey in edges) {
-            var e = edges[eKey];
-            var v1 = e[0], v2 = e[1], c = e[2];
-            v1.neighbours.push(v2);
-            v2.neighbours.push(v1);
-            v1.neighbourCosts.push(c);
-            v2.neighbourCosts.push(c);
+            var e1 = edges[eKey];
+            var e2 = e1.complement(); // create opposite edge
+            var v1 = e1.start, v2 = e1.end, c = e1.cost;
+            v1.neighbours.push(e1);
+            v2.neighbours.push(e2);
         }
     }
 
