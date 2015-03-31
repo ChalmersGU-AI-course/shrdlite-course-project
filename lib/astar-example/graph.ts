@@ -15,6 +15,22 @@ class Graph {
 	addNode(newNode : GraphNode) {
 		this.nodes.add(newNode);
 	}
+
+	contains(node : GraphNode) : boolean {
+		return this.nodes.contains(node); 
+	}
+
+	getNeighborsTo(node : GraphNode) : GraphNode[] {
+		var neighbors = new collections.Set<GraphNode>();
+		for(var e in this.edges) {
+			if(e.fromNode == node) {
+				neighbors.add(e.toNode);
+			} else if(e.toNode == node) {
+				neighbors.add(e.fromNode);
+			}
+		}
+		return neighbors.toArray();
+	}
 }
 
 class GraphNode {
@@ -47,10 +63,10 @@ class GraphNode {
 
 class Edge {
 	private cost : number;
-	private fromNode : number;
-	private endNode : number;
+	private fromNode : GraphNode;
+	private endNode : GraphNode;
 
-	constructor(cost : number, fromNode : number, toNode : number) {
+	constructor(cost : number, fromNode : GraphNode, toNode : GraphNode) {
 		this.cost = cost;
 		this.fromNode = fromNode;
 		this.endNode = toNode;
