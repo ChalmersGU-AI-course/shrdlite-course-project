@@ -3,36 +3,85 @@
 var C = require('./collections');
 var AS;
 (function (AS) {
-    var Graph = (function () {
-        function Graph() {
-            this.table = [];
+    var PuzzleStateNode = (function () {
+        function PuzzleStateNode() {
+            this.next = null; // (ids) list of possible nodes to walk to
         }
-        Graph.prototype.set = function (node) {
-            var k = key(node.state, node.cost);
-            this.table[k] = node;
-            return node;
+        PuzzleStateNode.prototype.getNeighbours = function () {
+            if (this.next == null) {
+                this.createNeighbours();
+            }
+            return this.next;
         };
-        Graph.prototype.get = function (k) {
-            return this.table[k];
+        PuzzleStateNode.prototype.createNeighbours = function () {
+            //find 0
+            var posx;
+            var posy;
+            for (var i = 0; i < 3; i++) {
+                for (var j = 0; j < 3; j++) {
+                    if (this.state.puzzle[i][j] == 0) {
+                        posx = i;
+                        posy = j;
+                        break;
+                    }
+                }
+            }
+            var ret = [];
+            /*      if(posx == 0){
+                //add new puzzleStates
+                var foo = switch(this.state, posx, posy, posx + 1, posy);
+                ret.push(switch(this.state, posx, posy, posx + 1, posy));
+                  } else if(posx == 2) {
+                ret.push(switch(state, posx, posy, posx - 1, posy));
+                  } else {
+                ret.push(switch(state, posx, posy, posx + 1, posy));
+                ret.push(switch(state, posx, posy, posx - 1, posy));
+                  }
+            
+                  if(posy == 0){
+                ret.push(switch(state, posx, posy, posx, posy +	1));
+                  } else if(posy == 2) {
+                ret.push(switch(state, posx, posy, posx, posy - 1));
+                  } else {
+                ret.push(switch(state, posx, posy, posx, posy + 1));
+                ret.push(switch(state, posx, posy, posx, posy - 1));
+                  }*/
         };
-        return Graph;
+        PuzzleStateNode.prototype.switch = function (base, x1, y1, x2, y2) {
+            var tmp = base[x1][y1];
+            base[x1][y1] = base[x2][y2];
+            base[x2][y2] = tmp;
+            return base;
+        };
+        PuzzleStateNode.prototype.equals = function (a) {
+            return true;
+        };
+        return PuzzleStateNode;
     })();
-    AS.Graph = Graph;
-    function key(state, cost) {
-        return state.toNumber() + cost;
-    }
-    AS.key = key;
-    var ANode = (function () {
-        function ANode(state, prev, next, cost) {
-            if (cost === void 0) { cost = 0; }
+    AS.PuzzleStateNode = PuzzleStateNode;
+    var CityStateNode = (function () {
+        function CityStateNode(state, prev, next) {
             this.state = state;
             this.prev = prev;
             this.next = next;
-            this.cost = cost;
+            this.cost = 0;
         }
-        return ANode;
+        CityStateNode.prototype.setNeighbour = function (nNode, dist) {
+            this.next.push([nNode, dist]);
+        };
+        CityStateNode.prototype.getNeighbours = function () {
+            return this.next;
+        };
+        CityStateNode.prototype.toString = function () {
+            var f = this.cost + this.state.h;
+            return this.state.toString() + " " + this.cost + " " + this.state.h + " " + f;
+        };
+        CityStateNode.prototype.equals = function (a) {
+            return a.state.name == this.state.name;
+        };
+        return CityStateNode;
     })();
-    AS.ANode = ANode;
+    AS.CityStateNode = CityStateNode;
     // http://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
     // Helper function to enable easier toNumber implementation for Heuristic type
     function hash(s) {
@@ -56,18 +105,26 @@ var AS;
      * TODO: If h satisfies the monotone restriction (h(m) - h(n) < cost(m, n))
      * then, A* with multiple path pruning always finds the shortest path to a goal.
      */
-    function search(start, goal, graph) {
+    function search(start, goal) {
         var frontier = new C.collections.PriorityQueue(compClosure(goal));
         frontier.enqueue(start);
         while (!frontier.isEmpty()) {
+            frontier.forEach(function (element) {
+                console.log(element.toString());
+            });
+            console.log("TOP: " + frontier.peek().toString());
             var n = frontier.dequeue();
+            console.log("dequeuing " + n.toString());
+            console.log("------");
             if (n) {
                 if (n.state.match(goal)) {
-                    return path(n, graph);
+                    return path(n);
                 }
-                for (var i = 0; i < n.next.length; i++) {
-                    var _neighbour = graph.get(n.next[i]);
-                    frontier.enqueue(_neighbour);
+                var neighbours = n.getNeighbours();
+                for (var i = 0; i < neighbours.length; i++) {
+                    var _neighbour = neighbours[i];
+                    _neighbour[0].cost = n.cost + _neighbour[1];
+                    frontier.enqueue(_neighbour[0]);
                 }
             }
             else {
@@ -87,6 +144,9 @@ var AS;
             // cost = g + h
             var aCost = a.cost + a.state.heuristic(goal);
             var bCost = b.cost + b.state.heuristic(goal);
+            console.log("DEBUG");
+            console.log(a.state.toString() + " " + aCost);
+            console.log(b.state.toString() + " " + bCost);
             var res;
             if (aCost < bCost)
                 res = 1;
@@ -101,13 +161,23 @@ var AS;
     /*
      * extracts the path from the ANode back to start node
      */
-    function path(n, graph) {
+    function path(n) {
         var _path = [];
         var _n = n;
         while (_n != null) {
             _path.push(_n.state);
-            _n = graph.get(_n.prev);
+            _n = _n.prev;
         }
         return _path.reverse();
+    }
+    function removeElement(el, oldPQ) {
+        var newPQ = new C.collections.PriorityQueue();
+        while (!oldPQ.isEmpty()) {
+            var t = oldPQ.dequeue();
+            if (t.equals(el)) {
+                newPQ.enqueue(oldPQ.dequeue());
+            }
+        }
+        return newPQ;
     }
 })(AS = exports.AS || (exports.AS = {}));

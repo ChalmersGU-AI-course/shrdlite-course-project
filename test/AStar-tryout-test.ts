@@ -23,6 +23,9 @@ export module AStarTest {
       this.name = name;
       this.h = h;
     }
+    toString() : string {
+      return this.name;
+    }
   }
 
   // Cities
@@ -38,33 +41,33 @@ export module AStarTest {
   var bucharest = new CityState( "Bucharest", 0   );
 
   //cities in the graph
-  var aradNode = new A.AS.CityStateNode(arad,           null, [], null); 
-  var bucharestNode = new A.AS.CityStateNode(bucharest, null, [], null);
-  var pitestiNode = new A.AS.CityStateNode(pitesti,     null, [], null); 
-  var fagarasNode = new A.AS.CityStateNode(fagaras,     null, [], null); 
-  var rimnicuNode  = new A.AS.CityStateNode(rimnicu,    null, [], null);
-  var sibiuNode = new A.AS.CityStateNode(sibiu,         null, [], null);
-  var oradeaNode = new A.AS.CityStateNode(oradea,       null, [], null); 
-  var zerindNode = new A.AS.CityStateNode(zerind,       null, [], null); 
-  var timisoaraNode = new A.AS.CityStateNode(timisoara, null, [], null); 
-  var craiovaNode = new A.AS.CityStateNode(craiova, null, [], null); 
+  var aradNode = new A.AS.CityStateNode(arad,           null, []); 
+  var bucharestNode = new A.AS.CityStateNode(bucharest, null, []);
+  var pitestiNode = new A.AS.CityStateNode(pitesti,     null, []); 
+  var fagarasNode = new A.AS.CityStateNode(fagaras,     null, []); 
+  var rimnicuNode  = new A.AS.CityStateNode(rimnicu,    null, []);
+  var sibiuNode = new A.AS.CityStateNode(sibiu,         null, []);
+  var oradeaNode = new A.AS.CityStateNode(oradea,       null, []); 
+  var zerindNode = new A.AS.CityStateNode(zerind,       null, []); 
+  var timisoaraNode = new A.AS.CityStateNode(timisoara, null, []); 
+  var craiovaNode = new A.AS.CityStateNode(craiova, null, []); 
 
   //neighbours of each city
-  pitestiNode.setNeighbour(bucharestNode, 418);
-  pitestiNode.setNeighbour(craiovaNode, 455);
-  pitestiNode.setNeighbour(rimnicuNode, 414);
+  pitestiNode.setNeighbour(bucharestNode, 101);
+  pitestiNode.setNeighbour(craiovaNode, 138);
+  pitestiNode.setNeighbour(rimnicuNode, 97);
 
-  fagarasNode.setNeighbour(sibiuNode, 338);
-  fagarasNode.setNeighbour(bucharestNode, 450);
+  fagarasNode.setNeighbour(sibiuNode, 99);
+  fagarasNode.setNeighbour(bucharestNode, 211);
 
-  rimnicuNode.setNeighbour(craiovaNode, 366);
-  rimnicuNode.setNeighbour(pitestiNode, 317);
-  rimnicuNode.setNeighbour(sibiuNode, 300);
+  rimnicuNode.setNeighbour(craiovaNode, 146);
+  rimnicuNode.setNeighbour(pitestiNode, 97);
+  rimnicuNode.setNeighbour(sibiuNode, 80);
 
-  sibiuNode.setNeighbour(aradNode, 280);
-  sibiuNode.setNeighbour(fagarasNode, 239);
-  sibiuNode.setNeighbour(oradeaNode, 291);
-  sibiuNode.setNeighbour(rimnicuNode, 220);
+  sibiuNode.setNeighbour(aradNode, 140);
+  sibiuNode.setNeighbour(fagarasNode, 99);
+  sibiuNode.setNeighbour(oradeaNode, 151);
+  sibiuNode.setNeighbour(rimnicuNode, 80);
 
   aradNode.setNeighbour(sibiuNode, 140);
   aradNode.setNeighbour(timisoaraNode, 118);

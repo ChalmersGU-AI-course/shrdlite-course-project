@@ -6,32 +6,15 @@ import P = require('../test/AStar-euclidian');
 import A = require('../test/AStar-tryout-test');
 export module AS { // AStar
 
-  interface HashTable<T extends Heuristic> {
-    [key: number]: ANode<T>;
-  }
-
-  export function key<T extends Heuristic>(state: A.AStarTest.CityState, cost: number): number {
-    return state.toNumber() + cost;
-  }
-
   interface ANode<T extends Heuristic> {
     state: T;
     prev: ANode<T>;
     cost: number;
 
     getNeighbours(): [ANode<T>, number][]; //TODO
+    toString(): string;
+    equals(a: ANode<T>): boolean;
   }
-
-/*  export class CityState implements State {
-    name;
-    private dist;
-    heuristic() {
-      return this.dist;
-    }
-    match(comp){
-      return (this.name==comp.name);
-    }
-  }*/
 
   export interface State extends Heuristic{
     heuristic(state): number;
@@ -96,6 +79,10 @@ export module AS { // AStar
       base[x2][y2] = tmp;
       return base;
     }
+
+    equals(a: ANode<P.AStarEuclidian.PuzzleState>): boolean {
+      return true;
+    }
   }
 
   export class CityStateNode implements ANode<A.AStarTest.CityState> {
@@ -103,11 +90,11 @@ export module AS { // AStar
     prev: CityStateNode;   // (id of node) just one node enables a walk back to start to return the path.
     next: [CityStateNode, number][]; // (ids) list of possible nodes to walk to
     cost: number;
-    constructor(state: A.AStarTest.CityState, prev: CityStateNode, next: [CityStateNode, number][], cost=0) {
+    constructor(state: A.AStarTest.CityState, prev: CityStateNode, next: [CityStateNode, number][]) {
       this.state = state;
       this.prev = prev;
       this.next = next;
-      this.cost = cost;
+      this.cost = 0;
     }
     
     setNeighbour(nNode: CityStateNode, dist: number) {
@@ -116,6 +103,15 @@ export module AS { // AStar
     
     getNeighbours() {
       return this.next;
+    }
+
+    toString() : string {
+      var f = this.cost + this.state.h;
+      return this.state.toString() + " " + this.cost + " " + this.state.h + " " + f;
+    }
+
+    equals(a: ANode<A.AStarTest.CityState>): boolean {
+      return a.state.name == this.state.name;
     }
   }
 
@@ -149,20 +145,27 @@ export module AS { // AStar
   export function search<T extends Heuristic>(start: ANode<T>, goal: T): T[] {
     var frontier = new C.collections.PriorityQueue<ANode<T>>(compClosure(goal));
     frontier.enqueue(start);
-    
+
     while(!frontier.isEmpty()) {
+      frontier.forEach(function(element: ANode<T>): any{
+        console.log(element.toString());
+      });
+      console.log("TOP: " + frontier.peek().toString());
       var n : ANode<T> = frontier.dequeue();
+      console.log("dequeuing " + n.toString());
+      console.log("------");
       if(n) {                     // check if node is undefined
-	if(n.state.match(goal)) {
-	  return path<T>(n);
-	}
-	var neighbours = n.getNeighbours();
-	for(var i=0; i<neighbours.length; i++) { // for all neighbours
-	  var _neighbour = neighbours[i];
-	  frontier.enqueue(_neighbour[0]);
-	}
+        if(n.state.match(goal)) {
+          return path<T>(n);
+        }
+        var neighbours = n.getNeighbours();
+        for(var i=0; i<neighbours.length; i++) { // for all neighbours
+          var _neighbour = neighbours[i];
+          _neighbour[0].cost = n.cost + _neighbour[1];
+          frontier.enqueue(_neighbour[0]);
+        }
       } else {
-	throw "Node undefined";
+	      throw "Node undefined";
       }
     }
   };
@@ -180,6 +183,9 @@ export module AS { // AStar
       // cost = g + h
       var aCost = a.cost + a.state.heuristic(goal);
       var bCost = b.cost + b.state.heuristic(goal);
+      console.log("DEBUG");
+      console.log(a.state.toString() + " " + aCost);
+      console.log(b.state.toString() + " " + bCost);
       var res;
       if (aCost < bCost)
 	res = 1;
@@ -204,4 +210,16 @@ export module AS { // AStar
     }
     return _path.reverse();
   }
+
+
+  function removeElement<T extends Heuristic>(el: ANode<T>, oldPQ: C.collections.PriorityQueue<ANode<T>>) {
+    var newPQ = new C.collections.PriorityQueue<ANode<T>>();
+    while (!oldPQ.isEmpty()) {
+      var t = oldPQ.dequeue();
+      if (t.equals(el)) {
+        newPQ.enqueue(oldPQ.dequeue());
+      }
+    }
+    return newPQ;
+  } 
 }
