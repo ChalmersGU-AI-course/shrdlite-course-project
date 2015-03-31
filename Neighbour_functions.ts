@@ -18,15 +18,14 @@ module Neighbour {
 			n.holding=null;
 			nlist.push(n);
 		}
-		//TODO: Stacks may not be fixed to 5. 
 		if(currentState.arm > 0){
 			var n : WorldState = copyObject(currentState);
 			n.arm = n.arm-1;
 			nlist.push(n);
 		}		
-		if(currentState.arm < 4){
+		if(currentState.arm < currentState.stacks.length){
 			var n : WorldState = copyObject(currentState);
-			n.arm = n.arm-1;
+			n.arm = n.arm+1;
 			nlist.push(n);
 		}
 
