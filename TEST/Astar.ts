@@ -62,7 +62,7 @@ function oops<T>(order : Array<Vertex<T>>) : T[]{
 *
 * returns a list of states, ie the lowest cost path from the initial state.
 */
-function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, isGoal : Goal<T>) : T[]{
+function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, isGoal : Goal<T>, multiPathPruning : boolean = true ) : T[]{
 
     var queue = new collections.PriorityQueue<Vertex<T>>( (a, b) => {
         return b.cost + h(b.state) - a.cost - h(a.state);
@@ -86,10 +86,12 @@ function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, i
         }
 
         var current : Vertex<T> = queue.dequeue();
-        if(visited.contains(current.state)){
-            continue;
+        if(multiPathPruning){
+            if(visited.contains(current.state)){
+                continue;
+            }
+            visited.add(current.state);
         }
-        visited.add(current.state);
 
         order[x] = current ;
 
