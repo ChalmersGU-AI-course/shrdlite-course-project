@@ -46,13 +46,22 @@ class Graph {
 	}
 
 	getCostForEdge(firstNode : GraphNode, secondNode : GraphNode) : number {
+		var arr = this.edges.toArray();
+		for (var i = 0; i < arr.length; i++){
+			var e = arr[i];
+			if(e.getFromNode().equals(firstNode) && e.getEndNode().equals(secondNode)
+			|| e.getFromNode().equals(secondNode) && e.getEndNode().equals(firstNode)) {
+				return e.getCost();
+			}
+		}
+/*
 		for(var e in this.edges) {
 			if(e.getFromNode.equals(firstNode) && e.getEndNode.equals(secondNode)
 			|| e.getFromNode.equals(secondNode) && e.getEndNode.equals(firstNode)) {
 				return e.getCost();
 			}
 		}
-
+*/
 		return -1;
 	}
 
@@ -93,7 +102,7 @@ class GraphNode {
 	}
 
 	equals(otherNode : GraphNode) : boolean {
-		return this.getId() == otherNode.getId();
+		return this.id == otherNode.id;
 	}
 }
 
