@@ -2,7 +2,6 @@
 ///<reference path="../search/Search"/>
 ///<reference path="../search/Heuristic"/>
 
-
 class N {
   constructor(public value: string, public neighbours: [N, number][] = []) {
   }
@@ -41,7 +40,6 @@ n1.neighbours.push([n3, 1]);
 n2.neighbours.push([n4, 1]);
 n2.neighbours.push([n5, 4]);
 n2.neighbours.push([n7, 1]);
-//n2.neighbours.push([n7, 10]);
 
 n3.neighbours.push([n6, 5]);
 
@@ -49,7 +47,6 @@ n4.neighbours.push([n5, 1]);
 n4.neighbours.push([n6, 3]);
 
 n5.neighbours.push([n6, 1]);
-
 
 var start = n1;
 var ends:Array<N>  = [n6,n7];

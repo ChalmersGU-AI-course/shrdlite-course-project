@@ -84,14 +84,6 @@ m[4][4] = false;
 m[5][4] = false;
 m[6][4] = false;
 
-
-// Add edges along the y-axis
-var xAxis: boolean = true;
-// Add edges along the x-axis
-var yAxis: boolean = true;
-// Add edges along the diagonals
-var diags: boolean = false;
-
 var g = graph(m, x_dim, y_dim, xAxis, yAxis, diags);
 
 var start = g[0][0];
