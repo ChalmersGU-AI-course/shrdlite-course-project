@@ -74,7 +74,7 @@ function printGraph(map: boolean[][], path: N[]) {
       if ( b ) {
         str += "+"
       } else {
-        str += map[y][x] ? " " : "▮"
+        str += map[y][x] ? " " : "#"
       }
     }
 

@@ -3,7 +3,7 @@
 ///<reference path="../search/Heuristic"/>
 ///<reference path="./Graph"/>
 
-
+// Dimensions of
 var x_dim = 10;
 var y_dim = 10;
 
