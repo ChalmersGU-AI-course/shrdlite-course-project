@@ -13,8 +13,6 @@ Library Files.
 How to test.
 
 We have a couple of test files in the Test folder. Most of the are pretty simple.
-	Test.ts
-		Just a simple graph. No dual directions or anything fancy. But there are 3 different ways to the end. It passes.
 	TestNoPathToEnd.ts
 		Test to see if it finishes even when there is no path to the end.
 	TestMultipleEnds.ts
