@@ -80,3 +80,8 @@ module AStar {
     }
 
 }
+
+declare var module;
+if(typeof module !== 'undefined') {
+    module.exports = AStar;
+}
