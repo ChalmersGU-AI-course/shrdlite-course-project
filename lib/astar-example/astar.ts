@@ -7,7 +7,7 @@ module aStar {
             // ERROR, nodes are not in graph.
         }
         
-        var evaluatedNodes = new collections.Set<StarNode>(); 
+        var evaluatedNodes = new collections.Set<GraphNode>(); 
         var nodesToEvaluate = new collections.PriorityQueue<StarNode>()
 
         //var cameFromNodeMap = new collections.dictonary<StarNode, StarNode>();
@@ -22,7 +22,15 @@ module aStar {
             if(currentNode.equals(toNode)) {
                 return currentNode.getPath();
             }
-
+            var arr = graph.getNeighborsTo(currentNode);
+            for (var i = 0 ; i < arr.length; i++){
+            	if(!evaluatedNodes.contains(arr[i])) {
+                    var newDistance = currentNode.getDistance() + graph.getCostForEdge(currentNode, arr[i]);
+                    var starNeighbor = new StarNode(arr[i], newDistance, arr[i].distanceTo(toNode));
+                    nodesToEvaluate.add(starNeighbor);
+                }
+            }
+/*
             for(var currentNeighbor in graph.getNeighborsTo(currentNode)) {
                 if(!evaluatedNodes.contains(currentNeighbor)) {
                     var newDistance = currentNode.getDistance() + graph.getCostForEdge(currentNode, currentNeighbor);
@@ -30,6 +38,7 @@ module aStar {
                     nodesToEvaluate.add(starNeighbor);
                 }
             }
+            */
         }
 
         return null;
@@ -66,10 +75,10 @@ module aStar {
         getTotalDistance() : number {
             return this.distanceSoFar+this.heuristicDistance;
         }
-
+/*
         distanceTo(node : StarNode) : number{
         	return super.distanceTo(node);
-        }
+        }*/
 
         compareTo(otherNode : StarNode) : number {
             return this.getTotalDistance()-otherNode.getTotalDistance();
