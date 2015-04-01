@@ -4,7 +4,7 @@ A STAR IMPLEMENTATION
 Examples has been integrated with the shrdlite-offline.ts file 
 use by typing "node shrdlite-offline.js ASTAR #city-to-start-from"
 
-The important files are AStar.ts and AStarExample.ts
+The important files are AStar.ts and AStarExample.ts.
 AStar.ts is where the A* algorithem is implemented, AStarExample.ts is the Bucharest example from the slides in lecture 2 as described below.
 
 To implement this lab we chose to have a single file for the A* algorithm which holds all interesting functions that are needed.
