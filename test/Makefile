@@ -1,5 +1,5 @@
 
-TARGETS = TestCircularGraph TestMultipleEnds TestNoPathToEnd Test
+TARGETS = TestCircularNoEnd TestCircularGraph TestMultipleEnds TestNoPathToEnd Test
 
 .DELETE_ON_ERROR:
 
