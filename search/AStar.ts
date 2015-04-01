@@ -5,6 +5,10 @@
 module Search {
   export function aStar<N>( heuristic?: Heuristic<N>
                           , key?: (a: N) => string
+                          , stats: AStarStats = {
+                              nodesVisited: 0,
+                              nodesAdded: 0
+                            }
                           ) : Search<N, N[]> {
 
     return function ( neighbours: (node: N) => [N, number][]
@@ -41,13 +45,17 @@ module Search {
           return buildPath(info, current);
         }
 
-        // Move the current node from the open to the closed set.
         var ci: AStarInfo<N> = info.getValue(current);
 
-        ci.open = false;
+        // Never mind if the node is already in the closed set.
+        if (ci.closed) {
+          continue;
+        }
+
+        // Move the current node from the open to the closed set.
         ci.closed = true;
 
-        info.setValue(current, ci);
+        stats.nodesVisited += 1;
 
         // Iterate over the neighbours of the current node.
         var ni: AStarInfo<N>;
@@ -65,7 +73,6 @@ module Search {
           // information with appropriate values.
           if ( !ni ) {
             ni = {
-              open: true,
               closed: false,
               parent: current,
               f: ci.g + cost + h(n),
@@ -83,15 +90,15 @@ module Search {
             // Update the information if the current path is better
             // than the last.
             if ( ci.g + cost < ni.g ) {
-              ni.open = true;   //WHY PUT IT IN OPEN SET AGAIN? TO RE-EVALUATE THE POSITION IN THE PRIORITY QUEUE?
               ni.parent = current;
               ni.g = ci.g + cost;
-              ni.f = ni.g + ni.h;
+              ni.f = ci.g + cost + ni.h;
             }
           }
 
           // Add the neighbour to the priority queue if its in the open set.
-          if ( ni.open ) {
+          if ( !ni.closed ) {
+            stats.nodesAdded += 1;
             open.add([n, ni.f]);
           }
 
@@ -125,12 +132,16 @@ module Search {
   }
 
   interface AStarInfo<N> {
-    open:   boolean;
     closed: boolean;
     parent: N;
     f:      number;
     g:      number;
     h:      number;
+  }
+
+  export interface AStarStats {
+    nodesVisited: number;
+    nodesAdded: number;
   }
 }
 
