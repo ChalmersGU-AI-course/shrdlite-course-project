@@ -26,15 +26,11 @@ is supplied.
 ##Test files
 To run the test run *make all* in the test folder.
 
-### Main test
-The main test for the implementation is the TestGraph.ts file. 
-This test contains a grid graph with some obstacles and compute the best path
-by using three different heuristic functions. 
-The heuristic functions are manhattan, linear and zerocost.
-We also have a couple of tests for making sure the algorithm terminates correct.
-These tests are located in the files TestNoPathToEnd.ts, TestMultipleEnds.ts, TestCircularGraph.ts, and TestCircularNoEnd.ts.
+### Main tests
+We have two test files, one that tests A* on graph properties and one that test the A* heuristics. They are called TestAStarOnGraphProperties and TestGraphAStarHeuristics respectively.
 
-TestNoPathToEnd is a test that makes sure that the algorithm halts even if there is no path in the graph.
-TestCircularNoEnd sees that it halts if there is no path to the goal even if there is still paths to explore but we have visited them before.
-TestMultipleEnds tests that the algorithm picks the best path if there are multiple paths to the goal.
-TestCircularGraph tests for halting of the algorithm when there is loops.
+The graph properties test contains a couple of tests for making sure that the algorithm terminates correctly.
+First it makes sure that the algorithm halts even if there is no path in the graph. Then it tests for halting of the algorithm when there is loops. The last test makes sure that the algorithm picks the best path if there are multiple paths to the goal.
+
+The heuristics test contains a grid graph with some obstacles and computes the best path
+by using three different heuristic functions. The heuristic functions are Manhattan, straight line and zero cost.
