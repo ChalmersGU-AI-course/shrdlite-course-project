@@ -11,20 +11,15 @@ class N {
 //                    (n1)
 //                1  /   \  4
 //               ----     ----
-//      10      /             \
-//  (n7)-------(n2)          (n3)
-//          4  A  A  1         |
-//         ----    ----      5 |
-//        /            \       |
-//        V     1       V      |
-//      (n5)<-------->(n4)     |
-//        |             A      |
-//         \ 1        3 /      |
-//          ----   ----        |
-//              \ /          /
-//               |        ----   
-//               |       /       
-//              (n6)-----        
+//              /             \
+//  (n7)       (n2)          (n3)
+//          4  A  A  1       
+//         ----    ----      
+//        /            \       
+//        V     1       V      
+//      (n5)<-------->(n4)     
+//            
+//              (n6)        
 
 var n1 = new N("n1");
 var n2 = new N("n2");
@@ -44,18 +39,8 @@ n4.neighbours.push([n2, 1]);
 n2.neighbours.push([n5, 4]);
 n5.neighbours.push([n2, 4]);
 
-//n2.neighbours.push([n7, 1]);
-n2.neighbours.push([n7, 10]);
-
-n3.neighbours.push([n6, 5]);
-
 n4.neighbours.push([n5, 1]);
 n5.neighbours.push([n4, 1]);
-
-n4.neighbours.push([n6, 3]);
-
-n5.neighbours.push([n6, 1]);
-
 
 var start = n1;
 var ends:Array<N>  = [n6];
@@ -101,6 +86,6 @@ for (var i in ns) {
   showN(ns[i]);
 }
 
-console.log("\nPath from " + start.value + " to " + p[p.length -1].value + ":");
+console.log("\nPath from " + start.value + " to " + "any end" + ":");
 showP(p);
 console.log();
