@@ -35,10 +35,8 @@ AStar :: Graph -> Path
       }
     }
     // Initilization Vendor Types 
-    var closedset = new collections.Set<Node>(); // nodes already evaluated.
-    var openset = new collections.Set<Node>(); // nodes to be evaluated.
-    var queue =  new collections.PriorityQueue<Node>(comp); // works in parallel with openset
-    var came_from = new collections.Dictionary<Node, Node>();
+    var closedset = new collections.PriorityQueue<Node>(); // nodes allready evaluated.
+    var queue =  new collections.PriorityQueue<Node>(comp); // workes in paralell with opensset
     // Initial calculations 
     start.gscore = 0; // the inital distace 
     start.fscore = start.gscore + functions.heuristic_approx(start,goal);
