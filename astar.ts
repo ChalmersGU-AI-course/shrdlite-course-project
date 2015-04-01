@@ -68,7 +68,7 @@ function init(): void {
     maze.drawMaze(mazeCtx);
 
     var startNode = maze.xy2node(Math.floor(maze.width / 2), Math.floor(maze.height / 2));
-
+    var stopNode = startNode;
 
     $('#generate').click(function () {
         var seed: number = $('#seed').val();
@@ -96,11 +96,13 @@ function init(): void {
         var x = e.pageX - mazeCanvas.offsetLeft;
         var y = e.pageY - mazeCanvas.offsetTop;
 
-        var stopNode = maze.coord2node(x, y);
-
-        var path = mazeGraph.findPath(startNode, stopNode);
-        maze.drawMaze(mazeCtx);
-        maze.drawPath(mazeCtx, path);
+        var node = maze.coord2node(x, y);
+        if (node != stopNode) {
+            var path = mazeGraph.findPath(startNode, stopNode);
+            maze.drawMaze(mazeCtx);
+            maze.drawPath(mazeCtx, path);
+            stopNode = node;
+        }
     }
     
 };
