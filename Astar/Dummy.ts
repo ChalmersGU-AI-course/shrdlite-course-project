@@ -3,6 +3,7 @@
 
 //-- Trivial example -----------------------------
 
+var start = 0;
 var goal = 10;
 
 function dummyF(x : number) : [number] {
@@ -22,5 +23,7 @@ function dummyGoal(x) : boolean{
 }
 
 function dummyCall(){
-    return astar<number>(dummyF, dummyCost, dummyH, 0, dummyGoal)
+    return astar<number>(dummyF, dummyCost, dummyH, start, dummyGoal) ;
+    // return bestFirst<number>(dummyF, dummyH, start, dummyGoal) ;
+    // return lowestCost<number>(dummyF, dummyCost, start, dummyGoal) ;
 }

@@ -1,6 +1,7 @@
 
 /// <reference path="lib/collections.ts" />
 
+//-- Interfaces -------------------------------------------
 
 interface Neighbours<T>{
     (state : T) : T[] ;
@@ -28,33 +29,7 @@ interface Compare<T> {
     icf : collections.ICompareFunction<Vertex<T>>;
 }
 
-function postProcess<T>(order : Array<Vertex<T>>, finish : number) : T[]{
-
-    var stack = new collections.Stack<T>();
-
-    for(var x : number = finish; x >= 0; x = order[x].previous){
-        stack.push(order[x].state);
-    }
-    // var str = "";
-    var result = Array<T>();
-    while(! stack.isEmpty()){
-        var s = stack.pop();
-        result.push(s);
-        // str = str + " " + s ;
-    }
-    return result;
-    // return str ;
-}
-
-function oops<T>(order : Array<Vertex<T>>) : T[]{
-    var result = [];
-    for (var n in order){
-        result.push(order[n].state);
-    }
-    return result;
-}
-
-
+//-- Algorithms -------------------------------------------
 
 /**
 * A-star algorithm.
@@ -69,10 +44,13 @@ function oops<T>(order : Array<Vertex<T>>) : T[]{
 *                    function is monotone, it may not give the very best solution
 *                    but may terminate (much) more quickly!
 *                    default value = true
+* maxIter = terminates function when surpassing this value.
 *
 * returns a list of states, ie the lowest cost path from the initial state.
 */
-function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, isGoal : Goal<T>, multiPathPruning : boolean = true, maxIter : number = 25000 ) : T[]{
+function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T,
+                  isGoal : Goal<T>, multiPathPruning : boolean = true,
+                  maxIter : number = 25000 ) : T[]{
     var comp : Compare<T> = {
         icf : ((a, b) => {
             return b.cost + h(b.state) - a.cost - h(a.state);
@@ -81,7 +59,27 @@ function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, i
     return search<T>(comp, f, c, h, start, isGoal, multiPathPruning, maxIter);
 }
 
-function bestFirst<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, isGoal : Goal<T>, multiPathPruning : boolean = true, maxIter : number = 25000 ) : T[]{
+/**
+* Best-first algorithm.
+*
+* Entirely disregards cost, only looking at the heuristic.
+*
+* f = function returning the Neighbouring states of a certain state
+* h = heuristic function
+* start = initial state
+* isGoal = function returning true for every accepting state
+*          and false for every non-accepting state.
+* multiPathPruning = if allow pruning of multiple paths. Unless the heuristic
+*                    function is monotone, it may not give the very best solution
+*                    but may terminate (much) more quickly!
+*                    default value = true
+* maxIter = terminates function when surpassing this value.
+*
+* returns a list of states, ie the a path from the initial state.
+*/
+function bestFirst<T>(f : Neighbours<T>, h : Heuristic<T>, start : T, isGoal : Goal<T>,
+                      multiPathPruning : boolean = true, maxIter : number = 25000 ) : T[]{
+    var c : Cost<T> = ((a,b)=>0);
     var comp : Compare<T> = {
         icf : ((a, b) => {
             return h(b.state) - h(a.state);
@@ -90,7 +88,26 @@ function bestFirst<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : 
     return search<T>(comp, f, c, h, start, isGoal, multiPathPruning, maxIter);
 }
 
-function lowestCost<T>(f : Neighbours<T>, c : Cost<T>, start : T, isGoal : Goal<T>, multiPathPruning : boolean = true, maxIter : number = 25000 ) : T[]{
+/**
+* Lowest-cost algorithm.
+*
+* Entirely disregards heuristic, only looking at the cost.
+*
+* f = function returning the Neighbouring states of a certain state
+* c = function returning the cost of travelling from one state to another
+* start = initial state
+* isGoal = function returning true for every accepting state
+*          and false for every non-accepting state.
+* multiPathPruning = if allow pruning of multiple paths. Unless the heuristic
+*                    function is monotone, it may not give the very best solution
+*                    but may terminate (much) more quickly!
+*                    default value = true
+* maxIter = terminates function when surpassing this value.
+*
+* returns a list of states, ie the lowest cost path from the initial state.
+*/
+function lowestCost<T>(f : Neighbours<T>, c : Cost<T>, start : T, isGoal : Goal<T>,
+                       multiPathPruning : boolean = true, maxIter : number = 25000 ) : T[]{
     var h : Heuristic<T> = (s => 0);
     var comp : Compare<T> = {
         icf : ((a, b) => {
@@ -100,12 +117,36 @@ function lowestCost<T>(f : Neighbours<T>, c : Cost<T>, start : T, isGoal : Goal<
     return search<T>(comp, f, c, h, start, isGoal, multiPathPruning, maxIter);
 }
 
-function depthFirst<T>(f : Neighbours<T>, start : T, isGoal : Goal<T>, multiPathPruning : boolean = true, maxIter : number = 25000 ) : T[]{
+/**
+* Breadth-first algorithm.
+*
+* Entirely disregards heuristic and assumes cost 1 on each state transition.
+*
+* f = function returning the Neighbouring states of a certain state
+* start = initial state
+* isGoal = function returning true for every accepting state
+*          and false for every non-accepting state.
+* multiPathPruning = if allow pruning of multiple paths. Unless the heuristic
+*                    function is monotone, it may not give the very best solution
+*                    but may terminate (much) more quickly!
+*                    default value = true
+* maxIter = terminates function when surpassing this value.
+*
+* returns a list of states, ie the lowest cost path from the initial state.
+*/
+function breadthFirst<T>(f : Neighbours<T>, start : T, isGoal : Goal<T>,
+                       multiPathPruning : boolean = true, maxIter : number = 25000 ) : T[]{
     var c : Cost<T> = ((a,b)=>1);
     return lowestCost<T>(f, c, start, isGoal, multiPathPruning, maxIter);
 }
 
-function search<T>(comp : Compare<T>, f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, isGoal : Goal<T>, multiPathPruning : boolean = true, maxIter : number = 25000 ) : T[]{
+/**
+* General search algorithm using a PriorityQueue.
+* Used by above algoritms including astar.
+*/
+function search<T>(comp : Compare<T>, f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>,
+                   start : T, isGoal : Goal<T>, multiPathPruning : boolean = true,
+                   maxIter : number = 25000 ) : T[]{
     var queue = new collections.PriorityQueue<Vertex<T>>(comp.icf) ;
 
     var order : Array<Vertex<T>> = [];
@@ -157,4 +198,30 @@ function search<T>(comp : Compare<T>, f : Neighbours<T>, c : Cost<T>, h : Heuris
     alert("No solution found!");
 
     return [start];
+}
+
+function postProcess<T>(order : Array<Vertex<T>>, finish : number) : T[]{
+
+    var stack = new collections.Stack<T>();
+
+    for(var x : number = finish; x >= 0; x = order[x].previous){
+        stack.push(order[x].state);
+    }
+    // var str = "";
+    var result = Array<T>();
+    while(! stack.isEmpty()){
+        var s = stack.pop();
+        result.push(s);
+        // str = str + " " + s ;
+    }
+    return result;
+    // return str ;
+}
+
+function oops<T>(order : Array<Vertex<T>>) : T[]{
+    var result = [];
+    for (var n in order){
+        result.push(order[n].state);
+    }
+    return result;
 }

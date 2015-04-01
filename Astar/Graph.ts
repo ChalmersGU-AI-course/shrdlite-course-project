@@ -55,8 +55,18 @@ function graphGoal(a : PositionXY) : boolean{
     return a.x == End.x && a.y == End.y;
 }
 
+/**
+* Runs the graph example. Returns a list of the path.
+*
+* Both astar and lowestCost finds the optimal path of cost 12. On the other hand
+* bestFirst and breadthFirst only finds the `shortest` path of two edges with a
+* total cost of 13.
+*/
 function graphRun(){
     return astar<PositionXY>(graphNeighbours, graphCost, graphHeuristic, Origin, graphGoal);
+    // return bestFirst<PositionXY>(graphNeighbours, graphHeuristic, Origin, graphGoal);
+    // return lowestCost<PositionXY>(graphNeighbours, graphCost, Origin, graphGoal);
+    // return breadthFirst<PositionXY>(graphNeighbours, Origin, graphGoal);
 }
 
 //-- Graph data ------------------------------------------
