@@ -1,89 +1,100 @@
 ///<reference path="../search/AStar"/>
 ///<reference path="../search/Search"/>
 ///<reference path="../search/Heuristic"/>
+///<reference path="./Graph"/>
 
-class N {
-  constructor(public value: string, public neighbours: [N, number][] = []) {
+
+var x_dim = 10;
+var y_dim = 10;
+
+// The map - coordinates with value true connects to their neighbours,
+// with value false they do not.
+var m: boolean[][] = []; 
+
+// Add edges along the y-axis
+var xAxis: boolean = true;
+// Add edges along the x-axis
+var yAxis: boolean = true;
+// Add edges along the diagonals
+var diags: boolean = false;
+
+var g: N[][];
+
+var start: N;
+var end: N;
+
+var stats = { nodesVisited: 0, nodesAdded: 0 }
+
+function manhattan(end: N): Search.Heuristic<N> {
+  return function(node: N): number {
+    return Math.abs(end.x - node.x) + Math.abs(end.y - node.y);
   }
 }
 
-//                    (n1)
-//                1  /   \  1
-//               ----     ----
-//              /             \
-//             (n2)          (n3)
-//          4  /  \  1         |
-//         ----    ----        |
-//        /            \       |
-//        |     1       |      |
-//      (n5)----------(n4)     |
-//        |             |      |
-//        \ 1        3 /       |
-//         -----   ----        |
-//              \ /         5 /
-//               |        ----
-//               |       /
-//              (n6)-----
-
-var n1 = new N("n1");
-var n2 = new N("n2");
-var n3 = new N("n3");
-var n4 = new N("n4");
-var n5 = new N("n5");
-var n6 = new N("n6");
-var ns = [n1, n2, n3, n4, n5, n6];
-
-n1.neighbours.push([n2, 1]);
-n1.neighbours.push([n3, 1]);
-
-n2.neighbours.push([n4, 1]);
-n2.neighbours.push([n5, 4]);
-
-n3.neighbours.push([n6, 5]);
-
-n4.neighbours.push([n5, 1]);
-n4.neighbours.push([n6, 3]);
-
-n5.neighbours.push([n6, 1]);
-
-
-var start = n1;
-var end   = n6;
-
-var s = Search.aStar(undefined, (node: N) => node.value);
-var p = s((n: N) => n.neighbours, start, (n: N) => n.value == end.value);
-
-
-var showN = (n: N) => {
-  var str   = "  " + n.value;
-  for (var i in n.neighbours) {
-    if ( i > 0 ) 
-      str += ", ";
-    else
-      str += " -> ";
-
-    str += "(" + n.neighbours[i][0].value + ", " + n.neighbours[i][1] + ")" ;
+function straightLine(end: N): Search.Heuristic<N> {
+  return function(node: N): number {
+    return Math.sqrt(Math.pow(end.x - node.x, 2) + Math.pow(end.y - node.y, 2));
   }
-  console.log(str);
 }
 
-var showP = (p: N[]) => {
-  var str   = "  ";
+function showP (p: N[]): string {
+  if ( !p ) {
+    console.log("No path found");
+  }
+  var str = "";
   for (var i in p) {
     if ( i > 0 )
       str += " -> ";
-
     str += p[i].value
   }
-  console.log(str);
+  return str;
 }
 
-console.log("\nNodes:")
-for (var i in ns) {
-  showN(ns[i]);
+function run(h: Search.Heuristic<N>, hn: string) {
+  stats = { nodesVisited: 0, nodesAdded: 0 }
+  var s = Search.aStar(h, (node: N) => node.value, stats);
+  var p = s((n: N) => n.neighbours, start, (n: N) => n.value == end.value);
+
+  console.log("\n" + hn + "\n-------------------------")
+  console.log("\nPath from " + start.value + " to " + end.value + ":");
+  console.log("  " + showP(p));
+  console.log("\nStats:");
+  console.log("         nodes visited: " + stats.nodesVisited);
+  console.log("  nodes added to queue: " + stats.nodesAdded);
+  console.log();
+  printGraph(m, p);
 }
 
-console.log("\nPath from " + start.value + " to " + end.value + ":");
-showP(p);
-console.log();
 
+// Initialize map and graph, no edges added at this point
+for ( var y=0; y<y_dim; y++ ) { 
+  var my = [];
+  for ( var x=0; x<x_dim; x++ ) { 
+    my.push(true);
+  }
+  m.push(my);
+}
+
+// Add obstacle to map
+m[3][3] = false;
+m[3][4] = false;
+m[4][4] = false;
+m[5][4] = false;
+m[6][4] = false;
+
+
+// Add edges along the y-axis
+var xAxis: boolean = true;
+// Add edges along the x-axis
+var yAxis: boolean = true;
+// Add edges along the diagonals
+var diags: boolean = false;
+
+var g = graph(m, x_dim, y_dim);
+
+var start = g[0][0];
+var end   = g[9][9];
+
+run(undefined, "zero");
+run(manhattan(end), "manhattan");
+run(straightLine(end), "straight line");

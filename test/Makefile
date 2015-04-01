@@ -3,13 +3,13 @@ TARGETS = TestCircularNoEnd TestCircularGraph TestMultipleEnds TestNoPathToEnd T
 
 .DELETE_ON_ERROR:
 
-.PHONY: help clean $(TARGETS)
+.PHONY: help clean all $(TARGETS)
 
 dist:
 	mkdir dist
 
 help:
-	@echo "make help | clean | $(TARGETS:%=% |) ..."
+	@echo "make help | clean | all | $(TARGETS:%=% |) ..."
 
 clean:
 	rm -f *js
@@ -17,7 +17,15 @@ clean:
 
 all: $(TARGETS)
 
+ifeq ($(OS),Windows_NT)
+#Windows stuff
+TSC = C:/Users/David/AppData/Roaming/npm/tsc
+else
+#Linux stuff
+TSC = tsc
+endif
+
 $(TARGETS): %:
-	tsc --out dist/$@.js $@.ts
+	$(TSC) --out dist/$@.js $@.ts
 	cd dist; node $@.js > $@.log
 	cd dist; cat $@.log
