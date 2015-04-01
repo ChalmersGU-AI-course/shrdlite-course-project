@@ -1,64 +1,40 @@
-# TODO: Include priority queue lib to html
-# https://github.com/adamhooper/js-priority-queue
-
-# "Enum" of the possible moves
-# E.g: Move.LEFT
-Move =
-  LEFT:	1
-  RIGHT:	2
-  UP:		3
-  DOWN:	4
-
 # A* algorithm.
 # start is the start state
 # goal is the goal state
 # heuristicFunction is the heuristic function
 # nextMoves gives the possible moves from current state
-Astar = (start, goal, heuristicFunction, nextMoves) ->
-  openSet = #PriorityQueue()
+# getNextState gives a new state given a move
+# Equality compares to states for equality
+Astar = (start, goal, heuristicFunction, nextMoves, getNextState, equality) ->
+  openSet = new PriorityQueue({ comparator: compareObjects })
   closedSet = []
-  listOfPossibleMoves = nextMoves(start)
-  
-  # Init open set
-  for i in listOfPossibleMoves
-    nextState = getNextState(start, listOfPossibleMoves[i])
-    totalCost = heuristicFunction(nextState, goal) + 1 # 1 extra for the step to next state
-    stateObject = # TODO: better name here
-      state: nextState
-      moves: listOfPossibleMoves[i]
-    openSet.queue(totalCost, stateObject])
+  # Add the start state to the queue
+  totalCost = heuristicFunction(start, goal)
+  startObject = 
+      state:  start
+      moves:  []
+      cost:   totalCost
+  openSet.queue(startObject)
 
   # A* iteration
-  while openSet.length > 1
-    currentStateObject = openSet.dequeue()
-    currentState = currentStateObject.state
-    currentTraversed = currentStateObject.moves
-    if currentState is goal
-      # Vad ska vi göra då?
-    closedSet.push(currentStateObject)
-    listOfPossibleMoves = nextMoves(currentState)
-
+  while openSet.length > 0
+    current = openSet.dequeue()
+    if equality(current.state, goal)
+      return current.moves
+    closedSet.push(current.state)
+    listOfPossibleMoves = nextMoves(current.state)
     # All possible moves from move chosen from priority queue
-    for i in listOfPossibleMoves
-      nextState = getNextState(currentState, listOfPossibleMoves[i])
-      if nextState not in closedSet
-        totalCost = heuristicFunction(nextState, goal) + currentTraversed.length + 1
+    for move in listOfPossibleMoves
+      state = getNextState(current.state, move)
+      if not (true in (equality(state, closed) for closed in closedSet))
+        path = current.moves.concat(move)
+        totalCost = heuristicFunction(state, goal) + path.length
         stateObject =
-          state: nextState
-          moves: listOfPossibleMoves[i]
-        openSet.queue(totalCost, stateObject)
+          state:  state
+          moves:  path
+          cost:   totalCost
+        openSet.queue(stateObject)
+  return -1
     
-
-
-nextMoves = (currentState) ->
-  possibleMoves = []
-
-  return possibleMoves
-
-nyDist = (current, goal) ->
-  sum = 0
-  return sum
-
-getNewState = (currentState, move) ->
-
-	return newState
+compareObjects = (obj1, obj2) ->
+  return obj1.cost - obj2.cost
