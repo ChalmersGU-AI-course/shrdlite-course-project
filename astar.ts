@@ -10,11 +10,11 @@ function init(): void {
     canv.width = 600;
     canv.height = 513;
     $('#map').append(canv);
-    var ctx = canv.getContext('2d');
+    var mapCtx = canv.getContext('2d');
 
     var bild = new Image();
     bild.src = "europe.svg";
-    bild.onload = function () { ctx.drawImage(bild, 0, 0, 600, 513); };
+    bild.onload = function () { mapCtx.drawImage(bild, 0, 0, 600, 513); };
 
     for (var n in Europe.Nodes) {
         $('#from').append('<option>' + Europe.Nodes[n].name + '</option>');
@@ -34,18 +34,18 @@ function init(): void {
             var startNode: GraphNode = Europe.Nodes[path[0][0]];
             $('#result').append(startNode.name + ' ');
 
-            ctx.clearRect(0, 0, 600, 513);
-            ctx.drawImage(bild, 0, 0, 600, 513);
+            mapCtx.clearRect(0, 0, 600, 513);
+            mapCtx.drawImage(bild, 0, 0, 600, 513);
 
-            ctx.beginPath();
-            ctx.moveTo(startNode.x, startNode.y);
+            mapCtx.beginPath();
+            mapCtx.moveTo(startNode.x, startNode.y);
 
             for (var i in path) {
                 $('#result').append(Europe.Nodes[path[i][1]].name + ' ');
-                ctx.lineTo(Europe.Nodes[path[i][1]].x, Europe.Nodes[path[i][1]].y);
+                mapCtx.lineTo(Europe.Nodes[path[i][1]].x, Europe.Nodes[path[i][1]].y);
             }
-            ctx.strokeStyle = "black";
-            ctx.stroke();
+            mapCtx.strokeStyle = "black";
+            mapCtx.stroke();
         }
         else {
             $('#result').text('No route possible');
@@ -67,10 +67,19 @@ function init(): void {
     var mazeCtx: CanvasRenderingContext2D = mazeCanvas.getContext('2d');
     maze.drawMaze(mazeCtx);
 
-    var startNode = maze.xy2node(Math.floor(maze.width / 2), Math.floor(maze.height / 2));
-    var stopNode = startNode;
 
-    $('#generate').click(function () {
+    //Will be set by generateMaze
+    var startNode = undefined;
+    var stopNode = undefined;
+    var mazeData = undefined;
+    genereateMaze();
+
+
+    $('#generate').click(genereateMaze);
+    mazeCanvas.addEventListener('mousedown', mazeClick, false);
+    mazeCanvas.addEventListener('mousemove', mazeMove, false);
+
+    function genereateMaze(): void {
         var seed: number = $('#seed').val();
         var width: number = $('#width').val();
         var height: number = $('#height').val();
@@ -78,19 +87,18 @@ function init(): void {
 
         mazeGraph = maze.generateGraph(width, height, seed, balance);
         maze.drawMaze(mazeCtx);
+        mazeData = mazeCtx.getImageData(0, 0, mazeCanvas.width, mazeCanvas.height);
         startNode = maze.xy2node(Math.floor(maze.width / 2), Math.floor(maze.height / 2));
         stopNode = startNode;
-    });
-
-    mazeCanvas.addEventListener('mousedown', mazeClick, false);
-    mazeCanvas.addEventListener('mousemove', mazeMove, false);
+    }
 
     function mazeClick(e: MouseEvent) {
         var x = e.pageX - mazeCanvas.offsetLeft;
         var y = e.pageY - mazeCanvas.offsetTop;
 
         var path = mazeGraph.findPath(stopNode, startNode);
-        maze.drawMaze(mazeCtx);
+        mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
+        mazeCtx.putImageData(mazeData, 0, 0);
         maze.drawPath(mazeCtx, path);
         var n = maze.coord2node(x, y);
         if (n != undefined)
@@ -105,7 +113,8 @@ function init(): void {
         if (node != undefined && node != stopNode) {
             stopNode = node;
             var path = mazeGraph.findPath(startNode, stopNode);
-            maze.drawMaze(mazeCtx);
+            mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
+            mazeCtx.putImageData(mazeData, 0, 0);
             maze.drawPath(mazeCtx, path);
         }
     }
