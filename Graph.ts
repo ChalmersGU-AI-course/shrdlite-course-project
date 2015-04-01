@@ -20,39 +20,34 @@ class Graph {
         if (start > this.nodes.length || start < 0 || goal > this.nodes.length || goal < 0)
             throw new RangeError("Node does not exist");
 
-        var came_from: number[] = []; //matris typ
+        var cameFrom: number[] = []; //matris typ
 
         var openset = new collections.Set<number>();
-        openset.add(start);
+
+        var fscore = new collections.PriorityQueue<{ node: number; cost: number }>(function (a, b): number {
+            return a.cost < b.cost ? 1 : -1;
+        });
+
 
         var closedset = new collections.Set<number>();
-
-        //can't get stl to work
-        //var f_score: minheap = new MinHeap();
-        var f_score = [];
-
-        //fill array with -1 to indicate nodes not yet calculated
-        for (var i = 0; i < this.nodes.length; ++i)
-            f_score[i] = -1;
 
         var g_score = []; //could maybe use = new int[f_score.length] for pre allocation
         for (var i = 0; i < this.nodes.length; ++i)
             g_score[i] = 0;
 
-
-        f_score[start] = g_score[start] + this.heuristicCost(start, goal);
+        openset.add(start);
+        fscore.enqueue({ node: start, cost: g_score[start] + this.heuristicCost(start, goal) });
 
         while (!openset.isEmpty()) {
             //var current: number = this.indexOfSmallest(f_score);//hitta elementet med lägst värde i f_score, sätt current till dess index
-            var current: number = this.indexOfSmallestRestricted(f_score, openset.toArray());
-            console.log("current: ", current);
+            var current = fscore.dequeue().node;
 
             if (current == goal) {
                 var path = [];//: [][number, number];
                 var cur = goal;
                 while (cur != start) {
-                    path.push([came_from[cur], cur]);
-                    cur = came_from[cur];
+                    path.push([cameFrom[cur], cur]);
+                    cur = cameFrom[cur];
                 }
                 var pathI = [];
                 for (var i = 0; i < path.length; ++i) {
@@ -81,9 +76,10 @@ class Graph {
                 var tentative_g_score = g_score[current] + edge_between_cost;
 
                 if (!openset.contains(current_neighbours[i][1]) || tentative_g_score < g_score[current_neighbours[i][1]]) {
-                    came_from[current_neighbours[i][1]] = current;
+                    cameFrom[current_neighbours[i][1]] = current;
                     g_score[current_neighbours[i][1]] = tentative_g_score;
-                    f_score[current_neighbours[i][1]] = g_score[current_neighbours[i][1]] + this.heuristicCost(current_neighbours[i][1], goal);
+
+                    fscore.enqueue({node: current_neighbours[i][1], cost: g_score[current_neighbours[i][1]] + this.heuristicCost(current_neighbours[i][1], goal)});
 
                     if (!openset.contains(current_neighbours[i][1]))
                         openset.add(current_neighbours[i][1]);
@@ -107,35 +103,6 @@ class Graph {
 
     cost(node1: GraphNode, node2: GraphNode) {
         return Math.sqrt((node1.x - node2.x) * (node1.x - node2.x) + (node1.y - node2.y) * (node1.y - node2.y));
-    }
-
-    //returns index of smallest non negative element
-    indexOfSmallest(arr: number[]) {
-        var lowest = 0;
-        for (var i = 1; i < arr.length; ++i) {
-            if ((arr[i] <= arr[lowest] && arr[i] >= 0) || (arr[i] >= 0 && arr[lowest] == -1)) lowest = i;
-        }
-        return lowest;
-    }
-
-    indexOfSmallestRestricted(arr: number[], oset: number[]) {
-        var lowest = oset[0];
-        var index = oset[0];
-
-        for (var i = 0; i < oset.length; ++i) {
-            index = oset[i];
-            if ((arr[index] <= arr[lowest] && arr[index] >= 0) || (arr[index] >= 0 && arr[lowest] == -1)) lowest = index;
-        }
-        return lowest;
-    }
-    
-    //returns -1 if value not in arr
-    find(arr: number[], value: number) {
-        var index = -1;
-        for (var i = 0; i < arr.length; ++i) {
-            if (arr[i] == value) index = i;
-        }
-        return index;
     }
 
     get NoOfNodes(): number {
