@@ -1,11 +1,11 @@
 Overview
-============================
+------------------------------------------------
 
-The A* implementation is located in the `Astar/` folder. The implementation is explained below, after the examples.
+The A* implementation is located in the `Astar/` folder. The implementation is explained below.
 
 Compile the typescript file by running `Astar/Makefile`.
 
-Start the program by opening up the astar.html file. On start, it will run the A* algorithm on three different examples (see below). While running the algorithm, the browser will likely freeze for about one second before showing a popup stating that it found a solution for the third example.
+Start the program by opening up the `astar.html` file. On start, it will run the A* algorithm on three different examples (see below). While running the algorithm, the browser will likely freeze for about one second before showing a popup stating that it found a solution for the third example.
 
 1. Dummy
 2. Graph
