@@ -1,4 +1,5 @@
-*Overview
+Overview
+============================
 
 The A* implementation is located in the´Astar/´ folder. The implementation is explained below, after the examples.
 
@@ -19,7 +20,9 @@ Which heuristic was used?
 The third example is the famous 8-puzzle. Here, the algorithm prints the heuristic of the starting point, runs the algorithm, and finally (assuming it finds a solution) prints the final path length and the actual steps taken in the path.
 Which heuristic was used?
 
-**Implementation
+
+Implementation
+------------------------------------------------
 The files used in this implementation are the following:
 
 BSD Makefile for automatically creating `.js` files from `.ts` files:
