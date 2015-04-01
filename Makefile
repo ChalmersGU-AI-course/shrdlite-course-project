@@ -19,7 +19,7 @@ clean:
 
 all: node_modules $(TARGETS)
 
-$(TARGETS): %: $(DIST)/shrdlite-%.js $(DIST)/grammar.js
+$(TARGETS): %: $(DIST)/shrdlite-%.js $(DIST)/grammar.js $(DIST)/AStar.js
 
 $(DIST)/%.js: $(SOURCE)/%.ts $(TSFILES)
 	tsc --out $@ $<
