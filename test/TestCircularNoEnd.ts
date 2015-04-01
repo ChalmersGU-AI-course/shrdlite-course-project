@@ -71,6 +71,10 @@ var showN = (n: N) => {
 }
 
 var showP = (p: N[]) => {
+  if ( !p ) {
+    console.log("  No path found");
+  }
+
   var str   = "  ";
   for (var i in p) {
     if ( i > 0 )

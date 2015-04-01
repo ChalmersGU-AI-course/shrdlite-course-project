@@ -24,7 +24,6 @@ var start: N;
 var end: N;
 
 var stats = { nodesVisited: 0, nodesAdded: 0 }
-var p: N[];
 
 function manhattan(end: N): Search.Heuristic<N> {
   return function(node: N): number {
@@ -39,6 +38,9 @@ function straightLine(end: N): Search.Heuristic<N> {
 }
 
 function showP (p: N[]): string {
+  if ( !p ) {
+    console.log("No path found");
+  }
   var str = "";
   for (var i in p) {
     if ( i > 0 )
@@ -51,7 +53,7 @@ function showP (p: N[]): string {
 function run(h: Search.Heuristic<N>, hn: string) {
   stats = { nodesVisited: 0, nodesAdded: 0 }
   var s = Search.aStar(h, (node: N) => node.value, stats);
-  p = s((n: N) => n.neighbours, start, (n: N) => n.value == end.value);
+  var p = s((n: N) => n.neighbours, start, (n: N) => n.value == end.value);
 
   console.log("\n" + hn + "\n-------------------------")
   console.log("\nPath from " + start.value + " to " + end.value + ":");
@@ -92,10 +94,6 @@ var g = graph(m, x_dim, y_dim);
 
 var start = g[0][0];
 var end   = g[9][9];
-
-var stats = { nodesVisited: 0, nodesAdded: 0 }
-var s = Search.aStar(undefined, (node: N) => node.value, stats);
-var p = s((n: N) => n.neighbours, start, (n: N) => n.value == end.value);
 
 run(undefined, "zero");
 run(manhattan(end), "manhattan");
