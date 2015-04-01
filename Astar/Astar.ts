@@ -162,7 +162,9 @@ function breadthFirst<T>(f : Neighbours<T>, start : T, isGoal : Goal<T>,
 
 /**
 * General search algorithm using a PriorityQueue.
-* Used by above algoritms including astar.
+* Used by above algoritms including `astar`.
+*
+* see documentation for `astar` above.
 */
 function search<T>(comp : Compare<T>, f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>,
                    start : T, isGoal : Goal<T>, multiPathPruning : boolean = true,
@@ -178,12 +180,12 @@ function search<T>(comp : Compare<T>, f : Neighbours<T>, c : Cost<T>, h : Heuris
         previous : -1
     });
 
-    for( var x = 0 ; ! queue.isEmpty(); ++x){
+    for( var x = 0; ! queue.isEmpty(); ++x){
 
         if(x > maxIter){
             alert("Stopping early after " + x + " iterations. Size of queue: " + queue.size() + " current cost: " + current.cost);
-            // return postProcess<T>(order, x);
-            return showVisited<T>(order);
+            return postProcess<T>(order, x-1);
+            // return showVisited<T>(order);
         }
 
         var current : Vertex<T> = queue.dequeue();

@@ -1,14 +1,16 @@
 
 /// <reference path="Astar.ts" />
 
-// type PState = number[][];
-
 class PState{
+    /**
+    * matr = 3x3 matrix of starting state
+    * (iz, jz) = coordinate of zero in `matr`.
+    */
     constructor(public matr : number[][], public iz : number, public jz : number){
     }
 
     /**
-    * Deep copy
+    * returns deep copy of this state.
     */
     slice(){
         var newMatr = [];
@@ -18,6 +20,9 @@ class PState{
         return new PState(newMatr, this.iz, this.jz);
     }
 
+    /**
+    * returns html-friendly string.
+    */
     toString(){
         var str = "";
         for(var i in this.matr){
@@ -37,15 +42,13 @@ var pStart : PState = new PState(
 //          [0,5,7],
 //          [4,6,2]], 1, 0);
 
-var pGoal : PState = new PState(
-        [[0,1,2],
-         [3,4,5],
-         [6,7,8]], 0, 0);
-
 function puzzleGoal(a : PState){
-    return pGoal.toString() == a.toString();
+    return puzzleHeuristic(a) == 0;
 }
 
+/**
+* Manhattan distance as usual. The tile zero is ignored.
+*/
 function manhattan(i : number, j : number, x : number){
     if(x == 0){
         return 0;
@@ -63,6 +66,9 @@ function puzzleHeuristic(a : PState) : number{
     return sum;
 }
 
+/**
+* returns deep copy of state where the zero tile is swapped with the tile on (ix, jx).
+*/
 function swap(a : PState, ix : number, jx : number) : PState{
     var b = a.slice();
     b.matr[b.iz][b.jz] = b.matr[ix][jx];
@@ -72,6 +78,9 @@ function swap(a : PState, ix : number, jx : number) : PState{
     return b;
 }
 
+/**
+* returns list of deep copies of neighbouring states.
+*/
 function puzzleNeighbours(a : PState) : PState[]{
     var is = [-1,0,1,0];
     var js = [0,-1,0,1];
