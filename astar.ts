@@ -30,10 +30,10 @@ function init(): void {
         var path = G.findPath(from, to);
 
         if (path != undefined && path.length > 0) {
-            $('#result').text('');
+            var txt = '';
             var startNode: GraphNode = Europe.Nodes[path[0][0]];
-            $('#result').append(startNode.name + ' ');
-
+            txt += startNode.name + ', ';
+            
             mapCtx.clearRect(0, 0, 600, 513);
             mapCtx.drawImage(bild, 0, 0, 600, 513);
 
@@ -41,11 +41,14 @@ function init(): void {
             mapCtx.moveTo(startNode.x, startNode.y);
 
             for (var i in path) {
-                $('#result').append(Europe.Nodes[path[i][1]].name + ' ');
+                txt += Europe.Nodes[path[i][1]].name + ', ';
                 mapCtx.lineTo(Europe.Nodes[path[i][1]].x, Europe.Nodes[path[i][1]].y);
             }
             mapCtx.strokeStyle = "black";
             mapCtx.stroke();
+
+            txt = txt.substr(0, txt.length - 2);
+            $('#europe-result').text(txt);
 
             //Draw blobs
             mapCtx.fillStyle = "black";
@@ -60,7 +63,7 @@ function init(): void {
             }
         }
         else {
-            $('#result').text('No route possible');
+            $('#europe-result').text('No route possible');
         }
     });
 
@@ -82,9 +85,9 @@ function init(): void {
     maze.drawMaze(mazeCtx);
 
     //Will be set by generateMaze
-    var startNode = undefined;
-    var stopNode = undefined;
-    var mazeData = undefined;
+    var startNode: number = undefined;
+    var stopNode: number = undefined;
+    var mazeData: ImageData = undefined;
     genereateMaze();
 
 
@@ -116,6 +119,7 @@ function init(): void {
         var n = maze.coord2node(x, y);
         if (n != undefined)
             startNode = n;
+        $('#maze-result').text('From ' + mazeGraph.nodes[startNode].name + ' to ' + mazeGraph.nodes[stopNode].name);
     }
 
     function mazeMove(e: MouseEvent) {
@@ -129,6 +133,8 @@ function init(): void {
             mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
             mazeCtx.putImageData(mazeData, 0, 0);
             maze.drawPath(mazeCtx, path);
+
+            $('#maze-result').text('From ' + mazeGraph.nodes[startNode].name + ' to ' + mazeGraph.nodes[stopNode].name);
         }
     }
 

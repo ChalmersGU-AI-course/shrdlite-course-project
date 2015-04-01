@@ -38,7 +38,7 @@ class Maze {
 
         for (var y = 0; y < this.height_; ++y)
             for (var x = 0; x < this.width; ++x)
-                nodes[this.xy2node(x, y)] = { name: x.toString() + y.toString(), x: x, y: y };
+                nodes[this.xy2node(x, y)] = { name: '(' + x.toString() + ',' + y.toString() + ')', x: x, y: y };
 
         return nodes;
     }
