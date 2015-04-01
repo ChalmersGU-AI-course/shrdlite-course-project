@@ -95,7 +95,7 @@ def a_star_search(graph, start, goal):
 
 def printPath(goal, start, came_from, cost_so_far):
   current = goal
-
+  print("path  :  Cost")
   while not current == start:
     print(current," : ", cost_so_far[current])
     current = came_from[current]
@@ -124,11 +124,12 @@ def testcase2():
   diagram = GridWithWeights(5, 5)
   diagram.walls = [(1, 1), (1, 2), (1, 3), (1,4), (3,0), (2,2), (2,3), (2,4),(3,2)]
   #
-  #       S . . # 
+  #       S . . #  
   #         # . . .
   #         # # # .
   #         # #   .
   #         # #   E
+  # Expected path: (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (4, 1), (4, 2), (4, 3), (4, 4)
   came_from, cost_so_far = a_star_search(diagram, start, goal)
   printPath(goal,start, came_from, cost_so_far)
 
@@ -138,13 +139,40 @@ def testcase3():
   start = (0,0)
   diagram = GridWithWeights(5, 5)
   diagram.walls = [(1, 1), (1, 2), (3, 4)]
-  # diagram4.weights = {loc: 5 for loc in [(3, 4), (3, 5), (4, 1), (4, 2),
-  #                                        (4, 3), (4, 4), (4, 5), (4, 6), 
-  #                                        (4, 7), (4, 8), (5, 1), (5, 2),
-  #                                        (5, 3), (5, 4), (5, 5), (5, 6), 
-  #                                        (5, 7), (5, 8), (6, 2), (6, 3), 
-  #                                        (6, 4), (6, 5), (6, 6), (6, 7), 
-  #                                        (7, 3), (7, 4), (7, 5)]}
+  #
+  #       S . . . .
+  #       5 # 5 5 . 
+  #       5 # 5 5 .
+  #       5 5 5 5 .
+  #           #   E
+  # Expected path: (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (4, 1), (4, 2), (4, 3), (4, 4)
+  
+  diagram.weights = {loc: 5 for loc in [(0, 1), (2, 1), (3, 1),
+                                         (0, 2), (2, 2), (3, 2),
+                                         (0, 3), (1, 3), (2, 3), (3, 3)]}
 
+  came_from, cost_so_far = a_star_search(diagram, start, goal)
+  printPath(goal,start, came_from, cost_so_far)
+
+print("testcase1")
+print("S        ")
+print(". #      ")
+print(". #      ")
+print(". . . . .")
+print("    #   E")
+testcase1()
+print("testcase2")
+print("S . . #  ")
+print("  # . . .")
+print("  # # # .")
+print("  # #   .")
+print("  # #   E")
 testcase2()
+print("testcase3")
+print("S . . . .")
+print("5 # 5 5 .")
+print("5 # 5 5 .")
+print("5 5 5 5 .")
+print("    #   E")
+testcase3()
 
