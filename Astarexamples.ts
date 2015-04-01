@@ -6,17 +6,13 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     _edges : Array<Array<number>>;        //from index node a to index node b
     _width : number;
     _heigth : number;
-    
-    getNodeValue (index : number):number{
-        var res = this._nodeValues[index];
-        return (res[0]*10)+res[1];
-    }
+    _heuristicWeight : number;
 
-    constructor(size:number, wall:boolean, hole:number){
+    constructor(size:number, wall:boolean, hole:number, heuristic:number){
+        this._heuristicWeight = heuristic;
         this._width = size;
         this._heigth = size;
         this._nodeValues = [];
-        //this._nodeValues = [[1,1],[1,2],[2,3],[3,2],[4,2],[5,5]];
         var index = 0;
         for(var i = 0; i < this._width; i++){
             for(var j = 0; j < this._heigth; j++){
@@ -75,21 +71,18 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     }
     
     getcost(from: number,to:number):number{
-        return 1;
-        var index = this._nodeneighbors[from].indexOf(to);
-        if(index >= 0){
-            return 1;
-            //return this._edges[from][index];
-        }
-        return -1;
+        return this.manhattan(from, to);
     }
     
-    heuristic_cost_estimate(current : number, goal : number) : number{
-        //return 0;
+    manhattan(current : number, goal : number) : number{
         var cur = this._nodeValues[current];
         var gol = this._nodeValues[goal];
         //Manhathan distance
         return (Math.abs(gol[0] - cur[0]) + Math.abs(gol[1] - cur[1]));
+    }
+    
+    heuristic_cost_estimate(current : number, goal : number) : number{
+        return this.manhattan(current, goal)*this._heuristicWeight;
     }
     
     specialIndexOf(obj:number[]):number {    
@@ -102,28 +95,84 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     }
 }
 
+function printres(res:number[], nodeVal){
+    if(res.length == 0){
+    console.log("no path found");
+    }else{
+        console.log("Path -> ");
+        var conv = [];
+        for(var i = 0 ; i < res.length; i ++){
+            conv[i]= nodeVal[res[i]].toString(); 
+        }
+        conv = conv.reverse();
+        conv.forEach(c => {
+            console.log("<" + c+">");   
+        
+            });
+        console.log("Path length: " + conv.length);
+    }
 
-var sp = new Shortestpath(10, true, 0);// 10x10 map, true for wall and 5 for hole in wall 
+}
+/* ex 1 */
+console.info("Example 1 with heuristic: no wall");
+
+var sp = new Shortestpath(10, false, -1, 1);// 10x10 map, true for wall and 5 for hole in wall 
 var as = new Astar<number[]>(sp);
 var start = sp.specialIndexOf([2,2]);
 var end = sp.specialIndexOf([6,6]);
-console.log("Start: " +start +" End: " + end);
+console.log("Start: <2,2> End: <6,6>");
 var res = as.star(start,end);
-if(res.length == 0){
-    console.log("no path found");
-}else{
-    var conv = [];
-    for(var i = 0 ; i < res.length; i ++){
-        conv[i]= sp._nodeValues[res[i]];
-    }
-    conv = conv.reverse();
-    conv.forEach(c => {
-        console.log("(" + c+")");   
-    
-        });
-    console.log("Path length: " + conv.length);
-    console.log("res: (" + conv.toString()+")");   
-}
+printres(res, sp._nodeValues);
+
+/* ex 2 */
+console.info("Example 2 with heuristic: wall");
+
+
+var sp = new Shortestpath(10, true, -1, 1);// 10x10 map, true for wall and 5 for hole in wall 
+var as = new Astar<number[]>(sp);
+var start = sp.specialIndexOf([2,2]);
+var end = sp.specialIndexOf([6,6]);
+console.log("Start: <2,2> End: <6,6>");
+var res = as.star(start,end);
+printres(res, sp._nodeValues);
+
+/* ex 3 */
+console.info("Example 3 with heuristic: wall with hole in middle");
+
+
+var sp = new Shortestpath(10, true, 5, 1);// 10x10 map, true for wall and 5 for hole in wall 
+var as = new Astar<number[]>(sp);
+var start = sp.specialIndexOf([2,2]);
+var end = sp.specialIndexOf([6,6]);
+console.log("Start: <2,2> End: <6,6>");
+var res = as.star(start,end);
+printres(res, sp._nodeValues);
+
+/* ex 4 */
+console.info("Example 4 without heuristic: wall with hole in middle");
+
+
+var sp = new Shortestpath(10, true, 5, 0);// 10x10 map, true for wall and 5 for hole in wall 
+var as = new Astar<number[]>(sp);
+var start = sp.specialIndexOf([2,2]);
+var end = sp.specialIndexOf([6,6]);
+console.log("Start: <2,2> End: <6,6>");
+var res = as.star(start,end);
+printres(res, sp._nodeValues);
+
+/* ex 5 */
+console.info("Example 5 with heuristic weight 10(instead of 1): wall with hole in middle");
+
+
+var sp = new Shortestpath(10, true, 5, 10);// 10x10 map, true for wall and 5 for hole in wall 
+var as = new Astar<number[]>(sp);
+var start = sp.specialIndexOf([2,2]);
+var end = sp.specialIndexOf([6,6]);
+console.log("Start: <2,2> End: <6,6>");
+var res = as.star(start,end);
+printres(res, sp._nodeValues);
+
+
 /*
 class eightpuzzle implements  Graph<number[][]>{
     initstate : number[][];
@@ -168,7 +217,7 @@ class eightpuzzle implements  Graph<number[][]>{
         for(var i=0;i<N;i++){
             manhattanDist = current
         }
-        var N:number = Math.sqrt(current.length)
+        var N = Math.sqrt(current.length)
         for(var x=0;x<N;x++){
             for(var y=0;y<N;y++){
                 var currentValue:number = current[y*N + x];
@@ -261,4 +310,5 @@ class eightpuzzle implements  Graph<number[][]>{
         return 1;
         
     }
+    
 }*/
