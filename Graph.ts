@@ -38,17 +38,17 @@ class Graph {
 	    g_score[i]=0;
 
 
-	//min heap på f_score
 	f_score[start] = g_score[start] + this.heuristicCost(start,goal);
 
-	//loop commented out to not get stuck in inf loop
         while (openset.length != 0) {
             //var current: number = this.indexOfSmallest(f_score);//hitta elementet med lägst värde i f_score, sätt current till dess index
+	    console.log("size of set: ",openset.length);
+	    for(var i=0;i<openset.length;++i)
+		console.log("in open: ",openset[i],"\t score: ",f_score[openset[i]]);
 	    var current: number = this.indexOfSmallestRestricted(f_score,openset);
-	    console.log("size of set: ",openset.length,"current: ",current);
+	    console.log("current: ",current);
+	    
             if (current == goal) {
-                console.log("Hurray!")
-		//[[start, 9], [10, 13], [13, 12], [12, goal]]
 		var path =[];//: [][number, number];
 		var cur=goal;
 		while(cur != start)
@@ -84,8 +84,6 @@ class Graph {
                 var tentative_g_score = g_score[current] + edge_between_cost;
 
                 if ( (this.find(openset,current_neighbours[i][1])==-1 ) || tentative_g_score < g_score[current_neighbours[i][1]]) {		    
-                    //spara undan hur du kom hit
-		    //came_from[] something, left to do
 		    came_from[current_neighbours[i][1]]=current;
                     g_score[current_neighbours[i][1]] = tentative_g_score;
                     f_score[current_neighbours[i][1]] = g_score[current_neighbours[i][1]] + this.heuristicCost(current_neighbours[i][1], goal);
@@ -124,18 +122,19 @@ class Graph {
     indexOfSmallest(arr:number[]) {
 	var lowest = 0;
 	for (var i = 1; i < arr.length; ++i) {
-	    if ( (arr[i] < arr[lowest] && arr[i]>=0 ) || (arr[i]>=0 && arr[lowest]==-1) ) lowest = i;
+	    if ( (arr[i] <= arr[lowest] && arr[i]>=0 ) || (arr[i]>=0 && arr[lowest]==-1) ) lowest = i;
 	}
 	return lowest;
     }
     
     indexOfSmallestRestricted(arr:number[],oset:number[]) {
-	var lowest = 0;
-	var index = 0;
+	var lowest = oset[0];
+	var index = oset[0];
+
 	for(var i=0;i<oset.length;++i)
 	{
 	    index=oset[i];
-	    if ( (arr[index] < arr[lowest] && arr[index]>=0 ) || (arr[index]>=0 && arr[lowest]==-1) ) lowest = index;
+	    if ( (arr[index] <= arr[lowest] && arr[index]>=0 ) || (arr[index]>=0 && arr[lowest]==-1) ) lowest = index;
 	}
 	return lowest;	
     }
