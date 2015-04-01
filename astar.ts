@@ -78,6 +78,8 @@ function init(): void {
 
         mazeGraph = maze.generateGraph(width, height, seed, balance);
         maze.drawMaze(mazeCtx);
+        startNode = maze.xy2node(Math.floor(maze.width / 2), Math.floor(maze.height / 2));
+        stopNode = startNode;
     });
 
     mazeCanvas.addEventListener('mousedown', mazeClick, false);
@@ -87,7 +89,12 @@ function init(): void {
         var x = e.pageX - mazeCanvas.offsetLeft;
         var y = e.pageY - mazeCanvas.offsetTop;
 
-        startNode = maze.coord2node(x, y);
+        var path = mazeGraph.findPath(stopNode, startNode);
+        maze.drawMaze(mazeCtx);
+        maze.drawPath(mazeCtx, path);
+        var n = maze.coord2node(x, y);
+        if (n != undefined)
+            startNode = n;
     }
 
     function mazeMove(e: MouseEvent) {

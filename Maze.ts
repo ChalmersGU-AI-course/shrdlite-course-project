@@ -214,23 +214,43 @@ class Maze {
         if (path != undefined && path.length > 0) {
             var start = this.nodes[path[0][0]];
 
+
+
+            var sx = start.x * this.gridsize + 0.5 + this.gridsize / 2;
+            var sy = start.y * this.gridsize + 0.5 + this.gridsize / 2;
+
+            ctx.beginPath();
+            ctx.arc(sx, sy, this.gridsize / 5, 0, 2 * Math.PI);
+            ctx.fillStyle = 'blue';
+            ctx.lineWidth = 0;
+            ctx.fill();
+            
+            
             ctx.lineWidth = 1;
             ctx.strokeStyle = "blue";
 
             ctx.beginPath();
-            ctx.moveTo(start.x * this.gridsize + 0.5 + this.gridsize / 2, start.y * this.gridsize + 0.5 + this.gridsize / 2);
+
+            ctx.moveTo(sx, sy);
 
             for (var i = 0; i < path.length; ++i) {
                 var n = this.nodes[path[i][1]];
-                ctx.lineTo(n.x * this.gridsize + 0.5 + this.gridsize / 2, n.y * this.gridsize + 0.5 + this.gridsize / 2);
+                var nx = n.x * this.gridsize + 0.5 + this.gridsize / 2;
+                var ny = n.y * this.gridsize + 0.5 + this.gridsize / 2;
+                ctx.lineTo(nx, ny);
             }
             ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(nx, ny, this.gridsize / 5, 0, 2 * Math.PI);
+            ctx.fillStyle = 'red';
+            ctx.lineWidth = 0;
+            ctx.fill();
         }
     }
 
     public coord2node(x: number, y: number): number {
         var n = this.xy2node(Math.floor(x / this.gridsize), Math.floor(y / this.gridsize));
-        if (n < this.noOfNodes && n > 0)
+        if (n < this.noOfNodes && n >= 0)
             return n;
         else
             return undefined;
