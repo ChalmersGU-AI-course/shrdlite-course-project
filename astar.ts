@@ -29,7 +29,7 @@ function init(): void {
         var to = $('#to').find(":selected").index();
         var path = G.findPath(from, to);
 
-        if (path != undefined) {
+        if (path != undefined && path.length > 0) {
             $('#result').text('');
             var startNode: GraphNode = Europe.Nodes[path[0][0]];
             $('#result').append(startNode.name + ' ');
