@@ -31,7 +31,7 @@ SAGZ - A* implementation
 		Astar.coffee 	-	is the generic A* algorithm
 		index.html		-	is where you run the game
 		Fifteen.sh 		-	bash script that compiles the neccesary
-							coffeescript and typescript files
+							coffeescript files to the same js file
 
 	Heuristics
 		Manhattan distance	-	This works well for the problem instance.
