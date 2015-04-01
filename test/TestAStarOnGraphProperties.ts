@@ -7,8 +7,6 @@ class N {
   }
 }
 
-var start = n1;
-
 var showN = (n: N) => {
     var str = "  " + n.value;
     for (var i in n.neighbours) {
@@ -37,11 +35,6 @@ var showP = (p: N[]) => {
     console.log(str);
 }
 
-console.log("\nNodes:")
-for (var i in ns) {
-    showN(ns[i]);
-}
-
 function isEnd(node: N): boolean {
     for (var i = 0; i < ends.length; i++) {
         if (node == ends[i]) {
@@ -54,6 +47,7 @@ function isEnd(node: N): boolean {
 
 // TestNoPathToEnd
 
+console.log("\n---------------------------------------");
 console.log("\nTest when there is no path to the goal:");
 console.log("\n---------------------------------------");
 
@@ -87,68 +81,24 @@ n2.neighbours.push([n5, 4]);
 
 n4.neighbours.push([n5, 1]);
 
-
+var start = n1;
 var end = n6;
 
 var s = Search.aStar(undefined, (node: N) => node.value);
 var p = s((n: N) => n.neighbours, start, (n: N) => n.value == end.value);
 
+console.log("\nNodes:")
+for (var i in ns) {
+    showN(ns[i]);
+}
 
 console.log("\nPath from " + start.value + " to " + end.value + ":");
 showP(p);
 console.log();
 
-// TestCircularNoEnd
-
-console.log("\nTest when there is no path to the goal but there is a loop:");
-console.log("\n---------------------------------------");
-
-//                    (n1)
-//                1  /   \  4
-//               ----     ----
-//              /             \
-//  (n7)       (n2)          (n3)
-//          4  A  A  1       
-//         ----    ----      
-//        /            \       
-//        V     1       V      
-//      (n5)<-------->(n4)     
-//            
-//              (n6)        
-
-var n1 = new N("n1");
-var n2 = new N("n2");
-var n3 = new N("n3");
-var n4 = new N("n4");
-var n5 = new N("n5");
-var n6 = new N("n6");
-var n7 = new N("n7");
-var ns = [n1, n2, n3, n4, n5, n6, n7];
-
-n1.neighbours.push([n2, 1]);
-n1.neighbours.push([n3, 4]);
-
-n2.neighbours.push([n4, 1]);
-n4.neighbours.push([n2, 1]);
-
-n2.neighbours.push([n5, 4]);
-n5.neighbours.push([n2, 4]);
-
-n4.neighbours.push([n5, 1]);
-n5.neighbours.push([n4, 1]);
-
-var start = n1;
-var ends: Array<N> = [n6];
-
-var s = Search.aStar(undefined, (node: N) => node.value);
-var p = s((n: N) => n.neighbours, start, (n: N) => isEnd(n));
-
-console.log("\nPath from " + start.value + " to " + "any end" + ":");
-showP(p);
-console.log();
-
 // TestCircularGraph
 
+console.log("\n---------------------------------------");
 console.log("\nTest when there is a loop:");
 console.log("\n---------------------------------------");
 
@@ -197,10 +147,16 @@ n5.neighbours.push([n2, 4]);
 n5.neighbours.push([n4, 1]);
 n5.neighbours.push([n6, 1]);
 
+var start = n1;
 var ends: Array<N> = [n6];
 
 var s = Search.aStar(undefined, (node: N) => node.value);
 var p = s((n: N) => n.neighbours, start, (n: N) => isEnd(n));
+
+console.log("\nNodes:")
+for (var i in ns) {
+    showN(ns[i]);
+}
 
 console.log("\nPath from " + start.value + " to " + p[p.length - 1].value + ":");
 showP(p);
@@ -208,6 +164,7 @@ console.log();
 
 // TestMultipleEnds
 
+console.log("\n---------------------------------------");
 console.log("\nTest when there are multiple goals");
 console.log("\n---------------------------------------");
 
@@ -253,10 +210,16 @@ n4.neighbours.push([n6, 3]);
 
 n5.neighbours.push([n6, 1]);
 
+var start = n1;
 var ends: Array<N> = [n6, n7];
 
 var s = Search.aStar(undefined, (node: N) => node.value);
 var p = s((n: N) => n.neighbours, start, (n: N) => isEnd(n));
+
+console.log("\nNodes:")
+for (var i in ns) {
+    showN(ns[i]);
+}
 
 console.log("\nPath from " + start.value + " to " + p[p.length - 1].value + ":");
 showP(p);

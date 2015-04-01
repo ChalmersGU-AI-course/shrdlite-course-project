@@ -1,5 +1,5 @@
 
-TARGETS = TestCircularGraph TestCircularNoEnd TestGraph TestLinear TestMultipleEnds TestNoPathToEnd TestAStar
+TARGETS = TestGraphAStarHeuristics TestAStarOnGraphProperties
 
 .DELETE_ON_ERROR:
 
