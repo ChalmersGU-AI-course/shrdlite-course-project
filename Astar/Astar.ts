@@ -43,7 +43,7 @@ interface Vertex<T>{
 }
 
 /**
-* Used for comparison in the PriorityQueue.
+* Type alias used for comparison in the PriorityQueue.
 */
 interface Compare<T> {
     icf : collections.ICompareFunction<Vertex<T>>;

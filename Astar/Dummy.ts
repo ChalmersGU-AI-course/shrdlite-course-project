@@ -7,7 +7,7 @@ var start = 0;
 var goal = 10;
 
 function dummyF(x : number) : [number] {
-    return [x+1,x-1];
+    return [x-1,x,x+1];
 }
 
 function dummyCost(x, y) {
