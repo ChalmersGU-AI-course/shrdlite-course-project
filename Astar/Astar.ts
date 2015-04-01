@@ -3,28 +3,48 @@
 
 //-- Interfaces -------------------------------------------
 
+/**
+* returns the neighbouring states from the current state.
+*/
 interface Neighbours<T>{
     (state : T) : T[] ;
 }
 
+/**
+* returns the cost of moving from stateA to stateB.
+* Assmues that stateB is a neighbour of stateA.
+*/
 interface Cost<T>{
     (stateA : T, stateB : T) : number ;
 }
 
+/**
+* Heuristic function.
+*/
 interface Heuristic<T>{
     (state : T) : number ;
 }
 
+/**
+* returns true iff the state is accepting, ie is a goal state.
+* Thus, there can be several goal states.
+*/
 interface Goal<T>{
     (state : T) : boolean ;
 }
 
+/**
+* Used internally by the function `search`.
+*/
 interface Vertex<T>{
     state : T ;
     cost : number ;
     previous : number ;
 }
 
+/**
+* Used for comparison in the PriorityQueue.
+*/
 interface Compare<T> {
     icf : collections.ICompareFunction<Vertex<T>>;
 }
@@ -163,7 +183,7 @@ function search<T>(comp : Compare<T>, f : Neighbours<T>, c : Cost<T>, h : Heuris
         if(x > maxIter){
             alert("Stopping early after " + x + " iterations. Size of queue: " + queue.size() + " current cost: " + current.cost);
             // return postProcess<T>(order, x);
-            return oops(order);
+            return showVisited<T>(order);
         }
 
         var current : Vertex<T> = queue.dequeue();
@@ -200,6 +220,11 @@ function search<T>(comp : Compare<T>, f : Neighbours<T>, c : Cost<T>, h : Heuris
     return [start];
 }
 
+/**
+* Backtracks from the final state to the original state.
+*
+* returns the path as a list, ie from start to goal.
+*/
 function postProcess<T>(order : Array<Vertex<T>>, finish : number) : T[]{
 
     var stack = new collections.Stack<T>();
@@ -218,7 +243,11 @@ function postProcess<T>(order : Array<Vertex<T>>, finish : number) : T[]{
     // return str ;
 }
 
-function oops<T>(order : Array<Vertex<T>>) : T[]{
+/**
+* returns an ordered list of explored states. They do not form a path
+* but shows in which order the states were explored, starting with the inital state.
+*/
+function showVisited<T>(order : Array<Vertex<T>>) : T[]{
     var result = [];
     for (var n in order){
         result.push(order[n].state);

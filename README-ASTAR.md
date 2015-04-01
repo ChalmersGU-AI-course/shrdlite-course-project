@@ -3,7 +3,7 @@ Overview
 
 The A* implementation is located in the `Astar/` folder. The implementation is explained below.
 
-Compile the typescript file by running `Astar/Makefile`.
+Compile the typescript file by running `make` in the `Astar` directory.
 
 Start the program by opening up the `astar.html` file. On start, it will run the A* algorithm on three different examples (see below). While running the algorithm, the browser will likely freeze for about one second before showing a popup stating that it found a solution for the third example.
 
@@ -15,7 +15,7 @@ The first example is very simple. In it, two actions are possible for every stat
 
 The second example is a graph problem, where each node is a point in a 2-d space. Some of these nodes are connected with each other and they basically form a map. The heuristic used in this problem is the euclidean distance to the goal.
 
-The third example is the famous 8-puzzle. Here, the algorithm prints the heuristic of the starting point, runs the algorithm, and finally (assuming it finds a solution) prints the final path length and the actual steps taken in the path. The sum of the Manhattan distance for each tile is used as a heuristic.
+The third example is the famous 8-puzzle. Here, the algorithm prints the heuristic value of the starting point, runs the algorithm, and finally (assuming it finds a solution) prints the final path length and the actual steps taken in the path. The sum of the Manhattan distance for each tile is used as a heuristic.
 
 
 Implementation
@@ -31,7 +31,7 @@ Main browser file:
 Main TypeScript module where the algorithm starts:
 - `Test.ts`
 
-The actual A* implementation:
+The implementation of A* and some similar algorithms such as best-first search:
 - `Astar.ts`
 
 Files containing the functions and parameters for the three different examples:
@@ -39,11 +39,13 @@ Files containing the functions and parameters for the three different examples:
 - `Graph.ts`
 - `Puzzle.ts`
 
-The libraries that the A* implementation uses:
+The A* implementation uses the standard collections library from [basarat](https://github.com/basarat/typescript-collections):
 - `lib/collections.ts`
 
-The A* implementation is called with problem-specific functions (for cost, heuristic, and so on) as parameters. The algorithm keeps track of a priority queue of all the nodes/states that are to be evaluated. This queue sorts the nodes by their value `f = cost + heuristic`. The starting state is added to this queue before the main loop begins.
+The implementation uses vertices that contains a state, the cost so far and from which vertex it got there. These vertices are inserted in a priority queue sorted by a comparison function; in the case of A* it is `f = cost + heuristic`. The algorithm starts with an initial state that is inserted in the queue.
 
-Each iteration of the loop, a node is picked from the priority queue to be evaluated. If multi-path pruning is used, the algorithm discards any node that has already been visited. It checks if the picked node is the goal, and if it is not, adds all of the node's neighbours to the priority queue.
+Whenever a new vertex is removed from the priority queue, it is examined if it contains an accepting state or not, ie the goal function returns true. If not, the neighbouring states as returned by the supplied neighbour function and inserted as vertices in the queue.
+
+There is an option of multi-path pruning which simply keeps track of the visited states in a Set. For this to work properly, the state-class must implement a toString() method that is used by the collections library for Hashing and comparison.
 
 The algorithm terminates if the goal is reached or if the number of search iterations exceeds a certain number. If the goal has been found, backtracking is used to find the path leading to it, and then that path is returned.
