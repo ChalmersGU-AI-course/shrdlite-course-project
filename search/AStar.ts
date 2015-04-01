@@ -79,6 +79,11 @@ module Search {
               g: ci.g + cost,
               h: h(n)
             }
+
+            // Add the new node to the open set
+            stats.nodesAdded += 1;
+            open.add([n, ni.f]);
+            info.setValue(n, ni);
           } else { // We have seen the node before
 
             // If the node is in the closed set, then continue with
@@ -93,19 +98,13 @@ module Search {
               ni.parent = current;
               ni.g = ci.g + cost;
               ni.f = ci.g + cost + ni.h;
+
+              // Add the updated node to the open set
+              stats.nodesAdded += 1;
+              open.add([n, ni.f]);
             }
           }
-
-          // Add the neighbour to the priority queue if its in the open set.
-          if ( !ni.closed ) {
-            stats.nodesAdded += 1;
-            open.add([n, ni.f]);
-          }
-
-          // Store the updated information.
-          info.setValue(n, ni);
         }
-
       } while ( !open.isEmpty() );
 
       // Error, no end node was found!
