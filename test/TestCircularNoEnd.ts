@@ -2,7 +2,6 @@
 ///<reference path="../search/Search"/>
 ///<reference path="../search/Heuristic"/>
 
-
 class N {
   constructor(public value: string, public neighbours: [N, number][] = []) {
   }

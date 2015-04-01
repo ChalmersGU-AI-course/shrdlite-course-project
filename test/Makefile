@@ -1,5 +1,5 @@
 
-TARGETS = TestCircularGraph TestCircularNoEnd TestGraph TestLinear TestMultipleEnds TestNoPathToEnd
+TARGETS = TestCircularGraph TestCircularNoEnd TestGraph TestLinear TestMultipleEnds TestNoPathToEnd TestAStar
 
 .DELETE_ON_ERROR:
 
