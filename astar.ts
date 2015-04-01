@@ -46,6 +46,18 @@ function init(): void {
             }
             mapCtx.strokeStyle = "black";
             mapCtx.stroke();
+
+            //Draw blobs
+            mapCtx.fillStyle = "black";
+            mapCtx.beginPath();
+            mapCtx.arc(Europe.Nodes[path[0][0]].x, Europe.Nodes[path[0][0]].y, 2, 0, 2 * Math.PI);
+            mapCtx.fill();
+
+            for (var i in path) {
+                mapCtx.beginPath();
+                mapCtx.arc(Europe.Nodes[path[i][1]].x, Europe.Nodes[path[i][1]].y, 2, 0, 2 * Math.PI);
+                mapCtx.fill();
+            }
         }
         else {
             $('#result').text('No route possible');
@@ -65,6 +77,8 @@ function init(): void {
 
     var mazeGraph: Graph = maze.generateGraph(32, 32, 1024, 0.5); //default values in html code
     var mazeCtx: CanvasRenderingContext2D = mazeCanvas.getContext('2d');
+    mazeCtx.translate(0.5, 0.5);
+    mazeCtx.msImageSmoothingEnabled = false;
     maze.drawMaze(mazeCtx);
 
 

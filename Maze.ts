@@ -9,9 +9,6 @@ class Maze {
     private height_: number;
     private gridsize: number;
 
-    public constructor() {
-    }
-
     public get width() {
         return this.width_;
     }
@@ -146,31 +143,32 @@ class Maze {
         var canvasWidth = ctx.canvas.width - 1; // canvas needs to be 1 bigger
         var canvasHeight = ctx.canvas.height - 1;
 
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.clearRect(-1, -1, ctx.canvas.width, ctx.canvas.height);
+
         this.gridsize = Math.min(canvasWidth / this.width, canvasHeight / this.height);
 
-        ctx.lineWidth = 1;
-        ctx.shadowBlur = 1;
+        ctx.lineWidth = 0.5;
+        ctx.shadowBlur = 0;
 
         ctx.strokeStyle = "black";
 
         for (var x = 0; x <= this.width; ++x) {
             ctx.beginPath();
-            ctx.moveTo(x * this.gridsize + 0.5, 0.5);
-            ctx.lineTo(x * this.gridsize + 0.5, canvasHeight + 0.5);
+            ctx.moveTo(x * this.gridsize, 0);
+            ctx.lineTo(x * this.gridsize, canvasHeight);
             ctx.stroke();
         }
 
         for (var y = 0; y <= this.height; ++y) {
             ctx.beginPath();
-            ctx.moveTo(0.5, y * this.gridsize + 0.5);
-            ctx.lineTo(canvasWidth + 0.5, y * this.gridsize + 0.5);
+            ctx.moveTo(0, y * this.gridsize);
+            ctx.lineTo(canvasWidth, y * this.gridsize);
             ctx.stroke();
         }
 
-
         ctx.strokeStyle = "white";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
+
         for (var x = 0; x < this.width; ++x) {
             for (var y = 0; y < this.height; ++y) {
                 var nodeNo: number = this.xy2node(x, y);
@@ -182,26 +180,26 @@ class Maze {
 
                     if (c[0] > x) {
                         ctx.beginPath();
-                        ctx.moveTo((x + 1) * this.gridsize + 0.5, y * this.gridsize + 1 + 0.5);
-                        ctx.lineTo((x + 1) * this.gridsize + 0.5,(y + 1) * this.gridsize - 1 + 0.5);
+                        ctx.moveTo((x + 1) * this.gridsize, y * this.gridsize + 0.5);
+                        ctx.lineTo((x + 1) * this.gridsize,(y + 1) * this.gridsize - 0.5);
                         ctx.stroke();
                     }
                     if (c[0] < x) {
                         ctx.beginPath();
-                        ctx.moveTo(x * this.gridsize + 0.5, y * this.gridsize + 1 + 0.5);
-                        ctx.lineTo(x * this.gridsize + 0.5,(y + 1) * this.gridsize - 1 + 0.5);
+                        ctx.moveTo(x * this.gridsize, y * this.gridsize + 0.5);
+                        ctx.lineTo(x * this.gridsize,(y + 1) * this.gridsize - 0.5);
                         ctx.stroke();
                     }
                     if (c[1] < y) {
                         ctx.beginPath();
-                        ctx.moveTo(x * this.gridsize + 1 + 0.5, y * this.gridsize + 0.5);
-                        ctx.lineTo((x + 1) * this.gridsize - 1 + 0.5, y * this.gridsize + 0.5);
+                        ctx.moveTo(x * this.gridsize + 0.5, y * this.gridsize);
+                        ctx.lineTo((x + 1) * this.gridsize - 0.5, y * this.gridsize);
                         ctx.stroke();
                     }
                     if (c[1] > y) {
                         ctx.beginPath();
-                        ctx.moveTo(x * this.gridsize + 1 + 0.5,(y + 1) * this.gridsize + 0.5);
-                        ctx.lineTo((x + 1) * this.gridsize - 1 + 0.5,(y + 1) * this.gridsize + 0.5);
+                        ctx.moveTo(x * this.gridsize + 0.5,(y + 1) * this.gridsize);
+                        ctx.lineTo((x + 1) * this.gridsize - 0.5,(y + 1) * this.gridsize);
                         ctx.stroke();
                     }
                 }
@@ -216,8 +214,8 @@ class Maze {
 
 
 
-            var sx = start.x * this.gridsize + 0.5 + this.gridsize / 2;
-            var sy = start.y * this.gridsize + 0.5 + this.gridsize / 2;
+            var sx = start.x * this.gridsize + this.gridsize / 2;
+            var sy = start.y * this.gridsize + this.gridsize / 2;
 
             ctx.beginPath();
             ctx.arc(sx, sy, this.gridsize / 5, 0, 2 * Math.PI);
@@ -235,8 +233,8 @@ class Maze {
 
             for (var i = 0; i < path.length; ++i) {
                 var n = this.nodes[path[i][1]];
-                var nx = n.x * this.gridsize + 0.5 + this.gridsize / 2;
-                var ny = n.y * this.gridsize + 0.5 + this.gridsize / 2;
+                var nx = n.x * this.gridsize + this.gridsize / 2;
+                var ny = n.y * this.gridsize + this.gridsize / 2;
                 ctx.lineTo(nx, ny);
             }
             ctx.stroke();
