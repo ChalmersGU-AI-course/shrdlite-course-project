@@ -147,7 +147,7 @@ class Maze {
         var canvasHeight = ctx.canvas.height - 1;
 
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        this.gridsize = Math.min(canvasWidth / this.width, canvasHeight / this.height); 
+        this.gridsize = Math.min(canvasWidth / this.width, canvasHeight / this.height);
 
         ctx.lineWidth = 1;
         ctx.shadowBlur = 1;
@@ -168,7 +168,7 @@ class Maze {
             ctx.stroke();
         }
 
-        
+
         ctx.strokeStyle = "white";
         ctx.lineWidth = 2;
         for (var x = 0; x < this.width; ++x) {
@@ -224,8 +224,8 @@ class Maze {
             ctx.fillStyle = 'blue';
             ctx.lineWidth = 0;
             ctx.fill();
-            
-            
+
+
             ctx.lineWidth = 1;
             ctx.strokeStyle = "blue";
 

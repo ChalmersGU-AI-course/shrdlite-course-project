@@ -118,7 +118,7 @@ function init(): void {
             maze.drawPath(mazeCtx, path);
         }
     }
-    
+
 };
 
 
