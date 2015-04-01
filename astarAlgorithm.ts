@@ -44,7 +44,6 @@ AStar :: Graph -> Path
     // Variable initiations moved outside reduce redundancy 
     var current : Node
     var neighbors :[Node]
-    var g_score : number 
     /*
     g_score - is compared with the gscore - where gscore is the traveled distance - 
     of the node to check gscore can be reduced.
