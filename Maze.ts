@@ -76,7 +76,7 @@ class Maze {
             }
         }
 
-        this.edges_ = this.prim(edges, 0);
+        this.edges_ = this.primLike(edges, 0);
         this.nodes_ = this.genNodes();
 
         return new Graph(this.nodes_, this.edges_);
@@ -94,7 +94,7 @@ class Maze {
         return this.width * this.height;
     }
 
-    private prim(edges: [number, number, number][][], start: number): [number, number][][] {
+    private primLike(edges: [number, number, number][][], start: number): [number, number][][] {
         var found: boolean[] = new Array(edges.length);
         var parent: number[] = new Array(edges.length);
         var q = new collections.PriorityQueue<[number, number, number]>(
@@ -108,7 +108,8 @@ class Maze {
         for (var i = 0; i < edges[start].length; ++i)
             var s = q.enqueue(edges[start][i]);
 
-
+        found[start] = true;
+        parent[start] = undefined;
 
         while (!q.isEmpty()) {
             var u: [number, number, number] = q.dequeue(); // [0: from, 1: to, 2: cost]
@@ -125,18 +126,21 @@ class Maze {
             }
         }
 
-        var p: [number, number][][] = new Array(parent.length);
+        //Pack all edges
+        var edgePackage: [number, number][][] = new Array(parent.length);
         for (var i = 0; i < parent.length; ++i) {
-            if (p[i] == undefined)
-                p[i] = new Array();
-            if (p[parent[i]] == undefined)
-                p[parent[i]] = new Array();
+            if (parent[i] != undefined) { //Should only be undefined for root in tree
+                if (edgePackage[i] == undefined)
+                    edgePackage[i] = new Array();
+                if (edgePackage[parent[i]] == undefined)
+                    edgePackage[parent[i]] = new Array();
 
-            p[i].push([i, parent[i]]);
-            p[parent[i]].push([parent[i], i]);
+                edgePackage[i].push([i, parent[i]]);
+                edgePackage[parent[i]].push([parent[i], i]);
+            }
         }
 
-        return p;
+        return edgePackage;
     }
 
     public drawMaze(ctx: CanvasRenderingContext2D): void {

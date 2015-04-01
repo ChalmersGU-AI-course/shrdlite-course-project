@@ -81,7 +81,6 @@ function init(): void {
     mazeCtx.msImageSmoothingEnabled = false;
     maze.drawMaze(mazeCtx);
 
-
     //Will be set by generateMaze
     var startNode = undefined;
     var stopNode = undefined;
