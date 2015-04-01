@@ -32,9 +32,13 @@ SAGZ - A* implementation
 		index.html		-	is where you run the game
 		Fifteen.sh 		-	bash script that compiles the neccesary
 							coffeescript files to the same js file
+		prioriy-queue.js	-	A library for the priority queue in A* source: 
+						github.com/adamhooper/js-priority-queue
 
 	Heuristics
 		Manhattan distance	-	This works well for the problem instance.
 		Without heuristics	-	This did not work well on the general case
 								of the problem instance. It did take too long
 								time to compute most of the time.
+								
+	
