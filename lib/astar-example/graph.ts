@@ -1,8 +1,8 @@
 /// <reference path="../typescript-collections/collections.ts" />
 
 class Graph {
-	private edges = new collections.Set<Edge>(Edge.edgeToString);
-	private nodes = new collections.Set<GraphNode>();
+	private edges = new collections.Set<Edge>(e => e.edgeToString());
+	private nodes = new collections.Set<GraphNode>(n => n.getId().toString());
 
 	constructor() {
 
@@ -15,8 +15,6 @@ class Graph {
 			throw "can't place an edge between nonexistent nodes :(";
 			
 		}
-		
-		console.log(this.edges.toArray());
 	}
 
 	addNode(newNode : GraphNode) {
@@ -27,13 +25,21 @@ class Graph {
 		return this.nodes.contains(node); 
 	}
 
+	getNumberOfNodes() : number {
+		return this.nodes.size();
+	}
+
+	getNumberOfEdges() : number {
+		return this.edges.size();
+	}
+
 	getNeighborsTo(node : GraphNode) : GraphNode[] {
-		var neighbors = new collections.Set<GraphNode>();
+		var neighbors = new collections.Set<GraphNode>(g => g.getId().toString());
+		var edgeArr = this.edges.toArray();
+		var e;
 
-		console.log(this.edges.toArray().length);
-
-		for (var i = this.edges.toArray().length - 1; i >= 0; i--) {
-			var e = this.edges.toArray()[i];
+		for (var i = 0; i < edgeArr.length; i++) {
+			e = edgeArr[i];
 
 			if(e.getFromNode().equals(node)) {
 				neighbors.add(e.getEndNode());
@@ -42,13 +48,30 @@ class Graph {
 			}
 
 		}
+
 		return neighbors.toArray();
 	}
 
+	getEdgeBetween(start : GraphNode, end : GraphNode) : Edge {
+		var edgeArr = this.edges.toArray();
+		var e;
+		for (var i = 0; i < edgeArr.length; i++) {
+			e = edgeArr[i];
+
+			if(e.getFromNode().equals(start) && e.getEndNode().equals(end)) {
+				return e;
+			}
+		}
+	}
+
 	getCostForEdge(firstNode : GraphNode, secondNode : GraphNode) : number {
-		for(var e in this.edges) {
-			if(e.getFromNode.equals(firstNode) && e.getEndNode.equals(secondNode)
-			|| e.getFromNode.equals(secondNode) && e.getEndNode.equals(firstNode)) {
+		var edgeArr = this.edges.toArray();
+
+		for (var i = 0; i < edgeArr.length; i++) {
+			var e = edgeArr[i];
+
+			if(e.getFromNode().equals(firstNode) && e.getEndNode().equals(secondNode)
+			|| e.getFromNode().equals(secondNode) && e.getEndNode().equals(firstNode)) {
 				return e.getCost();
 			}
 		}
@@ -123,11 +146,11 @@ class Edge {
 		return this.cost;
 	}
 
-	edgeToString(edge : Edge) : string {
-		var fromNodeX = edge.fromNode.getX();
-		var fromNodeY = edge.fromNode.getY();
-		var endNodeX  = edge.endNode.getX();
-		var endNodeY  = edge.endNode.getY();
+	edgeToString() : string {
+		var fromNodeX = this.fromNode.getX();
+		var fromNodeY = this.fromNode.getY();
+		var endNodeX  = this.endNode.getX();
+		var endNodeY  = this.endNode.getY();
 
 		if(fromNodeX < endNodeX) {
 			return fromNodeX + fromNodeY + " " + endNodeX + endNodeY;

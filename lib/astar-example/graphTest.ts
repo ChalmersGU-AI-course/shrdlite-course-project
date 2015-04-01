@@ -2,14 +2,14 @@
 
 var schweden = new Graph();
 
-var kiruna = new GraphNode(1, 5, 2, "Kiruna");
-var lulea = new GraphNode(2, 10, 7, "Luleå");
-var umea = new GraphNode(3, 10, 17, "Umeå");
-var tanndalen = new GraphNode(4, 1, 23, "Tänndalen");
-var sthlm = new GraphNode(5, 15, 28, "Stockholm");
-var gbg = new GraphNode(6, 1, 33, "Gôteborg");
-var kalmar = new GraphNode(7, 12, 34, "Kalmar");
-var malmo = new GraphNode(8, 4, 40, "Malmö");
+var kiruna = new GraphNode(0, 5, 2, "Kiruna");
+var lulea = new GraphNode(1, 10, 7, "Luleå");
+var umea = new GraphNode(2, 10, 17, "Umeå");
+var tanndalen = new GraphNode(3, 1, 23, "Tänndalen");
+var sthlm = new GraphNode(4, 15, 28, "Stockholm");
+var gbg = new GraphNode(5, 1, 33, "Gôteborg");
+var kalmar = new GraphNode(6, 12, 34, "Kalmar");
+var malmo = new GraphNode(7, 4, 40, "Malmö");
 
 schweden.addNode(kiruna);
 schweden.addNode(lulea);
@@ -34,4 +34,5 @@ schweden.addEdge(new Edge(12, gbg, kalmar));
 schweden.addEdge(new Edge(10, malmo, gbg));
 schweden.addEdge(new Edge(14, kalmar, malmo));
 
-aStar.aStar(schweden, malmo, kiruna);
+//aStar.aStar(schweden, malmo, kiruna);
+console.log(aStar.aStar(schweden, malmo, kiruna));
