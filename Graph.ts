@@ -1,3 +1,5 @@
+///<reference path="lib/collections.ts"/>
+
 interface GraphNode {
     name: string;
     x: number;
@@ -18,16 +20,15 @@ class Graph {
         if (start > this.nodes.length || start < 0 || goal > this.nodes.length || goal < 0)
             throw new RangeError("Node does not exist");
 
-        console.log("start: ", start, "\n goal: ", goal);
-
         var closedset = []; //list
-        var openset = []
-        openset[0] = start; //list
-        var came_from = []; //matris typ
+        var came_from: number[] = []; //matris typ
+
+        var openset = new collections.Set<number>();
+        openset.add(start);
 
         //can't get stl to work
         //var f_score: minheap = new MinHeap();
-        var f_score = []
+        var f_score = [];
 
         //fill array with -1 to indicate nodes not yet calculated
         for (var i = 0; i < this.nodes.length; ++i)
@@ -40,12 +41,9 @@ class Graph {
 
         f_score[start] = g_score[start] + this.heuristicCost(start, goal);
 
-        while (openset.length != 0) {
+        while (!openset.isEmpty()) {
             //var current: number = this.indexOfSmallest(f_score);//hitta elementet med lägst värde i f_score, sätt current till dess index
-            console.log("size of set: ", openset.length);
-            for (var i = 0; i < openset.length; ++i)
-                console.log("in open: ", openset[i], "\t score: ", f_score[openset[i]]);
-            var current: number = this.indexOfSmallestRestricted(f_score, openset);
+            var current: number = this.indexOfSmallestRestricted(f_score, openset.toArray());
             console.log("current: ", current);
 
             if (current == goal) {
@@ -62,11 +60,12 @@ class Graph {
 
                 return pathI;
             }
-	    
+
             //find current in openset and remove that element and add to closed
-            var it: number = this.find(openset, current);
-            closedset.push(openset[it]);
-            openset.splice(it, 1); //splice removes the element at index
+            var it: number = this.find(openset.toArray(), current);
+            closedset.push(current);
+            //openset.splice(it, 1); //splice removes the element at index
+            openset.remove(current);
 
             var current_neighbours = this.getNeighbours(current);
 
@@ -81,21 +80,16 @@ class Graph {
 
                 var tentative_g_score = g_score[current] + edge_between_cost;
 
-                if ((this.find(openset, current_neighbours[i][1]) == -1) || tentative_g_score < g_score[current_neighbours[i][1]]) {
+                if (!openset.contains(current_neighbours[i][1]) || tentative_g_score < g_score[current_neighbours[i][1]]) {
                     came_from[current_neighbours[i][1]] = current;
                     g_score[current_neighbours[i][1]] = tentative_g_score;
                     f_score[current_neighbours[i][1]] = g_score[current_neighbours[i][1]] + this.heuristicCost(current_neighbours[i][1], goal);
 
-                    if (this.find(openset, current_neighbours[i][1]) == -1) {
-                        openset.push(current_neighbours[i][1]);
-                    }
+                    if (!openset.contains(current_neighbours[i][1]))
+                        openset.add(current_neighbours[i][1]);
                 }
             }
         }
-        
-
-        //Dummy: Just a test path for the view
-        //return [[start, 9], [10, 13], [13, 12], [12, goal]];
 
         return undefined; //No path was found
     }
