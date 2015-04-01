@@ -12,19 +12,18 @@ class Astar <T>{
         this.mGraph = g;
     }
 
-    private getMinFScore(fscore : number[], openset : number[]){
-        var result : number;
-        result=fscore[0];
+    private getMinFScore(fscore : number[], openset : number[]){        
+        var result=fscore[fscore.length-1];
         var index : number = 0;
-        var indexout : number = 0;
-        openset.forEach(os => {
-            var fs = fscore[os];
-            if(fs < result){
+        var indexout : number = openset.length-1;
+        for(var i = 0; i < openset.length; i++){
+            var fs = fscore[openset[i]];
+            if(fs < result && fs >= 0){
                 result = fs;
                 indexout = index;
             }
             index++;
-        });
+        }
         return indexout;    
     }
 
@@ -68,6 +67,12 @@ class Astar <T>{
             var current = openset[this.getMinFScore(f_score, openset)];
             counter ++;
             if(current == goal){
+                console.log("closed set: ");
+                closedset = closedset.reverse();
+                closedset.forEach(c => {
+                    console.log("(" + c+")");   
+                
+                    });
                 console.info("Counter " + counter);
                 return this.reconstruct_path(came_from, goal);
             }

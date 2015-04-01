@@ -31,7 +31,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     
     makewall(hole:number){
         //make a wall
-        for(var i = 1; i < 9; i++){
+        for(var i = 3; i < 7; i++){
             if(i != hole){
                 this._nodeValues.splice(this.specialIndexOf([10-i,i]),1);
             }
@@ -80,7 +80,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     }
     
     heuristic_cost_estimate(current : number, goal : number) : number{
-        return 0;
+        //return 0;
         var cur = this._nodeValues[current];
         var gol = this._nodeValues[goal];
         //Manhathan distance
