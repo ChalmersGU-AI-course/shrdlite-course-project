@@ -134,7 +134,7 @@ class Graph {
     }
     
     indexOfSmallestRestricted(arr:number[],oset:number[]) {
-	var lowest = 0;
+	var lowest = oset[0];
 	console.log("test: ",arr[NaN],arr[NaN]<0);
 	var index = 0;
 	for(var i=0;i<oset.length;++i)
