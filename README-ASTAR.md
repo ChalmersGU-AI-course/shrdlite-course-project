@@ -10,11 +10,12 @@ node is an end node.
 The result of running a search function is a path
 
 ###Astar.ts
-This file contains the actual implementation of the A* search algorithm.
-The implementation exports a function called aStar
-which returns a function that is used to do searches.
-The *aStar* function setup the heuristic function to be used in the search
-while the returned function takes the input necessary to compute a path.
+An implementation of the A* algorithm.
+The function *aStar* returns, given an optional heuristic, a search function
+that implements the *search* interface.
+
+It returns a list of nodes if a path between the start and the end is found,
+and undefined otherwise.
 
 ##Heuristic.ts
 Exports an interface to build heuristic functions.
