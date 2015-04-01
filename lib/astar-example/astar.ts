@@ -23,6 +23,7 @@ module aStar {
             if(currentNode.equals(toNode)) {
                 return currentNode;
             }
+            
   			var edgesN = graph.getEdgesTo(currentNode);
   			for (var i = 0; i < edgesN.length; i++) {
   				var n;
@@ -35,33 +36,12 @@ module aStar {
   				var dist = currentNode.getDistance() + edgesN[i].getCost();
   				var starNeighbor = new StarNode(n, dist, n.distanceTo(toNode), currentNode.getPath());
   				if(!evaluatedNodes.contains(starNeighbor)) {
-  					console.log(currentNode.getName());
-                    console.log(starNeighbor.getName());
-                    console.log(" ");
   					starNeighbor.updatePath(edgesN[i]);
   					nodesToEvaluate.add(starNeighbor);
-  				} else{
-  					
   				}
   			}
-            /*var neighborArr = graph.getNeighborsTo(currentNode);
-            for (var i = 0; i < neighborArr.length; i++) {
-                var starNeighbor = new StarNode(neighborArr[i], currentNode.getDistance(), neighborArr[i].distanceTo(toNode), currentNode.getPath());
-
-                if(!evaluatedNodes.contains(starNeighbor)) {
-                    var newDistance = currentNode.getDistance() + graph.getCostForEdge(currentNode, starNeighbor);
-                    starNeighbor.setDistance(newDistance);
-                    starNeighbor.updatePath(graph.getEdgeBetween(currentNode, starNeighbor));
-                    nodesToEvaluate.add(starNeighbor);
-                } else {
-                    console.log(currentNode.getName());
-                    console.log(starNeighbor.getName());
-                    console.log(" ");
-                }
-            }*/
         }
 
-        nodesToEvaluate.clear();
         return null;
     }
 
@@ -88,7 +68,7 @@ module aStar {
             super(node.getId(), node.getX(), node.getY(), node.getName());
             this.distanceSoFar = distance;
             this.heuristicDistance = heuristic;
-            this.pathTo = path;
+            path.forEach(p => this.pathTo.add(p));
         }
 
         updatePath(newEdge : Edge) {
@@ -120,7 +100,13 @@ module aStar {
         }
 
         compareTo(otherNode : StarNode) : number {
-            return this.getTotalDistance()-otherNode.getTotalDistance();
+            if(this.getTotalDistance()  == otherNode.getTotalDistance()) {
+                return 0;
+            } else if (this.getTotalDistance() > otherNode.getTotalDistance()) {
+                return -1;
+            } else {
+                return 1;
+            }
         }
     }
 }
