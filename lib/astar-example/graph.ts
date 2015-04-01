@@ -33,6 +33,19 @@ class Graph {
 		return this.edges.size();
 	}
 
+	getEdgesTo(node : GraphNode) : Edge[] {
+		var close = new collections.Set<Edge>(e => e.edgeToString());
+		var arr = this.edges.toArray();
+		for (var i = 0; i < arr.length; i++) {
+			if(arr[i].getFromNode().equals(node)) {
+				close.add(arr[i]);
+			} else if(arr[i].getEndNode().equals(node)) {
+				close.add(arr[i]);
+			}
+		}
+		return close.toArray();
+	}
+
 	getNeighborsTo(node : GraphNode) : GraphNode[] {
 		var neighbors = new collections.Set<GraphNode>(g => g.getId().toString());
 		var edgeArr = this.edges.toArray();
