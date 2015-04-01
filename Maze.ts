@@ -46,7 +46,7 @@ class Maze {
         return nodes;
     }
 
-    public generateGraph(width: number, height: number, seed: number, balance: number) {
+    public generateGraph(width: number, height: number, seed: number, balance: number): Graph {
         this.width = width;
         this.height = height;
 
@@ -210,18 +210,25 @@ class Maze {
     }
 
     public drawPath(ctx: CanvasRenderingContext2D, path: [number, number][]): void {
-        var start = this.nodes[path[0][0]];
 
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = "blue";
+        if (path != undefined && path.length > 0) {
+            var start = this.nodes[path[0][0]];
 
-        ctx.beginPath();
-        ctx.moveTo(start.x * this.gridsize + 0.5 + this.gridsize / 2, start.y * this.gridsize + 0.5 + this.gridsize / 2);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = "blue";
 
-        for (var i = 0; i < path.length; ++i) {
-            var n = this.nodes[path[i][1]];
-            ctx.lineTo(n.x * this.gridsize + 0.5 + this.gridsize / 2, n.y * this.gridsize + 0.5 + this.gridsize / 2);
+            ctx.beginPath();
+            ctx.moveTo(start.x * this.gridsize + 0.5 + this.gridsize / 2, start.y * this.gridsize + 0.5 + this.gridsize / 2);
+
+            for (var i = 0; i < path.length; ++i) {
+                var n = this.nodes[path[i][1]];
+                ctx.lineTo(n.x * this.gridsize + 0.5 + this.gridsize / 2, n.y * this.gridsize + 0.5 + this.gridsize / 2);
+            }
+            ctx.stroke();
         }
-        ctx.stroke();
+    }
+
+    public coord2node(x: number, y: number): number {
+        return this.xy2node(Math.floor(x / this.gridsize), Math.floor(y / this.gridsize));
     }
 }
