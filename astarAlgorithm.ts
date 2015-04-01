@@ -23,8 +23,10 @@ TODO: config priority que to sort by f(x)
 
 AStar :: Graph -> Path
 */
-  export function Astar(start: Node, goal:Node, functions : Functions): Node[]{
+ export function Astar(s: Node, g:Node, functions : Functions): Node[]{
     //Node comparion function
+    var start:Node = s;
+    var goal:Node = g;
     function comp(a:Node,b:Node){
       if (a.fscore < b.fscore)
         return -1;
@@ -50,7 +52,7 @@ AStar :: Graph -> Path
     for example, if there are two ways of reaching node x, then after it has been explored, 
     then the other path might provided a lower value.  
     */
-    while (!openset.isEmpty){
+    while (!openset.isEmpty()){
         /*
         Necessary check! Without it the program will not terminate.
         It checks if the current node is the goal node,
@@ -61,7 +63,7 @@ AStar :: Graph -> Path
           var path = new collections.LinkedList<Node>();
           path.add(current)
           while(current.successor){
-              current = (current).successor;
+              current = current.successor;
               path.add(current);
           }
           path.reverse
@@ -96,3 +98,4 @@ AStar :: Graph -> Path
     throw new Error("no path!");
   }
 };
+

@@ -2,6 +2,7 @@
 ///<reference path="SVGWorld.ts"/>
 ///<reference path="ExampleWorlds.ts"/>
 ///<reference path="lib/jquery.d.ts" />
+///<reference path="tests/astartest.ts" />
 
 var defaultWorld = 'small';
 var defaultSpeech = false;
