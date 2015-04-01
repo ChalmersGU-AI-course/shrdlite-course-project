@@ -38,10 +38,8 @@ class Graph {
 	    g_score[i]=0;
 
 
-	//min heap på f_score
 	f_score[start] = g_score[start] + this.heuristicCost(start,goal);
 
-	//loop commented out to not get stuck in inf loop
         while (openset.length != 0) {
             //var current: number = this.indexOfSmallest(f_score);//hitta elementet med lägst värde i f_score, sätt current till dess index
 	    console.log("size of set: ",openset.length);
@@ -51,8 +49,6 @@ class Graph {
 	    console.log("current: ",current);
 	    
             if (current == goal) {
-                console.log("Hurray!")
-		//[[start, 9], [10, 13], [13, 12], [12, goal]]
 		var path =[];//: [][number, number];
 		var cur=goal;
 		while(cur != start)
@@ -88,8 +84,6 @@ class Graph {
                 var tentative_g_score = g_score[current] + edge_between_cost;
 
                 if ( (this.find(openset,current_neighbours[i][1])==-1 ) || tentative_g_score < g_score[current_neighbours[i][1]]) {		    
-                    //spara undan hur du kom hit
-		    //came_from[] something, left to do
 		    came_from[current_neighbours[i][1]]=current;
                     g_score[current_neighbours[i][1]] = tentative_g_score;
                     f_score[current_neighbours[i][1]] = g_score[current_neighbours[i][1]] + this.heuristicCost(current_neighbours[i][1], goal);
@@ -134,9 +128,8 @@ class Graph {
     }
     
     indexOfSmallestRestricted(arr:number[],oset:number[]) {
-	var lowest = 0;
-	console.log("test: ",arr[NaN],arr[NaN]<0);
-	var index = 0;
+	var lowest = oset[0];
+	var index = oset[0];
 	for(var i=0;i<oset.length;++i)
 	{
 	    index=oset[i];
