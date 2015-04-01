@@ -21,7 +21,7 @@ class PState{
     toString(){
         var str = "";
         for(var i in this.matr){
-            str = str + "<p> [" + this.matr[i] + "]" ;
+            str = str + "<br> [" + this.matr[i] + "]" ;
         }
         return "["+ str +"]<p>";
     }
