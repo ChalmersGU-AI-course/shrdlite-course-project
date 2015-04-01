@@ -1,6 +1,6 @@
 
 /// <reference path="Dummy.ts" />
-/// <reference path="Example.ts" />
+/// <reference path="Graph.ts" />
 /// <reference path="Puzzle.ts" />
 /// <reference path="Astar.ts" />
 /// <reference path="lib/collections.ts" />

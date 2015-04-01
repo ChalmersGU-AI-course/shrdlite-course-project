@@ -2,4 +2,4 @@ shrdlite-*.js
 
 tsconfig.json
 
-TEST/*.js
+Astar/*.js
