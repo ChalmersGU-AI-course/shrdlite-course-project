@@ -3,6 +3,7 @@ interface Graph<T>{
     getcost(from: number,to:number):number;
     heuristic_cost_estimate(current : number, goal : number) : number;
     specialIndexOf(obj:T):number;
+    getNodeValue(index:number):number;
 }
 
 class Astar <T>{
@@ -15,7 +16,7 @@ class Astar <T>{
     private getMinFScore(fscore : number[], openset : number[]){        
         var result=fscore[fscore.length-1];
         var index : number = 0;
-        var indexout : number = openset.length-1;
+        var indexout : number = openset.indexOf(fscore.length-1);
         for(var i = 0; i < openset.length; i++){
             var fs = fscore[openset[i]];
             if(fs < result && fs >= 0){
@@ -69,8 +70,9 @@ class Astar <T>{
             if(current == goal){
                 console.log("closed set: ");
                 closedset = closedset.reverse();
+                
                 closedset.forEach(c => {
-                    console.log("(" + c+")");   
+                    console.log("(" + this.mGraph.getNodeValue(c)+")");   
                 
                     });
                 console.info("Counter " + counter);

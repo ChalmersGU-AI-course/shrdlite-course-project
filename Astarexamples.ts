@@ -6,6 +6,11 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     _edges : Array<Array<number>>;        //from index node a to index node b
     _width : number;
     _heigth : number;
+    
+    getNodeValue (index : number):number{
+        var res = this._nodeValues[index];
+        return (res[0]*10)+res[1];
+    }
 
     constructor(size:number, wall:boolean, hole:number){
         this._width = size;
@@ -31,7 +36,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     
     makewall(hole:number){
         //make a wall
-        for(var i = 3; i < 7; i++){
+        for(var i = 4; i < 7; i++){
             if(i != hole){
                 this._nodeValues.splice(this.specialIndexOf([10-i,i]),1);
             }
