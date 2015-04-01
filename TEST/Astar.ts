@@ -59,6 +59,10 @@ function oops<T>(order : Array<Vertex<T>>) : T[]{
 * start = initial state
 * isGoal = function returning true for every accepting state
 *          and false for every non-accepting state.
+* multiPathPruning = if allow pruning of multiple paths. Unless the heuristic
+*                    function is monotonic, it may not give the very best solution
+*                    but may terminate (much) more quickly!
+*                    default value = true
 *
 * returns a list of states, ie the lowest cost path from the initial state.
 */
@@ -79,7 +83,7 @@ function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T, i
 
     for( var x = 0 ; ! queue.isEmpty(); ++x){
 
-        if(x > 15000){
+        if(x > 150000){
             alert("Stopping early after " + x + " iterations. Size of queue: " + queue.size() + " current cost: " + current.cost);
             // return postProcess<T>(order, x);
             return oops(order);

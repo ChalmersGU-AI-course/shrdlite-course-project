@@ -12,8 +12,6 @@ var show = "Hello World!!!" ;
 //--------------------------------------
 
 function testMain(){
-    // show = "$ " + dummyCall();
-    // show = "$ " + graphRun();
     var d = dummyCall();
     var gr = graphRun();
     var res = runPuzzle();
@@ -21,7 +19,7 @@ function testMain(){
             "<p>$ dummy: " + d +
             "<p>$ graph: " + gr +
             "<p>$ 8-puzzle: start heuristic = " + puzzleHeuristic(pStart) +
-            "<p> path length: " + res.length +
+            "<p> path length = " + res.length +
             "<p>"+ res;
 
     document.getElementById("demo").innerHTML = show;

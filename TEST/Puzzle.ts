@@ -92,5 +92,5 @@ function puzzleCost(a : PState, b : PState) : number{
 }
 
 function runPuzzle(){
-    return astar<PState>(puzzleNeighbours, puzzleCost, puzzleHeuristic, pStart, puzzleGoal);
+    return astar<PState>(puzzleNeighbours, puzzleCost, puzzleHeuristic, pStart, puzzleGoal, true);
 }
