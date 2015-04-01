@@ -1,11 +1,13 @@
 ﻿##Search files
 The files for the A* search algorithm are inside the *search* folder.
 ###Search.ts
-The search file contains an interface for expressing searches.
-It takes a function for returning the neighbours of a given node,
-a start node, and
-a function to determine if a given node is the end node.
-An implementation of the interface should return a Path for a given graph.
+The search file contains an interface for search functions.
+
+It takes three arguments, a function that gives the neighbours
+of a given node, the start node and a function that determines if a given
+node is an end node.
+
+The result of running a search function is a path
 
 ###Astar.ts
 This file contains the actual implementation of the A* search algorithm.
