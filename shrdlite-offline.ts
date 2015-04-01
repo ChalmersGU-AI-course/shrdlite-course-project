@@ -1,7 +1,7 @@
 ///<reference path="Shrdlite.ts"/>
 ///<reference path="TextWorld.ts"/>
 ///<reference path="ExampleWorlds.ts"/>
-///<reference path="AStar.ts"/>
+///<reference path="AStarExample.ts"/>
 
 // Extract command line arguments:
 var nodename = process.argv[0];
@@ -20,11 +20,11 @@ if(process.argv[2] == "ASTAR")
     console.log("Printing Bucharest example: ");
     if(!(+process.argv[3]<0 || + process.argv[3]> 19 || process.argv[3]== null ))
     {
-        AStar.example2(+process.argv[3]);
+        AStarExample.example2(+process.argv[3]);
     }
     else
     {
-        AStar.example2(0);
+        AStarExample.example2(0);
     }
     process.exit(0);
 }   
