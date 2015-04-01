@@ -64,7 +64,7 @@ function init(): void {
     var maze = new Maze();
 
     var mazeGraph: Graph = maze.generateGraph(32, 32, 1024, 0.5); //default values in html code
-    var mazeCtx: CanvasRenderingContext2D = mazeCanvas.getContext('2d', { antialias: false, alpha: false });
+    var mazeCtx: CanvasRenderingContext2D = mazeCanvas.getContext('2d');
     maze.drawMaze(mazeCtx);
 
     $('#generate').click(function () {
