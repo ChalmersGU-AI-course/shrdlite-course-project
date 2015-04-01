@@ -13,7 +13,7 @@ Start the program by opening up the `astar.html` file. On start, it will run the
 
 The first example is very simple. In it, two actions are possible for every state: either adding 0, or adding 1. The goal of the example is to find the shortest way to reach 10. This is of course trivial, add 1 ten times and you have reached 10. The path is then {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}. Even though this first example is simple, it is also infinite (in the case we always add 0). The used heuristic is simply the distance left to the goal minus one, that is `goal - x - 1` where x is the current state.
 
-The second example is a graph problem, where each node is a point in a 2-d space. Some of these nodes are connected with each other and are basically forming a map. The heuristic used in this problem is the euclidean distance to the goal.
+The second example is a graph problem, where each node is a point in a 2-d space. Some of these nodes are connected with each other and they basically form a map. The heuristic used in this problem is the euclidean distance to the goal.
 
 The third example is the famous 8-puzzle. Here, the algorithm prints the heuristic of the starting point, runs the algorithm, and finally (assuming it finds a solution) prints the final path length and the actual steps taken in the path. The sum of the Manhattan distance for each tile is used as a heuristic.
 
@@ -34,7 +34,7 @@ Main TypeScript module where the algorithm starts:
 The actual A* implementation:
 - `Astar.ts`
 
-Files containing the three different examples:
+Files containing the functions and parameters for the three different examples:
 - `Dummy.ts`
 - `Graph.ts`
 - `Puzzle.ts`
