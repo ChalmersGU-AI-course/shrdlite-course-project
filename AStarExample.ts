@@ -5,11 +5,11 @@ module AStarExample
     export function example1(a : number, b : number)
     {
         var graph: { [key:number] : AStar.Node; } = {};
-        graph[0] = {id:1,hweight:10,neighbours:[[2,1] ,[4,2],[1,3]]};
+        graph[0] = {id:1,hweight:30,neighbours:[[2,1] ,[4,2],[1,3]]};
         graph[1] = {id:2,hweight:15,neighbours:[[2,0],[1,2],[2,3]]};
-        graph[2] = {id:3,hweight:30,neighbours:[[2,0],[2,1],[2,3]]};  
-        graph[3] = {id:4,hweight:5,neighbours:[[2,1],[2,2]]};
-        var ret = AStar.astar(a,b,example1HeurFunction,graph);
+        graph[2] = {id:3,hweight:10,neighbours:[[2,0],[2,1],[2,3]]};  
+        graph[3] = {id:4,hweight:0,neighbours:[[2,1],[2,2]]};
+        var ret = AStar.astar(a,4,example1HeurFunction,graph);
         console.log(ret)
         return ret;
     }
