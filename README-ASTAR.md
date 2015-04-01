@@ -20,7 +20,7 @@ SAGZ - A* implementation
 
 	How to run A*
 		1. 	Run the game(see How to run the game)
-		2. 	Press UP-KEY to start A*
+		2. 	Press the 'a' key to start A*
 		3. 	The function will alert when it has found 
 			the solution and will print out the path to get there.
 

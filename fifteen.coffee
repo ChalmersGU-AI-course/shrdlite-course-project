@@ -52,7 +52,7 @@ drawText = ->
 
 keyPressed = (e) ->
   code = if e.keyCode then e.keyCode else e.which
-  if code is 38
+  if code is 97
     document.getElementById("solution").innerHTML = "Trying to find solution"
     goalMoves = Astar(pieces, startPieces, nyDist, nextMoves, getNextState, equality) 
     if goalMoves != -1
