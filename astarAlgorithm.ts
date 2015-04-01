@@ -4,11 +4,13 @@ module Astar {
     //n.parent:,
     //n.action:,
  export class Node{
+    id: string;
     fscore: number;
-    gscore: number;  // PATH-COST:
+    gscore: number; 
     children: [Node]
-    constructor(g:number,nodes:[Node]){
-      this.children = nodes
+    successor: Node
+    constructor(_id:string){
+      this.id = _id;
     }
   }
   interface Functions{
