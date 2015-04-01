@@ -75,7 +75,8 @@ function init(): void {
 
         mazeGraph = maze.generateGraph(width, height, seed, balance);
         maze.drawMaze(mazeCtx);
-        maze.drawPath(mazeCtx, [[0, 1], [1, 2], [2, 34]]);
+        var mazePath = mazeGraph.findPath(0, mazeGraph.nodes.length - 1);
+        maze.drawPath(mazeCtx, mazePath);
     });
     
 };
