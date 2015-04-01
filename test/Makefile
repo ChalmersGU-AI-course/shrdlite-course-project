@@ -19,6 +19,7 @@ all: $(TARGETS)
 
 ifeq ($(OS),Windows_NT)
 #Windows stuff
+TSC = C:/Users/David/AppData/Roaming/npm/tsc
 else
 #Linux stuff
 TSC = tsc
