@@ -44,12 +44,15 @@ function isEnd(node: N): boolean {
     return false;
 }
 
+console.log("\n\n+------------------------------------------------+");
+console.log("| Test aStar on graphs with different properties |");
+console.log("+------------------------------------------------+");
 
 // TestNoPathToEnd
 
 console.log("\n---------------------------------------");
-console.log("\nTest when there is no path to the goal:");
-console.log("\n---------------------------------------");
+console.log("Test when there is no path to the goal:");
+console.log("---------------------------------------");
 
 //                    (n1)
 //                1  /   \  1
@@ -99,8 +102,8 @@ console.log();
 // TestCircularGraph
 
 console.log("\n---------------------------------------");
-console.log("\nTest when there is a loop:");
-console.log("\n---------------------------------------");
+console.log("Test when there is a loop:");
+console.log("---------------------------------------");
 
 
 //                    (n1)
@@ -165,8 +168,8 @@ console.log();
 // TestMultipleEnds
 
 console.log("\n---------------------------------------");
-console.log("\nTest when there are multiple goals");
-console.log("\n---------------------------------------");
+console.log("Test when there are multiple goals");
+console.log("---------------------------------------");
 
 
 //                    (n1)

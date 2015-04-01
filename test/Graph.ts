@@ -64,7 +64,7 @@ function graph( map: boolean[][], xDim?: number, yDim?: number
 
 function printGraph(map: boolean[][], path: N[]) {
   for ( var y in map ) {
-    var str = "";
+    var str = "  ";
     for ( var x in map[y] ) {
       var b = false;
       for (var p in path) {
@@ -74,11 +74,15 @@ function printGraph(map: boolean[][], path: N[]) {
       if ( b ) {
         str += "+"
       } else {
-        str += map[y][x] ? " " : "#"
+        str += map[y][x] ? "." : "#"
       }
     }
 
     console.log(str);
   }
+  console.log("\n  Legend:");
+  console.log("    '.': Ordinary node");
+  console.log("    '#': Obstacle");
+  console.log("    '+': Path");
 }
 

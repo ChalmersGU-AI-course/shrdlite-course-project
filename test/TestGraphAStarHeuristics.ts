@@ -3,7 +3,7 @@
 ///<reference path="../search/Heuristic"/>
 ///<reference path="./Graph"/>
 
-// Dimensions of
+// Dimensions of graph
 var x_dim = 10;
 var y_dim = 10;
 
@@ -42,8 +42,10 @@ function run(h: Search.Heuristic<N>, hn: string) {
   var s = Search.aStar(h, (node: N) => node.value, stats);
   var p = s((n: N) => n.neighbours, start, (n: N) => n.value == end.value);
 
-  console.log("\n" + hn + "\n-------------------------")
-  
+  console.log("\n---------------------------------------")
+  console.log("Test with " + hn + " heuristic");
+  console.log("---------------------------------------")
+
   if ( !p ) {
     console.log("> No path found");
   } else {
@@ -63,8 +65,9 @@ function run(h: Search.Heuristic<N>, hn: string) {
   console.log("\nStats:");
   console.log("  nodes visited: " + stats.nodesVisited);
   console.log("  nodes added to queue: " + stats.nodesAdded);
-  console.log();
+  console.log("\nGraph visualization:");
   printGraph(m, p);
+  console.log();
 }
 
 
@@ -88,6 +91,10 @@ var g = graph(m, x_dim, y_dim, xAxis, yAxis, diags);
 
 var start = g[0][0];
 var end   = g[9][9];
+
+console.log("\n\n+------------------------------------------------+");
+console.log("|      Test aStar with different heuristics      |");
+console.log("+------------------------------------------------+");
 
 run(undefined, "zero");
 run(manhattan(end), "manhattan");
