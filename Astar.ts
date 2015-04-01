@@ -12,18 +12,19 @@ class Astar <T>{
         this.mGraph = g;
     }
 
-    private getMinFScore(fscore : number[]){
+    private getMinFScore(fscore : number[], openset : number[]){
         var result : number;
         result=fscore[0];
         var index : number = 0;
         var indexout : number = 0;
-        fscore.forEach(fs => {
+        openset.forEach(os => {
+            var fs = fscore[os];
             if(fs < result){
                 result = fs;
                 indexout = index;
             }
-            index ++;}
-        );
+            index++;
+        });
         return indexout;    
     }
 
@@ -62,11 +63,12 @@ class Astar <T>{
         g_score[start] = 0;
         
         f_score[start] = g_score[start] + this.mGraph.heuristic_cost_estimate(start, goal);
-        
+        var counter = 0;
         while (openset.length > 0){
-            var current = openset[this.getMinFScore(openset)];
-
+            var current = openset[this.getMinFScore(f_score, openset)];
+            counter ++;
             if(current == goal){
+                console.info("Counter " + counter);
                 return this.reconstruct_path(came_from, goal);
             }
             var index = openset.indexOf(current);
@@ -77,7 +79,7 @@ class Astar <T>{
             var currentNeighbors = this.neighbor_nodes(current);
             for(var i = 0; i < currentNeighbors.length; i++){
                 var neighbor = currentNeighbors[i];
-                if(closedset.indexOf(neighbor) < 0){
+                if(closedset.indexOf(neighbor) == -1){
                     var tentative_g_score : number = g_score[current] + this.cost(current,neighbor); // distance between c and n
                     if(openset.indexOf(neighbor) == -1 || tentative_g_score < g_score[neighbor]){
                         came_from[neighbor] = current;
