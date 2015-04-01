@@ -19,7 +19,9 @@ the end is found, and undefined otherwise.
 
 ##Heuristic.ts
 Exports an interface to build heuristic functions.
-A heuristic function for zero heuristic cost is implemented in the file as an example function.
+A heuristic function for zero heuristic cost is implemented in the file
+and is used by *aStar* as the default heuristic if no other heuristic
+is supplied.
 
 ##Test files
 To run the test run *make all* in the test folder.
