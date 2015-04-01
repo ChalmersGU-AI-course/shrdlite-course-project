@@ -229,6 +229,10 @@ class Maze {
     }
 
     public coord2node(x: number, y: number): number {
-        return this.xy2node(Math.floor(x / this.gridsize), Math.floor(y / this.gridsize));
+        var n = this.xy2node(Math.floor(x / this.gridsize), Math.floor(y / this.gridsize));
+        if (n < this.noOfNodes && n > 0)
+            return n;
+        else
+            return undefined;
     }
 }
