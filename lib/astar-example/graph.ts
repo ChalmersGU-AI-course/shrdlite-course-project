@@ -1,8 +1,8 @@
 /// <reference path="../typescript-collections/collections.ts" />
 
 class Graph {
-	private edges = new collections.Set<Edge>(Edge.edgeToString);
-	private nodes = new collections.Set<GraphNode>();
+	private edges = new collections.Set<Edge>(e => e.toStr());
+	private nodes = new collections.Set<GraphNode>(n => n.getName());
 
 	constructor() {
 
@@ -55,6 +55,7 @@ class Graph {
 
 		return -1;
 	}
+
 }
 
 class GraphNode {
@@ -123,11 +124,11 @@ class Edge {
 		return this.cost;
 	}
 
-	edgeToString(edge : Edge) : string {
-		var fromNodeX = edge.fromNode.getX();
-		var fromNodeY = edge.fromNode.getY();
-		var endNodeX  = edge.endNode.getX();
-		var endNodeY  = edge.endNode.getY();
+	toStr() : string {
+		var fromNodeX = this.fromNode.getX();
+		var fromNodeY = this.fromNode.getY();
+		var endNodeX  = this.endNode.getX();
+		var endNodeY  = this.endNode.getY();
 
 		if(fromNodeX < endNodeX) {
 			return fromNodeX + fromNodeY + " " + endNodeX + endNodeY;
