@@ -20,11 +20,12 @@ class Graph {
         if (start > this.nodes.length || start < 0 || goal > this.nodes.length || goal < 0)
             throw new RangeError("Node does not exist");
 
-        var closedset = []; //list
         var came_from: number[] = []; //matris typ
 
         var openset = new collections.Set<number>();
         openset.add(start);
+
+        var closedset = new collections.Set<number>();
 
         //can't get stl to work
         //var f_score: minheap = new MinHeap();
@@ -62,8 +63,7 @@ class Graph {
             }
 
             //find current in openset and remove that element and add to closed
-            var it: number = this.find(openset.toArray(), current);
-            closedset.push(current);
+            closedset.add(current);
             //openset.splice(it, 1); //splice removes the element at index
             openset.remove(current);
 
@@ -72,7 +72,7 @@ class Graph {
 
             for (var i = 0; i < current_neighbours.length; ++i) {
 
-                if (this.find(closedset, current_neighbours[i][1]) != -1)
+                if (closedset.contains(current_neighbours[i][1]))
                     continue;
 
                 var edge_between_cost = this.cost(this.nodes[current], this.nodes[current_neighbours[0][1]]);
