@@ -23,7 +23,6 @@ module aStar {
             if(currentNode.equals(toNode)) {
                 return currentNode;
             }
-            
   			var edgesN = graph.getEdgesTo(currentNode);
   			for (var i = 0; i < edgesN.length; i++) {
   				var n;
@@ -100,13 +99,7 @@ module aStar {
         }
 
         compareTo(otherNode : StarNode) : number {
-            if(this.getTotalDistance()  == otherNode.getTotalDistance()) {
-                return 0;
-            } else if (this.getTotalDistance() > otherNode.getTotalDistance()) {
-                return -1;
-            } else {
-                return 1;
-            }
+            return this.getTotalDistance()-otherNode.getTotalDistance();
         }
     }
 }
