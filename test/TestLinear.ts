@@ -77,4 +77,3 @@ for (var i in ns) {
 console.log("\nPath from " + start.value + " to " + end.value + ":");
 printP(p);
 console.log();
-
