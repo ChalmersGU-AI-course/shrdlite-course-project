@@ -3,28 +3,44 @@
 /// <reference path="../astarAlgorithm.ts" />
 
 module Tests{
+
 //Templates
   class Tuple {
-    0: Astar.Node
-    1: Astar.Node
+    a: Astar.Node
+    b: Astar.Node
   }
+  
   //Extend Nodes with coordinates. 
   class Town extends Astar.Node{
     x: number
     y: number
   }
+  
+  function townTupleToString(t:Tuple){
+    return t.a.id + t.b.id;
+  }
+  
   //Define Hieristic function
   function town_hier(t1:Town,t2:Town){
     return Math.round(Math.sqrt(Math.pow((t1.x - t2.x),2) + Math.pow((t1.y - t2.y),2))) // Pythagoras i.e the bird distance.
   }
-  var dic;   
+  
+  var dic;
+  
   function get_town_dist(t1:Town,t2:Town){ //NYI
-    return dic.getValue({0:t1,1:t2})
+    console.log(dic.getValue({a:t1,b:t2}));
+    var townTuple = new Tuple();
+    townTuple.a = t1;
+    townTuple.b = t2;
+    return dic.getValue(townTuple);
   }
-  function set_town_dist(t1:Town,t2:Town,dist:number,dic){
-    dic.setValue({0:t1,1:t2},dist)
-    dic.setValue({0:t2,1:t1},dist)
+  
+  function set_town_dist(t1:Town,t2:Town,dist:number){
+    dic.setValue({a:t1,b:t2},dist)
+    dic.setValue({a:t2,b:t1},dist)
   }
+  
+  
   //Extend Nodes with a number
   class Square extends Astar.Node{
     num: number
@@ -35,11 +51,23 @@ module Tests{
   function puzzle_dist(t1:Square,t2:Square){ //NYI
     return 0 
   }
+  
+  
   export class astarTest extends tsUnit.TestClass {
     /*
     The town problem : 
     "The trivial problem" - page68 AIAMA
     */
+    
+    getDic(){
+      return dic;
+    }
+    
+    set_town_dist(t1:Town,t2:Town,dist:number){
+      dic.setValue({a:t1,b:t2},dist)
+    }
+    
+    
     townProblemTest(){ 
 
       var zerind = new Town("zerind");
@@ -84,23 +112,27 @@ module Tests{
       craiova.x = 25;
       craiova.y = 1;
 
-      dic = new collections.Dictionary<Tuple, number>();
-      set_town_dist(oradea,zerind,71,dic)
-      set_town_dist(arad,zerind,75,dic)
-      set_town_dist(oradea,sibiu,151,dic)
-      set_town_dist(arad,sibiu,140,dic)
-      set_town_dist(arad,timisoar,118,dic)
-      set_town_dist(timisoar,lugoj,111,dic)
-      set_town_dist(lugoj,mehadia,70,dic)
-      set_town_dist(mehadia,drobeta,75,dic)
-      set_town_dist(drobeta,craiova,120,dic)
-      set_town_dist(sibiu,vilcea,80,dic)
-      set_town_dist(vilcea,craiova,146,dic)
+      dic = new collections.Dictionary<Tuple, number>(townTupleToString);
+      set_town_dist(oradea,zerind,71)
+      set_town_dist(arad,zerind,75)
+      set_town_dist(oradea,sibiu,151)
+      set_town_dist(arad,sibiu,140)
+      set_town_dist(arad,timisoar,118)
+      set_town_dist(timisoar,lugoj,111)
+      set_town_dist(lugoj,mehadia,70)
+      set_town_dist(mehadia,drobeta,75)
+      set_town_dist(drobeta,craiova,120)
+      set_town_dist(sibiu,vilcea,80)
+      set_town_dist(vilcea,craiova,146)
+      
 
       var path = Astar.Astar(oradea,craiova,{heuristic_approx: town_hier,dist_between: get_town_dist})
       //this.areIdentical([],path)
       //[oradea,sibiu,vilcea,craiova]
       return path
+      
+      
+      
     }
 
     eightPuzzleTest(){
