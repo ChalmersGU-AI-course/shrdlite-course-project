@@ -21,6 +21,8 @@ App.controller('AstarController', ['$scope', function($scope) {
 		var board = RandomBoard($scope.boardWidth, $scope.boardHeight);
 		$scope.currentState = 0;
 		$scope.boards = [board];
+		$scope.timeTaken = 0;
+		$scope.numExpandedNodes = 0.
 	}
 
 	$scope.plan = function() {
