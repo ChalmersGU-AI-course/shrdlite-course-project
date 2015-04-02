@@ -1,3 +1,6 @@
+/// <reference path="./Set"/>
+import Set = require('./Set');
+
 module AStar {
 
     type THeuristicF = (start: Node, goal: Node) => number;
@@ -17,7 +20,7 @@ module AStar {
         // Estimated total cost from start to goal through y.
         f_score.set(start, g_score.get(start) + heuristic(start, goal));
 
-        while (openset.size > 0) { // openset is not empty
+        while (openset.size() > 0) { // openset is not empty
             var current: Node = lowestFScoreNode(openset, heuristic, goal);
             if (current == goal) {
                 return reconstruct_path(came_from, goal);
@@ -75,7 +78,7 @@ module AStar {
             return {score: heuristic(node, goal), node: node}
         };
 
-        return setToArray(set)
+        return set.toArray()
             .map(scoreFn)
             .sort((a, b) => {return a.score - b.score})
             .shift().node;
@@ -90,15 +93,6 @@ module AStar {
         return total_path
     }
 
-    function setToArray<T>(set: Set<T>) : T[] {
-        var items: T[] = [];
-        set.forEach((item) => items.push(item));
-        return items;
-    }
-
 }
 
-declare var module;
-if(typeof module !== 'undefined') {
-    module.exports = AStar;
-}
+export = AStar;

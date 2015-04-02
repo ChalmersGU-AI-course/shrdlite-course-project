@@ -11,6 +11,8 @@ DIST = dist
 SOURCE = src
 TSFILES = $(wildcard $(SOURCE)/*.ts)
 
+FORCE:
+
 help:
 	@echo "make help | clean | all | start | $(TARGETS:%=% |) ..."
 
@@ -32,3 +34,6 @@ node_modules:
 
 start: all
 	python -m SimpleHTTPServer 8000
+
+run_example: FORCE
+	tsc --module commonjs --outDir dist test/astar_example.ts && node --harmony dist/test/astar_example.js
