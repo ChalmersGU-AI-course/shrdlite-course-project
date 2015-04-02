@@ -25,10 +25,12 @@ module AStar {
 
             openset.delete(current); // remove current from openset
             closedset.add(current); // add current to closedset
-            current.neighbor_nodes().forEach((neighbor) => {
+            current.neighbours.forEach((arc) => {
+                var neighbor = arc.destination;
+                var weight = arc.weight;
                 if (closedset.has(neighbor)) return; // continue
 
-                var tentative_g_score = g_score.get(current) + dist_between(current, neighbor);
+                var tentative_g_score = g_score.get(current) + weight;
 
                 if (!openset.has(neighbor) || tentative_g_score < g_score.get(neighbor)) {
                     came_from.set(neighbor, current);
@@ -40,12 +42,31 @@ module AStar {
                 }
             });
         }
-
         return null;
     }
 
-    interface Node {
-        neighbor_nodes(): [Node];
+    export class Arc {
+
+      constructor(public destination: Node, public weight: number) {
+      }
+
+    }
+
+    export class Node {
+
+      public neighbours: Arc[] = [];
+
+      constructor(public content: any) {
+      }
+
+      addNeighbour(node: Node, weight: number) : void {
+        var arc = new Arc(node, weight);
+        this.neighbours.push(arc);
+      }
+
+      neighbourNodes(): Node[] {
+        return this.neighbours.map((arc) => arc.destination);
+      }
     }
 
     function lowestFScoreNode(set: Set<Node>, heuristic: THeuristicF, goal: Node) : Node {
@@ -58,10 +79,6 @@ module AStar {
             .map(scoreFn)
             .sort((a, b) => {return a.score - b.score})
             .shift().node;
-    }
-
-    function dist_between(current: Node, neighbor: Node) {
-        return 1;
     }
 
     function reconstruct_path(came_from: Map<Node, Node>, current: Node) : Node[] {
