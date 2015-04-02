@@ -14,6 +14,9 @@ help:
 clean:
 	rm -f $(TSFILES:%.ts=%.js) *.map
 
+astar:
+	tsc -target ES5 --out astar.js astar.ts
+
 all: $(TARGETS)
 
 $(TARGETS): %: shrdlite-%.js
