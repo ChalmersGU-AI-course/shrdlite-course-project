@@ -7,6 +7,7 @@ TARGETS = html ajax ansi offline
 
 
 TSFILES = $(wildcard *.ts)
+CFFILES = $(wildcard *.coffee)
 
 help:
 	@echo "make help | clean | all | $(TARGETS:%=% |) ..."
