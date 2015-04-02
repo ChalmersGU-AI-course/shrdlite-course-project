@@ -1,24 +1,33 @@
 'use strict';
 
-var SortedSet = require('collections/sorted-set');
+var Heap = require('collections/heap');
 var Set = require('collections/set');
 
+
+// sac
+// b df
+// e  g 
+
 // TODO: Represent neighbours as edges instead?
-var g = { id: "g", x: 8, y: 8,  neighbours: [] };
-var f = { id: "f", x: 7, y: 7,  neighbours: [g] };
-var e = { id: "e", x: 6, y: 6,  neighbours: [g] };
-var d = { id: "d", x: 5, y: 5,  neighbours: [f] };
-var c = { id: "c", x: 4, y: 4,  neighbours: [] };
-var b = { id: "b", x: 3, y: 3,  neighbours: [e] };
-var a = { id: "a", x: 2, y: 2,  neighbours: [c, d] };
-var s = { id: "s", x: 1, y: 1,  neighbours: [a, b] };
+var g = { id: "g", x: 3, y: 2,  neighbours: [] };
+var f = { id: "f", x: 3, y: 1,  neighbours: [g] };
+var e = { id: "e", x: 0, y: 2,  neighbours: [] };
+var d = { id: "d", x: 2, y: 1,  neighbours: [f] };
+var c = { id: "c", x: 2, y: 0,  neighbours: [d] };
+var b = { id: "b", x: 0, y: 1,  neighbours: [e] };
+var a = { id: "a", x: 1, y: 0,  neighbours: [c] };
+var s = { id: "s", x: 0, y: 0,  neighbours: [a, b] };
 s.g = 0;
 s.f = h(s, g);
 
 console.log(astar(s, g));
 
-function h(from, to) {
+function manhattan(from, to) {
 	return Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
+}
+
+function h(from, to) {
+	return Math.sqrt(Math.pow(from.x - to.x, 2) + Math.pow(from.y - to.y, 2));
 }
 
 function rebuild_path(a) {
@@ -34,15 +43,16 @@ function rebuild_path(a) {
 
 
 function astar(start, goal) {
-	var frontier = new SortedSet([start], function(a, b) {
+	var frontier = new Heap([start], function(a, b) {
 		return a === b;
 	}, function(a, b) {
-		return a.f - b.f;
+		return b.f - a.f;
 	});
 	var visited = new Set();
 
+	debugger;
 	while(frontier.length > 0) {
-		var current = frontier.shift(); // Shift pops the minimal value
+		var current = frontier.pop();
 
 		if(current === goal) {
 			return rebuild_path(goal);
@@ -52,15 +62,14 @@ function astar(start, goal) {
 
 		for(var i = 0; i < current.neighbours.length; i++) {
 			var neighbour = current.neighbours[i];
-			var cost = current.g + 1; // FIXME: move cost is not always 1
+			var cost = current.g + manhattan(current, neighbour);
 
-
-			if(frontier.contains(neighbour) && cost < neighbour.g) {
+			if(frontier.indexOf(neighbour) !== -1 && cost < neighbour.g) {
 				// New path is better, remove neighbour from frontier
 				frontier.delete(neighbour);
 			}
 
-			if(!frontier.contains(neighbour) && !visited.contains(neighbour)) {
+			if(!frontier.indexOf(neighbour) !== -1 && !visited.contains(neighbour)) {
 				neighbour.g = cost;
 				neighbour.f = neighbour.g + h(neighbour, goal);
 				frontier.push(neighbour);
