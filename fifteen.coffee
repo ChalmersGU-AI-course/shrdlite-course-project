@@ -126,11 +126,12 @@ nyDist = (current, goal) ->
   sum = 0
   # Loop over all elements in current state
   for piece,i in current
-    gIndex = goal.indexOf(piece)
-    # Add the diff in x and the diff in y
-    dx = (gIndex%PUZZLE_SIZE) - (i%PUZZLE_SIZE)
-    dy = (gIndex//PUZZLE_SIZE) - (i//PUZZLE_SIZE)
-    sum += (Math.abs(dx) + Math.abs(dy))
+    if piece != 0
+      gIndex = goal.indexOf(piece)
+      # Add the diff in x and the diff in y
+      dx = (gIndex%PUZZLE_SIZE) - (i%PUZZLE_SIZE)
+      dy = (gIndex//PUZZLE_SIZE) - (i//PUZZLE_SIZE)
+      sum += (Math.abs(dx) + Math.abs(dy))
   return sum
 
 equality = (state1, state2) ->
