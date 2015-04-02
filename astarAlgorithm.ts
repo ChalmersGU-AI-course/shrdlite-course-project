@@ -29,11 +29,13 @@ AStar :: Graph -> Path
     var goal:Node = g;
     function comp(a:Node,b:Node){
       if (a.fscore < b.fscore)
-        return -1;
-      else if (a.fscore > b.fscore)
         return 1;
-      else{
+      else if (a.fscore > b.fscore)
+        return -1;
+      else if (a.id === b.id) 
         return 0;
+      else {
+        return 1;
       }
     }
     // Initilization Vendor Types 
@@ -66,7 +68,7 @@ AStar :: Graph -> Path
               current = current.successor;
               path.add(current);
           }
-          path.reverse
+          path.reverse()
           return path.toArray()
         }
         /*
@@ -80,19 +82,25 @@ AStar :: Graph -> Path
         All the neigbors are checked, in several ways    
         */ 
         for(var n in neighbors){
+
             if (!closedset.contains(neighbors[n])){
                 var g_score = current.gscore + functions.dist_between(current,neighbors[n])
-                if (!openset.contains(neighbors[n]) || neighbors[n].gscore < g_score){ // checks if the new path is better 
+                
+                if (!openset.contains(neighbors[n]) || neighbors[n].gscore > g_score){ // checks if the new path is better 
+
                     neighbors[n].successor = current
                     neighbors[n].gscore = g_score
                     neighbors[n].fscore = neighbors[n].gscore + functions.heuristic_approx(neighbors[n],goal);
+                    
                     if (!openset.contains(neighbors[n])){
-                        // The neighbors[n] has passed all checks and the node is added, before the next node is considered.  
-                        openset.add(neighbors[n]); 
+                        // The neighbors[n] has passed all checks and the node is added, before the next node is considered.
+                        openset.add(neighbors[n]);
                     }
                 }
             }
         }
+
+        
     }
     //     if we end up here then there is no path between start and goal  
     throw new Error("no path!");
