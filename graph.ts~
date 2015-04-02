@@ -38,14 +38,7 @@ module graph {
 		}
 		
 		cost(a :T, b :T) :number {
-			/*for(var node in this.nodeMap.values()) {
-				console.log(node);
-				console.log(a);
-				if(node === a && node.neighbors.containsKey(b)) {
-					return node.neighbors.getValue(b);
-				}
-			}*/
-			var cost :number;
+			cost :number;
 			this.nodeMap.forEach(function(k,v) {
 				if(k === a && v.neighbors.containsKey(b)) {
 					cost = v.neighbors.getValue(b);
