@@ -32,7 +32,7 @@ var map = [
     ," X                     X                          "
     ," X                     X                          "
     ," X                     X       X                  "
-    ," X                     X                          "
+    ," X                     XXXXXX                     "
     ," X    XXXXX                 X                     "
     ," X                          X                     "
     ," X                          X                     "
