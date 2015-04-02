@@ -1,6 +1,6 @@
 /// <reference path="../astar-example/astar.ts" />
 
-var schweden = new Graph();
+var sweden = new Graph();
 
 var kiruna = new GraphNode(0, 5, 2, "Kiruna");
 var lulea = new GraphNode(1, 10, 7, "Luleå");
@@ -11,28 +11,28 @@ var gbg = new GraphNode(5, 1, 33, "Gôteborg");
 var kalmar = new GraphNode(6, 12, 34, "Kalmar");
 var malmo = new GraphNode(7, 4, 40, "Malmö");
 
-schweden.addNode(kiruna);
-schweden.addNode(lulea);
-schweden.addNode(umea);
-schweden.addNode(tanndalen);
-schweden.addNode(sthlm);
-schweden.addNode(gbg);
-schweden.addNode(kalmar);
-schweden.addNode(malmo);
+sweden.addNode(kiruna);
+sweden.addNode(lulea);
+sweden.addNode(umea);
+sweden.addNode(tanndalen);
+sweden.addNode(sthlm);
+sweden.addNode(gbg);
+sweden.addNode(kalmar);
+sweden.addNode(malmo);
 
-schweden.addEdge(new Edge(10, kiruna, lulea));
-schweden.addEdge(new Edge(25, tanndalen, kiruna));
-schweden.addEdge(new Edge(10, kiruna, lulea));
-schweden.addEdge(new Edge(12, lulea, umea));
-schweden.addEdge(new Edge(14, umea, tanndalen));
-schweden.addEdge(new Edge(16, umea, sthlm));
-schweden.addEdge(new Edge(19, tanndalen, sthlm));
-schweden.addEdge(new Edge(10, tanndalen, gbg));
-schweden.addEdge(new Edge(19, gbg, sthlm));
-schweden.addEdge(new Edge(9, sthlm, kalmar));
-schweden.addEdge(new Edge(12, gbg, kalmar));
-schweden.addEdge(new Edge(10, malmo, gbg));
-schweden.addEdge(new Edge(14, kalmar, malmo));
+sweden.addEdge(new Edge(10, kiruna, lulea));
+sweden.addEdge(new Edge(25, tanndalen, kiruna));
+sweden.addEdge(new Edge(12, lulea, umea));
+sweden.addEdge(new Edge(14, umea, tanndalen));
+sweden.addEdge(new Edge(16, umea, sthlm));
+sweden.addEdge(new Edge(19, tanndalen, sthlm));
+sweden.addEdge(new Edge(10, tanndalen, gbg));
+sweden.addEdge(new Edge(19, gbg, sthlm));
+sweden.addEdge(new Edge(9, sthlm, kalmar));
+sweden.addEdge(new Edge(12, gbg, kalmar));
+sweden.addEdge(new Edge(10, malmo, gbg));
+sweden.addEdge(new Edge(14, kalmar, malmo));
 
-//aStar.aStar(schweden, malmo, kiruna);
-console.log(aStar.aStar(schweden, malmo, kiruna));
+//aStar.aStar(sweden, malmo, kiruna);
+//console.log(aStar.aStar(sweden, malmo, kiruna));
+//console.log(aStar.aStar(sweden, malmo, kiruna).getPath().toArray());

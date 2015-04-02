@@ -4,10 +4,6 @@ class Graph {
 	private edges = new collections.Set<Edge>(e => e.edgeToString());
 	private nodes = new collections.Set<GraphNode>(n => n.getId().toString());
 
-	constructor() {
-
-	}
-	
 	addEdge(newEdge : Edge) {
 		if (this.nodes.contains(newEdge.getFromNode()) && this.nodes.contains(newEdge.getEndNode())) {
 			this.edges.add(newEdge);
@@ -31,6 +27,11 @@ class Graph {
 
 	getNumberOfEdges() : number {
 		return this.edges.size();
+	}
+
+	getRandomNode() : GraphNode {
+		var randomIndex = Math.floor((Math.random() * this.getNumberOfNodes()));
+		return this.nodes.toArray()[randomIndex];
 	}
 
 	getEdgesTo(node : GraphNode) : Edge[] {
@@ -124,7 +125,6 @@ class GraphNode {
 
 	getName() : string {
 		return this.name;
-	
 	}
 
 	equals(otherNode : GraphNode) : boolean {

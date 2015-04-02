@@ -19,6 +19,7 @@ module aStar {
             var currentNode = nodesToEvaluate.dequeue();
             
             evaluatedNodes.add(currentNode);
+            console.log("Evaluated nodes: " + evaluatedNodes.size() + "/" + graph.getNumberOfNodes());
 
             if(currentNode.equals(toNode)) {
                 return currentNode;

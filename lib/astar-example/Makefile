@@ -2,7 +2,7 @@ TARGETS = Test
 
 TSFILES = $(wildcard *.ts)
 
-$(TARGETS): %: graph%.js
+$(TARGETS): %: graphRandom%.js
 
 %.js: %.ts $(TSFILES)
 	tsc --out $@ $<
