@@ -13,6 +13,9 @@ class TestNode implements INode<TestNode> {
     Neighbours(): Neighbour<TestNode>[] {
         return this.neighbours;
     }
+    toString(): string {
+    	return this.x + ":" + this.y;
+    }
 }
 
 

@@ -58,6 +58,8 @@ function PathCompare<T>(p0: Path<T>, p1: Path<T>): number {
 
 function Astar<T>(start: INode<T>, isGoal: GoalFunction<INode<T>>, heuristic: HeuristicFunction<INode<T>>): AstarResult<INode<T>> {
 	var frontier = new collections.PriorityQueue<Path<INode<T>>>(PathCompare);
+	var visited = new collections.Dictionary<INode<T>, number>();
+
 	var numExpandedNodes = 0;
 	var startPath : Path<INode<T>> = new Path<INode<T>>([start], 0, 0);
 	frontier.enqueue(startPath);
@@ -70,11 +72,16 @@ function Astar<T>(start: INode<T>, isGoal: GoalFunction<INode<T>>, heuristic: He
 		var neighbours = currentNode.Neighbours();
 		for (var i = 0; i < neighbours.length; ++i) {
 			var neighbour = neighbours[i];
-			var heuristicCost = heuristic(currentNode, neighbour.Node);
-			var newPath = path.Add(neighbour.Node, neighbour.Cost, heuristicCost);
-			frontier.enqueue(newPath);
+			var visitedCost = visited.getValue(neighbour.Node);
+			if (visitedCost === undefined || visitedCost > path.Cost + neighbour.Cost) {
+				var heuristicCost = heuristic(currentNode, neighbour.Node);
+				var newPath = path.Add(neighbour.Node, neighbour.Cost, heuristicCost);
 
-			++numExpandedNodes;
+				visited.setValue(neighbour.Node, newPath.Cost);
+				frontier.enqueue(newPath);
+
+				++numExpandedNodes;
+			}
 		}
 	}
 	return new AstarResult<INode<T>>(null, numExpandedNodes);
