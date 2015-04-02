@@ -17,7 +17,7 @@ module AStar {
         constructor(private path : Graph<S>[]){this.cost = 0;}
 
         //Returns a new path containing the graph contained in edge
-        //appeneded to the old path
+        //appended to the old path
         push(e:Edge<S>):Path<S>{
             var p = new Path(this.path.concat([e.end])); 
             p.cost = this.cost + e.cost;
