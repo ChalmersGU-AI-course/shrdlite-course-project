@@ -1,0 +1,18 @@
+/// <references path="graph.ts" />
+/// <references path="astar.ts" />
+
+var myGraph = new graph.Graph<string>();
+
+myGraph.addNode("Gothenburg");
+myGraph.addNode("Boras");
+myGraph.addNode("Stockholm");
+
+myGraph.addArc("Gothenburg","Stockholm",397);
+myGraph.addArc("Gothenburg","Boras", 100);
+
+var nodes = myGraph.nodeMap.size();
+
+/*var testing = AStar.AStarSearch(myGraph, "0", "3",
+		function(x) {return 0;});
+
+console.log(testing);*/

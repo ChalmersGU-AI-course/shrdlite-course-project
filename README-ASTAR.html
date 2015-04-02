@@ -1,0 +1,26 @@
+<html>
+<head>
+  <script src="astarexample.js"></script>
+</head>
+<body>
+  <h1>A* search example</h1>
+
+  <p>To compile the A* implementation and example, run `make astar`.
+     Visit this site again when you have done so and you will find an example here.</p>
+
+  <pre id="gen-text"></pre>
+
+  <script>
+      var x = document.getElementById("gen-text");
+      for(var i = 1; i < noHeuristics.size(); i++) {
+        x.innerHTML += "Going from " + noHeuristics.values()[i] + " to " + noHeuristics.keys()[i] + "\n";
+      }
+  </script>
+
+
+
+
+
+
+</body>
+</html>
