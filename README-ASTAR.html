@@ -8,12 +8,21 @@
   <p>To compile the A* implementation and example, run `make astar`.
      Visit this site again when you have done so and you will find an example here.</p>
 
-  <pre id="gen-text"></pre>
+  <h2>Without heuristics</h2>
+  <pre id="gen-text1"></pre>
+
+  <h2>With shortest-path-distance as heuristics</h2>
+  <pre id="gen-text2"></pre>
 
   <script>
-      var x = document.getElementById("gen-text");
+      var x = document.getElementById("gen-text1");
       for(var i = 1; i < noHeuristics.size(); i++) {
         x.innerHTML += "Going from " + noHeuristics.values()[i] + " to " + noHeuristics.keys()[i] + "\n";
+      }
+
+      var y = document.getElementById("gen-text2");
+      for(var i = 1; i < withHeuristics.size(); i++) {
+        y.innerHTML += "Going from " + withHeuristics.values()[i] + " to " + withHeuristics.keys()[i] + "\n";
       }
   </script>
 
