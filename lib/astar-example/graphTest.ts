@@ -8,7 +8,7 @@ var umea = new GraphNode(2, 10, 17, "Umeå");
 var tanndalen = new GraphNode(3, 1, 23, "Tänndalen");
 var sthlm = new GraphNode(4, 15, 28, "Stockholm");
 var gbg = new GraphNode(5, 1, 33, "Gôteborg");
-var kalmar = new GraphNode(6, 12, 34, "Kalmar");
+var kalmar = new GraphNode(6, 12, 26, "Kalmar");
 var malmo = new GraphNode(7, 4, 40, "Malmö");
 
 schweden.addNode(kiruna);
@@ -36,7 +36,7 @@ schweden.addEdge(new Edge(14, kalmar, malmo));
 
 //aStar.aStar(schweden, malmo, kiruna);
 var startNode = malmo;
-var goalNode = sthlm;
+var goalNode = kiruna;
 var finalNode = aStar.aStar(schweden, startNode, goalNode);
 var path = finalNode.getPath();
 var node = path.firstNode;
