@@ -136,7 +136,6 @@ module graphmodule {
 
         }
 
-
         public setHeuristicsFun(callback: collections.ILoopFunction<GraphNode<T>>) {
             this.nodes.forEach(callback);
         }

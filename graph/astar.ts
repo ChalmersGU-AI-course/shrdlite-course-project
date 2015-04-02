@@ -2,6 +2,8 @@
 /// <reference path="graph.ts" />
 
 module astar {
+
+    /** Compute the a path from the given start node to the given end node and the given graph */
     export function compute<T>(graph: graphmodule.Graph<T>, startID: string, endID: string) {
 
         var goalNodeAd = graph.adjacencyMap.getValue(endID);
