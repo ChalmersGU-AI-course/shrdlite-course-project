@@ -72,9 +72,13 @@ function ToMatrix(values, width, height) {
 }
 
 function RandomBoard(width: number, height: number): Board {
-	var values = _.shuffle(_.range(width * height));
-
-	return new Board(ToMatrix(values, width, height), width, height);
+	var board = new Board(ToMatrix(_.range(width * height), width, height), width, height);
+	for (var i = 0; i < 5000; ++i) {
+		var neighbours = board.Neighbours();
+		var rnd = Math.floor(Math.random() * neighbours.length);
+		board = neighbours[rnd].Node;
+	}
+	return board;
 }
 
 function IsGoalBoard(board: Board): boolean {
