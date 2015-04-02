@@ -150,11 +150,5 @@ function pointDist(a : Cell, b : Cell) : number
 	return Math.sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
 }
 
-function worstGuess(a : Cell, b : Cell) : number
-{
-	return -manhatan(a, b);
-}
-
 testHeuristic(10, manhatan, "Manhatan");
 testHeuristic(10, pointDist, "Point distance");
-testHeuristic(10, worstGuess, "Really bad guess");
