@@ -35,4 +35,10 @@ schweden.addEdge(new Edge(10, malmo, gbg));
 schweden.addEdge(new Edge(14, kalmar, malmo));
 
 //aStar.aStar(schweden, malmo, kiruna);
-console.log(aStar.aStar(schweden, malmo, kiruna));
+var finalNode = aStar.aStar(schweden, malmo, kiruna);
+var path = finalNode.getPath();
+var node = path.firstNode;
+while(node != null) {
+	console.log(node.element.getFromNode().getName() + " " + node.element.getEndNode().getName()) 
+	node = node.next
+}
