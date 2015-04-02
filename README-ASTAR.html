@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> 
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+<hr>
+<div id="README">
+<strong><h2>README-ASTAR</h2></strong>
+ 
+To test our program you run the command below which will create a javascript file called example.js.<br>
+<i>tsc --out example.js example.ts</i><br><br>
+Then you should open the <i>AStar.html</i> file in the web browser. <br><br>
+There you have three buttons, one for each example. Click on the example you would like to run.<br><br>
+
+<hr>
+
+<strong>Description of each file:<br></strong>
+- AStar.ts <br>
+Contains the AStar-algortihm and everything that's needed to create a graph (nodes, arches, heuristics etc). <br><br>
+- Example.ts<br>
+Contains the three examples which tests our AStar algortihm. <br><br>
+- AStar.html<br>
+Run this file to test all examples in the web browser. <br><br>
+<hr>
+
+<strong>Basic example:<br></strong>
+This is a very simple example that doesn't use heuristics and therefore becomes the lowest cost algorithm. <br> <br>
+
+Start city: 1 <br>
+Final city: 3 <br><br>
+
+<img src="example.png">
+
+<hr>
+
+<strong>Example1:<br></strong>
+This example is from the lecture slides (chapter 3, page 49) which is a non-trivial heuristics test. <br>
+It's about distances to some cities and their heuristics values. The test shows that the AStar-algorithm actually <br> 
+gets the lowest cost to the city (since the city can been reach from two different paths in the graph, see picture below).<br><br>
+
+Start city: Arad <br>
+Final city: Bucharest <br><br>
+
+<img src="example1.png">
+
+<hr>
+
+<strong>Example2:<br></strong>
+We have invented this example by ourself. This examples is also about distances to some cites and their heuristics values and is <br>
+therefore like the example above but here it's a possiblity to reach other cities after the final city.<br><br>
+
+Start city: Göteborg <br>
+Final city: Stockholm <br>
+
+<img src="example2.png">
+
+</div>
+</body> 
+</html>
