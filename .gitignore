@@ -8,5 +8,3 @@ grammar.js
 lib/collections.js
 tests/AstarTests.js
 grammar.js
-AstarLab.js
-Astar.js
