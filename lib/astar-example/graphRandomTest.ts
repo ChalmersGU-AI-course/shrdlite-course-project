@@ -24,7 +24,22 @@ console.log("Total citis: " + world.getNumberOfNodes() + ".");
 
 
 console.log("Initiating roads.");
-for (var i = 0; i < world.getNumberOfNodes(); i++) {
+
+var nodes = world.getNodes();
+for (var i = 0; i < nodes.length; i++){
+	var startNode = nodes[i];
+	for (var j = 0; j < maxRoadsPerCity; j++) {
+		var chance = Math.floor((Math.random() * 100) + 1);
+		if(chance >= (100-probOfRoad)) {
+			var endNode = world.getRandomNode(); // Should be one K-nearest instead.
+			var cost = startNode.distanceTo(endNode);
+			var edge = new Edge(cost + Math.random() * cost , startNode, endNode); //Compensating for having a less than or equal heuristic
+			world.addEdge(edge);
+		}
+	}
+}
+
+/*for (var i = 0; i < world.getNumberOfNodes(); i++) {
 	var startNode = world.getNode(i);
 	for (var j = 0; j < maxRoadsPerCity; j++) {
 		var chance = Math.floor((Math.random() * 100) + 1);
@@ -34,7 +49,7 @@ for (var i = 0; i < world.getNumberOfNodes(); i++) {
 			world.addEdge(edge);
 		}
 	}
-}
+}*/
 console.log("Total roads: " + world.getNumberOfEdges() + ".");
 
 var fromNode = world.getRandomNode();

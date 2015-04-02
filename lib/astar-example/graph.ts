@@ -2,7 +2,7 @@
 
 class Graph {
 	private edges = new collections.Set<Edge>(e => e.edgeToString());
-	private nodes = new collections.Set<GraphNode>(n => n.getId().toString());
+	private nodes = new collections.Set<GraphNode>(n => n.getName()/*n.getId().toString()*/);
 
 	addEdge(newEdge : Edge) {
 		if (this.nodes.contains(newEdge.getFromNode()) && this.nodes.contains(newEdge.getEndNode())) {
@@ -15,6 +15,10 @@ class Graph {
 
 	addNode(newNode : GraphNode) {
 		this.nodes.add(newNode);
+	}
+
+	getNodes() : GraphNode[] {
+		return this.nodes.toArray();
 	}
 
 	getNode(id : number) : GraphNode {
