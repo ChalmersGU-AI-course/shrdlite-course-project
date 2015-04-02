@@ -34,7 +34,8 @@ module graph {
 			if(!this.nodeMap.containsKey(b)) {
 				this.addNode(b);
 			}
-			return this.nodeMap.getValue(a).addNeighbor(b, weight);
+			this.nodeMap.getValue(a).addNeighbor(b, weight);
+			this.nodeMap.getValue(b).addNeighbor(a, weight);
 		}
 		
 		cost(a :T, b :T) :number {

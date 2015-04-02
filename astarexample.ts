@@ -75,6 +75,8 @@ var withHeuristics = AStar.AStarSearch(myGraph, "Arad", "Bucharest",
 			if(x === "Urziceni") { return 80; }
 			if(x === "Vaslui") { return 199; }
 			if(x === "Zerind") { return 374; }
-			return 0;
+			else return 0;
 		});
+
+
 

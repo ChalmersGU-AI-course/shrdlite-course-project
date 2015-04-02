@@ -8,24 +8,22 @@ module AStar {
 		var costSoFar = new collections.Dictionary<T, number>();
 
 		var frontier = new collections.PriorityQueue<T>(function(a,b) {
-			if( (costSoFar.getValue(a)+h(a)) < ( costSoFar.getValue(b)+h(b)) ){
-				return -1;
-			}
-			if( (costSoFar.getValue(a)+h(a) ) > ( costSoFar.getValue(b)+h(b)) ) {
-				return 1;
-			}
-			return 0;
+			return ((costSoFar.getValue(a)+h(a)) - (costSoFar.getValue(b)+h(b)));
 		});
 		cameFrom.setValue(start,start);
 		costSoFar.setValue(start, 0);
 		frontier.enqueue(start);
+
+		var counter = 0;
+
 		while(!frontier.isEmpty()) {
 			var cur = frontier.dequeue();
 			if(cur === goal) {
-				console.log("Done!\n");
-				return cameFrom;
+				var finalPath = recons_path<T>(cameFrom, goal);
+				console.log("[INFO] Done in " + counter  + " iterations, final path: " + finalPath);
+				return finalPath;
 			}
-			graph.nodeMap.getValue(cur).neighbors.forEach(function(k,v) {
+			graph.nodeMap.getValue(cur).neighbors.forEach( (k,v) => {
 				var newCost = costSoFar.getValue(k) + graph.cost(cur, k);
 				if(!costSoFar.containsKey(k) || newCost < costSoFar.getValue(k)) {
 					costSoFar.setValue(k, newCost);
@@ -33,6 +31,28 @@ module AStar {
 					cameFrom.setValue(k, cur);					
 				}
 			});
+			console.log("[INFO] Iteration done, result: ");
+			console.log("\tcurrent node: " + cur);
+			console.log("\tnext node: " + frontier.peek());
+			console.log("\tfrontier: ");
+			frontier.forEach( (elem) => {
+				console.log("\t\t"+elem);
+			});
+			counter++;
 		}
+		return null;
 	}
+
+	function recons_path<T>(came_from, current) {
+		var total_path = new collections.LinkedList<T>();
+		var temp_came_from = came_from;
+		total_path.add(current);
+		while( temp_came_from.containsKey(current) ) {
+			var next = temp_came_from.remove(current);
+			current = next;
+			total_path.add(current);
+		}
+		return total_path;
+	}
+
 }
