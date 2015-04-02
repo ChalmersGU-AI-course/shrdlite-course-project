@@ -14,15 +14,22 @@ module aStar {
         var sFrom = new StarNode(fromNode, 0, fromNode.distanceTo(toNode), startingPath);
 
         nodesToEvaluate.add(sFrom);
+        console.log("======== Starting ========");
 
         while(!nodesToEvaluate.isEmpty()) {
             var currentNode = nodesToEvaluate.dequeue();
+
+            console.log("evaluating " + currentNode.getName());
+            console.log("Distance is " + currentNode.getTotalDistance());
+            
             
             evaluatedNodes.add(currentNode);
 
             if(currentNode.equals(toNode)) {
+                console.log("found goal! " + currentNode.getName());
                 return currentNode;
             }
+            console.log("======== Adding edges ========");
   			var edgesN = graph.getEdgesTo(currentNode);
   			for (var i = 0; i < edgesN.length; i++) {
   				var n;
@@ -37,8 +44,10 @@ module aStar {
   				if(!evaluatedNodes.contains(starNeighbor)) {
   					starNeighbor.updatePath(edgesN[i]);
   					nodesToEvaluate.add(starNeighbor);
+                    console.log("Adding node " + starNeighbor.getName() + " to frontier. Distance is: " + starNeighbor.getTotalDistance());
   				}
   			}
+            console.log("======= Evaluating next node ========");
         }
 
         return null;
