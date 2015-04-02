@@ -17,6 +17,10 @@ class Graph {
 		this.nodes.add(newNode);
 	}
 
+	getNode(id : number) : GraphNode {
+		return this.nodes.toArray()[i];
+	}
+
 	contains(node : GraphNode) : boolean {
 		return this.nodes.contains(node); 
 	}

@@ -1,6 +1,8 @@
 /// <reference path="../typescript-collections/collections.ts" />
 /// <reference path="../astar-example/graph.ts" />
 
+var logging = false;
+
 module aStar {
     export function aStar(graph : Graph, fromNode : GraphNode, toNode : GraphNode) : StarNode {
         if(!graph.contains(fromNode) && !graph.contains(toNode)) {
@@ -14,23 +16,29 @@ module aStar {
         var sFrom = new StarNode(fromNode, 0, fromNode.distanceTo(toNode), startingPath);
 
         nodesToEvaluate.add(sFrom);
-        console.log("======== Starting ========");
+        if(logging) {
+            console.log("======== Starting ========");
+        }
 
         while(!nodesToEvaluate.isEmpty()) {
             var currentNode = nodesToEvaluate.dequeue();
 
-            console.log("evaluating " + currentNode.getName());
-            console.log("Distance is " + currentNode.getTotalDistance());
-            
+            if(logging) {
+                console.log("evaluating " + currentNode.getName());
+                console.log("Distance is " + currentNode.getTotalDistance());
+            }
             
             evaluatedNodes.add(currentNode);
-            console.log("Evaluated nodes: " + evaluatedNodes.size() + "/" + graph.getNumberOfNodes());
+            if(logging)
+                console.log("Evaluated nodes: " + evaluatedNodes.size() + "/" + graph.getNumberOfNodes());
 
             if(currentNode.equals(toNode)) {
-                console.log("found goal! " + currentNode.getName());
+                if(logging)
+                    console.log("found goal! " + currentNode.getName());
                 return currentNode;
             }
-            console.log("======== Adding edges ========");
+            if(logging)
+                console.log("======== Adding edges ========");
   			var edgesN = graph.getEdgesTo(currentNode);
   			for (var i = 0; i < edgesN.length; i++) {
   				var n;
@@ -45,10 +53,12 @@ module aStar {
   				if(!evaluatedNodes.contains(starNeighbor)) {
   					starNeighbor.updatePath(edgesN[i]);
   					nodesToEvaluate.add(starNeighbor);
-                    console.log("Adding node " + starNeighbor.getName() + " to frontier. Distance is: " + starNeighbor.getTotalDistance());
+                    if(logging)
+                        console.log("Adding node " + starNeighbor.getName() + " to frontier. Distance is: " + starNeighbor.getTotalDistance());
   				}
   			}
-            console.log("======= Evaluating next node ========");
+            if(logging)
+                console.log("======= Evaluating next node ========");
         }
 
         return null;
