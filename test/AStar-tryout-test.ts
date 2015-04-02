@@ -1,3 +1,4 @@
+
 ///<reference path="../lib/node.d.ts"/>
 ///<reference path="../typings/mocha/mocha.d.ts" />
 ///<reference path="../typings/chai/chai.d.ts" />
@@ -82,6 +83,9 @@ export module AStarTest {
     describe('heuristic', () => {
       it('path should be: Arad -> Sibiu -> Rimnicu -> Pitesti -> Bucharest', (done) => {
         var path: CityState[] = A.AS.search(aradn, bucharest);
+	for(var i = 0; i < path.length; i++) {
+	  console.log(path[i].name);
+	}
         expect(path[0].name).to.equals("Arad");
         expect(path[1].name).to.equals("Sibiu");
         expect(path[2].name).to.equals("Rimnicu");

@@ -11,9 +11,11 @@ export module AS { // AStar
     prev: ANode<T>;
     cost: number;
 
+    setToStart();
     getNeighbours(): [ANode<T>, number][]; //TODO
     toString(): string;
     equals(a: ANode<T>): boolean;
+    
   }
 
   export interface State extends Heuristic{
@@ -26,6 +28,10 @@ export module AS { // AStar
     prev: PuzzleStateNode;   // (id of node) just one node enables a walk back to start to return the path.
     private next: [PuzzleStateNode, number][] = null; // (ids) list of possible nodes to walk to
     cost: number;
+
+    setToStart(){
+      this.cost = 0;
+    }
     
     getNeighbours(){
       if(this.next == null){
@@ -89,11 +95,15 @@ export module AS { // AStar
     state: A.AStarTest.CityState;
     prev: CityStateNode;   // (id of node) just one node enables a walk back to start to return the path.
     next: [CityStateNode, number][]; // (ids) list of possible nodes to walk to
-    cost: number;
+    cost: number = Number.MAX_VALUE;
     constructor(state: A.AStarTest.CityState, prev: CityStateNode, next: [CityStateNode, number][]) {
       this.state = state;
       this.prev = prev;
       this.next = next;
+//      this.cost = 0;
+    }
+
+    setToStart(){
       this.cost = 0;
     }
     
@@ -138,22 +148,24 @@ export module AS { // AStar
    * TODO: Cycle checking: Keep record of visited nodes for termination and dont
    * expand (add to PQ if they are already visited)
    * TODO: Multiple path pruning: Keep redord of paths to visitied nodes and their
-   * cost. If a new path is cheaper exchange the old path with the new one.
+   * cost. If a new path is cheaper exchange the old path with the new
+   * one. HOPEFULLY DONE ;-)
    * TODO: If h satisfies the monotone restriction (h(m) - h(n) < cost(m, n))
    * then, A* with multiple path pruning always finds the shortest path to a goal.
    */
   export function search<T extends Heuristic>(start: ANode<T>, goal: T): T[] {
     var frontier = new C.collections.PriorityQueue<ANode<T>>(compClosure(goal));
+    start.setToStart();
     frontier.enqueue(start);
 
     while(!frontier.isEmpty()) {
-      frontier.forEach(function(element: ANode<T>): any{
-        console.log(element.toString());
-      });
-      console.log("TOP: " + frontier.peek().toString());
+//      frontier.forEach(function(element: ANode<T>): any{
+//        console.log("in frontier: " + element.toString());
+//      });
+//      console.log("TOP: " + frontier.peek().toString());
       var n : ANode<T> = frontier.dequeue();
-      console.log("dequeuing " + n.toString());
-      console.log("------");
+//      console.log("dequeuing " + n.toString());
+//      console.log("------");
       if(n) {                     // check if node is undefined
         if(n.state.match(goal)) {
           return path<T>(n);
@@ -161,8 +173,11 @@ export module AS { // AStar
         var neighbours = n.getNeighbours();
         for(var i=0; i<neighbours.length; i++) { // for all neighbours
           var _neighbour = neighbours[i];
-          _neighbour[0].cost = n.cost + _neighbour[1];
-          frontier.enqueue(_neighbour[0]);
+	  if(_neighbour[0].cost > n.cost + _neighbour[1]){
+            _neighbour[0].cost = n.cost + _neighbour[1];
+	    _neighbour[0].prev = n;
+            frontier.enqueue(_neighbour[0]);
+	  }
         }
       } else {
 	      throw "Node undefined";
@@ -183,9 +198,9 @@ export module AS { // AStar
       // cost = g + h
       var aCost = a.cost + a.state.heuristic(goal);
       var bCost = b.cost + b.state.heuristic(goal);
-      console.log("DEBUG");
-      console.log(a.state.toString() + " " + aCost);
-      console.log(b.state.toString() + " " + bCost);
+//      console.log("DEBUG");
+//      console.log("comp.param a, costs: " + a.state.toString() + " " + aCost);
+//      console.log("comp.param b, costs: " + b.state.toString() + " " + bCost);
       var res;
       if (aCost < bCost)
 	res = 1;
@@ -206,6 +221,7 @@ export module AS { // AStar
     var _n: ANode<T> = n;
     while(_n != null) {
       _path.push(_n.state)
+//      console.log("added to path: " + _n.toString());
       _n = _n.prev;
     }
     return _path.reverse();
