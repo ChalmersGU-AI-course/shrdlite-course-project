@@ -53,7 +53,7 @@ class SquareGrid:
     results = filter(self.passable, results)
     return results
 
-### Grid with weights for arcs
+### Grid with weights for edges
 class GridWithWeights(SquareGrid):
   def __init__(self, width, height):
     super().__init__(width, height)
@@ -67,7 +67,10 @@ def heuristic(a, b):
   (x2, y2) = b
   return abs(x1 - x2) + abs(y1 - y2) #Manhattan distance
 
-def a_star_search(graph, start, goal):
+def trivialHeuristic(a, b):
+  return 0
+
+def a_star_search(graph, start, goal, heuristic):
   frontier = PriorityQueue()
   frontier.put(start, 0)
   came_from = {}      # Map a node with previous node
@@ -95,16 +98,18 @@ def a_star_search(graph, start, goal):
 
 def printPath(goal, start, came_from, cost_so_far):
   current = goal
-  print("path  :  Cost")
+  path    = [goal]
+  print(" ==== Running A* ====")  
+  print("Path  :  Cost to node")
   while not current == start:
-    print(current," : ", cost_so_far[current])
+    print (current, " : ", cost_so_far[current])
     current = came_from[current]
-  
-  print(start," :  0")
+  print("cost to goal: ", cost_so_far[goal])
+  print("nodes visited: ", len(came_from))
 
 
 ##############################################################################
-def testcase1():
+def testcase1(func):
   goal  = (4,4)
   start = (0,0)
   diagram = GridWithWeights(5, 5)
@@ -115,10 +120,11 @@ def testcase1():
   #       . #
   #       . . . . .
   #           #   E
-  came_from, cost_so_far = a_star_search(diagram, start, goal)
+  came_from, cost_so_far = a_star_search(diagram, start, goal,func)
   printPath(goal,start, came_from, cost_so_far)
 
-def testcase2():
+
+def testcase2(func):
   goal  = (4,4)
   start = (0,0)
   diagram = GridWithWeights(5, 5)
@@ -130,11 +136,10 @@ def testcase2():
   #         # #   .
   #         # #   E
   # Expected path: (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (4, 1), (4, 2), (4, 3), (4, 4)
-  came_from, cost_so_far = a_star_search(diagram, start, goal)
+  came_from, cost_so_far = a_star_search(diagram, start, goal,func)
   printPath(goal,start, came_from, cost_so_far)
 
-
-def testcase3():
+def testcase3(func):
   goal  = (4,4)
   start = (0,0)
   diagram = GridWithWeights(5, 5)
@@ -151,28 +156,64 @@ def testcase3():
                                          (0, 2), (2, 2), (3, 2),
                                          (0, 3), (1, 3), (2, 3), (3, 3)]}
 
-  came_from, cost_so_far = a_star_search(diagram, start, goal)
+  came_from, cost_so_far = a_star_search(diagram, start, goal,func)
   printPath(goal,start, came_from, cost_so_far)
 
-print("testcase1")
-print("S        ")
-print(". #      ")
-print(". #      ")
-print(". . . . .")
-print("    #   E")
-testcase1()
-print("testcase2")
-print("S . . #  ")
-print("  # . . .")
-print("  # # # .")
-print("  # #   .")
-print("  # #   E")
-testcase2()
-print("testcase3")
-print("S . . . .")
-print("5 # 5 5 .")
-print("5 # 5 5 .")
-print("5 5 5 5 .")
-print("    #   E")
-testcase3()
+def getTestcase(num):
+  if num == 1:
+    return testcase1()
+  elif num == 2:
+    return testcase2()
+  elif num == 3:
+    return testcase3()
 
+import fileinput
+
+def main():
+  print("Hi and welcome to A*")
+  print("Choose a testcase betweeen 1-3:")
+
+  testcase = int(input())
+
+  print("Use Manhattan distance as heuristic? Y/N")
+
+  heuristicOn = input().upper()
+
+  if heuristicOn == "Y":
+    func = heuristic
+  else:
+    func = trivialHeuristic
+
+  if testcase == 1:
+    print("testcase1, dots are expected path")
+    print("   ___________")
+    print("   |S        |")
+    print("   |. #      |")
+    print("   |. #      |")
+    print("   |. . . . .|")
+    print("   |    #   E|")
+    print("   ___________")
+    testcase1(func)
+  elif testcase == 2:
+    print("testcase2, dots are expected path")
+    print("   ___________")
+    print("   |S . . #  |")
+    print("   |  # . . .|")
+    print("   |  # # # .|")
+    print("   |  # #   .|")
+    print("   |  # #   E|")
+    print("   ___________")
+    testcase2(func)
+  elif testcase == 3:
+    print("testcase3, dots are expected path, nums are cost")
+    print("   ___________")
+    print("   |S . . . .|")
+    print("   |5 # 5 5 .|")
+    print("   |5 # 5 5 .|")
+    print("   |5 5 5 5 .|")
+    print("   |    #   E|")
+    print("   ___________")
+    testcase3(func)
+
+
+main()
