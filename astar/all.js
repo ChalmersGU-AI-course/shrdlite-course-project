@@ -2436,8 +2436,8 @@ var astar;
     astar.Graph = Graph;
 })(astar || (astar = {}));
 /// <reference path="astar.ts" />
-var gridAstar;
-(function (gridAstar) {
+var grid_astar;
+(function (grid_astar) {
     // create graph to be used for path finding
     var NodeData = (function () {
         function NodeData(x, y) {
@@ -2446,7 +2446,7 @@ var gridAstar;
         }
         return NodeData;
     })();
-    gridAstar.NodeData = NodeData;
+    grid_astar.NodeData = NodeData;
     var DijkstraHeuristic = (function () {
         function DijkstraHeuristic() {
         }
@@ -2455,7 +2455,7 @@ var gridAstar;
         };
         return DijkstraHeuristic;
     })();
-    gridAstar.DijkstraHeuristic = DijkstraHeuristic;
+    grid_astar.DijkstraHeuristic = DijkstraHeuristic;
     var EuclidianHeuristic = (function () {
         function EuclidianHeuristic() {
         }
@@ -2466,7 +2466,7 @@ var gridAstar;
         };
         return EuclidianHeuristic;
     })();
-    gridAstar.EuclidianHeuristic = EuclidianHeuristic;
+    grid_astar.EuclidianHeuristic = EuclidianHeuristic;
     var ManhattanHeuristic = (function () {
         function ManhattanHeuristic() {
         }
@@ -2477,7 +2477,7 @@ var gridAstar;
         };
         return ManhattanHeuristic;
     })();
-    gridAstar.ManhattanHeuristic = ManhattanHeuristic;
+    grid_astar.ManhattanHeuristic = ManhattanHeuristic;
     function createGraphFromGrid(grid, heuristics) {
         var a = new astar.Graph(heuristics);
         // create nodes based on given grid
@@ -2532,9 +2532,9 @@ var gridAstar;
         }
         return { graph: a, nodes: gridNodes };
     }
-    gridAstar.createGraphFromGrid = createGraphFromGrid;
-})(gridAstar || (gridAstar = {}));
-/// <reference path="gridAstar.ts" />
+    grid_astar.createGraphFromGrid = createGraphFromGrid;
+})(grid_astar || (grid_astar = {}));
+/// <reference path="grid_astar.ts" />
 // create abstract grid representation (no nodes here)
 var grid = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1], [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
 var height = grid.length;
@@ -2568,20 +2568,20 @@ function testHeuristic(heuristic) {
     var resultString = document.getElementById("pathLength");
     var canvas = document.getElementById("gridCanvas");
     var context = canvas.getContext("2d");
-    var gridGraph = gridAstar.createGraphFromGrid(grid, heuristic);
+    var gridGraph = grid_astar.createGraphFromGrid(grid, heuristic);
     var result = gridGraph.graph.searchPath(gridGraph.nodes[1][1], gridGraph.nodes[3][19]);
     drawGrid(grid, 20, context, result.path, result.visited);
     resultString.innerHTML = "Length of path found: " + result.path.length;
 }
 function testEuclidean() {
     //test graph with Euclidean distance
-    testHeuristic(new gridAstar.EuclidianHeuristic());
+    testHeuristic(new grid_astar.EuclidianHeuristic());
 }
 function testManhattan() {
     //test graph with Manhattan distance
-    testHeuristic(new gridAstar.ManhattanHeuristic());
+    testHeuristic(new grid_astar.ManhattanHeuristic());
 }
 function testDijkstra() {
     //test graph with no heuristics
-    testHeuristic(new gridAstar.DijkstraHeuristic());
+    testHeuristic(new grid_astar.DijkstraHeuristic());
 }

@@ -1,4 +1,4 @@
-/// <reference path="gridAstar.ts" />
+/// <reference path="grid_astar.ts" />
 
 
 // create abstract grid representation (no nodes here)
@@ -58,7 +58,7 @@ function testHeuristic(heuristic){
 	var resultString = document.getElementById("pathLength");
 	var canvas = <HTMLCanvasElement>document.getElementById("gridCanvas");
 	var context = canvas.getContext("2d");
-	var gridGraph = gridAstar.createGraphFromGrid(grid,heuristic);
+	var gridGraph = grid_astar.createGraphFromGrid(grid,heuristic);
 	var result = gridGraph.graph.searchPath(gridGraph.nodes[1][1], gridGraph.nodes[3][19]);
 	drawGrid(grid, 20, context, result.path, result.visited);
 	resultString.innerHTML = "Length of path found: " + result.path.length;
@@ -66,15 +66,15 @@ function testHeuristic(heuristic){
 
 function testEuclidean(){
 	//test graph with Euclidean distance
-	testHeuristic(new gridAstar.EuclidianHeuristic());
+	testHeuristic(new grid_astar.EuclidianHeuristic());
 }
 
 function testManhattan(){
 	//test graph with Manhattan distance
-	testHeuristic(new gridAstar.ManhattanHeuristic());
+	testHeuristic(new grid_astar.ManhattanHeuristic());
 }
 
 function testDijkstra(){
 	//test graph with no heuristics
-	testHeuristic(new gridAstar.DijkstraHeuristic());
+	testHeuristic(new grid_astar.DijkstraHeuristic());
 }

@@ -1,6 +1,6 @@
 /// <reference path="astar.ts" />
 
-module gridAstar {
+module grid_astar {
 
     // create graph to be used for path finding
     export class NodeData implements astar.INodeData {
