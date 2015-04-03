@@ -1,8 +1,7 @@
 /// <reference path="astar.ts" />
 
 module grid_astar {
-
-    // create graph to be used for path finding
+    
     export class NodeData implements astar.INodeData {
         x: number;
         y: number;
@@ -45,10 +44,12 @@ module grid_astar {
         }
     }
 
+    export function createGraphFromGrid(grid, heuristics) {
+        var height = grid.length;
+        var width = grid[1].length;
 
-    export function createGraphFromGrid(grid,heuristics){
-        var a = new astar.Graph(heuristics);
         // create nodes based on given grid
+        var a = new astar.Graph(heuristics);
         var gridNodes = [];
 
         for (var y = 0; y < height; y++) {
@@ -73,30 +74,29 @@ module grid_astar {
                 var current = gridNodes[y][x];
 
                 if (current !== null) {
-
                     // west
-                    if (x !== 0) {
+                    if (x > 0) {
                         var n = gridNodes[y][x-1];
                         if (n) {
                             current.addNeighborNode(n, 1);
                         }
                     }
                     // east
-                    if (x % width !== 0) {
+                    if (x < width-1) {
                         var n = gridNodes[y][x+1];
                         if (n) {
                             current.addNeighborNode(n, 1);
                         }
                     }
                     // north
-                    if (y !== 0) {
+                    if (y > 0) {
                         var n = gridNodes[y-1][x];
                         if (n) {
                             current.addNeighborNode(n, 1);
                         }
                     }
                     // south
-                    if (y % height !== 0) {
+                    if (y < height-1) {
                         var n = gridNodes[y+1][x];
                         if (n) {
                             current.addNeighborNode(n, 1);
@@ -105,6 +105,7 @@ module grid_astar {
                 }
             }
         }
-        return {graph:a,nodes:gridNodes};
+
+        return { graph: a, nodes: gridNodes };
     }
 }

@@ -1,8 +1,7 @@
 /// <reference path="grid_astar.ts" />
 
-
 // create abstract grid representation (no nodes here)
-var grid = 
+var grid =
 [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
  [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
  [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
@@ -20,12 +19,45 @@ var grid =
  [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
 
-var height = grid.length;
-var width = grid[1].length;
+var tileSize = 20;
+var start = [1,1];
+var goal = [22,14];
 
-function drawGrid(grid, tileSize, context, path, visited) {
+window.onload = function() {
+	var canvas = document.getElementById("gridCanvas");
+	
+	canvas.addEventListener("mousedown", function(event) {
+		var x = event.pageX - canvas.offsetLeft;
+		var y = event.pageY - canvas.offsetTop;
+		var cellX = Math.floor(x / tileSize);
+		var cellY = Math.floor(y / tileSize);
+
+		toggleGridCell(cellX, cellY);
+		drawGrid([],[]);
+	}, false);
+
+	drawGrid([],[]);
+};
+
+function toggleGridCell(x, y) {
+	if ((x == start[0] && y == start[1]) ||
+		(x == goal[0] && y == goal[1])) {
+		return
+	}
+
+	if (grid[y][x] == 0) {
+		grid[y][x] = 1;
+	} else {
+		grid[y][x] = 0;
+	}
+}
+
+function drawGrid(path, visited) {
+	var canvas = <HTMLCanvasElement>document.getElementById("gridCanvas");
+	var context = canvas.getContext("2d");
+
 	var h = grid.length;
-	var w = grid[1].length;
+	var w = grid[0].length;
 
 	for (var x = 0; x < w; x++) {
 		for (var y = 0; y < h; y++) {
@@ -41,27 +73,37 @@ function drawGrid(grid, tileSize, context, path, visited) {
 
 	for (var i = 0; i < visited.length; i++) {
 		var current = visited[i];
-		context.fillStyle = "blue";
-
+		context.fillStyle = "lightgreen";
 		context.fillRect(current.data.x*tileSize, current.data.y*tileSize, tileSize-1, tileSize-1)
 	}
 
 	for (var i = 0; i < path.length; i++) {
 		var current = path[i];
-		context.fillStyle = "red";
-
+		context.fillStyle = "green";
 		context.fillRect(current.data.x*tileSize, current.data.y*tileSize, tileSize-1, tileSize-1)
 	}
+
+	context.fillStyle = "yellow";
+	context.fillRect(start[0]*tileSize, start[1]*tileSize, tileSize-1, tileSize-1);
+
+	context.fillStyle = "red";
+	context.fillRect(goal[0]*tileSize, goal[1]*tileSize, tileSize-1, tileSize-1);
 }
 
-function testHeuristic(heuristic){
-	var resultString = document.getElementById("pathLength");
-	var canvas = <HTMLCanvasElement>document.getElementById("gridCanvas");
-	var context = canvas.getContext("2d");
-	var gridGraph = grid_astar.createGraphFromGrid(grid,heuristic);
-	var result = gridGraph.graph.searchPath(gridGraph.nodes[1][1], gridGraph.nodes[3][19]);
-	drawGrid(grid, 20, context, result.path, result.visited);
-	resultString.innerHTML = "Length of path found: " + result.path.length;
+function testHeuristic(heuristic) {
+	var gridGraph = grid_astar.createGraphFromGrid(grid, heuristic);
+	var startNode = gridGraph.nodes[start[1]][start[0]];
+	var goalNode = gridGraph.nodes[goal[1]][goal[0]];
+	var result = gridGraph.graph.searchPath(startNode, goalNode);
+
+	drawGrid(result.path, result.visited);
+
+	var resultString = document.getElementById("info");
+	if (result.found) {
+		resultString.innerHTML = "Length of path found: " + result.path.length;
+	} else {
+		resultString.innerHTML = "No path found.";
+	}
 }
 
 function testEuclidean(){
