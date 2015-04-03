@@ -1,5 +1,4 @@
-/// <reference path="./Set"/>
-import Set = require('./Set');
+/// <reference path="./MySet"/>
 
 module AStar {
 
@@ -9,8 +8,8 @@ module AStar {
      * @returns Node[] or null
      */
     export function astar(start: Node, goal: Node, heuristic: THeuristicF) : Node[] {
-        var closedset = new Set<Node>(); // The set of nodes already evaluated.
-        var openset = new Set<Node>(); // The set of tentative nodes to be evaluated, initially containing the start node
+        var closedset = new MySet<Node>(); // The set of nodes already evaluated.
+        var openset = new MySet<Node>(); // The set of tentative nodes to be evaluated, initially containing the start node
         openset.add(start);
         var came_from = new Map<Node, Node>(); // The map of navigated nodes.
         var g_score = new Map<Node, number>();
@@ -72,7 +71,7 @@ module AStar {
       }
     }
 
-    function lowestFScoreNode(set: Set<Node>, heuristic: THeuristicF, goal: Node) : Node {
+    function lowestFScoreNode(set: MySet<Node>, heuristic: THeuristicF, goal: Node) : Node {
         // the node in openset having the lowest f_score[] value
         var scoreFn = (node: Node) => {
             return {score: heuristic(node, goal), node: node}
@@ -94,5 +93,3 @@ module AStar {
     }
 
 }
-
-export = AStar;

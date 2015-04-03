@@ -4,8 +4,7 @@ TARGETS = html ajax ansi offline
 
 .DELETE_ON_ERROR:
 
-.PHONY: help clean all $(TARGETS)
-
+.PHONY: help clean all $(TARGETS) start run_example FORCE
 
 DIST = dist
 SOURCE = src
@@ -19,7 +18,13 @@ help:
 clean:
 	rm -f $(DIST)/*.js
 
-all: node_modules $(TARGETS)
+all: $(TARGETS)
+
+start: all
+	python -m SimpleHTTPServer 8000
+
+run_example: $(DIST)/astar_example.js FORCE
+	node --harmony dist/astar_example.js
 
 $(TARGETS): %: $(DIST)/shrdlite-%.js $(DIST)/grammar.js $(DIST)/AStar.js
 
@@ -29,11 +34,5 @@ $(DIST)/%.js: $(SOURCE)/%.ts $(TSFILES)
 $(DIST)/grammar.js: $(SOURCE)/grammar.ne
 	nearleyc $< > $@
 
-node_modules:
-	npm install
-
-start: all
-	python -m SimpleHTTPServer 8000
-
-run_example: FORCE
-	tsc --module commonjs --outDir dist test/astar_example.ts && node --harmony dist/test/astar_example.js
+$(DIST)/astar_example.js: test/astar_example.ts $(TSFILES)
+	tsc --out $@ $<

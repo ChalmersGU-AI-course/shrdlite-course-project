@@ -1,4 +1,4 @@
-class Set<T> {
+class MySet<T> {
 
   private items: T[] = [];
 
@@ -24,5 +24,3 @@ class Set<T> {
     return this.items.slice(0);
   }
 }
-
-export = Set;

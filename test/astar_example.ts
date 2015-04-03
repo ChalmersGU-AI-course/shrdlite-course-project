@@ -1,8 +1,6 @@
 /// <reference path='../typings/node.d.ts' />
 /// <reference path="../src/AStar"/>
 
-var AStar = require("../src/AStar.js");
-
 function contents(nodes) {
   return nodes.map((n) => n.content);
 }
