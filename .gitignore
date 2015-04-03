@@ -38,3 +38,5 @@ shrdlite-*.js
 ehthumbs.db
 Thumbs.db
 *.js
+
+.idea
