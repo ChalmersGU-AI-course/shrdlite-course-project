@@ -1,0 +1,1 @@
+tsc --out all.js grid_test.ts
