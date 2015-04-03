@@ -20,8 +20,8 @@ var grid =
  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
 
 var tileSize = 20;
-var start = [1,1];
-var goal = [22,14];
+var start = [5,4];
+var goal = [19,11];
 
 window.onload = function() {
 	var canvas = document.getElementById("gridCanvas");
