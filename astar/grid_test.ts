@@ -1,7 +1,4 @@
-/// <reference path="astar.ts" />
-
-var canvas = <HTMLCanvasElement>document.getElementById('gridCanvas');
-var context = canvas.getContext("2d");
+/// <reference path="gridAstar.ts" />
 
 
 // create abstract grid representation (no nodes here)
@@ -57,121 +54,27 @@ function drawGrid(grid, tileSize, context, path, visited) {
 	}
 }
 
-// create graph to be used for path finding
-class NodeData implements astar.INodeData {
-    x: number;
-    y: number;
-
-    constructor(x, y) {
-    	this.x = x;
-    	this.y = y;
-    }
+function testHeuristic(heuristic){
+	var resultString = document.getElementById("pathLength");
+	var canvas = <HTMLCanvasElement>document.getElementById("gridCanvas");
+	var context = canvas.getContext("2d");
+	var gridGraph = gridAstar.createGraphFromGrid(grid,heuristic);
+	var result = gridGraph.graph.searchPath(gridGraph.nodes[1][1], gridGraph.nodes[3][19]);
+	drawGrid(grid, 20, context, result.path, result.visited);
+	resultString.innerHTML = "Length of path found: " + result.path.length;
 }
 
-class DijkstraHeuristic implements astar.IHeuristic {
-	
-	get(a: astar.Node, b: astar.Node): number {
-        return 0;
-	}
+function testEuclidean(){
+	//test graph with Euclidean distance
+	testHeuristic(new gridAstar.EuclidianHeuristic());
 }
 
-class EuclidianHeuristic implements astar.IHeuristic {
-
-	get(a: astar.Node, b: astar.Node): number {
-
-		var dataA = <NodeData>a.getData();
-		var dataB = <NodeData>b.getData();
-
-        return Math.sqrt(
-            Math.pow(dataA.x - dataB.x,2) +
-            Math.pow(dataA.y - dataB.y,2));
-	}
+function testManhattan(){
+	//test graph with Manhattan distance
+	testHeuristic(new gridAstar.ManhattanHeuristic());
 }
 
-class ManhattanHeuristic implements astar.IHeuristic {
-
-	get(a: astar.Node, b: astar.Node): number {
-
-		var dataA = <NodeData>a.getData();
-		var dataB = <NodeData>b.getData();
-
-        return Math.abs(dataA.x - dataB.x) +
-        	Math.abs(dataA.y - dataB.y);
-	}
+function testDijkstra(){
+	//test graph with no heuristics
+	testHeuristic(new gridAstar.DijkstraHeuristic());
 }
-
-
-function createGraphFromGrid(grid,heuristics){
-	var a = new astar.Graph(heuristics);
-	// create nodes based on given grid
-	var gridNodes = [];
-
-	for (var y = 0; y < height; y++) {
-		gridNodes.push([]);
-
-		for (var x = 0; x < width; x++) {
-			gridNodes[y].push(null);
-
-			if (grid[y][x] === 0) {
-				// Walkable cell, create node at this coordinate
-				var node = new astar.Node(new NodeData(x,y));
-				gridNodes[y][x] = node;
-				a.addNode(node);
-			}
-		}
-	}
-
-	// set neighbors
-	for (var x = 0; x < width; x++) {
-		for (var y = 0; y < height; y++) {
-			// add neighbors if node exists
-			var current = gridNodes[y][x];
-
-			if (current !== null) {
-
-				// west
-				if (x !== 0) {
-					var n = gridNodes[y][x-1];
-					if (n) {
-						current.addNeighborNode(n, 1);
-					}
-				}
-				// east
-				if (x % width !== 0) {
-					var n = gridNodes[y][x+1];
-					if (n) {
-						current.addNeighborNode(n, 1);
-					}
-				}
-				// north
-				if (y !== 0) {
-					var n = gridNodes[y-1][x];
-					if (n) {
-						current.addNeighborNode(n, 1);
-					}
-				}
-				// south
-				if (y % height !== 0) {
-					var n = gridNodes[y+1][x];
-					if (n) {
-						current.addNeighborNode(n, 1);
-					}
-				}
-			}
-		}
-	}
-	return {graph:a,nodes:gridNodes};
-}
-
-//test graph with Euclidean distance
-var graphEuclidean = createGraphFromGrid(grid,new EuclidianHeuristic())
-var resultEuclidean = graphEuclidean.graph.searchPath(graphEuclidean.nodes[1][1], graphEuclidean.nodes[3][19]);
-
-//test graph with Manhattan distance
-var graphManhattan = createGraphFromGrid(grid,new ManhattanHeuristic())
-var resultManhattan = graphManhattan.graph.searchPath(graphManhattan.nodes[1][1], graphManhattan.nodes[3][19]);
-
-console.log("Path found: " + resultEuclidean.found);
-
-drawGrid(grid, 20, context, resultEuclidean.path, resultEuclidean.visited);
-drawGrid(grid, 20, context, resultManhattan.path, resultManhattan.visited);
