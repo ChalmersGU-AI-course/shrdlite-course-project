@@ -14,14 +14,11 @@ module AStar {
         label: string;
         neighbours: Edge[];
         cost:number;
-        heuristic:number;
         previous: Node;
-        constructor (label : string, neighbours : Edge[],
-                     heuristic: number=0, cost:number=Infinity, previous:Node=null) {
+        constructor (label : string, neighbours : Edge[], cost:number=Infinity, previous:Node=null) {
             this.label = label;
             this.neighbours = neighbours;
             this.cost = cost;
-            this.heuristic = heuristic;
             this.previous = previous;
         }
 
@@ -69,7 +66,7 @@ module AStar {
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     // A* algorithm
 
-    export function astar(s: Node, t : Node, nodes : Node[]) : Node[] {
+    export function astar(s: Node, t : Node, nodes : Node[], heuristic: (Node)=>number) : Node[] {
 
         /*
         function getBest() : Node {
@@ -83,7 +80,7 @@ module AStar {
         */
 
         var compFunc : collections.ICompareFunction<Node> = function(a:Node, b: Node){
-            return (a.cost+a.heuristic)-(b.cost+b.heuristic);
+            return heuristic(a)-heuristic(b);
         };
 
         var frontier : Heap<Node> = new Heap<Node>(compFunc);
@@ -101,11 +98,6 @@ module AStar {
 
         while (!frontier.isEmpty()) {
             var v = frontier.removeRoot();
-
-            if(v.label === "f") {
-                console.log("nej!"+v.cost+v.heuristic);
-                console.log(frontier.peek());
-            }
 
             // Possibly update neighbours of node we're visiting now
             for (var eKey in v.neighbours) {
