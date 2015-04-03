@@ -33,20 +33,41 @@ sweden.addEdge(new Edge(12, gbg, kalmar));
 sweden.addEdge(new Edge(13, malmo, gbg));
 sweden.addEdge(new Edge(11, kalmar, malmo));
 
-var startNode = malmo;
-var goalNode = kiruna;
-var finalNode = aStar.aStar(sweden, startNode, goalNode);
-var path = finalNode.getPath();
-var node = path.firstNode;
-var edge = path.firstNode;
-var i = 1;
+var antiBestFirst = new Graph();
 
-console.log("======== Shortest path ========");
-console.log("Total cost:  " + finalNode.getTotalDistance());
-console.log("Total edges: " + path.size());
+var start = new GraphNode(0,0,1,"start-node");   // V I S U A L I S E D
+var roundway0 = new GraphNode(1,1,2,"r1");       //  r0-----r1
+var roundway1 = new GraphNode(2,2,2,"r2");       //  /     /
+var goal = new GraphNode(3,0,0,"goal-node");     // s     /
+											     //  g---´
 
-while(node != null) {
+antiBestFirst.addNode(start);
+antiBestFirst.addNode(roundway0);
+antiBestFirst.addNode(roundway1);
+antiBestFirst.addNode(goal);
 
-	console.log("Edge " + i++ + ": " + node.element.getFromNode().getName() + "-" + node.element.getEndNode().getName() + " (cost " + node.element.getCost() + ")");
-	node = node.next
+antiBestFirst.addEdge(new Edge(2,start, roundway0));
+antiBestFirst.addEdge(new Edge(1,roundway0, roundway1));
+antiBestFirst.addEdge(new Edge(3,roundway1, goal));
+
+var resultSweden = aStar.aStar(sweden, malmo, kiruna);
+var resultAntiBest = aStar.aStar(antiBestFirst, start, goal);
+
+printResult("Sweden",resultSweden);
+printResult("Anti-best-first",resultAntiBest);
+
+function printResult(name : String, result : any) {
+	var path = result.getPath();
+	var node = path.firstNode;
+	var i = 1;
+
+	console.log("======== Result: " + name + " ========");
+	console.log("Total cost:  " + result.getTotalDistance());
+	console.log("Total edges: " + path.size());
+
+	while (node != null) {
+
+		console.log("Edge " + i++ + ": " + node.element.getFromNode().getName() + "-" + node.element.getEndNode().getName() + " (cost " + node.element.getCost() + ")");
+		node = node.next
+	}
 }
