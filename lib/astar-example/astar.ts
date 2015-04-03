@@ -6,10 +6,10 @@ var logging = true;
 module aStar {
     export function aStar(graph : Graph, fromNode : GraphNode, toNode : GraphNode) : StarNode {
         if(!graph.contains(fromNode) && !graph.contains(toNode)) {
-            // ERROR, nodes are not in graph.
+            throw "ERROR, nodes are not in graph.";
         }
         
-        var evaluatedNodes = new collections.Set<StarNode>(n => /*n.getId().toString()*/ n.getName()); 
+        var evaluatedNodes = new collections.Set<StarNode>(n => n.getName());
         var nodesToEvaluate = new collections.PriorityQueue<StarNode>(compareNodes);
         var startingPath = new collections.LinkedList<Edge>();
 
@@ -25,7 +25,9 @@ module aStar {
 
             if(logging) {
                 console.log("evaluating " + currentNode.getName());
-                console.log("Distance is " + currentNode.getTotalDistance());
+                console.log("Distance is  " + currentNode.getDistance());
+                console.log("Heuristic is " + currentNode.getHeuristicDistance());
+                console.log("Their sum is " + currentNode.getTotalDistance());
             }
             
             evaluatedNodes.add(currentNode);
@@ -38,7 +40,7 @@ module aStar {
                 return currentNode;
             }
             if(logging)
-                console.log("======== Adding edges ========");
+                console.log("======== Adding neighbors to frontier ========");
   			var edgesN = graph.getEdgesTo(currentNode);
   			for (var i = 0; i < edgesN.length; i++) {
   				var e = edgesN[i];
@@ -51,7 +53,7 @@ module aStar {
   					starNeighbor.updatePath(e);
   					nodesToEvaluate.add(starNeighbor);
                     if(logging)
-                        console.log("Adding node " + starNeighbor.getName() + " to frontier. Distance is: " + starNeighbor.getTotalDistance());
+                        console.log("Adding " + starNeighbor.getName() + " to frontier. Distance+heuristic is: " + starNeighbor.getTotalDistance());
   				}
   			}
             if(logging)
@@ -62,17 +64,7 @@ module aStar {
     }
 
     function compareNodes(a : StarNode , b : StarNode){
-    	var aVal = a.getTotalDistance(); 
-    	var bVal = b.getTotalDistance();
-    	if (aVal == bVal) {
-    		return 0;
-    	}
-    	else if(aVal > bVal){
-    		return -1;
-    	}
-    	else{
-    		return 1;
-    	}
+    	return b.getTotalDistance() - a.getTotalDistance();
     }
 
     class StarNode extends GraphNode {
@@ -101,6 +93,10 @@ module aStar {
 
         getDistance() : number {
             return this.distanceSoFar;
+        }
+
+        getHeuristicDistance() : number {
+            return this.heuristicDistance;
         }
 
         getTotalDistance() : number {

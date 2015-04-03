@@ -21,10 +21,6 @@ class Graph {
 		return this.nodes.toArray();
 	}
 
-	getNode(id : number) : GraphNode {
-		return this.nodes.toArray()[i];
-	}
-
 	contains(node : GraphNode) : boolean {
 		return this.nodes.contains(node); 
 	}
@@ -53,52 +49,6 @@ class Graph {
 			}
 		}
 		return close.toArray();
-	}
-
-	getNeighborsTo(node : GraphNode) : GraphNode[] {
-		var neighbors = new collections.Set<GraphNode>(g => g.getId().toString());
-		var edgeArr = this.edges.toArray();
-		var e;
-
-		for (var i = 0; i < edgeArr.length; i++) {
-			e = edgeArr[i];
-
-			if(e.getFromNode().equals(node)) {
-				neighbors.add(e.getEndNode());
-			} else if(e.getEndNode().equals(node)) {
-				neighbors.add(e.getFromNode());
-			}
-
-		}
-
-		return neighbors.toArray();
-	}
-
-	getEdgeBetween(start : GraphNode, end : GraphNode) : Edge {
-		var edgeArr = this.edges.toArray();
-		var e;
-		for (var i = 0; i < edgeArr.length; i++) {
-			e = edgeArr[i];
-
-			if(e.getFromNode().equals(start) && e.getEndNode().equals(end)) {
-				return e;
-			}
-		}
-	}
-
-	getCostForEdge(firstNode : GraphNode, secondNode : GraphNode) : number {
-		var edgeArr = this.edges.toArray();
-
-		for (var i = 0; i < edgeArr.length; i++) {
-			var e = edgeArr[i];
-
-			if(e.getFromNode().equals(firstNode) && e.getEndNode().equals(secondNode)
-			|| e.getFromNode().equals(secondNode) && e.getEndNode().equals(firstNode)) {
-				return e.getCost();
-			}
-		}
-
-		return -1;
 	}
 }
 
@@ -149,10 +99,6 @@ class Edge {
 		this.cost = cost;
 		this.fromNode = fromNode;
 		this.endNode = toNode;
-	}
-
-	compareTo(otherEdge : Edge) : number {
-		return this.cost-otherEdge.cost;
 	}
 
 	getFromNode() : GraphNode {
