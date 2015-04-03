@@ -71,7 +71,7 @@ function run(h: Search.Heuristic<N>, hn: string) {
 }
 
 
-// Initialize map and graph, no edges added at this point
+// Create map
 for ( var y=0; y<y_dim; y++ ) { 
   var my = [];
   for ( var x=0; x<x_dim; x++ ) { 
