@@ -2436,8 +2436,105 @@ var astar;
     astar.Graph = Graph;
 })(astar || (astar = {}));
 /// <reference path="astar.ts" />
-var canvas = document.getElementById('gridCanvas');
-var context = canvas.getContext("2d");
+var gridAstar;
+(function (gridAstar) {
+    // create graph to be used for path finding
+    var NodeData = (function () {
+        function NodeData(x, y) {
+            this.x = x;
+            this.y = y;
+        }
+        return NodeData;
+    })();
+    gridAstar.NodeData = NodeData;
+    var DijkstraHeuristic = (function () {
+        function DijkstraHeuristic() {
+        }
+        DijkstraHeuristic.prototype.get = function (a, b) {
+            return 0;
+        };
+        return DijkstraHeuristic;
+    })();
+    gridAstar.DijkstraHeuristic = DijkstraHeuristic;
+    var EuclidianHeuristic = (function () {
+        function EuclidianHeuristic() {
+        }
+        EuclidianHeuristic.prototype.get = function (a, b) {
+            var dataA = a.getData();
+            var dataB = b.getData();
+            return Math.sqrt(Math.pow(dataA.x - dataB.x, 2) + Math.pow(dataA.y - dataB.y, 2));
+        };
+        return EuclidianHeuristic;
+    })();
+    gridAstar.EuclidianHeuristic = EuclidianHeuristic;
+    var ManhattanHeuristic = (function () {
+        function ManhattanHeuristic() {
+        }
+        ManhattanHeuristic.prototype.get = function (a, b) {
+            var dataA = a.getData();
+            var dataB = b.getData();
+            return Math.abs(dataA.x - dataB.x) + Math.abs(dataA.y - dataB.y);
+        };
+        return ManhattanHeuristic;
+    })();
+    gridAstar.ManhattanHeuristic = ManhattanHeuristic;
+    function createGraphFromGrid(grid, heuristics) {
+        var a = new astar.Graph(heuristics);
+        // create nodes based on given grid
+        var gridNodes = [];
+        for (var y = 0; y < height; y++) {
+            gridNodes.push([]);
+            for (var x = 0; x < width; x++) {
+                gridNodes[y].push(null);
+                if (grid[y][x] === 0) {
+                    // Walkable cell, create node at this coordinate
+                    var node = new astar.Node(new NodeData(x, y));
+                    gridNodes[y][x] = node;
+                    a.addNode(node);
+                }
+            }
+        }
+        for (var x = 0; x < width; x++) {
+            for (var y = 0; y < height; y++) {
+                // add neighbors if node exists
+                var current = gridNodes[y][x];
+                if (current !== null) {
+                    // west
+                    if (x !== 0) {
+                        var n = gridNodes[y][x - 1];
+                        if (n) {
+                            current.addNeighborNode(n, 1);
+                        }
+                    }
+                    // east
+                    if (x % width !== 0) {
+                        var n = gridNodes[y][x + 1];
+                        if (n) {
+                            current.addNeighborNode(n, 1);
+                        }
+                    }
+                    // north
+                    if (y !== 0) {
+                        var n = gridNodes[y - 1][x];
+                        if (n) {
+                            current.addNeighborNode(n, 1);
+                        }
+                    }
+                    // south
+                    if (y % height !== 0) {
+                        var n = gridNodes[y + 1][x];
+                        if (n) {
+                            current.addNeighborNode(n, 1);
+                        }
+                    }
+                }
+            }
+        }
+        return { graph: a, nodes: gridNodes };
+    }
+    gridAstar.createGraphFromGrid = createGraphFromGrid;
+})(gridAstar || (gridAstar = {}));
+/// <reference path="gridAstar.ts" />
 // create abstract grid representation (no nodes here)
 var grid = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1], [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
 var height = grid.length;
@@ -2467,93 +2564,24 @@ function drawGrid(grid, tileSize, context, path, visited) {
         context.fillRect(current.data.x * tileSize, current.data.y * tileSize, tileSize - 1, tileSize - 1);
     }
 }
-// create graph to be used for path finding
-var NodeData = (function () {
-    function NodeData(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-    return NodeData;
-})();
-var DijkstraHeuristic = (function () {
-    function DijkstraHeuristic() {
-    }
-    DijkstraHeuristic.prototype.get = function (a, b) {
-        return 0;
-    };
-    return DijkstraHeuristic;
-})();
-var EuclidianHeuristic = (function () {
-    function EuclidianHeuristic() {
-    }
-    EuclidianHeuristic.prototype.get = function (a, b) {
-        var dataA = a.getData();
-        var dataB = b.getData();
-        return Math.sqrt(Math.pow(dataA.x - dataB.x, 2) + Math.pow(dataA.y - dataB.y, 2));
-    };
-    return EuclidianHeuristic;
-})();
-var ManhattanHeuristic = (function () {
-    function ManhattanHeuristic() {
-    }
-    ManhattanHeuristic.prototype.get = function (a, b) {
-        var dataA = a.getData();
-        var dataB = b.getData();
-        return Math.abs(dataA.x - dataB.x) + Math.abs(dataA.y - dataB.y);
-    };
-    return ManhattanHeuristic;
-})();
-var a = new astar.Graph(new EuclidianHeuristic());
-// create nodes based on given grid
-var gridNodes = [];
-for (var y = 0; y < height; y++) {
-    gridNodes.push([]);
-    for (var x = 0; x < width; x++) {
-        gridNodes[y].push(null);
-        if (grid[y][x] === 0) {
-            // Walkable cell, create node at this coordinate
-            var node = new astar.Node(new NodeData(x, y));
-            gridNodes[y][x] = node;
-            a.addNode(node);
-        }
-    }
+function testHeuristic(heuristic) {
+    var resultString = document.getElementById("pathLength");
+    var canvas = document.getElementById("gridCanvas");
+    var context = canvas.getContext("2d");
+    var gridGraph = gridAstar.createGraphFromGrid(grid, heuristic);
+    var result = gridGraph.graph.searchPath(gridGraph.nodes[1][1], gridGraph.nodes[3][19]);
+    drawGrid(grid, 20, context, result.path, result.visited);
+    resultString.innerHTML = "Length of path found: " + result.path.length;
 }
-for (var x = 0; x < width; x++) {
-    for (var y = 0; y < height; y++) {
-        // add neighbors if node exists
-        var current = gridNodes[y][x];
-        if (current !== null) {
-            // west
-            if (x !== 0) {
-                var n = gridNodes[y][x - 1];
-                if (n) {
-                    current.addNeighborNode(n, 1);
-                }
-            }
-            // east
-            if (x % width !== 0) {
-                var n = gridNodes[y][x + 1];
-                if (n) {
-                    current.addNeighborNode(n, 1);
-                }
-            }
-            // north
-            if (y !== 0) {
-                var n = gridNodes[y - 1][x];
-                if (n) {
-                    current.addNeighborNode(n, 1);
-                }
-            }
-            // south
-            if (y % height !== 0) {
-                var n = gridNodes[y + 1][x];
-                if (n) {
-                    current.addNeighborNode(n, 1);
-                }
-            }
-        }
-    }
+function testEuclidean() {
+    //test graph with Euclidean distance
+    testHeuristic(new gridAstar.EuclidianHeuristic());
 }
-var result = a.searchPath(gridNodes[1][1], gridNodes[3][19]);
-console.log("Path found: " + result.found);
-drawGrid(grid, 20, context, result.path, result.visited);
+function testManhattan() {
+    //test graph with Manhattan distance
+    testHeuristic(new gridAstar.ManhattanHeuristic());
+}
+function testDijkstra() {
+    //test graph with no heuristics
+    testHeuristic(new gridAstar.DijkstraHeuristic());
+}

@@ -3,11 +3,15 @@
     <head>
         <meta charset="UTF-8">
         <title>A* algorithm</title>
+        <script src="all.js"></script>
     </head>
 
     <body>
         <h1>A*-algorithm</h1>
         <canvas id="gridCanvas" width="1000" height="400"></canvas>
-        <script src="all.js"></script>
+        <p id="pathLength">Click a button to run algorithm</p>
+        <button onclick="testEuclidean()">Euclidean heuristic</button>
+        <button onclick="testManhattan()">Manhattan heuristic</button>
+        <button onclick="testDijkstra()">Dijkstra (heuristic 0)</button>
     </body>
 </html>
