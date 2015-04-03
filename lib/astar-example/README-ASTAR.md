@@ -41,4 +41,4 @@ Example
 --------
 Our example is a (very simplified and somewhat made up) map of Sweden, in which we try to find the shortest path from Malmö to Kiruna. We have designed the map so that A* will evaluate the path along the east coast first, due to the edge between Malmö and Gôteborg being quite long relative to the euclidian distance between them. A* will see it as a bad choice until it discovers that the path along the east coast involves Stockholm (which is quite far eastward) while the west coast-path goes in a straighter line.
 
-The shortest path should be Malmö-Gôteborg-Tänndalen-Kiruna, with a cost of 3.
+The shortest path should be Malmö-Gôteborg-Tänndalen-Kiruna, with a cost of 48.
