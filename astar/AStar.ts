@@ -15,7 +15,7 @@ module AStar {
         neighbours: Edge[];
         cost:number;
         previous: Node;
-        constructor (label : string, neighbours : Edge[], cost:number=Infinity, previous:Node=null) {
+        constructor (label:string, neighbours:Edge[]=[], cost:number=Infinity, previous:Node=null) {
             this.label = label;
             this.neighbours = neighbours;
             this.cost = cost;
@@ -150,23 +150,35 @@ module AStar {
 
         // Define graph, with perfect heuristics
         // Right side (should be visited)
-        var a = new Node("a", [], 3);
-        var b = new Node("b", [], 2);
-        var c = new Node("c", [], 1);
-        var d = new Node("d", [], 0);
-        var e = new Node("e", [], 4);
+        var a = new Node("a");
+        var b = new Node("b");
+        var c = new Node("c");
+        var d = new Node("d");
+        var e = new Node("e");
         // Left side (should not be visited, due to heuristics)
-        var f = new Node("f", [], 3.5);
-        var g = new Node("g", [], 4.5);
-        var h = new Node("h", [], 4.5);
+        var f = new Node("f");
+        var g = new Node("g");
+        var h = new Node("h");
         var nodes = [a,b,c,d,e,f,g,h];
         var edges = Edge.createEdges([[a,b,1], [b,c,1], [c,d,1], [a,e,1], [e,d,4], // Right side
                                             [a,f,0.5], [f,g,1], [g,h,1], [h,f,1]]); // Left side
 
         initGraph(nodes, edges); // Updates node objects to be a proper graph
 
+        //A simple heuristic function that simply returns the exakt cost of the shortest path of the node
+        var heuristic = function(node) {
+            if(node.label === "a") return 3
+            if(node.label === "b") return 2
+            if(node.label === "c") return 1
+            if(node.label === "d") return 0
+            if(node.label === "e") return 4
+            if(node.label === "f") return 3.5
+            if(node.label === "g") return 4.5
+            if(node.label === "h") return 4.5
+        }
+
         console.log("Running astar correctness test ... ");
-        var path = astar(a, d, nodes);
+        var path = astar(a, d, nodes, heuristic);
         var correctPath = [a,b,c,d];
         if (!test(arrayEquals(path, correctPath)))
             console.log("nodes: ",nodes);
