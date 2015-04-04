@@ -39,7 +39,7 @@ var start = new GraphNode(0,0,1,"start-node");   // V I S U A L I S E D
 var roundway0 = new GraphNode(1,1,2,"r1");       //  r0-----r1
 var roundway1 = new GraphNode(2,2,2,"r2");       //  /     /
 var goal = new GraphNode(3,0,0,"goal-node");     // s     /
-											     //  g---´
+											     // g----´
 
 antiBestFirst.addNode(start);
 antiBestFirst.addNode(roundway0);

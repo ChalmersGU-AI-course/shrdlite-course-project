@@ -2,11 +2,11 @@ Team Dandilion A*-report
 ========================
 Run instructions
 ----------------
-To run the provided example, `cd shrdlite-course-project/lib/astar-example` and do `make` followed by `node graphTest.js`. For more details on the example and its expected output, see the relevant section below.
+To run the provided examples, `cd shrdlite-course-project/lib/astar-example` and do `make` followed by `node graphTest.js`. For more details on the examples and their expected output, see the relevant section below.
 
 Implementation details
 ----------------------
-All relevant files are in the folder `lib/astar-example`. Our implementation of A* is in `astar.ts`, and our representation of graphs is in `graph.ts`. The example (which runs itself) is in `graphTest.ts` and is discussed separately below.
+All relevant files are in the folder `lib/astar-example`. Our implementation of A* is in `astar.ts`, and our representation of graphs is in `graph.ts`. The examples (which run themselves) are in `graphTest.ts` and are discussed separately below.
 
 ### graph.ts
 Graphs consists of nodes on a euclidian plane and weighted directed edges between them, which needn't be related to the corresponding euclidian distance.
@@ -37,8 +37,14 @@ The algorithm runs rougly as follows: To begin with, a `StarNode` based on the s
 2. If the node is the goal, stop and return it.
 3. Create `StarNode`s of all the neighbors and add them to the frontier.
 
-Example
+Examples
 --------
-Our example is a (very simplified and somewhat made up) map of Sweden, in which we try to find the shortest path from Malmö to Kiruna. We have designed the map so that A* will evaluate the path along the east coast first, due to the edge between Malmö and Gôteborg being quite long relative to the euclidian distance between them. A* will see it as a bad choice until it discovers that the path along the east coast involves Stockholm (which is quite far eastward) while the west coast-path goes in a straighter line.
+### Sweden
+This is a (very simplified and somewhat made up) map of Sweden, in which we try to find the shortest path from Malmö to Kiruna. We have designed the map so that A* will evaluate the path along the east coast first, due to the edge between Malmö and Gôteborg being quite long relative to the euclidian distance between them. A* will see it as a bad choice until it discovers that the path along the east coast involves Stockholm (which is quite far eastward) while the west coast-path goes in a straighter line.
 
 The shortest path should be Malmö-Gôteborg-Tänndalen-Kiruna, with a cost of 48.
+
+### Anti-best-first
+This is a graph on which a best-first-search would go into an infinite loop. The start and goal are very close to each other, but the only path between them increases the heuristic distance to the goal for two steps, before making a "jump" back to it on the last edge. A best-first-search would only ever evaluate the start and the first node in the "detour", since the second node in the detour has a longer heuristic distance to the goal than both of these.
+
+A* manages this though, and returns the only possible path: start-r0-r1-goal, with a cost of 6.
