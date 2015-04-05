@@ -7,7 +7,7 @@
 /**
  * @namespace Top level namespace for collections, a TypeScript data structure library.
  */
-module collections {
+export module collections {
     
     var _hasOwnProperty = Object.prototype.hasOwnProperty;
     var has = function(obj, prop) {

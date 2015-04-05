@@ -1,7 +1,8 @@
 ///<reference path="../lib/node.d.ts"/>
-///<reference path="collections.d.ts"/>
+///<reference path="../lib/collections.d.ts"/>
 
-import C = require('./collections');
+import C = require('../lib/collections');
+
 import P = require('../test/AStar-euclidian');
 import A = require('../test/AStar-tryout-test');
 export module AS { // AStar

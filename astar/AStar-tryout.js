@@ -1,38 +1,82 @@
 ///<reference path="../lib/node.d.ts"/>
-///<reference path="collections.d.ts"/>
-var C = require('./collections');
+///<reference path="../lib/collections.d.ts"/>
+var C = require('../lib/collections');
 var AS;
 (function (AS) {
-    var Graph = (function () {
-        function Graph() {
-            this.table = [];
-        }
-        Graph.prototype.set = function (node) {
-            var k = key(node.state, node.cost);
-            this.table[k] = node;
-            return node;
-        };
-        Graph.prototype.get = function (k) {
-            return this.table[k];
-        };
-        return Graph;
-    })();
-    AS.Graph = Graph;
     function key(state, cost) {
         return state.toNumber() + cost;
     }
     AS.key = key;
-    var ANode = (function () {
-        function ANode(state, prev, next, cost) {
+    var PuzzleStateNode = (function () {
+        function PuzzleStateNode() {
+            this.next = null; // (ids) list of possible nodes to walk to
+        }
+        PuzzleStateNode.prototype.getNeighbours = function () {
+            if (this.next == null) {
+                this.createNeighbours();
+            }
+            return this.next;
+        };
+        PuzzleStateNode.prototype.createNeighbours = function () {
+            //find 0
+            var posx;
+            var posy;
+            for (var i = 0; i < 3; i++) {
+                for (var j = 0; j < 3; j++) {
+                    if (this.state.puzzle[i][j] == 0) {
+                        posx = i;
+                        posy = j;
+                        break;
+                    }
+                }
+            }
+            var ret = [];
+            /*      if(posx == 0){
+                //add new puzzleStates
+                var foo = switch(this.state, posx, posy, posx + 1, posy);
+                ret.push(switch(this.state, posx, posy, posx + 1, posy));
+                  } else if(posx == 2) {
+                ret.push(switch(state, posx, posy, posx - 1, posy));
+                  } else {
+                ret.push(switch(state, posx, posy, posx + 1, posy));
+                ret.push(switch(state, posx, posy, posx - 1, posy));
+                  }
+            
+                  if(posy == 0){
+                ret.push(switch(state, posx, posy, posx, posy +	1));
+                  } else if(posy == 2) {
+                ret.push(switch(state, posx, posy, posx, posy - 1));
+                  } else {
+                ret.push(switch(state, posx, posy, posx, posy + 1));
+                ret.push(switch(state, posx, posy, posx, posy - 1));
+                  }*/
+        };
+        PuzzleStateNode.prototype.switch = function (base, x1, y1, x2, y2) {
+            var tmp = base[x1][y1];
+            base[x1][y1] = base[x2][y2];
+            base[x2][y2] = tmp;
+            return base;
+        };
+        return PuzzleStateNode;
+    })();
+    AS.PuzzleStateNode = PuzzleStateNode;
+    var CityStateNode = (function () {
+        function CityStateNode(state, prev, next, cost) {
             if (cost === void 0) { cost = 0; }
             this.state = state;
             this.prev = prev;
             this.next = next;
             this.cost = cost;
         }
-        return ANode;
+        CityStateNode.prototype.setNeighbour = function (nNode, dist) {
+            this.next.push([nNode, dist]);
+        };
+        CityStateNode.prototype.getNeighbours = function () {
+            return this.next;
+        };
+        return CityStateNode;
     })();
-    AS.ANode = ANode;
+    AS.CityStateNode = CityStateNode;
     // http://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
     // Helper function to enable easier toNumber implementation for Heuristic type
     function hash(s) {
@@ -56,18 +100,19 @@ var AS;
      * TODO: If h satisfies the monotone restriction (h(m) - h(n) < cost(m, n))
      * then, A* with multiple path pruning always finds the shortest path to a goal.
      */
-    function search(start, goal, graph) {
+    function search(start, goal) {
         var frontier = new C.collections.PriorityQueue(compClosure(goal));
         frontier.enqueue(start);
         while (!frontier.isEmpty()) {
             var n = frontier.dequeue();
             if (n) {
                 if (n.state.match(goal)) {
-                    return path(n, graph);
+                    return path(n);
                 }
-                for (var i = 0; i < n.next.length; i++) {
-                    var _neighbour = graph.get(n.next[i]);
-                    frontier.enqueue(_neighbour);
+                var neighbours = n.getNeighbours();
+                for (var i = 0; i < neighbours.length; i++) {
+                    var _neighbour = neighbours[i];
+                    frontier.enqueue(_neighbour[0]);
                 }
             }
             else {
@@ -101,12 +146,12 @@ var AS;
     /*
      * extracts the path from the ANode back to start node
      */
-    function path(n, graph) {
+    function path(n) {
         var _path = [];
         var _n = n;
         while (_n != null) {
             _path.push(_n.state);
-            _n = graph.get(_n.prev);
+            _n = _n.prev;
         }
         return _path.reverse();
     }
