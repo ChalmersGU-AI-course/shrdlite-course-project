@@ -1,5 +1,8 @@
 A* - Python implementation
 ============================
+
+__The implementation of A* can be found in the `AStar` directory.__
+
 This AStar implementation finds the shortest path in a square grid, where there exists walls and edges with different weights.
 
 # Files
