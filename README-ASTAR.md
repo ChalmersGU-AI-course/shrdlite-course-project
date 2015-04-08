@@ -25,9 +25,6 @@ This file is the runner for the 8-puzzle. It creates a randomized board of varia
 ### tests/Astar.ts
 The unit tests for the A* implementation.
 
-## Examples
-
-
 ## Heuristics
 
 ### None
@@ -38,9 +35,3 @@ The number of bricks that are not in their target square.
 
 ### Manhattan distance
 Sum of the manhattan distance for each square. The manhattan distance of a square is the number of squares that it would have to move to get to its goal position given that no square can move diagonally.
-
-
-
-
-
-The file README-ASTAR should contain information about how to test your implementation on your example(s), plus a description of each file that are important for this lab. Furthermore, it should contain a description of the example(s) and the heuristics that you have used.
