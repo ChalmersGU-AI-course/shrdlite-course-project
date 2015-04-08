@@ -13,6 +13,7 @@ help:
 
 clean:
 	rm -f $(TSFILES:%.ts=%.js) *.map
+	rm -f test/*.js astar/*.js
 
 all: $(TARGETS)
 
@@ -23,3 +24,9 @@ $(TARGETS): %: shrdlite-%.js
 
 grammar.js: grammar.ne
 	nearleyc $< > $@
+
+test:
+	tsc --module commonjs test/*.ts
+	@./node_modules/.bin/mocha
+
+.PHONY: test

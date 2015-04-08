@@ -1,0 +1,34 @@
+{
+  "name": "shrdlite-course-project",
+  "version": "0.0.0",
+  "description": "A project in AI Chalmers-course",
+  "main": "shrdlite.html",
+  "directories": {
+    "doc": "doc",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/patriques82/shrdlite-course-project.git"
+  },
+  "keywords": [
+    "AI"
+  ],
+  "author": "TomyRO, patriques82, Meister-Asrael",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/patriques82/shrdlite-course-project/issues"
+  },
+  "homepage": "https://github.com/patriques82/shrdlite-course-project",
+  "devDependencies": {
+    "chai": "^2.1.2",
+    "mocha": "^2.2.1",
+    "should": "^5.2.0"
+  },
+  "dependencies": {
+    "libstl": "^0.1.20"
+  }
+}

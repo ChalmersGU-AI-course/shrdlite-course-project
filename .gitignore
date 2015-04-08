@@ -1,1 +1,7 @@
 shrdlite-*.js
+*.DS_Store
+node_modules/*
+test/*.js
+astar/*.js
+lib/collections.js
+npm-debug.log
