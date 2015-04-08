@@ -14,14 +14,6 @@ export module AStarEuclidian {
 
     heuristic(goal: PuzzleState) {
       var sum = 0;
-      // for (var i = 0; i < 3; i++) {
-      //   for (var j = 0; j < 3; j++) {
-      //     var nr = this.puzzle[i][j];
-      //     var x = this.puzzle[i][j] % 3;
-      //     var y = this.puzzle[i][j] / 3;
-      //     sum += Math.abs(i - x) + Math.abs(j - y); 
-      //   }
-      // }
       for (var i = 0; i < 3; i++) {
         for (var j = 0; j < 3; j++) {
           // dont count distance of empyty cell (0)
