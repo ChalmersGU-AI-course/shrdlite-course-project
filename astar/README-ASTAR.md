@@ -35,7 +35,7 @@ This file runs the test cases.
 Used for implementing a compare interface for use with the heap.
 
 ## Test cases
-We currently have 1 test case.
+We currently have 2 test cases.
 
 Test case 1 consists of 8 nodes, as seen in *figure 1*. It contains a start node and a goal node
 labeled *a* and *d* respectively. This test case has two main purposes. The first is to test that
@@ -58,3 +58,24 @@ correct/shortest path, which is *(a -> b -> c -> d)*. The heuristics for all the
 ![Test case 1](/astar/testCase1.png?raw=true)
 
 *Figure 1: A graph representing test case 1*
+
+Test case 2 consists of 9 nodes, as seen in *figure 2*. It contains a start node and a goal node
+labeled *a* and *c* respectively. The purpose of this test case is the demonstrate that a less accurate
+heuristic function can be used to find the optimal path as well as avoiding an unecessary detour.
+The optimal path is *(a -> i -> h -> g -> c)*. The heuristics for all the nodes are:
+
+| Label  | Heuristic |
+| ------------- | ------------- |
+| a | 2 |
+| b | 1 |
+| c | 0 |
+| d | 1 |
+| e | 2 |
+| f | 2 |
+| g | 1 |
+| h | 2 |
+| i | 3 |
+
+![Test case 2](/astar/testCase2.png?raw=true)
+
+*Figure 2: A graph representing test case 2*
