@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Astar lab</title>
+
+    <script type="text/javascript" src="lib/angular.min.js"></script>
+    <script type="text/javascript" src="lib/underscore-min.js"></script>
+    <script type="text/javascript" src="lib/collections.js"></script>
+    <script type="text/javascript" src="Astar.js"></script>
+    <script type="text/javascript" src="AstarLab.js"></script>
+    <script type="text/javascript" src="AstarLabApp.js"></script>
+
+    <style>
+    a {
+    	cursor: pointer;
+    	text-decoration: underline;
+    	color: blue;
+    }
+    .board {
+    	margin: 80px;
+    	white-space: nowrap;
+    }
+    .row {
+    	margin: 0;
+    	padding: 0;
+    }
+    .cell {
+    	display: inline-block;
+    	width: 50px;
+    	height: 50px;
+    	margin: 2px;
+    	padding: 0;
+    	font-size: 25px;
+    	text-align: center;
+    }
+    .cell-item {
+    	width: 100%;
+    	height: 100%;
+    	background-color: #dddddd;
+    }
+    .cell-empty {
+    	width: 100%;
+    	height: 100%;
+    	background-color: #888888;
+    }
+    </style>
+</head>
+<body ng-app="AstarLab">
+	<div ng-controller="AstarController">
+		<div class="board">
+			<div ng-repeat="row in boards[currentState].Rows" class="row">
+				<div ng-repeat="cell in row" class="cell">
+					<div ng-show="cell > 0" class="cell-item">
+						{{cell}}
+					</div>
+					<div ng-show="cell == 0" class="cell-empty">
+					&nbsp;
+					</div>
+				</div>
+			</div>
+			<a ng-click="prev()">&lt;</a> <input type="range" min="0" max="{{boards.length - 1}}" ng-model="currentState" /> <a ng-click="next()">&gt;</a> <br>
+		</div>
+
+
+		<label for="boardWidth">Board width</label>
+		<input type="number" min="3" max="5" ng-model="boardWidth" id="boardWidth" />
+		<br>
+
+		<label for="boardHeight">Board height</label>
+		<input type="number" min="3" max="5" ng-model="boardHeight" id="boardHeight" />
+		<br>
+
+		<label for="heuristic">Heuristic</label>
+		<select ng-options="heuristic.name for heuristic in heuristics" ng-model="selectedHeuristic"></select>
+		<br>
+
+		<a ng-click="randomize()">Randomize</a><br>
+		<a ng-click="plan()">Plan</a>
+		<ul>
+			<li>Number of steps: {{boards.length}}</li>
+			<li>Number of expanded nodes: {{numExpandedNodes}}</li>
+			<li>Time taken: {{timeTaken}} ms</li>
+		</ul>
+	</div>
+</body>
+</html>
