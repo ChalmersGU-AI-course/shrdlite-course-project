@@ -1,5 +1,5 @@
 ///<reference path="World.ts"/>
-///<reference path="lib/jquery.d.ts" />
+///<reference path="../lib/jquery.d.ts" />
 
 
 class SVGWorld implements World {

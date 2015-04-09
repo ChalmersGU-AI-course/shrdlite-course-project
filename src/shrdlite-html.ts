@@ -1,7 +1,7 @@
 ///<reference path="Shrdlite.ts"/>
 ///<reference path="SVGWorld.ts"/>
 ///<reference path="ExampleWorlds.ts"/>
-///<reference path="lib/jquery.d.ts" />
+///<reference path="../lib/jquery.d.ts" />
 
 var defaultWorld = 'small';
 var defaultSpeech = false;
