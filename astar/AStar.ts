@@ -65,29 +65,23 @@ module AStar {
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     // A* algorithm
+    //
+    // Arguments:
+    // s is the start node
+    // t is the final node
+    // nodes is a list of all our nodes
+    // heuristic is the heuristic function
+    //
+    // Returns a path (array of nodes)
 
     export function astar(s: Node, t : Node, nodes : Node[], heuristic: (Node)=>number) : Node[] {
 
-        /*
-        function getBest() : Node {
-            // Return Node in todo-list with minimum cost
-            return todo.reduce((currMin : Node, v : Node) => {
-                var vVal    = v.cost       + v.heuristic;
-                var minVal  = currMin.cost + currMin.heuristic;
-                return (vVal<=minVal)?v:currMin;
-            }, new Node(null,null,null,Infinity));
-        }
-        */
-
+        //Function that the heap uses to order itself
         var compFunc : collections.ICompareFunction<Node> = function(a:Node, b: Node){
-            return heuristic(a)-heuristic(b);
+            return (a.cost+heuristic(a))-(b.cost+heuristic(b));
         };
 
         var frontier : Heap<Node> = new Heap<Node>(compFunc);
-
-
-
-    //  var frontier : collections.PriorityQueue<Node> = new collections.PriorityQueue<Node>(compFunc);
 
         frontier.add(s);
 
@@ -113,14 +107,13 @@ module AStar {
                 if (newCost<=n.cost) {
                     n.cost     = newCost;
                     n.previous = v;
-                    frontier.update(); //Since we update a node the heap may be different
+                    frontier.update(); //Since we updated a node the heap may have a different order
                 }
             }
 
             // When we remove t from the frontier, we're done
             if (v === t) {
                 frontier.clear();
-                console.log("done!"+!frontier.isEmpty());
             } else {
                 done.push(v);
             }
@@ -131,6 +124,7 @@ module AStar {
         var path = [];
         var v = t;
         while (v !== s) {
+            console.log(v.label);
             path.unshift(v);
             if (!v.previous) {
                 console.log(v);
@@ -144,7 +138,11 @@ module AStar {
 
     /**
      * This class is copied from collections. We only did this to be able to provide the
-     * update function!
+     * update()-function!
+     *
+     *Everything is the same as the original.
+     *
+     * We have authored update(): void
      */
     export class Heap<T> {
         /**

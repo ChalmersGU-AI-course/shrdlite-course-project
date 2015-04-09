@@ -76,6 +76,8 @@ The optimal path is *(a -> i -> h -> g -> c)*. The heuristics for all the nodes 
 | h | 2 |
 | i | 3 |
 
+Which is simply the number of edges to the goal.
+
 ![Test case 2](/astar/testCase2.png?raw=true)
 
 *Figure 2: A graph representing test case 2*
