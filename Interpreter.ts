@@ -50,22 +50,26 @@ module Interpreter {
         // This returns a dummy interpretation involving two random objects in the world
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         
-        var interp : Literal [][];
         
+        /* Draft
+        var interp : Literal [][];
+         
+        
+        var obj : string [] = List of objects mentiond in cmd 
         obj.forech((object) => {
-            /* Draft
+
             if (state.isMember(Object))
             {
-                return "error no such object as:" ++ show(Object);
+                return "error no such object as:" ++ show(Object); // cmd mentions an object that soes not exsist
             }
             else
             {
-            
-          
+                // express cmd as a PDDL entry like a above b, a beside c , a below g
+                
+                
             }
-            */
                             });
-        
+         */
         
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
