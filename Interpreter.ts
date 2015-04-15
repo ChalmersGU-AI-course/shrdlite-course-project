@@ -49,6 +49,24 @@ module Interpreter {
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        
+        var interp : Literal [][];
+        
+        obj.forech((object) => {
+            /* Draft
+            if (state.isMember(Object))
+            {
+                return "error no such object as:" ++ show(Object);
+            }
+            else
+            {
+            
+          
+            }
+            */
+                            });
+        
+        
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
         var intprt : Literal[][] = [[
