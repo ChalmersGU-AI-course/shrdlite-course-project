@@ -229,20 +229,12 @@ function search<T>(comp : Compare<T>, f : Neighbours<T>, c : Cost<T>, h : Heuris
 */
 function postProcess<T>(order : Array<Vertex<T>>, finish : number) : T[]{
 
-    var stack = new collections.Stack<T>();
+    var result = Array<T>();
 
     for(var x : number = finish; x >= 0; x = order[x].previous){
-        stack.push(order[x].state);
-    }
-    // var str = "";
-    var result = Array<T>();
-    while(! stack.isEmpty()){
-        var s = stack.pop();
-        result.push(s);
-        // str = str + " " + s ;
+        result.unshift(order[x].state);
     }
     return result;
-    // return str ;
 }
 
 /**
