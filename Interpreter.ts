@@ -49,6 +49,28 @@ module Interpreter {
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        
+        
+        /* Draft
+        var interp : Literal [][];
+         
+        
+        var obj : string [] = List of objects mentiond in cmd 
+        obj.forech((object) => {
+
+            if (state.isMember(Object))
+            {
+                return "error no such object as:" ++ show(Object); // cmd mentions an object that soes not exsist
+            }
+            else
+            {
+                // express cmd as a PDDL entry like a above b, a beside c , a below g
+                
+                
+            }
+                            });
+         */
+        
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
         var intprt : Literal[][] = [[
