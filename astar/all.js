@@ -2365,15 +2365,7 @@ var astar;
         return QueueElement;
     })();
     function entryCompare(a, b) {
-        if (a.priority > b.priority) {
-            return -1;
-        }
-        else if (a.priority === b.priority) {
-            return 0;
-        }
-        else {
-            return 1;
-        }
+        return b.priority - a.priority;
     }
     var Result = (function () {
         function Result(found, path, visited) {

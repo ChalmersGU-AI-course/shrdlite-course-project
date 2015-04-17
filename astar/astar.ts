@@ -61,13 +61,7 @@ module astar {
     }
 
     function entryCompare(a: QueueElement, b: QueueElement): number {
-        if (a.priority > b.priority) {
-            return -1;
-        } else if (a.priority === b.priority) {
-            return 0;
-        } else {
-            return 1;
-        }
+	    return b.priority - a.priority;
     }
 
     export interface IHeuristic {
