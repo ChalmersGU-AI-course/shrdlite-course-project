@@ -10,7 +10,7 @@ module astar {
 
         constructor (data: INodeData) {
             if (data === null) {
-                console.log("Invalid argument!");
+                throw new Error("Invalid argument!");
             }
 
             this.data = data;
@@ -26,7 +26,7 @@ module astar {
 
         addNeighborNode(node: Node, distance: number) {
             if (node === null || distance === 0) {
-                console.log("Invalid argument!");
+                throw new Error("Invalid argument!");
                 return;
             }
 
@@ -51,7 +51,7 @@ module astar {
 
         constructor (path: Node[], cost: number, priority: number) {
             if (path === null) {
-                console.log("Invalid argument!");
+                throw new Error("Invalid argument!");
             }
 
             this.path = path;
@@ -90,7 +90,7 @@ module astar {
 
         addNode(node: Node) {
             if (node === null) {
-                console.log("Invalid argument!");
+                throw new Error("Invalid argument!");
                 return;
             }
 

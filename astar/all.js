@@ -2320,7 +2320,7 @@ var astar;
             this.neighbors = [];
             this.data = null;
             if (data === null) {
-                console.log("Invalid argument!");
+                throw new Error("Invalid argument!");
             }
             this.data = data;
         }
@@ -2332,7 +2332,7 @@ var astar;
         };
         Node.prototype.addNeighborNode = function (node, distance) {
             if (node === null || distance === 0) {
-                console.log("Invalid argument!");
+                throw new Error("Invalid argument!");
                 return;
             }
             this.neighbors.push(new Neighbor(node, distance));
@@ -2356,7 +2356,7 @@ var astar;
             this.cost = 0;
             this.priority = 0;
             if (path === null) {
-                console.log("Invalid argument!");
+                throw new Error("Invalid argument!");
             }
             this.path = path;
             this.cost = cost;
@@ -2387,7 +2387,7 @@ var astar;
         }
         Graph.prototype.addNode = function (node) {
             if (node === null) {
-                console.log("Invalid argument!");
+                throw new Error("Invalid argument!");
                 return;
             }
             this.nodes.push(node);
