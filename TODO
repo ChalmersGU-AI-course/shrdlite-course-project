@@ -1,0 +1,12 @@
+* Planner
+ - goal function
+ - tree creation: neighbor function
+* Interpretation
+ - syntax tree to PDDL tree
+
+ - A* with Set
+
+
+
+ * Questions
+  - World representation in PDDL: above <-> on top, on top
