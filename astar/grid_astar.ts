@@ -14,33 +14,44 @@ module grid_astar {
 
     export class DijkstraHeuristic implements astar.IHeuristic {
         
-        get(a: astar.Node, b: astar.Node): number {
+        get(a: astar.Node, b: astar.Node[]): number {
             return 0;
         }
     }
 
     export class EuclidianHeuristic implements astar.IHeuristic {
 
-        get(a: astar.Node, b: astar.Node): number {
+        get(a: astar.Node, b: astar.Node[]): number {
 
             var dataA = <NodeData>a.getData();
-            var dataB = <NodeData>b.getData();
-
-            return Math.sqrt(
-                Math.pow(dataA.x - dataB.x,2) +
-                Math.pow(dataA.y - dataB.y,2));
+            var minHeuristic = Infinity;
+            for (var i=0; i<b.length ; i++){
+                var dataB = <NodeData>b[i].getData();
+                var tmpHeuristic = Math.sqrt(
+                    Math.pow(dataA.x - dataB.x,2) +
+                    Math.pow(dataA.y - dataB.y,2));
+                if(tmpHeuristic<minHeuristic){
+                    minHeuristic = tmpHeuristic;
+                }
+            }
+            return minHeuristic;
         }
     }
 
     export class ManhattanHeuristic implements astar.IHeuristic {
 
-        get(a: astar.Node, b: astar.Node): number {
-
+        get(a: astar.Node, b: astar.Node[]): number {
             var dataA = <NodeData>a.getData();
-            var dataB = <NodeData>b.getData();
-
-            return Math.abs(dataA.x - dataB.x) +
-                Math.abs(dataA.y - dataB.y);
+            var minHeuristic = Infinity;
+            for (var i=0; i<b.length ; i++){
+                var dataB = <NodeData>b[i].getData();
+                var tmpHeuristic = Math.abs(dataA.x - dataB.x) +
+                                Math.abs(dataA.y - dataB.y);
+                if(tmpHeuristic<minHeuristic){
+                    minHeuristic = tmpHeuristic;
+                }
+            }
+            return  minHeuristic;
         }
     }
 

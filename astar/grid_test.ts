@@ -22,6 +22,7 @@ var grid =
 var tileSize = 20;
 var start = [5,4];
 var goal = [19,11];
+var goal2 = [10,13];
 
 window.onload = function() {
 	var canvas = document.getElementById("gridCanvas");
@@ -41,7 +42,8 @@ window.onload = function() {
 
 function toggleGridCell(x, y) {
 	if ((x == start[0] && y == start[1]) ||
-		(x == goal[0] && y == goal[1])) {
+		(x == goal[0] && y == goal[1]) ||
+		(x == goal2[0] && y == goal2[1])) {
 		return
 	}
 
@@ -88,12 +90,13 @@ function drawGrid(path, visited) {
 
 	context.fillStyle = "red";
 	context.fillRect(goal[0]*tileSize, goal[1]*tileSize, tileSize-1, tileSize-1);
+	context.fillRect(goal2[0]*tileSize, goal2[1]*tileSize, tileSize-1, tileSize-1);
 }
 
 function testHeuristic(heuristic) {
 	var gridGraph = grid_astar.createGraphFromGrid(grid, heuristic);
 	var startNode = gridGraph.nodes[start[1]][start[0]];
-	var goalNode = gridGraph.nodes[goal[1]][goal[0]];
+	var goalNode = [gridGraph.nodes[goal[1]][goal[0]],gridGraph.nodes[goal2[1]][goal2[0]]];
 	var result = gridGraph.graph.searchPath(startNode, goalNode);
 
 	drawGrid(result.path, result.visited);

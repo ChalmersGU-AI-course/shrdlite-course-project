@@ -2410,7 +2410,7 @@ var astar;
             while (queue.peek()) {
                 var currentElement = queue.dequeue();
                 var currentNode = currentElement.path[currentElement.path.length - 1];
-                if (currentNode === goal) {
+                if (goal.indexOf(currentNode) > -1) {
                     return new Result(true, currentElement.path, visited);
                 }
                 else {
@@ -2460,8 +2460,15 @@ var grid_astar;
         }
         EuclidianHeuristic.prototype.get = function (a, b) {
             var dataA = a.getData();
-            var dataB = b.getData();
-            return Math.sqrt(Math.pow(dataA.x - dataB.x, 2) + Math.pow(dataA.y - dataB.y, 2));
+            var minHeuristic = Infinity;
+            for (var i = 0; i < b.length; i++) {
+                var dataB = b[i].getData();
+                var tmpHeuristic = Math.sqrt(Math.pow(dataA.x - dataB.x, 2) + Math.pow(dataA.y - dataB.y, 2));
+                if (tmpHeuristic < minHeuristic) {
+                    minHeuristic = tmpHeuristic;
+                }
+            }
+            return minHeuristic;
         };
         return EuclidianHeuristic;
     })();
@@ -2471,8 +2478,15 @@ var grid_astar;
         }
         ManhattanHeuristic.prototype.get = function (a, b) {
             var dataA = a.getData();
-            var dataB = b.getData();
-            return Math.abs(dataA.x - dataB.x) + Math.abs(dataA.y - dataB.y);
+            var minHeuristic = Infinity;
+            for (var i = 0; i < b.length; i++) {
+                var dataB = b[i].getData();
+                var tmpHeuristic = Math.abs(dataA.x - dataB.x) + Math.abs(dataA.y - dataB.y);
+                if (tmpHeuristic < minHeuristic) {
+                    minHeuristic = tmpHeuristic;
+                }
+            }
+            return minHeuristic;
         };
         return ManhattanHeuristic;
     })();
@@ -2541,6 +2555,7 @@ var grid = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 var tileSize = 20;
 var start = [5, 4];
 var goal = [19, 11];
+var goal2 = [10, 13];
 window.onload = function () {
     var canvas = document.getElementById("gridCanvas");
     canvas.addEventListener("mousedown", function (event) {
@@ -2554,7 +2569,7 @@ window.onload = function () {
     drawGrid([], []);
 };
 function toggleGridCell(x, y) {
-    if ((x == start[0] && y == start[1]) || (x == goal[0] && y == goal[1])) {
+    if ((x == start[0] && y == start[1]) || (x == goal[0] && y == goal[1]) || (x == goal2[0] && y == goal2[1])) {
         return;
     }
     if (grid[y][x] == 0) {
@@ -2594,11 +2609,12 @@ function drawGrid(path, visited) {
     context.fillRect(start[0] * tileSize, start[1] * tileSize, tileSize - 1, tileSize - 1);
     context.fillStyle = "red";
     context.fillRect(goal[0] * tileSize, goal[1] * tileSize, tileSize - 1, tileSize - 1);
+    context.fillRect(goal2[0] * tileSize, goal2[1] * tileSize, tileSize - 1, tileSize - 1);
 }
 function testHeuristic(heuristic) {
     var gridGraph = grid_astar.createGraphFromGrid(grid, heuristic);
     var startNode = gridGraph.nodes[start[1]][start[0]];
-    var goalNode = gridGraph.nodes[goal[1]][goal[0]];
+    var goalNode = [gridGraph.nodes[goal[1]][goal[0]], gridGraph.nodes[goal2[1]][goal2[0]]];
     var result = gridGraph.graph.searchPath(startNode, goalNode);
     drawGrid(result.path, result.visited);
     var resultString = document.getElementById("info");

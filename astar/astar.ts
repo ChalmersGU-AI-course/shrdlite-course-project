@@ -71,7 +71,7 @@ module astar {
     }
 
     export interface IHeuristic {
-        get(a: Node, b: Node): number;
+        get(a: Node, b: Node[]): number;
     }
 
     export class Result {
@@ -103,7 +103,7 @@ module astar {
             this.nodes.push(node);
         }
 
-        searchPath(start: Node, goal: Node): Result {
+        searchPath(start: Node, goal: Node[]): Result {
 
             var queue = new collections.PriorityQueue<QueueElement>(entryCompare);
             var visited = [];
@@ -117,7 +117,7 @@ module astar {
                 var currentElement = queue.dequeue();
                 var currentNode = currentElement.path[currentElement.path.length-1];
 
-                if (currentNode === goal) {
+                if (goal.indexOf(currentNode) > -1) {
                     return new Result(true, currentElement.path, visited);
                 } else {
                     var neighbors = currentNode.getNeighbors();
