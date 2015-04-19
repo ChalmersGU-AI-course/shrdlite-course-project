@@ -43,7 +43,7 @@ module.exports = function (cost, h, neighbours, start, goal) {
     // When there are elements in the frontier, get the one with the lowest heuristic distance
     while (front.length > 0) {
         var elem = front.pop();
-        reverseMap.delete
+        reverseMap.delete(elem.node);
         evaluated.add(elem.node);
 
         // Finished, follow backlinks to reconstruct path.
