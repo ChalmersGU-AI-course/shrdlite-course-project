@@ -87,8 +87,12 @@ module Planner {
             var currStack = s.stacks[s.arm];
             var head : string = currStack[currStack.length-1];
             if(canSupport(s.holding, head)){
+
                 // Can drop here
+                // console.log(s.holding + " can support " + head);
                 result.push(performAction("d",s));
+            } else {
+                // console.log(s.holding + " can't support " + head);
             }
         }
 
@@ -123,9 +127,44 @@ module Planner {
         var objA : ObjectDefinition = worldDictionary[above];
         var objB : ObjectDefinition = worldDictionary[below];
 
+        if(objB.form == "floor"){
+            // The floor can support any object
+            return true;
+        }
+
+        var cs = compareSize(objB.size, objA.size);
+        if(cs < 0){
+            // No small object can support a large(r) one.
+            return false;
+        }
+
+        if(objA.form == "ball"){
+            // A ball can only be supported by the floor or a box.
+            return objB.form == "box";
+        }
+
+        if(objB.form == "ball"){
+            // A ball cannot support anything
+            return false;
+        }
+
         // TODO implement rules...
 
         return true;
+    }
+
+    /**
+    * Compares two sizes.
+    * returns positive if a > b, 0 if a == b and negative otherwise.
+    */
+    function compareSize(a : string, b : string) : number{
+        if (a == b){
+            return 0;
+        }
+        if( a == "large"){
+            return 1;
+        }
+        return -1;
     }
 
     function cloneState(s : State) : State{
