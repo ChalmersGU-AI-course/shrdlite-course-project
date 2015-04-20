@@ -46,17 +46,72 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        // This returns a dummy interpretation involving two random objects in the world
-        console.log("HEJSAN?");
-        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        var a = objs[getRandomInt(objs.length)];
-        var b = objs[getRandomInt(objs.length)];
-        var intprt : Literal[][] = [[
-            {pol: true, rel: "ontop", args: [a, "floor"]},
-            {pol: true, rel: "holding", args: [b]}
-        ]];
+
+        var intprt : Literal[][] = [];
+
+        switch(cmd.cmd){
+            case "take":
+                // console.log("Got take!");
+                var targets = findTargetEntities(cmd.ent, state);
+                for (var ix in targets){
+                    // console.log("Target: " + targets[ix]);
+                    intprt.push( [
+                        {pol: true, rel: "holding", args: [targets[ix]] }
+                    ] );
+                }
+                break;
+            case "move":
+                console.log("Got move! which is not implemented yet...");
+            default:
+                console.log("Interpreter: UNKNOWN cmd: " + cmd.cmd);
+        }
+
+        // var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        // var a = objs[getRandomInt(objs.length)];
+        // var b = objs[getRandomInt(objs.length)];
+
+        //  = [[
+        //     {pol: true, rel: "ontop", args: [a, "floor"]},
+        //     {pol: true, rel: "holding", args: [b]}
+        // ],[
+        //     {pol: true, rel: "ontop", args: [a, "floor"]},
+        //     {pol: true, rel: "ontop", args: [a, "floor"]},
+        //     {pol: true, rel: "ontop", args: [a, "floor"]}
+        // ]];
         return intprt;
+    }
+
+
+    function findTargetEntities(en : Parser.Entity, state : WorldState) : string[] {
+        var goalObj = en.obj;
+        var result : string[] = [];
+        for(var objName in state.objects){
+            var obj : ObjectDefinition = state.objects[objName];
+
+            if(goalObj.size){
+                if(goalObj.size != obj.size){
+                    // console.log("WRONG SIZE "+objName + ": " + obj.size);
+                    continue;
+                }
+            }
+            if(goalObj.color){
+                if(goalObj.color != obj.color){
+                    // console.log("WRONG COLOR "+objName + ": " + obj.color);
+                    continue;
+                }
+            }
+            if(goalObj.form){
+                if(goalObj.form != obj.form){
+                    // console.log("WRONG FORM "+ objName + ": " + obj.form);
+                    continue;
+                }
+            }
+            result.push(objName);
+            // console.log("Found one! "+ objName);
+        }
+        return result;
     }
 
 
