@@ -6,15 +6,15 @@
 function init(): void {
 
     //plot map
-    var canv = document.createElement("canvas");
-    canv.width = 600;
-    canv.height = 513;
-    $('#map').append(canv);
-    var mapCtx = canv.getContext('2d');
+    var mapCanvas = document.createElement("canvas");
+    mapCanvas.width = 600;
+    mapCanvas.height = 513;
+    $('#map').append(mapCanvas);
+    var mapCtx = mapCanvas.getContext('2d');
 
     var bild = new Image();
     bild.src = "europe.svg";
-    bild.onload = function () { mapCtx.drawImage(bild, 0, 0, 600, 513); };
+    bild.onload = function () { mapCtx.drawImage(bild, 0, 0, mapCanvas.width, mapCanvas.height); };
 
     for (var n in Europe.Nodes) {
         $('#from').append('<option>' + Europe.Nodes[n].name + '</option>');
