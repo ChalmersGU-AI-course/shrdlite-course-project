@@ -7,11 +7,11 @@ module Astar{
     /**
     * returns the neighbouring states from the current state.
     */
-    interface Neighbours<T>{
+    export interface Neighbours<T>{
         (state : T) : Neighb<T>[] ;
     }
 
-    interface Neighb<T>{
+    export interface Neighb<T>{
         state : T,
         action : string
     }
@@ -20,14 +20,14 @@ module Astar{
     * returns the cost of moving from stateA to stateB.
     * Assmues that stateB is a neighbour of stateA.
     */
-    interface Cost<T>{
+    export interface Cost<T>{
         (stateA : T, stateB : T) : number ;
     }
 
     /**
     * Heuristic function.
     */
-    interface Heuristic<T>{
+    export interface Heuristic<T>{
         (state : T) : number ;
     }
 
@@ -35,7 +35,7 @@ module Astar{
     * returns true iff the state is accepting, ie is a goal state.
     * Thus, there can be several goal states.
     */
-    interface Goal<T>{
+    export interface Goal<T>{
         (state : T) : boolean ;
     }
 
@@ -75,7 +75,7 @@ module Astar{
     *
     * returns a list of states, ie the lowest cost path from the initial state.
     */
-    function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T,
+    export function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T,
                       isGoal : Goal<T>, multiPathPruning : boolean = true,
                       maxIter : number = 25000 ) : string[]{
         var comp : Compare<T> = {
@@ -104,7 +104,7 @@ module Astar{
     *
     * returns a list of states, ie the a path from the initial state.
     */
-    function bestFirst<T>(f : Neighbours<T>, h : Heuristic<T>, start : T, isGoal : Goal<T>,
+    export function bestFirst<T>(f : Neighbours<T>, h : Heuristic<T>, start : T, isGoal : Goal<T>,
                           multiPathPruning : boolean = true, maxIter : number = 25000 ) : string[]{
         var c : Cost<T> = ((a,b)=>0);
         var comp : Compare<T> = {
@@ -133,7 +133,7 @@ module Astar{
     *
     * returns a list of states, ie the lowest cost path from the initial state.
     */
-    function lowestCost<T>(f : Neighbours<T>, c : Cost<T>, start : T, isGoal : Goal<T>,
+    export function lowestCost<T>(f : Neighbours<T>, c : Cost<T>, start : T, isGoal : Goal<T>,
                            multiPathPruning : boolean = true, maxIter : number = 25000 ) : string[]{
         var h : Heuristic<T> = (s => 0);
         var comp : Compare<T> = {
@@ -161,7 +161,7 @@ module Astar{
     *
     * returns a list of states, ie the lowest cost path from the initial state.
     */
-    function breadthFirst<T>(f : Neighbours<T>, start : T, isGoal : Goal<T>,
+    export function breadthFirst<T>(f : Neighbours<T>, start : T, isGoal : Goal<T>,
                            multiPathPruning : boolean = true, maxIter : number = 25000 ) : string[]{
         var c : Cost<T> = ((a,b)=>1);
         return lowestCost<T>(f, c, start, isGoal, multiPathPruning, maxIter);
