@@ -23,3 +23,6 @@ $(TARGETS): %: shrdlite-%.js
 
 grammar.js: grammar.ne
 	nearleyc $< > $@
+
+run: offline
+	node shrdlite-offline.js small "take a ball"

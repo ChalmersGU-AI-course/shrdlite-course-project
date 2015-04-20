@@ -46,6 +46,8 @@ module Planner {
         } while (state.stacks[pickstack].length == 0);
         var plan : string[] = [];
 
+        plan.push("Debug interpreter: " + intprt);
+
         // First move the arm to the leftmost nonempty stack
         if (pickstack < state.arm) {
             plan.push("Moving left");

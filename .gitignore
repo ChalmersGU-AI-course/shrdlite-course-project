@@ -3,3 +3,6 @@ shrdlite-*.js
 tsconfig.json
 
 Astar/*.js
+
+Planner.js
+Interpreter.js
