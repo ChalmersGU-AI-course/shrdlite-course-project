@@ -55,7 +55,7 @@ class SVGWorld implements World {
         dialogue: $('#dialogue'),
         inputform: $('#dialogue form'),
         userinput: $('#dialogue form input:text'),
-        inputexamples: $('#dialogue form select'),
+        inputexamples: $('#dialogue form select')
     };
 
     //////////////////////////////////////////////////////////////////////

@@ -7,6 +7,7 @@ module Interpreter {
     // exported functions, classes and interfaces/types
 
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
+
         var interpretations : Result[] = [];
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
@@ -48,15 +49,59 @@ module Interpreter {
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
+
+        // TODO: we should implement this function
+        // What should it return? The goal functions?
+        // Whatever we return here is only for our own benefit, in the planner
+
+
+        // We see here that an object simply has a one-letter identifier
+        console.log('stacks:', state.stacks);
+
+        console.log('cmd:',cmd);
+        // cmd.cmd: what to do ("move")
+        // cmd.ent: what object to do this with
+        // cmd.loc: where to put it (may be undefined, if cmd is e.g. "take"
+
+        // Map commands to functions
+        var handlerFns = {
+            "move": interpretMove,
+            "take": interpretTake
+            // TODO: add more
+        };
+
+        // Run associated function
+        var fn = handlerFns[cmd.cmd];
+        if (!fn) fn = interpretRandom;
+        var intprt = fn(cmd);
+
+        return intprt;
+    }
+
+    function interpretMove(cmd : Parser.Command, state : WorldState)  : Literal[][] {
+        console.log("interpretMove()");
+        // TODO
+        return [[]];
+    }
+
+    function interpretTake(cmd : Parser.Command, state : WorldState)  : Literal[][] {
+        // TODO
+        return [[]];
+    }
+
+    function interpretRandom(cmd : Parser.Command, state : WorldState) : Literal[][] {
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
+
         var intprt : Literal[][] = [[
             {pol: true, rel: "ontop", args: [a, "floor"]},
             {pol: true, rel: "holding", args: [b]}
         ]];
         return intprt;
     }
+
+
 
 
     function getRandomInt(max) {
