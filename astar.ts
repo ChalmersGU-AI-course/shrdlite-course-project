@@ -35,9 +35,6 @@ module AStar {
 			console.log("\tcurrent node: " + cur);
 			console.log("\tnext node: " + frontier.peek());
 			console.log("\tfrontier: ");
-			frontier.forEach( (elem) => {
-				console.log("\t\t"+elem);
-			});
 			counter++;
 		}
 		return null;
