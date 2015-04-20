@@ -49,13 +49,33 @@ module Interpreter {
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        //console.log("tttttttttttttst", state.objects["a"].color );
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
         var intprt : Literal[][] = [[
             {pol: true, rel: "ontop", args: [a, "floor"]},
             {pol: true, rel: "holding", args: [b]}
         ]];
+        
+        checkStm(cmd.ent.obj , state);
+        
         return intprt;
+    }
+    
+    function checkStm (objs : Parser.Object , state : WorldState ) : string{
+    		for(var i in state.objects){
+    			//console.log("hhhhhhhhhhhhhhhh" , objs.color);
+    			//console.log("hhhhhhhhhhhhhhhh" , );
+    			if(objs.color == state.objects[i].color && objs.form == state.objects[i].form ){
+    				
+    				console.log("hhhhhhhhhhhhhhhh" , i);
+    			}
+    			
+    		}
+    			//state.objects.forEach((parseresult) => {
+    	
+    	//}
+    	return ""
     }
 
 
