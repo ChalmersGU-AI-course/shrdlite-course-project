@@ -148,8 +148,34 @@ module Planner {
             return false;
         }
 
-        // TODO implement rules...
+        if(objB.form == "box"){
+            if(cs > 0){
+                return true;
+            }
+            // Same size, so cannot support box, pyramid or plank.
+            switch(objA.form){
+                case "box":
+                case "pyramid":
+                case "plank":
+                    return false;
+                default:
+                    return true;
+            }
+        }
 
+        if(objA.form == "box"){
+            if(objA.form == "large"){
+                // Large boxes cannot be supported by (large) pyramids
+                return objB.form != "pyramid";
+            } else {
+                // Small boxes cannot be supported by small bricks or pyramids
+                if(objB.form == "brick" || objB.form == "pyramid"){
+                    return objB.size != "small";
+                }
+            }
+        }
+
+        // Otherwise, can support
         return true;
     }
 
