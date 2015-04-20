@@ -12,8 +12,8 @@ module Astar{
     }
 
     export interface Neighb<T>{
-        state : T,
-        action : string
+        state : T ;
+        action : string ;
     }
 
     /**

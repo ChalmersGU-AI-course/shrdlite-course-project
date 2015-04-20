@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="Astar.ts"/>
 
 module Planner {
 
@@ -40,51 +41,90 @@ module Planner {
     // private functions
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
-        var plan : string[] = [];
+        //var plan : string[] = [];
+        var plan : string[] = ["r","p"];
 
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
-            }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
-            }
-        }
+        // console.log("There are " + state.stacks.length + " stacks in the world...");
 
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
+        // actions r l p d
+        //
+        // T == WordState
 
-        if (pickstack < state.stacks.length-1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
-                plan.push("r");
-            }
-
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
-                plan.push("l");
-            }
-        }
-
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
+        // performAction("r", {arm: 0, stacks: []});
+        // performAction("r", state);
+        console.log(neighbours(state));
 
         return plan;
     }
 
+    interface State{
+        arm : number;
+        holding: string;
+        stacks : string[][];
+    }
+
+    function neighbours(s : State) : Astar.Neighb<State>[]{
+        var result = [];
+        var numStacks = s.stacks.length;
+
+        if(s.arm > 0){
+            // Can move left
+            result.push(performAction("l",s));
+        }
+        if(s.arm < numStacks-1){
+            // Can move right
+            result.push(performAction("r",s));
+        }
+
+        if(s.holding == null){
+            if(s.stacks[s.arm].length>0){
+                // Can pick up
+                result.push(performAction("p",s));
+            }
+        } else {
+            // TODO check if can support
+            // Can drop here?
+        }
+
+        return result;
+    }
+
+    function performAction(action: string, state: State) : Astar.Neighb<State>{
+        var newState = cloneState(state);
+        // newState.arm = state.arm + 1;
+        // if(newState.arm === state.arm){
+        //     console.log("OOPS, doesnt work as I want!");
+        // } else {
+        //     console.log("Seems to work...");
+        // }
+        switch(action){
+            case "l":
+                newState.arm = state.arm - 1;
+                break;
+            case "r":
+                newState.arm = state.arm + 1;
+                break;
+            case "p":
+                newState.holding = newState.stacks[newState.arm].pop();
+                break;
+            case "d":
+                newState.stacks[newState.arm].push(newState.holding);
+                newState.holding = null;
+                break;
+            default:
+                console.log("ERROR: unknown action "+action);
+                return undefined;
+        }
+        return {state: newState, action: action};
+    }
+
+    function cloneState(s : State) : State{
+        var rs = [];
+        for(var i in s.stacks){
+            rs.push(s.stacks[i].slice());
+        }
+        return {arm: s.arm, holding: s.holding, stacks: rs};
+    }
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
