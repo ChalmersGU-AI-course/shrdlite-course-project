@@ -10,3 +10,9 @@
 
  * Questions
   - World representation in PDDL: above <-> on top, on top
+
+
+  * Idea for Heuristics
+  How deep is the object we want to move
+  -we are sure that this is an underestimate
+  -there is probably a better heuristic, but this one should be ok to begin with
