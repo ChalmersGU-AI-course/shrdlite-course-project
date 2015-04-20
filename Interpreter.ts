@@ -49,27 +49,22 @@ module Interpreter {
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        //var obj : string []  = List of objects mentiond in cmd 
         
-        
-        /* Draft
+        //Draft
         var interp : Literal [][];
-         
-        
-        var obj : string [] = List of objects mentiond in cmd 
-        obj.forech((object) => {
+        console.log(+23);
+        //console.log(cmd.ent.obj);
+        if (searchObj(cmd.ent.obj,state,objs) == 1)
+        {
+            console.log("found all objects");
+        }
+        else 
+        {
+            console.log("did not find requested objects");
+        }
 
-            if (state.isMember(Object))
-            {
-                return "error no such object as:" ++ show(Object); // cmd mentions an object that soes not exsist
-            }
-            else
-            {
-                // express cmd as a PDDL entry like a above b, a beside c , a below g
-                
-                
-            }
-                            });
-         */
+        
         
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
@@ -78,6 +73,40 @@ module Interpreter {
             {pol: true, rel: "holding", args: [b]}
         ]];
         return intprt;
+    }
+    
+    function searchObj(cmd : Parser.Object, state : WorldState,objs : string[]) : number
+    { 
+        console.log(cmd.obj);
+        var res :number = 0;
+        objs.forEach((object) => {
+            var temp : ObjectDefinition = state.objects[object];
+            console.log(temp.form + "    " + cmd.obj.form);
+            if(temp.form == cmd.obj.form || cmd.obj.form == null || cmd.obj.form == 'anyform'|| cmd.obj.form == 'floor')
+            {   console.log(temp.size + "    " + cmd.obj.size);
+                if(temp.size == cmd.obj.size || cmd.obj.size == null)
+                {console.log(temp.color + "    " + cmd.obj.color);
+                    if(temp.color == cmd.obj.color || cmd.obj.color == null)
+                    {
+                        if (typeof cmd.loc !== 'undefined') 
+                        {
+                            console.log("jumping to next level");
+                            res = searchObj(cmd.loc.ent,state,objs);
+                            console.log("result from bottom level " +res);
+                        }
+                        if(res == -1)
+                        {
+                            console.log("fail in loop");
+                            return -1;
+                        }
+                        console.log("exit success");
+                        return 1;
+                    }
+                }
+            }
+        });
+        //console.log(cmd);
+        return -1;
     }
 
 
