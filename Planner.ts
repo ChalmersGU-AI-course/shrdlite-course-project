@@ -40,11 +40,13 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+    var worldDictionary : {[s:string] : ObjectDefinition};
+
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         //var plan : string[] = [];
         var plan : string[] = ["r","p"];
 
-        // console.log("There are " + state.stacks.length + " stacks in the world...");
+        worldDictionary = state.objects;
 
         // actions r l p d
         //
@@ -82,8 +84,12 @@ module Planner {
                 result.push(performAction("p",s));
             }
         } else {
-            // TODO check if can support
-            // Can drop here?
+            var currStack = s.stacks[s.arm];
+            var head : string = currStack[currStack.length-1];
+            if(canSupport(s.holding, head)){
+                // Can drop here
+                result.push(performAction("d",s));
+            }
         }
 
         return result;
@@ -91,12 +97,7 @@ module Planner {
 
     function performAction(action: string, state: State) : Astar.Neighb<State>{
         var newState = cloneState(state);
-        // newState.arm = state.arm + 1;
-        // if(newState.arm === state.arm){
-        //     console.log("OOPS, doesnt work as I want!");
-        // } else {
-        //     console.log("Seems to work...");
-        // }
+
         switch(action){
             case "l":
                 newState.arm = state.arm - 1;
@@ -116,6 +117,15 @@ module Planner {
                 return undefined;
         }
         return {state: newState, action: action};
+    }
+
+    function canSupport(above: string, below: string) : boolean{
+        var objA : ObjectDefinition = worldDictionary[above];
+        var objB : ObjectDefinition = worldDictionary[below];
+
+        // TODO implement rules...
+
+        return true;
     }
 
     function cloneState(s : State) : State{
