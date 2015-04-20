@@ -53,10 +53,8 @@ module Interpreter {
 
         switch(cmd.cmd){
             case "take":
-                // console.log("Got take!");
                 var targets = findTargetEntities(cmd.ent, state);
                 for (var ix in targets){
-                    // console.log("Target: " + targets[ix]);
                     intprt.push( [
                         {pol: true, rel: "holding", args: [targets[ix]] }
                     ] );
@@ -67,19 +65,6 @@ module Interpreter {
             default:
                 console.log("Interpreter: UNKNOWN cmd: " + cmd.cmd);
         }
-
-        // var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        // var a = objs[getRandomInt(objs.length)];
-        // var b = objs[getRandomInt(objs.length)];
-
-        //  = [[
-        //     {pol: true, rel: "ontop", args: [a, "floor"]},
-        //     {pol: true, rel: "holding", args: [b]}
-        // ],[
-        //     {pol: true, rel: "ontop", args: [a, "floor"]},
-        //     {pol: true, rel: "ontop", args: [a, "floor"]},
-        //     {pol: true, rel: "ontop", args: [a, "floor"]}
-        // ]];
         return intprt;
     }
 
@@ -92,28 +77,24 @@ module Interpreter {
 
             if(goalObj.size){
                 if(goalObj.size != obj.size){
-                    // console.log("WRONG SIZE "+objName + ": " + obj.size);
                     continue;
                 }
             }
             if(goalObj.color){
                 if(goalObj.color != obj.color){
-                    // console.log("WRONG COLOR "+objName + ": " + obj.color);
                     continue;
                 }
             }
             if(goalObj.form){
                 if(goalObj.form != obj.form){
-                    // console.log("WRONG FORM "+ objName + ": " + obj.form);
                     continue;
                 }
             }
+            // TODO consider location for filtering as well!
             result.push(objName);
-            // console.log("Found one! "+ objName);
         }
         return result;
     }
-
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
