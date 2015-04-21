@@ -51,27 +51,20 @@ module Interpreter {
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
 
-        // TODO: we should implement this function
-        // What should it return? The goal functions?
-        // Whatever we return here is only for our own benefit, in the planner
-
-
-        // We see here that an object simply has a one-letter identifier
+        // Log interesting things
         console.log('state:',state);
         console.log('stacks:', state.stacks);
-
         console.log('cmd:',cmd);
+
         // cmd.cmd: what to do ("move")
-        // cmd.ent: what object to do this with
-        // cmd.loc: where to put it (may be undefined, if cmd is e.g. "take"
+        // cmd.ent: what object to do this with (may be undefined, if e.g. "drop")
+        // cmd.loc: where to put it (may be undefined, if cmd is e.g. "take")
 
         // For debugging, store in window object
         this.objects = state.objects;
 
-        {form: 'floor'}
-
-        // Create convenient representation (store objects in stacks, rather than id's)
-        var world : any = _.map(state.stacks, function (stack, i) {
+        // Create convenient world representation (store the objects in stacks, rather than id's)
+        var stacks : any = _.map(state.stacks, function (stack, i) {
             var newStack = _.map(stack, function (objId) {
                 // Add 'id' property to each object
                 return _.assign(state.objects[objId], {id: objId});
@@ -82,24 +75,18 @@ module Interpreter {
             newStack.unshift(floor);
             return newStack;
         });
-
-        var objects = concat(world);
-
-        // Old way
-        // (objectKeys still needed by old code, remove later)
-        var objectKeys : string[] = concat(state.stacks);
-        //var objectValues = _.map(objectKeys, function (objId) {return state.objects[objId]});
-        //var objects = _.zipObject(objectKeys, objectValues);
+        // Create array of all objects (also convenient)
+        var objects = concat(stacks);
 
         // Create PPDL representation
         // TODO: don't do it here; waste of CPU cycles
         var ppdlWorld : Literal[] = [];
-        for (var x in world) {
+        for (var x in stacks) {
             // Add constraints
-            for (var y = 0; y<world[x].length; y++) {
+            for (var y = 0; y<stacks[x].length; y++) {
                 // On top / inside
-                var obj     = world[x][y]
-                  , nextObj =world[x][y+1];
+                var obj     = stacks[x][y]
+                  , nextObj =stacks[x][y+1];
                 if (nextObj) {
                     var rel        = (obj.form == 'box') ? 'inside' : 'ontop'
                       , constraint = {pol: true, rel: rel, args: [nextObj.id, obj.id]};
@@ -108,22 +95,48 @@ module Interpreter {
             }
         }
 
-        console.log("world:",world);
+        console.log("stacks:",stacks);
         console.log("ppdlWorld:",ppdlWorld);
 
-        // Parse entity (if any)
-        var entities = findEntities(cmd.ent, objects, ppdlWorld);
+        var interpretations = [];
 
-        // Below: old code
-        var a = objectKeys[getRandomInt(objectKeys.length)];
-        var b = objectKeys[getRandomInt(objectKeys.length)];
+        if (cmd.cmd === 'move') {
+                // Which entity we should move
+            var entities        = findEntities(cmd.ent, objects, ppdlWorld)
+                // Where we should move it
+              , locations       = findEntities(cmd.loc.ent, objects, ppdlWorld)
+                // How entity will be positioned on location (ontop, inside, ...)
+              , rel             = cmd.loc.rel;
+            if (entities.length > 1 || locations.length > 1) {
+                console.warn('Interpreter warning: ambiguous entity or location!' +
+                'Returning multiple interpretations');
+            }
+            // Add all possible combinations of interpretations
+            for (var i in entities) {
+                for (var j in locations) {
+                    var entity         = entities[i]
+                      , location       = locations[j]
+                      , interpretation = {pol: true, rel: rel, args: [entity, location]};
+                    // in this case: only one PPDL goal => singleton list
+                    interpretations.push([interpretation]);
+                }
+            }
+        }
 
-        var intprt : Literal[][] = [[
-            {pol: true, rel: "ontop", args: [a, "floor"]},
-            {pol: true, rel: "holding", args: [b]}
-        ]];
+        else {
+            var objectKeys : string[] = concat(state.stacks);
+            // Below: old code
+            var a = objectKeys[getRandomInt(objectKeys.length)];
+            var b = objectKeys[getRandomInt(objectKeys.length)];
 
-        return intprt;
+            var intprt : Literal[][] = [[
+                {pol: true, rel: "ontop", args: [a, "floor"]},
+                {pol: true, rel: "holding", args: [b]}
+            ]];
+        }
+
+        console.log("returning",interpretations);
+        return interpretations;
     }
 
     // Finds one/many entities matching the description 'ent' from the parser
@@ -155,6 +168,7 @@ module Interpreter {
 
             // Parse only one thing (for now) asdf
             if (ent.quant === 'the') {
+                // TODO: Special case for floor?
                 return closeObjs; // TODO: conflict resolution?
             }
             if (ent.quant === 'any') {
@@ -163,13 +177,6 @@ module Interpreter {
         }
     }
 
-    // Finds one/many id's for locations matching the description 'loc' from the parser
-    function findLocations(loc : Parser.Location, objects, ppdlWorld) {
-        if (loc) {
-            // loc.ent: the object we should put [preposition]
-            // loc.rel: the preposition (ontop, inside, ...)
-        }
-    }
 
     //function hasConstraint(ppdlWorld, constraint) {
     //    return _.find(ppdlWorld, constraint);
