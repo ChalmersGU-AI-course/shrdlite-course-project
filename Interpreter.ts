@@ -68,13 +68,19 @@ module Interpreter {
         // For debugging, store in window object
         this.objects = state.objects;
 
+        {form: 'floor'}
+
         // Create convenient representation (store objects in stacks, rather than id's)
-        var world : any = _.map(state.stacks, function (stack) {
-            return _.map(stack, function (objId) {
+        var world : any = _.map(state.stacks, function (stack, i) {
+            var newStack = _.map(stack, function (objId) {
                 // Add 'id' property to each object
                 return _.assign(state.objects[objId], {id: objId});
                 //return state.objects[objId];
-            })
+            });
+            // Add floor objects at beginning of each stack
+            var floor = {form: 'floor', id: 'floor-'+i}
+            newStack.unshift(floor);
+            return newStack;
         });
 
         var objects = concat(world);
@@ -89,15 +95,7 @@ module Interpreter {
         // TODO: don't do it here; waste of CPU cycles
         var ppdlWorld : Literal[] = [];
         for (var x in world) {
-            if (world[x].length === 0) continue;
-
-            // Add floor constraint
-            var objId      = world[x][0].id
-              , floorId    = "floor-"+x
-              , constraint = {pol: true, rel: "ontop", args: [objId, floorId]};
-            ppdlWorld.push(constraint);
-
-            // Add rest of constraints
+            // Add constraints
             for (var y = 0; y<world[x].length; y++) {
                 // On top / inside
                 var obj     = world[x][y]
@@ -128,15 +126,14 @@ module Interpreter {
         return intprt;
     }
 
-    // TODO: find sensible type for objects (if needed)
-    // TODO: keep track of id
+    // Finds one/many entities matching the description 'ent' from the parser
+    // TODO: find sensible type for objects (if needed?)
     function findEntities(ent : Parser.Entity, objects, ppdlWorld) /* : Parser.Entity[] */ {
         if (ent) {
             var critLoc   = ent.obj.loc || null // entitiy's location (if specified)
               , critObj   = deleteNullProperties(ent.obj.obj || ent.obj) // description of entity
               , alikeObjs = _.filter(objects, critObj);
-            console.log('obj:', critObj);
-            console.log('alike objects:', alikeObjs);
+            console.log('obj:', critObj, 'alike objects:', alikeObjs);
 
             // Location specified for entity? Filter further
             var closeObjs = alikeObjs;
@@ -156,13 +153,21 @@ module Interpreter {
             }
 
 
-            // Parse only one thing (for now)
+            // Parse only one thing (for now) asdf
             if (ent.quant === 'the') {
                 return closeObjs; // TODO: conflict resolution?
             }
             if (ent.quant === 'any') {
                 return closeObjs;
             }
+        }
+    }
+
+    // Finds one/many id's for locations matching the description 'loc' from the parser
+    function findLocations(loc : Parser.Location, objects, ppdlWorld) {
+        if (loc) {
+            // loc.ent: the object we should put [preposition]
+            // loc.rel: the preposition (ontop, inside, ...)
         }
     }
 
@@ -184,7 +189,7 @@ module Interpreter {
     function hasBinaryConstraint(ppdlWorld, pol, rel, obj1, obj2) {
         var constraint = {pol: pol, rel: rel, args: [obj1.id, obj2.id]}
           , found      = _.find(ppdlWorld, constraint);
-        console.log("hasBinaryConstraint(): constraint:",constraint,"ppdlWorld",ppdlWorld,"found:",found);
+        // console.log("hasBinaryConstraint(): constraint:",constraint,"ppdlWorld",ppdlWorld,"found:",found);
         return found;
     }
 
