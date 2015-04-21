@@ -65,20 +65,56 @@ module Interpreter {
         // cmd.ent: what object to do this with
         // cmd.loc: where to put it (may be undefined, if cmd is e.g. "take"
 
+        // For debugging, store in window object
+        this.objects = state.objects;
 
-        var world = _.map(state.stacks, function (stack) {
+        // Create convenient representation (store objects in stacks, rather than id's)
+        var world : any = _.map(state.stacks, function (stack) {
             return _.map(stack, function (objId) {
-                return state.objects[objId];
+                // Add 'id' property to each object
+                return _.assign(state.objects[objId], {id: objId});
+                //return state.objects[objId];
             })
         });
 
+        var objects = concat(world);
+
+        // Old way
+        // (objectKeys still needed by old code, remove later)
         var objectKeys : string[] = concat(state.stacks);
-        var objectValues = _.map(objectKeys, function (objId) {return state.objects[objId]});
+        //var objectValues = _.map(objectKeys, function (objId) {return state.objects[objId]});
+        //var objects = _.zipObject(objectKeys, objectValues);
+
+        // Create PPDL representation
+        // TODO: don't do it here; waste of CPU cycles
+        var ppdlWorld : Literal[] = [];
+        for (var x in world) {
+            if (world[x].length === 0) continue;
+
+            // Add floor constraint
+            var objId      = world[x][0].id
+              , floorId    = "floor-"+x
+              , constraint = {pol: true, rel: "ontop", args: [objId, floorId]};
+            ppdlWorld.push(constraint);
+
+            // Add rest of constraints
+            for (var y = 0; y<world[x].length; y++) {
+                // On top / inside
+                var obj     = world[x][y]
+                  , nextObj =world[x][y+1];
+                if (nextObj) {
+                    var rel        = (obj.form == 'box') ? 'inside' : 'ontop'
+                      , constraint = {pol: true, rel: rel, args: [nextObj.id, obj.id]};
+                    ppdlWorld.push(constraint);
+                }
+            }
+        }
+
         console.log("world:",world);
-        var objects = _.zipObject(objectKeys, objectValues);
+        console.log("ppdlWorld:",ppdlWorld);
 
         // Parse entity (if any)
-        var entities = findEntities(cmd.ent, objects);
+        var entities = findEntities(cmd.ent, objects, ppdlWorld);
 
         // Below: old code
         var a = objectKeys[getRandomInt(objectKeys.length)];
@@ -94,7 +130,7 @@ module Interpreter {
 
     // TODO: find sensible type for objects (if needed)
     // TODO: keep track of id
-    function findEntities(ent : Parser.Entity, objects) /* : Parser.Entity[] */ {
+    function findEntities(ent : Parser.Entity, objects, ppdlWorld) /* : Parser.Entity[] */ {
         if (ent) {
             var critLoc   = ent.obj.loc || null // entitiy's location (if specified)
               , critObj   = deleteNullProperties(ent.obj.obj || ent.obj) // description of entity
@@ -105,15 +141,20 @@ module Interpreter {
             // Location specified for entity? Filter further
             var closeObjs = alikeObjs;
             if (critLoc) {
-                if (critLoc.rel === 'inside') {
-                    var boxes       = findEntities(critLoc.ent, objects)
+                if (critLoc.rel === 'inside' || critLoc.rel === 'ontop') {
+                    var boxes       = findEntities(critLoc.ent, objects, ppdlWorld)
+                      , rel         = critLoc.rel
                       , objsInBoxes = _.map(boxes, function (box) {
-                            return _.filter(alikeObjs, _.partial(isInside, objects, box));
+                            return _.filter(alikeObjs, _.partial(hasBinaryConstraint, ppdlWorld, true, rel, box));
                         });
                     closeObjs = concat(objsInBoxes);
+                } else {
+                    console.log("TODO: implement more relations! See rel value of ",critLoc);
                 }
+
+                console.log('close objects:', closeObjs);
             }
-            console.log('close objects:', closeObjs);
+
 
             // Parse only one thing (for now)
             if (ent.quant === 'the') {
@@ -125,10 +166,36 @@ module Interpreter {
         }
     }
 
+    //function hasConstraint(ppdlWorld, constraint) {
+    //    return _.find(ppdlWorld, constraint);
+    //}
+
+    // Checks if ppdlWorld has inside constraint
+    //function isInside(ppdlWorld, box, ent) {
+    //    // TODO
+    //    var constraint = newInside(true, ent.id, box.id)
+    //      , found      = _.find(ppdlWorld, constraint);
+    //    console.log("isInside(): constraint:",constraint,"ppdlWorld",ppdlWorld,"found:",found);
+    //    return found;
+    //}
+
+    // Checks if ppdlWorld has some binary constraint
+    // (Typically 'inside' or 'ontop')
+    function hasBinaryConstraint(ppdlWorld, pol, rel, obj1, obj2) {
+        var constraint = {pol: pol, rel: rel, args: [obj1.id, obj2.id]}
+          , found      = _.find(ppdlWorld, constraint);
+        console.log("hasBinaryConstraint(): constraint:",constraint,"ppdlWorld",ppdlWorld,"found:",found);
+        return found;
+    }
+
+
     // Checks if ent is inside box, in the world with objects 'objects'
-    function isInside(objects, box, ent) {
+    function isOntop(ppdlWorld, box, ent) {
         // TODO
-        return true;
+        var constraint = {pol: true, rel: 'inside', args: [ent.id, box.id]}
+            , found      = _.find(ppdlWorld, constraint);
+        //console.log("isInside(): constraint:",constraint,"ppdlWorld",ppdlWorld,"found:",found);
+        return found;
     }
 
 
