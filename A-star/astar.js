@@ -4,11 +4,6 @@ var Heap = require("collections/heap");
 var Map = require("collections/map");
 var Set = require("collections/set");
 
-
-function front_equals (a, b) {
-    return Object.equals(a.node, b.node);
-}
-
 function front_cmp (a, b) {
     return b.approx - a.approx;
 }
@@ -23,7 +18,7 @@ function front_cmp (a, b) {
 // Returns list of an optimal path or undefined if there is none.
 module.exports = function (cost, h, neighbours, start, goal) {
     // Frontier, heap map sorted by lowest approximated distance
-    var front = new Heap([], front_cmp, front_cmp);
+    var front = new Heap([], Object.equals, front_cmp);
     // Map of the elements to their object in the front.
     // Needed to update priority in O(log n)
     var reverseMap = new Map([], Object.equals, String);
