@@ -1,0 +1,32 @@
+* Mind-map
+
+- transparency
+  - decision trace
+  - open source algorithms
+  - neural networks (bostrom, yudkowsky 2011)
+  - verification
+
+- responsibilities
+  - programmer
+  - machine
+  - company
+
+- examples
+  - drones
+  - grades
+  - domstol
+  - employment
+  - war
+  - banks loans (bostrom 2013)
+  - political decisions
+
+- more fair than human decisions?
+
+- independent developers
+
+- they took our jobs
+
+* Our opinion
+
+we believe that it is a good thing to use machines to make decisions,
+machines can be more partial and better at judging the situation.
