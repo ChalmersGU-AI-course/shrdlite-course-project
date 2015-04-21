@@ -68,43 +68,92 @@ module Interpreter {
         return intprt;
     }
 
+    function checkRelation(obj : Parser.Object, loc : Parser.Location, state: WorldState) {
+	//find target
+	var targets : string[] = findValid(loc.ent.obj, state);
+	var valids  : string[] = [];
+	
+	for(var i = 0; i < targets.length; i++) {
+	    if(loc.rel == "ontop" && checkSize(obj, loc.ent.obj)) {
+		
+	    }
+	}
+	return valids;
+    }
+
+    function checkSize(above : Parser.Object, below : Parser.Object) : boolean {
+	if(below.form == "floor") {
+	    return true;
+	} else if (below.form == "ball") {
+	    return false;
+	} else if(above.form == "box" && above.size == "small" && 
+                  below.size == "small" && (below.form == "brick" || below.form == "pyramid")) {
+	    return false;
+	} else if(above.form == "box" && above.size == "large" && 
+                  below.form == "pyramid" && below.size == "large") {
+	    return false;
+	}
+	else if(above.size > below.size && (below.form == "box" || below.form == "pyramid") ) {
+	    return true;
+	}
+	else if(above.size >= below.size) {
+	    if((above.form == "ball" || above.form == "brick") && below.form == "box") {
+		return true;
+	    }
+	    
+	} 
+	return false;
+    }
+
 
     function findValid(obj : Parser.Object, state : WorldState) : string[]{
 	var valids : string[] = [];
 	if(obj.obj) { //If recursive
+	    //All obj matching the first obj in relation
 	    var valids2 : string[] = findValid(obj.obj, state);
+
+	    //All obj mathching the seconds obj in relation
 	    var valids3 : string[] = findValid(obj.loc.ent.obj , state);
-		for( var i = 0; i < valids3.length; i++) {
+
+	    //Finds all objs in valids that match the relationship
+	    for( var i = 0; i < valids3.length; i++) {
 		    
-		    var targetObjPos : Position = findObject(valids3[i], state);
-		    if(obj.loc.rel == "inside") {
-			var objAboveTarget : string = state.stacks[targetObjPos.x][targetObjPos.y + 1];
-			if((  objAboveTarget &&
-			    ((var yes = valids2.indexOf(objAboveTarget)) != -1) &&
-			      state.objects[objAboveTarget].size > state.objects[valids3[i]].size)) {
-			    valids.push(valids2[yes]);
-			}
+		var targetObjPos : Position = findObject(valids3[i], state);
+		if(obj.loc.rel == "inside" || obj.loc.rel == "ontop" ) {
+		    var objAboveTarget : string = state.stacks[targetObjPos.x][targetObjPos.y + 1];
+		    var yes : number = valids2.indexOf(objAboveTarget);
+		    if(objAboveTarget && yes != -1){
+			valids.push(valids2[yes]);
 		    }
 		}
-	    
+	    }
 
 	} else { //Base case
-	    
-	    for(var y in state.objects) {
-		if((obj.size  == state.objects[y].size  || obj.size  == null) &&
-		   (obj.form  == state.objects[y].form  || obj.form  == null) && 
-		   (obj.color == state.objects[y].color || obj.color == null)){
-		       valids.push(y);
+	    if(obj.form == "floor") {
+		for(var n = 0; n < state.stacks.length; n++) {
+		    valids.push("f_" + n);
 		}
-	    } 
+	    } else {
+		for(var y in state.objects) {
+		    if((obj.size  == state.objects[y].size  || obj.size  == null) &&
+		       (obj.form  == state.objects[y].form  || obj.form  == null) && 
+		       (obj.color == state.objects[y].color || obj.color == null)){
+			valids.push(y);
+		    }
+		} 
+	    }
 	}
 	return valids;
     }
 
 
+
     function findObject(key : string, state : WorldState) : Position {
+	if(key.indexOf("f_") != -1) {
+	    return {x:parseInt(key.charAt(2)), y:-1};
+	}
 	for(var i = 0; i < state.stacks.length; i++) {
-	    for(var j = 0; i < state.stacks[i].length; j++) {
+	    for(var j = 0; j < state.stacks[i].length; j++) {
 		if(key == state.stacks[i][j]) {
 		    return {x:i, y:j};
 		}
