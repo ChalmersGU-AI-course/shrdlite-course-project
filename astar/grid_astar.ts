@@ -2,35 +2,92 @@
 
 module grid_astar {
     
-    export class NodeData implements astar.INodeData {
+    export class Node implements astar.INode {
+        grid: number[][];
         x: number;
         y: number;
 
-        constructor(x, y) {
+        constructor(grid: number[][], x, y) {
+            this.grid = grid;
             this.x = x;
             this.y = y;
+        }
+
+        getUniqueId(): string {
+            return "x: " + this.x + " y: " + this.y;
+        }
+
+        getNeighbors(): astar.Neighbor[] {
+            var n: astar.Neighbor[] = [];
+
+            var height = grid.length;
+            var width = grid[0].length;
+
+            // west
+            if (this.x > 0) {
+                if (grid[this.y][this.x-1] === 0) {
+                    n.push(new astar.Neighbor(new Node(grid,this.x-1,this.y),1));
+                }
+            }
+            // east
+            if (this.x < width-1) {
+                if (grid[this.y][this.x+1] === 0) {
+                    n.push(new astar.Neighbor(new Node(grid,this.x+1,this.y),1));
+                }
+            }
+            // north
+            if (this.y > 0) {
+                if (grid[this.y-1][this.x] === 0) {
+                    n.push(new astar.Neighbor(new Node(grid,this.x,this.y-1),1));
+                }
+            }
+            // south
+            if (this.y < height-1) {
+                if (grid[this.y+1][this.x] === 0) {
+                    n.push(new astar.Neighbor(new Node(grid,this.x,this.y+1),1));
+                }
+            }
+
+            return n;
+        }
+    }
+
+    export class MultipleGoals implements astar.IGoal {
+        points: number[][];
+
+        constructor(points: number[][]) {
+            this.points = points;
+        }
+
+        isReached(node: astar.INode): boolean {
+            var n = <Node>node;
+
+            for (var i = 0; i < this.points.length; i++) {
+                if (n.x === this.points[i][0] && n.y === this.points[i][1]) {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 
     export class DijkstraHeuristic implements astar.IHeuristic {
-        
-        get(a: astar.Node, b: astar.Node[]): number {
+        get(node: astar.INode,goal: astar.IGoal): number {
             return 0;
         }
     }
 
     export class EuclidianHeuristic implements astar.IHeuristic {
-
-        get(a: astar.Node, b: astar.Node[]): number {
-
-            var dataA = <NodeData>a.getData();
+        get(node: astar.INode,goal: astar.IGoal): number {
+            var n = <Node>node;
+            var g = <MultipleGoals>goal;
             var minHeuristic = Infinity;
-            for (var i=0; i<b.length ; i++){
-                var dataB = <NodeData>b[i].getData();
+            for (var i = 0; i< g.points.length; i++) {
                 var tmpHeuristic = Math.sqrt(
-                    Math.pow(dataA.x - dataB.x,2) +
-                    Math.pow(dataA.y - dataB.y,2));
-                if(tmpHeuristic<minHeuristic){
+                    Math.pow(n.x - g.points[i][0],2) +
+                    Math.pow(n.y - g.points[i][1],2));
+                if (tmpHeuristic < minHeuristic) {
                     minHeuristic = tmpHeuristic;
                 }
             }
@@ -39,84 +96,18 @@ module grid_astar {
     }
 
     export class ManhattanHeuristic implements astar.IHeuristic {
-
-        get(a: astar.Node, b: astar.Node[]): number {
-            var dataA = <NodeData>a.getData();
+        get(node: astar.INode,goal: astar.IGoal): number {
+            var n = <Node>node;
+            var g = <MultipleGoals>goal;
             var minHeuristic = Infinity;
-            for (var i=0; i<b.length ; i++){
-                var dataB = <NodeData>b[i].getData();
-                var tmpHeuristic = Math.abs(dataA.x - dataB.x) +
-                                Math.abs(dataA.y - dataB.y);
-                if(tmpHeuristic<minHeuristic){
+            for (var i = 0; i< g.points.length; i++) {
+                var tmpHeuristic =  Math.abs(n.x - g.points[i][0]) +
+                                    Math.abs(n.y - g.points[i][1]);
+                if (tmpHeuristic < minHeuristic) {
                     minHeuristic = tmpHeuristic;
                 }
             }
-            return  minHeuristic;
+            return minHeuristic;
         }
-    }
-
-    export function createGraphFromGrid(grid, heuristics) {
-        var height = grid.length;
-        var width = grid[1].length;
-
-        // create nodes based on given grid
-        var a = new astar.Graph(heuristics);
-        var gridNodes = [];
-
-        for (var y = 0; y < height; y++) {
-            gridNodes.push([]);
-
-            for (var x = 0; x < width; x++) {
-                gridNodes[y].push(null);
-
-                if (grid[y][x] === 0) {
-                    // Walkable cell, create node at this coordinate
-                    var node = new astar.Node(new NodeData(x,y));
-                    gridNodes[y][x] = node;
-                    a.addNode(node);
-                }
-            }
-        }
-
-        // set neighbors
-        for (var x = 0; x < width; x++) {
-            for (var y = 0; y < height; y++) {
-                // add neighbors if node exists
-                var current = gridNodes[y][x];
-
-                if (current !== null) {
-                    // west
-                    if (x > 0) {
-                        var n = gridNodes[y][x-1];
-                        if (n) {
-                            current.addNeighborNode(n, 1);
-                        }
-                    }
-                    // east
-                    if (x < width-1) {
-                        var n = gridNodes[y][x+1];
-                        if (n) {
-                            current.addNeighborNode(n, 1);
-                        }
-                    }
-                    // north
-                    if (y > 0) {
-                        var n = gridNodes[y-1][x];
-                        if (n) {
-                            current.addNeighborNode(n, 1);
-                        }
-                    }
-                    // south
-                    if (y < height-1) {
-                        var n = gridNodes[y+1][x];
-                        if (n) {
-                            current.addNeighborNode(n, 1);
-                        }
-                    }
-                }
-            }
-        }
-
-        return { graph: a, nodes: gridNodes };
     }
 }

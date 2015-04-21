@@ -2,54 +2,31 @@
 
 module astar {
 
-    export interface INodeData {}
-
-    export class Node {
-        private neighbors: Neighbor[] = [];
-        private data: INodeData = null;
-
-        constructor (data: INodeData) {
-            if (data === null) {
-                throw new Error("Invalid argument!");
-            }
-
-            this.data = data;
-        }
-
-        getData(): INodeData {
-            return this.data;
-        }
-
-        getNeighbors(): Neighbor[] {
-            return this.neighbors;
-        }
-
-        addNeighborNode(node: Node, distance: number) {
-            if (node === null || distance === 0) {
-                throw new Error("Invalid argument!");
-                return;
-            }
-
-            this.neighbors.push(new Neighbor(node, distance));
-        }
+    export interface INode {
+        getUniqueId(): string;
+        getNeighbors(): Neighbor[];
     }
 
     export class Neighbor {
-        node: Node = null;
+        node: INode = null;
         distance: number = 0;
 
-        constructor (node: Node, distance: number) {
+        constructor(node: INode, distance: number) {
+            if (node === null) {
+                throw new Error("Invalid argument!");
+            }
+
             this.node = node;
             this.distance = distance;
         }
     }
 
     class QueueElement {
-        path: Node[] = [];
+        path: INode[] = [];
         cost: number = 0;
         priority: number = 0;
 
-        constructor (path: Node[], cost: number, priority: number) {
+        constructor (path: INode[], cost: number, priority: number) {
             if (path === null) {
                 throw new Error("Invalid argument!");
             }
@@ -65,15 +42,19 @@ module astar {
     }
 
     export interface IHeuristic {
-        get(a: Node, b: Node[]): number;
+        get(node: INode,goal: IGoal): number;
+    }
+
+    export interface IGoal {
+        isReached(node: INode): boolean;
     }
 
     export class Result {
         found: boolean = false;
-        path: Node[] = [];
-        visited: Node[] = [];
+        path: INode[] = [];
+        visited: INode[] = [];
 
-        constructor(found: boolean, path: Node[], visited: Node[]) {
+        constructor(found: boolean, path: INode[], visited: INode[]) {
             this.found = found;
             this.path = path;
             this.visited = visited;
@@ -82,37 +63,27 @@ module astar {
 
     export class Graph {
         private heuristic: IHeuristic = null;
-        private nodes: Node[] = [];
+        private goal: IGoal = null;
 
-        constructor(heuristic: IHeuristic) {
+        constructor(heuristic: IHeuristic, goal: IGoal) {
             this.heuristic = heuristic;
+            this.goal = goal;
         }
 
-        addNode(node: Node) {
-            if (node === null) {
-                throw new Error("Invalid argument!");
-                return;
-            }
-
-            this.nodes.push(node);
-        }
-
-        searchPath(start: Node, goal: Node[]): Result {
+        searchPath(start: INode): Result {
 
             var queue = new collections.PriorityQueue<QueueElement>(entryCompare);
-            var visited = [];
-            var visitedCost = [];
+            var visited = new collections.Dictionary<INode,number>(function(node: INode) { return node.getUniqueId(); });
 
-            queue.enqueue(new QueueElement([start],0,this.heuristic.get(start,goal)));
-            visited.push(start);
-            visitedCost.push(0);
+            queue.enqueue(new QueueElement([start],0,this.heuristic.get(start,this.goal)));
+            visited.setValue(start,0);
 
             while (queue.peek()) {
                 var currentElement = queue.dequeue();
                 var currentNode = currentElement.path[currentElement.path.length-1];
 
-                if (goal.indexOf(currentNode) > -1) {
-                    return new Result(true, currentElement.path, visited);
+                if (this.goal.isReached(currentNode)) {
+                    return new Result(true, currentElement.path, visited.keys());
                 } else {
                     var neighbors = currentNode.getNeighbors();
 
@@ -121,22 +92,19 @@ module astar {
                         var neighbor = neighbors[i];
                         var newCost = currentElement.cost + neighbor.distance;
 
-                        var firstOccurance = visited.indexOf(neighbor.node);
-
-                        if (firstOccurance === -1 || newCost < visitedCost[firstOccurance])
+                        if (!visited.containsKey(neighbor.node) || newCost < visited.getValue(neighbor.node))
                         {
-                            var newPriority = newCost + this.heuristic.get(neighbor.node, goal);
+                            var newPriority = newCost + this.heuristic.get(neighbor.node,this.goal);
                             var newPath = currentElement.path.concat(neighbor.node);
                             
                             queue.enqueue(new QueueElement(newPath, newCost, newPriority));
-                            visited.push(neighbor.node);
-                            visitedCost.push(newCost);
+                            visited.setValue(neighbor.node,newCost);
                         }
                     }
                 }
             }
 
-            return new Result(false, [], visited);
+            return new Result(false, [], visited.keys());
         }
     }
 }

@@ -21,7 +21,7 @@ var grid =
 
 var tileSize = 20;
 var start = [5,4];
-var goal = [19,11];
+var goal1 = [19,11];
 var goal2 = [10,13];
 
 window.onload = function() {
@@ -34,20 +34,20 @@ window.onload = function() {
 		var cellY = Math.floor(y / tileSize);
 
 		toggleGridCell(cellX, cellY);
-		drawGrid([],[]);
+		testEuclidean();
 	}, false);
 
-	drawGrid([],[]);
+	testEuclidean();
 };
 
 function toggleGridCell(x, y) {
-	if ((x == start[0] && y == start[1]) ||
-		(x == goal[0] && y == goal[1]) ||
-		(x == goal2[0] && y == goal2[1])) {
-		return
+	if ((x === start[0] && y === start[1]) ||
+		(x === goal1[0] && y === goal1[1]) ||
+		(x === goal2[0] && y === goal2[1])) {
+		return;
 	}
 
-	if (grid[y][x] == 0) {
+	if (grid[y][x] === 0) {
 		grid[y][x] = 1;
 	} else {
 		grid[y][x] = 0;
@@ -76,28 +76,28 @@ function drawGrid(path, visited) {
 	for (var i = 0; i < visited.length; i++) {
 		var current = visited[i];
 		context.fillStyle = "lightgreen";
-		context.fillRect(current.data.x*tileSize, current.data.y*tileSize, tileSize-1, tileSize-1)
+		context.fillRect(current.x*tileSize, current.y*tileSize, tileSize-1, tileSize-1)
 	}
 
 	for (var i = 0; i < path.length; i++) {
 		var current = path[i];
 		context.fillStyle = "green";
-		context.fillRect(current.data.x*tileSize, current.data.y*tileSize, tileSize-1, tileSize-1)
+		context.fillRect(current.x*tileSize, current.y*tileSize, tileSize-1, tileSize-1)
 	}
 
 	context.fillStyle = "yellow";
 	context.fillRect(start[0]*tileSize, start[1]*tileSize, tileSize-1, tileSize-1);
 
 	context.fillStyle = "red";
-	context.fillRect(goal[0]*tileSize, goal[1]*tileSize, tileSize-1, tileSize-1);
+	context.fillRect(goal1[0]*tileSize, goal1[1]*tileSize, tileSize-1, tileSize-1);
 	context.fillRect(goal2[0]*tileSize, goal2[1]*tileSize, tileSize-1, tileSize-1);
 }
 
 function testHeuristic(heuristic) {
-	var gridGraph = grid_astar.createGraphFromGrid(grid, heuristic);
-	var startNode = gridGraph.nodes[start[1]][start[0]];
-	var goalNode = [gridGraph.nodes[goal[1]][goal[0]],gridGraph.nodes[goal2[1]][goal2[0]]];
-	var result = gridGraph.graph.searchPath(startNode, goalNode);
+	var graphGoal = new grid_astar.MultipleGoals([goal1,goal2]);
+	var graph = new astar.Graph(heuristic, graphGoal);
+	var graphStart = new grid_astar.Node(grid,start[0],start[1]);
+	var result = graph.searchPath(graphStart);
 
 	drawGrid(result.path, result.visited);
 
@@ -109,6 +109,11 @@ function testHeuristic(heuristic) {
 	}
 }
 
+function testDijkstra(){
+	//test graph with no heuristics
+	testHeuristic(new grid_astar.DijkstraHeuristic());
+}
+
 function testEuclidean(){
 	//test graph with Euclidean distance
 	testHeuristic(new grid_astar.EuclidianHeuristic());
@@ -117,9 +122,4 @@ function testEuclidean(){
 function testManhattan(){
 	//test graph with Manhattan distance
 	testHeuristic(new grid_astar.ManhattanHeuristic());
-}
-
-function testDijkstra(){
-	//test graph with no heuristics
-	testHeuristic(new grid_astar.DijkstraHeuristic());
 }

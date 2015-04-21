@@ -2315,35 +2315,13 @@ var collections;
 /// <reference path="collections.ts" />
 var astar;
 (function (astar) {
-    var Node = (function () {
-        function Node(data) {
-            this.neighbors = [];
-            this.data = null;
-            if (data === null) {
-                throw new Error("Invalid argument!");
-            }
-            this.data = data;
-        }
-        Node.prototype.getData = function () {
-            return this.data;
-        };
-        Node.prototype.getNeighbors = function () {
-            return this.neighbors;
-        };
-        Node.prototype.addNeighborNode = function (node, distance) {
-            if (node === null || distance === 0) {
-                throw new Error("Invalid argument!");
-                return;
-            }
-            this.neighbors.push(new Neighbor(node, distance));
-        };
-        return Node;
-    })();
-    astar.Node = Node;
     var Neighbor = (function () {
         function Neighbor(node, distance) {
             this.node = null;
             this.distance = 0;
+            if (node === null) {
+                throw new Error("Invalid argument!");
+            }
             this.node = node;
             this.distance = distance;
         }
@@ -2380,48 +2358,40 @@ var astar;
     })();
     astar.Result = Result;
     var Graph = (function () {
-        function Graph(heuristic) {
+        function Graph(heuristic, goal) {
             this.heuristic = null;
-            this.nodes = [];
+            this.goal = null;
             this.heuristic = heuristic;
+            this.goal = goal;
         }
-        Graph.prototype.addNode = function (node) {
-            if (node === null) {
-                throw new Error("Invalid argument!");
-                return;
-            }
-            this.nodes.push(node);
-        };
-        Graph.prototype.searchPath = function (start, goal) {
+        Graph.prototype.searchPath = function (start) {
             var queue = new collections.PriorityQueue(entryCompare);
-            var visited = [];
-            var visitedCost = [];
-            queue.enqueue(new QueueElement([start], 0, this.heuristic.get(start, goal)));
-            visited.push(start);
-            visitedCost.push(0);
+            var visited = new collections.Dictionary(function (node) {
+                return node.getUniqueId();
+            });
+            queue.enqueue(new QueueElement([start], 0, this.heuristic.get(start, this.goal)));
+            visited.setValue(start, 0);
             while (queue.peek()) {
                 var currentElement = queue.dequeue();
                 var currentNode = currentElement.path[currentElement.path.length - 1];
-                if (goal.indexOf(currentNode) > -1) {
-                    return new Result(true, currentElement.path, visited);
+                if (this.goal.isReached(currentNode)) {
+                    return new Result(true, currentElement.path, visited.keys());
                 }
                 else {
                     var neighbors = currentNode.getNeighbors();
                     for (var i = 0; i < neighbors.length; i++) {
                         var neighbor = neighbors[i];
                         var newCost = currentElement.cost + neighbor.distance;
-                        var firstOccurance = visited.indexOf(neighbor.node);
-                        if (firstOccurance === -1 || newCost < visitedCost[firstOccurance]) {
-                            var newPriority = newCost + this.heuristic.get(neighbor.node, goal);
+                        if (!visited.containsKey(neighbor.node) || newCost < visited.getValue(neighbor.node)) {
+                            var newPriority = newCost + this.heuristic.get(neighbor.node, this.goal);
                             var newPath = currentElement.path.concat(neighbor.node);
                             queue.enqueue(new QueueElement(newPath, newCost, newPriority));
-                            visited.push(neighbor.node);
-                            visitedCost.push(newCost);
+                            visited.setValue(neighbor.node, newCost);
                         }
                     }
                 }
             }
-            return new Result(false, [], visited);
+            return new Result(false, [], visited.keys());
         };
         return Graph;
     })();
@@ -2430,18 +2400,68 @@ var astar;
 /// <reference path="astar.ts" />
 var grid_astar;
 (function (grid_astar) {
-    var NodeData = (function () {
-        function NodeData(x, y) {
+    var Node = (function () {
+        function Node(grid, x, y) {
+            this.grid = grid;
             this.x = x;
             this.y = y;
         }
-        return NodeData;
+        Node.prototype.getUniqueId = function () {
+            return "x: " + this.x + " y: " + this.y;
+        };
+        Node.prototype.getNeighbors = function () {
+            var n = [];
+            var height = grid.length;
+            var width = grid[0].length;
+            // west
+            if (this.x > 0) {
+                if (grid[this.y][this.x - 1] === 0) {
+                    n.push(new astar.Neighbor(new Node(grid, this.x - 1, this.y), 1));
+                }
+            }
+            // east
+            if (this.x < width - 1) {
+                if (grid[this.y][this.x + 1] === 0) {
+                    n.push(new astar.Neighbor(new Node(grid, this.x + 1, this.y), 1));
+                }
+            }
+            // north
+            if (this.y > 0) {
+                if (grid[this.y - 1][this.x] === 0) {
+                    n.push(new astar.Neighbor(new Node(grid, this.x, this.y - 1), 1));
+                }
+            }
+            // south
+            if (this.y < height - 1) {
+                if (grid[this.y + 1][this.x] === 0) {
+                    n.push(new astar.Neighbor(new Node(grid, this.x, this.y + 1), 1));
+                }
+            }
+            return n;
+        };
+        return Node;
     })();
-    grid_astar.NodeData = NodeData;
+    grid_astar.Node = Node;
+    var MultipleGoals = (function () {
+        function MultipleGoals(points) {
+            this.points = points;
+        }
+        MultipleGoals.prototype.isReached = function (node) {
+            var n = node;
+            for (var i = 0; i < this.points.length; i++) {
+                if (n.x === this.points[i][0] && n.y === this.points[i][1]) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        return MultipleGoals;
+    })();
+    grid_astar.MultipleGoals = MultipleGoals;
     var DijkstraHeuristic = (function () {
         function DijkstraHeuristic() {
         }
-        DijkstraHeuristic.prototype.get = function (a, b) {
+        DijkstraHeuristic.prototype.get = function (node, goal) {
             return 0;
         };
         return DijkstraHeuristic;
@@ -2450,12 +2470,12 @@ var grid_astar;
     var EuclidianHeuristic = (function () {
         function EuclidianHeuristic() {
         }
-        EuclidianHeuristic.prototype.get = function (a, b) {
-            var dataA = a.getData();
+        EuclidianHeuristic.prototype.get = function (node, goal) {
+            var n = node;
+            var g = goal;
             var minHeuristic = Infinity;
-            for (var i = 0; i < b.length; i++) {
-                var dataB = b[i].getData();
-                var tmpHeuristic = Math.sqrt(Math.pow(dataA.x - dataB.x, 2) + Math.pow(dataA.y - dataB.y, 2));
+            for (var i = 0; i < g.points.length; i++) {
+                var tmpHeuristic = Math.sqrt(Math.pow(n.x - g.points[i][0], 2) + Math.pow(n.y - g.points[i][1], 2));
                 if (tmpHeuristic < minHeuristic) {
                     minHeuristic = tmpHeuristic;
                 }
@@ -2468,12 +2488,12 @@ var grid_astar;
     var ManhattanHeuristic = (function () {
         function ManhattanHeuristic() {
         }
-        ManhattanHeuristic.prototype.get = function (a, b) {
-            var dataA = a.getData();
+        ManhattanHeuristic.prototype.get = function (node, goal) {
+            var n = node;
+            var g = goal;
             var minHeuristic = Infinity;
-            for (var i = 0; i < b.length; i++) {
-                var dataB = b[i].getData();
-                var tmpHeuristic = Math.abs(dataA.x - dataB.x) + Math.abs(dataA.y - dataB.y);
+            for (var i = 0; i < g.points.length; i++) {
+                var tmpHeuristic = Math.abs(n.x - g.points[i][0]) + Math.abs(n.y - g.points[i][1]);
                 if (tmpHeuristic < minHeuristic) {
                     minHeuristic = tmpHeuristic;
                 }
@@ -2483,70 +2503,13 @@ var grid_astar;
         return ManhattanHeuristic;
     })();
     grid_astar.ManhattanHeuristic = ManhattanHeuristic;
-    function createGraphFromGrid(grid, heuristics) {
-        var height = grid.length;
-        var width = grid[1].length;
-        // create nodes based on given grid
-        var a = new astar.Graph(heuristics);
-        var gridNodes = [];
-        for (var y = 0; y < height; y++) {
-            gridNodes.push([]);
-            for (var x = 0; x < width; x++) {
-                gridNodes[y].push(null);
-                if (grid[y][x] === 0) {
-                    // Walkable cell, create node at this coordinate
-                    var node = new astar.Node(new NodeData(x, y));
-                    gridNodes[y][x] = node;
-                    a.addNode(node);
-                }
-            }
-        }
-        for (var x = 0; x < width; x++) {
-            for (var y = 0; y < height; y++) {
-                // add neighbors if node exists
-                var current = gridNodes[y][x];
-                if (current !== null) {
-                    // west
-                    if (x > 0) {
-                        var n = gridNodes[y][x - 1];
-                        if (n) {
-                            current.addNeighborNode(n, 1);
-                        }
-                    }
-                    // east
-                    if (x < width - 1) {
-                        var n = gridNodes[y][x + 1];
-                        if (n) {
-                            current.addNeighborNode(n, 1);
-                        }
-                    }
-                    // north
-                    if (y > 0) {
-                        var n = gridNodes[y - 1][x];
-                        if (n) {
-                            current.addNeighborNode(n, 1);
-                        }
-                    }
-                    // south
-                    if (y < height - 1) {
-                        var n = gridNodes[y + 1][x];
-                        if (n) {
-                            current.addNeighborNode(n, 1);
-                        }
-                    }
-                }
-            }
-        }
-        return { graph: a, nodes: gridNodes };
-    }
-    grid_astar.createGraphFromGrid = createGraphFromGrid;
 })(grid_astar || (grid_astar = {}));
 /// <reference path="grid_astar.ts" />
 // create abstract grid representation (no nodes here)
 var grid = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1], [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
 var tileSize = 20;
 var start = [5, 4];
-var goal = [19, 11];
+var goal1 = [19, 11];
 var goal2 = [10, 13];
 window.onload = function () {
     var canvas = document.getElementById("gridCanvas");
@@ -2556,15 +2519,15 @@ window.onload = function () {
         var cellX = Math.floor(x / tileSize);
         var cellY = Math.floor(y / tileSize);
         toggleGridCell(cellX, cellY);
-        drawGrid([], []);
+        testEuclidean();
     }, false);
-    drawGrid([], []);
+    testEuclidean();
 };
 function toggleGridCell(x, y) {
-    if ((x == start[0] && y == start[1]) || (x == goal[0] && y == goal[1]) || (x == goal2[0] && y == goal2[1])) {
+    if ((x === start[0] && y === start[1]) || (x === goal1[0] && y === goal1[1]) || (x === goal2[0] && y === goal2[1])) {
         return;
     }
-    if (grid[y][x] == 0) {
+    if (grid[y][x] === 0) {
         grid[y][x] = 1;
     }
     else {
@@ -2590,24 +2553,24 @@ function drawGrid(path, visited) {
     for (var i = 0; i < visited.length; i++) {
         var current = visited[i];
         context.fillStyle = "lightgreen";
-        context.fillRect(current.data.x * tileSize, current.data.y * tileSize, tileSize - 1, tileSize - 1);
+        context.fillRect(current.x * tileSize, current.y * tileSize, tileSize - 1, tileSize - 1);
     }
     for (var i = 0; i < path.length; i++) {
         var current = path[i];
         context.fillStyle = "green";
-        context.fillRect(current.data.x * tileSize, current.data.y * tileSize, tileSize - 1, tileSize - 1);
+        context.fillRect(current.x * tileSize, current.y * tileSize, tileSize - 1, tileSize - 1);
     }
     context.fillStyle = "yellow";
     context.fillRect(start[0] * tileSize, start[1] * tileSize, tileSize - 1, tileSize - 1);
     context.fillStyle = "red";
-    context.fillRect(goal[0] * tileSize, goal[1] * tileSize, tileSize - 1, tileSize - 1);
+    context.fillRect(goal1[0] * tileSize, goal1[1] * tileSize, tileSize - 1, tileSize - 1);
     context.fillRect(goal2[0] * tileSize, goal2[1] * tileSize, tileSize - 1, tileSize - 1);
 }
 function testHeuristic(heuristic) {
-    var gridGraph = grid_astar.createGraphFromGrid(grid, heuristic);
-    var startNode = gridGraph.nodes[start[1]][start[0]];
-    var goalNode = [gridGraph.nodes[goal[1]][goal[0]], gridGraph.nodes[goal2[1]][goal2[0]]];
-    var result = gridGraph.graph.searchPath(startNode, goalNode);
+    var graphGoal = new grid_astar.MultipleGoals([goal1, goal2]);
+    var graph = new astar.Graph(heuristic, graphGoal);
+    var graphStart = new grid_astar.Node(grid, start[0], start[1]);
+    var result = graph.searchPath(graphStart);
     drawGrid(result.path, result.visited);
     var resultString = document.getElementById("info");
     if (result.found) {
@@ -2617,6 +2580,10 @@ function testHeuristic(heuristic) {
         resultString.innerHTML = "No path found.";
     }
 }
+function testDijkstra() {
+    //test graph with no heuristics
+    testHeuristic(new grid_astar.DijkstraHeuristic());
+}
 function testEuclidean() {
     //test graph with Euclidean distance
     testHeuristic(new grid_astar.EuclidianHeuristic());
@@ -2624,8 +2591,4 @@ function testEuclidean() {
 function testManhattan() {
     //test graph with Manhattan distance
     testHeuristic(new grid_astar.ManhattanHeuristic());
-}
-function testDijkstra() {
-    //test graph with no heuristics
-    testHeuristic(new grid_astar.DijkstraHeuristic());
 }
