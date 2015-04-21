@@ -57,26 +57,60 @@ module Interpreter {
             {pol: true, rel: "holding", args: [b]}
         ]];
         
-        checkStm(cmd.ent.obj , state);
+        //console.log("hhhhhhhhhhhhhhhh" , state.objects);
+        
+        if (cmd.cmd == "take"){
+        	if(cmd.ent.quant == "the"){
+        		
+        		checkStm(cmd.ent.obj, state);
+        	}
+        }
+        
+        //console.log("hhhhhhhhhhhhhhhh" , checkStm(cmd.ent.obj , state));
+        
+        
         
         return intprt;
     }
     
-    function checkStm (objs : Parser.Object , state : WorldState ) : string{
-    		for(var i in state.objects){
-    			//console.log("hhhhhhhhhhhhhhhh" , objs.color);
-    			//console.log("hhhhhhhhhhhhhhhh" , );
-    			if(objs.color == state.objects[i].color && objs.form == state.objects[i].form ){
-    				
-    				console.log("hhhhhhhhhhhhhhhh" , i);
+    
+    
+    
+    function checkStm (objs : Parser.Object , state : WorldState) : boolean {
+    	for(var x =0; x< state.stacks.length;  x++){
+    		for (var y=0; y< state.stacks[x].length; y++){
+    			var index = state.stacks[x][y];
+				if((objs.color == null || objs.color == state.objects[index].color) && 
+					(objs.form == null || objs.form == state.objects[index].form)  && (objs.size == null || objs.size == state.objects[index].size)){
+						//if( objs.loc.rel == "ontop" ){
+							//state.stacks[x][0];
+						//}
+						
+						console.log("index", x, y);
     			}
-    			
     		}
+    	}
+    	
+    	/*
+    	for(var i in state.objects){
+    			if((objs.color == null || objs.color == state.objects[i].color) && 
+    				(objs.form == null || objs.form == state.objects[i].form)  && (objs.size == null || objs.size == state.objects[i].size)){
+    				
+    				return true;
+    			}
+    	*/
+    			
+    			
     			//state.objects.forEach((parseresult) => {
     	
     	//}
-    	return ""
+    	
+    	
+    	return false;
     }
+    
+    
+    
 
 
     function getRandomInt(max) {
