@@ -100,7 +100,7 @@ module Interpreter {
         console.log("stacks:",stacks);
         console.log("ppdlWorld:",ppdlWorld);
 
-        var interpretations = [];
+        var interpretations : Literal[][] = [];
 
         if (cmd.cmd === 'move') {
                 // Which entity we should move
@@ -116,14 +116,14 @@ module Interpreter {
             // Add all possible combinations of interpretations
             for (var i in entitiesIntrprt) {
                 for (var j in locationsIntrprt) {
-                    var entities         = entitiesIntrprt[i]
-                      , locations        = locationsIntrprt[j]
-                      , interpretation   = [];
+                    var entities                   = entitiesIntrprt[i]
+                      , locations                  = locationsIntrprt[j]
+                      , interpretation : Literal[] = [];
                     // For each interpretation, create all possible PDDL goal states
                     for (var k in entities) {
                         for (var l in locations) {
                             // TODO: do not return actual objects in the PDDL goal, but their id's!
-                            var possiblePddlGoal = {pol: true, rel: rel, args: [entities[k], locations[l]]};
+                            var possiblePddlGoal = {pol: true, rel: rel, args: [entities[k].id, locations[l].id]};
                             interpretation.push(possiblePddlGoal);
                         }
                     }
