@@ -1,10 +1,11 @@
 /// <reference path="../typescript-collections/collections.ts" />
 
-class Graph {
-	private edges = new collections.Set<Edge>(e => e.edgeToString());
-	private nodes = new collections.Set<GraphNode>(n => n.getName()/*n.getId().toString()*/);
+class Graph<T extends GraphNode> {
+	private edges = new collections.Set<Edge<T>>(e => e.edgeToString());
+	private nodes = new collections.Set<T>(n => n.getId().toString()/*n.getId().toString()*/);
 
-	addEdge(newEdge : Edge) {
+
+	addEdge(newEdge : Edge<T>) {
 		if (this.nodes.contains(newEdge.getFromNode()) && this.nodes.contains(newEdge.getEndNode())) {
 			this.edges.add(newEdge);
 		} else {
@@ -13,15 +14,15 @@ class Graph {
 		}
 	}
 
-	addNode(newNode : GraphNode) {
+	addNode(newNode : T) {
 		this.nodes.add(newNode);
 	}
 
-	getNodes() : GraphNode[] {
+	getNodes() : T[] {
 		return this.nodes.toArray();
 	}
 
-	contains(node : GraphNode) : boolean {
+	contains(node : T) : boolean {
 		return this.nodes.contains(node); 
 	}
 
@@ -33,13 +34,13 @@ class Graph {
 		return this.edges.size();
 	}
 
-	getRandomNode() : GraphNode {
+	getRandomNode() : T {
 		var randomIndex = Math.floor((Math.random() * this.getNumberOfNodes()));
 		return this.nodes.toArray()[randomIndex];
 	}
-
-	getEdgesTo(node : GraphNode) : Edge[] {
-		var close = new collections.Set<Edge>(e => e.edgeToString());
+ 
+	getEdgesTo(node : T) : Edge<T>[] {
+		var close = new collections.Set<Edge<T>>(e => e.edgeToString());
 		var arr = this.edges.toArray();
 		for (var i = 0; i < arr.length; i++) {
 			if(arr[i].getFromNode().equals(node)) {
@@ -52,7 +53,15 @@ class Graph {
 	}
 }
 
-class GraphNode {
+interface GraphNode {
+	getId() : number;
+	equals(otherNode : GraphNode) : boolean;
+	distanceTo(to : GraphNode) : number;	
+	toString() : string;
+}
+
+
+class EucliNode implements GraphNode {
 	private id : number;
 	private xPos : number;
 	private yPos : number;
@@ -65,7 +74,7 @@ class GraphNode {
 		this.name = name;
 	}
 
-	distanceTo(to : GraphNode) : number {
+	distanceTo(to : EucliNode) : number {
 		return Math.sqrt(Math.pow(this.xPos-to.xPos, 2)+Math.pow(this.yPos-to.yPos, 2));
 	}
 
@@ -85,27 +94,32 @@ class GraphNode {
 		return this.name;
 	}
 
-	equals(otherNode : GraphNode) : boolean {
+	equals(otherNode : EucliNode) : boolean {
 		return this.getId() == otherNode.getId();
 	}
+
+	toString() : string {
+		return "("+this.xPos+","+this.yPos+")";
+	}
+
 }
 
-class Edge {
+class Edge<T extends GraphNode> {
 	private cost : number;
-	private fromNode : GraphNode;
-	private endNode : GraphNode;
+	private fromNode : T;
+	private endNode : T;
 
-	constructor(cost : number, fromNode : GraphNode, toNode : GraphNode) {
+	constructor(cost : number, fromNode : T, toNode : T) {
 		this.cost = cost;
 		this.fromNode = fromNode;
 		this.endNode = toNode;
 	}
 
-	getFromNode() : GraphNode {
+	getFromNode() : T {
 		return this.fromNode;
 	}
 
-	getEndNode() : GraphNode {
+	getEndNode() : T {
 		return this.endNode;
 	}
 
@@ -114,15 +128,17 @@ class Edge {
 	}
 
 	edgeToString() : string {
-		var fromNodeX = this.fromNode.getX();
-		var fromNodeY = this.fromNode.getY();
-		var endNodeX  = this.endNode.getX();
-		var endNodeY  = this.endNode.getY();
-
-		if(fromNodeX < endNodeX) {
-			return fromNodeX + fromNodeY + " " + endNodeX + endNodeY;
-		} else {
-			return endNodeX + endNodeY + " " + fromNodeX + fromNodeY;
-		}
+		var from = this.fromNode.toString();
+		var to = this.endNode.toString();
+		//var fromNodeX = this.fromNode.getX();
+		//var fromNodeY = this.fromNode.getY();
+		//var endNodeX  = this.endNode.getX();
+		//var endNodeY  = this.endNode.getY();
+		return from + " " + to; 
+//		if(fromNodeX < endNodeX) {
+//			return fromNodeX + fromNodeY + " " + endNodeX + endNodeY;
+//		} else {
+//			return endNodeX + endNodeY + " " + fromNodeX + fromNodeY;
+//		}
 	}
 }

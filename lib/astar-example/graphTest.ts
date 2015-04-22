@@ -1,15 +1,15 @@
 /// <reference path="../astar-example/astar.ts" />
 
-var sweden = new Graph();
+var sweden = new Graph<EucliNode>();
 
-var kiruna = new GraphNode(0, 5, 2, "Kiruna");
-var lulea = new GraphNode(1, 10, 7, "Luleå");
-var umea = new GraphNode(2, 10, 17, "Umeå");
-var tanndalen = new GraphNode(3, 1, 23, "Tänndalen");
-var sthlm = new GraphNode(4, 15, 28, "Stockholm");
-var gbg = new GraphNode(5, 1, 33, "Gôteborg");
-var kalmar = new GraphNode(6, 12, 34, "Kalmar");
-var malmo = new GraphNode(7, 4, 40, "Malmö");
+var kiruna = new EucliNode(0, 5, 2, "Kiruna");
+var lulea = new EucliNode(1, 10, 7, "Luleå");
+var umea = new EucliNode(2, 10, 17, "Umeå");
+var tanndalen = new EucliNode(3, 1, 23, "Tänndalen");
+var sthlm = new EucliNode(4, 15, 28, "Stockholm");
+var gbg = new EucliNode(5, 1, 33, "Gôteborg");
+var kalmar = new EucliNode(6, 12, 34, "Kalmar");
+var malmo = new EucliNode(7, 4, 40, "Malmö");
 
 sweden.addNode(kiruna);
 sweden.addNode(lulea);
@@ -33,12 +33,12 @@ sweden.addEdge(new Edge(12, gbg, kalmar));
 sweden.addEdge(new Edge(13, malmo, gbg));
 sweden.addEdge(new Edge(11, kalmar, malmo));
 
-var antiBestFirst = new Graph();
+var antiBestFirst = new Graph<EucliNode>();
 
-var start = new GraphNode(0,0,1,"start-node");   // V I S U A L I S E D
-var roundway0 = new GraphNode(1,1,2,"r1");       //  r0-----r1
-var roundway1 = new GraphNode(2,2,2,"r2");       //  /     /
-var goal = new GraphNode(3,0,0,"goal-node");     // s     /
+var start = new EucliNode(0,0,1,"start-node");   // V I S U A L I S E D
+var roundway0 = new EucliNode(1,1,2,"r1");       //  r0-----r1
+var roundway1 = new EucliNode(2,2,2,"r2");       //  /     /
+var goal = new EucliNode(3,0,0,"goal-node");     // s     /
 											     // g----´
 
 antiBestFirst.addNode(start);

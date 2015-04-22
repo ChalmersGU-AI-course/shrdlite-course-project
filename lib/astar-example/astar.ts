@@ -4,14 +4,14 @@
 var logging = true;
 
 module aStar {
-    export function aStar(graph : Graph, fromNode : GraphNode, toNode : GraphNode) : StarNode {
-        if(!graph.contains(fromNode) && !graph.contains(toNode)) {
+    export function aStar(graph : Graph<EucliNode>, fromNode : EucliNode, toNode : EucliNode) : StarNode {
+        if(!graph.contains(fromNode) || !graph.contains(toNode)) {
             throw "ERROR, nodes are not in graph.";
         }
         
         var evaluatedNodes = new collections.Set<StarNode>(n => n.getName());
         var nodesToEvaluate = new collections.PriorityQueue<StarNode>(compareNodes);
-        var startingPath = new collections.LinkedList<Edge>();
+        var startingPath = new collections.LinkedList<Edge<EucliNode>>();
 
         var sFrom = new StarNode(fromNode, 0, fromNode.distanceTo(toNode), startingPath);
 
@@ -67,27 +67,27 @@ module aStar {
     	return b.getTotalDistance() - a.getTotalDistance();
     }
 
-    class StarNode extends GraphNode {
+    class StarNode extends EucliNode {
         distanceSoFar : number;
         heuristicDistance : number;
-        pathTo = new collections.LinkedList<Edge>();
+        pathTo = new collections.LinkedList<Edge<EucliNode>>();
 
-        constructor(node : GraphNode, distance : number, heuristic : number, path : collections.LinkedList<Edge>) {
+        constructor(node : EucliNode, distance : number, heuristic : number, path : collections.LinkedList<Edge<EucliNode>>) {
             super(node.getId(), node.getX(), node.getY(), node.getName());
             this.distanceSoFar = distance;
             this.heuristicDistance = heuristic;
             path.forEach(p => this.pathTo.add(p));
         }
 
-        updatePath(newEdge : Edge) {
+        updatePath(newEdge : Edge<EucliNode>) {
             this.pathTo.add(newEdge);
         }
 
-        getPath() : collections.LinkedList<Edge> {
+        getPath() : collections.LinkedList<Edge<EucliNode>> {
             return this.pathTo;   
         }
 
-        equals(otherNode : GraphNode) : boolean {
+        equals(otherNode : EucliNode) : boolean {
             return this.getId() == otherNode.getId();
         }
 
