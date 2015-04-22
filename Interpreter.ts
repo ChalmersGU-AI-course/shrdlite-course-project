@@ -62,7 +62,7 @@ module Interpreter {
 
         // For debugging, store in window object
         this.objects = state.objects;
-
+        
         // Create convenient world representation (store the objects in stacks, rather than id's)
         var stacks : any = _.map(state.stacks, function (stack, i) {
             var newStack = _.map(stack, function (objId) {
