@@ -4,16 +4,16 @@
 var logging = true;
 
 module aStar {
-    export function aStar(graph : Graph<EucliNode>, fromNode : EucliNode, toNode : EucliNode) : StarNode {
+    export function aStar<T extends GraphNode>(graph : Graph<T>, fromNode : T, toNode : T) : Path<T> {
         if(!graph.contains(fromNode) || !graph.contains(toNode)) {
             throw "ERROR, nodes are not in graph.";
         }
         
-        var evaluatedNodes = new collections.Set<StarNode>(n => n.getName());
-        var nodesToEvaluate = new collections.PriorityQueue<StarNode>(compareNodes);
-        var startingPath = new collections.LinkedList<Edge<EucliNode>>();
+        var evaluatedNodes = new collections.Set<Path<T>>(n => n.getId().toString());
+        var nodesToEvaluate = new collections.PriorityQueue<Path<T>>(compareNodes);
+        var startingPath = new collections.LinkedList<Edge<T>>();
 
-        var sFrom = new StarNode(fromNode, 0, fromNode.distanceTo(toNode), startingPath);
+        var sFrom = new Path<T>(fromNode, 0, fromNode.distanceTo(toNode), startingPath);
 
         nodesToEvaluate.add(sFrom);
         if(logging) {
@@ -24,7 +24,7 @@ module aStar {
             var currentNode = nodesToEvaluate.dequeue();
 
             if(logging) {
-                console.log("evaluating " + currentNode.getName());
+                console.log("evaluating " + currentNode.toString());
                 console.log("Distance is  " + currentNode.getDistance());
                 console.log("Heuristic is " + currentNode.getHeuristicDistance());
                 console.log("Their sum is " + currentNode.getTotalDistance());
@@ -36,24 +36,24 @@ module aStar {
 
             if(currentNode.equals(toNode)) {
                 if(logging)
-                    console.log("found goal! " + currentNode.getName());
+                    console.log("found goal! " + currentNode.toString());
                 return currentNode;
             }
             if(logging)
                 console.log("======== Adding neighbors to frontier ========");
-  			var edgesN = graph.getEdgesTo(currentNode);
+  			var edgesN = graph.getEdgesTo(currentNode.getNode());
   			for (var i = 0; i < edgesN.length; i++) {
   				var e = edgesN[i];
   				var n = e.getFromNode().equals(currentNode) ? 
   					e.getEndNode() 
   					: e.getFromNode();
   				var dist = currentNode.getDistance() + e.getCost();
-  				var starNeighbor = new StarNode(n, dist, n.distanceTo(toNode), currentNode.getPath());
+  				var starNeighbor = new Path(n, dist, n.distanceTo(toNode), currentNode.getPath());
   				if(!evaluatedNodes.contains(starNeighbor)) {
   					starNeighbor.updatePath(e);
   					nodesToEvaluate.add(starNeighbor);
                     if(logging)
-                        console.log("Adding " + starNeighbor.getName() + " to frontier. Distance+heuristic is: " + starNeighbor.getTotalDistance());
+                        console.log("Adding " + starNeighbor.toString() + " to frontier. Distance+heuristic is: " + starNeighbor.getTotalDistance());
   				}
   			}
             if(logging)
@@ -63,31 +63,47 @@ module aStar {
         return null;
     }
 
-    function compareNodes(a : StarNode , b : StarNode){
+    function compareNodes<T extends GraphNode>(a : Path<T> , b : Path<T>){
     	return b.getTotalDistance() - a.getTotalDistance();
     }
 
-    class StarNode extends EucliNode {
+    class Path<T extends GraphNode> {
         distanceSoFar : number;
         heuristicDistance : number;
-        pathTo = new collections.LinkedList<Edge<EucliNode>>();
+        id : number; 
+        finalNode : T;
+        pathTo = new collections.LinkedList<Edge<T>>();
 
-        constructor(node : EucliNode, distance : number, heuristic : number, path : collections.LinkedList<Edge<EucliNode>>) {
-            super(node.getId(), node.getX(), node.getY(), node.getName());
+        constructor(node : T, distance : number, heuristic : number, path : collections.LinkedList<Edge<T>>) {
+            this.finalNode = node;
             this.distanceSoFar = distance;
             this.heuristicDistance = heuristic;
             path.forEach(p => this.pathTo.add(p));
         }
 
-        updatePath(newEdge : Edge<EucliNode>) {
+        getId() : number{
+            return this.finalNode.getId();
+        }
+        toString() : string{
+            return this.finalNode.toString();
+        }
+        getNode() : T {
+            return this.finalNode;
+        }
+
+        distanceTo(toNode : T ) : number {
+            return this.finalNode.distanceTo(toNode);
+        }
+
+        updatePath(newEdge : Edge<T>) {
             this.pathTo.add(newEdge);
         }
 
-        getPath() : collections.LinkedList<Edge<EucliNode>> {
+        getPath() : collections.LinkedList<Edge<T>> {
             return this.pathTo;   
         }
 
-        equals(otherNode : EucliNode) : boolean {
+        equals(otherNode : T) : boolean {
             return this.getId() == otherNode.getId();
         }
 
