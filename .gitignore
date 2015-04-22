@@ -1,8 +1,9 @@
+*.js
+
 shrdlite-*.js
 
 *.js.map
 *.js # we're all about typescript
-
 
 # Created by https://www.gitignore.io
 
