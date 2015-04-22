@@ -1,5 +1,15 @@
-Filosofisk
-*Går det att skriva något med lika bra medvetande*
+Filosofisk approach: *Går det att skriva något med lika bra medvetande*
+
+Tillvägagångssätt: Jämföra olika artiklar/argument för att kunna filosofiskt spinna vidare på vår framtidstro om AI.
+
+Frågor att börja med:
+---------------------
 förstår vi ens vårt medvetna (undermedvetna)
 Big data parallellism till IA (intelligence Amplified) -ish ai.
-Jämföra olika artiklar för att kunna filosofiskt spinna vidare på vår framtidstro om AI.
+Finns ett citat: "Om ett lejon kunde prata så skulle vi inte förstå det" (pga helt andra referensramar). Skulle samma sak gälla AI?
+"Kan rummet kinesiska?"
+
+Börjat läsa på:
+http://www.loebner.net/Prizef/TuringArticle.html
+https://www-rohan.sdsu.edu/faculty/vinge/misc/singularity.html
+http://cogprints.org/7150/1/10.1.1.83.5248.pdf
