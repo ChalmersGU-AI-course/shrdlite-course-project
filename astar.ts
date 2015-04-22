@@ -17,12 +17,6 @@ module Astar
 		}
 	}
 
-	export interface Node
-	{
-		equals(object : Node) : boolean;
-		toString() : string;
-	}
-
 	/**
 	 * Finds the shortest path between start and end if such a path exists.
 	 * @param start 	- The starting point
@@ -31,18 +25,20 @@ module Astar
 	 * @param equals	- a function that can determine equality.
 	 * @param heuristic - a guess for how close a node is to the end node.
 	 */
-	export function findPath<T extends Node>(start : T, 
-											  end : T, 
-											  gen : (t : T) => T[],
-											  heuristic : (t : T, e : T) => number)  : SearchResult<T>
+	export function findPath<T>(start : T, 
+								end : T, 
+								gen : (t : T) => T[],
+								heuristic : (t : T, e : T) => number,
+                                equals : (t: T, t0 : T) => boolean,
+                                strFun : (t : T) => string)  : SearchResult<T>
 	{
 		//Simple case:
-		if(start.equals(end)) 
+		if(equals(start, end)) 
 		{
 			return new SearchResult<T>([start, end], 0);
 		}
 
-		var known  = new collections.Dictionary<T, number>();
+		var known  = new collections.Dictionary<T, number>(strFun);
 		var dist:number[]   = [];
 		var prev:number[]  	= [];
 		var nodes:T[]		= [];
@@ -87,7 +83,7 @@ module Astar
 
 		var iterations: number    = 1;
 		var node : T = pQueue.dequeue();
-		while(!node.equals(end))
+		while(!equals(node,end))
 		{
 			var previous = known.getValue(node);
 			var adjacent = gen(node);

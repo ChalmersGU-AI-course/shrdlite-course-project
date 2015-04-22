@@ -15,7 +15,7 @@ var grid =
 ];
 
 
-class Cell implements Astar.Node
+class Cell 
 {
 	x : number;
 	y : number;
@@ -25,18 +25,16 @@ class Cell implements Astar.Node
 		this.x = x;
 		this.y = y;
 	}
+}
 
-	equals(object : Astar.Node) : boolean
-	{
-		var cell = <Cell>object;
-		return cell.x == this.x &&
-			   cell.y == this.y;
-	}
+function cellEquals(a : Cell, b : Cell) : boolean
+{
+	return a.x == b.x && a.y == b.y;
+}
 
-	toString() : string
-	{
-		return this.x.toString() + "|" + this.y.toString();
-	}
+function cellString(c : Cell) : string
+{
+	return c.x.toString() + "|" + c.y.toString();
 }
 
 function generator(cell : Cell) : Cell[]
@@ -107,8 +105,8 @@ function validMove(from : Cell, to : Cell)
 function enforceAstarResult(start : Cell, end : Cell, sRes : Astar.SearchResult<Cell>)
 {
 	enforce(sRes.success, "Astar failed.");
-	enforce(sRes.nodes[0].equals(start), "Does not start at the start node!");
-	enforce(sRes.nodes[sRes.nodes.length - 1].equals(end), "Does not end at the end node!");
+	enforce(cellEquals(sRes.nodes[0], start), "Does not start at the start node!");
+	enforce(cellEquals(sRes.nodes[sRes.nodes.length - 1], end), "Does not end at the end node!");
 	
 	//Walk the path.
 	for(var i = 0; i < sRes.nodes.length - 1; i++)
@@ -125,8 +123,8 @@ function testHeuristic(numTests : number, heur : (a : Cell, b : Cell) => number,
 		var start = new Cell(rand(10), rand(10));
 		var end   = new Cell(rand(10), rand(10));
 
-		var apath = Astar.findPath(start, end, generator, heur);
-		var dpath = Astar.findPath(start, end, generator, nullheuristic);
+		var apath = Astar.findPath(start, end, generator, heur, cellEquals, cellString);
+		var dpath = Astar.findPath(start, end, generator, nullheuristic, cellEquals, cellString);
 
 		enforceAstarResult(start, end, apath);
 		enforceAstarResult(start, end, dpath);
@@ -135,7 +133,8 @@ function testHeuristic(numTests : number, heur : (a : Cell, b : Cell) => number,
 
 		console.log("\nTest", i, "\n");
 		console.log("Between ", start, " and ", end);
-		console.log("Nodes visited Astar:", apath.nodesVisited, "Dijkstra's algorithm:", dpath.nodesVisited);			
+		console.log("Nodes visited Astar:", apath.nodesVisited, "Dijkstra's algorithm:", dpath.nodesVisited);	
+		console.log("NL", apath.nodes.length);			
 	}
 }
 

@@ -1,7 +1,41 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="Neighbour_functions.ts"/>
+///<reference path="Heuristics.ts"/>
+///<reference path="Astar.ts"/>
 
 module Planner {
+
+var endState : WorldState = { 
+    "stacks": [[],["g","l"],["m"],["k","e"],["f"]],
+    "holding": null,
+    "arm": 0,
+    "objects": {
+        "a": { "form":"brick",   "size":"large",  "color":"green" },
+        "b": { "form":"brick",   "size":"small",  "color":"white" },
+        "c": { "form":"plank",   "size":"large",  "color":"red"   },
+        "d": { "form":"plank",   "size":"small",  "color":"green" },
+        "e": { "form":"ball",    "size":"large",  "color":"white" },
+        "f": { "form":"ball",    "size":"small",  "color":"black" },
+        "g": { "form":"table",   "size":"large",  "color":"blue"  },
+        "h": { "form":"table",   "size":"small",  "color":"red"   },
+        "i": { "form":"pyramid", "size":"large",  "color":"yellow"},
+        "j": { "form":"pyramid", "size":"small",  "color":"red"   },
+        "k": { "form":"box",     "size":"large",  "color":"yellow"},
+        "l": { "form":"box",     "size":"large",  "color":"red"   },
+        "m": { "form":"box",     "size":"small",  "color":"blue"  }
+    },
+    "examples": [
+        "put the white ball in a box on the floor",
+        "put the black ball in a box on the floor",
+        "take a blue object",
+        "take the white ball",
+        "put all boxes on the floor",
+        "move all balls inside a large box"
+    ]
+};
+
+
 
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
@@ -40,49 +74,66 @@ module Planner {
     // private functions
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
-        var plan : string[] = [];
+    
+         var result = Astar.findPath(state, endState, Neighbour.listNeighbours, Heuristics.simple, worldEq, worldStr);
+        
+        var path = [];
+        for (var i = 1; i < result.nodes.length; i++)
+        {
+            var s0 = result.nodes[i - 1];
+            var s1 = result.nodes[i];
 
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
+            if(s0.holding && !s1.holding)
+            {
+                path.push("d");
             }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
+            else if(!s0.holding && s1.holding)
+            {
+                path.push("p");                
             }
-        }
-
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
-
-        if (pickstack < state.stacks.length-1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
-                plan.push("r");
+            else if(s0.arm < s1.arm)
+            {
+                path.push("r");
             }
-
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
-                plan.push("l");
+            else if(s0.arm > s1.arm)
+            {
+                path.push("l");
+            }
+            else 
+            {
+                throw "Error in planner!";
             }
         }
 
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
+        return path;
+    }
 
-        return plan;
+    function worldStr(a: WorldState): string 
+    {
+        var str = "";
+        for (var i = 0; i < a.stacks.length; i++)
+        {
+            str = str + "(";
+            for (var j = 0; j < a.stacks[i].length; j++)
+            {
+                str = str + a.stacks[i][j];
+
+            }
+            str = str + ")";
+        }
+
+        str = str + a.holding + " " + a.arm.toString();
+        return str;
+    }
+
+    function worldEq(a: WorldState, b: WorldState): boolean 
+    {
+        return worldStr(a) === worldStr(b);
+    }
+
+    function nullheur(a : WorldState, b: WorldState) : number
+    {
+        return 0;
     }
 
 
