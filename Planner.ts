@@ -39,7 +39,12 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+    //TODO first create the graph then find shortest path with AStar
+    //TODO Remove the code that is here right now
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
+
+
+
         // This function returns a dummy plan involving a random stack
         do {
             var pickstack = getRandomInt(state.stacks.length);

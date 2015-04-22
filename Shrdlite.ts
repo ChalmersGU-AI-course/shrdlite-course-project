@@ -31,6 +31,7 @@ module Shrdlite {
     // - then it interprets the parse(s)
     // - then it creates plan(s) for the interpretation(s)
 
+    //TODO convert the world to a pddl-world before sending it to interpreter and planner!
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
@@ -47,6 +48,8 @@ module Shrdlite {
         parses.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
         });
+
+        //TODO convert world into PDDL-world
 
         try {
             var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
