@@ -39,6 +39,7 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+    // HERE IS THE PLACE WHERE WE SHOULD IMPLEMENT OUR PLANNER!
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         // This function returns a dummy plan involving a random stack
         do {
