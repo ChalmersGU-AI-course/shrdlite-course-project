@@ -85,10 +85,12 @@ module Interpreter {
             matching = findObjectsByDescription(location.ent.obj, world);
         }
 
+        var childLiterals: Literal[][] = [];
 
         if (location.ent.obj.loc) {
             for (var i = 0; i < matching.length; ++i) {
                 var literals = buildRelativeLiterals(matching[i], location.ent.obj.loc, world);
+                childLiterals = childLiterals.concat(literals);
             }
 
             var result: Literal[][] = [];
