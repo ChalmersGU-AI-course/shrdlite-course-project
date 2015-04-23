@@ -293,7 +293,7 @@ module Interpreter {
                         objUnderTarget = state.stacks[valids3[i].pos.x][level];
                         for( var j = 0; j < valids2.length; j++) {
                             if(valids2[j].name == objUnderTarget) {
-                                valids.push(valids2[j]);
+                                valids.add(valids2[j]);
                             }
                         }
                         level--;
@@ -304,17 +304,17 @@ module Interpreter {
         		    
         		    var nr : number = checkObjInRelation(objL, valids2); 
         		    if( nr != -1) {
-        			valids.push(valids2[nr]);
+        			valids.add(valids2[nr]);
         		    }
         		    nr = checkObjInRelation(objL, valids2); 
         		    if( nr != -1) {
-        		 	valids.push(valids2[nr]);
+        		 	valids.add(valids2[nr]);
         		    }
 		        }
                     if(objUnderTarget && yes != -1) valids.add(valids2[yes]);
                 }
 
-            }
+        
 
         } else { //Base case
             if(obj.form == "floor") {
