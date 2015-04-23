@@ -189,23 +189,22 @@ module Interpreter {
             return true;
         } else if (below.form == "ball") {
             return false;
-        } else if(above.form == "box" && above.size == "small" && 
-                  below.size == "small" && (below.form == "brick" || below.form == "pyramid")) {
-            return false;
-        } else if(above.form == "box" && above.size == "large" && 
-                  below.form == "pyramid" && below.size == "large") {
-            return false;
-        }
-        else if(above.size > below.size && (below.form == "box" || below.form == "pyramid") ) {
-            return true;
-        }
-        else if(above.size >= below.size) {
-            if((above.form == "ball" || above.form == "brick") && below.form == "box") {
+        } else if (above.form == "ball"){
+            if(below.form == "floor" || below.form == "box"){
                 return true;
+            }else{
+                return false;
             }
-            
-        } 
-        return false;
+        } else if (below.size > above.size){
+            return false;
+        } else if (below.size == above.size && below.form == "box" && (above.form == "pyramid" || above.form == "plank" || above.form == "box")){
+            return false;
+        } else if (above.size == "small" && above.form == "box" && below.size == "small" && (below.form == "brick" || below.form == "pyramid")){
+            return false;
+        }else if (above.size == "large" && above.form == "box" && below.size == "large" && below.form == "pyramid"){
+            return false;
+        }
+        return true;
     }
 
 
