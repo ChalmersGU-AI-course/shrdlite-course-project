@@ -64,7 +64,7 @@ module Interpreter {
 
         // For debugging, store in window object
         this.objects = state.objects;
-        
+
         // Create convenient world representation (store the objects in stacks, rather than id's)
         var stacks : any = _.map(state.stacks, function (stack, i) {
             var newStack = _.map(stack, function (objId) {
@@ -82,7 +82,7 @@ module Interpreter {
 
         // Create PPDL representation
         // TODO: don't do it here; waste of CPU cycles
-        var ppdlWorld : Literal[] = [];
+        var pddlWorld : Literal[] = [];
         for (var x in stacks) {
             // Add constraints
             for (var y = 0; y<stacks[x].length; y++) {
@@ -92,21 +92,21 @@ module Interpreter {
                 if (nextObj) {
                     var rel        = (obj.form == 'box') ? 'inside' : 'ontop'
                       , constraint = {pol: true, rel: rel, args: [nextObj.id, obj.id]};
-                    ppdlWorld.push(constraint);
+                    pddlWorld.push(constraint);
                 }
             }
         }
 
         console.log("stacks:",stacks);
-        console.log("ppdlWorld:",ppdlWorld);
+        console.log("pddlWorld:",pddlWorld);
 
         var interpretations : Literal[][] = [];
 
         if (cmd.cmd === 'move') {
                 // Which entity we should move
-            var entitiesIntrprt        = findEntities(cmd.ent, objects, ppdlWorld)
+            var entitiesIntrprt        = findEntities(cmd.ent, objects, pddlWorld)
                 // Where we should move it
-              , locationsIntrprt       = findEntities(cmd.loc.ent, objects, ppdlWorld)
+              , locationsIntrprt       = findEntities(cmd.loc.ent, objects, pddlWorld)
                 // How entity will be positioned on location (ontop, inside, ...)
               , rel             = cmd.loc.rel;
             if (entitiesIntrprt.length > 1 || locationsIntrprt.length > 1) {
