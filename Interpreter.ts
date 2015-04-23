@@ -156,7 +156,7 @@ module Interpreter {
             //Finds all objs in valids that match the relationship
             for( var i = 0; i < valids3.length; i++) {
 
-                if(obj.loc.rel == "inside" || obj.loc.rel == "ontop" ) {
+                if((obj.loc.rel == "inside" && valids3[i].obj.form == "box") || obj.loc.rel == "ontop" ) {
                     var objAboveTarget : string = state.stacks[valids3[i].pos.x][valids3[i].pos.y + 1];
                     var yes : number = -1;
                     for( var j = 0; j < valids2.length; j++) {
@@ -167,6 +167,18 @@ module Interpreter {
                     }
                     if(objAboveTarget && yes != -1){
                         valids.push(valids2[yes]);
+                    }
+                }else if(obj.loc.rel == "above"){
+                    var wholeStack : string[] = state.stacks[valids3[i].pos.x];
+                    
+                    for(var k=0 ; k < wholeStack.length ; k++){
+                        if(k > valids3[i].pos.y){
+                            for( var j = 0; j < valids2.length; j++) {
+                                if(valids2[j].name == wholeStack[k]) {
+                                    valids.push(valids2[j]);
+                                }
+                            }
+                        }
                     }
                 }
             }
