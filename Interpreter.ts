@@ -49,7 +49,6 @@ module Interpreter {
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        //console.log("tttttttttttttst", state.objects["a"].color );
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
         var intprt : Literal[][] = [[
@@ -57,66 +56,91 @@ module Interpreter {
             {pol: true, rel: "holding", args: [b]}
         ]];
         
-        //console.log("hhhhhhhhhhhhhhhh" , state.objects);
-        
-        if (cmd.cmd == "take"){
-        	if(cmd.ent.quant == "the"){
-        		
-        		checkStm(cmd.ent.obj, state);
-        	}
-        }
-        
-        //console.log("hhhhhhhhhhhhhhhh" , checkStm(cmd.ent.obj , state));
-        
-        
-        
+        if (cmd.cmd == "move"){
+        	console.log("entity--------------\n",checkStm(cmd.ent.obj, state));
+        	console.log("location------------\n",checkStm(cmd.loc.ent.obj, state));
+        }        
         return intprt;
     }
     
-    
-    
-    
-    function checkStm (objs : Parser.Object , state : WorldState) : string[] {
-    	var list : string[] = [];
+    class position {
+    	public x : number;
+    	public y : number;
+    	public obj : ObjectDefinition
+    	public wasFound : boolean
+	
+    	constructor( x : number, y : number, obj : ObjectDefinition){
+    		this.x = x;
+    		this.y = y;
+    		this.obj = obj;
+    		this.wasFound = true;
+    	}
+
+    	public setWasFound(b : boolean){
+    		this.wasFound = b;
+    	}
+    }
+        
+    function checkStm (objs : Parser.Object , state : WorldState) : position[] {
+    	var list : position[] = [];
     	
     	if(objs.obj){
-    		
     		var stmObj = checkStm(objs.obj, state);
     		var stmLocObj = checkStm(objs.loc.ent.obj, state);
-    	
-    	for(var x =0; x< state.stacks.length;  x++){
-    		for (var y=0; y< state.stacks[x].length; y++){
-    			var index = state.stacks[x][y];
-    			if(index == stmLocObj[0]){
-    				if( objs.loc.rel == "ontop" || objs.loc.rel == "inside"){
-						if(state.stacks[x][y+1] == stmObj[0]){
-							list.push(stmObj[0]);
-							list.push(stmLocObj[0]);
-						}
+    	   				
+			if( objs.loc.rel == "ontop" || objs.loc.rel == "inside"){
+				if (!stmLocObj[0].obj){				//check if floor exist
+					for(var x =0; x< state.stacks.length;  x++){	//loop through every floor
+							 	for(var y =0; y< stmObj.length;  y++){
+							 	 
+								 if (state.stacks[x][0] == state.stacks[stmObj[y].x][stmObj[y].y]){
+								 	list.push(stmObj[y]);
+								 	list.push(stmLocObj[0]);
+								 	break;
+								 }
+							 }
 					}
-    			}
-		//		if((objs.color == null || objs.color == state.objects[index].color) && 
-		//			(objs.form == null || objs.form == state.objects[index].form)  && 
-		//				(objs.size == null || objs.size == state.objects[index].size)){
+					if(list.length == 0){
+						var errPos = (new position(-1,-1,null));
+						errPos.setWasFound(false);
+						list.push(errPos);
+					}
+				}else{
+				
+					if(!(stmLocObj[0].y+1 > state.stacks[stmLocObj[0].x].length) && 
+						(state.stacks[stmLocObj[0].x][stmLocObj[0].y+1] == state.stacks[stmObj[0].x][stmObj[0].y])){
+				
+						list.push(stmObj[0]);
+						list.push(stmLocObj[0]);
+					}else {
 						
-						
-						
-						console.log("index", x, y);
-    	//		}
-    		}
-    	}
-    	
-    	} else {
-    	
-    	for(var i in state.objects){
-    			if((objs.color == null || objs.color == state.objects[i].color) && 
-    				(objs.form == null || objs.form == state.objects[i].form)  && 
-    				(objs.size == null || objs.size == state.objects[i].size)){
-    				list.push(i);
-    				return list;
-    			}
-    	}
-    	
+						stmObj[0].setWasFound(false);
+						stmLocObj[0].setWasFound(false);
+						list.push(stmObj[0]);
+						list.push(stmLocObj[0]);
+					}
+				}
+				return list;
+			}		
+    	} else { 		
+    		
+    		if (objs.form == "floor"){
+    			list.push(new position(-1,-1, null));
+    			
+    	    }else{
+	    	    for(var x =0; x< state.stacks.length;  x++){
+		    		for (var y=0; y< state.stacks[x].length; y++){
+		    			var index = state.stacks[x][y];
+		    			if((objs.color == null || objs.color == state.objects[index].color) && 
+		    				(objs.form == null || objs.form == state.objects[index].form)  && 
+		    				(objs.size == null || objs.size == state.objects[index].size)){
+		    
+		    				var pos = new position(x,y, state.objects[state.stacks[x][y]]);
+		    				list.push(pos);
+		    			}
+	    			}
+	    		}
+			}						
     	return list;
     	}
     }
