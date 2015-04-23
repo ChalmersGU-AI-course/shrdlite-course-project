@@ -72,6 +72,11 @@ module Interpreter {
     function findObjectsByDescription(object: Parser.Object, world: WorldState): string[] {
         var result: string[] = [];
 
+        if (object.form === "floor") {
+            result.push("floor");
+            return;
+        }
+        
         if (world.holding) {
             var objectDefinition = world.objects[world.holding];
             if (isMatchByDescription(object, objectDefinition)) {
