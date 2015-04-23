@@ -1,7 +1,7 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
 ///<reference path="Interpreter.d.ts"/>
-///<reference path="Planner.ts"/>
+///<reference path="Planner.d.ts"/>
 
 module Shrdlite {
 
