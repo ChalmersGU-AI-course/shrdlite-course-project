@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="lib/collections.ts"/>
 
 module Planner {
 
@@ -44,10 +45,36 @@ module Planner {
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         var plan : string[] = [];
 
+        //TODO this assumes state is a PDDL-world, not a WorldState
+        //TODO WONT WORK!!!!!!!! MUST FIX!!!!!!!
+        var topObjects:string[] = getObjectsOnTop(state);
+
+        //TODO create the graph here
 
         return plan;
     }
 
+    //Takes a PDDL-world and returns an array of all the objects that are on top
+    function getObjectsOnTop(world) {
+        var objects: collections.Set<string>;
+
+        // Get every object in the world and add it to a set
+        for(var i in world){
+            for(var j = 0; j<2; j++){
+                if(world[i].args[j].indexOf("floor") === -1){
+                    objects.add(world[i].args[j]);
+                }
+            }
+        }
+
+        for(var i in world){
+            if(world[i].rel === "ontop") {
+                objects.remove(world[i].args[1]);
+            }
+        }
+
+        return objects.toArray();
+    }
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
