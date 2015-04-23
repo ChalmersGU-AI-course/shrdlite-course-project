@@ -72,9 +72,6 @@ module Interpreter {
         }
 
         var goals : Literal[][] = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel);
-	if(!goals) {
-	    goals = [[]];
-	}
         // This returns a dummy interpretation involving two random objects in the world
         /*var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var a = objs[getRandomInt(objs.length)];
@@ -115,16 +112,55 @@ module Interpreter {
         var valids  : ObjectInfo[] = [];
         
         for(var i = 0; i < targets.length; i++) {
-            if(loc.rel == "ontop" && checkSize(obj, targets[i].obj )) {
+            if((loc.rel == "ontop") && checkSize(obj, targets[i].obj )) {
                 valids.push(targets[i]);
             } else if(loc.rel == "inside" && checkSize(obj, targets[i].obj) && targets[i].obj.form == "box" ) {
                 valids.push(targets[i]);
-            }
+            } else if(loc.rel == "beside") {
+	
+		var ls : ObjectInfo[] = getBesides({x: targets[i].pos.x + 1, y: targets[i].pos.y}, targets[i], obj, state );
+		ls.forEach(function(l) {
+		    valids.push(l);
+		});
+
+		var rs : ObjectInfo[] = getBesides({x: targets[i].pos.x - 1, y: targets[i].pos.y}, targets[i], obj, state );
+		rs.forEach(function(r) {
+		    valids.push(r);
+		});
+	    }
         }
         return valids;
     }
 
-   
+
+
+    function getObjectAtPosition(pos : Position, state : WorldState) : ObjectInfo {
+	if( pos.x >= 0 && pos.x < state.stacks.length && pos.y >= 0 && pos.y < state.stacks[pos.x].length) {
+	    var name = state.stacks[pos.x][pos.y];
+	    var obj = state.objects[name];
+	    return {name : name, pos : pos, obj: obj};
+	} else {
+	    return null;
+	}
+    }
+
+    function getBesides(pos: Position, target: ObjectInfo, obj: Parser.Object, state : WorldState ) : ObjectInfo[] {
+	var valids : ObjectInfo[] = [];
+	if(pos.x < state.stacks.length && pos.x >= 0) {
+	    for(var k = 0; k < state.stacks[pos.x].length; k++) {
+		var objR = getObjectAtPosition({x: pos.x, y: pos.y + k}, state);
+		var objInfo : ObjectInfo[] = findValid(obj, state);
+		for(var j = 0; j < objInfo.length; j++) {
+		    if(objR && objR.name == objInfo[j].name) {
+			valids.push(target);
+			break;
+		    } 
+		}
+	    }
+	}
+	return valids;
+    }
+
 
     function checkSize(above : Parser.Object, below : Parser.Object) : boolean {
         if(below.form == "floor") {
@@ -176,17 +212,15 @@ module Interpreter {
                         valids.push(valids2[yes]);
                     }
                 } else if(obj.loc.rel == "beside"){
-		    var objL : string = state.stacks[valids3[i].pos.x - 1][valids3[i].pos.y];
-		    var objR : string = state.stacks[valids3[i].pos.x + 1][valids3[i].pos.y];
-		    
-		    var nr : number = checkObjInRelation(objL, valids2); 
-		    if( nr != -1) {
-			valids.push(valids2[nr]);
-		    }
-		    nr = checkObjInRelation(objL, valids2); 
-		    if( nr != -1) {
-		 	valids.push(valids2[nr]);
-		    }
+		    var ls = getValidsBeside({x: valids3[i].pos.x - 1, y: 0 }, valids2, state );
+		    ls.forEach(function(l){
+			valids.push(l);
+		    });
+
+		    var rs = getValidsBeside({x: valids3[i].pos.x + 1, y: 0 }, valids2, state );
+		    rs.forEach(function(r){
+			valids.push(r);
+		    });
 		}
             }
 
@@ -210,6 +244,23 @@ module Interpreter {
         }
         return valids;
     } 
+
+    function getValidsBeside (pos : Position, valids2: ObjectInfo[],  state : WorldState) : ObjectInfo[] {
+	var valids : ObjectInfo[] = [];
+	if(pos.x < state.stacks.length && pos.x >= 0) {
+	    for(var k = 0; k < state.stacks[pos.x].length; k++) {
+		var objr : ObjectInfo = getObjectAtPosition({x: pos.x, y: 0 + k}, state);
+		if(objr) {
+		    var nr : number = checkObjInRelation(objr.name, valids2); 
+		    if( nr != -1) {
+			valids.push(valids2[nr]);
+		    }
+		}
+	    }
+	}
+	return valids;
+    }
+
 
     function checkObjInRelation(obj: string, valids : ObjectInfo[]) : number{
 	var nr : number = -1;
@@ -237,6 +288,8 @@ module Interpreter {
         //should never get here
         alert("Error in findObject. Reached unreachable code");
     }
+
+
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
