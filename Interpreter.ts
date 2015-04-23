@@ -109,45 +109,45 @@ module Interpreter {
             } else if(loc.rel == "inside" && checkSize(obj, targets[i].obj) && targets[i].obj.form == "box" ) {
                 valids.push(targets[i]);
             } else if(loc.rel == "beside") {
-		
-		var ls : ObjectInfo[] = getBesides({x: targets[i].pos.x + 1, y: targets[i].pos.y}, targets[i], obj, state );
-		ls.forEach(function(l) {
-		    valids.push(l);
-		});
+                
+                var ls : ObjectInfo[] = getBesides({x: targets[i].pos.x + 1, y: targets[i].pos.y}, targets[i], obj, state );
+                ls.forEach(function(l) {
+                    valids.push(l);
+                });
 
-		var rs : ObjectInfo[] = getBesides({x: targets[i].pos.x - 1, y: targets[i].pos.y}, targets[i], obj, state );
-		rs.forEach(function(r) {
-		    valids.push(r);
-		});
-	    }
+                var rs : ObjectInfo[] = getBesides({x: targets[i].pos.x - 1, y: targets[i].pos.y}, targets[i], obj, state );
+                rs.forEach(function(r) {
+                    valids.push(r);
+                });
+            }
             else if(loc.rel == "above"){
                 var stack : string[] = state.stacks[targets[i].pos.x];
                 for(var j = targets[i].pos.y ; j < stack.length ; j++){
                     var objAbove : Parser.Object;
                     var name : string;
                     if(j == -1){ //The floor
-			objAbove = {form : "floor"};
-			name = "f_" + targets[i].pos.x;
+                        objAbove = {form : "floor"};
+                        name = "f_" + targets[i].pos.x;
                     }else{
-			objAbove = state.objects[stack[j]];
-			name = stack[j];
+                        objAbove = state.objects[stack[j]];
+                        name = stack[j];
                     }
                     if(checkSize(obj, objAbove)){
-			valids.push({obj: objAbove, pos: {x:targets[i].pos.x,y:j}, name: name});
+                        valids.push({obj: objAbove, pos: {x:targets[i].pos.x,y:j}, name: name});
                     }
                 }
             } else if(loc.rel == "rightof" || loc.rel == "leftof"){
-		var offset : number = loc.rel == "rightof" ? 1 : -1;
+                var offset : number = loc.rel == "rightof" ? 1 : -1;
 
-		for(var x = targets[i].pos.x + offset ; x < state.stacks.length && x >= 0 ; x += offset){
+                for(var x = targets[i].pos.x + offset ; x < state.stacks.length && x >= 0 ; x += offset){
                     valids.push({obj: {form : "floor"}, name: "f_" + x, pos: {x:x, y:-1}});
                     for(var y = 0 ; y < state.stacks[x].length ; y++){
-			var target : Parser.Object = state.objects[state.stacks[x][y]];
-			if(checkSize(obj,target)){
+                        var target : Parser.Object = state.objects[state.stacks[x][y]];
+                        if(checkSize(obj,target)){
                             valids.push({obj: target, name: state.stacks[x][y], pos: {x:x, y:y}});
-			}
+                        }
                     }
-		}
+                }
 
             }
         }
@@ -157,30 +157,30 @@ module Interpreter {
 
 
     function getObjectAtPosition(pos : Position, state : WorldState) : ObjectInfo {
-	if( pos.x >= 0 && pos.x < state.stacks.length && pos.y >= 0 && pos.y < state.stacks[pos.x].length) {
-	    var name = state.stacks[pos.x][pos.y];
-	    var obj = state.objects[name];
-	    return {name : name, pos : pos, obj: obj};
-	} else {
-	    return null;
-	}
+        if( pos.x >= 0 && pos.x < state.stacks.length && pos.y >= 0 && pos.y < state.stacks[pos.x].length) {
+            var name = state.stacks[pos.x][pos.y];
+            var obj = state.objects[name];
+            return {name : name, pos : pos, obj: obj};
+        } else {
+            return null;
+        }
     }
 
     function getBesides(pos: Position, target: ObjectInfo, obj: Parser.Object, state : WorldState ) : ObjectInfo[] {
-	var valids : ObjectInfo[] = [];
-	if(pos.x < state.stacks.length && pos.x >= 0) {
-	    for(var k = 0; k < state.stacks[pos.x].length; k++) {
-		var objR = getObjectAtPosition({x: pos.x, y: pos.y + k}, state);
-		var objInfo : ObjectInfo[] = findValid(obj, state);
-		for(var j = 0; j < objInfo.length; j++) {
-		    if(objR && objR.name == objInfo[j].name) {
-			valids.push(target);
-			break;
-		    } 
-		}
-	    }
-	}
-	return valids;
+        var valids : ObjectInfo[] = [];
+        if(pos.x < state.stacks.length && pos.x >= 0) {
+            for(var k = 0; k < state.stacks[pos.x].length; k++) {
+                var objR = getObjectAtPosition({x: pos.x, y: pos.y + k}, state);
+                var objInfo : ObjectInfo[] = findValid(obj, state);
+                for(var j = 0; j < objInfo.length; j++) {
+                    if(objR && objR.name == objInfo[j].name) {
+                        valids.push(target);
+                        break;
+                    } 
+                }
+            }
+        }
+        return valids;
     }
 
 
@@ -259,16 +259,16 @@ module Interpreter {
                     }
 
                 } else if(obj.loc.rel == "beside"){
-		    var ls = getValidsBeside({x: valids3[i].pos.x - 1, y: 0 }, valids2, state );
-		    ls.forEach(function(l){
-			valids.add(l);
-		    });
+                    var ls = getValidsBeside({x: valids3[i].pos.x - 1, y: 0 }, valids2, state );
+                    ls.forEach(function(l){
+                        valids.add(l);
+                    });
 
-		    var rs = getValidsBeside({x: valids3[i].pos.x + 1, y: 0 }, valids2, state );
-		    rs.forEach(function(r){
-			valids.add(r);
-		    });
-		
+                    var rs = getValidsBeside({x: valids3[i].pos.x + 1, y: 0 }, valids2, state );
+                    rs.forEach(function(r){
+                        valids.add(r);
+                    });
+                
                 }else if (obj.loc.rel == "under") {
                     var objUnderTarget : string = null;
                     var level : number = valids3[i].pos.y;
@@ -311,19 +311,19 @@ module Interpreter {
     } 
 
     function getValidsBeside (pos : Position, valids2: ObjectInfo[],  state : WorldState) : ObjectInfo[] {
-	var valids : ObjectInfo[] = [];
-	if(pos.x < state.stacks.length && pos.x >= 0) {
-	    for(var k = 0; k < state.stacks[pos.x].length; k++) {
-		var objr : ObjectInfo = getObjectAtPosition({x: pos.x, y: 0 + k}, state);
-		if(objr) {
-		    var nr : number = checkObjInRelation(objr.name, valids2); 
-		    if( nr != -1) {
-			valids.push(valids2[nr]);
-		    }
-		}
-	    }
-	}
-	return valids;
+        var valids : ObjectInfo[] = [];
+        if(pos.x < state.stacks.length && pos.x >= 0) {
+            for(var k = 0; k < state.stacks[pos.x].length; k++) {
+                var objr : ObjectInfo = getObjectAtPosition({x: pos.x, y: 0 + k}, state);
+                if(objr) {
+                    var nr : number = checkObjInRelation(objr.name, valids2); 
+                    if( nr != -1) {
+                        valids.push(valids2[nr]);
+                    }
+                }
+            }
+        }
+        return valids;
     }
 
 
