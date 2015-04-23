@@ -96,6 +96,8 @@ module Interpreter {
                 }
             }
         }
+        // Add the arm to the pddl-world
+        ppdlWorld.push({pol: true, rel: 'holding', args: (state.holding == null) ? [] : [state.holding]});
 
         console.log("stacks:",stacks);
         console.log("ppdlWorld:",ppdlWorld);
@@ -129,6 +131,23 @@ module Interpreter {
                     }
                     interpretations.push(interpretation);
                 }
+            }
+        } else if (cmd.cmd === 'take') {
+            // TODO: Should we check (here?) if the arm is already holding something?
+            var entitiesIntrprt = findEntities(cmd.ent, objects, ppdlWorld);
+
+            if (entitiesIntrprt.length > 1) {
+                console.warn('Interpreter warning: ambiguous entity or location!' +
+                'Returning multiple interpretations');
+            }
+            for (var i in entitiesIntrprt) {
+                var entities                   = entitiesIntrprt[i]
+                  , interpretation : Literal[] = [];
+                for (var k in entities) {
+                    var possiblePddlGoal = { pol: true, rel: 'holding', args: [entities[k]] };
+                    interpretation.push(possiblePddlGoal);
+                }
+                interpretations.push(interpretation);
             }
         }
 
