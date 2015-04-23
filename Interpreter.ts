@@ -76,40 +76,50 @@ module Interpreter {
     
     
     
-    function checkStm (objs : Parser.Object , state : WorldState) : boolean {
+    function checkStm (objs : Parser.Object , state : WorldState) : string[] {
+    	var list : string[] = [];
+    	
+    	if(objs.obj){
+    		
+    		var stmObj = checkStm(objs.obj, state);
+    		var stmLocObj = checkStm(objs.loc.ent.obj, state);
+    	
     	for(var x =0; x< state.stacks.length;  x++){
     		for (var y=0; y< state.stacks[x].length; y++){
     			var index = state.stacks[x][y];
-				if((objs.color == null || objs.color == state.objects[index].color) && 
-					(objs.form == null || objs.form == state.objects[index].form)  && (objs.size == null || objs.size == state.objects[index].size)){
-						//if( objs.loc.rel == "ontop" ){
-							//state.stacks[x][0];
-						//}
+    			if(index == stmLocObj[0]){
+    				if( objs.loc.rel == "ontop" || objs.loc.rel == "inside"){
+						if(state.stacks[x][y+1] == stmObj[0]){
+							list.push(stmObj[0]);
+							list.push(stmLocObj[0]);
+						}
+					}
+    			}
+		//		if((objs.color == null || objs.color == state.objects[index].color) && 
+		//			(objs.form == null || objs.form == state.objects[index].form)  && 
+		//				(objs.size == null || objs.size == state.objects[index].size)){
+						
+						
 						
 						console.log("index", x, y);
-    			}
+    	//		}
     		}
     	}
     	
-    	/*
+    	} else {
+    	
     	for(var i in state.objects){
     			if((objs.color == null || objs.color == state.objects[i].color) && 
-    				(objs.form == null || objs.form == state.objects[i].form)  && (objs.size == null || objs.size == state.objects[i].size)){
-    				
-    				return true;
+    				(objs.form == null || objs.form == state.objects[i].form)  && 
+    				(objs.size == null || objs.size == state.objects[i].size)){
+    				list.push(i);
+    				return list;
     			}
-    	*/
-    			
-    			
-    			//state.objects.forEach((parseresult) => {
+    	}
     	
-    	//}
-    	
-    	
-    	return false;
+    	return list;
+    	}
     }
-    
-    
     
 
 
