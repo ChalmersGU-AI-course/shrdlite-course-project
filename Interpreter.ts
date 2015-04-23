@@ -191,7 +191,6 @@ module Interpreter {
                     if(objAboveTarget && yes != -1){
                         valids.push(valids2[yes]);
                     }
-
                 }else if(obj.loc.rel == "above"){
                     var wholeStack : string[] = state.stacks[valids3[i].pos.x];
                     
@@ -216,6 +215,21 @@ module Interpreter {
                     if( nr != -1) {
                         valids.push(valids2[nr]);
                     }
+                }else if (obj.loc.rel == "under") {
+                    var objUnderTarget : string = null;
+                    var level : number = valids3[i].pos.y;
+                    var yes : number = -1
+                    while (level > -1) {
+                        objUnderTarget = state.stacks[valids3[i].pos.x][level];
+                        for( var j = 0; j < valids2.length; j++) {
+                            if(valids2[j].name == objUnderTarget) {
+                                yes = j;
+                                break;
+                            }
+                        }
+                        level--;
+                    }
+                    if(objUnderTarget && yes != -1) valids.push(valids2[yes]);
                 }
             }
 
