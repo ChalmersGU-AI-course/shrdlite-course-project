@@ -131,7 +131,13 @@ module Interpreter {
 
     function isRelativeMatch(firstObject: string, relation: string, secondObject: string, world: WorldState): boolean {
         var firstPosition = getObjectPosition(firstObject, world);
-        var secondPosition = getObjectPosition(secondObject, world);
+        var secondPosition: ObjectPosition;
+
+        if (secondObject === "floor") {
+            secondPosition = new ObjectPosition(firstPosition.Stack, -1);
+        } else {
+            secondPosition = getObjectPosition(secondObject, world);
+        }
 
         if (!firstPosition || !secondPosition) {
             return false;
