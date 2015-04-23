@@ -72,7 +72,9 @@ module Interpreter {
         }
 
         var goals : Literal[][] = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel);
-
+	if(!goals) {
+	    goals = [[]];
+	}
         // This returns a dummy interpretation involving two random objects in the world
         /*var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var a = objs[getRandomInt(objs.length)];
@@ -88,15 +90,20 @@ module Interpreter {
     function convertGoalsToPDDL(dict : collections.Dictionary<ObjectInfo, ObjectInfo[]>, relation : string) : Literal[][] 
     {
         var lits : Literal[][] = [[]];
+	for(var i = 0; i < dict.keys.length; i++) {
+	    lits.push([]);
+	}
+	var index = 0;
         dict.forEach(function(key: ObjectInfo, value : ObjectInfo[]) {
             for(var i = 0; i < value.length; i++) {
                 if(relation == "holding") {
 
                 } else {
                     var p : Literal = {pol: true, rel: relation, args: [key.name, value[i].name] };
-                    lits[i].push(p);
+                    lits[index].push(p);
                 }
             }
+	    index++;
         });
         return lits;
     }
@@ -168,7 +175,19 @@ module Interpreter {
                     if(objAboveTarget && yes != -1){
                         valids.push(valids2[yes]);
                     }
-                }
+                } else if(obj.loc.rel == "beside"){
+		    var objL : string = state.stacks[valids3[i].pos.x - 1][valids3[i].pos.y];
+		    var objR : string = state.stacks[valids3[i].pos.x + 1][valids3[i].pos.y];
+		    
+		    var nr : number = checkObjInRelation(objL, valids2); 
+		    if( nr != -1) {
+			valids.push(valids2[nr]);
+		    }
+		    nr = checkObjInRelation(objL, valids2); 
+		    if( nr != -1) {
+		 	valids.push(valids2[nr]);
+		    }
+		}
             }
 
         } else { //Base case
@@ -192,6 +211,16 @@ module Interpreter {
         return valids;
     } 
 
+    function checkObjInRelation(obj: string, valids : ObjectInfo[]) : number{
+	var nr : number = -1;
+        for( var i = 0; i < valids.length; i++) {
+            if(valids[i].name == obj) {
+                nr = i;
+                break;
+            }
+        }
+        return nr;
+    }
 
 
     function findObject(key : string, state : WorldState) : Position {
