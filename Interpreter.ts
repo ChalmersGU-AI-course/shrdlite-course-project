@@ -72,7 +72,9 @@ module Interpreter {
         }
 
         var goals : Literal[][] = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel);
-
+        if(!goals) {
+            goals = [[]];
+        }
         // This returns a dummy interpretation involving two random objects in the world
         /*var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var a = objs[getRandomInt(objs.length)];
@@ -88,15 +90,20 @@ module Interpreter {
     function convertGoalsToPDDL(dict : collections.Dictionary<ObjectInfo, ObjectInfo[]>, relation : string) : Literal[][] 
     {
         var lits : Literal[][] = [[]];
+        for(var i = 0; i < dict.keys.length; i++) {
+        lits.push([]);
+        }
+        var index = 0;
         dict.forEach(function(key: ObjectInfo, value : ObjectInfo[]) {
             for(var i = 0; i < value.length; i++) {
                 if(relation == "holding") {
 
                 } else {
                     var p : Literal = {pol: true, rel: relation, args: [key.name, value[i].name] };
-                    lits[i].push(p);
+                    lits[index].push(p);
                 }
             }
+        index++;
         });
         return lits;
     }
@@ -112,6 +119,22 @@ module Interpreter {
                 valids.push(targets[i]);
             } else if(loc.rel == "inside" && checkSize(obj, targets[i].obj) && targets[i].obj.form == "box" ) {
                 valids.push(targets[i]);
+            } else if(loc.rel == "above"){
+                var stack : string[] = state.stacks[targets[i].pos.x];
+                for(var j = targets[i].pos.y ; j < stack.length ; j++){
+                  var objAbove : Parser.Object;
+                  var name : string;
+                  if(j == -1){ //The floor
+                      objAbove = {form : "floor"};
+                      name = "f_" + targets[i].pos.x;
+                  }else{
+                      objAbove = state.objects[stack[j]];
+                      name = stack[j];
+                  }
+                  if(checkSize(obj, objAbove)){
+                    valids.push({obj: objAbove, pos: {x:targets[i].pos.x,y:j}, name: name});
+                  }
+                }
             }
         }
         return valids;
@@ -168,6 +191,7 @@ module Interpreter {
                     if(objAboveTarget && yes != -1){
                         valids.push(valids2[yes]);
                     }
+
                 }else if(obj.loc.rel == "above"){
                     var wholeStack : string[] = state.stacks[valids3[i].pos.x];
                     
@@ -179,6 +203,18 @@ module Interpreter {
                                 }
                             }
                         }
+                    }
+                }else if(obj.loc.rel == "beside"){
+                    var objL : string = state.stacks[valids3[i].pos.x - 1][valids3[i].pos.y];
+                    var objR : string = state.stacks[valids3[i].pos.x + 1][valids3[i].pos.y];
+        
+                    var nr : number = checkObjInRelation(objL, valids2); 
+                    if( nr != -1) {
+                        valids.push(valids2[nr]);
+                    }
+                    nr = checkObjInRelation(objL, valids2); 
+                    if( nr != -1) {
+                        valids.push(valids2[nr]);
                     }
                 }
             }
@@ -196,7 +232,9 @@ module Interpreter {
                        (obj.form  == state.objects[y].form  || obj.form  == null) && 
                        (obj.color == state.objects[y].color || obj.color == null)){
                         var position : Position = findObject(y, state);
-                        valids.push({name: y, pos: position, obj : state.objects[y]});
+                        if(position != null){
+                            valids.push({name: y, pos: position, obj : state.objects[y]});
+                        }
                     }
                 } 
             }
@@ -204,6 +242,16 @@ module Interpreter {
         return valids;
     } 
 
+    function checkObjInRelation(obj: string, valids : ObjectInfo[]) : number{
+          var nr : number = -1;
+        for( var i = 0; i < valids.length; i++) {
+            if(valids[i].name == obj) {
+                nr = i;
+                break;
+            }
+        }
+        return nr;
+    }
 
 
     function findObject(key : string, state : WorldState) : Position {
@@ -218,7 +266,7 @@ module Interpreter {
             }
         }
         //should never get here
-        alert("Error in findObject. Reached unreachable code");
+        return null;
     }
 
     function getRandomInt(max) {
