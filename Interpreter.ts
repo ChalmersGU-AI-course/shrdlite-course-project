@@ -132,9 +132,22 @@ module Interpreter {
                       name = stack[j];
                   }
                   if(checkSize(obj, objAbove)){
-                    valids.push({obj: objAbove, pos: {x:targets[i].pos.x,y:j}, name: name});
+                      valids.push({obj: objAbove, pos: {x:targets[i].pos.x,y:j}, name: name});
                   }
                 }
+            } else if(loc.rel == "rightof" || loc.rel == "leftof"){
+              var offset : number = loc.rel == "rightof" ? 1 : -1;
+
+              for(var x = targets[i].pos.x + offset ; x < state.stacks.length && x >= 0 ; x += offset){
+                  valids.push({obj: {form : "floor"}, name: "f_" + x, pos: {x:x, y:-1}});
+                  for(var y = 0 ; y < state.stacks[x].length ; y++){
+                      var target : Parser.Object = state.objects[state.stacks[x][y]];
+                      if(checkSize(obj,target)){
+                          valids.push({obj: target, name: state.stacks[x][y], pos: {x:x, y:y}});
+                      }
+                  }
+              }
+
             }
         }
         return valids;
@@ -168,7 +181,7 @@ module Interpreter {
 
 
     function findValid(obj : Parser.Object, state : WorldState) : ObjectInfo[]{
-        var valids : ObjectInfo[] = [];
+        var valids : collections.Set<ObjectInfo> = new collections.Set<ObjectInfo>();
         if(obj.obj) { //If recursive
             //All obj matching the first obj in relation
             var valids2 : ObjectInfo[] = findValid(obj.obj, state);
@@ -189,7 +202,19 @@ module Interpreter {
                         }
                     }
                     if(objAboveTarget && yes != -1){
-                        valids.push(valids2[yes]);
+                        valids.add(valids2[yes]);
+                    }
+                }else if(obj.loc.rel == "rightof" || obj.loc.rel == "leftof"){
+                    var offset : number = obj.loc.rel == "rightof" ? 1 : -1; 
+
+                    for(var s = valids3[i].pos.x + offset; s < state.stacks.length && s >= 0 ; s+= offset){
+                        for(var h = 0 ; h < state.stacks[s].length ; h++){
+                            for(var v = 0 ; v < valids2.length ; v++){
+                                if(valids2[v].name == state.stacks[s][h]){
+                                    valids.add(valids2[v]);
+                                }
+                            }
+                        }
                     }
                 }else if(obj.loc.rel == "above"){
                     var wholeStack : string[] = state.stacks[valids3[i].pos.x];
@@ -198,7 +223,7 @@ module Interpreter {
                         if(k > valids3[i].pos.y){
                             for( var j = 0; j < valids2.length; j++) {
                                 if(valids2[j].name == wholeStack[k]) {
-                                    valids.push(valids2[j]);
+                                    valids.add(valids2[j]);
                                 }
                             }
                         }
@@ -209,11 +234,11 @@ module Interpreter {
         
                     var nr : number = checkObjInRelation(objL, valids2); 
                     if( nr != -1) {
-                        valids.push(valids2[nr]);
+                        valids.add(valids2[nr]);
                     }
                     nr = checkObjInRelation(objL, valids2); 
                     if( nr != -1) {
-                        valids.push(valids2[nr]);
+                        valids.add(valids2[nr]);
                     }
                 }else if (obj.loc.rel == "under") {
                     var objUnderTarget : string = null;
@@ -229,7 +254,7 @@ module Interpreter {
                         }
                         level--;
                     }
-                    if(objUnderTarget && yes != -1) valids.push(valids2[yes]);
+                    if(objUnderTarget && yes != -1) valids.add(valids2[yes]);
                 }
             }
 
@@ -238,7 +263,7 @@ module Interpreter {
                 for(var n = 0; n < state.stacks.length; n++) {
                     var object : Parser.Object = {form: "floor"}
                     var info : ObjectInfo = {name : "f_" + n, pos: {x: n, y: -1}, obj : object};
-                    valids.push(info);
+                    valids.add(info);
                 }
             } else {
                 for(var y in state.objects) {
@@ -247,13 +272,13 @@ module Interpreter {
                        (obj.color == state.objects[y].color || obj.color == null)){
                         var position : Position = findObject(y, state);
                         if(position != null){
-                            valids.push({name: y, pos: position, obj : state.objects[y]});
+                            valids.add({name: y, pos: position, obj : state.objects[y]});
                         }
                     }
                 } 
             }
         }
-        return valids;
+        return valids.toArray();
     } 
 
     function checkObjInRelation(obj: string, valids : ObjectInfo[]) : number{
