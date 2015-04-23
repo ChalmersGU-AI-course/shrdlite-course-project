@@ -119,6 +119,22 @@ module Interpreter {
                 valids.push(targets[i]);
             } else if(loc.rel == "inside" && checkSize(obj, targets[i].obj) && targets[i].obj.form == "box" ) {
                 valids.push(targets[i]);
+            } else if(loc.rel == "under") {
+                var stack : string[] = state.stacks[targets[i].pos.x];
+                for(var j = targets[i].pos.y; j >= -1; j--) {
+                    var objUnder : Parser.Object;
+                    var name : string;
+                    if(j == -1) {
+                        objUnder = {form : "floor"};
+                        name = "f_" + targets[i].pos.x;
+                    } else {
+                        objUnder = state.objects[stack[j]];
+                        name = stack[j];
+                    }
+                    if(objUnder.form == "floor" || checkSize(objUnder, obj)) {
+                        valids.push({obj: objUnder, pos: {x: targets[i].pos.x, y: j}, name: name});
+                    }
+                }
             }
         }
         return valids;
@@ -183,13 +199,11 @@ module Interpreter {
                         objUnderTarget = state.stacks[valids3[i].pos.x][level];
                         for( var j = 0; j < valids2.length; j++) {
                             if(valids2[j].name == objUnderTarget) {
-                                yes = j;
-                                break;
+                                valids.push(valids2[j]);
                             }
                         }
                         level--;
                     }
-                    if(objUnderTarget && yes != -1) valids.push(valids2[yes]);
                 } else if (obj.loc.rel == "beside"){
         		    var objL : string = state.stacks[valids3[i].pos.x - 1][valids3[i].pos.y];
         		    var objR : string = state.stacks[valids3[i].pos.x + 1][valids3[i].pos.y];
