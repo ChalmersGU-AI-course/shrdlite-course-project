@@ -47,7 +47,23 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        var matching = findObjects(cmd.ent, state);
+        var matching: string[];
+        if (cmd.ent) {
+             matching = findObjects(cmd.ent.obj, state);
+        } else if(state.holding) {
+            matching = [state.holding];
+        }
+
+        var literals: Literal[][] = [];
+
+        if (!cmd.loc) {
+            for (var i = 0; i < matching.length; ++i) {
+                literals.push([{pol: true, rel: "holding", args: [matching[i]]}]);
+            }
+            return literals;
+        }
+
+        literals = buildRelativeLiterals(matching[0], cmd.loc, state);
 
         // This returns a dummy interpretation involving two random objects in the world
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
@@ -56,12 +72,46 @@ module Interpreter {
         var intprt : Literal[][] = [[
             {pol: true, rel: "ontop", args: [a, "floor"]},
             {pol: true, rel: "holding", args: [b]}
-        ]];
+        ],
+        []];
         return intprt;
     }
 
-    function findObjects(entity: Parser.Entity, world: WorldState): string[] {
-        var parserObject = entity.obj;
+    function buildRelativeLiterals(object: string, location: Parser.Location, world: WorldState): Literal[][] {
+        var matching: string[];
+        if (location.ent.obj.obj) {
+            matching = findObjectsByDescription(location.ent.obj.obj, world);
+        } else {
+            matching = findObjectsByDescription(location.ent.obj, world);
+        }
+
+
+        if (location.ent.obj.loc) {
+            for (var i = 0; i < matching.length; ++i) {
+                var literals = buildRelativeLiterals(matching[i], location.ent.obj.loc, world);
+            }
+
+            var result: Literal[][] = [];
+            for (var i = 0; i < childLiterals.length; ++i) {
+                for (var m = 0; m < matching.length; ++m) {
+                    var childLiteral = childLiterals[i].slice();
+                    var match = matching[m];
+                    childLiteral.splice(0, 0, {pol: true, rel: location.rel, args: [object, match]});
+                    result.push(childLiteral);
+                }
+            }
+
+            return result;
+        } else {
+            var result: Literal[][] = [];
+            for (var m = 0; m < matching.length; ++m) {
+                result.push([{pol: true, rel: location.rel, args: [object, matching[m]]}]);
+            }
+            return result;
+        }
+    }
+
+    function findObjects(parserObject: Parser.Object, world: WorldState): string[] {
         if (parserObject.obj) {
             return findObjectsByLocation(parserObject, world);
         } else {
@@ -125,7 +175,8 @@ module Interpreter {
     }
 
     function isMatchByLocation(objectId: string, location: Parser.Location, world: WorldState): boolean {
-        var matchingEntities = findObjects(location.ent, world);
+        //handle singular vs plural quantifier
+        var matchingEntities = findObjects(location.ent.obj, world);
         for (var matchingNr = 0; matchingNr < matchingEntities.length; ++matchingNr) {
             if (isRelativeMatch(objectId, location.rel, matchingEntities[matchingNr], world)) {
                 return true;
