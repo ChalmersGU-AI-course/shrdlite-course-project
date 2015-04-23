@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
+///<reference path="collections.ts"/>
 
 module Interpreter {
 
@@ -7,6 +8,13 @@ module Interpreter {
 	x : number;
 	y : number;
     }
+
+    interface ObjectInfo {
+	pos  : Position;
+	name : string;
+	obj  : Parser.Object;
+    }
+
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
@@ -51,35 +59,65 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-	
-	var valids : string[] = findValid(cmd.ent.obj, state);
-	if(valids.length == 0) {
+
+ 	var toMove : ObjectInfo[] = findValid(cmd.ent.obj, state);
+	var moveWithGoals = new collections.Dictionary<ObjectInfo, ObjectInfo[]>();
+
+	if(toMove.length == 0) {
 	    alert("no such object TODO");
 	}
+	for(var i = 0; i < toMove.length; i++) {
+	    var validGoals : ObjectInfo[] = checkRelation(toMove[i].obj, cmd.loc, state);
+	    moveWithGoals.setValue(toMove[i], validGoals);
+	}
+
+	var goals : Literal[][] = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel);
 
         // This returns a dummy interpretation involving two random objects in the world
-        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        /*var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
         var intprt : Literal[][] = [[
             {pol: true, rel: "ontop", args: [a, "floor"]},
             {pol: true, rel: "holding", args: [b]}
-        ]];
-        return intprt;
+        ]];*/
+
+        return goals;
     }
 
-    function checkRelation(obj : Parser.Object, loc : Parser.Location, state: WorldState) {
+    function convertGoalsToPDDL(dict : collections.Dictionary<ObjectInfo, ObjectInfo[]>, relation : string) : Literal[][] 
+    {
+	var lits : Literal[][] = [[]];
+	dict.forEach(function(key: ObjectInfo, value : ObjectInfo[]) {
+	    for(var i = 0; i < value.length; i++) {
+		if(relation == "holding") {
+
+		} else {
+		    var p : Literal = {pol: true, rel: relation, args: [key.name, value[i].name] };
+		    lits[i].push(p);
+		}
+	    }
+	});
+	return lits;
+    }
+
+    //returns all valids targets for the object with the specified relation
+    function checkRelation(obj : Parser.Object, loc : Parser.Location, state: WorldState) : ObjectInfo[] {
 	//find target
-	var targets : string[] = findValid(loc.ent.obj, state);
-	var valids  : string[] = [];
+	var targets : ObjectInfo[] = findValid(loc.ent.obj, state);
+	var valids  : ObjectInfo[] = [];
 	
 	for(var i = 0; i < targets.length; i++) {
-	    if(loc.rel == "ontop" && checkSize(obj, loc.ent.obj)) {
-		
+	    if(loc.rel == "ontop" && checkSize(obj, targets[i].obj )) {
+		valids.push(targets[i]);
+	    } else if(loc.rel == "inside" && checkSize(obj, targets[i].obj) && targets[i].obj.form == "box" ) {
+		valids.push(targets[i]);
 	    }
 	}
 	return valids;
     }
+
+   
 
     function checkSize(above : Parser.Object, below : Parser.Object) : boolean {
 	if(below.form == "floor") {
@@ -106,22 +144,27 @@ module Interpreter {
     }
 
 
-    function findValid(obj : Parser.Object, state : WorldState) : string[]{
-	var valids : string[] = [];
+    function findValid(obj : Parser.Object, state : WorldState) : ObjectInfo[]{
+	var valids : ObjectInfo[] = [];
 	if(obj.obj) { //If recursive
 	    //All obj matching the first obj in relation
-	    var valids2 : string[] = findValid(obj.obj, state);
+	    var valids2 : ObjectInfo[] = findValid(obj.obj, state);
 
 	    //All obj mathching the seconds obj in relation
-	    var valids3 : string[] = findValid(obj.loc.ent.obj , state);
+	    var valids3 : ObjectInfo[] = findValid(obj.loc.ent.obj , state);
 
 	    //Finds all objs in valids that match the relationship
 	    for( var i = 0; i < valids3.length; i++) {
-		    
-		var targetObjPos : Position = findObject(valids3[i], state);
+
 		if(obj.loc.rel == "inside" || obj.loc.rel == "ontop" ) {
-		    var objAboveTarget : string = state.stacks[targetObjPos.x][targetObjPos.y + 1];
-		    var yes : number = valids2.indexOf(objAboveTarget);
+		    var objAboveTarget : string = state.stacks[valids3[i].pos.x][valids3[i].pos.y + 1];
+		    var yes : number = -1;
+		    for( var j = 0; j < valids2.length; j++) {
+			if(valids2[j].name == objAboveTarget) {
+			    yes = j;
+			    break;
+			}
+		    }
 		    if(objAboveTarget && yes != -1){
 			valids.push(valids2[yes]);
 		    }
@@ -131,20 +174,23 @@ module Interpreter {
 	} else { //Base case
 	    if(obj.form == "floor") {
 		for(var n = 0; n < state.stacks.length; n++) {
-		    valids.push("f_" + n);
+		    var object : Parser.Object = {form: "floor"}
+		    var info : ObjectInfo = {name : "f_" + n, pos: {x: n, y: -1}, obj : object};
+		    valids.push(info);
 		}
 	    } else {
 		for(var y in state.objects) {
 		    if((obj.size  == state.objects[y].size  || obj.size  == null) &&
 		       (obj.form  == state.objects[y].form  || obj.form  == null) && 
 		       (obj.color == state.objects[y].color || obj.color == null)){
-			valids.push(y);
+			var position : Position = findObject(y, state);
+			valids.push({name: y, pos: position, obj : state.objects[y]});
 		    }
 		} 
 	    }
 	}
 	return valids;
-    }
+    } 
 
 
 
