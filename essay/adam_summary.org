@@ -1,0 +1,23 @@
+* Ethical guidelines of a superintelligence
+
+  http://www.cs.nyu.edu/faculty/davise/papers/Bostrom.pdf
+
+  file:articles/Ethical_guidelines.pdf
+
+  A review of bostrom's "SuperIntelligence: Paths, Dangers, Stategies".
+
+  Critical of bostrom, bostrom is exaggerating.
+
+  Probably not useful to our essay, perhaps if we also study above
+  mentioned book.
+
+  #+BEGIN_QUOTE
+  developing an understanding of ethics as contemporary humans
+  understand it is actually one of the easier problems facing AI
+  #+END_QUOTE
+
+* Roboethics: Social and Ethical Implications of Robotics
+
+  file:articles/Roboethics.pdf
+
+  Predicts humanoid robots in the next decades.
