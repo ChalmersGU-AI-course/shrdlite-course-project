@@ -1,16 +1,21 @@
-module.exports = 
-    plan: function(interpretations, currentState) {
-    },
+var Planner = {};
+(function (Planner) {
+    function plan(interpretations, currentState) {
+    }
+	Planner.plan = plan;
 
-	planToString: function(res) {
-    },
+	function planToString(res) {
+    }
+	Planner.planToString = planToString;
 
-	Error: function () {
+	var Error = (function () {
         function Error(message) {
             this.message = message;
             this.name = "Planner.Error";
         }
         Error.prototype.toString = function () { return this.name + ": " + this.message; };
         return Error;
-    }
-}
+    })();
+	Planner.Error = Error;
+})(Planner)
+window.Planner = Planner;
