@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="lib/collections.ts"/>
 
 module Planner {
 
@@ -39,52 +40,41 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
+    //TODO first create the graph then find shortest path with AStar
+    //TODO Remove the code that is here right now
+    function planInterpretation(intprt : PddlLiteral[][], state : WorldState) : string[] {
         var plan : string[] = [];
 
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
-            }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
-            }
-        }
+        //TODO this assumes state is a PDDL-world, not a WorldState
+        //TODO WONT WORK!!!!!!!! MUST FIX!!!!!!!
+        //var topObjects:string[] = getObjectsOnTop(state);
 
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
-
-        if (pickstack < state.stacks.length-1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
-                plan.push("r");
-            }
-
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
-                plan.push("l");
-            }
-        }
-
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
+        //TODO create the graph here
 
         return plan;
     }
 
+    //Takes a PDDL-world and returns an array of all the objects that are on top
+    function getObjectsOnTop(world) {
+        var objects: collections.Set<string>;
+
+        // Get every object in the world and add it to a set
+        for(var i in world){
+            for(var j = 0; j<2; j++){
+                if(world[i].args[j].indexOf("floor") === -1){
+                    objects.add(world[i].args[j]);
+                }
+            }
+        }
+
+        for(var i in world){
+            if(world[i].rel === "ontop") {
+                objects.remove(world[i].args[1]);
+            }
+        }
+
+        return objects.toArray();
+    }
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);

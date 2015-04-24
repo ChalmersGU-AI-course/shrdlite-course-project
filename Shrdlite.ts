@@ -31,6 +31,7 @@ module Shrdlite {
     // - then it interprets the parse(s)
     // - then it creates plan(s) for the interpretation(s)
 
+    //TODO convert the world to a pddl-world before sending it to interpreter and planner!
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
@@ -48,8 +49,17 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
         });
 
+
+        // TODO own function
+
+        var extendedState = extendWorldState(world.currentState);
+
+
+        //console.log("stacks:",objStacks);
+        //console.log("pddlWorld:",pddlWorld);
+
         try {
-            var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
+            var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, extendedState);
         } catch(err) {
             if (err instanceof Interpreter.Error) {
                 world.printError("Interpretation error", err.message);
@@ -64,7 +74,7 @@ module Shrdlite {
         });
 
         try {
-            var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
+            var plans : Planner.Result[] = Planner.plan(interpretations, extendedState);
         } catch(err) {
             if (err instanceof Planner.Error) {
                 world.printError("Planning error", err.message);
