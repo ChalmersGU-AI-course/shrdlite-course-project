@@ -7,25 +7,21 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
-    export function interpret(parses : Parser.Result[], currentState : ExtendedWorldState) : Result[] {
-
-        var interpretations : Result[] = [];
-        parses.forEach((parseresult) => {
-            var intprt : Result = <Result>parseresult;
-            intprt.intp = interpretCommand(intprt.prs, currentState);
-            interpretations.push(intprt);
-        });
-        if (interpretations.length) {
-            return interpretations;
+    export function interpret(parses : Parser.Result[], state : ExtendedWorldState) : PddlLiteral[][][] {
+        var cmds        : Parser.Command[]    = <Parser.Command[]> _.map(parses, 'prs')
+        //  , intpsPerCmd : PddlLiteral[][][][] = _.map(cmds, _.partial(interpretCommand, _, state))
+          , intpsPerCmd : PddlLiteral[][][][] = _.map(cmds, function(a) {return interpretCommand(a, state);})
+          , intps       : PddlLiteral[][][]   = concat(intpsPerCmd)
+        if (intps.length) {
+            return intps;
         } else {
             throw new Interpreter.Error("Found no interpretation");
         }
     }
 
-    export interface Result extends Parser.Result {intp:PddlLiteral[][];}
-
-    export function interpretationToString(res : Result) : string {
-        return res.intp.map((lits) => {
+    export function interpretationToString(res : PddlLiteral[][]) : string {
+        // TODO: print human-readable sentence? Or at least add new function for that
+        return res.map((lits) => {
             return lits.map((lit) => literalToString(lit)).join(" & ");
         }).join(" | ");
     }
@@ -34,6 +30,9 @@ module Interpreter {
         return (lit.pol ? "" : "-") + lit.rel + "(" + lit.args.join(",") + ")";
     }
 
+
+    // TODO: Don't use anywhere! 'Tis bad!
+    export interface Result extends Parser.Result {intp:PddlLiteral[][];}
 
     export class Error implements Error {
         public name = "Interpreter.Error";
@@ -45,7 +44,7 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function interpretCommand(cmd : Parser.Command, state : ExtendedWorldState) : PddlLiteral[][] {
+    function interpretCommand(cmd : Parser.Command, state : ExtendedWorldState) : PddlLiteral[][][] {
         // Outer list: different interpretations
         // Inner list: different conditions for one interpretation, separated by OR.
         //             that is, either of may be true for the interpretation to be satisfied
@@ -62,7 +61,7 @@ module Interpreter {
         // cmd.ent: what object to do this with (may be undefined, if e.g. "drop")
         // cmd.loc: where to put it (may be undefined, if cmd is e.g. "take")
 
-        var interpretations : PddlLiteral[][] = [];
+        var interpretations : PddlLiteral[][][] = [];
 
         if (cmd.cmd === 'move') {
                 // Which entity we should move
@@ -78,17 +77,26 @@ module Interpreter {
             // Add all possible combinations of interpretations
             for (var i in entitiesIntrprt) {
                 for (var j in locationsIntrprt) {
-                    var entities                   = entitiesIntrprt[i]
-                      , locations                  = locationsIntrprt[j]
-                      , interpretation : PddlLiteral[] = [];
-                    // For each interpretation, create all possible PDDL goal states
-                    for (var k in entities) {
-                        for (var l in locations) {
-                            var possiblePddlGoal = {pol: true, rel: rel, args: [entities[k].id, locations[l].id]};
-                            interpretation.push(possiblePddlGoal);
+                    var entitiesOr                   = entitiesIntrprt[i]
+                      , locationsOr                  = locationsIntrprt[j]
+                      , interpretationOr : PddlLiteral[][] = [];
+                    // Disjunctive
+                    for (var k in entitiesOr) {
+                        for (var l in locationsOr) {
+                            var entitiesAnd                       = entitiesOr[k]
+                              , locationsAnd                      = locationsOr[l]
+                              , interpretationAnd : PddlLiteral[] = [];
+                            // Conjunctive
+                            for (var m in entitiesAnd) {
+                                for (var n in locationsAnd) {
+                                    var pddlGoal = {pol: true, rel: rel, args: [entitiesAnd[m].id, locationsAnd[n].id]};
+                                    interpretationAnd.push(pddlGoal);
+                                }
+                            }
+                            interpretationOr.push(interpretationAnd);
                         }
                     }
-                    interpretations.push(interpretation);
+                    interpretations.push(interpretationOr);
                 }
             }
         }
@@ -109,14 +117,15 @@ module Interpreter {
         return interpretations;
     }
 
+    // TODO: update documentation below, is false
     // Finds one/many entities matching the description 'ent' from the parser
     // Returns obj[][].
     // The outer list is of _different_ interpretations,
     //   (i.e. "the white ball" may find several white balls. => [[b1], [b2]])
     // The inner list is of several acceptable entities for one interpretation
     //   (e.g. "the floor" should accept all floor tiles. => [[b1,b2]])
-    // TODO: find sensible type for objects (if needed?)
-    function findEntities(ent : Parser.Entity, objects, ppdlWorld) : any[][] /* : Parser.Entity[] */ {
+    // TODO: update so it works
+    function findEntities(ent : Parser.Entity, objects, ppdlWorld) : any[][][] /* : Parser.Entity[] */ {
         if (ent) {
 
             console.log("findEntities()....");
@@ -190,19 +199,6 @@ module Interpreter {
     }
 
 
-    //function hasConstraint(ppdlWorld, constraint) {
-    //    return _.find(ppdlWorld, constraint);
-    //}
-
-    // Checks if ppdlWorld has inside constraint
-    //function isInside(ppdlWorld, box, ent) {
-    //    // TODO
-    //    var constraint = newInside(true, ent.id, box.id)
-    //      , found      = _.find(ppdlWorld, constraint);
-    //    console.log("isInside(): constraint:",constraint,"ppdlWorld",ppdlWorld,"found:",found);
-    //    return found;
-    //}
-
     // Checks if ppdlWorld has some binary constraint
     // (Typically 'inside' or 'ontop')
     function hasBinaryConstraint(ppdlWorld, pol, rel, obj1, obj2) {
@@ -213,18 +209,8 @@ module Interpreter {
     }
 
 
-    // Checks if ent is inside box, in the world with objects 'objects'
-    function isOntop(ppdlWorld, box, ent) {
-        // TODO
-        var constraint = {pol: true, rel: 'inside', args: [ent.id, box.id]}
-            , found      = _.find(ppdlWorld, constraint);
-        //console.log("isInside(): constraint:",constraint,"ppdlWorld",ppdlWorld,"found:",found);
-        return found;
-    }
-
 
     // Removes all null properties in an object
-    // Not used atm
     function deleteNullProperties(obj) {
         for (var k in obj) {
             if (obj[k] === null) {
