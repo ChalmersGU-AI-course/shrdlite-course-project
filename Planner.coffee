@@ -27,6 +27,15 @@ nextMoves = (state) ->
  return []
 
 getNextState = (state, move) ->
+  if move is 'p'
+    state.holding = state.stacks[state.arm].pop()
+  else if move is 'd'
+    state.stacks[state.arm].push(state.holding) 
+    state.holding = null
+  else if move is 'r'
+    state.arm = state.arm + 1
+  else if move is 'l'
+    state.arm = state.arm - 1
   return state
 
 equality = (state, goal) ->
