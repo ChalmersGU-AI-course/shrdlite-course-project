@@ -49,10 +49,17 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
         });
 
-        //TODO convert world into PDDL-world
+
+        // TODO own function
+
+        var extendedState = extendWorldState(world.currentState);
+
+
+        //console.log("stacks:",objStacks);
+        //console.log("pddlWorld:",pddlWorld);
 
         try {
-            var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
+            var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, extendedState);
         } catch(err) {
             if (err instanceof Interpreter.Error) {
                 world.printError("Interpretation error", err.message);
@@ -67,7 +74,7 @@ module Shrdlite {
         });
 
         try {
-            var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
+            var plans : Planner.Result[] = Planner.plan(interpretations, extendedState);
         } catch(err) {
             if (err instanceof Planner.Error) {
                 world.printError("Planning error", err.message);

@@ -42,12 +42,12 @@ module Planner {
 
     //TODO first create the graph then find shortest path with AStar
     //TODO Remove the code that is here right now
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
+    function planInterpretation(intprt : PddlLiteral[][], state : WorldState) : string[] {
         var plan : string[] = [];
 
         //TODO this assumes state is a PDDL-world, not a WorldState
         //TODO WONT WORK!!!!!!!! MUST FIX!!!!!!!
-        var topObjects:string[] = getObjectsOnTop(state);
+        //var topObjects:string[] = getObjectsOnTop(state);
 
         //TODO create the graph here
 
