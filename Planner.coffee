@@ -3,10 +3,12 @@ class Planner
 Planner.plan = (interpretations, currentState) ->
   
   plans = []
-  movesToGoal = Astar(currentstate, intprt.intp[0], heuristicFunction,
-      nextMoves, getNextState, equality)
-  plan.plan = planInterpretation(movesToGoal, currentState)
+  plan = interpretations[0]
+  #movesToGoal = Astar(currentstate, intprt.intp[0], heuristicFunction,
+  #   nextMoves, getNextState, equality)
+  plan.plan = planInterpretation(plan.intp, currentState)
   plans.push(plan)
+  console.log plan.intp
   return plans
 
 planInterpretation = (intprt, state) ->
@@ -99,6 +101,69 @@ getNextState = (state, move) ->
 
 equality = (state, goal) ->
   return state.arm == goal.arm && state.holding == goal.holding && "#{state.stacks}" is "#{goal.stacks}"
+
+polarity = (polarity, b) ->
+  return ((not polarity and not b) or (polarity and b))
+
+leftOfCheck = (state, left, right) ->
+  result = false
+  for stack,i in state.stacks
+    if right in stack
+      if i is not 0 and left in state.stacks[i - 1]
+        result = true
+  return result
+
+onTopCheck = (state, above, below) ->
+  result = false
+  for stack in state.stacks
+    if below in stack
+      if stack.indexOf(above) - stack.indexOf(below) is 1
+        result = true
+  return result
+
+aboveCheck = (state, above, below) ->
+  result = false
+  for stack in state.stacks
+    if below in stack
+      if stack.indexOf(above) - stack.indexOf(below) >= 1
+        result = true
+  return result
+
+satisfaction = (state, goalRep) ->
+  result = true
+  for goal in goalRep
+    p = goal.pol
+    c = false
+    switch goal.rel
+      when "holding"
+        c = (goal.args[0] is state.holding)
+      when "ontop", "inside"
+        a = goal.args[0]
+        b = goal.args[1]
+        c = onTopCheck(state,a,b)
+      when "leftof"
+        a = goal.args[0]
+        b = goal.args[1]
+        c = leftOfCheck(state,a,b)
+      when "rightof"
+        a = goal.args[0]
+        b = goal.args[1]
+        c = leftOfCheck(state,b,a)
+      when "beside"
+        a = goal.args[0]
+        b = goal.args[1]
+        c = leftOfCheck(state,a,b) or leftOfCheck(state,b,a)
+      when "above"
+        a = goal.args[0]
+        b = goal.args[1]
+        c = aboveCheck(state,a,b)
+      when "under"
+        a = goal.args[0]
+        b = goal.args[1]
+        c = aboveCheck(state,b,a)
+    result = result and polarity(p, c)
+
+  return result
 
 Planner.planToString = (res)->
   console.log "called planToString"
