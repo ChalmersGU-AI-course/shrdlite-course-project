@@ -86,6 +86,9 @@ function extendWorldState(state: WorldState) : ExtendedWorldState {
             }
         }
     }
+    if (state.holding != null) {
+        pddlWorld.push({ pol: true, rel: 'holding', args: [state.holding] });
+    }
     var newState : ExtendedWorldState = {
         objStacks: objStacks,
         objectsWithId: objectsWithId,
