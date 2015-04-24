@@ -32,17 +32,19 @@ interface World {
 
 // Our extended versions :)
 
+// Extends an ObjectDefinition to an ObjectDefinitionWithId
 function assignObjectId(obj : ObjectDefinition, id : string) {
     var newObj : ObjectDefinitionWithId = {
         form: obj.form,
         size: obj.size,
         color: obj.color,
         id: id
-    }
+    };
     return newObj;
 }
 
-function extendWorldState(state: WorldState) {
+// Extends a WorldState
+function extendWorldState(state: WorldState) : ExtendedWorldState {
 
     // Create convenient world representation (store the objects in stacks, rather than id's)
     var objStacks : ObjectDefinitionWithId[][] = _.map(state.stacks, function (stack, i) {
@@ -93,7 +95,7 @@ function extendWorldState(state: WorldState) {
         arm: state.arm,
         objects: state.objects,
         examples: state.examples
-    }
+    };
     return newState;
 }
 
