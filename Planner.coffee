@@ -39,7 +39,7 @@ getNextState = (state, move) ->
   return state
 
 equality = (state, goal) ->
-  return false;
+  return state.arm == goal.arm && state.holding == goal.holding && "#{state.stacks}" is "#{goal.stacks}"
 
 Planner.planToString = (res)->
   console.log "called planToString"
