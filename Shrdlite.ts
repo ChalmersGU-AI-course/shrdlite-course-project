@@ -49,14 +49,7 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
         });
 
-
-        // TODO own function
-
         var extendedState = extendWorldState(world.currentState);
-
-
-        //console.log("stacks:",objStacks);
-        //console.log("pddlWorld:",pddlWorld);
 
         try {
             var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, extendedState);
@@ -68,10 +61,32 @@ module Shrdlite {
                 throw err;
             }
         }
+
+        // Ambiguity resolution?
+        // TODO
+        world.printSystemOutput("Found interpretations, count: "+interpretations.length);
+        if (interpretations.length > 1) {
+            world.printSystemOutput("Multiple interpretations found:");
+            var interpretationStrings = _.map(interpretations, Interpreter.interpretationToString);
+            _.each(interpretationStrings, world.printSystemOutput);
+            // Loop until user has chosen one
+            var interpretation = null;
+            while (!interpretation) {
+                world.readUserInput("Which one did you mean?", function (i) {
+                    if (i > 0 && i < interpretations.length) {
+                        // TODO
+                    } else {
+                        world.printSystemOutput("Unfortunately, I didn't quite grasp that.");
+                    }
+                })
+            }
+        }
+        /*
         world.printDebugInfo("Found " + interpretations.length + " interpretations");
         interpretations.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
         });
+        */
 
         try {
             var plans : Planner.Result[] = Planner.plan(interpretations, extendedState);
