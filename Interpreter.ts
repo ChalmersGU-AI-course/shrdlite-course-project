@@ -7,7 +7,7 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
-    export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
+    export function interpret(parses : Parser.Result[], currentState : ExtendedWorldState) : Result[] {
 
         var interpretations : Result[] = [];
         parses.forEach((parseresult) => {
@@ -22,10 +22,7 @@ module Interpreter {
         }
     }
 
-
-    export interface Result extends Parser.Result {intp:Literal[][];}
-    export interface Literal {pol:boolean; rel:string; args:string[];}
-
+    export interface Result extends Parser.Result {intp:PddlLiteral[][];}
 
     export function interpretationToString(res : Result) : string {
         return res.intp.map((lits) => {
@@ -33,7 +30,7 @@ module Interpreter {
         }).join(" | ");
     }
 
-    export function literalToString(lit : Literal) : string {
+    export function literalToString(lit : PddlLiteral) : string {
         return (lit.pol ? "" : "-") + lit.rel + "(" + lit.args.join(",") + ")";
     }
 
@@ -48,7 +45,7 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
+    function interpretCommand(cmd : Parser.Command, state : ExtendedWorldState) : PddlLiteral[][] {
         // Outer list: different interpretations
         // Inner list: different conditions for one interpretation, separated by OR.
         //             that is, either of may be true for the interpretation to be satisfied
@@ -58,57 +55,19 @@ module Interpreter {
         console.log('stacks:', state.stacks);
         console.log('cmd:',cmd);
 
+        var objects   = state.objectsWithId
+          , pddlWorld = state.pddlWorld;
+
         // cmd.cmd: what to do ("move")
         // cmd.ent: what object to do this with (may be undefined, if e.g. "drop")
         // cmd.loc: where to put it (may be undefined, if cmd is e.g. "take")
-
-        // For debugging, store in window object
-        this.objects = state.objects;
-
-        // Create convenient world representation (store the objects in stacks, rather than id's)
-        var stacks : any = _.map(state.stacks, function (stack, i) {
-            var newStack = _.map(stack, function (objId) {
-                // Add 'id' property to each object
-                return _.assign(state.objects[objId], {id: objId});
-                //return state.objects[objId];
-            });
-            // Add floor objects at beginning of each stack
-            var floor = {form: 'floor', id: 'floor-'+i}
-            newStack.unshift(floor);
-            return newStack;
-        });
-        // Create array of all objects (also convenient)
-        var objects = concat(stacks);
-
-        // Create PPDL representation
-        // TODO: don't do it here; waste of CPU cycles
-        var ppdlWorld : Literal[] = [];
-        for (var x in stacks) {
-            // Add constraints
-            for (var y = 0; y<stacks[x].length; y++) {
-                // On top / inside
-                var obj     = stacks[x][y]
-                  , nextObj =stacks[x][y+1];
-                if (nextObj) {
-                    var rel        = (obj.form == 'box') ? 'inside' : 'ontop'
-                      , constraint = {pol: true, rel: rel, args: [nextObj.id, obj.id]};
-                    ppdlWorld.push(constraint);
-                }
-            }
-        }
-        // Add the arm to the pddl-world
-        ppdlWorld.push({pol: true, rel: 'holding', args: (state.holding == null) ? [] : [state.holding]});
-
-        console.log("stacks:",stacks);
-        console.log("ppdlWorld:",ppdlWorld);
-
-        var interpretations : Literal[][] = [];
+        var interpretations : PddlLiteral[][] = [];
 
         if (cmd.cmd === 'move') {
                 // Which entity we should move
-            var entitiesIntrprt        = findEntities(cmd.ent, objects, ppdlWorld)
+            var entitiesIntrprt        = findEntities(cmd.ent, objects, pddlWorld)
                 // Where we should move it
-              , locationsIntrprt       = findEntities(cmd.loc.ent, objects, ppdlWorld)
+              , locationsIntrprt       = findEntities(cmd.loc.ent, objects, pddlWorld)
                 // How entity will be positioned on location (ontop, inside, ...)
               , rel             = cmd.loc.rel;
             if (entitiesIntrprt.length > 1 || locationsIntrprt.length > 1) {
@@ -120,11 +79,10 @@ module Interpreter {
                 for (var j in locationsIntrprt) {
                     var entities                   = entitiesIntrprt[i]
                       , locations                  = locationsIntrprt[j]
-                      , interpretation : Literal[] = [];
+                      , interpretation : PddlLiteral[] = [];
                     // For each interpretation, create all possible PDDL goal states
                     for (var k in entities) {
                         for (var l in locations) {
-                            // TODO: do not return actual objects in the PDDL goal, but their id's!
                             var possiblePddlGoal = {pol: true, rel: rel, args: [entities[k].id, locations[l].id]};
                             interpretation.push(possiblePddlGoal);
                         }
@@ -134,7 +92,7 @@ module Interpreter {
             }
         } else if (cmd.cmd === 'take') {
             // TODO: Should we check (here?) if the arm is already holding something?
-            var entitiesIntrprt = findEntities(cmd.ent, objects, ppdlWorld);
+            var entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld);
 
             if (entitiesIntrprt.length > 1) {
                 console.warn('Interpreter warning: ambiguous entity or location!' +
@@ -142,7 +100,7 @@ module Interpreter {
             }
             for (var i in entitiesIntrprt) {
                 var entities                   = entitiesIntrprt[i]
-                  , interpretation : Literal[] = [];
+                  , interpretation : PddlLiteral[] = [];
                 for (var k in entities) {
                     var possiblePddlGoal = { pol: true, rel: 'holding', args: [entities[k]] };
                     interpretation.push(possiblePddlGoal);
@@ -157,7 +115,7 @@ module Interpreter {
             var a = objectKeys[getRandomInt(objectKeys.length)];
             var b = objectKeys[getRandomInt(objectKeys.length)];
 
-            var intprt : Literal[][] = [[
+            var intprt : PddlLiteral[][] = [[
                 {pol: true, rel: "ontop", args: [a, "floor"]},
                 {pol: true, rel: "holding", args: [b]}
             ]];
@@ -291,12 +249,6 @@ module Interpreter {
         }
         return obj;
     }
-
-    // Concats a list of lists into a list
-    function concat(lists) {
-        return Array.prototype.concat.apply([], lists);
-    }
-
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
