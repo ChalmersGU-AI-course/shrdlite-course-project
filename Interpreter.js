@@ -98,7 +98,7 @@ var Interpreter;
                     for (var k in entities) {
                         for (var l in locations) {
                             // TODO: do not return actual objects in the PDDL goal, but their id's!
-                            var possiblePddlGoal = { pol: true, rel: rel, args: [entities[k], locations[l]] };
+                            var possiblePddlGoal = { pol: true, rel: rel, args: [entities[k].id, locations[l].id] };
                             interpretation.push(possiblePddlGoal);
                         }
                     }
