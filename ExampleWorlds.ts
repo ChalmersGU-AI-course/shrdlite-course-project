@@ -94,6 +94,7 @@ ExampleWorlds["small"] = {
         "m": { "form":"box",     "size":"small",  "color":"blue"  }
     },
     "examples": [
+        "put the white ball in the red box",
         "put the white ball in a box on the floor",
         "put the black ball in a box on the floor",
         "take a blue object",

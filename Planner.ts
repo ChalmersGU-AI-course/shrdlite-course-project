@@ -7,7 +7,7 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
-    export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
+    export function plan(interpretations : Interpreter.Result[], currentState : ExtendedWorldState) : Result[] {
         var plans : Result[] = [];
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
@@ -42,12 +42,14 @@ module Planner {
 
     //TODO first create the graph then find shortest path with AStar
     //TODO Remove the code that is here right now
-    function planInterpretation(intprt : PddlLiteral[][], state : WorldState) : string[] {
+    function planInterpretation(intprt : PddlLiteral[][], state : ExtendedWorldState) : string[] {
         var plan : string[] = [];
 
         //TODO this assumes state is a PDDL-world, not a WorldState
         //TODO WONT WORK!!!!!!!! MUST FIX!!!!!!!
-        //var topObjects:string[] = getObjectsOnTop(state);
+        var topObjects:string[] = getObjectsOnTop(state);
+
+
 
         //TODO create the graph here
 
@@ -55,21 +57,21 @@ module Planner {
     }
 
     //Takes a PDDL-world and returns an array of all the objects that are on top
-    function getObjectsOnTop(world) {
-        var objects: collections.Set<string>;
+    function getObjectsOnTop(world : ExtendedWorldState) {
+        var objects: collections.Set<string> = new collections.Set<string>(),
+            pddlWorld: PddlLiteral[] = world.pddlWorld;
 
         // Get every object in the world and add it to a set
-        for(var i in world){
-            for(var j = 0; j<2; j++){
-                if(world[i].args[j].indexOf("floor") === -1){
-                    objects.add(world[i].args[j]);
-                }
+        for(var id in world.objectsWithId){
+            if(id.indexOf("floor") === -1) {
+                objects.add(id);
             }
         }
 
-        for(var i in world){
-            if(world[i].rel === "ontop") {
-                objects.remove(world[i].args[1]);
+        for(var i in pddlWorld){
+            var rel = pddlWorld[i].rel;
+            if(rel === "ontop" || rel === "inside") {
+                objects.remove(pddlWorld[i].args[1]);
             }
         }
 
@@ -79,5 +81,4 @@ module Planner {
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
-
 }
