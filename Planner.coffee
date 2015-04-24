@@ -1,11 +1,12 @@
 class Planner
 
 Planner.plan = (interpretations, currentState) ->
+  
   plans = []
-  for intprt in interpretations
-    plan = intprt
-    plan.plan = planInterpretation(plan.intp, currentState)
-    plans.push(plan)
+  movesToGoal = Astar(currentstate, intprt.intp[0], heuristicFunction,
+      nextMoves, getNextState, equality)
+  plan.plan = planInterpretation(movesToGoal, currentState)
+  plans.push(plan)
   return plans
 
 planInterpretation = (intprt, state) ->
@@ -18,6 +19,18 @@ planInterpretation = (intprt, state) ->
   plan.push("Dropping down")
   plan.push("d")
   return plan
+
+heuristicFunction = (start, goal) ->
+  return 0
+
+nextMoves = (state) ->
+ return []
+
+getNextState = (state, move) ->
+  return state
+
+equality = (state, goal) ->
+  return false;
 
 Planner.planToString = (res)->
   console.log "called planToString"
