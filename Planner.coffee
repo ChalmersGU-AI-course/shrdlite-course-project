@@ -69,14 +69,14 @@ isObjectDropValid = (craneItem, topItem) ->
         return topItem.form is "box" and (topItem.size is craneItem.size)
 
       switch craneItem.form
-        when "brick" then
+        when "brick"
           return true
-        when "ball" then
+        when "ball"
           # Ball can only be in box or on floor(which is checked outside)
           return topItem.form is "box"
-        when "table" then
+        when "table" 
           return true
-        when "box" then
+        when "box" 
           # Box cannot contain box of same size
           if not (topItem.form is "box" and (topItem.size is craneItem.size))
             # Box cannot be supported by pyramid
