@@ -189,6 +189,7 @@ module Astar{
         });
 
         for( var x = 0; ! queue.isEmpty(); ++x){
+            console.log("Astar "+ x);
 
             if(x > maxIter){
                 console.log("Stopping early after " + x + " iterations. Size of queue: " + queue.size() + " current cost: " + current.cost);
@@ -217,6 +218,7 @@ module Astar{
 
             for(var n in neighbours){
                 var next = neighbours[n];
+                console.log("DEBUG in astar: "+next.action);
                 queue.enqueue({
                     state : next.state,
                     cost : current.cost + c(current.state, next.state),

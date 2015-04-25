@@ -46,7 +46,12 @@ module Planner {
 
         var goal = computeGoalFunction(intprt);
 
-        console.log("DEBUG: " + goal(state));
+        // console.log("DEBUG - is start goal: " + goal(state));
+        //
+        // var ns = neighbours(state);
+        // for(var ix in ns){
+        //     console.log("DEBUG - neighbour: " + ns[ix].action);
+        // }
 
         var plan : string[] = Astar.astar(neighbours, cost, heuristic, state, goal);
 
@@ -61,7 +66,7 @@ module Planner {
 
         // performAction("r", {arm: 0, stacks: []});
         // performAction("r", state);
-        console.log(neighbours(state));
+        // console.log(neighbours(state));
 
         return plan;
     }
@@ -182,6 +187,7 @@ module Planner {
                 console.log("ERROR: unknown action "+action);
                 return undefined;
         }
+        console.log("DEBUG performAction - arm: "+newState.arm);
         return {state: newState, action: action};
     }
 
