@@ -69,6 +69,9 @@ module Interpreter {
     }
 
 
+    /**
+    * @return list of targets in the world that complies with the specified entity.
+    */
     function findTargetEntities(en : Parser.Entity, state : WorldState) : string[] {
         var goalObj = en.obj;
         var result : string[] = [];
@@ -93,6 +96,16 @@ module Interpreter {
             // TODO consider location for filtering as well!
             result.push(objName);
         }
+        switch(en.quant){
+            case "any":
+                break;
+            case "the":
+                if(result.length > 1){
+                    // TODO should only be one target... Give warning or error.
+                }
+                break;
+        }
+
         return result;
     }
 
