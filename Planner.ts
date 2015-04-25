@@ -43,8 +43,13 @@ module Planner {
     var worldDictionary : {[s:string] : ObjectDefinition};
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
+
+        var goal = computeGoalFunction(intprt);
+
+        var plan : string[] = Astar.astar(neighbours, cost, heuristic, state, goal);
+
         //var plan : string[] = [];
-        var plan : string[] = ["r","p"];
+        // var plan : string[] = ["r","p"];
 
         worldDictionary = state.objects;
 
@@ -59,11 +64,66 @@ module Planner {
         return plan;
     }
 
+    // Ducktyping subtype of WorldState :)
+    // should be sufficient.
     interface State{
         arm : number;
         holding: string;
         stacks : string[][];
     }
+
+    function cost(a : State, b : State) : number{
+        return 1;
+    }
+
+    // Dummy heuristic function
+    function heuristic(s : State) : number{
+        return 0;
+    }
+
+    /**
+    * @return goal function for Astar.
+    */
+    function computeGoalFunction(intprt : Interpreter.Literal[][]) : Astar.Goal<State>{
+        return (s : State) => {
+            for(var clause in intprt){
+                if(testConjunctiveClause(s, clause)){
+                    return true;
+                }
+            }
+            // None of them is true
+            return false;
+        };
+    }
+
+    function testConjunctiveClause(s : State, c : Interpreter.Literal[]) : boolean{
+        for(var atom in c){
+            if(! testAtom(s, atom)){
+                return false;
+            }
+        }
+        // They are all true
+        return true;
+    }
+
+    function testAtom(s : State, atom : Interpreter.Literal) : boolean {
+        var result : boolean;
+
+        switch(atom.rel){
+            case "holding":
+                result = s.holding === atom.args[0];
+                break;
+            default:
+                console.log("!!! Unimplemented relation in testAtom: "+atom.rel);
+                return true;
+        }
+        if(atom.pol){
+            return result;
+        }
+        return ! result;
+    }
+
+
 
     function neighbours(s : State) : Astar.Neighb<State>[]{
         var result = [];
