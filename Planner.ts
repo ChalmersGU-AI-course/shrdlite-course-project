@@ -46,6 +46,8 @@ module Planner {
 
         var goal = computeGoalFunction(intprt);
 
+        console.log("DEBUG: " + goal(state));
+
         var plan : string[] = Astar.astar(neighbours, cost, heuristic, state, goal);
 
         //var plan : string[] = [];
@@ -86,8 +88,8 @@ module Planner {
     */
     function computeGoalFunction(intprt : Interpreter.Literal[][]) : Astar.Goal<State>{
         return (s : State) => {
-            for(var clause in intprt){
-                if(testConjunctiveClause(s, clause)){
+            for(var ix in intprt){
+                if(testConjunctiveClause(s, intprt[ix])){
                     return true;
                 }
             }
@@ -97,8 +99,8 @@ module Planner {
     }
 
     function testConjunctiveClause(s : State, c : Interpreter.Literal[]) : boolean{
-        for(var atom in c){
-            if(! testAtom(s, atom)){
+        for(var ix in c){
+            if(! testAtom(s, c[ix])){
                 return false;
             }
         }

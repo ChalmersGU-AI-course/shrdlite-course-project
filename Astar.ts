@@ -191,7 +191,7 @@ module Astar{
         for( var x = 0; ! queue.isEmpty(); ++x){
 
             if(x > maxIter){
-                alert("Stopping early after " + x + " iterations. Size of queue: " + queue.size() + " current cost: " + current.cost);
+                console.log("Stopping early after " + x + " iterations. Size of queue: " + queue.size() + " current cost: " + current.cost);
                 return postProcess<T>(order, x-1);
                 // return showVisited<T>(order);
             }
@@ -208,7 +208,7 @@ module Astar{
 
             if(isGoal(current.state)){
                 if(x > 1000){
-                    alert("Completed but it took " + x + " iterations!");
+                    console.log("Completed but it took " + x + " iterations!");
                 }
                 return postProcess<T>(order, x);
             }
@@ -226,7 +226,7 @@ module Astar{
             }
         }
 
-        alert("No solution found!");
+        console.log("No solution found!");
 
         return ["init"];
     }
