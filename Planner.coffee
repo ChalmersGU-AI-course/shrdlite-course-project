@@ -4,22 +4,17 @@ Planner.plan = (interpretations, currentState) ->
   
   plans = []
   plan = interpretations[0]
-  #movesToGoal = Astar(currentstate, intprt.intp[0], heuristicFunction,
-  #   nextMoves, getNextState, equality)
-  plan.plan = planInterpretation(plan.intp, currentState)
+  movesToGoal = Astar(currentState, plan.intp[0], heuristicFunction,
+     nextMoves, getNextState, satisfaction, equality)
+  plan.plan = movesToGoal # planInterpretation(plan.intp, currentState)
   plans.push(plan)
-  console.log plan.intp
   return plans
 
 planInterpretation = (intprt, state) ->
   plan = []
-  plan.push("Picking up")
-  plan.push("p")
-  plan.push("Moving right")
-  plan.push("r")
-  plan.push("r")
-  plan.push("Dropping down")
-  plan.push("d")
+  # This method should push Picking up before p
+  # Moving right before r (not for every)
+  # Dropping down before d etc
   return plan
 
 heuristicFunction = (start, goal) ->
@@ -34,9 +29,9 @@ nextMoves = (state) ->
 
   # Crane movement
   if cranePos > 0
-    moves.push("r")
-  if cranePos < nbrOfStacks-1
     moves.push("l")
+  if cranePos < nbrOfStacks-1
+    moves.push("r")
 
   # Crane items
   stack = state.stacks[cranePos]
@@ -52,7 +47,6 @@ nextMoves = (state) ->
     else
       # No items in stack
       moves.push("d")
-
 
   return moves
 
@@ -88,16 +82,25 @@ isObjectDropValid = (craneItem, topItem) ->
   return false
 
 getNextState = (state, move) ->
+  stackCopy = []
+  for s,i in state.stacks
+    stackCopy.push([])
+    for item in s
+      stackCopy[i].push(item)
+  newState =
+    holding: state.holding
+    arm:     state.arm
+    stacks:  stackCopy
   if move is 'p'
-    state.holding = state.stacks[state.arm].pop()
+    newState.holding = newState.stacks[newState.arm].pop()
   else if move is 'd'
-    state.stacks[state.arm].push(state.holding) 
-    state.holding = null
+    newState.stacks[newState.arm].push(newState.holding) 
+    newState.holding = null
   else if move is 'r'
-    state.arm = state.arm + 1
+    newState.arm = state.arm + 1
   else if move is 'l'
-    state.arm = state.arm - 1
-  return state
+    newState.arm = state.arm - 1
+  return newState
 
 equality = (state, goal) ->
   return state.arm == goal.arm && state.holding == goal.holding && "#{state.stacks}" is "#{goal.stacks}"
@@ -115,6 +118,10 @@ leftOfCheck = (state, left, right) ->
 
 onTopCheck = (state, above, below) ->
   result = false
+  if below is "floor" # Floor is a special case..
+    for stack in state.stacks
+      if above in stack
+        return stack.indexOf(above) is 0
   for stack in state.stacks
     if below in stack
       if stack.indexOf(above) - stack.indexOf(below) is 1
