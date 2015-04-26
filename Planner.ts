@@ -46,10 +46,12 @@ module Planner {
             var pickstack = getRandomInt(state.stacks.length);
         } while (state.stacks[pickstack].length == 0);
         var plan : string[] = [];
+        
+        plan.push("Here is a comment");
 
         // First move the arm to the leftmost nonempty stack
         if (pickstack < state.arm) {
-            plan.push("Moving left");
+            plan.push("Moving left just a liiiiiitle bit");
             for (var i = state.arm; i > pickstack; i--) {
                 plan.push("l");
             }

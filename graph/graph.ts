@@ -6,14 +6,12 @@ module graphmodule {
     export class GraphNode<T> {
         public id: string;
         public data: T;
-        public heuristics: collections.Dictionary<GraphNode<T>, number>;
 
         constructor(id: string, data?: T) {
             this.id = id;
             if (data != undefined) {
                 this.data = data
             }
-            this.heuristics = new collections.Dictionary<GraphNode<T>, number>();
         }
 
         toString() {
@@ -79,10 +77,15 @@ module graphmodule {
     }
 
     /** Function to compare two paths. Needs to know the goal node in order to use heuristics */
-    export function comparePath<T>(first: Path<T>, second: Path<T>, goal: GraphNode<T>) {
+    export function comparePath<T>(first: Path<T>, second: Path<T>, goal: GraphNode<T>, hFun: HeuristicFunction<T>) {
         //returns cost of: second - first in regard of reaching the goal
-        return (second.cost + second.path.last().to.heuristics.getValue(goal)) -
-            (first.cost + first.path.last().to.heuristics.getValue(goal));
+        return (second.cost + hFun(second.path.last().to.data, goal.data)) -
+            (first.cost + hFun(first.path.last().to.data, goal.data));
+    }
+    
+    /** Heuristic function */
+    export interface HeuristicFunction<T>{
+        (startNode: T, goalNode: T): number;
     }
 
     /** Graph holding nodes and edges */
@@ -98,8 +101,9 @@ module graphmodule {
         }
 
         addNode(node: GraphNode<T>) {
-            this.nodes.add(node);
+            var ret = this.nodes.add(node);
             this.adjacencyMap.setValue(node.id, new Adjacency<T>(node));
+            return ret;
         }
 
         addEdge(startId: string, endId: string, cost: number, bidirectional = false) {

@@ -2323,7 +2323,6 @@ var graphmodule;
             if (data != undefined) {
                 this.data = data;
             }
-            this.heuristics = new collections.Dictionary();
         }
         GraphNode.prototype.toString = function () {
             return this.id;
@@ -2381,9 +2380,9 @@ var graphmodule;
     })();
     graphmodule.Path = Path;
     /** Function to compare two paths. Needs to know the goal node in order to use heuristics */
-    function comparePath(first, second, goal) {
+    function comparePath(first, second, goal, hFun) {
         //returns cost of: second - first in regard of reaching the goal
-        return (second.cost + second.path.last().to.heuristics.getValue(goal)) - (first.cost + first.path.last().to.heuristics.getValue(goal));
+        return (second.cost + hFun(second.path.last().to.data, goal.data)) - (first.cost + hFun(first.path.last().to.data, goal.data));
     }
     graphmodule.comparePath = comparePath;
     /** Graph holding nodes and edges */
@@ -2437,7 +2436,8 @@ var graphmodule;
 /// <reference path="graph.ts" />
 var astar;
 (function (astar) {
-    function compute(graph, startID, endID) {
+    /** Compute the a path from the given start node to the given end node and the given graph */
+    function compute(graph, startID, endID, hFun) {
         var goalNodeAd = graph.adjacencyMap.getValue(endID);
         var currentAd = graph.adjacencyMap.getValue(startID);
         if (goalNodeAd === undefined || currentAd === undefined) {
@@ -2445,7 +2445,11 @@ var astar;
         }
         var goalNode = goalNodeAd.node;
         var pq = new collections.PriorityQueue(function comparePath(first, second) {
-            return graphmodule.comparePath(first, second, goalNode);
+            //first: first path
+            //second: second path
+            //goalNode: The goal node
+            //hFun: The heuristic function that should be used
+            return graphmodule.comparePath(first, second, goalNode, hFun);
         });
         var visited = new collections.Set();
         var currentPath = new graphmodule.Path();
@@ -2537,42 +2541,27 @@ var GridGraph = (function () {
             }
         }
     }
-    GridGraph.prototype.computePath = function (startPos, endPos) {
-        return astar.compute(this.graph, startPos, endPos);
+    GridGraph.prototype.computePath = function (startPos, endPos, hFun) {
+        return astar.compute(this.graph, startPos, endPos, hFun);
     };
-    GridGraph.prototype.useEuclideanDistanceHeuristics = function () {
-        var _this = this;
-        this.graph.setHeuristicsFun(function (node) {
-            _this.graph.nodes.forEach(function forEachNodeAgain(node2) {
-                var x1 = node.data.first;
-                var y1 = node.data.second;
-                var x2 = node.data.first;
-                var y2 = node.data.second;
-                var distance = Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
-                node.heuristics.setValue(node2, distance);
-                return true;
-            });
-            return true;
-        });
+    GridGraph.prototype.euclidianDistance = function (startNode, goalNode) {
+        var x1 = startNode.first;
+        var y1 = startNode.second;
+        var x2 = goalNode.first;
+        var y2 = goalNode.second;
+        var distance = Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
+        return distance;
     };
-    GridGraph.prototype.useManhattanHeuristics = function () {
-        var _this = this;
-        this.graph.setHeuristicsFun(function (node) {
-            _this.graph.nodes.forEach(function forEachNodeAgain(node2) {
-                var x1 = node.data.first;
-                var y1 = node.data.second;
-                var x2 = node2.data.first;
-                var y2 = node2.data.second;
-                var distance = Math.abs(x2 - x1) + Math.abs(y2 - y1);
-                node.heuristics.setValue(node2, distance * 40);
-                return true;
-            });
-            return true;
-        });
+    GridGraph.prototype.manhattanDistance = function (startNode, goalNode) {
+        var x1 = startNode.first;
+        var y1 = startNode.second;
+        var x2 = goalNode.first;
+        var y2 = goalNode.second;
+        var distance = Math.abs(x2 - x1) + Math.abs(y2 - y1);
+        return distance * 40;
     };
     return GridGraph;
 })();
-[1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 0, 1, 1, 1, 1, 1], [1, 1, 1, 1, 0, 1, 1, 1, 1, 1], [1, 1, 1, 1, 0, 0, 0, 1, 1, 1], [1, 1, 1, 1, 0, 1, 1, 1, 1, 1], [1, 1, 1, 1, 0, 1, 0, 1, 1, 1], [1, 1, 1, 1, 0, 1, 0, 1, 1, 1], [1, 1, 1, 1, 0, 1, 0, 1, 1, 1], [1, 1, 1, 1, 1, 1, 0, 1, 1, 1];
 function runExample(element) {
     var gridGraph = new GridGraph();
     element.innerHTML += "Graph used (gridGraph):";
@@ -2593,13 +2582,13 @@ function runExample(element) {
     element.innerHTML += " &#9633; &#9633<br><br>";
     element.innerHTML += "Euclidian distance Best Path from (1,1) to (9,7):";
     element.innerHTML += "<br>";
-    gridGraph.useEuclideanDistanceHeuristics();
-    element.innerHTML += gridGraph.computePath("1,1", "9,7");
+    //Set and use the euclidianDistance
+    element.innerHTML += gridGraph.computePath("1,1", "9,7", gridGraph.euclidianDistance);
     element.innerHTML += "<br><br>";
     element.innerHTML += "Manhattan Best Path from (1,1) to (9,7):";
     element.innerHTML += "<br>";
-    gridGraph.useManhattanHeuristics();
-    element.innerHTML += gridGraph.computePath("1,1", "9,7");
+    //Set and use manhattanDistance
+    element.innerHTML += gridGraph.computePath("1,1", "9,7", gridGraph.manhattanDistance);
     element.innerHTML += "<br>";
 }
 window.onload = function () {

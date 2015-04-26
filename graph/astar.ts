@@ -4,7 +4,7 @@
 module astar {
 
     /** Compute the a path from the given start node to the given end node and the given graph */
-    export function compute<T>(graph: graphmodule.Graph<T>, startID: string, endID: string) {
+    export function compute<T>(graph: graphmodule.Graph<T>, startID: string, endID: string, hFun: graphmodule.HeuristicFunction<T>) {
 
         var goalNodeAd = graph.adjacencyMap.getValue(endID);
         var currentAd = graph.adjacencyMap.getValue(startID);
@@ -17,7 +17,11 @@ module astar {
 
         var pq = new collections.PriorityQueue<graphmodule.Path<T>>(
             function comparePath(first: graphmodule.Path<T>, second: graphmodule.Path<T>) {
-                return graphmodule.comparePath(first, second, goalNode);
+                //first: first path
+                //second: second path
+                //goalNode: The goal node
+                //hFun: The heuristic function that should be used
+                return graphmodule.comparePath(first, second, goalNode, hFun);
             }
             );
 

@@ -76,68 +76,36 @@ class GridGraph{
 
     }
 
-    computePath(startPos: string, endPos: string) {
-        return astar.compute(this.graph, startPos, endPos);
+    computePath(startPos: string, endPos: string, hFun: graphmodule.HeuristicFunction<Tuple>) {
+        return astar.compute(this.graph, startPos, endPos, hFun);
     }
 
-    useEuclideanDistanceHeuristics() {
-        this.graph.setHeuristicsFun((node: graphmodule.GraphNode<Tuple>) => {
-                this.graph.nodes.forEach(
-                    function forEachNodeAgain(node2: graphmodule.GraphNode<Tuple>) {
+    euclidianDistance(startNode: Tuple, goalNode: Tuple){
+        var x1 = startNode.first;
+        var y1 = startNode.second;
 
-                        var x1 = node.data.first;
-                        var y1 = node.data.second;
+        var x2 = goalNode.first;
+        var y2 = goalNode.second;
 
-                        var x2 = node.data.first;
-                        var y2 = node.data.second;
+        var distance = Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
 
-                        var distance = Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
-
-                        node.heuristics.setValue(node2, distance);
-                        return true;
-                    }
-                    );
-
-                return true;
-            }
-            );
+        return distance;
     }
 
-    useManhattanHeuristics() {
-        this.graph.setHeuristicsFun((node: graphmodule.GraphNode<Tuple>) => {
-                this.graph.nodes.forEach(
-                    function forEachNodeAgain(node2: graphmodule.GraphNode<Tuple>) {
+    manhattanDistance(startNode: Tuple, goalNode: Tuple){
+        var x1 = startNode.first;
+        var y1 = startNode.second;
 
-                        var x1 = node.data.first;
-                        var y1 = node.data.second;
+        var x2 = goalNode.first;
+        var y2 = goalNode.second;
 
-                        var x2 = node2.data.first;
-                        var y2 = node2.data.second;
-
-                        var distance = Math.abs(x2 - x1) + Math.abs(y2 - y1);
-
-                        node.heuristics.setValue(node2, distance * 40);
-                        return true;
-                    }
-                    );
-
-                return true;
-            }
-            );
+        var distance = Math.abs(x2 - x1) + Math.abs(y2 - y1);
+        
+        return distance*40;
     }
 
 }
 
-[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 0, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 0, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 0, 0, 0, 1, 1, 1],
-        [1, 1, 1, 1, 0, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 0, 1, 0, 1, 1, 1],
-        [1, 1, 1, 1, 0, 1, 0, 1, 1, 1],
-        [1, 1, 1, 1, 0, 1, 0, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 0, 1, 1, 1]
         
 function runExample(element: HTMLElement) {
     var gridGraph = new GridGraph();
@@ -162,14 +130,16 @@ function runExample(element: HTMLElement) {
     
     element.innerHTML += "Euclidian distance Best Path from (1,1) to (9,7):";
     element.innerHTML += "<br>";
-    gridGraph.useEuclideanDistanceHeuristics();
-    element.innerHTML += gridGraph.computePath("1,1", "9,7");
+    
+    //Set and use the euclidianDistance
+    element.innerHTML += gridGraph.computePath("1,1", "9,7", gridGraph.euclidianDistance);
     element.innerHTML += "<br><br>";
 
     element.innerHTML += "Manhattan Best Path from (1,1) to (9,7):";
     element.innerHTML += "<br>";
-    gridGraph.useManhattanHeuristics();
-    element.innerHTML += gridGraph.computePath("1,1", "9,7");
+    
+    //Set and use manhattanDistance
+    element.innerHTML += gridGraph.computePath("1,1", "9,7", gridGraph.manhattanDistance);
     element.innerHTML += "<br>";
 }
 
