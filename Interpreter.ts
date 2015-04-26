@@ -117,56 +117,87 @@ module Interpreter {
         return interpretations;
     }
 
-    // TODO: update documentation below, is false
     // Finds one/many entities matching the description 'ent' from the parser
-    // Returns obj[][].
-    // The outer list is of _different_ interpretations,
-    //   (i.e. "the white ball" may find several white balls. => [[b1], [b2]])
-    // The inner list is of several acceptable entities for one interpretation
-    //   (e.g. "the floor" should accept all floor tiles. => [[b1,b2]])
-    // TODO: update so it works
-    function findEntities(ent : Parser.Entity, objects, ppdlWorld) : any[][][] /* : Parser.Entity[] */ {
+    // The outer list is of different interpretations,
+    //   (e.g. "the white ball" may find several white balls. => [[[b1]], [[b2]]])
+    // The middle list is of several acceptable entities for one interpretation ("the or list")
+    //   (e.g. "the floor" should accept all floor tiles. => [[[b1],[b2]]])
+    // The inner list is if several entities should be returned for one interpretation
+    //   (e.g. "all balls" should select several: [[[b1,b2]]])
+    function findEntities(ent : Parser.Entity,
+                          objects : { [s: string]: ObjectDefinitionWithId; },
+                          ppdlWorld : PddlLiteral[]) : ObjectDefinitionWithId[][][] /* : Parser.Entity[] */ {
         if (ent) {
 
             console.log("findEntities()....");
 
-            var critLoc           = ent.obj.loc || null // entitiy's location (if specified)
-              , critObj           = deleteNullProperties(ent.obj.obj || ent.obj) // description of entity
-              , alikeObjs : any[] = _.filter(objects, critObj)
-              , hasDoneIntrprt    = false; // whether we have done obj[] -> obj[][] yet or not
+            var critLoc                              = ent.obj.loc || null // entitiy's location (if specified)
+              , critObj                              = deleteNullProperties(ent.obj.obj || ent.obj) // description of entity
+              , alikeObjs : ObjectDefinitionWithId[] = _.filter(objects, critObj);
             console.log('obj:', critObj, 'alike objects:', alikeObjs);
 
             // Location specified for entity? Filter further
             // Note: this has a different type than alikeObjs -
             //       this also accounts for different interpretations of locations
-            var closeObjsIntrprt : any[][] = null;
             if (critLoc) {
                 if (critLoc.rel === 'inside' || critLoc.rel === 'ontop') {
                     var locationsIntrprt = findEntities(critLoc.ent, objects, ppdlWorld)
-                      , rel         = critLoc.rel;
-                    // for all interpretations...
-                    closeObjsIntrprt = _.map(locationsIntrprt, function (locations) {
-                        // ...filter out all object which has relation to any location in locations
-                        return _.filter(alikeObjs, function (obj) {
-                            return _.any(locations, function (location) {
-                                return hasBinaryConstraint(ppdlWorld, true, rel, obj, location);
+                      , rel         = critLoc.rel
+                        // For each location interpretation, store all objects which has relation to that interpretation's location
+                        // Example: "the box to the left of the two blue balls"
+                        // Example world: □1 o1 □2 o2   o3
+                      , closeObjsIntrprt : ObjectDefinitionWithId[][] =
+                            // for all interpretations...
+                            // Example: three blue balls => three combinations/interpretations
+                            // [ [[o1,o2]],[[o1,o3]],[[o2,o3]] ]
+                          _.map(locationsIntrprt, function (locationsOr) {
+                            // ...filter out all objects which...
+                            return _.filter(alikeObjs, function (obj) {
+                                // ... satisfies at least one ...
+                                return _.any(locationsOr, function (locationsAnd) {
+                                    // ... of the 'and'-lists.
+                                    // In example: must have relation to both balls
+                                    return _.all(locationsAnd, function(location) {
+                                        return hasBinaryConstraint(ppdlWorld, true, rel, obj, location);
+                                    });
+                                });
                             })
-                        })
-                    });
+                        });
+                       // (Example output: [[□1], [□1], [□1,□2]]
                 } else {
                     console.log("TODO: implement more relations! See rel value of ",critLoc);
                 }
-                hasDoneIntrprt = true;
                 console.log('close objects:', closeObjsIntrprt);
             }
 
-            // Turn into obj[][], if it has not already been done, by filtering through quantities
-            var quantFilteredObjs : any[][] = [[]];
-            if (hasDoneIntrprt) {
-                // Big TODO: should we ignore all quantifiers when filtered by location? No, right?
-                quantFilteredObjs = closeObjsIntrprt;
+            // Process quantifiers. (Produce the final obj[][][])
+            var quantFilteredObjs : ObjectDefinitionWithId[][][] = [[]];
+            if (locationsIntrprt) {
+                // TODO: write these quantifiers
+
+                // "the"
+                // Select only one object.
+                // If several objects match location within an interpretation, create an interpretation for each
+                // Example: [[□1], [□1], [□1,□2]] -> [[□1], [□1], [□1] ,[□2]]
+                // Concat the list, and turn objects into singleton-singleton or-and lists
+
+                // "any"
+                // Example: [[□1], [□1], [□1,□2]] -> [[[□1]], [[□1]], [[□1],[□2]]]
+                // Create singleton and lists for each object
+
+                // "all"
+                // Select all objects in each interpretation.
+                // Example: [[□1], [□1], [□1,□2]] -> [[[□1]], [[□1]], [[□1,□2]]]
+                // Create singleton or lists
+
+                // TODO: nub the interpretation list
+                // It doesn't matter which intermediate objects we used to find the object(s)
+                // Example: [[[□1]],[[□1]],[[□1],[□2]]] -> [[[□1]],[[□1],[□2]]]
             }
             else {
+                // TODO: update these quantifiers
+                // Should be similar to above, except that we don't have any interpretations yet
+
                 // "the" should only select one object. May spawn multiple interpretations
                 if (ent.quant === 'the') {
                     if (ent.obj.form === 'floor') {
