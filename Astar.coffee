@@ -1,3 +1,4 @@
+PriorityQueue = require('./priority-queue.js')
 # A* algorithm.
 # start is the start state
 # goal is the goal "state"
@@ -5,7 +6,8 @@
 # nextMoves gives the possible moves from current state
 # getNextState gives a new state given a move
 # Equality compares to states for equality
-Astar = (start, goal, heuristicFunction, nextMoves, getNextState, equality) ->
+Astar = (start, goal, heuristicFunction, nextMoves, getNextState,
+    satisfaction, equality) ->
   openSet = new PriorityQueue({ comparator: compareObjects })
   closedSet = []
   # Add the start state to the queue
@@ -19,7 +21,8 @@ Astar = (start, goal, heuristicFunction, nextMoves, getNextState, equality) ->
   # A* iteration
   while openSet.length > 0
     current = openSet.dequeue()
-    if equality(current.state, goal)
+    if satisfaction(current.state, goal)
+      console.log "Number of states seacrhed in Astar: " + closedSet.length
       return current.moves
     closedSet.push(current.state)
     listOfPossibleMoves = nextMoves(current.state)
