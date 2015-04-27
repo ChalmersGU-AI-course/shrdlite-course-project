@@ -8,6 +8,10 @@ module Interpreter {
     // exported functions, classes and interfaces/types
 
     export function interpret(parses : Parser.Result[], state : ExtendedWorldState) : PddlLiteral[][][] {
+
+        // TODO remove, used for debugging
+        this._ = _;
+
         var cmds        : Parser.Command[]    = <Parser.Command[]> _.map(parses, 'prs')
         //  , intpsPerCmd : PddlLiteral[][][][] = _.map(cmds, _.partial(interpretCommand, _, state))
           , intpsPerCmd : PddlLiteral[][][][] = _.map(cmds, function(a) {return interpretCommand(a, state);})
@@ -144,7 +148,7 @@ module Interpreter {
                     var locationsIntrprt = findEntities(critLoc.ent, objects, ppdlWorld)
                       , rel         = critLoc.rel
                         // For each location interpretation, store all objects which has relation to that interpretation's location
-                        // Example: "the box to the left of the two blue balls"
+                        // Example: "... the box to the left of the two blue balls"
                         // Example world: □1 o1 □2 o2   o3
                       , closeObjsIntrprt : ObjectDefinitionWithId[][] =
                             // for all interpretations...
@@ -171,61 +175,87 @@ module Interpreter {
             }
 
             // Process quantifiers. (Produce the final obj[][][])
-            var quantFilteredObjs : ObjectDefinitionWithId[][][] = [[]];
-            if (locationsIntrprt) {
-                // TODO: write these quantifiers
-
+            var quantFilteredObjs : ObjectDefinitionWithId[][][] = [];
+            // Has location already given rise to different interpretations?
+            if (closeObjsIntrprt) {
                 // "the"
                 // Select only one object.
                 // If several objects match location within an interpretation, create an interpretation for each
-                // Example: [[□1], [□1], [□1,□2]] -> [[□1], [□1], [□1] ,[□2]]
+                // Example: [[□1], [□1], [□1,□2]] -> [[[□1]], [[□1]], [[□1]] ,[[□2]]]
                 // Concat the list, and turn objects into singleton-singleton or-and lists
+                if (ent.quant === 'the') {
+                    var list = concat(closeObjsIntrprt);
+                    quantFilteredObjs = _.map(list, function (i) {
+                        return [[i]];
+                    });
+                }
 
                 // "any"
                 // Example: [[□1], [□1], [□1,□2]] -> [[[□1]], [[□1]], [[□1],[□2]]]
                 // Create singleton and lists for each object
+                else if (ent.quant === 'any') {
+                    quantFilteredObjs = _.map(closeObjsIntrprt, function (i) {
+                        return _.map(i, function (j) {
+                          return [j];
+                        });
+                    });
+                }
 
                 // "all"
                 // Select all objects in each interpretation.
                 // Example: [[□1], [□1], [□1,□2]] -> [[[□1]], [[□1]], [[□1,□2]]]
                 // Create singleton or lists
-
-                // TODO: nub the interpretation list
-                // It doesn't matter which intermediate objects we used to find the object(s)
-                // Example: [[[□1]],[[□1]],[[□1],[□2]]] -> [[[□1]],[[□1],[□2]]]
+                else if (ent.quant === 'all') {
+                    quantFilteredObjs = _.map(closeObjsIntrprt, function (i) {
+                        return [i];
+                    });
+                }
             }
+            // Location was not specified
             else {
-                // TODO: update these quantifiers
-                // Should be similar to above, except that we don't have any interpretations yet
+                // TODO: test these
+
+                // "The floor" does in fact mean any floor tile
+                // TODO: change... parser?
+                if ((ent.quant === 'the') && (ent.obj.form === 'floor')) {
+                    ent.quant = 'any';
+                }
 
                 // "the" should only select one object. May spawn multiple interpretations
                 if (ent.quant === 'the') {
-                    if (ent.obj.form === 'floor') {
-                        // Any floor tile is acceptable (Put into same inner list)
-                        var allFloorTiles = concat(alikeObjs);
-                        // Only one interpretation (singleton outer list)
-                        quantFilteredObjs = [allFloorTiles];
-                        console.log("the. found the floor!", quantFilteredObjs);
-                    }
-                    else {
-                        // Any object is not acceptable, each is different interpretation
-                        quantFilteredObjs = _.map(alikeObjs, function (obj) {
-                            return [obj];
-                        });
-                        console.log("the. found other objects!", quantFilteredObjs);
-                    }
+                    quantFilteredObjs = _.map(alikeObjs, function (obj) {
+                        return [[obj]];
+                    });
+                    console.log("the. found other objects!", quantFilteredObjs);
                 }
+
                 // "any" can select any object. Has only one interpretation
-                if (ent.quant === 'any') {
-                    // Any object is acceptable (put into same inner list)
-                    var allFloorTiles = concat(alikeObjs);
+                else if (ent.quant === 'any') {
+                    // Any object is acceptable (Put singleton and lists)
+                    var allObjs : ObjectDefinitionWithId[][] = _.map(alikeObjs, function (obj) {
+                        return [obj];
+                    });
                     // Only one interpretation (singleton outer list)
-                    quantFilteredObjs = [allFloorTiles];
+                    quantFilteredObjs = [allObjs];
                     console.log("any. found objects!", quantFilteredObjs);
+                }
+
+                // "all" selects all objects. Has only one interpretation
+                else if (ent.quant === 'all') {
+                    quantFilteredObjs = [[alikeObjs]];
+                    console.log("all. found objects!", quantFilteredObjs);
                 }
             }
 
-            return quantFilteredObjs;
+            // Nub the interpretation list (remove duplicates)
+            // It doesn't matter which intermediate objects we used to find the object(s)
+            // Example: [[[□1]],[[□1]],[[□1],[□2]]] -> [[[□1]],[[□1],[□2]]]
+            var nubbedList = _.uniq(quantFilteredObjs, function (i) {
+                return JSON.stringify(i); // (convert to string since array comparisons are done by reference)
+            });
+            console.log("nubbed list:",nubbedList);
+
+            return nubbedList;
         }
     }
 
