@@ -5,9 +5,6 @@
  */
 interface GraphNode {
     name: string;
-    x: number;
-    y: number;
-
     costTo(to: GraphNode): number;
 }
 

@@ -31,7 +31,7 @@ function init(): void {
 
         if (path != undefined && path.length > 0) {
             var txt = '';
-            var startNode: GraphNode = Europe.Nodes[path[0][0]];
+            var startNode: PointNode = Europe.Nodes[path[0][0]];
             txt += startNode.name + ', ';
             
             mapCtx.clearRect(0, 0, 600, 513);
