@@ -71,28 +71,26 @@ module Interpreter {
             moveWithGoals.setValue(toMove[i], validGoals);
         }
 
-        var goals : Literal[][] = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel);
+        var goals : Literal[][] = [convertGoalsToPDDL(moveWithGoals, cmd.loc.rel)];
 
         return goals;
     }
 
-    function convertGoalsToPDDL(dict : collections.Dictionary<ObjectInfo, ObjectInfo[]>, relation : string) : Literal[][] 
+    function convertGoalsToPDDL(dict : collections.Dictionary<ObjectInfo, ObjectInfo[]>, relation : string) : Literal[] 
     {
-        var lits : Literal[][] = [[]];
-        for(var i = 0; i < dict.keys.length; i++) {
-        lits.push([]);
-        }
-        var index = 0;
+        var lits : Literal[] = [];
+        /*for(var i = 0; i < dict.keys.length; i++) {
+            lits.push([]);
+        }*/
         dict.forEach(function(key: ObjectInfo, value : ObjectInfo[]) {
             for(var i = 0; i < value.length; i++) {
                 if(relation == "holding") {
 
                 } else {
                     var p : Literal = {pol: true, rel: relation, args: [key.name, value[i].name] };
-                    lits[index].push(p);
+                    lits.push(p);
                 }
             }
-        index++;
         });
         return lits;
     }
