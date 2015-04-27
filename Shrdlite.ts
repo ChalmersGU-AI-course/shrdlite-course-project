@@ -68,7 +68,7 @@ module Shrdlite {
         if (interpretations.length > 1) {
             world.printSystemOutput("Multiple interpretations found:");
             var interpretationStrings = _.map(interpretations, Interpreter.interpretationToString);
-            _.each(interpretationStrings, world.printSystemOutput);
+            _.each(interpretationStrings, world.printSystemOutput, world);
             // Loop until user has chosen one
             var interpretation = null;
             while (!interpretation) {
