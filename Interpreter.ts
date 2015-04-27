@@ -63,18 +63,13 @@ module Interpreter {
             return literals;
         }
 
-        literals = buildRelativeLiterals(matching[0], cmd.loc, state);
 
-        // This returns a dummy interpretation involving two random objects in the world
-        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        var a = objs[getRandomInt(objs.length)];
-        var b = objs[getRandomInt(objs.length)];
-        var intprt : Literal[][] = [[
-            {pol: true, rel: "ontop", args: [a, "floor"]},
-            {pol: true, rel: "holding", args: [b]}
-        ],
-        []];
-        return intprt;
+        for (var i=0; i < matching.length; ++i)
+        {
+            var matchLiterals = buildRelativeLiterals(matching[i], cmd.loc, state);
+            literals = literals.concat(matchLiterals);
+        }
+        return literals;
     }
 
     function buildRelativeLiterals(object: string, location: Parser.Location, world: WorldState): Literal[][] {
@@ -82,7 +77,7 @@ module Interpreter {
         if (location.ent.obj.obj) {
             matching = findObjectsByDescription(location.ent.obj.obj, world);
         } else {
-            matching = findObjectsByDescription(location.ent.obj, world);
+            matching = findObjectsByDescription(location.ent.obj, world) || [];
         }
 
         var childLiterals: Literal[][] = [];
@@ -126,7 +121,7 @@ module Interpreter {
 
         if (object.form === "floor") {
             result.push("floor");
-            return;
+            return result;
         }
         
         if (world.holding) {
@@ -177,7 +172,7 @@ module Interpreter {
     }
 
     function isMatchByLocation(objectId: string, location: Parser.Location, world: WorldState): boolean {
-        //handle singular vs plural quantifier
+        //TODO: handle singular vs plural quantifier
         var matchingEntities = findObjects(location.ent.obj, world);
         for (var matchingNr = 0; matchingNr < matchingEntities.length; ++matchingNr) {
             if (isRelativeMatch(objectId, location.rel, matchingEntities[matchingNr], world)) {
