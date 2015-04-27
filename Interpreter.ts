@@ -59,19 +59,21 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-
+	
         var toMove : ObjectInfo[] = findValid(cmd.ent.obj, state);
         var moveWithGoals = new collections.Dictionary<ObjectInfo, ObjectInfo[]>();
 
-        if(toMove.length == 0) {
-            alert("no such object TODO");
-        }
         for(var i = 0; i < toMove.length; i++) {
             var validGoals : ObjectInfo[] = checkRelation(toMove[i].obj, cmd.loc, state);
             moveWithGoals.setValue(toMove[i], validGoals);
         }
 
-        var goals : Literal[][] = [convertGoalsToPDDL(moveWithGoals, cmd.loc.rel)];
+        var ors : Literal[] = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel);
+	var goals : Literal[][] = [];
+
+	ors.map(function(l) {
+	    goals.push([l]);
+	});
 
         return goals;
     }
@@ -79,13 +81,12 @@ module Interpreter {
     function convertGoalsToPDDL(dict : collections.Dictionary<ObjectInfo, ObjectInfo[]>, relation : string) : Literal[] 
     {
         var lits : Literal[] = [];
-        /*for(var i = 0; i < dict.keys.length; i++) {
-            lits.push([]);
-        }*/
+
         dict.forEach(function(key: ObjectInfo, value : ObjectInfo[]) {
             for(var i = 0; i < value.length; i++) {
                 if(relation == "holding") {
-
+		    var p : Literal = {pol: true, rel : relation, args: [key.name]};
+		    lits.push(p);
                 } else {
                     var p : Literal = {pol: true, rel: relation, args: [key.name, value[i].name] };
                     lits.push(p);
@@ -223,7 +224,9 @@ module Interpreter {
 
 
     function findValid(obj : Parser.Object, state : WorldState) : ObjectInfo[]{
-        var valids : collections.Set<ObjectInfo> = new collections.Set<ObjectInfo>();
+        var valids : collections.Set<ObjectInfo> = new collections.Set<ObjectInfo>(function(a) {
+	    return a.name;
+	});
         if(obj.obj) { //If recursive
             //All obj matching the first obj in relation
             var valids2 : ObjectInfo[] = findValid(obj.obj, state);
@@ -327,7 +330,7 @@ module Interpreter {
                        (obj.color == state.objects[y].color || obj.color == null)){
                         var position : Position = findObject(y, state);
                         if(position != null){
-                            valids.add({name: y, pos: position, obj : state.objects[y]});
+			    valids.add({name: y, pos: position, obj : state.objects[y]});
                         }
                     }
                 } 
