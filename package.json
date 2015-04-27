@@ -10,6 +10,6 @@
     "grunt-typescript": "^0.6.1",
     "mocha": "^2.2.1",
     "nearley": "^1.2.1",
-    "typescript": "^1.4.1"
+    "typescript": "1.4.1"
   }
 }
