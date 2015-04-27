@@ -32,9 +32,9 @@ class Spatial(Enum):
   above = 2
   under = 3
   beside = 4
-  left-of = 5
-  right-of = 6
-  strictly-right-of = 7
+  left_of = 5
+  right_of = 6
+  strictly_right_of = 7
 
 class Relation:
   def __init__(self, spatial, a, b):
