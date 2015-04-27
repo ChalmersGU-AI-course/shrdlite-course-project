@@ -243,7 +243,7 @@ module Interpreter {
     // Not used atm
     function deleteNullProperties(obj) {
         for (var k in obj) {
-            if (obj[k] === null) {
+            if (obj[k] === null || obj[k] === 'anyform') {
                 delete obj[k];
             }
         }
