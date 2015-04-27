@@ -4,7 +4,10 @@ Planner.plan = (interpretations, currentState) ->
   
   plans = []
   plan = interpretations[0]
-  movesToGoal = Astar(currentState, plan.intp[0], heuristicFunction,
+  goalRep = [ { pol: true, rel: 'ontop', args: [ 'm', 'floor' ] },
+  { pol: true, rel: 'holding', args: [ 'e' ] } ]
+
+  movesToGoal = Astar(currentState, goalRep, heuristicFunction,
      nextMoves, getNextState, satisfaction, equality)
   plan.plan = planInterpretation(movesToGoal)
   plans.push(plan)
@@ -31,8 +34,42 @@ planInterpretation = (moves) ->
     plan.push(move)
   return plan
 
-heuristicFunction = (start, goal) ->
-  return 0
+heuristicFunction = (state, goalRep) ->
+  sum = 0
+  for goal in goalRep
+    switch goal.rel
+      when "holding"
+        item = goal.args[0]
+        # Do something?
+      when "ontop", "inside"
+        top = goal.args[0]
+        bot = goal.args[1]
+        # Do something
+        if not onTopCheck(state, top, bot)
+          for stack in state.stacks
+            if top in stack
+              sum = sum + 3*(stack.length-stack.indexOf(top))
+      when "leftof"
+        left = goal.args[0]
+        right = goal.args[1]
+        # Do something
+      when "rightof"
+        right = goal.args[0]
+        left = goal.args[1]
+        # Do something
+      when "beside"
+        a = goal.args[0]
+        b = goal.args[1]
+        # Do something
+      when "above"
+        above = goal.args[0]
+        under = goal.args[1]
+        # Do something
+      when "under"
+        under = goal.args[0]
+        above = goal.args[1]
+        # Do something
+  return sum
 
 nextMoves = (state) ->
   moves = []
