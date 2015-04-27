@@ -4,14 +4,6 @@
 * Interpretation
  - syntax tree to PDDL tree
 
- - A* with Set
-
-
-
- * Questions
-  - World representation in PDDL: above <-> on top, on top
-
-
   * Idea for Heuristics
   How deep is the object we want to move
   -we are sure that this is an underestimate
