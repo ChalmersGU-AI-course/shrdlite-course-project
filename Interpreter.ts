@@ -25,13 +25,14 @@ module Interpreter {
             intprt.intp = interpretCommand(intprt.prs, currentState);
             interpretations.push(intprt);
         });
-        if (interpretations.length) {
+        if (interpretations.length == 1) {
             return interpretations;
-        } else {
+        } else if(interpretations.length) {
+	    throw new Interpreter.Error("Ambiguous interpretation. Please clarify");
+	}else {
             throw new Interpreter.Error("Found no interpretation");
         }
     }
-
 
     export interface Result extends Parser.Result {intp:Literal[][];}
     export interface Literal {pol:boolean; rel:string; args:string[];}
@@ -59,23 +60,52 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-	
-        var toMove : ObjectInfo[] = findValid(cmd.ent.obj, state);
-        var moveWithGoals = new collections.Dictionary<ObjectInfo, ObjectInfo[]>();
+	var moveWithGoals = new collections.Dictionary<ObjectInfo, ObjectInfo[]>(function(a) {
+	    return a.name;
+	});
+	var ors : Literal[];
+	if(cmd.cmd == "move") {
+            var toMove : ObjectInfo[] = findValid(cmd.ent.obj, state);
+           
+            for(var i = 0; i < toMove.length; i++) {
+		var validGoals : ObjectInfo[] = checkRelation(toMove[i].obj, cmd.loc, state);
+		moveWithGoals.setValue(toMove[i], validGoals);
+            }
 
-        for(var i = 0; i < toMove.length; i++) {
-            var validGoals : ObjectInfo[] = checkRelation(toMove[i].obj, cmd.loc, state);
-            moveWithGoals.setValue(toMove[i], validGoals);
-        }
+	    ors = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel);
 
-        var ors : Literal[] = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel);
+	} else if(cmd.cmd == "take") {
+	    var toMove : ObjectInfo[] = findValid(cmd.ent.obj, state);
+
+	    toMove.map(function(o) {
+		moveWithGoals.setValue(o, []);
+	    });
+
+	    ors = convertGoalsToPDDL(moveWithGoals, "holding");
+
+	} else if(cmd.cmd == "put") {
+	    state.holding = "m";
+	    var o : Parser.Object = state.objects[state.holding];
+	    var objs : ObjectInfo[] = checkRelation(o, cmd.loc, state);
+
+	    var pos : Position = findObject(state.holding, state);
+	    var obj2 : ObjectInfo = {obj: o, pos: pos, name : state.holding};
+
+	    moveWithGoals.setValue(obj2, objs);
+	    ors = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel);
+
+	} else {
+	    throw new Interpreter.Error("Error parsing command");
+	}
+
+	 
 	var goals : Literal[][] = [];
 
 	ors.map(function(l) {
 	    goals.push([l]);
 	});
 
-        return goals;
+	return goals;
     }
 
     function convertGoalsToPDDL(dict : collections.Dictionary<ObjectInfo, ObjectInfo[]>, relation : string) : Literal[] 
@@ -83,14 +113,14 @@ module Interpreter {
         var lits : Literal[] = [];
 
         dict.forEach(function(key: ObjectInfo, value : ObjectInfo[]) {
-            for(var i = 0; i < value.length; i++) {
-                if(relation == "holding") {
-		    var p : Literal = {pol: true, rel : relation, args: [key.name]};
-		    lits.push(p);
-                } else {
+            if(relation == "holding") {
+		var p : Literal = {pol: true, rel : relation, args: [key.name]};
+		lits.push(p);
+	    } else{
+		for(var i = 0; i < value.length; i++) {
                     var p : Literal = {pol: true, rel: relation, args: [key.name, value[i].name] };
                     lits.push(p);
-                }
+		}
             }
         });
         return lits;
@@ -326,7 +356,7 @@ module Interpreter {
             } else {
                 for(var y in state.objects) {
                     if((obj.size  == state.objects[y].size  || obj.size  == null) &&
-                       (obj.form  == state.objects[y].form  || obj.form  == null) && 
+                       (obj.form  == state.objects[y].form  || obj.form  == null || obj.form == "anyform") && 
                        (obj.color == state.objects[y].color || obj.color == null)){
                         var position : Position = findObject(y, state);
                         if(position != null){
@@ -357,7 +387,7 @@ module Interpreter {
 
 
     function checkObjInRelation(obj: string, valids : ObjectInfo[]) : number{
-          var nr : number = -1;
+        var nr : number = -1;
         for( var i = 0; i < valids.length; i++) {
             if(valids[i].name == obj) {
                 nr = i;
