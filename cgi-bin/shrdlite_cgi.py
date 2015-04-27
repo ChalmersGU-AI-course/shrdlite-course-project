@@ -6,7 +6,7 @@ def main(state):
     time.sleep(1)
 
     # Write to log for testing purposes
-    pretty_state = json.dumps(state, sort_keys=True, indent=2, separators=(',', ': ')))
+    pretty_state = json.dumps(state, sort_keys=True, indent=2, separators=(',', ': '))
     writeToLog(pretty_state)
 
     intprt = interpret(**state)
