@@ -24,16 +24,11 @@ class PointNode implements GraphNode {
  * @class represent a G(v,E)
  */
 class Graph<T extends GraphNode> {
-    nodes: GraphNode[];
-    edges: [number, number][][]; //A list of tuples for every node
-
     /*
     * Creates an instance of Graph
     * @constructor
     */
-    public constructor(nodes: GraphNode[], edges: [number, number][][]) {
-        this.nodes = nodes;
-        this.edges = edges;
+    public constructor(private nodes: GraphNode[], private edges: [number, number][][]  /*A list of tuples for every node */ ) {
     }
 
     /**
