@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-def main(state): 
+def main(state):
     # This is just to make the impression of a large computation:
     import time
     time.sleep(1)
@@ -20,8 +20,8 @@ def writeToLog(string):
     """
     Since we cannot print to standard output, this function prints to a test log instead
     """
-    f = open('log', 'a')
-    f.write("\n----\n" + string)
+    with open('log', 'a') as f:
+        f.write("\n----\n" + string)
 
 def interpret(stacks, holding, arm, objects, utterance, parses):
     """
