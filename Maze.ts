@@ -4,7 +4,7 @@
 
 class Maze {
     private edges_: [number, number][][];
-    private nodes_: GraphNode[];
+    private nodes_: PointNode[];
     private width_: number;
     private height_: number;
     private gridsize: number;
@@ -25,7 +25,7 @@ class Maze {
         this.height_ = Math.max(val, 1);
     }
 
-    public get nodes(): GraphNode[] {
+    public get nodes(): PointNode[] {
         return this.nodes_;
     }
 
@@ -33,17 +33,17 @@ class Maze {
         return this.edges_;
     }
 
-    private genNodes(): GraphNode[] {
-        var nodes: GraphNode[] = new Array(this.width * this.height_);
+    private genNodes(): PointNode[] {
+        var nodes: PointNode[] = new Array(this.width * this.height_);
 
         for (var y = 0; y < this.height_; ++y)
             for (var x = 0; x < this.width; ++x)
-                nodes[this.xy2node(x, y)] = { name: '(' + x.toString() + ',' + y.toString() + ')', x: x, y: y };
+                nodes[this.xy2node(x, y)] = new PointNode('(' + x.toString() + ',' + y.toString() + ')', x, y);
 
         return nodes;
     }
 
-    public generateGraph(width: number, height: number, seed: number, balance: number): Graph {
+    public generateGraph(width: number, height: number, seed: number, balance: number): Graph<PointNode> {
         this.width = width;
         this.height = height;
 

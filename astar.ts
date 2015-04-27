@@ -78,7 +78,7 @@ function init(): void {
 
     var maze = new Maze();
 
-    var mazeGraph: Graph = maze.generateGraph(32, 32, 1024, 0.5); //default values in html code
+    var mazeGraph: Graph<PointNode> = maze.generateGraph(32, 32, 1024, 0.5); //default values in html code
     var mazeCtx: CanvasRenderingContext2D = mazeCanvas.getContext('2d');
     mazeCtx.translate(0.5, 0.5);
     mazeCtx.msImageSmoothingEnabled = false;

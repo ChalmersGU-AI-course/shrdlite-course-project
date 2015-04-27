@@ -7,12 +7,23 @@ interface GraphNode {
     name: string;
     x: number;
     y: number;
+
+    costTo(to: GraphNode): number;
+}
+
+class PointNode implements GraphNode {
+    public constructor(public name: string, public x: number, public y: number) {
+    }
+
+    costTo(to: PointNode): number {
+        return Math.sqrt((this.x - to.x) * (this.x - to.x) + (this.y - to.y) * (this.y - to.y));
+    }
 }
 
 /**
  * @class represent a G(v,E)
  */
-class Graph {
+class Graph<T extends GraphNode> {
     nodes: GraphNode[];
     edges: [number, number][][]; //A list of tuples for every node
 
@@ -78,14 +89,14 @@ class Graph {
             //find current in openset and remove that element and add to closed
             closedset.add(current);
             openset.remove(current);
-            var currentEdges = this.EdgesFor(current);
+            var currentEdges = this.edgesFor(current);
 
             for (var i = 0; i < currentEdges.length; ++i) {
 
                 if (closedset.contains(currentEdges[i][1]))
                     continue;
 
-                var edge_between_cost = this.cost(this.nodes[current], this.nodes[currentEdges[0][1]]);
+                var edge_between_cost = this.nodes[current].costTo(this.nodes[currentEdges[0][1]]);
                 var tentativeGScore = gScore[current] + edge_between_cost;
 
                 if (!openset.contains(currentEdges[i][1]) || tentativeGScore < gScore[currentEdges[i][1]]) {
@@ -111,7 +122,7 @@ class Graph {
     * @return {number} A minimum cost for traveling between the nodes
     */
     private heuristicCost(current: number, goal: number): number {
-        return this.cost(this.nodes[current], this.nodes[goal]);
+        return this.nodes[current].costTo(this.nodes[goal]);
     }
 
     /**
@@ -120,20 +131,11 @@ class Graph {
     * @param {number} node The node you want the neighbours of
     * @return {[number, number][]} A list of edges
     */
-    EdgesFor(node: number): [number, number][] {
+    private edgesFor(node: number): [number, number][] {
         if (node < 0 || node >= this.nodes.length)
             throw new RangeError("Node does not exist");
 
         return this.edges[node];
-    }
-    /**
-    * Get all edges for a node
-    *
-    * @param {number} The node you want the neighbours of
-    * @return {[number, number][]} A list of edges from the node
-    */
-    private cost(node1: GraphNode, node2: GraphNode) {
-        return Math.sqrt((node1.x - node2.x) * (node1.x - node2.x) + (node1.y - node2.y) * (node1.y - node2.y));
     }
 
     public get Size(): number {
