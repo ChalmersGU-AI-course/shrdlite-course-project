@@ -5,12 +5,22 @@ def main(state):
     import time
     time.sleep(1)
 
+    # Write to log for testing purposes
+    writeToLog(json.dumps(state))
+
     intprt = interpret(**state)
     plan = planner(intprt, **state)
     return {'int': intprt,
             'plan': plan,
             }
 
+
+def writeToLog(string):
+    """
+    Since we cannot print to standard output, this function prints to a test log instead
+    """
+    f = open('log', 'a')
+    f.write("\n" + string)
 
 def interpret(stacks, holding, arm, objects, utterance, parses):
     """
