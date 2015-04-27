@@ -34,10 +34,10 @@ function permutate(initWorld: WorldState):graphmodule.Graph<string[][]>{
                             var id = newState2.toString();
                             if(graph.addNode(new graphmodule.GraphNode(id, newState2)){
                                 //Add an edge between the initState and the newState2
-                                graph.addEdge(initStateID, id, 1, true);
                                 
                                 stack.push(newState2);
                             }
+							graph.addEdge(initStateID, id, 1, true);
                                 
                         }
                         
