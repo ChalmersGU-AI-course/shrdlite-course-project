@@ -28,7 +28,7 @@ class Graph<T extends GraphNode> {
     * Creates an instance of Graph
     * @constructor
     */
-    public constructor(private nodes: GraphNode[], private edges: [number, number][][]  /*A list of tuples for every node */ ) {
+    public constructor(private nodes: T[], private edges: [number, number][][]  /*A list of tuples for every node */ ) {
     }
 
     /**
@@ -138,5 +138,13 @@ class Graph<T extends GraphNode> {
     */
     public get Size(): number {
         return this.nodes.length;
+    }
+
+    public get Nodes(): T[]{
+        return this.nodes;
+    }
+
+    public get Edges(): [number, number][][]  /*A list of tuples for every node */ {
+        return this.edges;
     }
 }

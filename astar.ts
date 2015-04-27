@@ -119,7 +119,7 @@ function init(): void {
         var n = maze.coord2node(x, y);
         if (n != undefined)
             startNode = n;
-        $('#maze-result').text('From ' + mazeGraph.nodes[startNode].name + ' to ' + mazeGraph.nodes[stopNode].name);
+        $('#maze-result').text('From ' + mazeGraph.Nodes[startNode].name + ' to ' + mazeGraph.Nodes[stopNode].name);
     }
 
     function mazeMove(e: MouseEvent) {
@@ -134,7 +134,7 @@ function init(): void {
             mazeCtx.putImageData(mazeData, 0, 0);
             maze.drawPath(mazeCtx, path);
 
-            $('#maze-result').text('From ' + mazeGraph.nodes[startNode].name + ' to ' + mazeGraph.nodes[stopNode].name);
+            $('#maze-result').text('From ' + mazeGraph.Nodes[startNode].name + ' to ' + mazeGraph.Nodes[stopNode].name);
         }
     }
 
