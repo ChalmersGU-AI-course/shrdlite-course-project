@@ -1,13 +1,12 @@
 ﻿// LCG - http://en.wikipedia.org/wiki/Linear_congruential_generator
 class Random {
-    seed: number;
-    m: number = (1 << 24);
-    a: number = 0x43FD43FD;
-    c: number = 0xC39EC3;
-    x: number = 0xECE66D;
+    m: number = (1 << 31);
+    a: number = 1103515245;
+    c: number = 12345;
+    x: number = 0xECE66D; //xor:ed with seed
     x0: number;
 
-    constructor(seed: number) {
+    constructor(private seed: number) {
         this.setSeed(seed);
         this.x0 = seed;
     }
@@ -17,8 +16,8 @@ class Random {
     }
 
     private next(): number {
-        this.seed = (this.seed * this.a + this.c) % this.m; //Can be optimzed with bitwise "AND" instead of modulus but loses uniformity (or something like that)
-        return (this.seed);
+        this.x0 = (this.x0 * this.a + this.c) % this.m; //Can be optimzed with bitwise "AND" instead of modulus but loses uniformity (or something like that)
+        return (this.x0);
     }
 
     public nextDouble(): number {
@@ -27,5 +26,9 @@ class Random {
 
     public nextRange(from: number, to: number): number {
         return (this.next() % (to - from + 1)) + from;
+    }
+
+    public get Seed(): number {
+        return this.seed;
     }
 }
