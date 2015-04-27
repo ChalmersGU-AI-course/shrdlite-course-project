@@ -1,13 +1,16 @@
 ///<reference path="lib/collections.ts"/>
 
 /**
- * @interface represent a geometrical node
+ * @interface represent a node in the graph
  */
 interface GraphNode {
     name: string;
     costTo(to: GraphNode): number;
 }
 
+/**
+ * @class represent a Node which have euclidean coordinates
+ */
 class PointNode implements GraphNode {
     public constructor(public name: string, public x: number, public y: number) {
     }
@@ -135,6 +138,9 @@ class Graph<T extends GraphNode> {
         return this.edges[node];
     }
 
+    /**
+    * Get number of nodes in the graph
+    */
     public get Size(): number {
         return this.nodes.length;
     }
