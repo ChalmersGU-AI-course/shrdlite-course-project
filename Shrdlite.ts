@@ -31,6 +31,40 @@ module Shrdlite {
     // - then it interprets the parse(s)
     // - then it creates plan(s) for the interpretation(s)
 
+    /*
+    TODO
+
+     var utterance;
+     var world;
+
+     async.waterfall([
+     function(cb) {
+     var parses = Parser.parse(utterance);
+     cb(null, parses);
+     },
+     function(parses, cb) {
+     var interpretations = Interpreter.interpret(parses);
+     cb(null, interpretations);
+     }
+     ], function(err, interpretations) {
+     async.forever(
+     function(next) {
+     world.readUserInput("xxx", function(input) {
+     if (input) {
+     next(input);
+     } else {
+     next();
+     }
+     });
+     },
+     function() {
+     // TODO planner here
+     }
+     )
+     })
+
+     */
+
     //TODO convert the world to a pddl-world before sending it to interpreter and planner!
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
