@@ -8,7 +8,7 @@ function validWorld(topObject: string, bottomObject: string, objects: {[s:string
 	}
 	
 	//Balls can't support anything
-	if ((objects[bottomObject].form == "ball" && topObject != "") || ) {
+	if ((objects[bottomObject].form == "ball") || ) {
 		return false
 	}
 	
