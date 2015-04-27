@@ -6,15 +6,29 @@ Planner.plan = (interpretations, currentState) ->
   plan = interpretations[0]
   movesToGoal = Astar(currentState, plan.intp[0], heuristicFunction,
      nextMoves, getNextState, satisfaction, equality)
-  plan.plan = movesToGoal # planInterpretation(plan.intp, currentState)
+  plan.plan = planInterpretation(movesToGoal)
   plans.push(plan)
   return plans
-
-planInterpretation = (intprt, state) ->
+# This function adds text about what shrd does
+planInterpretation = (moves) ->
   plan = []
-  # This method should push Picking up before p
-  # Moving right before r (not for every)
-  # Dropping down before d etc
+  lastMove = ''
+  for move in moves
+    if not (move is lastMove)
+      switch move
+        when 'p'
+          plan.push("Picking up item")
+          lastMove = 'p'
+        when 'd'
+          plan.push("Dropping item")
+          lastMove = 'd'
+        when 'r'
+          plan.push("Moving right")
+          lastMove = 'r'
+        when 'l'
+          plan.push("Moving left")
+          lastMove = 'l'
+    plan.push(move)
   return plan
 
 heuristicFunction = (start, goal) ->
