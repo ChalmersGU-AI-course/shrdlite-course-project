@@ -6,7 +6,8 @@ def main(state):
     time.sleep(1)
 
     # Write to log for testing purposes
-    writeToLog(json.dumps(state))
+    pretty_state = json.dumps(state, sort_keys=True, indent=2, separators=(',', ': ')))
+    writeToLog(pretty_state)
 
     intprt = interpret(**state)
     plan = planner(intprt, **state)
@@ -20,7 +21,7 @@ def writeToLog(string):
     Since we cannot print to standard output, this function prints to a test log instead
     """
     f = open('log', 'a')
-    f.write("\n" + string)
+    f.write("\n----\n" + string)
 
 def interpret(stacks, holding, arm, objects, utterance, parses):
     """
