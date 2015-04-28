@@ -40,34 +40,28 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    var worldDictionary : {[s:string] : ObjectDefinition};
+    var worldDictionary : {[s:string] : ObjectDefinition} = null;
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
 
+        worldDictionary = state.objects;
+
         var goal = computeGoalFunction(intprt);
 
-        // console.log("DEBUG - is start goal: " + goal(state));
-        //
-        // var ns = neighbours(state);
-        // for(var ix in ns){
-        //     console.log("DEBUG - neighbour: " + ns[ix].action);
-        // }
+        {
+            //DEBUG
+            // var someGoal = {arm : 1, holding : "g", stacks : []};
+            // if(goal(someGoal)){
+            //     console.log("DEBUG: Goal works");
+            // } else {
+            //     console.log("DEBUG: Goal doesnt work...");
+            // }
+        }
 
-        var plan : string[] = Astar.astar(neighbours, cost, heuristic, state, goal, false);
+        var plan : string[] = Astar.astar(neighbours, cost, heuristic, state, goal, false, 10000);
 
         //var plan : string[] = [];
         // var plan : string[] = ["r","p"];
-
-        worldDictionary = state.objects;
-
-        // actions r l p d
-        //
-        // T == WordState
-
-        // performAction("r", {arm: 0, stacks: []});
-        // performAction("r", state);
-        // console.log(neighbours(state));
-
         return plan;
     }
 
@@ -156,14 +150,17 @@ module Planner {
             }
         } else {
             var currStack = s.stacks[s.arm];
-            var head : string = currStack[currStack.length-1];
-            if(canSupport(s.holding, head)){
+            if(currStack.length > 0){
+                var head : string = currStack[currStack.length-1];
 
-                // Can drop here
-                // console.log(s.holding + " can support " + head);
-                result.push(performAction("d",s));
-            } else {
-                // console.log(s.holding + " can't support " + head);
+                if(canSupport(s.holding, head)){
+
+                    // Can drop here
+                    // console.log(s.holding + " can support " + head);
+                    result.push(performAction("d",s));
+                } else {
+                    // console.log(s.holding + " can't support " + head);
+                }
             }
         }
 
@@ -197,6 +194,10 @@ module Planner {
     function canSupport(above: string, below: string) : boolean{
         var objA : ObjectDefinition = worldDictionary[above];
         var objB : ObjectDefinition = worldDictionary[below];
+
+        if(! objB){
+            console.log("DEBUG: objB undefined: "+below);
+        }
 
         if(objB.form == "floor"){
             // The floor can support any object
