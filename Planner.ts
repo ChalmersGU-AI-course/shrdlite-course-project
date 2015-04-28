@@ -53,7 +53,7 @@ module Planner {
         //     console.log("DEBUG - neighbour: " + ns[ix].action);
         // }
 
-        var plan : string[] = Astar.astar(neighbours, cost, heuristic, state, goal);
+        var plan : string[] = Astar.astar(neighbours, cost, heuristic, state, goal, false);
 
         //var plan : string[] = [];
         // var plan : string[] = ["r","p"];
@@ -77,6 +77,10 @@ module Planner {
         arm : number;
         holding: string;
         stacks : string[][];
+    }
+
+    export function printState(s : State){
+
     }
 
     function cost(a : State, b : State) : number{
@@ -187,7 +191,6 @@ module Planner {
                 console.log("ERROR: unknown action "+action);
                 return undefined;
         }
-        console.log("DEBUG performAction - arm: "+newState.arm);
         return {state: newState, action: action};
     }
 

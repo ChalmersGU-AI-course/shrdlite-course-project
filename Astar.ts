@@ -198,6 +198,8 @@ module Astar{
             }
 
             var current : Vertex<T> = queue.dequeue();
+            // console.log("DEBUG - Astar queue: "+current.state);
+
             if(multiPathPruning){
                 if(visited.contains(current.state)){
                     continue;
