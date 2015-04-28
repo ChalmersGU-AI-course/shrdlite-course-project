@@ -6,16 +6,28 @@ class WorldState(object):
     def __init__(self):
         self.world = {}
 
-    def addEnity(label, entity):
-       self.world[label] = entity
+    def addEntity(self, label, entity):
+        self.world[label] = entity
 
-    def lookupEntity(size, form, color):
+    def lookupEntity(self, size, form, color):
         fittingList = []
-        for label, ent in world.iteritems():
-            if size is not None and ent.size is not size
+        for label, ent in self.world.items():
+            if size not in (None, ent.size):
                 continue
-            if form is not None and ent.form is not form
+            if form not in (None, ent.form):
                 continue
-            if color is not None and ent.color is not color
+            if color not in (None, ent.color):
                 continue
+            fittingList.append(ent)
         return fittingList
+
+def interpret(objects):
+    worldState = WorldState()
+
+    # Add all entities to world state
+    for label, features in objects.items():
+        # This way, the features in the entity will be saved as strings, not as the enums
+        # we defined in PDDL.py... I wonder if this is bad?
+        entity = Entity(features['size'], features['color'], features['form']) 
+        worldState.addEntity(label, entity)
+
