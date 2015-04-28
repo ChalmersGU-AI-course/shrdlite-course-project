@@ -31,6 +31,40 @@ module Shrdlite {
     // - then it interprets the parse(s)
     // - then it creates plan(s) for the interpretation(s)
 
+    /*
+    TODO
+
+     var utterance;
+     var world;
+
+     async.waterfall([
+     function(cb) {
+     var parses = Parser.parse(utterance);
+     cb(null, parses);
+     },
+     function(parses, cb) {
+     var interpretations = Interpreter.interpret(parses);
+     cb(null, interpretations);
+     }
+     ], function(err, interpretations) {
+     async.forever(
+     function(next) {
+     world.readUserInput("xxx", function(input) {
+     if (input) {
+     next(input);
+     } else {
+     next();
+     }
+     });
+     },
+     function() {
+     // TODO planner here
+     }
+     )
+     })
+
+     */
+
     //TODO convert the world to a pddl-world before sending it to interpreter and planner!
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
@@ -49,17 +83,10 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
         });
 
-
-        // TODO own function
-
         var extendedState = extendWorldState(world.currentState);
 
-
-        //console.log("stacks:",objStacks);
-        //console.log("pddlWorld:",pddlWorld);
-
         try {
-            var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, extendedState);
+            var interpretations : PddlLiteral[][][] = Interpreter.interpret(parses, extendedState);
         } catch(err) {
             if (err instanceof Interpreter.Error) {
                 world.printError("Interpretation error", err.message);
@@ -68,13 +95,39 @@ module Shrdlite {
                 throw err;
             }
         }
+
+        /*
+        // Ambiguity resolution?
+        // TODO
+        world.printSystemOutput("Found interpretations, count: "+interpretations.length);
+        if (interpretations.length > 1) {
+            world.printSystemOutput("Multiple interpretations found:");
+            var interpretationStrings = _.map(interpretations, Interpreter.interpretationToString);
+            _.each(interpretationStrings, world.printSystemOutput, world);
+            // Loop until user has chosen one
+            var interpretation = null;
+            while (!interpretation) {
+                // TODO does this even work? With callback etc?
+                world.readUserInput("Which one did you mean?", function (i) {
+                    if (i > 0 && i < interpretations.length) {
+                        interpretation = interpretations[i];
+                    } else {
+                        world.printSystemOutput("Unfortunately, I didn't quite grasp that.");
+                    }
+                });
+            }
+        }
+        */
+
         world.printDebugInfo("Found " + interpretations.length + " interpretations");
         interpretations.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
         });
 
+
         try {
-            var plans : Planner.Result[] = Planner.plan(interpretations, extendedState);
+            // TODO: use PddlLiteral[][][] as input to Planner.plan()
+            var plans : Planner.Result[] = []; // Planner.plan(interpretations, extendedState);
         } catch(err) {
             if (err instanceof Planner.Error) {
                 world.printError("Planning error", err.message);
@@ -88,9 +141,14 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
         });
 
+        world.printError("Planner not done yet");
+        return null;
+        // TODO: return plans[0] here, as below
+        /*
         var plan : string[] = plans[0].plan;
         world.printDebugInfo("Final plan: " + plan.join(", "));
         return plan;
+        */
     }
 
 

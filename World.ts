@@ -101,7 +101,7 @@ function extendWorldState(state: WorldState) : ExtendedWorldState {
 
 // Concats a list of lists into a list
 // TODO: move to util file
-function concat(lists) {
+function concat(lists : any[][]) : any[] {
     return Array.prototype.concat.apply([], lists);
 }
 
