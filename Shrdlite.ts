@@ -96,6 +96,7 @@ module Shrdlite {
             }
         }
 
+        /*
         // Ambiguity resolution?
         // TODO
         world.printSystemOutput("Found interpretations, count: "+interpretations.length);
@@ -116,6 +117,7 @@ module Shrdlite {
                 });
             }
         }
+        */
 
         world.printDebugInfo("Found " + interpretations.length + " interpretations");
         interpretations.forEach((res, n) => {
@@ -139,9 +141,14 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
         });
 
+        world.printError("Planner not done yet");
+        return null;
+        // TODO: return plans[0] here, as below
+        /*
         var plan : string[] = plans[0].plan;
         world.printDebugInfo("Final plan: " + plan.join(", "));
         return plan;
+        */
     }
 
 
