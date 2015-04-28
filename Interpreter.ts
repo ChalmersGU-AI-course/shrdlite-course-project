@@ -62,8 +62,10 @@ module Interpreter {
                 break;
             case "move":
                 console.log("Got move! which is not implemented yet...");
+                break;
             default:
                 console.log("Interpreter: UNKNOWN cmd: " + cmd.cmd);
+                break;
         }
         return intprt;
     }
@@ -101,7 +103,7 @@ module Interpreter {
                 break;
             case "the":
                 if(result.length > 1){
-                    // TODO should only be one target... Give warning or error.
+                    throw new Interpreter.Error("There are several objects that fit the description");
                 }
                 break;
         }
