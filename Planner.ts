@@ -45,15 +45,43 @@ module Planner {
     function planInterpretation(intprt : PddlLiteral[][], state : ExtendedWorldState) : string[] {
         var plan : string[] = [];
 
+        //TODO should this be moved somewhere? Argument och global parameter?
+        var searchDepth = 10;
+
         //TODO this assumes state is a PDDL-world, not a WorldState
         //TODO WONT WORK!!!!!!!! MUST FIX!!!!!!!
         var topObjects:string[] = getObjectsOnTop(state);
 
+        for(var i = 0; i<searchDepth; i++){
+            for(var j = 0 ; i<topObjects.length; j++){
 
+            }
+        }
 
         //TODO create the graph here
 
         return plan;
+    }
+
+    // Returns a pddlworld where the given object is in the arm
+    // Assumes that the given object is on top
+    function liftObject(world:PddlLiteral[], object:string){
+        var newWorld: PddlLiteral[];
+
+        //TODO move to a clone-method somewhere
+        for(var i in world) {
+            newWorld[i] = {pol: world[i].pol, rel: world[i].rel, args: [world[i].args[0], world[i].args[1]]};
+        }
+
+        for(var i = 0; i<newWorld.length; i++){
+            if(newWorld[i].args[0] === "object" && newWorld[i].rel === "ontop") {
+                newWorld.splice(i, 1);
+                //TODO what does the relation that an object is carried by the arm look like?
+                newWorld.push({pol: true, rel:"inside", args: [object, "arm"]});
+            }
+        }
+
+        return world;
     }
 
     //Takes a PDDL-world and returns an array of all the objects that are on top

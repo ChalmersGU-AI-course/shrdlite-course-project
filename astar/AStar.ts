@@ -3,6 +3,7 @@
  */
 ///<reference path="../lib/collections.ts"/>
 ///<reference path="../lib/lodash.d.ts"/>
+///<reference path="../Planner.ts"/>
 
 
 module AStar {
@@ -15,6 +16,7 @@ module AStar {
         neighbours: Edge[];
         cost:number;
         previous: Node;
+        data: PddlLiteral[];
         constructor (label:string, neighbours:Edge[]=[], cost:number=Infinity, previous:Node=null) {
             this.label = label;
             this.neighbours = neighbours;
