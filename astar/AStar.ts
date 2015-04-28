@@ -10,15 +10,17 @@ module AStar {
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     // Types
-
+    //TODO create a separate version with previous and such
     export class Node  {
+        //TODO remove lavel?
         label: string;
         neighbours: Edge[];
         cost:number;
         previous: Node;
         data: PddlLiteral[];
-        constructor (label:string, neighbours:Edge[]=[], cost:number=Infinity, previous:Node=null) {
+        constructor (label:string, data:PddlLiteral[], neighbours:Edge[]=[], cost:number=Infinity, previous:Node=null) {
             this.label = label;
+            this.data = data;
             this.neighbours = neighbours;
             this.cost = cost;
             this.previous = previous;

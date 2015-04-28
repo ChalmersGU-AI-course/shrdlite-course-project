@@ -52,9 +52,11 @@ module Planner {
         //TODO WONT WORK!!!!!!!! MUST FIX!!!!!!!
         var topObjects:string[] = getObjectsOnTop(state);
 
+
+        
         for(var i = 0; i<searchDepth; i++){
             for(var j = 0 ; i<topObjects.length; j++){
-
+                var n = new Node("hej", liftObject(state.pddlWorld, topObjects[j], [], Infinity, null));
             }
         }
 
