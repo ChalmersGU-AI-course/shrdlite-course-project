@@ -48,20 +48,8 @@ module Planner {
 
         var goal = computeGoalFunction(intprt);
 
-        {
-            //DEBUG
-            // var someGoal = {arm : 1, holding : "g", stacks : []};
-            // if(goal(someGoal)){
-            //     console.log("DEBUG: Goal works");
-            // } else {
-            //     console.log("DEBUG: Goal doesnt work...");
-            // }
-        }
-
         var plan : string[] = Astar.astar(neighbours, cost, heuristic, state, goal, false, 10000);
 
-        //var plan : string[] = [];
-        // var plan : string[] = ["r","p"];
         return plan;
     }
 
@@ -71,10 +59,6 @@ module Planner {
         arm : number;
         holding: string;
         stacks : string[][];
-    }
-
-    export function printState(s : State){
-
     }
 
     function cost(a : State, b : State) : number{
