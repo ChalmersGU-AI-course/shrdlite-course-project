@@ -1,4 +1,4 @@
-Filosofisk approach: *Går det att skriva något med lika bra medvetande*
+Filosofisk approach: *Går det att skriva något med lika bra medvetande* (är "strong AI" möjligt?)
 
 Tillvägagångssätt: Jämföra olika artiklar/argument för att kunna filosofiskt spinna vidare på vår framtidstro om AI.
 
@@ -10,6 +10,33 @@ Finns ett citat: "Om ett lejon kunde prata så skulle vi inte förstå det" (pga
 "Kan rummet kinesiska?"
 
 Börjat läsa på:
+---------------
 http://www.loebner.net/Prizef/TuringArticle.html
 https://www-rohan.sdsu.edu/faculty/vinge/misc/singularity.html
+
+Läst klart:
+-----------
 http://cogprints.org/7150/1/10.1.1.83.5248.pdf
+Läst av: weeeeeew, ...
+Läsvärd: ja
+
+Sammanfattning:
+Searle menar att strong AI är omöjligt att uppnå utan att exakt simulera en hjärna. Flera argument för och emot gås igenom, men i grund och botten handlar hans argument om att de högre nivåerna (the mind) inte bara "körs på" de lägre nivåerna (the brain) på samma sätt som ett program körs på en dator, utan att det pågår ett intrikat samspel mellan nivåerna. För att strong AI ska vara möjligt måste alltså programmet kunna interagera med sin maskin, vilket möjliggörs av hjärnans biologiska struktur.
+
+Han pekar även på att program i grund och botten saknar semantik utan enbart består av syntax; det är användarna som tillskriver indatan och utdatan - ibland även mellanstegen - mening, medan programmet enbart manipulerar symboler. Varför han anser att processerna i en hjärna innehar mening har jag inte helt förstått, men han pratar mycket om dess kausala kraft i samband med detta, och det verkar vara knutet till argumentet om samspel mellan nivåer.
+
+Reflektioner:
+Varför kan man inte skriva ett program med många nivåer som interagerar med varandra på ett sådant sätt att mening uppstår, utan att för den sakens skull simulera hjärnans biologi?
+
+Även om "the mind" samspelar med "the brain" så finns det långt lägre nivåer som ingen av dem samspelar med. Hur neuronerna fungerar kan varken hjärnan eller sinnet påverka, även om båda två "körs på" dem, och i grund och botten körs allt på atomer, kvarkar och så vidare. Bara för att ett program inte kan påverka datorn det körs på behöver inte det betyda att det är omöjligt att skapa strong AI, då datorn helt enkelt skulle kunna ses som den första "fasta" nivån, som flera samspelande nivåer kan köras ovanpå.
+
+-----------
+http://pinker.wjh.harvard.edu/articles/media/1997_08_18_usnewsworldreport.html
+Läst av: weeeeeew
+Läsvärd: ja, men den ställer frågor snarare än att argumentera åt något håll
+
+Sammanfattning:
+Om det fanns en maskin som var omöjlig att skilja från en människa förutom materialet den bestod av, skulle det gå att avgöra huruvida den faktiskt upplevde subjektivitet eller enbart simulerade den? Det är i grund och botten samma fråga som om andra människor upplever subjektivitet eller inte, vilken så vitt vi vet är omöjlig att svara på mha experiment. Vi kan anta att de gör det eftersom vi är skapta på samma sätt, men det enda vi egentligen kan vara säkra på existerar är vårt eget medvetande. På samma tema kan man fråga sig om en mask på en krok känner smärta eller om den vrider sig pga enkel I/O i dess nervsystem, dvs reflexer.
+
+Reflektioner:
+I/O, simulerade känslor och reflexer verkar ligga på samma nivå av "medvetande". Subjektivitet, eller självmedvetenhet, verkar däremot ligga åtminstone en nivå högre. Förmågan att ta in indata X utan att automatiskt skicka ut utdata Y verkar vara ett nödvändigt krav för detta. Å andra sidan kan man argumentera för att detta bara är en komplexare variant av I/O, där utdatan beror av fler indata än enbart X. Är subjektivitet en illusion, en biprodukt skapad av väldigt komplexa I/O-system? I någon mening, ja, definitivt, men vad är det som ger upphov till illusionen i så fall? Kanske de samspelande nivåerna som beskrivs i artikeln ovanför denna (och som för övrigt är ett av de huvudsakliga ämnena i "Gödel, Escher, Bach", som jag också ska skriva en sammanfattning av/reflektion på när jag orkar)?
