@@ -1,12 +1,13 @@
-///<reference path="Puzzle.ts"/>
+///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
+///<reference path="Constrains.ts"/>
 
 module Interpreter {
 
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
-    export function interpret(parses : Parser.Result[], currentState : PuzzleState) : Result[] {
+    export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
@@ -46,10 +47,20 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function interpretCommand(cmd : Parser.Command, state : PuzzleState) : Literal[][] {
+    function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        var what : Constrains.constrainInterface = new constrainParser();
+        var fullDomain : collections.Set<string> = new collections.Set<string>();
+        objs.forEach((obj) => {
+            fullDomain.add(obj);
+        });
+        Constrains.constrain<string>(fullDomain, cmd.ent, what);
+
+        var a = objs[getRandomInt(objs.length)];
+        var b = objs[getRandomInt(objs.length)];
         var intprt : Literal[][] = [[
-            {pol: true, rel: cmd.cmd, args: []}
+            {pol: true, rel: "ontop", args: [a, "floor"]},
+            {pol: true, rel: "holding", args: [b]}
         ]];
         return intprt;
     }
@@ -58,6 +69,14 @@ module Interpreter {
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
+
+    class constrainParser implements Constrains.constrainInterface {
+        constructor(
+//            public aState: PuzzleState
+        ) {}
+        printDebugInfo(info : string) : void {console.log(info);}
+    }
+
 
 }
 
