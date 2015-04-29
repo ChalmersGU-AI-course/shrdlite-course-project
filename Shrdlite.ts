@@ -95,29 +95,27 @@ module Shrdlite {
                 throw err;
             }
         }
-
-        /*
-        // Ambiguity resolution?
-        // TODO
         world.printSystemOutput("Found interpretations, count: "+interpretations.length);
-        if (interpretations.length > 1) {
-            world.printSystemOutput("Multiple interpretations found:");
-            var interpretationStrings = _.map(interpretations, Interpreter.interpretationToString);
-            _.each(interpretationStrings, world.printSystemOutput, world);
+
+        // Ambiguity resolution
+        if (interpretations.length > 1) {;
             // Loop until user has chosen one
             var interpretation = null;
             while (!interpretation) {
-                // TODO does this even work? With callback etc?
-                world.readUserInput("Which one did you mean?", function (i) {
-                    if (i > 0 && i < interpretations.length) {
-                        interpretation = interpretations[i];
-                    } else {
-                        world.printSystemOutput("Unfortunately, I didn't quite grasp that.");
-                    }
-                });
+                // TODO: pretty-print here
+                // implement function which takes a list of objects, and pretty-prints them
+                // with as much detail as needed to distinguish them
+                var intpStrings = _.map(interpretations, (int,i) => {return i+". "+Interpreter.interpretationToString(int);})
+                  , intpString  = _.reduce(intpStrings, (total, s) => {return total+"\n"+s;});
+                var i = Number(prompt("Multiple interpretations found:\n"+intpString+"\nWhich one did you mean?"));
+                if (i >= 0 && i < interpretations.length) {
+                    interpretation = interpretations[i];
+                } else {
+                    world.printSystemOutput("Unfortunately, I didn't quite grasp that.");
+                }
             }
         }
-        */
+
 
         world.printDebugInfo("Found " + interpretations.length + " interpretations");
         interpretations.forEach((res, n) => {
