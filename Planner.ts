@@ -72,14 +72,13 @@ module Planner {
                     for(var j = 0; j<NUM_STACKS; j++) {
                         if(armPos != j) {
                             var dir:string = j>armPos ? "r" : "l";
-                            var node = new AStar.Node<PddlLiteral[]>(moveArm(nodes[i][n].label, j), [], Infinity, null);
-                            var edge = new AStar.Edge<PddlLiteral[]>(nodes[i][n], node, Math.abs(state.arm-j), dir);
+                            var cost:number = Math.abs(state.arm-j);
+                            var node = new AStar.Node<PddlLiteral[]>(moveArm(nodes[i][n].label, j), [], Infinity, null, dir+cost);
+                            var edge = new AStar.Edge<PddlLiteral[]>(nodes[i][n], node, cost);
                             nodes[i][n].neighbours.push(edge);
                             nodes[i+1].push(node);
                         }
                     }
-
-
                     //TODO add a lift to the top object under arm
 
 
@@ -88,12 +87,62 @@ module Planner {
             }
         }
 
+
+        //Create a testgoal
+
+        var goal:PddlLiteral[] = [
+            {pol:true, rel:"at", args:["arm", "3"]}
+        ];
+
+        var searchResult = AStar.astar(startNode, createGoalFunction(goal), createHeuristicFunction());
+
+        console.log("Search result:");
+        console.log(searchResult);
+
+        console.log("Start node:");
         console.log(startNode);
 
-
+        console.log("State:");
         console.log(state);
 
+        for(var s in searchResult) {
+            pushActions(plan, searchResult[s].action[0], Number(searchResult[s].action[1]));
+        }
+
+        console.log("Plan:");
+        console.log(plan);
+
         return plan;
+    }
+
+    function pushActions(plan:string[], action:string, times:number) {
+        for(var i=0; i<times; i++) {
+            plan.push(action);
+        }
+    }
+
+    function createHeuristicFunction() {
+        return function () {
+            return 0;
+        }
+    }
+
+    function createGoalFunction(goalWorld:PddlLiteral[]) {
+        return function(node:AStar.Node<PddlLiteral[]>) {
+            var world = node.label;
+            for(var n in world) {
+                for(var i in goalWorld) {
+                    if(world[n].rel === goalWorld[i].rel &&
+                        world[n].args[0] === goalWorld[i].args[0] &&
+                        world[n].args[1] === goalWorld[i].args[1]) {
+                        goalWorld.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+
+            return goalWorld.length === 0;
+        }
     }
 
     //Returns the first of the given relation in a Pddlworld

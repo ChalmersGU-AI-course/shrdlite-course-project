@@ -17,11 +17,13 @@ module AStar {
         neighbours: Edge<T>[];
         cost:number;
         previous: Node<T>;
-        constructor (label:T, neighbours:Edge<T>[]=[], cost:number=Infinity, previous:Node<T> = null) {
+        action: string;
+        constructor (label:T, neighbours:Edge<T>[]=[], cost:number=Infinity, previous:Node<T> = null, action:string="") {
             this.label = label;
             this.neighbours = neighbours;
             this.cost = cost;
             this.previous = previous;
+            this.action = action;
         }
 
         // Convenience function for creating many nodes.
@@ -39,26 +41,24 @@ module AStar {
         start : Node<T>;
         end : Node<T>;
         cost: number;
-        action: string;
-        constructor (start : Node<T>, end : Node<T>, cost : number, action:string) {
+        constructor (start : Node<T>, end : Node<T>, cost : number) {
             this.start = start;
             this.end   = end;
             this.cost  = cost;
-            this.action = action;
         }
 
         // Creates a new edge which goes in the opposite direction of this one.
         // If no cost is given, the new edge recieves the same cost as this one
         public complement(cost? : number) : Edge<T> {
             if (!(_.isFinite(cost))) cost = 1;
-            return new Edge(this.end, this.start, this.cost, this.action);
+            return new Edge(this.end, this.start, this.cost);
         }
 
         // Convenience function for creating many edges
-        public static createEdges<T>(data : [[Node<T>,Node<T>,number,string]]) : Edge<T>[] {
+        public static createEdges<T>(data : [[Node<T>,Node<T>,number]]) : Edge<T>[] {
             var edges = [];
             for (var key in data) {
-                var e = new Edge<T>(data[key][0], data[key][1], data[key][2], data[key][3]);
+                var e = new Edge<T>(data[key][0], data[key][1], data[key][2]);
                 edges.push(e);
             }
             return edges;
@@ -78,7 +78,7 @@ module AStar {
     //
     // Returns a path (array of nodes)
 
-    export function astar<T>(s: Node<T>, isGoal: (Node)=>boolean, nodes : Node<T>[], heuristic: (Node)=>number) : Node<T>[] {
+    export function astar<T>(s: Node<T>, isGoal: (Node)=>boolean, heuristic: (Node)=>number) : Node<T>[] {
 
         //Function that the heap uses to order itself
         var compFunc : collections.ICompareFunction<Node<T>> = function(a:Node<T>, b: Node<T>){
