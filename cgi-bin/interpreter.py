@@ -35,6 +35,10 @@ class WorldState(object):
                     return True
         return False
 
+    ## Här tänker jag också att man ska ha en metod som tar fram vilka actions som är möjliga för armen,
+    ## och då tar fram de world states som actionsen leder till.
+    ## Sedan använder man de olika spatial-metoderna för att avgöra om ett mål är uppnått.
+
 def interpret(stacks, objects):
 
     # Add all entities 
