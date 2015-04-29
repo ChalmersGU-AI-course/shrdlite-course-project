@@ -48,14 +48,27 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        //console.log(cmd);
-
-        if(cmd.ent != null){
-            interpretEntity(cmd.ent, state);
+        console.log(cmd+'\n');
+        if(cmd.cmd === "move"){
+            var objs : string[] = interpretEntity(cmd.ent, state);
+            var locs : {rel:string, objs:string[]} = interpretLocation(cmd.loc, state);
+            var lit : Literal[][] = [[]];
+            var it : number = 0;
+            for(int i = 0; i< objs.length; i++){
+                for(int j = 0; j< locs.objs.length; j++){
+                    lit[it++][0] = {pol: true, rel: locs.rel¸[objs[i],locs.objs[j]]};
+                }
+            }
+            //check if valid.
+            return lit;    
+        } 
+        else if (cmd.cmd === "put"){
+            //Liknande. TODO
         }
-        if(cmd.loc != null){
-            interpretLocation(cmd.loc, state);
+        else{
+            //Liknande. TODO
         }
+        
         // This returns a dummy interpretation involving two random objects in the world
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var a = objs[getRandomInt(objs.length)];
@@ -67,28 +80,39 @@ module Interpreter {
         return intprt;
     }
 
-    function interpretEntity(ent : Parser.Entity, state : WorldState) : Literal[][] {
-        //console.log(ent);
-        if(ent.obj != null){
-            interpretObject(ent.obj, state);
-        }
+    function interpretEntity(ent : Parser.Entity, state : WorldState) : string[] {
+        //Assuming only single objects. 
+        //TODO: quant == all, any.
+        var objs : string[] = interpretObject(ent.obj, state);
+        return objs;
+        //console.log(ent+'\n');
+        //if(ent.obj != null){
+        //    interpretObject(ent.obj, state);
+        //}
 
-        return null;
+        //return null;
     }
 
-    function interpretObject(obj : Parser.Object, state : WorldState) : Literal[][] {
-        //console.log(obj);
-        if(obj.loc != null){
-            interpretLocation(obj.loc, state);
-        }
+    function interpretObject(obj : Parser.Object, state : WorldState) : string[] {
+        console.log(obj+'\n');
         if(obj.obj != null){
+            //check loc
             interpretObject(obj.obj, state);
-        }
+        }else{
+            //identify obj from woldstatt-
+            if(obj.form === "floor"){
+                return ["floor"];
+            }
+            var objs : string[]= state.objects;
+            var objsindexes : string[] = Array.prototype.concat.apply([], state.stacks);
 
-        return null;
+            objs = state.objects.filter(e=> e.size === obj.size).filter(e=> e.form === obj.form).filter(e=> e.color === obj.color);
+
+
+        }
     }
-    function interpretLocation(loc : Parser.Location, state : WorldState) : Literal[][] {
-        //console.log(loc);
+    function interpretLocation(loc : Parser.Location, state : WorldState) : {rel: string, objs: string[]} {
+        console.log(loc+'\n');
         if(loc.ent != null){
             interpretEntity(loc.ent, state);
         }
