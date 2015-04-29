@@ -1,6 +1,4 @@
 ///<reference path="../search/AStar"/>
-///<reference path="../search/Search"/>
-///<reference path="../search/Heuristic"/>
 ///<reference path="./Graph"/>
 
 // Dimensions of graph

@@ -23,7 +23,7 @@ module Search {
       var info = new collections.Dictionary<N, AStarInfo<N>>(key);
 
       // Add the start node to the open set.
-      open.add([start, 0]);
+      open.add([start, h(start)]);
 
       // Initialize the info of the start node.
       info.setValue(start, {
@@ -60,7 +60,7 @@ module Search {
         // Iterate over the neighbours of the current node.
         var ni: AStarInfo<N>;
         var ns: [N, number][] = neighbours(current);
-        for ( var i in ns ) {
+        for (var i = 0; i < ns.length; i++){
           // Extract the node and cost from the neighbour.
           var n: N = ns[i][0];
           var cost: number = ns[i][1];
@@ -143,4 +143,3 @@ module Search {
     nodesAdded: number;
   }
 }
-
