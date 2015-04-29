@@ -10,7 +10,6 @@ module Interpreter {
         var interpretations : Result[] = [];
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
-            console.log("\nInput is :"+parseresult.input);
             intprt.intp = interpretCommand(intprt.prs, currentState);
             interpretations.push(intprt);
         });
@@ -53,7 +52,7 @@ module Interpreter {
             var objs : string[] = interpretEntity(cmd.ent, state);
             var locs : Sayings = interpretLocation(cmd.loc, state);
             var it : number = 0;
-            console.log(locs == null);
+            
             for(var i : number = 0; i < objs.length; i++){
                 for(var j : number= 0; j< locs.objs.length; j++){
                     lit[it++][0] = {pol: true, rel : locs.rel, args : [objs[i],locs.objs[j]]};
@@ -80,9 +79,8 @@ module Interpreter {
     }
 
     function interpretObject(obj : Parser.Object, state : WorldState) : string[] {
-        //console.log(obj+'\n');
         if(obj.obj != null){
-            //check loc
+            //Todo :: check loc
             return interpretObject(obj.obj, state);
             
         }else{
@@ -105,7 +103,6 @@ module Interpreter {
     }
 
     function interpretLocation(loc : Parser.Location, state : WorldState) : Sayings {
-        console.log(loc+'\n');
         return {rel:loc.rel, objs:interpretEntity(loc.ent, state)};
     }
 
