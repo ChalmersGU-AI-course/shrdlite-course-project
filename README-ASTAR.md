@@ -7,7 +7,7 @@ shortest path from one city to another, the second more complex test involves
 finding a solution to an 8-puzzle.
 
 ### Files
-=========
+
 *astar/AStar.ts* --  the general implementation of the A* algorithm
 
 */astar/AStar-tryout.ts*  --  a previous partial implementation (left it there
@@ -25,18 +25,17 @@ for internal functions.
 
 
 ### Types and Ideas in AStar
-============================
 
 Our astar implementation uses the following interface for searching the
 solution.
 
-`
+```
   interface State {
     heuristic(solution: any): number;  // compare length to goal
     match(solution: any): boolean;     // see if goal is found
     expand(): Transition[];            // expand to next possible states
   }
-`
+```
 
 Since all problems involves different heuristics where the solution can be more
 or less specified, have we let the parameter `solution` for the huristic and match
@@ -45,18 +44,18 @@ generality in the implementations.
 
 Every state can be expanded.
 
-`
+```
   interface Transition {
     cost: number;
     state: State;
   }
-`
+```
 
 This interface lets us expand a state into neighbour states and give us a cost
 for each transition which the astar `search` function uses to keep track of
 total cost for paths.
 
-`
+```
   interface Solution<T extends State> {
     path: T[];
     graph: ASGraph<T>;
@@ -65,7 +64,7 @@ total cost for paths.
       visits: number;
     }
   }
-`
+```
 
 This represents a solution to the problem as the name hints. Since all solutions
 depends on the specific implementation, is this interface generic. `path`
@@ -91,7 +90,6 @@ priority a node is given in the priority queue.
 
 
 ### Tests for implementation of shrdlite
-========================================
 
 - Before any testing you will need to run `npm install` to include any dependencies.
 
@@ -104,7 +102,6 @@ The tests build on the testing frameworks:
 
 
 ### Testing method
-==================
 
 In order to test the algorithm, use 'make test' in the project root. This will
 run both the puzzle and the romania tests. The heuristic in the 8-puzzle is the
