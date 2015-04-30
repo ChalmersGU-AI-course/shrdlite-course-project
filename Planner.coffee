@@ -6,7 +6,6 @@ Planner.plan = (interpretations, currentState) ->
   plan = interpretations[0]
   goalRep = [ { pol: true, rel: 'ontop', args: [ 'm', 'floor' ] },
   { pol: true, rel: 'holding', args: [ 'e' ] } ]
-
   movesToGoal = Astar(currentState, goalRep, heuristicFunction,
      nextMoves, getNextState, satisfaction, equality)
   plan.plan = planInterpretation(movesToGoal)
@@ -37,38 +36,106 @@ planInterpretation = (moves) ->
 heuristicFunction = (state, goalRep) ->
   sum = 0
   for goal in goalRep
-    switch goal.rel
-      when "holding"
-        item = goal.args[0]
-        # Do something?
-      when "ontop", "inside"
-        top = goal.args[0]
-        bot = goal.args[1]
-        # Do something
-        if not onTopCheck(state, top, bot)
-          for stack in state.stacks
-            if top in stack
-              sum = sum + 3*(stack.length-stack.indexOf(top))
-      when "leftof"
-        left = goal.args[0]
-        right = goal.args[1]
-        # Do something
-      when "rightof"
-        right = goal.args[0]
-        left = goal.args[1]
-        # Do something
-      when "beside"
-        a = goal.args[0]
-        b = goal.args[1]
-        # Do something
-      when "above"
-        above = goal.args[0]
-        under = goal.args[1]
-        # Do something
-      when "under"
-        under = goal.args[0]
-        above = goal.args[1]
-        # Do something
+    if goal.rel is "holding"
+      item = goal.args[0]
+      for stack,i in state.stacks
+        # If the item is in a stack add distance to it
+        if item in stack
+          sum += Math.abs( state.arm - i )# + 1
+    else # All other relations has two arguments
+      e1 = goal.args[0]
+      e2 = goal.args[1]
+      si1 = -1 # The stackindex of e1
+      si2 = -1 # The stackindex of e2
+      for stack,i in state.stacks
+        if e1 in stack
+          si1 = i
+        if e2 in stack
+          si2 = i
+      # Floor is a special case 
+      if e2 is "floor"
+        if e1 isnt state.holding
+          stack = state.stacks[si1]
+          if stack.indexOf(e1) isnt 0
+            sum += 3*(stack.length-stack.indexOf(e1))
+      else
+        # Found the stack of both items
+        switch goal.rel
+          when "ontop", "inside"
+            if not onTopCheck(state, e1, e2)
+              # If they are in the same stack but not "onTop"
+              # we have to remove all items on top of the lower one
+              if si1 is si2
+                stack = state.stacks[si1]
+                minPos = Math.min(stack.indexOf(e1), stack.indexOf(e2) )
+                sum = sum + 3*(state.stacks[si1].length - minPos)
+              # If they are in different stacks then add for both elements
+              else # Add 3 for all items on top of e1 and e2
+                s1 = state.stacks[si1]
+                s2 = state.stacks[si2]
+                if e1 isnt state.holding
+                  sum += 3*(s1.length-s1.indexOf(e1))
+                if e2 isnt state.holding
+                  sum += 3*(s2.length-s2.indexOf(e2))
+                # Also add for the difference in columns between them
+                sum += Math.abs(si1 - si2)
+          when "leftof"
+            if e1 is state.holding
+              # The distance should be 1 and +1 for drop
+              sum += Math.abs(1 - (si2 - state.arm)) + 1
+            else if e2 is state.holding
+              sum += Math.abs(1 - (state.arm - si1)) + 1
+            else
+              # The distance should be 1 and +2 for pick and drop
+              sum += Math.abs(1 - (si2-si1)) + 2
+          when "rightof"
+            if e1 is state.holding
+              # The distance should be 1 and +1 for drop
+              sum += Math.abs(1 - (state.arm - si2)) + 1
+            else if e2 is state.holding
+              sum += Math.abs(1 - (si1 - state.arm)) + 1
+            else
+              # The distance should be 1 and +2 for pick and drop
+              costOver1 = 3*(state.stacks[si1].length-state.stacks[si1].indexOf(e1))
+              costOver2 = 3*(state.stacks[si2].length-state.stacks[si2].indexOf(e2))
+              sum += Math.abs(1 - (si1-si2)) + 2 + Math.min(costOver1, costOver2)
+          when "beside"
+            if e1 is state.holding
+              sum += Math.abs(state.arm - si2) + 1
+            else if e2 is state.holding
+              sum += Math.abs(state.arm - si1) + 1
+          when "above"
+            if e1 is state.holding
+              sum += Math.abs(state.arm - si2) + 1
+            else if e2 is state.holding
+              costOver = 3*(state.stacks[si1].length-state.stacks[si1].indexOf(e1))
+              sum += Math.abs(state.arm - si1) + costOver + 1
+            else
+              # The height (position of item in list)
+              h1 = state.stacks[si1].indexOf(e1)
+              h2 = state.stacks[si2].indexOf(e2)
+              # If not e1 above e2
+              if not (si1 is si2 and h1 > h2)
+                # Add work for all items above h1
+                sum += 3*(state.stacks[si1].length-h1);
+                # Add work for distance between them
+                sum += Math.abs(si1-si2)
+          when "under"
+            if e1 is state.holding
+              costOver = 3*(state.stacks[si2].length-state.stacks[si2].indexOf(e2))
+              sum += Math.abs(state.arm - si2) + costOver + 1
+            else if e2 is state.holding
+              sum += Math.abs(state.arm - si1) + 1
+            else
+              # The height (position of item in list)
+              h1 = state.stacks[si1].indexOf(e1)
+              h2 = state.stacks[si2].indexOf(e2)
+              # If not e1 above e2
+              if not (si1 is si2 and h1 < h2)
+                # Add work for all items above h1
+                sum += 3*(state.stacks[si1].length-h2);
+                # Add work for distance between them
+                sum += Math.abs(si1-si2)
   return sum
 
 nextMoves = (state) ->
@@ -90,9 +157,10 @@ nextMoves = (state) ->
     if stack.length > 0
       moves.push("p")
   else
+    craneItem = getItem(state, craneItem)
     # Check if drop is legit
     if stack.length > 0
-      topItem = stack[stack.length-1]
+      topItem = getItem(state, stack[stack.length-1])
       if isObjectDropValid(craneItem, topItem)
         moves.push("d")
     else
@@ -101,11 +169,28 @@ nextMoves = (state) ->
 
   return moves
 
+getItem = (state, letter) ->
+  switch letter
+    when "a" then return state.objects.a
+    when "b" then return state.objects.b
+    when "c" then return state.objects.c
+    when "d" then return state.objects.d
+    when "e" then return state.objects.e
+    when "f" then return state.objects.f
+    when "g" then return state.objects.g
+    when "h" then return state.objects.h
+    when "i" then return state.objects.i
+    when "j" then return state.objects.j
+    when "k" then return state.objects.k
+    when "l" then return state.objects.l
+    when "m" then return state.objects.m
+    else console.log "Did not recognize object!"
+
 isObjectDropValid = (craneItem, topItem) ->
   # Cannot place large item on small item
   if not (topItem.size is "small" and craneItem.size is "large")
     # Cannot place any items on a ball
-    if topItem.form is not "ball"
+    if topItem.form isnt "ball"
 
       # Cases for crane item
 
@@ -142,6 +227,7 @@ getNextState = (state, move) ->
     holding: state.holding
     arm:     state.arm
     stacks:  stackCopy
+    objects: state.objects
   if move is 'p'
     newState.holding = newState.stacks[newState.arm].pop()
   else if move is 'd'
@@ -163,7 +249,7 @@ leftOfCheck = (state, left, right) ->
   result = false
   for stack,i in state.stacks
     if right in stack
-      if i is not 0 and left in state.stacks[i - 1]
+      if i isnt 0 and left in state.stacks[i - 1]
         result = true
   return result
 
@@ -175,7 +261,7 @@ onTopCheck = (state, above, below) ->
         return stack.indexOf(above) is 0
   for stack in state.stacks
     if below in stack
-      if stack.indexOf(above) - stack.indexOf(below) is 1
+      if (stack.indexOf(above) - stack.indexOf(below)) is 1
         result = true
   return result
 
