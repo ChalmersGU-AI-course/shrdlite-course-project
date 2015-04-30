@@ -54,8 +54,9 @@ module Interpreter {
         objs.forEach((obj) => {
             fullDomain.add(obj);
         });
-        Constrains.constrain<string>(fullDomain, cmd.ent, what);
-        Constrains.constrain<string>(fullDomain, cmd.loc.ent, what);
+        fullDomain.add('floor');
+        Constrains.constrain<string>(fullDomain, cmd.ent, what, state);
+        Constrains.constrain<string>(fullDomain, cmd.loc.ent, what, state);
 
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
