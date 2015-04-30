@@ -55,6 +55,7 @@ module Interpreter {
             fullDomain.add(obj);
         });
         Constrains.constrain<string>(fullDomain, cmd.ent, what);
+        Constrains.constrain<string>(fullDomain, cmd.loc.ent, what);
 
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
