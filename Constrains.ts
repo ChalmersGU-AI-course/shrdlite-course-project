@@ -167,11 +167,11 @@ module Constrains {
     //////////////////////////////////////////////////////////////////////
     // Constrains
     function getActiveVoiceAction<T>(act : string) {
-        var actions = {hasSize:hasSize, hasColor:hasColor, isA:isA, inside:isInside};
+        var actions = {hasSize:hasSize, hasColor:hasColor, isA:isA, inside:isInside, ontop:isOntop};
         return actions[act.trim()];
     }
     function getPasiveVoiceAction<T>(act : string) {
-        var actions = {inside:hasInside};
+        var actions = {inside:hasInside, ontop:hasOntop};
         return actions[act.trim()];
     }
 
@@ -225,7 +225,7 @@ module Constrains {
         if(eleDefinition.form == 'box') {
             var containerPos : whereInTheWorld = findInWorld(eleDefinition, state);
             if((containerPos.stack == objPos.stack) &&
-               (containerPos.row < objPos.stack))
+               (containerPos.row < objPos.row))
                 return true;
         }
         return false;
@@ -259,6 +259,49 @@ module Constrains {
         variable.domain.forEach((ele) => {
             var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
             ret = inside(objPos, objEle.toString(), state);
+            return !ret;
+        });
+        return ret;
+    }
+
+    function ontop(objPos : whereInTheWorld,
+                   eleDefinition : ObjectDefinition,
+                   state : WorldState) : boolean {
+        if(eleDefinition == null)
+            return objPos.row == 0; //the floor
+        var supportPos : whereInTheWorld = findInWorld(eleDefinition, state);
+        if((supportPos.stack == objPos.stack) &&
+           (supportPos.row == objPos.row - 1))
+            return true;
+        return false;
+    }
+
+    function isOntop<T>(obj:ObjectDefinition,
+                        stringParameter:string,
+                        variables:collections.LinkedList<DomainNode<T>>,
+                        state : WorldState) {
+        if(obj==null)
+            return false; //the floor cant be on top of anything
+        var objPos : whereInTheWorld = findInWorld(obj, state);
+        var ret : boolean = false;
+        variables.forEach((variable) => {
+            variable.domain.forEach((ele) => {
+                ret = ontop(objPos, state.objects[ele.toString()], state);
+                return !ret;
+            });
+            return !ret;
+        });
+        return ret;
+    }
+
+    function hasOntop<T>(variable:DomainNode<T>,
+                         stringParameter:string,
+                         objEle:T,
+                         state : WorldState) {
+        var ret : boolean = false;
+        variable.domain.forEach((ele) => {
+            var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
+            ret = ontop(objPos, state.objects[objEle.toString()], state);
             return !ret;
         });
         return ret;
