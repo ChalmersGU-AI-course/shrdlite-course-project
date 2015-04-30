@@ -30,7 +30,7 @@ export module AS { // AStar
    * search for eventually further investigation.
    */
   export interface Solution<T extends State> {
-    path: T[];
+    path?: T[];
     graph: ASGraph<T>;
     stats: {
       expansions: number;
@@ -77,8 +77,7 @@ export module AS { // AStar
         }
       }
     } // while
-    return {
-      path: [],                                   // no solution could be found
+    return {                                      // no solution found
       graph: graph,
       stats: {
         expansions: expansions,
@@ -153,7 +152,8 @@ export module AS { // AStar
 
   /*
    * A-Star graph: represents problem graph.
-   * TODO: another implementation could maybe be faster?
+   * TODO: another implementation could maybe be faster? Right now the search is
+   * quite slow, which is likeluy due to the ASGraph implementation
    */
   class ASGraph<T extends State> {
     start: ASNode<T>;
