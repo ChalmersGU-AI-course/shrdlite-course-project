@@ -8,7 +8,7 @@ import A = require('../astar/AStar');
 
 module AStarEuclidian {
 
-  class PuzzleState implements A.AS.State {
+  class PuzzleState implements A.Astar.State {
     puzzle: number[][];
     cache: number;          // cache for heuristic computations
 
@@ -236,7 +236,7 @@ module AStarEuclidian {
         var goal = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
         var start = new PuzzleState(puzzle);
         var end = new PuzzleState(goal);
-        var solution = A.AS.search(start, null, end);
+        var solution = A.Astar.search(start, null, end);
         // for(var i=0; i<path.length; i++) // to see the path (26 steps)
         //   console.log(solution.path[i].puzzle);
         var last = solution.path.pop();

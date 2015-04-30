@@ -1,9 +1,9 @@
 ///<reference path="../lib/node.d.ts"/>
 ///<reference path="../lib/collections.d.ts"/>
 
-import C = require('../lib/collections'); // TODO: remove require for enabling usage in html
+import C = require('../lib/collections'); // TODO: remove require for enabling jsage in html
 
-export module AS { // AStar
+export module Astar {
 
   /*
    * Necessary Interface for usage of the astar search function.

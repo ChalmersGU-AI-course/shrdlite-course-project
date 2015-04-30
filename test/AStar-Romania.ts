@@ -1,18 +1,16 @@
 ///<reference path="../lib/node.d.ts"/>
 ///<reference path="../typings/mocha/mocha.d.ts" />
 ///<reference path="../typings/chai/chai.d.ts" />
-///<reference path="../lib/collections.d.ts"/>
+///<reference path="../astar/Astar.d.ts"/>
 
-import C = require('../lib/collections');
 import A = require('../astar/AStar');
-
 import chai = require('chai');
 
 module AStarRomania {
 
-  var map:A.AS.Transition[] = [];
+  var map:A.Astar.Transition[] = [];
 
-  class City implements A.AS.State {
+  class City implements A.Astar.State {
     name: string;
     from: string; // only used for making node unique in hash function
     h: number;
@@ -26,7 +24,7 @@ module AStarRomania {
       return map[this.name];
     }
     hash() {
-      return A.AS.hash(this.name + this.from);
+      return A.Astar.hash(this.name + this.from);
     }
     toString() {
       return "City: " + this.name + " and came from " + this.from;
@@ -97,7 +95,7 @@ module AStarRomania {
   describe('Romania map', () => {
     describe('Shortest path from Arad to Bucharest', () => {
       it('path should be: Arad -> Sibiu -> Rimnicu -> Pitesti -> Bucharest', (done) => {
-        var solution = A.AS.search(arad, null, pitesti_bucharest);
+        var solution = A.Astar.search(arad, null, pitesti_bucharest);
         var path = solution.path;
         expect(path[0].name).to.equals("Arad");
         expect(path[1].name).to.equals("Sibiu");
