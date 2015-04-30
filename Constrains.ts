@@ -74,15 +74,17 @@ module Constrains {
                                arcs : collections.LinkedList<ArcNode<T>>) : DomainNode<T> {
         if((node == null) || (node.obj == null))
             return null;
-        var mainVariables : DomainNode<T> = {domain: copyDomain(fullDomain),
-                                             constrains: new collections.LinkedList<ConstrainNode<T>>()};
+        var variable : DomainNode<T> = {domain: copyDomain(fullDomain),
+                                        constrains: new collections.LinkedList<ConstrainNode<T>>()};
         if(node.obj.loc == null)
-            isAConstrains<T>(mainVariables, node.obj, mainVariables.constrains, arcs);
+            isAConstrains<T>(variable, node.obj, variable.constrains, arcs);
         else {
-            isAConstrains<T>(mainVariables, node.obj.obj, mainVariables.constrains, arcs);
-            mainVariables.constrains.add(constructRelation(fullDomain, node.obj.loc, space, arcs));
+            isAConstrains<T>(variable, node.obj.obj, variable.constrains, arcs);
+            var constrain : ConstrainNode<T> = constructRelation(fullDomain, node.obj.loc, space, arcs);
+            variable.constrains.add(constrain);
+            arcs.add({variable, constrain});
         }
-        return mainVariables;
+        return variable;
     }
 
     function constructRelation<T>(fullDomain : collections.Set<T>,
@@ -133,11 +135,11 @@ module Constrains {
                              constrain : ConstrainNode<T>,
                              space : constrainInterface,
                              state : WorldState) {
-        var a=getAction<T>(constrain.type);
+        var a=getActiveVoiceAction<T>(constrain.type);
         if(a == null)
             return false;
         variable.domain.forEach((ele) => {
-            if(a(state.objects[ele.toString()], constrain.stringParameter, constrain.variables) == false)
+            if(a(state.objects[ele.toString()], constrain.stringParameter, constrain.variables, state) == false)
                 variable.domain.remove(ele);
             return true;
         });
@@ -146,14 +148,19 @@ module Constrains {
 
     //////////////////////////////////////////////////////////////////////
     // Constrains
-    function getAction<T>(act : string) {
-        var actions = {hasSize:hasSize, hasColor:hasColor, isA:isA};
+    function getActiveVoiceAction<T>(act : string) {
+        var actions = {hasSize:hasSize, hasColor:hasColor, isA:isA, inside:isInside};
+        return actions[act.trim()];
+    }
+    function getPasiveVoiceAction<T>(act : string) {
+        var actions = {inside:hasInside};
         return actions[act.trim()];
     }
 
     function hasSize<T>(obj:ObjectDefinition,
                      stringParameter:string,
-                     variables:collections.LinkedList<DomainNode<T>>) {
+                     variables:collections.LinkedList<DomainNode<T>>,
+                     state : WorldState) {
         if(obj==null)
             return true; //the floor has an unspecified size
         if(obj.size != stringParameter)
@@ -163,7 +170,8 @@ module Constrains {
 
     function hasColor<T>(obj:ObjectDefinition,
                       stringParameter:string,
-                      variables:collections.LinkedList<DomainNode<T>>) {
+                      variables:collections.LinkedList<DomainNode<T>>,
+                      state : WorldState) {
         if(obj==null)
             return true; //the floor has an unspecified color
         if(obj.color != stringParameter)
@@ -172,13 +180,63 @@ module Constrains {
     }
 
     function isA<T>(obj:ObjectDefinition,
-                 stringParameter:string,
-                 variables:collections.LinkedList<DomainNode<T>>) {
+                    stringParameter:string,
+                    variables:collections.LinkedList<DomainNode<T>>,
+                    state : WorldState) {
         if(obj==null)
             return stringParameter == 'floor'; //the floor is something in particular
         if(obj.form != stringParameter)
             return false;
         return true;
+    }
+
+    interface whereInTheWorld {stack:number; row:number; what:string}
+
+    function findInWorld(obj:ObjectDefinition,
+                         state : WorldState) : whereInTheWorld {
+        for(var stack=0; stack < state.stacks.length; ++stack)
+            for(var row=0; row < state.stacks[stack].length; ++row)
+                if(state.objects[state.stacks[stack][row]] == obj)
+                    return {stack:stack, row:row, what:state.stacks[stack][row]};
+    }
+
+    function inside(objPos : whereInTheWorld,
+                    ele : string,
+                    state : WorldState) : boolean {
+        var eleDefinition : ObjectDefinition = state.objects[ele];
+        if(eleDefinition.form == 'box') {
+            var containerPos : whereInTheWorld = findInWorld(eleDefinition, state);
+            if((containerPos.stack == objPos.stack) &&
+               (containerPos.row < objPos.stack))
+                return true;
+        }
+        return false;
+    }
+
+    function isInside<T>(obj:ObjectDefinition,
+                 stringParameter:string,
+                 variables:collections.LinkedList<DomainNode<T>>,
+                 state : WorldState) {
+        if(obj==null)
+            return false; //the floor cant be inside anything
+        var objPos : whereInTheWorld = findInWorld(obj, state);
+        var ret : boolean = false;
+        variables.forEach((variable) => {
+            variable.domain.forEach((ele) => {
+                ret = inside(objPos, ele.toString(), state);
+                return !ret;
+            });
+            return !ret;
+        });
+        return ret;
+    }
+
+    function hasInside<T>(obj:ObjectDefinition,
+                 stringParameter:string,
+                 variables:collections.LinkedList<DomainNode<T>>,
+                 state : WorldState) {
+        if(obj==null)
+            return false; //the floor cant have anything inside
     }
 
     //////////////////////////////////////////////////////////////////////
