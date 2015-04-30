@@ -29,7 +29,10 @@ module Constrains {
         space.printDebugInfo('arcs '+ arcs.size());
         arcs.forEach((arc) => {
             if(!arc.reverseArc) {
-                if(reduceDomain<T>(arc.variable, arc.constrain, space, state))
+                if(reduceActiveVoice<T>(arc.variable, arc.constrain, space, state))
+                    arcs.remove(arc);
+            } else {
+                if(reducePasiveVoice<T>(arc.variable, arc.constrain, space, state))
                     arcs.remove(arc);
             }
             return true;
@@ -83,6 +86,7 @@ module Constrains {
             var constrain : ConstrainNode<T> = constructRelation(fullDomain, node.obj.loc, space, arcs);
             variable.constrains.add(constrain);
             arcs.add({variable, constrain});
+            arcs.add({variable, constrain, reverseArc : true});
         }
         return variable;
     }
@@ -95,10 +99,6 @@ module Constrains {
                                             stringParameter: null,
                                             variables: new collections.LinkedList<DomainNode<T>>()};
         constrain.variables.add(constructGraph<T>(fullDomain, node.ent, space, arcs));
-        constrain.variables.forEach((obj) => {
-            arcs.add({variable : obj, constrain : constrain, reverseArc : true});
-            return true;
-        });
         return constrain;
     }
 
@@ -131,16 +131,34 @@ module Constrains {
         arcs.add({variable : variable, constrain : constrain});
     }
 
-    function reduceDomain<T>(variable : DomainNode<T>,
-                             constrain : ConstrainNode<T>,
-                             space : constrainInterface,
-                             state : WorldState) {
+    function reduceActiveVoice<T>(variable : DomainNode<T>,
+                                  constrain : ConstrainNode<T>,
+                                  space : constrainInterface,
+                                  state : WorldState) {
         var a=getActiveVoiceAction<T>(constrain.type);
         if(a == null)
             return false;
         variable.domain.forEach((ele) => {
             if(a(state.objects[ele.toString()], constrain.stringParameter, constrain.variables, state) == false)
                 variable.domain.remove(ele);
+            return true;
+        });
+        return true;
+    }
+
+    function reducePasiveVoice<T>(source : DomainNode<T>,
+                                  constrain : ConstrainNode<T>,
+                                  space : constrainInterface,
+                                  state : WorldState) {
+        var a=getPasiveVoiceAction<T>(constrain.type);
+        if(a == null)
+            return false;
+        constrain.variables.forEach((variable) => {
+            variable.domain.forEach((ele) => {
+                if(a(source, constrain.stringParameter, ele, state) == false)
+                    variable.domain.remove(ele);
+                return true;
+            });
             return true;
         });
         return true;
@@ -231,12 +249,19 @@ module Constrains {
         return ret;
     }
 
-    function hasInside<T>(obj:ObjectDefinition,
+    function hasInside<T>(variable:DomainNode<T>,
                  stringParameter:string,
-                 variables:collections.LinkedList<DomainNode<T>>,
+                 objEle:T,
                  state : WorldState) {
-        if(obj==null)
+        if(state.objects[objEle.toString()] == null)
             return false; //the floor cant have anything inside
+        var ret : boolean = false;
+        variable.domain.forEach((ele) => {
+            var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
+            ret = inside(objPos, objEle.toString(), state);
+            return !ret;
+        });
+        return ret;
     }
 
     //////////////////////////////////////////////////////////////////////
