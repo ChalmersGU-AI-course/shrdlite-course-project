@@ -53,6 +53,7 @@ export module AS { // AStar
     // work through the priority queue until a solution is found
     while(!frontier.isEmpty()) {
       var current : ASNode<T> = frontier.dequeue();
+      visited++;
       if(current.state.match(goal)) {             // goal is found return path, graph and stats
         return {
           path: path<T>(current, graph),
@@ -65,7 +66,7 @@ export module AS { // AStar
       }
       var transitions = current.state.expand();   // get neighbour transitions
       var neighbour, trans;
-      if(transitions) {
+      if(transitions && transitions.length > 0) {
         expansions++;
         // for all transitions add a new node to the graph, and if not added already enqueue
         for(var i=0; i<transitions.length; i++) {
