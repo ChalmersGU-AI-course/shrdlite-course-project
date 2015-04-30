@@ -5,9 +5,6 @@ var Heap = require("./binary-heap-hash/binary-heap-hash");
 var Map = require("collections/map");
 var Set = require("collections/set");
 
-function front_cmp (a, b) {
-    return b.approx - a.approx;
-}
 
 // A-star algorithm. Should have optimal complexity
 // Terminates if the graph is finite or has a solution
@@ -17,15 +14,15 @@ function front_cmp (a, b) {
 // neighbours: returns the neighbours from any given node
 // start, goal: obvious
 // Returns list of an optimal path or undefined if there is none.
-module.exports = function (cost, h, neighbours, start, goal) {
+module.exports = function (cost, h, neighbours, state_hash, start, goal, isgoal) {
     // Frontier, heap map sorted by lowest approximated distance
-    var front = new Heap(String);
+    var front = new Heap(state_hash);
     // Nodes that are already completely evaluated to prevent reevaluation
-    var evaluated = new Set([], Object.equals, String);
+    var evaluated = new Set([], Object.equals, state_hash);
     // Map of backlinks of best path.
-    var previous = new Map([], Object.equals, String);
+    var previous = new Map([], Object.equals, state_hash);
     // Map of actual distances from the start node;
-    var d = new Map([], Object.equals, String);
+    var d = new Map([], Object.equals, state_hash);
 
     // Start exploring
     d.set(start, 0);
@@ -37,9 +34,9 @@ module.exports = function (cost, h, neighbours, start, goal) {
         evaluated.add(elem.obj);
 
         // Finished, follow backlinks to reconstruct path.
-        if (Object.equals(elem.obj, goal)) {
+        if (isgoal(elem.obj, goal)) {
             var ret = [];
-            var bs = previous.get(goal);
+            var bs = previous.get(elem.obj);
             while (!Object.equals(bs, start)) {
                 ret.unshift(bs);
                 bs = previous.get(bs);
@@ -68,5 +65,6 @@ module.exports = function (cost, h, neighbours, start, goal) {
             }
         }
     }
+    console.log('Nodes evaluated: ' + evaluated.length);
     return undefined;
 };
