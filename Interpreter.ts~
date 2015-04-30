@@ -1,7 +1,7 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
 
-module Interpreter {
+module Interpreter2 {
 
     interface Coord{
         x: number; //x coordinate
