@@ -11,23 +11,20 @@ module Constrains {
                                  constrain : ConstrainNode<T>;
                                  reverseArc : boolean;}
 
-    export interface constrainInterface {
-        printDebugInfo(info : string) : void;
-    }
+    export interface Result<T> {what : collections.Set<T>; whereTo : DomainNode<T>;}
 
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
     export function constrain<T>(fullDomain : collections.Set<T>,
                                  head : Parser.Command,
-                                 space : constrainInterface,
-                                 state : WorldState) : Boolean {
+                                 state : WorldState) : Result<T> {
         if((head == null) || (head.ent.obj == null) || (head.loc.ent.obj == null))
-            return false;
+            return null;
 
         var arcs : collections.LinkedList<ArcNode<T>> = new collections.LinkedList<ArcNode<T>>();
-        var whereTo : DomainNode<T> = constructGraph<T>(fullDomain, head.loc.ent, space, arcs, true);
-        var what : DomainNode<T> = constructGraph<T>(fullDomain, head.ent, space, arcs, false);
+        var whereTo : DomainNode<T> = constructGraph<T>(fullDomain, head.loc.ent, arcs, true);
+        var what : DomainNode<T> = constructGraph<T>(fullDomain, head.ent, arcs, false);
         if(head.loc.rel == "inside") {
             var constrain : ConstrainNode<T> = {type: "CanBeInside",
                                                 stringParameter: null,
@@ -45,17 +42,14 @@ module Constrains {
             notActiveArcs.add(arc);
 
             if((arc.reverseArc == null) || (arc.reverseArc == false)) {
-                if(reduceActiveVoice<T>(arc.variable, arc.constrain, space, state))
+                if(reduceActiveVoice<T>(arc.variable, arc.constrain, state))
                     reSheduleArcs<T>(arcs, arc.variable, notActiveArcs);
             } else {
-                if(reducePasiveVoice<T>(arc.variable, arc.constrain, space, state))
+                if(reducePasiveVoice<T>(arc.variable, arc.constrain, state))
                     reSheduleArcs<T>(arcs, arc.variable, notActiveArcs);
             }
         } while(arcs.size() > 0);
-//        printGraph<T>(what, space);
-//        space.printDebugInfo('whereTo ');
-//        printGraph<T>(whereTo, space);
-        return false;
+        return {what : what.domain, whereTo : whereTo};
     }
 
     export class Error implements Error {
@@ -64,31 +58,11 @@ module Constrains {
         public toString() {return this.name + ": " + this.message}
     }
 
-    function printGraph<T>(node : DomainNode<T>, space : constrainInterface) : void {
-        space.printDebugInfo('DomainNode, with ' + node.domain.size() + ' elements and ' + node.constrains.size() + ' Constrains');
-        node.domain.forEach((ele) => {
-            space.printDebugInfo('element ' + ele.toString());
-            return true;
-        });
-        node.constrains.forEach((obj) => {
-            printConstrain<T>(obj, space);
-            return true;
-        });
-    }
-    function printConstrain<T>(node : ConstrainNode<T>, space : constrainInterface) : void {
-        space.printDebugInfo('ConstrainNode,' + node.type + ' str ' + node.stringParameter + ' with ' + node.variables.size() + ' Variables');
-        node.variables.forEach((obj) => {
-            printGraph<T>(obj, space);
-            return true;
-        });
-    }
-
     //////////////////////////////////////////////////////////////////////
     // private functions and classes
 
     function constructGraph<T>(fullDomain : collections.Set<T>,
                                node : Parser.Entity,
-                               space : constrainInterface,
                                arcs : collections.LinkedList<ArcNode<T>>,
                                futureTense : boolean) : DomainNode<T> {
         if((node == null) || (node.obj == null))
@@ -99,7 +73,7 @@ module Constrains {
             isAConstrains<T>(variable, node.obj, variable.constrains, arcs, futureTense);
         else {
             isAConstrains<T>(variable, node.obj.obj, variable.constrains, arcs, futureTense);
-            var constrain : ConstrainNode<T> = constructRelation(fullDomain, node.obj.loc, space, arcs, futureTense);
+            var constrain : ConstrainNode<T> = constructRelation(fullDomain, node.obj.loc, arcs, futureTense);
             variable.constrains.add(constrain);
             arcs.add({variable : variable, constrain : constrain, reverseArc : true});
             arcs.add({variable : variable, constrain : constrain, reverseArc : false});
@@ -109,14 +83,13 @@ module Constrains {
 
     function constructRelation<T>(fullDomain : collections.Set<T>,
                                   node : Parser.Location,
-                                  space : constrainInterface,
                                   arcs : collections.LinkedList<ArcNode<T>>,
                                   futureTense : boolean) : ConstrainNode<T> {
         var constrain : ConstrainNode<T> = {type: node.rel,
                                             stringParameter: null,
                                             variables: new collections.LinkedList<DomainNode<T>>(),
                                             futureTense : futureTense};
-        constrain.variables.add(constructGraph<T>(fullDomain, node.ent, space, arcs, futureTense));
+        constrain.variables.add(constructGraph<T>(fullDomain, node.ent, arcs, futureTense));
         return constrain;
     }
 
@@ -152,7 +125,6 @@ module Constrains {
 
     function reduceActiveVoice<T>(variable : DomainNode<T>,
                                   constrain : ConstrainNode<T>,
-                                  space : constrainInterface,
                                   state : WorldState) {
         var a=getActiveVoiceAction<T>(constrain.type, constrain.futureTense);
         if(a == null)
@@ -175,7 +147,6 @@ module Constrains {
 
     function reducePasiveVoice<T>(source : DomainNode<T>,
                                   constrain : ConstrainNode<T>,
-                                  space : constrainInterface,
                                   state : WorldState) {
         var a=getPasiveVoiceAction<T>(constrain.type, constrain.futureTense);
         if(a == null)
@@ -287,8 +258,8 @@ module Constrains {
                 return false; // cant put a same size box in a box
             if(lhs.size == rhs.size)
                 return true; // a ball or a table can be but in a same size box
-            if(rhs.size == 'small')
-                return false; // only large box can carry anything which is not smallbox
+            if(rhs.size == 'large')
+                return true; // large box can carry anything else
         }
         return false;
     }

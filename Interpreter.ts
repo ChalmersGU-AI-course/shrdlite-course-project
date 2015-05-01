@@ -12,7 +12,8 @@ module Interpreter {
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
-            interpretations.push(intprt);
+            if(intprt.intp != null)
+                interpretations.push(intprt);
         });
         if (interpretations.length) {
             return interpretations;
@@ -49,35 +50,63 @@ module Interpreter {
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        var what : Constrains.constrainInterface = new constrainParser();
         var fullDomain : collections.Set<string> = new collections.Set<string>();
         objs.forEach((obj) => {
             fullDomain.add(obj);
         });
         fullDomain.add('floor');
-        Constrains.constrain<string>(fullDomain, cmd, what, state);
+        var constrained : Constrains.Result<string> = Constrains.constrain<string>(fullDomain, cmd, state);
 
-        var a = objs[getRandomInt(objs.length)];
-        var b = objs[getRandomInt(objs.length)];
-        var intprt : Literal[][] = [[
-            {pol: true, rel: "ontop", args: [a, "floor"]},
-            {pol: true, rel: "holding", args: [b]}
-        ]];
+        if(constrained.what.size() == 0)
+            return null;
+
+        //cmd.ent.quant
+        //cmd.loc.ent.quant
+
+        var intprt : Literal[][] = [[]];
+        constrained.what.forEach((ele) => {
+            constrained.whereTo.domain.forEach((obj) => {
+                otherConditions(obj,
+                                intprt,
+                                constrained.whereTo.constrains,
+                                [{pol: true, rel: cmd.loc.rel, args: [ele, obj]}]);
+                return true;
+            });
+            return true;
+        });
         return intprt;
     }
 
+    function otherConditions(ele:string,
+                             intprt : Literal[][],
+                             constrains : collections.LinkedList<Constrains.ConstrainNode<string>>,
+                             finalGoal : Literal[]) {
+        var n : number = 0;
+        constrains.forEach((constrain) => {
+            if(constrain.variables.size() > 0) {
+                n++;
+                constrain.variables.forEach((variable) => {
+                    variable.domain.forEach((obj) => {
+                        var oneIntprt : Literal[] = Array.prototype.concat.apply([], finalGoal);
+                        oneIntprt.push({pol: true, rel: constrain.type, args: [ele, obj]});
+                        otherConditions(obj,
+                                 intprt,
+                                 variable.constrains,
+                                 oneIntprt)
+                        return true;
+                    })
+                    return true;
+                })
+            }
+            return true;
+        });
+        if(n == 0)
+            intprt.push(finalGoal);
+    }
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
-
-    class constrainParser implements Constrains.constrainInterface {
-        constructor(
-//            public aState: PuzzleState
-        ) {}
-        printDebugInfo(info : string) : void {console.log(info);}
-    }
-
 
 }
 
