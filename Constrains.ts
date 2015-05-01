@@ -167,11 +167,15 @@ module Constrains {
     //////////////////////////////////////////////////////////////////////
     // Constrains
     function getActiveVoiceAction<T>(act : string) {
-        var actions = {hasSize:hasSize, hasColor:hasColor, isA:isA, inside:isInside, ontop:isOntop};
+        var actions = {hasSize:hasSize, hasColor:hasColor, isA:isA, inside:isInside, ontop:isOntop,
+                       under:isUnder, above:isAbove, beside:isBeside, leftof:isLeftof, rightof:isRightof
+        };
         return actions[act.trim()];
     }
     function getPasiveVoiceAction<T>(act : string) {
-        var actions = {inside:hasInside, ontop:hasOntop};
+        var actions = {inside:hasSomethingInside, ontop:hasSomethingOntop,
+                       under:hasSomethingUnder, above:hasSomethingAbove, beside:hasSomethingBeside,
+                       leftof:hasSomethingLeftof, rightof:hasSomethingRightof};
         return actions[act.trim()];
     }
 
@@ -218,14 +222,14 @@ module Constrains {
                     return {stack:stack, row:row, what:state.stacks[stack][row]};
     }
 
-    function inside(objPos : whereInTheWorld,
+    function inside(lhs : whereInTheWorld,
                     ele : string,
                     state : WorldState) : boolean {
         var eleDefinition : ObjectDefinition = state.objects[ele];
         if(eleDefinition.form == 'box') {
-            var containerPos : whereInTheWorld = findInWorld(eleDefinition, state);
-            if((containerPos.stack == objPos.stack) &&
-               (containerPos.row < objPos.row))
+            var rhs : whereInTheWorld = findInWorld(eleDefinition, state);
+            if((rhs.stack == lhs.stack) &&
+               (lhs.row > rhs.row))
                 return true;
         }
         return false;
@@ -249,7 +253,7 @@ module Constrains {
         return ret;
     }
 
-    function hasInside<T>(variable:DomainNode<T>,
+    function hasSomethingInside<T>(variable:DomainNode<T>,
                  stringParameter:string,
                  objEle:T,
                  state : WorldState) {
@@ -264,14 +268,14 @@ module Constrains {
         return ret;
     }
 
-    function ontop(objPos : whereInTheWorld,
+    function ontop(lhs : whereInTheWorld,
                    eleDefinition : ObjectDefinition,
                    state : WorldState) : boolean {
         if(eleDefinition == null)
-            return objPos.row == 0; //the floor
-        var supportPos : whereInTheWorld = findInWorld(eleDefinition, state);
-        if((supportPos.stack == objPos.stack) &&
-           (supportPos.row == objPos.row - 1))
+            return lhs.row == 0; //the floor
+        var rhs : whereInTheWorld = findInWorld(eleDefinition, state);
+        if((rhs.stack == lhs.stack) &&
+           (lhs.row - 1 == rhs.row))
             return true;
         return false;
     }
@@ -294,7 +298,7 @@ module Constrains {
         return ret;
     }
 
-    function hasOntop<T>(variable:DomainNode<T>,
+    function hasSomethingOntop<T>(variable:DomainNode<T>,
                          stringParameter:string,
                          objEle:T,
                          state : WorldState) {
@@ -302,6 +306,219 @@ module Constrains {
         variable.domain.forEach((ele) => {
             var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
             ret = ontop(objPos, state.objects[objEle.toString()], state);
+            return !ret;
+        });
+        return ret;
+    }
+
+    function under(lhs : whereInTheWorld,
+                   eleDefinition : ObjectDefinition,
+                   state : WorldState) : boolean {
+        if(eleDefinition == null)
+            return false; //the floor
+        var rhs : whereInTheWorld = findInWorld(eleDefinition, state);
+        if((rhs.stack == lhs.stack) &&
+           (lhs.row < rhs.row))
+            return true;
+        return false;
+    }
+
+    function isUnder<T>(obj:ObjectDefinition,
+                        stringParameter:string,
+                        variables:collections.LinkedList<DomainNode<T>>,
+                        state : WorldState) {
+        if(obj==null)
+            return true; //the floor is under everything
+        var objPos : whereInTheWorld = findInWorld(obj, state);
+        var ret : boolean = false;
+        variables.forEach((variable) => {
+            variable.domain.forEach((ele) => {
+                ret = under(objPos, state.objects[ele.toString()], state);
+                return !ret;
+            });
+            return !ret;
+        });
+        return ret;
+    }
+
+    function hasSomethingUnder<T>(variable:DomainNode<T>,
+                         stringParameter:string,
+                         objEle:T,
+                         state : WorldState) {
+        var ret : boolean = false;
+        variable.domain.forEach((ele) => {
+            var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
+            ret = under(objPos, state.objects[objEle.toString()], state);
+            return !ret;
+        });
+        return ret;
+    }
+
+    function above(lhs : whereInTheWorld,
+                   eleDefinition : ObjectDefinition,
+                   state : WorldState) : boolean {
+        if(eleDefinition == null)
+            return true; //the floor
+        var rhs : whereInTheWorld = findInWorld(eleDefinition, state);
+        if((lhs.stack == rhs.stack) &&
+           (lhs.row > rhs.row))
+            return true;
+        return false;
+    }
+
+    function isAbove<T>(obj:ObjectDefinition,
+                        stringParameter:string,
+                        variables:collections.LinkedList<DomainNode<T>>,
+                        state : WorldState) {
+        if(obj==null)
+            return false; //the floor cant be above of anything
+        var objPos : whereInTheWorld = findInWorld(obj, state);
+        var ret : boolean = false;
+        variables.forEach((variable) => {
+            variable.domain.forEach((ele) => {
+                ret = above(objPos, state.objects[ele.toString()], state);
+                return !ret;
+            });
+            return !ret;
+        });
+        return ret;
+    }
+
+    function hasSomethingAbove<T>(variable:DomainNode<T>,
+                         stringParameter:string,
+                         objEle:T,
+                         state : WorldState) {
+        var ret : boolean = false;
+        variable.domain.forEach((ele) => {
+            var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
+            ret = above(objPos, state.objects[objEle.toString()], state);
+            return !ret;
+        });
+        return ret;
+    }
+
+    function beside(lhs : whereInTheWorld,
+                   eleDefinition : ObjectDefinition,
+                   state : WorldState) : boolean {
+        if(eleDefinition == null)
+            return false; //the floor
+        var rhs : whereInTheWorld = findInWorld(eleDefinition, state);
+        if((rhs.stack-1 == lhs.stack) &&
+           (rhs.stack+1 == lhs.stack))
+            return true;
+        return false;
+    }
+
+    function isBeside<T>(obj:ObjectDefinition,
+                        stringParameter:string,
+                        variables:collections.LinkedList<DomainNode<T>>,
+                        state : WorldState) {
+        if(obj==null)
+            return false; //the floor cant be beside of anything
+        var objPos : whereInTheWorld = findInWorld(obj, state);
+        var ret : boolean = false;
+        variables.forEach((variable) => {
+            variable.domain.forEach((ele) => {
+                ret = beside(objPos, state.objects[ele.toString()], state);
+                return !ret;
+            });
+            return !ret;
+        });
+        return ret;
+    }
+
+    function hasSomethingBeside<T>(variable:DomainNode<T>,
+                         stringParameter:string,
+                         objEle:T,
+                         state : WorldState) {
+        var ret : boolean = false;
+        variable.domain.forEach((ele) => {
+            var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
+            ret = beside(objPos, state.objects[objEle.toString()], state);
+            return !ret;
+        });
+        return ret;
+    }
+
+    function leftof(lhs : whereInTheWorld,
+                   eleDefinition : ObjectDefinition,
+                   state : WorldState) : boolean {
+        if(eleDefinition == null)
+            return false; //the floor
+        var rhs : whereInTheWorld = findInWorld(eleDefinition, state);
+        if(lhs.stack < rhs.stack)
+            return true;
+        return false;
+    }
+
+    function isLeftof<T>(obj:ObjectDefinition,
+                        stringParameter:string,
+                        variables:collections.LinkedList<DomainNode<T>>,
+                        state : WorldState) {
+        if(obj==null)
+            return false; //the floor cant be left of anything
+        var objPos : whereInTheWorld = findInWorld(obj, state);
+        var ret : boolean = false;
+        variables.forEach((variable) => {
+            variable.domain.forEach((ele) => {
+                ret = leftof(objPos, state.objects[ele.toString()], state);
+                return !ret;
+            });
+            return !ret;
+        });
+        return ret;
+    }
+
+    function hasSomethingLeftof<T>(variable:DomainNode<T>,
+                         stringParameter:string,
+                         objEle:T,
+                         state : WorldState) {
+        var ret : boolean = false;
+        variable.domain.forEach((ele) => {
+            var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
+            ret = leftof(objPos, state.objects[objEle.toString()], state);
+            return !ret;
+        });
+        return ret;
+    }
+
+    function rightof(lhs : whereInTheWorld,
+                   eleDefinition : ObjectDefinition,
+                   state : WorldState) : boolean {
+        if(eleDefinition == null)
+            return false; //the floor
+        var rhs : whereInTheWorld = findInWorld(eleDefinition, state);
+        if(lhs.stack > rhs.stack)
+            return true;
+        return false;
+    }
+
+    function isRightof<T>(obj:ObjectDefinition,
+                        stringParameter:string,
+                        variables:collections.LinkedList<DomainNode<T>>,
+                        state : WorldState) {
+        if(obj==null)
+            return false; //the floor cant be right of anything
+        var objPos : whereInTheWorld = findInWorld(obj, state);
+        var ret : boolean = false;
+        variables.forEach((variable) => {
+            variable.domain.forEach((ele) => {
+                ret = rightof(objPos, state.objects[ele.toString()], state);
+                return !ret;
+            });
+            return !ret;
+        });
+        return ret;
+    }
+
+    function hasSomethingRightof<T>(variable:DomainNode<T>,
+                         stringParameter:string,
+                         objEle:T,
+                         state : WorldState) {
+        var ret : boolean = false;
+        variable.domain.forEach((ele) => {
+            var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
+            ret = rightof(objPos, state.objects[objEle.toString()], state);
             return !ret;
         });
         return ret;
