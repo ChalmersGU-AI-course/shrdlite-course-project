@@ -3,12 +3,13 @@
 module Constrains {
     export interface ConstrainNode<T> {type : string;
                                        stringParameter : string;
+                                       futureTense : boolean;
                                        variables : collections.LinkedList<DomainNode<T>>;}
     export interface DomainNode<T> {domain : collections.Set<T>;
                                     constrains : collections.LinkedList<ConstrainNode<T>>;}
     export interface ArcNode<T> {variable : DomainNode<T>;
                                  constrain : ConstrainNode<T>;
-                                 reverseArc? : boolean;}
+                                 reverseArc : boolean;}
 
     export interface constrainInterface {
         printDebugInfo(info : string) : void;
@@ -18,17 +19,29 @@ module Constrains {
     // exported functions, classes and interfaces/types
 
     export function constrain<T>(fullDomain : collections.Set<T>,
-                                 head : Parser.Entity,
+                                 head : Parser.Command,
                                  space : constrainInterface,
                                  state : WorldState) : Boolean {
         space.printDebugInfo('start');
-        if((head == null) || (head.obj == null))
+        if((head == null) || (head.ent.obj == null) || (head.loc.ent.obj == null))
             return false;
+
         var arcs : collections.LinkedList<ArcNode<T>> = new collections.LinkedList<ArcNode<T>>();
-        var mainVariables : DomainNode<T> = constructGraph<T>(fullDomain, head, space, arcs);
+        var what : DomainNode<T> = constructGraph<T>(fullDomain, head.ent, space, arcs, false);
+        var whereTo : DomainNode<T> = constructGraph<T>(fullDomain, head.loc.ent, space, arcs, true);
+        if(head.loc.rel = "inside") {
+            var constrain : ConstrainNode<T> = {type: "CanBeInside",
+                                                stringParameter: null,
+                                                variables: new collections.LinkedList<DomainNode<T>>(),
+                                                futureTense : true};
+            constrain.variables.add(whereTo);
+            what.constrains.add(constrain);
+            arcs.add({variable : what, constrain : constrain, reverseArc : false});
+            arcs.add({variable : what, constrain : constrain, reverseArc : true});
+        }
         space.printDebugInfo('arcs '+ arcs.size());
         arcs.forEach((arc) => {
-            if(!arc.reverseArc) {
+            if((arc.reverseArc == null) || (arc.reverseArc == false)) {
                 if(reduceActiveVoice<T>(arc.variable, arc.constrain, space, state))
                     arcs.remove(arc);
             } else {
@@ -37,7 +50,20 @@ module Constrains {
             }
             return true;
         });
-        printGraph<T>(mainVariables, space);
+        arcs.forEach((arc) => {
+            if((arc.reverseArc == null) || (arc.reverseArc == false)) {
+                if(reduceActiveVoice<T>(arc.variable, arc.constrain, space, state))
+                    arcs.remove(arc);
+            } else {
+                if(reducePasiveVoice<T>(arc.variable, arc.constrain, space, state))
+                    arcs.remove(arc);
+            }
+            return true;
+        });
+
+        printGraph<T>(what, space);
+        space.printDebugInfo('whereTo ');
+        printGraph<T>(whereTo, space);
 
         space.printDebugInfo('end (arcs)' + arcs.size());
         return false;
@@ -74,19 +100,20 @@ module Constrains {
     function constructGraph<T>(fullDomain : collections.Set<T>,
                                node : Parser.Entity,
                                space : constrainInterface,
-                               arcs : collections.LinkedList<ArcNode<T>>) : DomainNode<T> {
+                               arcs : collections.LinkedList<ArcNode<T>>,
+                               futureTense : boolean) : DomainNode<T> {
         if((node == null) || (node.obj == null))
             return null;
         var variable : DomainNode<T> = {domain: copyDomain(fullDomain),
                                         constrains: new collections.LinkedList<ConstrainNode<T>>()};
         if(node.obj.loc == null)
-            isAConstrains<T>(variable, node.obj, variable.constrains, arcs);
+            isAConstrains<T>(variable, node.obj, variable.constrains, arcs, futureTense);
         else {
-            isAConstrains<T>(variable, node.obj.obj, variable.constrains, arcs);
-            var constrain : ConstrainNode<T> = constructRelation(fullDomain, node.obj.loc, space, arcs);
+            isAConstrains<T>(variable, node.obj.obj, variable.constrains, arcs, futureTense);
+            var constrain : ConstrainNode<T> = constructRelation(fullDomain, node.obj.loc, space, arcs, futureTense);
             variable.constrains.add(constrain);
-            arcs.add({variable, constrain});
-            arcs.add({variable, constrain, reverseArc : true});
+            arcs.add({variable : variable, constrain : constrain, reverseArc : true});
+            arcs.add({variable : variable, constrain : constrain, reverseArc : false});
         }
         return variable;
     }
@@ -94,31 +121,34 @@ module Constrains {
     function constructRelation<T>(fullDomain : collections.Set<T>,
                                   node : Parser.Location,
                                   space : constrainInterface,
-                                  arcs : collections.LinkedList<ArcNode<T>>) : ConstrainNode<T> {
+                                  arcs : collections.LinkedList<ArcNode<T>>,
+                                  futureTense : boolean) : ConstrainNode<T> {
         var constrain : ConstrainNode<T> = {type: node.rel,
                                             stringParameter: null,
-                                            variables: new collections.LinkedList<DomainNode<T>>()};
-        constrain.variables.add(constructGraph<T>(fullDomain, node.ent, space, arcs));
+                                            variables: new collections.LinkedList<DomainNode<T>>(),
+                                            futureTense : futureTense};
+        constrain.variables.add(constructGraph<T>(fullDomain, node.ent, space, arcs, futureTense));
         return constrain;
     }
 
     function isAConstrains<T>(variable : DomainNode<T>,
                               obj : Parser.Object,
                               intoCollection : collections.LinkedList<ConstrainNode<T>>,
-                              arcs : collections.LinkedList<ArcNode<T>>) : void {
+                              arcs : collections.LinkedList<ArcNode<T>>,
+                              futureTense : boolean) : void {
         if(obj.size)
             addArcAndConstrain<T>(variable,
-                                  {type:"hasSize", stringParameter:obj.size, variables:new collections.LinkedList<DomainNode<T>>()},
+                                  {type:"hasSize", stringParameter:obj.size, variables:new collections.LinkedList<DomainNode<T>>(), futureTense : futureTense},
                                   intoCollection,
                                   arcs);
         if(obj.color)
             addArcAndConstrain<T>(variable,
-                                  {type:"hasColor", stringParameter:obj.color, variables:new collections.LinkedList<DomainNode<T>>()},
+                                  {type:"hasColor", stringParameter:obj.color, variables:new collections.LinkedList<DomainNode<T>>(), futureTense : futureTense},
                                   intoCollection,
                                   arcs);
         if(obj.form)
             addArcAndConstrain<T>(variable,
-                                  {type:"isA", stringParameter:obj.form, variables:new collections.LinkedList<DomainNode<T>>()},
+                                  {type:"isA", stringParameter:obj.form, variables:new collections.LinkedList<DomainNode<T>>(), futureTense : futureTense},
                                   intoCollection,
                                   arcs);
     }
@@ -128,14 +158,15 @@ module Constrains {
                                    intoCollection : collections.LinkedList<ConstrainNode<T>>,
                                    arcs : collections.LinkedList<ArcNode<T>>) : void {
         intoCollection.add(constrain);
-        arcs.add({variable : variable, constrain : constrain});
+        arcs.add({variable : variable, constrain : constrain, reverseArc : false});
     }
 
     function reduceActiveVoice<T>(variable : DomainNode<T>,
                                   constrain : ConstrainNode<T>,
                                   space : constrainInterface,
                                   state : WorldState) {
-        var a=getActiveVoiceAction<T>(constrain.type);
+console.log('reduceActiveVoice '+constrain.type);
+        var a=getActiveVoiceAction<T>(constrain.type, constrain.futureTense);
         if(a == null)
             return false;
         variable.domain.forEach((ele) => {
@@ -150,7 +181,8 @@ module Constrains {
                                   constrain : ConstrainNode<T>,
                                   space : constrainInterface,
                                   state : WorldState) {
-        var a=getPasiveVoiceAction<T>(constrain.type);
+console.log('reducePasiveVoice '+constrain.type);
+        var a=getPasiveVoiceAction<T>(constrain.type, constrain.futureTense);
         if(a == null)
             return false;
         constrain.variables.forEach((variable) => {
@@ -166,17 +198,21 @@ module Constrains {
 
     //////////////////////////////////////////////////////////////////////
     // Constrains
-    function getActiveVoiceAction<T>(act : string) {
+    function getActiveVoiceAction<T>(act : string, futureTense : boolean) {
         var actions = {hasSize:hasSize, hasColor:hasColor, isA:isA, inside:isInside, ontop:isOntop,
-                       under:isUnder, above:isAbove, beside:isBeside, leftof:isLeftof, rightof:isRightof
+                       under:isUnder, above:isAbove, beside:isBeside, leftof:isLeftof, rightof:isRightof,
+                       CanBeInside:isCanBeInside
         };
-        return actions[act.trim()];
+        var facts = {hasSize:hasSize, hasColor:hasColor, isA:isA, CanBeInside:isCanBeInside};
+        return !futureTense ? actions[act.trim()] : facts[act.trim()];
     }
-    function getPasiveVoiceAction<T>(act : string) {
+    function getPasiveVoiceAction<T>(act : string, futureTense : boolean) {
         var actions = {inside:hasSomethingInside, ontop:hasSomethingOntop,
                        under:hasSomethingUnder, above:hasSomethingAbove, beside:hasSomethingBeside,
-                       leftof:hasSomethingLeftof, rightof:hasSomethingRightof};
-        return actions[act.trim()];
+                       leftof:hasSomethingLeftof, rightof:hasSomethingRightof,
+                       CanBeInside:hasCanBeInside};
+        var facts = {CanBeInside:hasCanBeInside};
+        return !futureTense ? actions[act.trim()] : facts[act.trim()];
     }
 
     function hasSize<T>(obj:ObjectDefinition,
@@ -220,6 +256,56 @@ module Constrains {
             for(var row=0; row < state.stacks[stack].length; ++row)
                 if(state.objects[state.stacks[stack][row]] == obj)
                     return {stack:stack, row:row, what:state.stacks[stack][row]};
+    }
+
+    function CanBeInside(lhs : ObjectDefinition,
+                         rhs : ObjectDefinition) : boolean {
+console.log('CanBeInside');
+        if((lhs == null) || (rhs == null))
+            return false; // floor
+
+console.log('rhs.form ' + rhs.form);
+        if(rhs.form == 'box') {
+console.log('lhs.form ' + lhs.form);
+console.log('lhs.size ' + lhs.size);
+            if((lhs.form == 'box') && (lhs.size == rhs.size))
+                return false; // cant put a same size box in a box
+console.log('rhs.size ' + rhs.size);
+            if(lhs.size == rhs.size)
+                return true; // a ball or a table can be but in a same size box
+console.log('hh small');
+            if(rhs.size == 'small')
+                return false; // only large box can carry anything which is not smallbox
+console.log('not small!!');
+        }
+        return false;
+    }
+
+    function isCanBeInside<T>(obj:ObjectDefinition,
+                 stringParameter:string,
+                 variables:collections.LinkedList<DomainNode<T>>,
+                 state : WorldState) {
+        var ret : boolean = false;
+        variables.forEach((variable) => {
+            variable.domain.forEach((ele) => {
+                ret = CanBeInside(obj, state.objects[ele.toString()]);
+                return !ret;
+            });
+            return !ret;
+        });
+        return ret;
+    }
+
+    function hasCanBeInside<T>(variable:DomainNode<T>,
+                 stringParameter:string,
+                 objEle:T,
+                 state : WorldState) {
+        var ret : boolean = false;
+        variable.domain.forEach((ele) => {
+            ret = CanBeInside(state.objects[ele.toString()], state.objects[objEle.toString()]);
+            return !ret;
+        });
+        return ret;
     }
 
     function inside(lhs : whereInTheWorld,
