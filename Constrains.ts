@@ -22,14 +22,13 @@ module Constrains {
                                  head : Parser.Command,
                                  space : constrainInterface,
                                  state : WorldState) : Boolean {
-        space.printDebugInfo('start');
         if((head == null) || (head.ent.obj == null) || (head.loc.ent.obj == null))
             return false;
 
         var arcs : collections.LinkedList<ArcNode<T>> = new collections.LinkedList<ArcNode<T>>();
-        var what : DomainNode<T> = constructGraph<T>(fullDomain, head.ent, space, arcs, false);
         var whereTo : DomainNode<T> = constructGraph<T>(fullDomain, head.loc.ent, space, arcs, true);
-        if(head.loc.rel = "inside") {
+        var what : DomainNode<T> = constructGraph<T>(fullDomain, head.ent, space, arcs, false);
+        if(head.loc.rel == "inside") {
             var constrain : ConstrainNode<T> = {type: "CanBeInside",
                                                 stringParameter: null,
                                                 variables: new collections.LinkedList<DomainNode<T>>(),
@@ -39,33 +38,23 @@ module Constrains {
             arcs.add({variable : what, constrain : constrain, reverseArc : false});
             arcs.add({variable : what, constrain : constrain, reverseArc : true});
         }
-        space.printDebugInfo('arcs '+ arcs.size());
-        arcs.forEach((arc) => {
+        var notActiveArcs : collections.LinkedList<ArcNode<T>> = new collections.LinkedList<ArcNode<T>>();
+        do {
+            var arc : ArcNode<T> = arcs.first();
+            arcs.remove(arc);
+            notActiveArcs.add(arc);
+
             if((arc.reverseArc == null) || (arc.reverseArc == false)) {
                 if(reduceActiveVoice<T>(arc.variable, arc.constrain, space, state))
-                    arcs.remove(arc);
+                    reSheduleArcs<T>(arcs, arc.variable, notActiveArcs);
             } else {
                 if(reducePasiveVoice<T>(arc.variable, arc.constrain, space, state))
-                    arcs.remove(arc);
+                    reSheduleArcs<T>(arcs, arc.variable, notActiveArcs);
             }
-            return true;
-        });
-        arcs.forEach((arc) => {
-            if((arc.reverseArc == null) || (arc.reverseArc == false)) {
-                if(reduceActiveVoice<T>(arc.variable, arc.constrain, space, state))
-                    arcs.remove(arc);
-            } else {
-                if(reducePasiveVoice<T>(arc.variable, arc.constrain, space, state))
-                    arcs.remove(arc);
-            }
-            return true;
-        });
-
-        printGraph<T>(what, space);
-        space.printDebugInfo('whereTo ');
-        printGraph<T>(whereTo, space);
-
-        space.printDebugInfo('end (arcs)' + arcs.size());
+        } while(arcs.size() > 0);
+//        printGraph<T>(what, space);
+//        space.printDebugInfo('whereTo ');
+//        printGraph<T>(whereTo, space);
         return false;
     }
 
@@ -76,7 +65,7 @@ module Constrains {
     }
 
     function printGraph<T>(node : DomainNode<T>, space : constrainInterface) : void {
-        space.printDebugInfo('DomainNode, with ' + node.constrains.size() + ' Constrains');
+        space.printDebugInfo('DomainNode, with ' + node.domain.size() + ' elements and ' + node.constrains.size() + ' Constrains');
         node.domain.forEach((ele) => {
             space.printDebugInfo('element ' + ele.toString());
             return true;
@@ -165,36 +154,66 @@ module Constrains {
                                   constrain : ConstrainNode<T>,
                                   space : constrainInterface,
                                   state : WorldState) {
-console.log('reduceActiveVoice '+constrain.type);
         var a=getActiveVoiceAction<T>(constrain.type, constrain.futureTense);
         if(a == null)
             return false;
-        variable.domain.forEach((ele) => {
-            if(a(state.objects[ele.toString()], constrain.stringParameter, constrain.variables, state) == false)
-                variable.domain.remove(ele);
-            return true;
-        });
-        return true;
+        var ret : boolean = false;
+        var rep : boolean;
+        do {
+            rep = false;
+            variable.domain.forEach((ele) => {
+                if(a(state.objects[ele.toString()], constrain.stringParameter, constrain.variables, state) == false) {
+                    variable.domain.remove(ele);
+                    rep = true;
+                    ret = true;
+                }
+                return true;
+            });
+        } while (rep);
+        return ret;
     }
 
     function reducePasiveVoice<T>(source : DomainNode<T>,
                                   constrain : ConstrainNode<T>,
                                   space : constrainInterface,
                                   state : WorldState) {
-console.log('reducePasiveVoice '+constrain.type);
         var a=getPasiveVoiceAction<T>(constrain.type, constrain.futureTense);
         if(a == null)
             return false;
-        constrain.variables.forEach((variable) => {
-            variable.domain.forEach((ele) => {
-                if(a(source, constrain.stringParameter, ele, state) == false)
-                    variable.domain.remove(ele);
+        var ret : boolean = false;
+        var rep : boolean;
+        do {
+            rep = false;
+            constrain.variables.forEach((variable) => {
+                variable.domain.forEach((ele) => {
+                    if(a(source, constrain.stringParameter, ele, state) == false) {
+                        variable.domain.remove(ele);
+                        rep = true;
+                        ret = true;
+                    }
+                    return true;
+                });
                 return true;
             });
-            return true;
-        });
-        return true;
+        } while (rep);
+        return ret;
     }
+
+    function reSheduleArcs<T>(arcs : collections.LinkedList<ArcNode<T>>, variable : DomainNode<T>, notActiveArcs : collections.LinkedList<ArcNode<T>>) {
+        var rep : boolean;
+        do {
+            rep = false;
+            notActiveArcs.forEach((arc) => {
+                if(arc.variable == variable) {
+                    notActiveArcs.remove(arc);
+                    arcs.add(arc);
+                    rep = true;
+                }
+                return true;
+            });
+        } while (rep);
+    }
+
 
     //////////////////////////////////////////////////////////////////////
     // Constrains
@@ -260,23 +279,16 @@ console.log('reducePasiveVoice '+constrain.type);
 
     function CanBeInside(lhs : ObjectDefinition,
                          rhs : ObjectDefinition) : boolean {
-console.log('CanBeInside');
         if((lhs == null) || (rhs == null))
             return false; // floor
 
-console.log('rhs.form ' + rhs.form);
         if(rhs.form == 'box') {
-console.log('lhs.form ' + lhs.form);
-console.log('lhs.size ' + lhs.size);
             if((lhs.form == 'box') && (lhs.size == rhs.size))
                 return false; // cant put a same size box in a box
-console.log('rhs.size ' + rhs.size);
             if(lhs.size == rhs.size)
                 return true; // a ball or a table can be but in a same size box
-console.log('hh small');
             if(rhs.size == 'small')
                 return false; // only large box can carry anything which is not smallbox
-console.log('not small!!');
         }
         return false;
     }
