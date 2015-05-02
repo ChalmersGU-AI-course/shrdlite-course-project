@@ -66,7 +66,7 @@ module Interpreter {
             // Identify an object and a location and move the object to that location
         }
         else
-            throw new Interpreter.Error("NYI: CMD " ++ cmd.cmd);
+            throw new Interpreter.Error("NYI: CMD " + cmd.cmd);
         //if(cmd.ent != null)
         //    var obj : Parser.Object[] = identifyObj(cmd.ent, state)
 
@@ -74,6 +74,59 @@ module Interpreter {
         return intprt;
     }
 
+
+    function checkLoc(objectId, loc : Parser.Location, state : WorldState) : boolean{
+
+        var relation = loc.rel;
+        var pos : [number, number] = findObjPos(objectId, state);
+
+
+        if(relation == "leftof"){
+            if(pos[0] = state.stacks.length - 1)
+                throw new Interpreter.Error("The object " + objectId + " is in the rightmost stack.");
+                throw new Interpreter.Error("NYI: checkLoc - leftof");
+        }
+        else if(relation == "rightof"){
+            if(pos[0] = 0)
+                throw new Interpreter.Error("The object " + objectId + " is in the leftmost stack.");
+            throw new Interpreter.Error("NYI: checkLoc - rightof");
+        }
+        else if(relation == "inside"){
+            throw new Interpreter.Error("NYI: checkLoc - inside");
+        }
+        else if(relation == "ontop"){
+            throw new Interpreter.Error("NYI: checkLoc - ontop");
+        }
+        else if(relation == "under"){
+            if(pos[1] = state.stacks[pos[0]].length-1)
+                throw new Interpreter.Error("The object " + objectId + " is the uppermost object of the stack."); 
+            throw new Interpreter.Error("NYI: checkLoc - under");
+        }
+        else if(relation == "beside"){
+            throw new Interpreter.Error("NYI: checkLoc - beside");
+        }
+        else if(relation == "above"){
+            if(pos[1] = 0)
+                throw new Interpreter.Error("The object " + objectId + " is the lowermost object of the stack.");
+            throw new Interpreter.Error("NYI: checkLoc - above");
+        }
+
+
+        return false;
+    }
+
+    function findObjPos(objectId, state : WorldState) : [number, number]{
+
+        for (var stacknr = 0; stacknr < state.stacks.length; stacknr++) {
+            for (var objectnr=0; objectnr < state.stacks[stacknr].length; objectnr++) {
+                if(state.stacks[stacknr][objectnr] == objectId){
+                    return [stacknr,objectnr];
+                }
+
+            }
+        }
+        return null;
+    }
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
