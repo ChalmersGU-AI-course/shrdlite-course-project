@@ -88,7 +88,9 @@ module Interpreter {
 
             for(var i = 0; i < objs.length; i++){
                 var currentObj = state.objects[objs[i]];
-                if(currentObj.form == form && currentObj.color == color && currentObj.size == size){
+                if((currentObj.form == form || form == "anyform") && 
+                    (currentObj.color == color || color == null) && 
+                    (currentObj.size == size || size == null)){
                     ids.push(objs[i]);
                 }
             }           
@@ -130,7 +132,7 @@ module Interpreter {
             throw new Interpreter.Error("NYI: checkLoc - ontop");
         }
         else if(relation == "under"){
-            if(pos[1] = state.stacks[pos[0]].length-1)
+            if(pos[1] == state.stacks[pos[0]].length-1)
                 throw new Interpreter.Error("The object " + objectId + " is the uppermost object of the stack."); 
             throw new Interpreter.Error("NYI: checkLoc - under");
         }
