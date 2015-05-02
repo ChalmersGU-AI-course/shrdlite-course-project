@@ -81,7 +81,7 @@ module Interpreter {
 					if (((o.size == null || o.size == a.size) &&
 						(o.color == null || o.color == a.color) &&
 						(o.form == null || o.form == a.form)) ||
-				   		(o.form == "floor")) {
+				   		((o.form == "floor") || (o.form == "anyform"))) {
 							return i;	
 					}
 				}
@@ -91,6 +91,7 @@ module Interpreter {
 
 		//get the interpretation for the parse that was handed over on creation
 		//todo: actually interpret something, right now the return is just a dummy
+		//todo: fix issues when there is just an origin but no destination
 		public getInterpretation() : Literal[][] {
 			//check origin
 			if (typeof this.cmd.ent !== "undefined") {
@@ -100,7 +101,7 @@ module Interpreter {
 			}
 
 			//check destination
-			if (typeof this.cmd.loc.ent !== "undefined") {
+			if (typeof this.cmd.loc !== "undefined") {
 				var ent = this.cmd.loc.ent;
 				if (!this.checkExistence(ent))
 					return null;
