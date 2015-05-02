@@ -74,6 +74,37 @@ module Interpreter {
         return intprt;
     }
 
+    function indentifyObj(object : Parser.Object, state : WorldState) : String[]{
+        var ids : String[] = [];
+        if(object.obj == null){
+            var size = object.size;
+            var color = object.color;
+            var form = object.form;
+            for(var i = 0; i < state.objects.length; i++){
+                var currentObj = state.objects[i];
+                if(currentObj.form == form && currentObj.color == color && currentObj.size == size){
+                    ids.push(currentObj);
+                }
+            }           
+        }else{
+            var objIds = identifyObj(object.obj, state);
+            for(var i = 0; i < objIds.length; i++){
+                if(checkLoc(objId[i], object.loc, state)){
+                    ids.push(objId[i]);
+                }
+            }
+
+        }
+        
+
+
+
+
+
+
+
+    }
+
 
     function checkLoc(objectId, loc : Parser.Location, state : WorldState) : boolean{
 
