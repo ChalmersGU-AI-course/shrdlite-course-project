@@ -371,55 +371,55 @@ module owl {
     // utility function to detect Nodes.  In particular, we're looking
     // for the cloneNode method.  The global document is also defined to
     // be a Node, but is a special case in many ways.
-    function isNode(source: any): boolean {
-        /* tslint:disable:no-string-literal */
-        if ( window["Node"] ) {
-            return source instanceof Node;
-        } else {
-            // the document is a special Node and doesn't have many of
-            // the common properties so we use an identity check instead.
-            if ( source === document ) {
-                return true;
-            }
-            return (
-                typeof source.nodeType === "number" &&
-                source.attributes !== undefined &&
-                source.childNodes &&
-                source.cloneNode
-            );
-        }
-        /* tslint:enable:no-string-literal */
-    }
+    // function isNode(source: any): boolean {
+    //     /* tslint:disable:no-string-literal */
+    //     if ( window["Node"] ) {
+    //         return source instanceof Node;
+    //     } else {
+    //         // the document is a special Node and doesn't have many of
+    //         // the common properties so we use an identity check instead.
+    //         if ( source === document ) {
+    //             return true;
+    //         }
+    //         return (
+    //             typeof source.nodeType === "number" &&
+    //             source.attributes !== undefined &&
+    //             source.childNodes &&
+    //             source.cloneNode
+    //         );
+    //     }
+    //     /* tslint:enable:no-string-literal */
+    // }
 
     // Node copier
-    deepCopy.register({
-        canCopy: function(source: any): boolean { return isNode(source); },
+    // deepCopy.register({
+    //     canCopy: function(source: any): boolean { return isNode(source); },
 
-        create: function(source: any): any {
-            // there can only be one (document).
-            if ( source === document ) {
-                return document;
-            }
+    //     create: function(source: any): any {
+    //         // there can only be one (document).
+    //         if ( source === document ) {
+    //             return document;
+    //         }
 
-            // start with a shallow copy.  We'll handle the deep copy of
-            // its children ourselves.
-            return source.cloneNode(false);
-        },
+    //         // start with a shallow copy.  We'll handle the deep copy of
+    //         // its children ourselves.
+    //         return source.cloneNode(false);
+    //     },
 
-        populate: function(deepCopy: (source: any) => any, source: any, result: any): any {
-            // we're not copying the global document, so don't have to populate it either.
-            if ( source === document ) {
-                return document;
-            }
+    //     populate: function(deepCopy: (source: any) => any, source: any, result: any): any {
+    //         // we're not copying the global document, so don't have to populate it either.
+    //         if ( source === document ) {
+    //             return document;
+    //         }
 
-            // if this Node has children, deep copy them one-by-one.
-            if ( source.childNodes && source.childNodes.length ) {
-                for ( var i: number = 0; i < source.childNodes.length; i++ ) {
-                    var childCopy = deepCopy(source.childNodes[i]);
-                    result.appendChild(childCopy);
-                }
-            }
-        }
-    });
+    //         // if this Node has children, deep copy them one-by-one.
+    //         if ( source.childNodes && source.childNodes.length ) {
+    //             for ( var i: number = 0; i < source.childNodes.length; i++ ) {
+    //                 var childCopy = deepCopy(source.childNodes[i]);
+    //                 result.appendChild(childCopy);
+    //             }
+    //         }
+    //     }
+    // });
 
 }
