@@ -107,6 +107,7 @@ module Interpreter {
             for(var i = 0; i < objIds.length; i++){
                 if(checkLoc(objIds[i], object.loc, state)){
                     ids.push(objIds[i]);
+                    alert("hej");
                 }
             }
 
@@ -121,6 +122,7 @@ module Interpreter {
 
         var relation = loc.rel;
         var pos : [number, number] = findObjPos(objectId, state);
+        var res : boolean = false;
 
         var ids = identifyObj(loc.ent.obj, state);
         ids.forEach( id => {
@@ -146,17 +148,18 @@ module Interpreter {
             else if(relation == "under"){
                 //if(pos[1] == state.stacks[pos[0]].length-1)
                 //    return false;       
+                alert(pos[0] + " " + lpos[0] + " " + pos[1] + " " + lpos[1]);
                 if(pos[0] == lpos[0] && pos[1] < lpos[1])
-                    return true;
+                    res = true;
             }
             else if(relation == "beside"){
                 throw new Interpreter.Error("NYI: checkLoc - beside");
             }
             else if(relation == "above"){
-                if(pos[1] = 0)
-                    throw new Interpreter.Error("The object " + objectId + " is the lowermost object of the stack.");
+                //if(pos[1] = 0)
+                //    throw new Interpreter.Error("The object " + objectId + " is the lowermost object of the stack.");
                 if(pos[0] == lpos[0] && pos[1] > lpos[1])
-                return true;
+                    res = true;
 
                 throw new Interpreter.Error("NYI: checkLoc - above");
             }
@@ -164,7 +167,7 @@ module Interpreter {
                 throw new Interpreter.Error("NYI: checkLoc " + loc.rel);
 
         });
-        return false;
+        return res;
     }
 
     function findObjPos(objectId, state : WorldState) : [number, number]{
