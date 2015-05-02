@@ -49,14 +49,20 @@ module Interpreter {
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        // var intprt : Literal[][];
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
         var intprt : Literal[][] = [[
             {pol: true, rel: "ontop", args: [a, "floor"]},
             {pol: true, rel: "holding", args: [b]}
         ]];
+        // return toLiterals(cmd., state)
         return intprt;
     }
+
+    // function toLiterals(cmd: Parser.Command, state : WorldState): Literal[][] {
+
+    // }
 
 
     function getRandomInt(max) {
