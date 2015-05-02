@@ -49,20 +49,82 @@ module Interpreter {
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        // var intprt : Literal[][];
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
         var intprt : Literal[][] = [[
             {pol: true, rel: "ontop", args: [a, "floor"]},
             {pol: true, rel: "holding", args: [b]}
         ]];
-        // return toLiterals(cmd., state)
         return intprt;
     }
 
-    // function toLiterals(cmd: Parser.Command, state : WorldState): Literal[][] {
+    class Interpret {
+      state: WorldState;
+      constructor(state: WorldState) {
+        this.state = state;
+      }
+      /*
+       * Top-level interpreter method:
+       * Defines the following interpretation depending on the verb action.
+       */
+      derive(cmd: Parser.Command): Literal[][] {
+        switch(cmd.cmd) {
+          case "take":
+            return this.take(cmd.ent);
+          case "put":
+            return this.put(cmd.loc);
+          case "move":
+            return this.move(cmd.ent, cmd.loc);
+          default:
+            throw new Interpreter.Error("derive: unrecognized verb."); // TODO: make throw statement
+        }
+      }
+      /*
+       * precondition:
+       *    - Arm should not hold any object
+       * effect:
+       *    - Arm should hold spec object
+       */
+      take(ent : Parser.Entity): Literal[][] {
+        var lit: Literal[][];
+        return lit;
+      }
+      /*
+       * precondition:
+       *    - Arm should hold a object
+       * effect:
+       *    - Arm should not hold a object
+       *    - Held object should be located at spec location
+       */
+      put(loc : Parser.Location): Literal[][] {
+        var lit: Literal[][];
+        return lit;
+      }
+      /*
+       * precondition:
+       *    - Arm should hold a object
+       * effect:
+       *    - Arm should not hold a object
+       *    - Spec object should be located at spec location
+       */
+      move(ent : Parser.Entity, loc : Parser.Location): Literal[][] {
+        var lit: Literal[][];
+        return lit;
+      }
+      // location(loc : Parser.Location)
+    }
 
-    // }
+
+
+
+
+
+
+
+
+
+
+
 
 
     function getRandomInt(max) {
