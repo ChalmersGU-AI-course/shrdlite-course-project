@@ -55,6 +55,22 @@ module Interpreter {
             {pol: true, rel: "ontop", args: [a, "floor"]},
             {pol: true, rel: "holding", args: [b]}
         ]];
+
+        if(cmd.cmd == "take"){
+            // Identify an object, pick it up
+        }
+        else if (cmd.cmd == "put"){
+            // Identify a location and drop the current object there.
+        }
+        else if (cmd.cmd == "move"){
+            // Identify an object and a location and move the object to that location
+        }
+        else
+            throw new Interpreter.Error("NYI: CMD " ++ cmd.cmd);
+        //if(cmd.ent != null)
+        //    var obj : Parser.Object[] = identifyObj(cmd.ent, state)
+
+
         return intprt;
     }
 
