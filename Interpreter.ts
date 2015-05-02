@@ -57,13 +57,16 @@ module Interpreter {
         ]];
 
         if(cmd.cmd == "take"){
-            // Identify an object, pick it up
+            var ids = identifyObj(cmd.ent.obj, state);
+            //throw new Interpreter.Error("NYI: CMD " + cmd.cmd);
         }
         else if (cmd.cmd == "put"){
             // Identify a location and drop the current object there.
+            throw new Interpreter.Error("NYI: CMD " + cmd.cmd);
         }
         else if (cmd.cmd == "move"){
             // Identify an object and a location and move the object to that location
+            throw new Interpreter.Error("NYI: CMD " + cmd.cmd);
         }
         else
             throw new Interpreter.Error("NYI: CMD " + cmd.cmd);
@@ -74,34 +77,32 @@ module Interpreter {
         return intprt;
     }
 
-    function indentifyObj(object : Parser.Object, state : WorldState) : String[]{
+    function identifyObj(object : Parser.Object, state : WorldState) : String[]{
         var ids : String[] = [];
         if(object.obj == null){
             var size = object.size;
             var color = object.color;
             var form = object.form;
-            for(var i = 0; i < state.objects.length; i++){
-                var currentObj = state.objects[i];
+
+            var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+
+            for(var i = 0; i < objs.length; i++){
+                var currentObj = state.objects[objs[i]];
                 if(currentObj.form == form && currentObj.color == color && currentObj.size == size){
-                    ids.push(currentObj);
+                    ids.push(objs[i]);
                 }
             }           
         }else{
             var objIds = identifyObj(object.obj, state);
             for(var i = 0; i < objIds.length; i++){
-                if(checkLoc(objId[i], object.loc, state)){
-                    ids.push(objId[i]);
+                if(checkLoc(objIds[i], object.loc, state)){
+                    ids.push(objIds[i]);
                 }
             }
 
         }
-        
 
-
-
-
-
-
+        return ids;
 
     }
 
@@ -141,6 +142,8 @@ module Interpreter {
                 throw new Interpreter.Error("The object " + objectId + " is the lowermost object of the stack.");
             throw new Interpreter.Error("NYI: checkLoc - above");
         }
+        else 
+            throw new Interpreter.Error("NYI: checkLoc " + loc.rel);
 
 
         return false;
