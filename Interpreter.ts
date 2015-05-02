@@ -94,7 +94,7 @@ module Interpreter {
             var color = object.color;
             var form = object.form;
 
-            if(form == "floor") return "floor";
+            if(form == "floor") ids.push("floor");
 
             var objs : string[] = Array.prototype.concat.apply([], state.stacks);
 
