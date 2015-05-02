@@ -8,6 +8,8 @@ module Interpreter {
 
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
+        if(parses.length > 1)
+            throw new Interpreter.Error("Your utterance was ambiguous, please be more specific!");
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
