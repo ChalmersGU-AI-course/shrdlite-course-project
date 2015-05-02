@@ -63,6 +63,7 @@ module Interpreter {
       constructor(state: WorldState) {
         this.state = state;
       }
+
       /*
        * Top-level interpreter method:
        * Defines the following interpretation depending on the verb action.
@@ -79,39 +80,62 @@ module Interpreter {
             throw new Interpreter.Error("derive: unrecognized verb."); // TODO: make throw statement
         }
       }
+
       /*
-       * precondition:
-       *    - Arm should not hold any object
-       * effect:
+       * preconditions:
+       *    - Arm should not hold a object
+       *    - Spec object/s exist among objects (s: any)
+       * effects:
        *    - Arm should hold spec object
        */
       take(ent : Parser.Entity): Literal[][] {
+        // 1. Find referred object in entity
+        // 2. Check precondition (1)
+        // 3. Check precondition (2)
+        // 4. Make Literal
         var lit: Literal[][];
         return lit;
       }
+
       /*
-       * precondition:
+       * preconditions:
        *    - Arm should hold a object
-       * effect:
+       *    - Held object can be located at spec location/s
+       * effects:
        *    - Arm should not hold a object
-       *    - Held object should be located at spec location
+       *    - Held object should be located at spec location/s (s: any)
        */
       put(loc : Parser.Location): Literal[][] {
+        // 1. Check precondition (1)
+        // 2. Find referred location
+        // 3. Check precondition (2)
+        // 4. Make Literal
         var lit: Literal[][];
         return lit;
       }
+
       /*
-       * precondition:
-       *    - Arm should hold a object
-       * effect:
+       * preconditions:
        *    - Arm should not hold a object
-       *    - Spec object should be located at spec location
+       *    - Spec object/s exist among objects
+       *    - Spec object/s can be located at spec location/s
+       * effects:
+       *    - Arm should not hold a object
+       *    - Spec object/s should be located at spec location/s
        */
       move(ent : Parser.Entity, loc : Parser.Location): Literal[][] {
+        // 1. Check precondition (1)
+        // 2. Find referred object in entity
+        // 3. Check precondition (2)
+        // 4. Find referred location
+        // 5. Check precondition (3)
+        // 6. Make Literal
         var lit: Literal[][];
         return lit;
       }
+
       // location(loc : Parser.Location)
+      // entity(ent: Parser.Entity)
     }
 
 
