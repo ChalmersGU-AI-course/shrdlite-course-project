@@ -7,10 +7,12 @@ module planner_astar {
     export class PlannerNode implements astar.INode {
         state: WorldState;
         lastAction: string; //l, r , d or p
+        actionMessage: string;
 
-        constructor(state, action) {
+        constructor(state, lastAction, actionMessage) {
             this.state = state;
-            this.lastAction = action;
+            this.lastAction = lastAction;
+            this.actionMessage = actionMessage;
         }
 
         getUniqueId(): string {
@@ -50,15 +52,17 @@ module planner_astar {
                     var newState = owl.deepCopy(this.state, 5);
                     newState.holding = currentStack[topItemIndex];
                     newState.stacks[this.state.arm].splice(topItemIndex, 1);
-                    return new PlannerNode(newState, "p");
+                    var newMessage = "Picking up the " + newState.objects[newState.holding].form;
+                    return new PlannerNode(newState, "p", newMessage);
                 }
             } else { // holding something at the moment
                 console.log("putting object down");
                 var newState = owl.deepCopy(this.state, 5);
                 //TODO: check if legal move
                 newState.stacks[newState.arm].push(newState.holding);
+                var newMessage = "Dropping the " + newState.objects[newState.holding].form;
                 newState.holding = null;
-                return new PlannerNode(newState, "d");
+                return new PlannerNode(newState, "d", newMessage);
             }
             return null;
         }
@@ -69,8 +73,8 @@ module planner_astar {
             if (targetPos >= 0 && targetPos < numberOfStacks) {
                 var newState = owl.deepCopy(this.state, 5);
                 newState.arm = targetPos;
-
-                return new PlannerNode(newState, direction>0 ? "r":"l");
+                var newMessage = "Moving " + (direction > 0 ? "right" : "left");
+                return new PlannerNode(newState, direction>0 ? "r":"l", newMessage);
             }
             return null;
         }

@@ -90,13 +90,15 @@ module Planner {
 
         var graphGoal = new planner_astar.MultipleGoals();
         var graph = new astar.Graph(new planner_astar.DijkstraHeuristic(), graphGoal);
-        var graphStart = new planner_astar.PlannerNode(state, null);
+        var graphStart = new planner_astar.PlannerNode(state, null, null);
         var result = graph.searchPath(graphStart);
 
         for (var i = 1; i < result.path.length; i++) {
             var current = <planner_astar.PlannerNode> result.path[i];
+            plan.push(current.actionMessage);
             plan.push(current.lastAction);
         }
+        plan.push("Taddaaa");
 
         return plan
     }
