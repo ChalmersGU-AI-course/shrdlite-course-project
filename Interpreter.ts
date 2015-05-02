@@ -107,10 +107,8 @@ module Interpreter {
             for(var i = 0; i < objIds.length; i++){
                 if(checkLoc(objIds[i], object.loc, state)){
                     ids.push(objIds[i]);
-                    alert("hej");
                 }
             }
-
         }
 
         return ids;
@@ -129,39 +127,32 @@ module Interpreter {
             var lpos : [number, number] = findObjPos(id, state);
 
             if(relation == "leftof"){
-                if(pos[0] = state.stacks.length - 1)
-                    throw new Interpreter.Error("The object " + objectId + " is in the rightmost stack.");
-                    throw new Interpreter.Error("NYI: checkLoc - leftof");
+                if(pos[0] < lpos[0])
+                    res = true;
             }
             else if(relation == "rightof"){
-                if(pos[0] = 0)
-                    throw new Interpreter.Error("The object " + objectId + " is in the leftmost stack.");
-                throw new Interpreter.Error("NYI: checkLoc - rightof");
+                if(pos[0] > lpos[0])
+                    res = true;
             }
             else if(relation == "inside"){
-                throw new Interpreter.Error("NYI: checkLoc - inside");
+                if(pos[0] == lpos[0] && pos[1] == lpos[1] + 1)
+                    res = true;
             }
             else if(relation == "ontop"){
-                throw new Interpreter.Error("NYI: checkLoc - ontop");
-                
+                if(pos[0] == lpos[0] && pos[1] == lpos[1] + 1)
+                    res = true;   
             }
             else if(relation == "under"){
-                //if(pos[1] == state.stacks[pos[0]].length-1)
-                //    return false;       
-                alert(pos[0] + " " + lpos[0] + " " + pos[1] + " " + lpos[1]);
                 if(pos[0] == lpos[0] && pos[1] < lpos[1])
                     res = true;
             }
             else if(relation == "beside"){
-                throw new Interpreter.Error("NYI: checkLoc - beside");
+                if(pos[0] == lpos[0] + 1 || pos[0] == lpos[0] - 1)
+                    res = true;
             }
             else if(relation == "above"){
-                //if(pos[1] = 0)
-                //    throw new Interpreter.Error("The object " + objectId + " is the lowermost object of the stack.");
                 if(pos[0] == lpos[0] && pos[1] > lpos[1])
                     res = true;
-
-                throw new Interpreter.Error("NYI: checkLoc - above");
             }
             else 
                 throw new Interpreter.Error("NYI: checkLoc " + loc.rel);
