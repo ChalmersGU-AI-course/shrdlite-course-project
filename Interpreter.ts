@@ -48,9 +48,8 @@ module Interpreter {
 	class ShrdliteInterpretation {
 		constructor(private state : WorldState, private cmd : Parser.Command) {}
 
-		//checks for every object mentioned in the parse if the object exist in the current state
+		//checks for every object mentioned in the parse if the object exists in the current world state
 		//todo: check if the spatial relations between the parsed objects exist
-		//todo: throw error depending on what the failure really is (e.g. "Interpretation error: there is no green ball in the current state)
 		private checkExistence(ent) : boolean {
 			//going through the objects-tree
 			while (true) {
@@ -59,16 +58,15 @@ module Interpreter {
 					o = o.obj;
 				}
 
-				//when no position can be found
-				if (this.getPosition(o) == null) {
+				//when no positions can be found
+				if (!this.getPositions(o).length) {
 					throw new Interpreter.Error("There is no "
 						+ ((o.size != null) ? o.size+" " : "") 
 						+ ((o.color != null) ? o.color+" " : "") 
 						+ ((o.form != null) ? o.form : ""));
-
-					return false;
 				}
 
+				//when there are no new objects left in the tree
 				if (typeof ent.obj.loc === "undefined") {
 					return true;
 				}
@@ -77,10 +75,12 @@ module Interpreter {
 			return false;
 		}
 
-		//return the position of the object in the world state
+		//return the positions of all objects that match the pattern in the world state
 		//note: currently this function only returns the first occurence of an object that matches
 		//note: in my eyes this checking should be a method within World (will ask the TA's about if we may do that)
-		private getPosition(o) : Position {
+		//todo: figure out what to return in case of "floor"
+		private getPositions(o) : Position[] {
+			var p : Position[] = [];
 			for (var i = 0; i < this.state.stacks.length; i++) {
 				for (var j = 0; j < this.state.stacks[i].length; j++) {
 					var a = this.state.objects[this.state.stacks[i][j]];
@@ -88,15 +88,15 @@ module Interpreter {
 						(o.color == null || o.color == a.color) &&
 						(o.form == null || o.form == a.form || o.form == "anyform")) ||
 				   		(o.form == "floor")) {
-							var p : Position = {x: i, y: j}; 
-							return p;	
+							var temp : Position = {x: i, y: j}; 
+							p.push(temp);	
 					}
 				}
 			}
-			return null;
+			return p;
 		}
 
-		//get the interpretation for the parse that was handed over on creation
+		//return the interpretation for the parse that was handed over on creation
 		//todo: actually interpret something, right now the return is just a dummy
 		public getInterpretation() : Literal[][] {
 			//check origin
