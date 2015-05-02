@@ -1,6 +1,8 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
 
+///<reference path="planner_astar.ts"/>
+
 module Planner {
 
     //////////////////////////////////////////////////////////////////////
@@ -41,48 +43,62 @@ module Planner {
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         // This function returns a dummy plan involving a random stack
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
-        var plan : string[] = [];
+        // do {
+        //     var pickstack = getRandomInt(state.stacks.length);
+        // } while (state.stacks[pickstack].length == 0);
+        // var plan : string[] = [];
 
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
-            }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
-            }
+        // // First move the arm to the leftmost nonempty stack
+        // if (pickstack < state.arm) {
+        //     plan.push("Moving left");
+        //     for (var i = state.arm; i > pickstack; i--) {
+        //         plan.push("l");
+        //     }
+        // } else if (pickstack > state.arm) {
+        //     plan.push("Moving right");
+        //     for (var i = state.arm; i < pickstack; i++) {
+        //         plan.push("r");
+        //     }
+        // }
+
+        // // Then pick up the object
+        // var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
+        // plan.push("Picking up the " + state.objects[obj].form,
+        //           "p");
+
+        // if (pickstack < state.stacks.length-1) {
+        //     // Then move to the rightmost stack
+        //     plan.push("Moving as far right as possible");
+        //     for (var i = pickstack; i < state.stacks.length-1; i++) {
+        //         plan.push("r");
+        //     }
+
+        //     // Then move back
+        //     plan.push("Moving back");
+        //     for (var i = state.stacks.length-1; i > pickstack; i--) {
+        //         plan.push("l");
+        //     }
+        // }
+
+        // // Finally put it down again
+        // plan.push("Dropping the " + state.objects[obj].form,
+        //           "d");
+
+        // return plan;
+
+        var plan: string[] = [];
+
+        var graphGoal = new planner_astar.MultipleGoals();
+        var graph = new astar.Graph(new planner_astar.DijkstraHeuristic(), graphGoal);
+        var graphStart = new planner_astar.PlannerNode(state, null);
+        var result = graph.searchPath(graphStart);
+
+        for (var i = 1; i < result.path.length; i++) {
+            var current = <planner_astar.PlannerNode> result.path[i];
+            plan.push(current.lastAction);
         }
 
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
-
-        if (pickstack < state.stacks.length-1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
-                plan.push("r");
-            }
-
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
-                plan.push("l");
-            }
-        }
-
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
-
-        return plan;
+        return plan
     }
 
 
