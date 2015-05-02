@@ -8,14 +8,15 @@ module Interpreter {
 
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
-        if(parses.length > 1)
-            throw new Interpreter.Error("Your utterance was ambiguous, please be more specific!");
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
-            interpretations.push(intprt);
+            if(intprt.intp != null)
+                interpretations.push(intprt);
         });
-        if (interpretations.length) {
+        if (interpretations.length > 1) {
+            throw new Interpreter.Error("Your utterance was ambiguous, please be more specific!");
+        } else if (interpretations.length){
             return interpretations;
         } else {
             throw new Interpreter.Error("Found no interpretation");
@@ -50,34 +51,35 @@ module Interpreter {
 
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        // This returns a dummy interpretation involving two random objects in the world
-      /*  var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        var a = objs[getRandomInt(objs.length)];
-        var b = objs[getRandomInt(objs.length)];
-        var intprt : Literal[][] = [[
-            {pol: true, rel: "ontop", args: [a, "floor"]},
-            {pol: true, rel: "holding", args: [b]}
-        ]]; */
 
         if(cmd.cmd == "take"){
             var ids = identifyObj(cmd.ent.obj, state);
+            if(ids.length == 0) 
+                return null;
             var intprt : Literal[][] = [[
                 {pol: true, rel: "holding", args: [ids[0]]}
             ]];
         }
         else if (cmd.cmd == "put"){
             var ids = identifyObj(cmd.loc.ent.obj, state);
+            if(ids.length == 0 || state.holding == null) 
+                return null;
             var intprt : Literal[][] = [[
                 {pol: true, rel: cmd.loc.rel, args: [state.holding, ids[0]]}
             ]];
             
         }
         else if (cmd.cmd == "move"){
-            var idsSrc = identifyObj(cmd.ent.obj, state);
-            var idsDst = identifyObj(cmd.loc.ent.obj, state);
+            var srcIds = identifyObj(cmd.ent.obj, state);
+            if(srcIds.length == 0) 
+                return null;
+            var dstIds = identifyObj(cmd.loc.ent.obj, state);
+            if(dstIds.length == 0) 
+                return null;
+
             var intprt : Literal[][] = [[
-                {pol: true, rel: cmd.loc.rel, args: [idsSrc[0],idsDst[0]]}
-            ]];
+                {pol: true, rel: cmd.loc.rel, args: [srcIds[0], dstIds[0]]}
+            ]];        
         }
         else
             throw new Interpreter.Error("NYI: CMD " + cmd.cmd);
@@ -114,7 +116,6 @@ module Interpreter {
         }
 
         return ids;
-
     }
 
 
@@ -141,7 +142,7 @@ module Interpreter {
                     res = true;
             }
             else if(relation == "ontop"){
-                if(pos[0] == lpos[0] && pos[1] == lpos[1] + 1)
+                if((pos[0] == lpos[0] || lpos[0] == -1) && pos[1] == lpos[1] + 1)
                     res = true;   
             }
             else if(relation == "under"){
@@ -153,7 +154,7 @@ module Interpreter {
                     res = true;
             }
             else if(relation == "above"){
-                if(pos[0] == lpos[0] && pos[1] > lpos[1])
+                if((pos[0] == lpos[0] || lpos[0] == -1) && pos[1] > lpos[1])
                     res = true;
             }
             else 
@@ -185,3 +186,11 @@ module Interpreter {
 
 }
 
+        // This returns a dummy interpretation involving two random objects in the world
+      /*  var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        var a = objs[getRandomInt(objs.length)];
+        var b = objs[getRandomInt(objs.length)];
+        var intprt : Literal[][] = [[
+            {pol: true, rel: "ontop", args: [a, "floor"]},
+            {pol: true, rel: "holding", args: [b]}
+        ]]; */
