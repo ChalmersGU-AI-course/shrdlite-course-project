@@ -48,6 +48,7 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
       /*  var objs : string[] = Array.prototype.concat.apply([], state.stacks);
@@ -80,9 +81,6 @@ module Interpreter {
         }
         else
             throw new Interpreter.Error("NYI: CMD " + cmd.cmd);
-        //if(cmd.ent != null)
-        //    var obj : Parser.Object[] = identifyObj(cmd.ent, state)
-
 
         return intprt;
     }
@@ -166,6 +164,9 @@ module Interpreter {
     }
 
     function findObjPos(objectId, state : WorldState) : [number, number]{
+
+        if(objectId == "floor")
+            return [-1,-1];
 
         for (var stacknr = 0; stacknr < state.stacks.length; stacknr++) {
             for (var objectnr=0; objectnr < state.stacks[stacknr].length; objectnr++) {
