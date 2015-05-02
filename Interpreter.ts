@@ -24,6 +24,7 @@ module Interpreter {
 
     export interface Result extends Parser.Result {intp:Literal[][];}
     export interface Literal {pol:boolean; rel:string; args:string[];}
+	export interface Position {x:number; y:number;}
 
 
     export function interpretationToString(res : Result) : string {
@@ -47,7 +48,7 @@ module Interpreter {
 	class ShrdliteInterpretation {
 		constructor(private state : WorldState, private cmd : Parser.Command) {}
 
-		//check if the parsed objects exist in the current state
+		//checks for every object mentioned in the parse if the object exist in the current state
 		//todo: check if the spatial relations between the parsed objects exist
 		//todo: throw error depending on what the failure really is (e.g. "Interpretation error: there is no green ball in the current state)
 		private checkExistence(ent) : boolean {
@@ -60,6 +61,11 @@ module Interpreter {
 
 				//when no position can be found
 				if (this.getPosition(o) == null) {
+					throw new Interpreter.Error("There is no "
+						+ ((o.size != null) ? o.size+" " : "") 
+						+ ((o.color != null) ? o.color+" " : "") 
+						+ ((o.form != null) ? o.form : ""));
+
 					return false;
 				}
 
@@ -74,15 +80,16 @@ module Interpreter {
 		//return the position of the object in the world state
 		//note: currently this function only returns the first occurence of an object that matches
 		//note: in my eyes this checking should be a method within World (will ask the TA's about if we may do that)
-		private getPosition(o) : number {
+		private getPosition(o) : Position {
 			for (var i = 0; i < this.state.stacks.length; i++) {
 				for (var j = 0; j < this.state.stacks[i].length; j++) {
 					var a = this.state.objects[this.state.stacks[i][j]];
 					if (((o.size == null || o.size == a.size) &&
 						(o.color == null || o.color == a.color) &&
-						(o.form == null || o.form == a.form)) ||
-				   		((o.form == "floor") || (o.form == "anyform"))) {
-							return i;	
+						(o.form == null || o.form == a.form || o.form == "anyform")) ||
+				   		(o.form == "floor")) {
+							var p : Position = {x: i, y: j}; 
+							return p;	
 					}
 				}
 			}
@@ -91,7 +98,6 @@ module Interpreter {
 
 		//get the interpretation for the parse that was handed over on creation
 		//todo: actually interpret something, right now the return is just a dummy
-		//todo: fix issues when there is just an origin but no destination
 		public getInterpretation() : Literal[][] {
 			//check origin
 			if (typeof this.cmd.ent !== "undefined") {
