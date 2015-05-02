@@ -3,6 +3,10 @@
 ///<reference path="ExampleWorlds.ts"/>
 ///<reference path="deepCopy.ts"/>
 
+
+// start with
+// tsc --out treetest.js searchTreeTest.ts && node treetest.js medium
+
 // Extract command line arguments:
 var nodename = process.argv[0];
 var jsfile = process.argv[1].replace(/^.*\//, "");
