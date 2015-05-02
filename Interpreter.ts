@@ -48,25 +48,33 @@ module Interpreter {
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
-        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+      /*  var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
         var intprt : Literal[][] = [[
             {pol: true, rel: "ontop", args: [a, "floor"]},
             {pol: true, rel: "holding", args: [b]}
-        ]];
+        ]]; */
 
         if(cmd.cmd == "take"){
             var ids = identifyObj(cmd.ent.obj, state);
-            //throw new Interpreter.Error("NYI: CMD " + cmd.cmd);
+            var intprt : Literal[][] = [[
+                {pol: true, rel: "holding", args: [ids[0]]}
+            ]];
         }
         else if (cmd.cmd == "put"){
-            // Identify a location and drop the current object there.
-            throw new Interpreter.Error("NYI: CMD " + cmd.cmd);
+            var ids = identifyObj(cmd.loc.ent.obj, state);
+            var intprt : Literal[][] = [[
+                {pol: true, rel: cmd.loc.rel, args: [state.holding, ids[0]]}
+            ]];
+            
         }
         else if (cmd.cmd == "move"){
-            // Identify an object and a location and move the object to that location
-            throw new Interpreter.Error("NYI: CMD " + cmd.cmd);
+            var idsSrc = identifyObj(cmd.ent.obj, state);
+            var idsDst = identifyObj(cmd.loc.ent.obj, state);
+            var intprt : Literal[][] = [[
+                {pol: true, rel: cmd.loc.rel, args: [idsSrc[0],idsDst[0]]}
+            ]];
         }
         else
             throw new Interpreter.Error("NYI: CMD " + cmd.cmd);
@@ -77,8 +85,8 @@ module Interpreter {
         return intprt;
     }
 
-    function identifyObj(object : Parser.Object, state : WorldState) : String[]{
-        var ids : String[] = [];
+    function identifyObj(object : Parser.Object, state : WorldState){
+        var ids = [];
         if(object.obj == null){
             var size = object.size;
             var color = object.color;
