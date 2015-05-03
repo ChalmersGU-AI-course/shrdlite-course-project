@@ -45,7 +45,7 @@ module Planner {
         var plan : string[] = [];
 
         //TODO should this be moved somewhere? Argument och global parameter?
-        var searchDepth = 5;
+        var searchDepth = 7;
 
         for(var i = 0; i<NUM_STACKS; i++) {
             var obs = state.objStacks[i];
@@ -60,15 +60,17 @@ module Planner {
         var boxes = findBoxes(state);
 
         state.pddlWorld.push({pol:true, rel:"at", args:["arm", state.arm+""]});
-
-
         var startNode:AStar.Node<PddlLiteral[]> = new AStar.Node<PddlLiteral[]>(state.pddlWorld, [], Infinity, null);
+        var nPickUp = new AStar.Node<PddlLiteral[]>(liftObject(state.pddlWorld, 0), [], Infinity, null,"p"+1);
+        var ePickUp = new AStar.Edge<PddlLiteral[]>(startNode, nPickUp, 1);
+        startNode.neighbours.push(ePickUp);
 
         //Will hold all the created nodes
         //One of the dimensions is the "layers" of the node generation
         //The other dimension is the nodes within that layer
         var nodes: AStar.Node<PddlLiteral[]>[][] = [[]];
         nodes[0].push(startNode);
+        nodes[0].push(nPickUp);
 
         for(var i = 0; i<searchDepth; i++){
             nodes[i+1] = [];
@@ -77,14 +79,23 @@ module Planner {
                 for(var j = 0; j<NUM_STACKS; j++) {
                     if(armPos != j) {
                         var dir:string = j>armPos ? "r" : "l";
-                        var cost:number = Math.abs(state.arm-j);
-                        var node = new AStar.Node<PddlLiteral[]>(moveArm(nodes[i][n].label, j), [], Infinity, null, dir+cost);
+                        var cost:number = Math.abs(armPos-j);
+                        var nodeWorld = moveArm(nodes[i][n].label, j);
+
+                        var node = null;
+
+                        if(!isHolding(nodes[i][n].label)) {
+                            node = new AStar.Node<PddlLiteral[]>(liftObject(nodeWorld, j), [], Infinity, null, dir+cost+"p"+1);
+                        } else {
+                            node = new AStar.Node<PddlLiteral[]>(putDownObject(nodeWorld, j, boxes), [], Infinity, null, dir+cost+"d"+1);
+                        }
+
                         var edge = new AStar.Edge<PddlLiteral[]>(nodes[i][n], node, cost);
                         nodes[i][n].neighbours.push(edge);
                         nodes[i+1].push(node);
                     }
                 }
-
+/*
                 if(!isHolding(nodes[i][n].label)){
                     var node = new AStar.Node<PddlLiteral[]>(liftObject(nodes[i][n].label, armPos), [], Infinity, null, "p"+1);
                     var edge = new AStar.Edge<PddlLiteral[]>(nodes[i][n], node, 1);
@@ -95,7 +106,7 @@ module Planner {
                     var edge = new AStar.Edge<PddlLiteral[]>(nodes[i][n], node, 1);
                     nodes[i][n].neighbours.push(edge);
                     nodes[i+1].push(node);
-                }
+                }*/
             }
         }
 
@@ -106,7 +117,11 @@ module Planner {
         console.log(searchResult);
 
         for(var s in searchResult) {
-            pushActions(plan, searchResult[s].action[0], Number(searchResult[s].action[1]));
+            while(searchResult[s].action) {
+                pushActions(plan, searchResult[s].action[0], Number(searchResult[s].action[1]));
+                searchResult[s].action = searchResult[s].action.slice(2,searchResult[s].action.length);
+            }
+
         }
 
 
