@@ -64,13 +64,13 @@ module Interpreter {
         */
         
         //"move it" cmd
-        if(cmd.ent.obj == null){
-            var obj: ObjectDefinition = state.objects[state.holding];
+        if(cmd.ent == null){
             if(state.holding == null){
                 throw new Error("No object is being held at the moment");
             }
-            
+            var obj: ObjectDefinition = state.objects[state.holding];
             var o: ObjWCoord = {id: state.holding, size: obj.size, form: obj.form, color: obj.color};
+            
             tmp.push(o);
         //other cmd
         }else{
