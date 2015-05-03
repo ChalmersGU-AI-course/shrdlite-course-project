@@ -44,35 +44,109 @@ module Interpreter {
         public toString() {return this.name + ": " + this.message}
     }
 
+	class ShrdliteSpatialCheck {
+		constructor(private stacks : string[][], private parentPos : Position[], private childPos : Position[], private rel : string) {
+		}
+
+		public check() : boolean {
+			//check if any relation exists
+			for (var i = 0; i < this.parentPos.length; i++) {
+				for (var j = 0; j < this.childPos.length; j++) {
+					if (this.isReachable(this.parentPos[i], this.childPos[j], this.rel)) {
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		//relations: inside,ontop,under,beside,above,leftof,rightof
+		//todo: check for physical impossibilities, or does the parser do that?
+		private isReachable(orig : Position, dest : Position, rel : string) : boolean {
+			switch (rel) {
+				case "inside":
+					if (orig.x == dest.x && orig.y == (dest.y + 1)) {
+						return true;
+					}
+					break;
+				case "ontop":
+					if (orig.x == dest.x && orig.y == (dest.y + 1)) {
+						return true;
+					}
+					break;
+				case "above":
+					if (orig.x == dest.x && orig.y > dest.y) {
+						return true;
+					}
+					break;
+				case "under":
+					if (orig.x == dest.x && orig.y == (dest.y - 1)) {
+						return true;
+					}
+					break;
+				case "leftof":
+					if (orig.x == (dest.x - 1)) {
+						return true;
+					}
+					break;
+				case "rightof":
+					if (orig.x == (dest.x + 1)) {
+						return true;
+					}
+					break;
+				case "beside":
+					if (orig.x == (dest.x - 1) || orig.x == (dest.x + 1)) {
+						return true;
+					}
+					break;
+			}
+			return false;
+		}
+	}
+
 	//class for interpreting a single parse based on the current worldstate
 	class ShrdliteInterpretation {
 		constructor(private state : WorldState, private cmd : Parser.Command) {}
 
 		//checks for every object mentioned in the parse if the object exists in the current world state
 		//todo: check if the spatial relations between the parsed objects exist
-		private checkExistence(ent) : boolean {
-			//going through the objects-tree
-			while (true) {
-				var o = ent.obj;
-				if (typeof o.size === "undefined") {
-					o = o.obj;
-				}
-
-				//when no positions can be found
-				if (!this.getPositions(o).length) {
-					throw new Interpreter.Error("There is no "
-						+ ((o.size != null) ? o.size+" " : "") 
-						+ ((o.color != null) ? o.color+" " : "") 
-						+ ((o.form != null) ? o.form : ""));
-				}
-
-				//when there are no new objects left in the tree
-				if (typeof ent.obj.loc === "undefined") {
-					return true;
-				}
-				ent = ent.obj.loc.ent;
+		//todo: include proper typing for the function arguments
+		private checkExistence(ent, parentPos : Position[] = [], parentRel : string = "") : boolean {
+			//checking the next object
+			var o = ent.obj;
+			var loc = null;
+			if (typeof o.size === "undefined") {
+				loc = o.loc;
+				o = o.obj;
 			}
-			return false;
+				
+			//get all possible Positions for the current object
+			var pos : Position[] = this.getPositions(o);
+
+			//when no positions can be found
+			if (!pos.length) {
+				throw new Interpreter.Error("There is no "
+					+ ((o.size != null) ? o.size+" " : "") 
+					+ ((o.color != null) ? o.color+" " : "") 
+					+ ((o.form != null) ? o.form : ""));
+			}
+
+			//check if the spatial relations work out
+			if (parentPos.length) {
+				var spatChecker = new ShrdliteSpatialCheck(this.state.stacks, parentPos, pos, parentRel);
+				if (!spatChecker.check()) {
+					console.log("spatial relation error");
+					//throw new Interpreter.Error("Spatial relation error");
+				}
+			}
+
+			//when there are no new objects left in the tree
+			if (typeof ent.obj.loc === "undefined") {
+				return true;
+			}
+
+			//Recursion
+			return this.checkExistence(ent.obj.loc.ent, pos, loc.rel);
 		}
 
 		//return the positions of all objects that match the pattern in the world state
