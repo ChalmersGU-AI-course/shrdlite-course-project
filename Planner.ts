@@ -41,20 +41,26 @@ module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
-
-    //TODO first create the graph then find shortest path with AStar
-    //TODO Remove the code that is here right now
     function planInterpretation(intprt : PddlLiteral[][], state : ExtendedWorldState) : string[] {
         var plan : string[] = [];
 
         //TODO should this be moved somewhere? Argument och global parameter?
-        var searchDepth = 2;
+        var searchDepth = 5;
 
-        //TODO this assumes state is a PDDL-world, not a WorldState
-        //TODO WONT WORK!!!!!!!! MUST FIX!!!!!!!
-        var topObjects:string[] = getObjectsOnTop(state);
+        for(var i = 0; i<NUM_STACKS; i++) {
+            var obs = state.objStacks[i];
+            var obj = state.objStacks[i][obs.length-1];
+            if(obs.length > 1) {
+                state.pddlWorld.push({pol:true, rel:"attop", args:[obj.id, "floor-"+i]});
+            }
+        }
 
-        state.pddlWorld.push({pol:true, rel:"at", args:["arm", "0"]});
+        console.log(intprt);
+
+        var boxes = findBoxes(state);
+
+        state.pddlWorld.push({pol:true, rel:"at", args:["arm", state.arm+""]});
+
 
         var startNode:AStar.Node<PddlLiteral[]> = new AStar.Node<PddlLiteral[]>(state.pddlWorld, [], Infinity, null);
 
@@ -67,52 +73,52 @@ module Planner {
         for(var i = 0; i<searchDepth; i++){
             nodes[i+1] = [];
             for(var n in nodes[i]){
-                if(state.holding === null){
-                    var armPos = Number(getRel(nodes[i][n].label, "at").args[1]);
-                    for(var j = 0; j<NUM_STACKS; j++) {
-                        if(armPos != j) {
-                            var dir:string = j>armPos ? "r" : "l";
-                            var cost:number = Math.abs(state.arm-j);
-                            var node = new AStar.Node<PddlLiteral[]>(moveArm(nodes[i][n].label, j), [], Infinity, null, dir+cost);
-                            var edge = new AStar.Edge<PddlLiteral[]>(nodes[i][n], node, cost);
-                            nodes[i][n].neighbours.push(edge);
-                            nodes[i+1].push(node);
-                        }
+                var armPos = Number(getRel(nodes[i][n].label, "at").args[1]);
+                for(var j = 0; j<NUM_STACKS; j++) {
+                    if(armPos != j) {
+                        var dir:string = j>armPos ? "r" : "l";
+                        var cost:number = Math.abs(state.arm-j);
+                        var node = new AStar.Node<PddlLiteral[]>(moveArm(nodes[i][n].label, j), [], Infinity, null, dir+cost);
+                        var edge = new AStar.Edge<PddlLiteral[]>(nodes[i][n], node, cost);
+                        nodes[i][n].neighbours.push(edge);
+                        nodes[i+1].push(node);
                     }
-                    //TODO add a lift to the top object under arm
+                }
 
-
-//                    var node = new AStar.Node<PddlLiteral[]>(liftObject(nodes[i][n].label, stack[stack.length-1].id));
+                if(!isHolding(nodes[i][n].label)){
+                    var node = new AStar.Node<PddlLiteral[]>(liftObject(nodes[i][n].label, armPos), [], Infinity, null, "p"+1);
+                    var edge = new AStar.Edge<PddlLiteral[]>(nodes[i][n], node, 1);
+                    nodes[i][n].neighbours.push(edge);
+                    nodes[i+1].push(node);
+                } else {
+                    var node = new AStar.Node<PddlLiteral[]>(putDownObject(nodes[i][n].label,armPos, boxes), [], Infinity, null, "d"+1);
+                    var edge = new AStar.Edge<PddlLiteral[]>(nodes[i][n], node, 1);
+                    nodes[i][n].neighbours.push(edge);
+                    nodes[i+1].push(node);
                 }
             }
         }
 
 
-        //Create a testgoal
-
-        var goal:PddlLiteral[] = [
-            {pol:true, rel:"at", args:["arm", "3"]}
-        ];
-
-        var searchResult = AStar.astar(startNode, createGoalFunction(goal), createHeuristicFunction());
+        var searchResult = AStar.astar(startNode, createGoalFunction(intprt), createHeuristicFunction());
 
         console.log("Search result:");
         console.log(searchResult);
-
-        console.log("Start node:");
-        console.log(startNode);
-
-        console.log("State:");
-        console.log(state);
 
         for(var s in searchResult) {
             pushActions(plan, searchResult[s].action[0], Number(searchResult[s].action[1]));
         }
 
-        console.log("Plan:");
-        console.log(plan);
 
         return plan;
+    }
+
+    function isHolding(world:PddlLiteral[]) {
+        var holding = false;
+        for(var i in world) {
+            holding = holding || world[i].rel === "holding";
+        }
+        return holding;
     }
 
     function pushActions(plan:string[], action:string, times:number) {
@@ -127,21 +133,26 @@ module Planner {
         }
     }
 
-    function createGoalFunction(goalWorld:PddlLiteral[]) {
+    function createGoalFunction(goalWorld:PddlLiteral[][]) {
         return function(node:AStar.Node<PddlLiteral[]>) {
             var world = node.label;
+            var done = false;
             for(var n in world) {
                 for(var i in goalWorld) {
-                    if(world[n].rel === goalWorld[i].rel &&
-                        world[n].args[0] === goalWorld[i].args[0] &&
-                        world[n].args[1] === goalWorld[i].args[1]) {
-                        goalWorld.splice(i, 1);
-                        break;
+                    for(var j in goalWorld[i]) {
+                        if(world[n].rel === goalWorld[i][j].rel &&
+                            world[n].args[0] === goalWorld[i][j].args[0] &&
+                            world[n].args[1] === goalWorld[i][j].args[1]) {
+                            goalWorld[i].splice(i, 1);
+                            break;
+                        }
                     }
+
+                    done = done || goalWorld[i].length === 0;
                 }
             }
 
-            return goalWorld.length === 0;
+            return done;
         }
     }
 
@@ -166,7 +177,8 @@ module Planner {
         return newWorld;
     }
 
-    //Returns a PddlWorld where the arm has moved to the given number
+    //Moves the arm in the given PddlWorld to the given stack
+    //Returns the modified world, does not change the original!
     function moveArm(state:PddlLiteral[], stack:number):PddlLiteral[]{
         //If you try to move outside the world just ignore it
         if(stack > 5 || stack < 0) {
@@ -188,20 +200,69 @@ module Planner {
         return world;
     }
 
-    // Returns a pddlworld where the given object is in the arm
-    // Assumes that the given object is on top
-    function liftObject(world:PddlLiteral[], object:string):PddlLiteral[] {
+    //Puts the given object cdown on the top object on the given stack
+    //Takes a list of possible boxes to know if it should be "inside" or "ontop"
+    //Returns the modified world, does not change the original!
+    function putDownObject(world:PddlLiteral[], floor: number, boxes:string[]):PddlLiteral[] {
         var newWorld: PddlLiteral[] = clonePddlWorld(world);
 
-        for(var i:number = 0; i<newWorld.length; i++){
-            if(newWorld[i].args[0] === "object" && newWorld[i].rel === "ontop") {
-                newWorld.splice(i, 1);
-                //TODO what does the relation that an object is carried by the arm look like?
-                newWorld.push({pol: true, rel:"inside", args: [object, "arm"]});
+        var object = null;
+        for(var i in newWorld) {
+            if(newWorld[i].rel === "holding") {
+                object = newWorld[i].args[1];
             }
         }
 
-        return world;
+
+        var topObject = "floor-"+floor;
+        for(var i in newWorld) {
+            if(world[i].rel === "attop" && world[i].args[1] === "floor-"+floor) {
+                topObject = world[i].args[0];
+                newWorld.splice(i, 1);
+                break;
+            }
+        }
+
+        var rel = "ontop";
+
+        for(var i in boxes) {
+            if(boxes[i] === topObject) {
+                rel = "inside";
+            }
+        }
+
+        removeLiteral(newWorld, {pol:true, rel:"holding", args:["arm", object]});
+
+        newWorld.push({pol:true, rel:rel, args:[object, topObject]});
+        newWorld.push({pol:true, rel:"attop", args:[object, "floor-"+floor]});
+        return newWorld;
+    }
+
+    // Lifts the object that is on top of the given stack
+    // Assumes that the arm is in the right position to do so
+    function liftObject(world:PddlLiteral[], floor: number):PddlLiteral[] {
+        var newWorld: PddlLiteral[] = clonePddlWorld(world);
+
+        for(var i:number = 0; i<newWorld.length; i++){
+            if(newWorld[i].rel === "attop" && newWorld[i].args[1] === "floor-"+floor) {
+                var object = newWorld[i].args[0];
+                newWorld.splice(i, 1);
+
+                for(var j in newWorld) {
+                    if((newWorld[j].rel === "ontop" || newWorld[j].rel === "inside") && world[j].args[0] === object) {
+                        var topRel = newWorld.splice(j, 1);
+                        if(topRel[0].args[1].indexOf("floor") === -1) {
+                            newWorld.push({pol:true, rel:"attop", args:[topRel[0].args[1], "floor-"+floor]});
+                        }
+                    }
+                }
+
+                newWorld.push({pol: true, rel:"holding", args: ["arm", object]});
+                break;
+            }
+        }
+
+        return newWorld;
     }
 
     //Takes a PDDL-world and returns an array of all the objects that are on top
@@ -224,6 +285,28 @@ module Planner {
         }
 
         return objects.toArray();
+    }
+
+    function removeLiteral(world: PddlLiteral[], literal:PddlLiteral) {
+        for(var i in world) {
+            if(literal.rel === world[i].rel && literal.pol === world[i].pol
+                && literal.args[0] === world[i].args[0]
+                && literal.args[1] === world[i].args[1]){
+                world.splice(i, 1);
+            }
+        }
+
+        return world;
+    }
+
+    function findBoxes(world: ExtendedWorldState):string[] {
+        var boxes = [];
+        for(var i in world.objectsWithId) {
+            if(world.objectsWithId[i].form === "box") {
+                boxes.push(i);
+            }
+        }
+        return boxes;
     }
 
     function getRandomInt(max) {
