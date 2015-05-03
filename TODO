@@ -1,5 +1,4 @@
 * Planner
- - Add messages to  plannerNode
  - goal function
  - create only valid neighbors (big object on small one is evil)
     - rules that apply to the world in form of Literals?
