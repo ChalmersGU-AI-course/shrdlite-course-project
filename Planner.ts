@@ -87,6 +87,9 @@ module Planner {
 
         // return plan;
 
+        console.log(intprt);
+        console.log(intprt[1]);
+
         var plan: string[] = [];
 
         var graphGoal = new MultipleGoals();
@@ -100,13 +103,9 @@ module Planner {
             plan.push(current.lastAction);
         }
         plan.push("Taddaaa");
+        console.log(state);
 
-        return plan
-    }
-
-
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
+        return plan;
     }
 
     export class PlannerNode implements astar.INode {
@@ -149,8 +148,6 @@ module Planner {
 
         useArm(): PlannerNode {
             if (this.state.holding === null) {
-                console.log(this.state.holding);
-                console.log("picking object up");
                 var currentStack = this.state.stacks[this.state.arm];
                 if (currentStack.length > 0) {
                     var topItemIndex = currentStack.length - 1;
@@ -161,7 +158,6 @@ module Planner {
                     return new PlannerNode(newState, "p", newMessage);
                 }
             } else { // holding something at the moment
-                console.log("putting object down");
                 var newState = owl.deepCopy(this.state, 5);
                 //TODO: check if legal move
                 newState.stacks[newState.arm].push(newState.holding);
@@ -195,6 +191,27 @@ module Planner {
 
             //return n.state.arm === 2;
             return n.state.stacks[1].length === 0;
+        }
+
+        isLiteralFullfilled(lit: Interpreter.Literal, state: WorldState): boolean {
+            if (lit.rel == "ontop") {
+                return checkOntopLiteral(lit, state);
+            }
+            return true;
+        }
+
+        checkOntopLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
+            var on = lit.args[0];
+            var under = lit.args[1];
+
+            for (var i = 0; i < length; ++i) {
+                var stack = state.stacks[i];
+                if (stack) {
+
+                }
+            }
+
+            return false;
         }
     }
 

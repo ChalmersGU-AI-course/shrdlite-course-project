@@ -38,7 +38,7 @@ world.printWorld();
 
 var graphGoal = new planner_astar.MultipleGoals();
 var graph = new astar.Graph(new planner_astar.DijkstraHeuristic(), graphGoal);
-var graphStart = new planner_astar.PlannerNode(origState, null);
+var graphStart = new planner_astar.PlannerNode(origState, null, null);
 var result = graph.searchPath(graphStart);
 
 console.log(result);
