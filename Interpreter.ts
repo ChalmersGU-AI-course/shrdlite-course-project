@@ -17,7 +17,7 @@ module Interpreter {
         if (interpretations.length) {
             return interpretations;
         } else {
-            throw new Interpreter.Error("Found no interpretation");
+            throw new Interpreter.Error("The spatial relations do not work out");
         }
     }
 
@@ -25,7 +25,6 @@ module Interpreter {
     export interface Result extends Parser.Result {intp:Literal[][];}
     export interface Literal {pol:boolean; rel:string; args:string[];}
 	export interface Position {x:number; y:number;}
-	export interface SpatRel {orig:Position; dest:Position; rel:string;}
 
 
     export function interpretationToString(res : Result) : string {
@@ -49,16 +48,17 @@ module Interpreter {
 		constructor(private stacks : string[][], private parentPos : Position[], private childPos : Position[], private rel : string) {
 		}
 
-		//check if any relation might exist
-		public check() : boolean {
+		//return an array of all childPos that had an existing spatial relation to the parentPos
+		public check() : Position[] {
+			var tempPos : Position[] = [];
 			for (var i = 0; i < this.parentPos.length; i++) {
 				for (var j = 0; j < this.childPos.length; j++) {
 					if (this.isReachable(this.parentPos[i], this.childPos[j], this.rel)) {
-						return true;
+						tempPos.push(this.childPos[j]);
 					}
 				}
 			}
-			return false;
+			return tempPos;
 		}
 
 		//relations: inside,ontop,under,beside,above,leftof,rightof
@@ -110,7 +110,6 @@ module Interpreter {
 		constructor(private state : WorldState, private cmd : Parser.Command) {}
 
 		//checks for every object mentioned in the parse if the object exists in the current world state
-		//todo: check if the spatial relations between the parsed objects exist
 		//todo: include proper typing for the function arguments
 		private checkExistence(ent, parentPos : Position[] = [], parentRel : string = "") : boolean {
 			//checking the next object
@@ -133,12 +132,14 @@ module Interpreter {
 			}
 
 			//check if the spatial relations work out
-			//todo: currently we are checking only proceedingly pairwise, what if there is a ball that is inside some box
-			//and a box that is on the floor but there is no ball that is inside a box that is on the floor?
 			if (parentPos.length) {
 				var spatChecker = new ShrdliteSpatialCheck(this.state.stacks, parentPos, pos, parentRel);
-				if (!spatChecker.check()) {
+				pos = spatChecker.check();
+				//when there are no spatial relations from objects in the world matching the current pattern 
+				//to objects in the world matching the pattern one node before
+				if (!pos.length) {
 					console.log("spatial relation error");
+					return false;
 					//throw new Interpreter.Error("Spatial relation error");
 				}
 			}
@@ -178,8 +179,9 @@ module Interpreter {
 			//check origin
 			if (typeof this.cmd.ent !== "undefined") {
 				var ent = this.cmd.ent;
-				if (!this.checkExistence(ent))
+				if (!this.checkExistence(ent)) {
 					return null;
+				}
 			}
 
 			//check destination
@@ -203,13 +205,8 @@ module Interpreter {
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
-        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        //var a = objs[getRandomInt(objs.length)];
-        //var b = objs[getRandomInt(objs.length)];
-        //var intprt : Literal[][] = [[
-        //    {pol: true, rel: "ontop", args: [a, "floor"]},
-        //    {pol: true, rel: "holding", args: [b]}
-        //]];
+        //var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+
 		var interpret = new ShrdliteInterpretation(state, cmd); 
 		var intprt : Literal[][] = interpret.getInterpretation();
         return intprt;
