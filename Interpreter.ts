@@ -25,6 +25,7 @@ module Interpreter {
     export interface Result extends Parser.Result {intp:Literal[][];}
     export interface Literal {pol:boolean; rel:string; args:string[];}
 	export interface Position {x:number; y:number;}
+	export interface SpatRel {orig:Position; dest:Position; rel:string;}
 
 
     export function interpretationToString(res : Result) : string {
@@ -48,8 +49,8 @@ module Interpreter {
 		constructor(private stacks : string[][], private parentPos : Position[], private childPos : Position[], private rel : string) {
 		}
 
+		//check if any relation might exist
 		public check() : boolean {
-			//check if any relation exists
 			for (var i = 0; i < this.parentPos.length; i++) {
 				for (var j = 0; j < this.childPos.length; j++) {
 					if (this.isReachable(this.parentPos[i], this.childPos[j], this.rel)) {
@@ -132,6 +133,8 @@ module Interpreter {
 			}
 
 			//check if the spatial relations work out
+			//todo: currently we are checking only proceedingly pairwise, what if there is a ball that is inside some box
+			//and a box that is on the floor but there is no ball that is inside a box that is on the floor?
 			if (parentPos.length) {
 				var spatChecker = new ShrdliteSpatialCheck(this.state.stacks, parentPos, pos, parentRel);
 				if (!spatChecker.check()) {
@@ -150,7 +153,6 @@ module Interpreter {
 		}
 
 		//return the positions of all objects that match the pattern in the world state
-		//note: currently this function only returns the first occurence of an object that matches
 		//note: in my eyes this checking should be a method within World (will ask the TA's about if we may do that)
 		//todo: figure out what to return in case of "floor"
 		private getPositions(o) : Position[] {
