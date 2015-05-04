@@ -37,6 +37,7 @@ function permutate(initWorld: WorldState):graphmodule.Graph<string[][]>{
                             }
                             //Add an edge between the initState and the newState2
                             graph.addEdge(initStateID, id, 1, true);
+
                                 
                         }
                         

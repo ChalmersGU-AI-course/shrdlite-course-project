@@ -4,7 +4,7 @@
 module astar {
 
     /** Compute the a path from the given start node to the given end node and the given graph */
-    export function compute<T>(graph: graphmodule.Graph<T>, startID: string, endID: string, hFun: graphmodule.HeuristicFunction<T>, generateNeighbours: graphmodule.GenerateNodes<T>) {
+    export function compute<T>(graph: graphmodule.Graph<T>, startID: string, endStateFun: graphmodule.ValidStateFunction<T>, hFun: graphmodule.HeuristicFunction<T>, generateNeighbours: graphmodule.GenerateNodes<T>) {
 
         var goalNodeAd = graph.adjacencyMap.getValue(endID);
         var currentAd = graph.adjacencyMap.getValue(startID);
@@ -35,7 +35,7 @@ module astar {
 
         visited.add(currentNode);
 
-        while (currentNode != goalNode) {
+		while (endStateFun(currentNode)) {
         
             //Create next states
             var neighbours = generateNeighbours(currentNode);
@@ -53,7 +53,7 @@ module astar {
                     return true;
                 }
             );
-
+        
             currentAd.neighbours.forEach(
                 function addEdge(edge: graphmodule.Edge<T>) {
                     var neighbour = edge.to;
