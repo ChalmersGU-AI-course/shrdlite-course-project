@@ -12,7 +12,8 @@ module Planner {
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
             plan.plan = planInterpretation(plan.intp, currentState);
-            plans.push(plan);
+            if(plan.plan != null)
+                plans.push(plan);
         });
         if (plans.length) {
             return plans;
@@ -44,45 +45,37 @@ module Planner {
         var plan : string[] = [];
         var planner : plannerViaSearch =
                         new plannerViaSearch(intprt, flatten(state.stacks), state.stacks.length);
-        if(!Searcher.search(planner)) {
-            plan.push("Moving right as I couldnt finish ");
-            plan.push("r");
-            return plan;
-        }
+        if(!Searcher.search(planner))
+            return null;
         planner.printDebugInfo('start');
         var statearm = state.arm;
-        planner.getResult().forEach((instr) => {
-            plan.push("Fetching "+instr.args[0]);
+        var res : Interpreter.Literal[] = planner.getResult();
+        if(((res.length == 1) && (res[0].rel == 'nop')) || (res.length == 0))
+            plan.push("Already solved");
+        else res.forEach((instr) => {
             var pickstack = +instr.args[1];
-            if (pickstack < statearm) {
-                for (var i = statearm; i > pickstack; i--) {
-                    plan.push("l");
-                }
-            } else if (pickstack > statearm) {
-                for (var i = statearm; i < pickstack; i++) {
-                    plan.push("r");
-                }
-            }
             var obj = instr.args[0];
+            statearm = armMove(plan,pickstack,statearm);
             plan.push("Picking up the " + state.objects[obj].form,
                       "p");
-            statearm = pickstack;
             pickstack = +instr.args[2];
-            if (pickstack < statearm) {
-                for (var i = statearm; i > pickstack; i--) {
-                    plan.push("l");
-                }
-            } else if (pickstack > statearm) {
-                for (var i = statearm; i < pickstack; i++) {
-                    plan.push("r");
-                }
-            }
+            statearm = armMove(plan,pickstack,statearm);
             plan.push("Dropping the " + state.objects[obj].form,
                       "d");
             planner.printDebugInfo(Interpreter.literalToString(instr));
         });
         planner.printDebugInfo('end');
         return plan;
+    }
+    function armMove(plan : string[],pickstack : number, statearm : number) : number {
+        if (pickstack < statearm) {
+            for (var i = statearm; i > pickstack; i--)
+                plan.push("l");
+        } else if (pickstack > statearm) {
+            for (var i = statearm; i < pickstack; i++)
+                plan.push("r");
+        }
+        return pickstack;
     }
 
     interface mneumonicMeaning {plan:Interpreter.Literal[];
@@ -158,9 +151,9 @@ module Planner {
                     ++col;
                 } while((col < stacks.length) && (symbols.size() > 0));
                 cost = Math.min(cost, goalCost);
-                this.printDebugInfo(' cost '+cost.toString() + ' syms ' + symbols.size().toString());
+//                this.printDebugInfo(' cost '+cost.toString() + ' syms ' + symbols.size().toString());
             });
-            this.printDebugInfo(' cost '+cost.toString());
+//            this.printDebugInfo(' cost '+cost.toString());
             return cost;
         }
 
@@ -189,35 +182,27 @@ module Planner {
                             ret = false;
                             break;
                         }
-                    if(ret) {
-                        this.printDebugInfo('true');
+                    if(ret)
                         return true;
-                    }
                 }
-            this.printDebugInfo('false');
             return false;
         }
 
         nextChildAndMakeCurrent(): Boolean {
-            this.columnTo = -1;
             ++this.columnFrom;
-            do {
-                var i : number = this.findVerb('clear',this.columnFrom);
-                this.printDebugInfo(' i '+i+' columnfrom '+this.columnFrom);
-                if(i==-1) {
-                    return false;
-                    this.columnFrom = 0;
-                    this.nextSiblingAndMakeCurrent();
-                    this.printDebugInfo('pushing plan');
-                    this.currentPlan.push(this.tentativePlan);
-                    this.tentativePlan = {pol: true, rel: 'nop', args: []};
-                    i = this.findVerb('clear',this.columnFrom);
-                }
-                if(this.currentState[i].args[0] == 'floor') {
-                    ++this.columnFrom;
-                    this.printDebugInfo('this was a floor');
-                }
-            } while (this.currentState[i].args[0] == 'floor');
+            this.columnFrom = this.findNextObject(this.columnFrom);
+            this.printDebugInfo(' columnfrom '+this.columnFrom);
+            if(this.columnFrom == -1) {
+                this.undoTentativePlan();
+                this.columnFrom = this.findNextObject(0);
+                this.printDebugInfo('NEXT LAYER '+this.columnFrom);
+                this.columnTo = -1;
+                this.nextSiblingAndMakeCurrent();
+                this.printDebugInfo('pushing plan');
+                this.currentPlan.push(this.tentativePlan);
+                this.tentativePlan = {pol: true, rel: 'nop', args: []};
+                this.columnFrom = this.findNextObject(this.columnFrom);
+            }
             this.columnTo = -1;
             this.printDebugInfo(' from,to '+this.columnFrom+' , '+this.columnTo);
             return this.nextSiblingAndMakeCurrent();
@@ -225,14 +210,7 @@ module Planner {
         nextSiblingAndMakeCurrent(): Boolean {
             var obj : string;
             var stacks : string[][];
-            if(this.tentativePlan.rel == 'move') {
-                stacks = unFlatten(this.currentState);
-                obj = stacks[+this.tentativePlan.args[2]].pop(); //to
-                stacks[+this.tentativePlan.args[1]].push(obj); //from
-                this.currentState = flatten(stacks);
-                this.printDebugInfo(' restoring '+obj+' bck from '+this.tentativePlan.args[2]+' to '+this.tentativePlan.args[1]);
-                this.tentativePlan = {pol: true, rel: 'nop', args: []};
-            }
+            this.undoTentativePlan();
             var i : number = this.findVerb('clear', this.columnFrom);
             obj = this.currentState[i].args[0];
             if(obj == 'floor') {
@@ -254,10 +232,23 @@ module Planner {
             this.currentState = flatten(stacks);
             return true;
         }
+        undoTentativePlan() {
+            var obj : string;
+            var stacks : string[][];
+            if(this.tentativePlan.rel == 'move') {
+                stacks = unFlatten(this.currentState);
+                obj = stacks[+this.tentativePlan.args[2]].pop(); //to
+                stacks[+this.tentativePlan.args[1]].push(obj); //from
+                this.currentState = flatten(stacks);
+                this.printDebugInfo(' restoring '+obj+' bck from '+this.tentativePlan.args[2]+' to '+this.tentativePlan.args[1]);
+                this.tentativePlan = {pol: true, rel: 'nop', args: []};
+            }
+        }
 
         getResult() : Interpreter.Literal[] {
             this.printDebugInfo(' getResult '+this.currentPlan.length+ ' plans and tentative '+Interpreter.literalToString(this.tentativePlan));
-            this.currentPlan.push(this.tentativePlan);
+            if(this.tentativePlan.rel != 'nop')
+                this.currentPlan.push(this.tentativePlan);
             return this.currentPlan;
         }
 
@@ -269,6 +260,16 @@ module Planner {
                     --n
                 }
             return -1;
+        }
+        findNextObject(n:number) :number {
+            do {
+                var i : number = this.findVerb('clear', n);
+                if(i == -1)
+                    return -1;
+                if(this.currentState[i].args[0] != 'floor')
+                    return n;
+                ++n;
+            } while(true);
         }
 
         printDebugInfo(info : string) : void {console.log(info);}

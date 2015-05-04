@@ -29,9 +29,11 @@ module Searcher {
 
     export function search(space : searchInterface) : Boolean {
         var frontier : frontierInterface = new frontierQueue();
+        var lastMne : number = -1;
+        var currentMne : number = -1;
         frontier.pushFrontierElement(1,
                                      space.getCostOfCurrentState(),
-                                     space.getMneumonicFromCurrentState());
+                                     lastMne = space.getMneumonicFromCurrentState());
         do {
             var mi = frontier.getSmallestCost();
             space.setCurrentStateFromMneumonic(mi.mneumonic);
@@ -40,13 +42,22 @@ module Searcher {
             var currentCost = mi.initialCost;
             if(space.nextChildAndMakeCurrent()) {
                 ++currentCost;
-                frontier.pushFrontierElement(currentCost,
-                                             space.getCostOfCurrentState(),
-                                             space.getMneumonicFromCurrentState());
-                while(space.nextSiblingAndMakeCurrent())
+                currentMne = space.getMneumonicFromCurrentState();
+                if(currentMne > lastMne) {
                     frontier.pushFrontierElement(currentCost,
                                                  space.getCostOfCurrentState(),
-                                                 space.getMneumonicFromCurrentState());
+                                                 currentMne);
+                    lastMne = currentMne;
+                }
+                while(space.nextSiblingAndMakeCurrent()) {
+                    currentMne = space.getMneumonicFromCurrentState();
+                    if(currentMne > lastMne) {
+                        frontier.pushFrontierElement(currentCost,
+                                                     space.getCostOfCurrentState(),
+                                                     currentMne);
+                        lastMne = currentMne;
+                    }
+                }
             } else
                 space.printDebugInfo('no children');
         } while(frontier.frontierSize() > 0);
