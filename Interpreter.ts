@@ -63,13 +63,16 @@ module Interpreter {
         //cmd.ent.quant
         //cmd.loc.ent.quant
 
-        var intprt : Literal[][] = [[]];
+        var intprt : Literal[][] = [];
+        var typ : string = cmd.loc.rel;
+        if(typ == 'inside')
+            typ = 'ontop';
         constrained.what.forEach((ele) => {
             constrained.whereTo.domain.forEach((obj) => {
                 otherConditions(obj,
                                 intprt,
                                 constrained.whereTo.constrains,
-                                [{pol: true, rel: cmd.loc.rel, args: [ele, obj]}]);
+                                [{pol: true, rel: typ, args: [ele, obj]}]);
                 return true;
             });
             return true;
@@ -83,12 +86,16 @@ module Interpreter {
                              finalGoal : Literal[]) {
         var n : number = 0;
         constrains.forEach((constrain) => {
+            var typ : string = constrain.type;
+            if(typ == 'inside')
+                typ = 'ontop';
             if(constrain.variables.size() > 0) {
                 n++;
                 constrain.variables.forEach((variable) => {
                     variable.domain.forEach((obj) => {
-                        var oneIntprt : Literal[] = Array.prototype.concat.apply([], finalGoal);
-                        oneIntprt.push({pol: true, rel: constrain.type, args: [ele, obj]});
+                        var oneIntprt : Literal[] = Array.prototype.concat.apply(
+                                                        [{pol: true, rel: typ, args: [ele, obj]}],
+                                                        finalGoal);
                         otherConditions(obj,
                                  intprt,
                                  variable.constrains,
