@@ -87,6 +87,11 @@ module graphmodule {
     export interface HeuristicFunction<T>{
         (startNode: T, goalNode: T): number;
     }
+    
+    /** Function which can generate nodes given a node */
+    export interface GenerateNodes<T>{
+        (basedOn: GraphNode<T>): GraphNode<T>[];
+    }
 
     /** Graph holding nodes and edges */
     export class Graph<T> {

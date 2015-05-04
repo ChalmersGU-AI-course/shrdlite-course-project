@@ -33,11 +33,10 @@ function permutate(initWorld: WorldState):graphmodule.Graph<string[][]>{
                             //Add the new state
                             var id = newState2.toString();
                             if(graph.addNode(new graphmodule.GraphNode(id, newState2)){
-                                //Add an edge between the initState and the newState2
-                                graph.addEdge(initStateID, id, 1, true);
-                                
                                 stack.push(newState2);
                             }
+                            //Add an edge between the initState and the newState2
+                            graph.addEdge(initStateID, id, 1, true);
                                 
                         }
                         
@@ -51,6 +50,44 @@ function permutate(initWorld: WorldState):graphmodule.Graph<string[][]>{
     }
 
 }
+
+function permutateBasedOn(baseOn: graphmodule.GraphNode<WorldState):graphmodule.GraphNode<WorldState>[]{
+    var baseOnState = baseOn.data;
+    
+    var columns = baseOn.stacks.length;
+    
+    var returnList: graphmodule.GraphNode<WorldState>[] = [];
+    
+    for(int i = 0; i < columns; i++){
+        
+        var newState = copyStack(baseOnState);
+        
+        if(newState[i].length > 0){
+            var topObject = newState[i].pop();
+        
+            for(int j = 0; j < columns; j++){
+                if(j != i){
+                    var newState2 = copyStack(newState);
+                    
+                    var lastElementInStack = newState2[i][newState[i].length-1];
+                    
+                    if(newState2[j].length == 0 || objectAllowedOnTop(topObject, lastElementInStack, newState2[j]){
+                        newState2[j].push(topObject);
+                    
+                        //Add the state to the return list
+                        var id = newState2.toString();
+                        returnList.push(new graphmodule.GraphNode(id, newState2));
+                    }
+                    
+                }
+            }
+        }
+        
+    }
+    
+    return returnList;
+}
+
 
 function alreadyInGraph(graph: graphmodule.Graph<string[][]>, state: string[][]){
     var returnValue = false;

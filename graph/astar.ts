@@ -4,7 +4,7 @@
 module astar {
 
     /** Compute the a path from the given start node to the given end node and the given graph */
-    export function compute<T>(graph: graphmodule.Graph<T>, startID: string, endID: string, hFun: graphmodule.HeuristicFunction<T>) {
+    export function compute<T>(graph: graphmodule.Graph<T>, startID: string, endID: string, hFun: graphmodule.HeuristicFunction<T>, generateNeighbours: graphmodule.GenerateNodes<T>) {
 
         var goalNodeAd = graph.adjacencyMap.getValue(endID);
         var currentAd = graph.adjacencyMap.getValue(startID);
@@ -23,7 +23,7 @@ module astar {
                 //hFun: The heuristic function that should be used
                 return graphmodule.comparePath(first, second, goalNode, hFun);
             }
-            );
+        );
 
         var visited = new collections.Set<graphmodule.GraphNode<T>>();
 
@@ -36,18 +36,39 @@ module astar {
         visited.add(currentNode);
 
         while (currentNode != goalNode) {
+        
+            //Create next states
+            var neighbours = generateNeighbours(currentNode);
+            
+            //Add next states to the graph
+            neighbours.forEach(
+                function addNode(neighbour: graphmodule.GraphNode<T>){
+                    
+                    //Add the neighbour to the graph
+                    graph.addNode(neighbour);
+                    
+                    //Add edge between current node and neighbour
+                    graph.addEdge(currentNode.id, neighbour.id, 1, true);
+                    
+                    return true;
+                }
+            );
 
             currentAd.neighbours.forEach(
                 function addEdge(edge: graphmodule.Edge<T>) {
+                    var neighbour = edge.to;
 
-                    if (!visited.contains(edge.to)) {
+                    if (!visited.contains(neighbour)) {
+                        
                         var newPath = new graphmodule.Path<T>(edge, currentPath);
-
+                        
+                        
+                        
                         pq.enqueue(newPath);
                     }
                     return true;
                 }
-                );
+            );
 
             currentPath = pq.dequeue();
 

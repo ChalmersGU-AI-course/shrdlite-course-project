@@ -77,7 +77,11 @@ class GridGraph{
     }
 
     computePath(startPos: string, endPos: string, hFun: graphmodule.HeuristicFunction<Tuple>) {
-        return astar.compute(this.graph, startPos, endPos, hFun);
+        return astar.compute(this.graph, startPos, endPos, hFun, 
+            function generateNodes(basedOn: GraphNode<T>): GraphNode<T>[]{
+                return [];
+            }
+        );
     }
 
     euclidianDistance(startNode: Tuple, goalNode: Tuple){
