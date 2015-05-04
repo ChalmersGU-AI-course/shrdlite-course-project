@@ -30,3 +30,9 @@
 
 we believe that it is a good thing to use machines to make decisions,
 machines can be more partial and better at judging the situation.
+
+* articles
+
+- Bostrom 2011/2013
+  http://www.nickbostrom.com/ethics/artificial-intelligence.pdf
+-
