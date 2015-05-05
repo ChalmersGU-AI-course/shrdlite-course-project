@@ -1,16 +1,41 @@
 def interpret(stacks, holding, arm, objects, utterance, parses):
-    """
-    This function returns a dummy interpretation involving two random objects
-    """
-    import random
-    objs = [o for stk in stacks for o in stk]
-    a = random.choice(objs)
-    b = random.choice(objs)
-    interpretation = [[
-        {'pol': True, 'rel': "ontop", 'args': [a, "floor"]},
-        {'pol': True, 'rel': "holding", 'args': [b]},
-    ]]
-    return interpretation
+    goals = []
+    for parse in parses:
+        goals.append(interp_cmd(parse["prs"], objects, stacks, holding))
+
+    return goals
+
+def interp_cmd(cmd, objects, stacks, holding):
+    """from command to disjunctive PDDL goal, list of pddl goals"""
+    interp = {"take": interp_cmd_take,
+              "put":  interp_cmd_put,
+              "move": interp_cmd_move}.get(cmd["cmd"])
+    return interp(cmd["ent"], cmd["loc"], objects, stacks, holding)
+
+
+def interp_cmd_take(ent, _, objects, stacks, holding):
+    ents = find_ent(ent, objects, stacks, holding)
+    return [("hold", x) for x in ents]
+
+def interp_cmd_put(_, loc, objects, stacks, holding):
+    rel = loc["rel"]
+    ent = loc["ent"]
+    ents = find_ent(ent, objects, stacks, holding)
+    return [(rel, holding, x) for x in ents]
+
+def interp_cmd_move(ent, loc, objects, stacks, holding):
+    rel = loc["rel"]
+    goals = []
+    for a in find_ent(ent, objects, stacks, holding):
+        for b in find_ent(loc["ent"], objects, stacks, holding):
+            goals.append((rel, a, b))
+    return goals
+
+# PDDL goals
+# ("relation", x, y)
+# relation = inside, under, ...
+# ("hold", x)
+
 
 def find_ent(ent, objects, stacks, holding):
     """ent:
@@ -28,7 +53,7 @@ def find_ent(ent, objects, stacks, holding):
     returns: a list of names of possible objects
     """
 
-    if not ent["obj"]["obj"]: # yes, this does work, the typescript looks the same
+    if not "obj" in ent["obj"]:
         # is a simple entity description
         # return all matching objects
         return find_objs(ent["obj"], objects, stacks)
@@ -55,15 +80,15 @@ def find_ent(ent, objects, stacks, holding):
 def find_objs(obj, objects, stacks):
     """Find all possible objects fitting properties obj"""
     return [name for name, props in objects.items()
-            if matches_obj(obj_obj, props)]
+            if matches_obj(obj, props)]
 
 def matches_obj(a, b):
     """Does object a match object b, where b is a "complete" object
     description
     """
     return (not a["color"] or a["color"] == b["color"]) \
-        and (not a["form"] or a["form"] == b["form"]) \
-        and (not a["size"] or a["size"] == b["size"])
+            and (not a["form"] or a["form"] == b["form"]) \
+            and (not a["size"] or a["size"] == b["size"])
 
 def satisfy_rel(rel, a, b, stacks):
     return {"ontop":   satisfy_ontop,

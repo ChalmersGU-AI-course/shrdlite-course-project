@@ -9,6 +9,8 @@ def main(state):
     pretty_state = json.dumps(state, sort_keys=True, indent=2, separators=(',', ': '))
     writeToLog(pretty_state)
 
+    # TODO: put floors in the bottom of the stacks :)
+
     intprt = interpret(**state)
     plan = planner(intprt, **state)
     return {'int': intprt,
