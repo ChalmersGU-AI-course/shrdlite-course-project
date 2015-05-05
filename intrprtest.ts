@@ -1,6 +1,11 @@
 ///<reference path="TextWorld.ts"/>
 ///<reference path="ExampleWorlds.ts"/>
+///<reference path="Parser.ts"/>
 ///<reference path="Interpreter.ts"/>
+
+/*
+ * All tests assumes the small world
+ */
 
 // Extract command line arguments:
 var nodename = process.argv[0];
@@ -48,18 +53,47 @@ parses.forEach((res, n) => {
 
 
 // INTERPRETING
-world.printDebugInfo('\n\nInterpreting utterance: "' + utterance + '"');
-try {
-  var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
-} catch(err) {
-  if (err instanceof Interpreter.Error) {
-    world.printError("Interpretation error", err.message);
-    process.exit(1);
-  } else {
-    throw err;
-  }
-}
-world.printDebugInfo("Found " + interpretations.length + " interpretations");
-interpretations.forEach((res, n) => {
-    world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
+// world.printDebugInfo('\n\nInterpreting utterance: "' + utterance + '"');
+// try {
+//   var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
+// } catch(err) {
+//   if (err instanceof Interpreter.Error) {
+//     world.printError("Interpretation error", err.message);
+//     process.exit(1);
+//   } else {
+//     throw err;
+//   }
+// }
+// world.printDebugInfo("Found " + interpretations.length + " interpretations");
+// interpretations.forEach((res, n) => {
+//     world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
+// });
+
+
+// Small world used in these tests!!!
+
+// world.printDebugInfo('\n\nTesting findTarget: ');
+// var i = new Interpreter.Interpret(world.currentState);
+// var target = i.findTarget("leftof", "g");
+// console.log("left of g: " + target + ", expecting e"); // should be e
+// var target = i.findTarget("ontop", "k");
+// console.log("ontop of k: " + target + ", expecting m"); // should be m
+
+world.printDebugInfo('\n\nTesting references: ');
+var i = new Interpreter.Interpret(world.currentState);
+parses.forEach((parseresult) => {
+    var intprt : Interpreter.Result = <Interpreter.Result>parseresult;
+    var cmd = intprt.prs;
+    var refs = i.references(cmd.ent.obj);
+    if(refs && refs.length > 0) {
+      refs.forEach((ref) => {
+        console.log(ref + "  ");
+      });
+    }
 });
+
+
+
+
+
+

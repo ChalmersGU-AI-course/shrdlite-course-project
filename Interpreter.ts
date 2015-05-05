@@ -48,19 +48,19 @@ module Interpreter {
     // TODO: delete this function
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
-        // var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        // var a = objs[getRandomInt(objs.length)];
-        // var b = objs[getRandomInt(objs.length)];
-        // var intprt : Literal[][] = [[
-        //     {pol: true, rel: "ontop", args: [a, "floor"]},
-        //     {pol: true, rel: "holding", args: [b]}
-        // ]];
-        // return intprt;
-        var i = new Interpret(state);
-        return i.derive(cmd);
+        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        var a = objs[getRandomInt(objs.length)];
+        var b = objs[getRandomInt(objs.length)];
+        var intprt : Literal[][] = [[
+            {pol: true, rel: "ontop", args: [a, "floor"]},
+            {pol: true, rel: "holding", args: [b]}
+        ]];
+        return intprt;
+        // var i = new Interpret(state);
+        // return i.derive(cmd);
     }
 
-    class Interpret {
+    export class Interpret {
       state: WorldState;
       constructor(state: WorldState) {
         this.state = state;
@@ -122,7 +122,7 @@ module Interpreter {
         // 2. Check precondition (2)
         // 3. Make Literal
         var literalfunc = this.moveFunc(loc);
-        literalfunc(true, [this.state.holding]);
+        literalfunc(true, [this.state["holding"]]);
 
         var lit: Literal[][];
         return lit;
@@ -179,7 +179,7 @@ module Interpreter {
         switch(ent.quant) {
           case "all":
             // find all object ids matching description
-            var secondaryIds = this.findObjects(ent.obj, null);
+            var secondaryIds = this.references(ent.obj);
             // return function to caller who specifies pol, rel, and object
             return function(pol: boolean, rel: string, primaryIds: string[]): Literal[][] {
               function toLiteral(id: string) {
@@ -214,46 +214,95 @@ module Interpreter {
       /*
        * Searches world state to find matching object and return all their ids
        */
-      findObjects(obj: Parser.Object, oldMatches: string[]): string[] {
-        var newMatches: string[];
-        if(!oldMatches) {                         // first time called: filter out matches
-          for(var id in this.state.objects) {
-            if(match(obj, this.state.objects[id]))
-              newMatches.push(id);
+      references(obj: Parser.Object): string[] {
+        var matches: string[] = [];
+        if(!obj.loc) {                       // base case: find all objects in spec
+          for(var id in this.state["objects"]) {
+            if(match(obj, this.state["objects"][id])) {
+              matches.push(id);
+            }
+          }
+        } else {                             // recursive case: filter out by location as well
+          var loc = obj.loc;
+          var refs: string[];
+          if(loc.ent.obj)
+            refs = this.references(loc.ent.obj);
+          else
+            console.log("\n entity object error");
+          var target: string;
+          if(refs && refs.length > 0) {
+            refs.forEach((ref: string) => {
+              target = this.findTarget(loc.rel, ref); // findTarget("leftof", "a")
+              if(target) // found target TODO: throw error if no target is found
+                matches.push(target);
+            });
+          } else {
+            console.log("\n refs error");
           }
         }
-        if(obj.loc) {                             // filter out by location aswell
-          // recursively pass newmatches...
-          var references: string[] = [];
-          switch(obj.loc.rel) {
-            case "leftof":
-              // look in stacks of state
-              references = this.findObjects(obj.loc.ent.obj, null);
-              // filter newMatches to only objects to the left of references
-              break;
-            case "rightof":
-              break;
-            case "inside":
-              break;
-            case "ontop":
-              break;
-            case "under":
-              break;
-            case "beside":
-              break;
-            default:
-              throw new Interpreter.Error("locations: unrecognized relation");
+        return matches;
+      }
+
+      /*
+       * Finds target object in relation (leftof, rightof, under, ontop) to
+       * another object.
+       * Logic error if index out of bounds or if no object exist in that place.
+       */
+      findTarget(rel: string, ref: string): string {
+        var stacks = this.state["stacks"];
+        var target: string;
+        var found = false;
+        for(var col=0; col<stacks.length && !found; col++) {
+          for(var row=0; row<stacks[col].length && !found; row++) {
+            if(ref === stacks[col][row]) {
+              found = true;                       // found: stop searching...
+              switch(rel) {
+                case "leftof":
+                  target = stacks[col-1][row];
+                  break;
+                case "rightof":
+                  target = stacks[col+1][row];
+                  break;
+                case "beside":                    // check if only one case is possible
+                  var left = stacks[col-1][row];
+                  var right = stacks[col+1][row];
+                  if(left && right)
+                    throw new Interpreter.Error("findTarget: semantic error (There are many targets)");
+                  if(left)
+                    target = left;
+                  if(right)
+                    target = right;
+                  break;
+                case "ontop":
+                  target = stacks[col][row+1];
+                  break;
+                case "inside":
+                  target = stacks[col][row+1];
+                  break;
+                case "under":
+                  target = stacks[col][row-1];
+                  break;
+              }
+            }
           }
         }
-        return newMatches;
+        return target;
       }
 
     }
 
     // Helper functions
-    function match(obj: Parser.Object, def: ObjectDefinition) {
-
-
+    function match(obj: Parser.Object, def: ObjectDefinition): boolean {
+      if(obj.size && obj.size !== def.size)
+        return false;
+      if(obj.color && obj.color !== def.color)
+        return false;
+      if(obj.form && obj.form !== def.form)
+        return false;
+      // console.log("\nmatch obj: {" + obj.form + ", " + obj.size + ", " + obj.color + "}");
+      // console.log("\nmatch def: {" + def.form + ", " + def.size + ", " + def.color + "}");
+      // console.log("\nmatching: " + matching);
+      return true;
     }
 
     function getRandomInt(max) {
