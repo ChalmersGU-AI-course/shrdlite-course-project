@@ -21,7 +21,7 @@
 
 ## Bowald
 
-- [The Nature, Importance, and Difficulty of Machine Ethics](http://www.computer.org/csdl/mags/ex/2006/04/x4018-abs.html)
+- [The Nature, Importance, and Difficulty of Machine Ethics](http://www.computer.org/csdl/mags/ex/2006/04/x4018-abs.html) 
   - Argues that as we expand computers decision making roles in practical matters, such as computer driving cars, ethical considerations are inevitable
   - Humans can not in retreat to a world of pure facts, or lace subjective normative assessment. Computers can!
   - four types of ethics
