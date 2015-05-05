@@ -2,7 +2,9 @@
 ///<reference path="TextWorld.ts"/>
 ///<reference path="ExampleWorlds.ts"/>
 ///<reference path="deepCopy.ts"/>
-///<reference path="planner_astar.ts"/>
+///<reference path="Planner.ts"/>
+
+///<reference path="Interpreter.ts"/>
 
 
 // start with
@@ -22,7 +24,6 @@ if (process.argv.length != 3 || !ExampleWorlds[worldname]) {
 }
 
 var origState = ExampleWorlds[worldname];
-console.log(origState.holding);
 var world = new TextWorld(origState);
 
 // origState.arm = 2;
@@ -35,10 +36,11 @@ world.printWorld();
 // for (var i = states.length - 1; i >= 0; i--) {
 //     new TextWorld(states[i]).printWorld();
 // }
-
-var graphGoal = new planner_astar.MultipleGoals();
-var graph = new astar.Graph(new planner_astar.DijkstraHeuristic(), graphGoal);
-var graphStart = new planner_astar.PlannerNode(origState, null, null);
+var tar: Interpreter.Literal[][] = [[
+    { pol: true, rel: "ontop", args: ["l", "floor"] },
+    { pol: true, rel: "holding", args: ["b"] }
+]];
+var graphGoal = new Planner.MultipleGoals(tar);
+var graph = new astar.Graph(new Planner.DijkstraHeuristic(), graphGoal);
+var graphStart = new Planner.PlannerNode(origState, null, null);
 var result = graph.searchPath(graphStart);
-
-console.log(result);

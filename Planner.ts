@@ -92,7 +92,7 @@ module Planner {
 
         var plan: string[] = [];
 
-        var graphGoal = new MultipleGoals();
+        var graphGoal = new MultipleGoals(intprt);
         var graph = new astar.Graph(new DijkstraHeuristic(), graphGoal);
         var graphStart = new PlannerNode(state, null, null);
         var result = graph.searchPath(graphStart);
@@ -182,20 +182,38 @@ module Planner {
     }
 
     export class MultipleGoals implements astar.IGoal {
+        targets: Interpreter.Literal[] = null;
 
-        constructor() {
+        constructor(targetLiterals: Interpreter.Literal[][]) {
+            this.targets = targetLiterals[0];
         }
 
         isReached(node: astar.INode): boolean {
             var n = <PlannerNode> node;
+
+            var result: boolean = true;
+
+            console.log("Checking state");
+
+            for (var i = 0; i < this.targets.length; i++) {
+                var currentLiteral = this.targets[i];
+
+                result = result && this.isLiteralFullfilled(currentLiteral, n.state);
+            }
 
             //return n.state.arm === 2;
             return n.state.stacks[1].length === 0;
         }
 
         isLiteralFullfilled(lit: Interpreter.Literal, state: WorldState): boolean {
+            console.log("checking lit:" + Interpreter.literalToString(lit));
             if (lit.rel == "ontop") {
-                return checkOntopLiteral(lit, state);
+                console.log(this.checkOntopLiteral(lit, state));
+                return this.checkOntopLiteral(lit, state);
+            }
+            if (lit.rel == "holding") {
+                console.log(this.checkHoldingLiteral(lit, state));
+                return this.checkHoldingLiteral(lit, state);
             }
             return true;
         }
@@ -204,14 +222,32 @@ module Planner {
             var on = lit.args[0];
             var under = lit.args[1];
 
-            for (var i = 0; i < length; ++i) {
+            // check all stacks
+            for (var i = 0; i < state.stacks.length; ++i) {
                 var stack = state.stacks[i];
-                if (stack) {
 
+                // if stack contains items
+                if (stack) {
+                    var position = stack.indexOf(on);
+                    // item on floor
+                    if (position == 0 && under == "floor") {
+                        return true;
+                    }
+                    // item on top of other item
+                    if (position > 0) {
+                        var positionUnder = stack.indexOf(under);
+                        if (positionUnder == position - 1) {
+                            return true;
+                        }
+                    }
                 }
             }
 
             return false;
+        }
+
+        checkHoldingLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
+            return state.holding == lit.args[0];
         }
     }
 
