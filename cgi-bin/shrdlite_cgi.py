@@ -13,7 +13,7 @@ def main(state):
     plan = planner(intprt, **state)
     return {'int': intprt,
             'plan': plan,
-            }
+    }
 
 
 def writeToLog(string):
@@ -22,23 +22,6 @@ def writeToLog(string):
     """
     with open('log', 'a') as f:
         f.write("\n----\n" + string)
-
-def interpret(stacks, holding, arm, objects, utterance, parses):
-    """
-    This function returns a dummy interpretation involving two random objects
-    """
-    import interpreter
-    interpreter.interpret(objects)
-
-    import random
-    objs = [o for stk in stacks for o in stk]
-    a = random.choice(objs)
-    b = random.choice(objs)
-    interpretation = [[
-        {'pol': True, 'rel': "ontop", 'args': [a, "floor"]},
-        {'pol': True, 'rel': "holding", 'args': [b]},
-    ]]
-    return interpretation
 
 
 def planner(intprt, stacks, holding, arm, objects, utterance, parses):
@@ -50,7 +33,7 @@ def planner(intprt, stacks, holding, arm, objects, utterance, parses):
         pickstack = random.randrange(len(stacks))
         if stacks[pickstack]:
             break
-    plan = []
+            plan = []
 
     # First move the arm to the selected stack
     if pickstack < arm:
