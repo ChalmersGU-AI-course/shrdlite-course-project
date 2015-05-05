@@ -25,6 +25,7 @@ module Interpreter {
     export interface Result extends Parser.Result {intp:Literal[][];}
     export interface Literal {pol:boolean; rel:string; args:string[];}
 	export interface Position {x:number; y:number;}
+	export interface PosNode {pos:Position[]; rel:string;}
 
 
     export function interpretationToString(res : Result) : string {
@@ -44,21 +45,45 @@ module Interpreter {
         public toString() {return this.name + ": " + this.message}
     }
 
-	class ShrdliteSpatialCheck {
-		constructor(private stacks : string[][], private parentPos : Position[], private childPos : Position[], private rel : string) {
+	class ShrdliteWorldChecker {
+		private nodeL : PosNode[];
+		constructor(private stacks : string[][]) {
+			this.nodeL = [];
 		}
 
-		//returns an array of all childPos that have an existing spatial relation to their parentPos
-		public check() : Position[] {
-			var tempPos : Position[] = [];
-			for (var i = 0; i < this.parentPos.length; i++) {
-				for (var j = 0; j < this.childPos.length; j++) {
-					if (this.isReachable(this.parentPos[i], this.childPos[j], this.rel)) {
-						tempPos.push(this.childPos[j]);
+		public addNode(pos : Position[], rel : string) : void {
+			var node : PosNode = {pos:pos, rel:rel};
+			this.nodeL.push(node);
+		}	
+		
+		public getHead() : PosNode {
+			if (this.nodeL[0].pos.length) {
+				return this.nodeL[0];
+			}
+			return null;
+		}
+
+		//prunes the possible positions by checking if the spatial relations work out
+		public prune() : boolean {
+			for (var n = 0; n < (this.nodeL.length - 1); n++) {
+				var parentPos : Position [] = this.nodeL[n].pos;
+				var childPos : Position [] = this.nodeL[n+1].pos;
+				var rel : string = this.nodeL[n].rel;
+				var workDone : boolean = false;
+
+				for (var i = 0; i < parentPos.length; i++) {
+					for (var j = 0; j < childPos.length; j++) {
+						if (!this.isReachable(parentPos[i], childPos[j], rel)) {
+							parentPos.splice(i, 1);
+							childPos.splice(j, 1);
+							workDone = true;
+						}
 					}
 				}
+				this.nodeL[n].pos = parentPos;
+				this.nodeL[n+1].pos = childPos;
 			}
-			return tempPos;
+			return workDone;
 		}
 
 		//relations: inside,ontop,under,beside,above,leftof,rightof
@@ -111,10 +136,10 @@ module Interpreter {
 		constructor(private state : WorldState, private cmd : Parser.Command) {}
 
 		//checks for every object pattern in the parse if the object exists in the current world state
+		//return: array of possible object positions
 		//todo: include proper typing for the function arguments
-		//todo: return should be a list of positions of origins that have been found out to work in the current world
-		//or sth like several lists of the possible paths
-		private checkExistence(ent) : boolean {
+		private checkExistence(ent) : Position[] {
+			var checker : ShrdliteWorldChecker = new ShrdliteWorldChecker(this.state.stacks);
 			var parentPos : Position[] = [];
 			var parentRel : string = "";
 
@@ -122,12 +147,12 @@ module Interpreter {
 			while (true) {
 				//checking the next object pattern
 				var o = ent.obj;
-				var loc = null;
+				var rel : string = "";
 				if (typeof o.size === "undefined") {
-					loc = o.loc;
+					rel = o.loc.rel;
 					o = o.obj;
 				}
-					
+
 				//get all possible positions for the current object pattern
 				var pos : Position[] = this.getPositions(o);
 
@@ -138,29 +163,31 @@ module Interpreter {
 						+ ((o.color != null) ? o.color+" " : "") 
 						+ ((o.form != null) ? o.form : ""));
 				}
-
-				//check if the spatial relations to the parent work out
-				if (parentPos.length) {
-					var spatChecker : ShrdliteSpatialCheck = new ShrdliteSpatialCheck(this.state.stacks, parentPos, pos, parentRel);
-					pos = spatChecker.check();
-					//when there are no spatial relations from objects in the world matching the current pattern 
-					//to objects in the world matching the pattern one node before
-					if (!pos.length) {
-						console.log("spatial relation error");
-						return false;
-					} 
-				}
+					
+				//add to the checker
+				checker.addNode(pos, rel);
 
 				//when there are no new objects left in the tree
 				if (typeof ent.obj.loc === "undefined") {
-					return true;
+					break;
 				}
 
 				//advancing to the next object pattern
 				ent = ent.obj.loc.ent;
-				parentPos = pos;
-				parentRel = loc.rel;
 			}
+
+			//removing the spatial relations that don't work in the current world state
+			while(checker.prune()) {
+				continue;
+			}
+
+			var head : PosNode = checker.getHead();
+
+			if (head != null) {
+				return head.pos;
+			}
+
+			return null;
 		}	 
 
 		//return the positions of all objects that match the pattern in the world state
@@ -186,10 +213,13 @@ module Interpreter {
 		//return the interpretation for the parse that was handed over on creation
 		//todo: actually interpret something, right now the return is just a dummy
 		public getInterpretation() : Literal[][] {
+			var origs : Position[] = null;
+			var dests : Position[] = null;
 			//check origin
 			if (typeof this.cmd.ent !== "undefined") {
 				var ent = this.cmd.ent;
-				if (!this.checkExistence(ent)) {
+				origs = this.checkExistence(ent);
+				if (origs == null) {
 					return null;
 				}
 			}
@@ -197,7 +227,8 @@ module Interpreter {
 			//check destination
 			if (typeof this.cmd.loc !== "undefined") {
 				var ent = this.cmd.loc.ent;
-				if (!this.checkExistence(ent))
+				dests = this.checkExistence(ent);
+				if (dests == null)
 					return null;
 			}
 
