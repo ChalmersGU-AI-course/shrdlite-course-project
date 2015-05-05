@@ -44,10 +44,9 @@ module Planner {
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         var plan : string[] = [];
         var planner : plannerViaSearch =
-                        new plannerViaSearch(intprt, flatten(state.stacks), state.stacks.length);
+                        new plannerViaSearch(intprt, flatten(state.stacks), state.stacks.length, state);
         if(!Searcher.search(planner))
             return null;
-        planner.printDebugInfo('start');
         var statearm = state.arm;
         var res : Interpreter.Literal[] = planner.getResult();
         if(((res.length == 1) && (res[0].rel == 'nop')) || (res.length == 0))
@@ -62,9 +61,7 @@ module Planner {
             statearm = armMove(plan,pickstack,statearm);
             plan.push("Dropping the " + state.objects[obj].form,
                       "d");
-            planner.printDebugInfo(Interpreter.literalToString(instr));
         });
-        planner.printDebugInfo('end');
         return plan;
     }
     function armMove(plan : string[],pickstack : number, statearm : number) : number {
@@ -87,7 +84,8 @@ module Planner {
         constructor(
             public intprt : Interpreter.Literal[][],
             public aState : Interpreter.Literal[],
-            public aMaxStacks : number
+            public aMaxStacks : number,
+	    public aWorldstate : WorldState
         ) {this.todo = intprt;
            this.currentState = aState;
            this.currentPlan  = [];
@@ -95,6 +93,7 @@ module Planner {
            this.columnTo = -1;
            this.maxStacks = aMaxStacks;
            this.tentativePlan = {pol: true, rel: 'nop', args: []};
+	   this.worldState = aWorldstate;
           }
 
         public currentPlan : Interpreter.Literal[];
@@ -103,6 +102,7 @@ module Planner {
         private columnFrom: number;
         private columnTo : number;
         private maxStacks : number;
+	private worldState : WorldState;
 
         private todo : Interpreter.Literal[][];
 
@@ -123,8 +123,9 @@ module Planner {
         }
         setCurrentStateFromMneumonic(mne:number) {
             this.currentPlan = this.mneumonicCollection[mne].plan;
-            this.tentativePlan = this.mneumonicCollection[mne].tentativePlan;
             this.currentState = this.mneumonicCollection[mne].state;
+	    this.commitTentativePlan();
+            this.tentativePlan = this.mneumonicCollection[mne].tentativePlan;
             this.columnFrom = this.mneumonicCollection[mne].columnFromWorkedOn;
             this.columnTo = this.mneumonicCollection[mne].columnToWorkedOn;
         }
@@ -151,9 +152,7 @@ module Planner {
                     ++col;
                 } while((col < stacks.length) && (symbols.size() > 0));
                 cost = Math.min(cost, goalCost);
-//                this.printDebugInfo(' cost '+cost.toString() + ' syms ' + symbols.size().toString());
             });
-//            this.printDebugInfo(' cost '+cost.toString());
             return cost;
         }
 
@@ -173,12 +172,10 @@ module Planner {
         in(literal: Interpreter.Literal, literals : Interpreter.Literal[]): boolean {
             for(var i:number = 0; i < literals.length; ++i)
                 if(literal.rel == literals[i].rel) {
-//                    this.printDebugInfo(' same rel '+literal.rel + ' lit1 ' + Interpreter.literalToString(literal)+ ' lit2 ' + Interpreter.literalToString(literals[i]));
                     var literalI : Interpreter.Literal = literals[i];
                     var ret : boolean = true;
                     for(var j:number = 0; j < literal.args.length; ++j)
                         if(literal.args[j] != literalI.args[j]) {
-//                            this.printDebugInfo(' culprit ('+j+') '+literal.args[j]+' vs '+literalI.args[j]);
                             ret = false;
                             break;
                         }
@@ -189,30 +186,42 @@ module Planner {
         }
 
         nextChildAndMakeCurrent(): Boolean {
-            ++this.columnFrom;
-            this.columnFrom = this.findNextObject(this.columnFrom);
-            this.printDebugInfo(' columnfrom '+this.columnFrom);
-            if(this.columnFrom == -1) {
-                this.undoTentativePlan();
-                this.columnFrom = this.findNextObject(0);
-                this.printDebugInfo('NEXT LAYER '+this.columnFrom);
-                this.columnTo = -1;
-                this.nextSiblingAndMakeCurrent();
-                this.printDebugInfo('pushing plan');
-                this.currentPlan.push(this.tentativePlan);
-                this.tentativePlan = {pol: true, rel: 'nop', args: []};
-                this.columnFrom = this.findNextObject(this.columnFrom);
-            }
+	    this.commitTentativePlan();
+            this.columnFrom = this.findNextObject(0);
             this.columnTo = -1;
-            this.printDebugInfo(' from,to '+this.columnFrom+' , '+this.columnTo);
             return this.nextSiblingAndMakeCurrent();
         }
         nextSiblingAndMakeCurrent(): Boolean {
             var obj : string;
             var stacks : string[][];
             this.undoTentativePlan();
+
+	    do {
+		var ret:boolean = true;
+		if(this.advanceSibling() == false)
+			return false;
+            	var i : number = this.findVerb('clear', this.columnFrom);
+            	obj = this.currentState[i].args[0];
+            	var bottomObj : string = this.currentState[this.findVerb('clear', this.columnTo)].args[0];
+		if(bottomObj != 'floor')
+			if((this.worldState.objects[obj].form == 'box') &&
+			   (this.worldState.objects[bottomObj].form == 'box') &&
+			   	( (this.worldState.objects[bottomObj].size == 'small') ||
+				  (this.worldState.objects[obj].size == 'large') )
+			   )
+				ret = false;
+	    } while(!ret);
+
+            this.tentativePlan = {pol: true, rel: 'move', args: [obj, this.columnFrom.toString() ,this.columnTo.toString()]};
+            stacks = unFlatten(this.currentState);
+            stacks[this.columnFrom].pop();
+            stacks[this.columnTo].push(obj);
+            this.currentState = flatten(stacks);
+            return true;
+        }
+	advanceSibling() : Boolean {
             var i : number = this.findVerb('clear', this.columnFrom);
-            obj = this.currentState[i].args[0];
+            var obj : string = this.currentState[i].args[0];
             if(obj == 'floor') {
                 this.printDebugInfo(' sibling floor');
                 return false;
@@ -221,17 +230,21 @@ module Planner {
             if(this.columnTo == this.columnFrom)
                 ++this.columnTo;
             if(this.columnTo >= this.maxStacks) {
-                this.printDebugInfo('columnto > max '+this.columnTo+'>'+this.maxStacks);
-                return false;
+		this.columnFrom = this.findNextObject(this.columnFrom + 1);
+		if(this.columnFrom == -1)
+	          return false;
+		this.columnTo = 0;
+		if(this.columnFrom == this.columnTo)
+		  ++this.columnTo;
             }
-            this.tentativePlan = {pol: true, rel: 'move', args: [obj, this.columnFrom.toString() ,this.columnTo.toString()]};
-            this.printDebugInfo(' sibling '+Interpreter.literalToString(this.tentativePlan));
-            stacks = unFlatten(this.currentState);
-            stacks[this.columnFrom].pop();
-            stacks[this.columnTo].push(obj);
-            this.currentState = flatten(stacks);
-            return true;
-        }
+	    return true;
+	}
+	commitTentativePlan() {
+            if(this.tentativePlan.rel == 'move') {
+                this.currentPlan.push(this.tentativePlan);
+                this.tentativePlan = {pol: true, rel: 'nop', args: []};
+	    }
+	}
         undoTentativePlan() {
             var obj : string;
             var stacks : string[][];
@@ -240,15 +253,12 @@ module Planner {
                 obj = stacks[+this.tentativePlan.args[2]].pop(); //to
                 stacks[+this.tentativePlan.args[1]].push(obj); //from
                 this.currentState = flatten(stacks);
-                this.printDebugInfo(' restoring '+obj+' bck from '+this.tentativePlan.args[2]+' to '+this.tentativePlan.args[1]);
                 this.tentativePlan = {pol: true, rel: 'nop', args: []};
             }
         }
 
         getResult() : Interpreter.Literal[] {
-            this.printDebugInfo(' getResult '+this.currentPlan.length+ ' plans and tentative '+Interpreter.literalToString(this.tentativePlan));
-            if(this.tentativePlan.rel != 'nop')
-                this.currentPlan.push(this.tentativePlan);
+	    this.commitTentativePlan();
             return this.currentPlan;
         }
 
