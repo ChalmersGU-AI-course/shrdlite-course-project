@@ -176,14 +176,14 @@ module Interpreter {
 				case "ontop":
 					if (orig.x == dest.x && orig.y == (dest.y + 1)) {
 						return true;
-					} else if (dest.x == -1 && orig.x == 0) { //the floor case
+					} else if (dest.x == -1 && orig.y == 0) { //the floor case
 						return true;
 					}
 					break;
 				case "above":
 					if (orig.x == dest.x && orig.y > dest.y) {
 						return true;
-					} else if (dest.x == -1 && orig.x >= 0) { //the floor case
+					} else if (dest.x == -1 && orig.y >= 0) { //the floor case
 						return true;
 					}
 					break;
