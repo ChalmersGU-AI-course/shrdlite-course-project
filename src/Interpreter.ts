@@ -11,7 +11,7 @@ module Interpreter {
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
-            interpretations.push(intprt);
+            if (intprt.intp) interpretations.push(intprt);
         });
         if (interpretations.length) {
             return interpretations;
@@ -48,14 +48,45 @@ module Interpreter {
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
-        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        var a = objs[getRandomInt(objs.length)];
-        var b = objs[getRandomInt(objs.length)];
+
+        // check if object exits
+        if (!recusiveCheckExistance(cmd.ent.obj, state)) return null;
+
+
+        // var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        // var a = objs[getRandomInt(objs.length)];
+        // var b = objs[getRandomInt(objs.length)];
+
         var intprt : Literal[][] = [[
-            {pol: true, rel: "ontop", args: [a, "floor"]},
-            {pol: true, rel: "holding", args: [b]}
+            // {pol: true, rel: "ontop", args: [a, "floor"]},
+            // {pol: true, rel: "holding", args: [b]}
         ]];
         return intprt;
+    }
+
+    function recusiveCheckExistance(obj : Parser.Object, state : WorldState) : Parser.Object[] {
+      debugger
+      if ("obj" in obj) {
+        // TODO
+        // rel: "inside",
+        // var matches = objectExists(obj, state)
+        return []; // recusiveCheckExistance(obj.loc.ent.obj, state);
+      } else {
+        return objectExists(obj, state);
+      }
+    }
+
+    function objectExists(objA : Parser.Object, state : WorldState) : Parser.Object[] {
+      var matches = [];
+      for (var o in state.objects) {
+        var objB = state.objects[o];
+        if (
+          (!objA.size  || objB.size  == objA.size) &&
+          (!objA.color || objB.color == objA.color) &&
+          (objA.form == "anyform"  || objB.form  == objA.form)
+        ) matches.push(objB);
+      }
+      return matches;
     }
 
 
@@ -64,4 +95,3 @@ module Interpreter {
     }
 
 }
-
