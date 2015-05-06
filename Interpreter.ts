@@ -48,16 +48,16 @@ module Interpreter {
     // TODO: delete this function
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
-        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        var a = objs[getRandomInt(objs.length)];
-        var b = objs[getRandomInt(objs.length)];
-        var intprt : Literal[][] = [[
-            {pol: true, rel: "ontop", args: [a, "floor"]},
-            {pol: true, rel: "holding", args: [b]}
-        ]];
-        return intprt;
-        // var i = new Interpret(state);
-        // return i.derive(cmd);
+        // var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        // var a = objs[getRandomInt(objs.length)];
+        // var b = objs[getRandomInt(objs.length)];
+        // var intprt : Literal[][] = [[
+        //     {pol: true, rel: "ontop", args: [a, "floor"]},
+        //     {pol: true, rel: "holding", args: [b]}
+        // ]];
+        // return intprt;
+        var i = new Interpret(state);
+        return i.derive(cmd);
     }
 
     export class Interpret {
@@ -96,15 +96,34 @@ module Interpreter {
        *    - Arm should hold spec object
        */
       take(ent : Parser.Entity): Literal[][] {
+        var lit: Literal[][];
         // 1. Check precondition (1)
         if(this.state.holding)
           throw new Interpreter.Error("take: logic error (the robot is already holding an object)");
         // 2. Check logic errors in grammar
         if(ent.quant === "all")
           throw new Interpreter.Error("take: logic error (the robot has only one arm)");
-        // TODO: 3. Check precondition (2)
-        var literalfunc = this.entityFunc(ent);
-        return literalfunc(true, "holding", null);
+        var refs = this.references(ent.obj);
+        // 3. Check precondition (2)
+        if(refs && refs.length > 0) {
+        // 4. Make literal
+          switch(ent.quant) {
+            case "any":
+              lit = refs.map((ref: string) => {
+                return [ {pol: true, rel: "holding", args: [ref]} ]; // [[lit] or [lit] or [lit]]
+              });
+              break;
+            case "the":
+              // check that there is only one else throw semantic ambigous error
+              if(refs.length > 1)
+                throw new Interpreter.Error("take: semantic ambiguity (too many options to take)");
+              return [[ {pol: true, rel: "holding", args: [refs.pop()]} ]]; // [[lit]]
+              break;
+            default:
+              throw new Interpreter.Error("take: unrecognized quant");
+          }
+        }
+        return lit;
       }
 
       /*
@@ -175,69 +194,31 @@ module Interpreter {
         return null;
       }
 
-      entityFunc(ent: Parser.Entity): (pol: boolean, rel: string, objs: Parser.Object[]) => Literal[][] {
-        switch(ent.quant) {
-          case "all":
-            // find all object ids matching description
-            var secondaryIds = this.references(ent.obj);
-            // return function to caller who specifies pol, rel, and object
-            return function(pol: boolean, rel: string, primaryIds: string[]): Literal[][] {
-              function toLiteral(id: string) {
-                return {pol: pol, rel: rel, args: [id]};
-              }
-              var literals = secondaryIds.map(toLiteral);
-              return [literals];                   // lit && lit && lit ....
-            };
-            break;
-          case "any":
-            // find all objects
-            // return function that takes
-            //    polarity
-            //    relation
-            //    other objects ontop of these objects in arguments
-            //    lit || lit || lit
-            break;
-          case "the":
-            // find the object
-            // if many throw ambiguity
-            // return function that takes
-            //    polarity
-            //    relation
-            //    other objects ontop of this object in arguments
-            //    lit
-            break;
-          default:
-            throw new Interpreter.Error("entities: unrecognized quantifier");
-        }
-      }
-
       /*
-       * Searches world state to find matching object and return all their ids
+       * Searches world state to find target object/s refered in command.
+       * TODO: exemplify what is reference
        */
       references(obj: Parser.Object): string[] {
         var matches: string[] = [];
         if(!obj.loc) {                       // base case: find all objects in spec
           for(var id in this.state["objects"]) {
-            if(match(obj, this.state["objects"][id])) {
+            if(this.match(obj, id)) {
               matches.push(id);
             }
           }
         } else {                             // recursive case: filter out by location as well
           var loc = obj.loc;
           var refs: string[];
-          if(loc.ent.obj)
+          if(loc.ent.obj) {
             refs = this.references(loc.ent.obj);
-          else
-            console.log("\n entity object error");
-          var target: string;
-          if(refs && refs.length > 0) {
-            refs.forEach((ref: string) => {
-              target = this.findTarget(loc.rel, ref); // findTarget("leftof", "a")
-              if(target) // found target TODO: throw error if no target is found
-                matches.push(target);
-            });
-          } else {
-            console.log("\n refs error");
+            var target: string;
+            if(refs && refs.length > 0) {
+              refs.forEach((ref: string) => {
+                target = this.findTarget(obj, loc.rel, ref); // findTarget(obj, "leftof", "a")
+                if(target) // found target TODO: throw error if no target is found
+                  matches.push(target);
+              });
+            }
           }
         }
         return matches;
@@ -248,7 +229,7 @@ module Interpreter {
        * another object.
        * Logic error if index out of bounds or if no object exist in that place.
        */
-      findTarget(rel: string, ref: string): string {
+      findTarget(obj: Parser.Object, rel: string, ref: string): string {
         var stacks = this.state["stacks"];
         var target: string;
         var found = false;
@@ -286,24 +267,44 @@ module Interpreter {
             }
           }
         }
-        return target;
+        var rootObj = this.rootObject(obj);
+        return (this.match(rootObj, target) ? target : null);
       }
 
-    }
+      // helper methods
 
-    // Helper functions
-    function match(obj: Parser.Object, def: ObjectDefinition): boolean {
-      if(obj.size && obj.size !== def.size)
-        return false;
-      if(obj.color && obj.color !== def.color)
-        return false;
-      if(obj.form && obj.form !== def.form)
-        return false;
-      // console.log("\nmatch obj: {" + obj.form + ", " + obj.size + ", " + obj.color + "}");
-      // console.log("\nmatch def: {" + def.form + ", " + def.size + ", " + def.color + "}");
-      // console.log("\nmatching: " + matching);
-      return true;
-    }
+      /*
+       * Checks if a given object matches the ObjectDefinition of an id in the
+       * current world state.
+       */
+      match(obj: Parser.Object, id: string): boolean {
+        var def: ObjectDefinition = this.state["objects"][id];
+        if(!obj || !def)
+          return false;
+        if(obj.size && obj.size !== def.size)
+          return false;
+        if(obj.color && obj.color !== def.color)
+          return false;
+        if(obj.form && obj.form !== def.form)
+          return false;
+        return true;
+      }
+
+      /*
+       * Gets the root object of an object, i.e the top level object that it
+       * specifies
+       */
+      rootObject(obj: Parser.Object): Parser.Object {
+        if(obj) {
+          if(obj.size || obj.color || obj.form)
+            return obj;
+          else
+            return this.rootObject(obj.obj);
+        }
+      }
+
+    } // class Interpret
+
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
