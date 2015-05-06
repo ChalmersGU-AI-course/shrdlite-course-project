@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
 def main(state):
-    # This is just to make the impression of a large computation:
-    import time
-    time.sleep(1)
+    # # Write to log for testing purposes
+    # pretty_state = json.dumps(state, sort_keys=True, indent=2, separators=(',', ': '))
+    # writeToLog(pretty_state)
 
-    # Write to log for testing purposes
-    pretty_state = json.dumps(state, sort_keys=True, indent=2, separators=(',', ': '))
-    writeToLog(pretty_state)
+    # add floors!
+    for idx, stack in enumerate(state['stacks']):
+        floor = "floor-" + str(idx)
+        state['objects'][floor] = {'color': None, 'form': 'floor', 'size': None}
+        stack.insert(0, floor)
+
 
     # TODO: put floors in the bottom of the stacks :)
 
