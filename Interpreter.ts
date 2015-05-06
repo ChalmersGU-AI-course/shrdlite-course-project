@@ -82,15 +82,19 @@ module Interpreter {
 		}	
 		
 		/**
-		* Get the trunk node of the parse tree
+		* Get an array of the trunk objects of the parse tree
 		*
-		* @return {PosNode} PosNode of the trunk, returns null if no trunk node is present
+		* @return {string[]} string[] that represent the trunk objects, returns [] if no objects matched the pattern
 		*/
-		public getTrunk() : PosNode {
-			if (this.nodeL[0].pos.length) {
-				return this.nodeL[0];
+		public getTrunk() : string[] {
+			var t : string[] = [];
+			for (var i = 0; i < this.nodeL[0].pos.length; i++) {
+				var x : number = this.nodeL[0].pos[i].x;
+				var y : number = this.nodeL[0].pos[i].y;
+				var s : string = (x == -1) ? "floor" : this.state.stacks[x][y];
+				t.push(s);
 			}
-			return null;
+			return t;
 		}
 
 		/**
@@ -108,10 +112,12 @@ module Interpreter {
 				for (var i = 0; i < p.length; i++) {
 					for (var j = 0; j < c.length; j++) {
 						if (!this.isReachable(p[i], c[j], rel)) {
-							p.splice(i, 1);
 							c.splice(j, 1);
 							workDone = true;
 						}
+					}
+					if (workDone) {
+						p.splice(i, 1);
 					}
 				}
 				this.nodeL[n].pos = p;
@@ -125,17 +131,22 @@ module Interpreter {
 		*
 		* @param {object} object representing an object pattern in the parse tree
 		* @return {Position[]} array of all positions that reflect the current object pattern in the world state
+		* returns [{x: -1, y: -1}] in case of "floor"
 		*/
-		//todo: figure out what to return in case of "floor"
 		private getPositions(o) : Position[] {
+			//in case of floor
+			if (o.form == "floor") {
+				return [{x: -1, y: -1}];
+			}
+
+			//otherwise
 			var p : Position[] = [];
 			for (var i = 0; i < this.state.stacks.length; i++) {
 				for (var j = 0; j < this.state.stacks[i].length; j++) {
 					var a = this.state.objects[this.state.stacks[i][j]];
-					if (((o.size == null || o.size == a.size) &&
+					if ((o.size == null || o.size == a.size) &&
 						(o.color == null || o.color == a.color) &&
-						(o.form == null || o.form == a.form || o.form == "anyform")) ||
-				   		(o.form == "floor")) {
+						(o.form == null || o.form == a.form || o.form == "anyform")) {
 							var temp : Position = {x: i, y: j}; 
 							p.push(temp);	
 					}
@@ -154,6 +165,7 @@ module Interpreter {
 		*/
 		//todo: check for physical impossibilities, or does the parser do that?
 		//todo: can a ball inside a small yellow box which is inside a large blue box be considered as "inside the blue box" ?
+		//todo: What to do with "move all balls inside all boxes"
 		private isReachable(orig : Position, dest : Position, rel : string) : boolean {
 			switch (rel) {
 				case "inside":
@@ -164,10 +176,14 @@ module Interpreter {
 				case "ontop":
 					if (orig.x == dest.x && orig.y == (dest.y + 1)) {
 						return true;
+					} else if (dest.x == -1 && orig.x == 0) { //the floor case
+						return true;
 					}
 					break;
 				case "above":
 					if (orig.x == dest.x && orig.y > dest.y) {
+						return true;
+					} else if (dest.x == -1 && orig.x >= 0) { //the floor case
 						return true;
 					}
 					break;
@@ -206,9 +222,9 @@ module Interpreter {
 		* Check if any position of the trunk node in the parse tree exists that fulfills the spatial and physical specs
 		*
 		* @param {Entity} Entity of an object pattern in the parse tree
-		* @return {Position[]} array of Position for the trunk object pattern that comply with the current world state
+		* @return {string[]} array of string for the trunk object pattern that represent the existing objects in the current world state
 		*/
-		private checkExistence(ent) : Position[] {
+		private checkExistence(ent) : string[] {
 			var checker : ShrdliteWorldChecker = new ShrdliteWorldChecker(this.state);
 
 			//going through the parse tree
@@ -238,44 +254,88 @@ module Interpreter {
 				continue;
 			}
 
-			//get the PosNode for the trunk
-			var trunk : PosNode = checker.getTrunk();
-
-			if (trunk != null) {
-				return trunk.pos;
-			}
-
-			return null;
+			//return the array of matching trunk objects
+			return checker.getTrunk();
 		}	 
 
+		/**
+		* Build the Literal[][] based on the Position[] of the origin and/or destination, 
+		* the goal and the quantifiers for both origin and/or destination
+		*
+		* @param {string} goal of the movement (ontop, above, under, beside, leftof, rightof, inside)
+		* @param {string} quantifier for the origin (the, any)
+		* @param {string} quantifier for the destination (the, any)
+		* @param {string[]} array of string that represent the objects for the origin
+		* @param {string[]} array of string that represent the objects for the destination
+		* @return {Literal[][]} Literal describing the PDDL goals
+		*/
+		private buildLiteral(goal : string, quantOrig : string, quantDest : string, origs : string[], dests : string[]) {
+			var intprt : Literal[][] = [[]];
+			var n : number = 0;
 
-		//return the interpretation for the parse that was handed over on creation
+			for (var i = 0; i < origs.length; i++) {
+				for (var j = 0; j < dests.length; j++) {
+					if (n>(intprt.length - 1))
+						intprt[n] = [];
+					var lit : Literal =  {pol:true, rel:goal, args:[origs[i], dests[j]]};
+					intprt[n].push(lit);
+					n = (quantDest == "the") ? n : ++n;
+				}
+				n = (quantOrig == "the") ? n : ++n;
+			}
+
+			return intprt;
+		}
+
+
+		/**
+		* Interpret the command based on the given objects and their relations and the actual command
+		*
+		* @return {Literal[][]} Literal describing the PDDL goals
+		*/
 		//todo: actually interpret something, right now the return is just a dummy
 		public getInterpretation() : Literal[][] {
-			var origs : Position[] = null;
-			var dests : Position[] = null;
-			//check origin
-			if (typeof this.cmd.ent !== "undefined") {
+			//typeof this.cmd.ent !== "undefined"
+			//typeof this.cmd.loc !== "undefined"
+
+			var cmdS : string = this.cmd.cmd;
+
+			//for a take/grasp/pick up command
+			if (cmdS == "take" || cmdS == "grasp" || cmdS == "pick up") {
+				//check origin
 				var ent = this.cmd.ent;
-				origs = this.checkExistence(ent);
-				if (origs == null) {
-					return null;
+				var origs : string[] = this.checkExistence(ent);
+				if (origs.length) {
+					return this.buildLiteral("holding", ent.quant, "", origs, []);
 				}
 			}
 
-			//check destination
-			if (typeof this.cmd.loc !== "undefined") {
+			//for a move/put/drop command when we are holding something and the "it" specifier is used (e.g. "drop it on the floor")
+			if ((cmdS == "move" || cmdS == "put" || cmdS == "drop") && this.state.holding != null && typeof this.cmd.ent === "undefined") {
+				//check destination
 				var ent = this.cmd.loc.ent;
-				dests = this.checkExistence(ent);
-				if (dests == null)
-					return null;
+				var dests : string[] = this.checkExistence(ent);
+				if (dests.length) {
+					return this.buildLiteral(this.cmd.loc.rel, "the", ent.quant, [this.state.holding], dests); 
+				}
 			}
 
-			var intprt : Literal[][] = [[
-				{pol: true, rel: "ontop", args: ["test", "test"]}
-			]];
+			//for a move/put/drop command from an origin pattern to a destination pattern
+			if (cmdS == "move" || cmdS == "put" || cmdS == "drop") {
+				//check origin
+				var entO = this.cmd.ent;
+				var origs : string[] = this.checkExistence(entO);
 
-			return intprt;
+				//check destination
+				var entD = this.cmd.loc.ent;
+				var dests : string[] = this.checkExistence(entD);
+
+				if (origs.length && dests.length) {
+					return this.buildLiteral(this.cmd.loc.rel, entO.quant, entD.quant, origs, dests); 
+				}
+			}
+
+			return null;
 		}
 	}
 
