@@ -44,3 +44,5 @@ var graphGoal = new Planner.MultipleGoals(tar);
 var graph = new astar.Graph(new Planner.DijkstraHeuristic(), graphGoal);
 var graphStart = new Planner.PlannerNode(origState, null, null);
 var result = graph.searchPath(graphStart);
+
+console.log(result.path)

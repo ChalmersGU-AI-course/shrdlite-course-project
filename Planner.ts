@@ -191,31 +191,25 @@ module Planner {
         isReached(node: astar.INode): boolean {
             var n = <PlannerNode> node;
 
-            var result: boolean = true;
-
-            console.log("Checking state");
-
             for (var i = 0; i < this.targets.length; i++) {
                 var currentLiteral = this.targets[i];
 
-                result = result && this.isLiteralFullfilled(currentLiteral, n.state);
+                if (!this.isLiteralFullfilled(currentLiteral, n.state)) {
+                    return false;
+                }
             }
 
-            //return n.state.arm === 2;
-            return n.state.stacks[1].length === 0;
+            return true;
         }
 
         isLiteralFullfilled(lit: Interpreter.Literal, state: WorldState): boolean {
-            console.log("checking lit:" + Interpreter.literalToString(lit));
             if (lit.rel == "ontop") {
-                console.log(this.checkOntopLiteral(lit, state));
                 return this.checkOntopLiteral(lit, state);
             }
             if (lit.rel == "holding") {
-                console.log(this.checkHoldingLiteral(lit, state));
                 return this.checkHoldingLiteral(lit, state);
             }
-            return true;
+            return false;
         }
 
         checkOntopLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
