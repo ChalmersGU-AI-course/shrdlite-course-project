@@ -45,48 +45,113 @@ module Interpreter {
         public toString() {return this.name + ": " + this.message}
     }
 
+	/**
+	* @class Represents a Checker for the spatial relations in the current world
+	*/
 	class ShrdliteWorldChecker {
 		private nodeL : PosNode[];
-		constructor(private stacks : string[][]) {
+		/*
+		* Creates an instance of ShrdliteWorldChecker
+		* @constructor
+		*/
+		constructor(private state : WorldState) {
 			this.nodeL = [];
 		}
 
-		public addNode(pos : Position[], rel : string) : void {
+		/**
+		* add PosNode to the array of all PosNodes
+		*
+		* @param {object} node object
+		* @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof)
+		* @return {void}
+		*/
+		public addNode(o, rel : string) : void {
+			//get all possible positions for the current object pattern
+			var pos : Position[] = this.getPositions(o);
+
+			//when no positions can be found
+			if (!pos.length) {
+				throw new Interpreter.Error("There is no "
+					+ ((o.size != null) ? o.size+" " : "") 
+					+ ((o.color != null) ? o.color+" " : "") 
+					+ ((o.form != null) ? o.form : ""));
+			}
+
 			var node : PosNode = {pos:pos, rel:rel};
 			this.nodeL.push(node);
 		}	
 		
-		public getHead() : PosNode {
+		/**
+		* Get the trunk node of the parse tree
+		*
+		* @return {PosNode} PosNode of the trunk, returns null if no trunk node is present
+		*/
+		public getTrunk() : PosNode {
 			if (this.nodeL[0].pos.length) {
 				return this.nodeL[0];
 			}
 			return null;
 		}
 
-		//prunes the possible positions by checking if the spatial relations work out
+		/**
+		* Prune all positions that do not have the given spatial relation
+		*
+		* @return {boolean} Has any pruning been done?
+		*/
 		public prune() : boolean {
 			for (var n = 0; n < (this.nodeL.length - 1); n++) {
-				var parentPos : Position [] = this.nodeL[n].pos;
-				var childPos : Position [] = this.nodeL[n+1].pos;
+				var p : Position [] = this.nodeL[n].pos;
+				var c : Position [] = this.nodeL[n+1].pos;
 				var rel : string = this.nodeL[n].rel;
 				var workDone : boolean = false;
 
-				for (var i = 0; i < parentPos.length; i++) {
-					for (var j = 0; j < childPos.length; j++) {
-						if (!this.isReachable(parentPos[i], childPos[j], rel)) {
-							parentPos.splice(i, 1);
-							childPos.splice(j, 1);
+				for (var i = 0; i < p.length; i++) {
+					for (var j = 0; j < c.length; j++) {
+						if (!this.isReachable(p[i], c[j], rel)) {
+							p.splice(i, 1);
+							c.splice(j, 1);
 							workDone = true;
 						}
 					}
 				}
-				this.nodeL[n].pos = parentPos;
-				this.nodeL[n+1].pos = childPos;
+				this.nodeL[n].pos = p;
+				this.nodeL[n+1].pos = c;
 			}
 			return workDone;
 		}
 
-		//relations: inside,ontop,under,beside,above,leftof,rightof
+		/**
+		* Get all possible Positions of an object pattern in the current world state
+		*
+		* @param {object} object representing an object pattern in the parse tree
+		* @return {Position[]} array of all positions that reflect the current object pattern in the world state
+		*/
+		//todo: figure out what to return in case of "floor"
+		private getPositions(o) : Position[] {
+			var p : Position[] = [];
+			for (var i = 0; i < this.state.stacks.length; i++) {
+				for (var j = 0; j < this.state.stacks[i].length; j++) {
+					var a = this.state.objects[this.state.stacks[i][j]];
+					if (((o.size == null || o.size == a.size) &&
+						(o.color == null || o.color == a.color) &&
+						(o.form == null || o.form == a.form || o.form == "anyform")) ||
+				   		(o.form == "floor")) {
+							var temp : Position = {x: i, y: j}; 
+							p.push(temp);	
+					}
+				}
+			}
+			return p;
+		}
+
+		/**
+		* Check if the given spatial relation between two positions holds
+		*
+		* @param {Position} Position of the origin
+		* @param {Position} Position of the destination
+		* @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof)
+		* @return {boolean} Does the relation hold?
+		*/
 		//todo: check for physical impossibilities, or does the parser do that?
 		//todo: can a ball inside a small yellow box which is inside a large blue box be considered as "inside the blue box" ?
 		private isReachable(orig : Position, dest : Position, rel : string) : boolean {
@@ -131,17 +196,20 @@ module Interpreter {
 		}
 	}
 
-	//class for interpreting a single parse based on the current worldstate
+	/**
+	* @class Represents an Interpreter for a single parse based on the current world state
+	*/
 	class ShrdliteInterpretation {
 		constructor(private state : WorldState, private cmd : Parser.Command) {}
 
-		//checks for every object pattern in the parse if the object exists in the current world state
-		//return: array of possible object positions
-		//todo: include proper typing for the function arguments
+		/**
+		* Check if any position of the trunk node in the parse tree exists that fulfills the spatial and physical specs
+		*
+		* @param {Entity} Entity of an object pattern in the parse tree
+		* @return {Position[]} array of Position for the trunk object pattern that comply with the current world state
+		*/
 		private checkExistence(ent) : Position[] {
-			var checker : ShrdliteWorldChecker = new ShrdliteWorldChecker(this.state.stacks);
-			var parentPos : Position[] = [];
-			var parentRel : string = "";
+			var checker : ShrdliteWorldChecker = new ShrdliteWorldChecker(this.state);
 
 			//going through the parse tree
 			while (true) {
@@ -152,20 +220,9 @@ module Interpreter {
 					rel = o.loc.rel;
 					o = o.obj;
 				}
-
-				//get all possible positions for the current object pattern
-				var pos : Position[] = this.getPositions(o);
-
-				//when no positions can be found
-				if (!pos.length) {
-					throw new Interpreter.Error("There is no "
-						+ ((o.size != null) ? o.size+" " : "") 
-						+ ((o.color != null) ? o.color+" " : "") 
-						+ ((o.form != null) ? o.form : ""));
-				}
 					
-				//add to the checker
-				checker.addNode(pos, rel);
+				//add positions and relation to the checker
+				checker.addNode(o, rel);
 
 				//when there are no new objects left in the tree
 				if (typeof ent.obj.loc === "undefined") {
@@ -181,34 +238,16 @@ module Interpreter {
 				continue;
 			}
 
-			var head : PosNode = checker.getHead();
+			//get the PosNode for the trunk
+			var trunk : PosNode = checker.getTrunk();
 
-			if (head != null) {
-				return head.pos;
+			if (trunk != null) {
+				return trunk.pos;
 			}
 
 			return null;
 		}	 
 
-		//return the positions of all objects that match the pattern in the world state
-		//note: in my eyes this checking should be a method within World (will ask the TA's about if we may do that)
-		//todo: figure out what to return in case of "floor"
-		private getPositions(o) : Position[] {
-			var p : Position[] = [];
-			for (var i = 0; i < this.state.stacks.length; i++) {
-				for (var j = 0; j < this.state.stacks[i].length; j++) {
-					var a = this.state.objects[this.state.stacks[i][j]];
-					if (((o.size == null || o.size == a.size) &&
-						(o.color == null || o.color == a.color) &&
-						(o.form == null || o.form == a.form || o.form == "anyform")) ||
-				   		(o.form == "floor")) {
-							var temp : Position = {x: i, y: j}; 
-							p.push(temp);	
-					}
-				}
-			}
-			return p;
-		}
 
 		//return the interpretation for the parse that was handed over on creation
 		//todo: actually interpret something, right now the return is just a dummy
