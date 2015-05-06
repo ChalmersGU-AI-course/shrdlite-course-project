@@ -1,4 +1,4 @@
-from PDDL import satisfy_rel
+from PDDL import satisfy_pred
 
 def interpret(stacks, holding, objects, parses, **_): # fancy way of ignoring all other stuff
     """for each parse return a collection of disjunctive goals, does not
@@ -24,7 +24,7 @@ def interp_cmd_take(ent, _, objects, stacks, holding):
     2. create goal
     """
     ents = find_ent(ent, objects, stacks, holding)
-    return [('hold', x, None) for x in ents]
+    return [('holding', x, None) for x in ents]
 
 def interp_cmd_put(_, loc, objects, stacks, holding):
     """simple, we want to put what we're holding somewhere
@@ -88,7 +88,7 @@ def find_ent(ent, objects, stacks, holding):
         matching = []
         for a in possible_objs:
             for b in possible_rels:
-                if satisfy_rel((rel, a, b), stacks, holding):
+                if satisfy_pred((rel, a, b), stacks, holding):
                     matching.append(a)
 
         return matching

@@ -10,7 +10,7 @@ Examples:
 """
 
 
-def satisfy_rel(pred, stacks, holding):
+def satisfy_pred(pred, stacks, holding):
     """check if a PDDL predicate is satisfied"""
     (rel, x, y) = pred
     return {'ontop':   satisfy_ontop,
@@ -20,7 +20,7 @@ def satisfy_rel(pred, stacks, holding):
             'beside':  satisfy_beside,
             'leftof':  satisfy_leftof,
             'rightof': satisfy_rightof,
-            'holding': satisfy_holding}.get(rel, lambda **_: False)(x, y, stacks, holding)
+            'holding': satisfy_holding}.get(rel)(x, y, stacks, holding)
 
 def satisfy_ontop(a, b, stacks, holding):
     """a ontop of b: some stack: bot, ..., b, a, ..., top"""
