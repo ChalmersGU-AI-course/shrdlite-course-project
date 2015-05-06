@@ -7,8 +7,8 @@ def check_physics(pred, objects):
             'inside': check_ontop}.get(rel, lambda x, y, o: True)(x, y, objects)
 
 def check_ontop(t, b, objects):
-    top = objects[top]
-    bot = objects[bot]
+    top = objects[t]
+    bot = objects[b]
 
     return (
         # Balls cannot support anything.
