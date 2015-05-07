@@ -1,10 +1,8 @@
 * Planner
- - Implement polarity
- - Implement heuristic
- - create only valid neighbors (big object on small one is evil)
-    - rules that apply to the world in form of Literals?
-
-
+	- Implement polarity
+	- Add Timeout
+	- Check/Improve Heuristic
+	- Check world rules
 
 
 

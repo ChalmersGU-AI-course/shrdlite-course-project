@@ -41,13 +41,18 @@ var tar: Interpreter.Literal[][] = [[
     { pol: true, rel: "holding", args: ["a"] }
 ]];
 var graphGoal = new Planner.MultipleGoals(tar);
-var graph = new astar.Graph(new Planner.DijkstraHeuristic(), graphGoal);
+var graphD = new astar.Graph(new Planner.DijkstraHeuristic(), graphGoal);
 var graphStart = new Planner.PlannerNode(origState, null, null);
-// var result = graph.searchPath(graphStart);
+var resultD = graphD.searchPath(graphStart);
 
+var graphH = new astar.Graph(new Planner.SimpleHeuristic(tar[0]), graphGoal);
+var resultH = graphH.searchPath(graphStart);
+// var heur = new Planner.SimpleHeuristic(tar[0]);
+// console.log("test heuristic")
+// console.log(heur.get(graphStart, null));
 
-var heur = new Planner.SimpleHeuristic(tar[0]);
-console.log("test heuristic")
-console.log(heur.get(graphStart, null));
+console.log("Dijkstra path length: " + resultD.path.length);
+console.log("Heuristic path length: " + resultH.path.length);
 
-// console.log(result.path)
+console.log("Dijkstra visited length: " + resultD.visited.length);
+console.log("Heuristic visited length: " + resultH.visited.length);

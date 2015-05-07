@@ -94,7 +94,7 @@ module Planner {
         var plan: string[] = [];
 
         var graphGoal = new MultipleGoals(intprt);
-        var graph = new astar.Graph(new DijkstraHeuristic(), graphGoal);
+        var graph = new astar.Graph(new SimpleHeuristic(intprt[0]), graphGoal);
         var graphStart = new PlannerNode(state, null, null);
         var result = graph.searchPath(graphStart);
 
@@ -207,44 +207,12 @@ module Planner {
 
         isLiteralFullfilled(lit: Interpreter.Literal, state: WorldState): boolean {
             if (lit.rel == "ontop") {
-                return this.checkOntopLiteral(lit, state);
+                return checkOntopLiteral(lit, state);
             }
             if (lit.rel == "holding") {
-                return this.checkHoldingLiteral(lit, state);
+                return checkHoldingLiteral(lit, state);
             }
             return false;
-        }
-
-        checkOntopLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
-            var on = lit.args[0];
-            var under = lit.args[1];
-
-            // check all stacks
-            for (var i = 0; i < state.stacks.length; ++i) {
-                var stack = state.stacks[i];
-
-                // if stack contains items
-                if (stack) {
-                    var position = stack.indexOf(on);
-                    // item on floor
-                    if (position == 0 && under == "floor") {
-                        return true;
-                    }
-                    // item on top of other item
-                    if (position > 0) {
-                        var positionUnder = stack.indexOf(under);
-                        if (positionUnder == position - 1) {
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        checkHoldingLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
-            return state.holding == lit.args[0];
         }
     }
 
@@ -269,6 +237,8 @@ module Planner {
                 var currentLiteral = this.targets[i];
 
                 var currentEstimate = this.getEstimateForLiteral(currentLiteral, n.state);
+                // console.log(currentLiteral);
+                // console.log(currentEstimate);
                 if (currentEstimate > maxEstimate) {
                     maxEstimate = currentEstimate;
                 }
@@ -277,7 +247,16 @@ module Planner {
         }
 
         getEstimateForLiteral(lit: Interpreter.Literal, state: WorldState): number {
+            if (lit.rel == "ontop") {
+                if (checkHoldingLiteral(lit, state)) {
+                    return 0;
+                }
+                return this.getOntopEstimate(lit, state);
+            }
             if (lit.rel == "holding") {
+                if (checkHoldingLiteral(lit, state)) {
+                    return 0;
+                }
                 return this.getHoldingEstimate(lit, state);
             }
             return 0;
@@ -292,6 +271,21 @@ module Planner {
                 // we need to move to the according stack
                 // we need to pick up the desired object
                 return depth * 4 + distance + 1;
+            }
+            return 0;
+        }
+
+        getOntopEstimate(lit: Interpreter.Literal, state: WorldState): number {
+            var on = lit.args[0];
+            var position = this.getPositionOfObject(on, state);
+
+            if (position) {
+                var depth = state.stacks[position[0]].length - position[1] - 1;
+                var distance = Math.abs(position[0] - state.arm);
+                // to get away an object on top requires four actions
+                // we need to move to the according stack
+                // we need to pick up the desired object, move it, drop it
+                return depth * 4 + distance + 3;
             }
             return 0;
         }
@@ -312,5 +306,38 @@ module Planner {
             }
             return null;
         }
+    }
+
+
+    function checkOntopLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
+        var on = lit.args[0];
+        var under = lit.args[1];
+
+        // check all stacks
+        for (var i = 0; i < state.stacks.length; ++i) {
+            var stack = state.stacks[i];
+
+            // if stack contains items
+            if (stack) {
+                var position = stack.indexOf(on);
+                // item on floor
+                if (position == 0 && under == "floor") {
+                    return true;
+                }
+                // item on top of other item
+                if (position > 0) {
+                    var positionUnder = stack.indexOf(under);
+                    if (positionUnder == position - 1) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    function checkHoldingLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
+        return state.holding == lit.args[0];
     }
 }
