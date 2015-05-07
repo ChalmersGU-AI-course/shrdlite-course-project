@@ -7,26 +7,32 @@ interface Graph<T>{
     specialIndexOf(obj:T):number;
 }
 
+class NodeScore {
+	private index:number;
+	private fscore:number;
+	
+	constructor(i:number, fs:number){
+		this.index = i;
+		this.fscore = fs;
+		
+	}
+	public getIndex():number{
+		return this.index;
+	}
+	public getFscore(){
+		return this.fscore;
+	}
+	public setFscore(fs:number){
+		this.fscore = fs;
+	}
+	
+}
+
 class Astar <T>{
     mGraph : Graph<T>;
 
     constructor(g : Graph<T>){
         this.mGraph = g;
-    }
-    // TODO make this a priority queue with (nodeIndex, fscore) as elements...
-    private getMinFScore(fscore : number[], openset : number[]){        
-        var result=fscore[fscore.length-1];
-        var index : number = 0;
-        var indexout : number = openset.indexOf(fscore.length-1);
-        for(var i = 0; i < openset.length; i++){
-            var fs = fscore[openset[i]];
-            if(fs < result && fs >= 0){
-                result = fs;
-                indexout = index;
-            }
-            index++;
-        }
-        return indexout;    
     }
 
     private reconstruct_path(came_from : number[], goal:number):number[]{
@@ -54,41 +60,47 @@ class Astar <T>{
     }
     
     public star (start: number, goal : number): number[]{
-        var closedset : number [] = [];   // The set of nodes already evaluated.
-        var openset : number [] = [];
-        openset[0] = start;       // The set of tentative nodes to be evaluated, initially containing the start node
+        // The set of tentative nodes to be evaluated, initially containing the start node
+        var openset = new collections.PriorityQueue<NodeScore>(
+        					function (a:NodeScore,b:NodeScore){
+        						return b.getFscore() - a.getFscore();
+        					});
+       	var openset_ids = new collections.Set<number>(); 
+        var closedset : number [] = [];   // The set of nodes already evaluated.      
         var came_from : number [] = [];    // The map of navigated nodes.
-        
         var g_score : number [] = [];
         var f_score : number [] = [];
         g_score[start] = 0;
-        
         f_score[start] = g_score[start] + this.mGraph.heuristic_cost_estimate(start, goal);
+        openset.add(new NodeScore(start,f_score[start]));
+        openset_ids.add(start);
         var counter = 0;
-        while (openset.length > 0){
-            var current = openset[this.getMinFScore(f_score, openset)];
+        
+        while (!openset.isEmpty()){
+            var current = openset.dequeue().getIndex();
+            openset_ids.remove(current);
             counter ++;
             if(current == goal){
                 console.info("Number of nodes visited " + counter);
                 return this.reconstruct_path(came_from, goal);
             }
-            var index = openset.indexOf(current);
-            if(index != undefined ){
-                openset.splice(index, 1);   
-            }
             closedset.push(current);
             var currentNeighbors = this.neighbor_nodes(current);
+            
             for(var i = 0; i < currentNeighbors.length; i++){
                 var neighbor = currentNeighbors[i];
                 if(closedset.indexOf(neighbor) == -1){
                     var tentative_g_score : number = g_score[current] + this.cost(current,neighbor); // distance between c and n
-                    if(openset.indexOf(neighbor) == -1 || tentative_g_score < g_score[neighbor]){
+                    var neighborNode = new NodeScore(neighbor, f_score[neighbor]);
+                    var containsNode = !(openset.contains(neighborNode));
+                    
+                	if(containsNode ||tentative_g_score < g_score[neighbor]){
                         came_from[neighbor] = current;
-
                         g_score[neighbor] = tentative_g_score;
                         f_score[neighbor] = g_score[neighbor] + this.mGraph.heuristic_cost_estimate(neighbor, goal);
-                        if(openset.indexOf(neighbor) == -1){
-                            openset.push(neighbor);
+                        neighborNode.setFscore(f_score[neighbor]);
+                        if(containsNode){
+                        	openset.add(neighborNode);
                         }
                     }
                 }
