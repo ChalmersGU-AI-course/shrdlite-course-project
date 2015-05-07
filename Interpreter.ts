@@ -41,7 +41,6 @@ module Interpreter {
         public toString() {return this.name + ": " + this.message}
     }
 
-
     //////////////////////////////////////////////////////////////////////
     // private functions
 
@@ -56,8 +55,8 @@ module Interpreter {
         //     {pol: true, rel: "holding", args: [b]}
         // ]];
         // return intprt;
-        var i = new Interpret(state);
-        return i.derive(cmd);
+        var interpreter = new Interpret(state);
+        return interpreter.derive(cmd);
     }
 
     export class Interpret {
@@ -90,61 +89,89 @@ module Interpreter {
 
       /*
        * preconditions:
-       *    - Arm should not hold a object
-       *    - Spec object/s exist among objects (s: "a", "an", "any")
+       *    1. Arm should not hold a object
+       *    2. Spec object(the) / objects(any) exist among the state objects
        * effects:
-       *    - Arm should hold spec object
+       *    1. Arm should hold spec object
        */
       take(ent : Parser.Entity): Literal[][] {
-        var lit: Literal[][];
-        // 1. Check precondition (1)
-        if(this.state.holding)
+        var lits: Literal[][];
+        // 1. preconditions: (1) // TODO: add effect to literal (not holding the
+        // object)
+        if(this.state["holding"])
           throw new Interpreter.Error("take: logic error (the robot is already holding an object)");
         // 2. Check logic errors in grammar
         if(ent.quant === "all")
           throw new Interpreter.Error("take: logic error (the robot has only one arm)");
+        // 3. preconditions: (2)
         var refs = this.references(ent.obj);
-        // 3. Check precondition (2)
         if(refs && refs.length > 0) {
-        // 4. Make literal
-          switch(ent.quant) {
-            case "any":
-              lit = refs.map((ref: string) => {
-                return [ {pol: true, rel: "holding", args: [ref]} ]; // [[lit] or [lit] or [lit]]
-              });
-              break;
-            case "the":
-              // check that there is only one else throw semantic ambigous error
-              if(refs.length > 1)
-                throw new Interpreter.Error("take: semantic ambiguity (too many options to take)");
-              return [[ {pol: true, rel: "holding", args: [refs.pop()]} ]]; // [[lit]]
-              break;
-            default:
-              throw new Interpreter.Error("take: unrecognized quant");
+        // 4. Create effects (1) (make literal)
+          if(ent.quant === "any") {        // it is possible to have many references
+            lits = refs.map((ref: string) => {
+              return [ {pol: true, rel: "holding", args: [ref]} ]; // [[lit] or [lit] or [lit]]
+            });
+          } else if(ent.quant === "the") { // there should only be one reference
+            if(refs.length > 1)
+              throw new Interpreter.Error("take: semantic ambiguity (too many options to take)");
+            lits = [[ {pol: true, rel: "holding", args: [refs.pop()]} ]]; // [[lit]]
           }
         }
-        return lit;
+        return lits;
       }
 
       /*
        * preconditions:
-       *    - Arm should hold a object
-       *    - Held object can be located at spec location/s
+       *    1. Arm should hold a object
+       *    2. Held object can be located at spec location/s
+       *        (see function isAllowedPosition below)
        * effects:
-       *    - Arm should not hold a object
-       *    - Held object should be located at spec location/s (s: "a", "an", "any")
+       *    1. Arm should not move the reference object (Cheating otherwise)
+       *    2. Held object should be located at spec location/s (s: "a", "an", "any")
        */
       put(loc : Parser.Location): Literal[][] {
-        // 1. Check precondition (1)
-        if(!this.state.holding)
+        var lits: Literal[][];
+        var heldId = this.state["holding"];
+        var heldObj = this.findObject(heldId);
+        // 1. preconditions: (1)
+        if(!heldObj)
           throw new Interpreter.Error("put: logic error (the robot is not holding an object)");
-        // 2. Check precondition (2)
-        // 3. Make Literal
-        var literalfunc = this.moveFunc(loc);
-        literalfunc(true, [this.state["holding"]]);
-
-        var lit: Literal[][];
-        return lit;
+        // 2. Check logic errors in grammar
+        if(loc.ent.quant === "all")
+          throw new Interpreter.Error("take: logic error (the robot has only one arm)");
+        // 3. if the command reference the floor make lit immediately
+        if(this.isFloor(loc.ent.obj))
+          return this.floorLiteral(heldId);
+        // 4. preconditions: (2)
+        var refs = this.references(loc.ent.obj);
+        if(refs && refs.length > 0) {
+          if(loc.ent.quant === "any") {        // filter out allowed positions
+            var allowed = refs.filter((ref: string) => {
+              return this.isAllowedPosition(heldObj, loc.rel, ref);
+            });
+            if(allowed.length > 0) {
+              // 5. Create effects (1) (2) (make literal)
+              lits = allowed.map((ref: string) => {
+                return [
+                  {pol: false, rel: "holding", args: [ref]},
+                  {pol: true, rel: loc.rel, args: [heldId, ref]}
+                ]; // [[lit1, lit2] or [lit1, lit2] or [lit1, lit2]]
+              });
+            }
+          } else if(loc.ent.quant === "the") { // there should only be one reference
+            if(refs.length > 1)
+              throw new Interpreter.Error("put: semantic ambiguity (too many options to take)");
+            var ref = refs.pop();
+            if(this.isAllowedPosition(heldObj, loc.rel, ref)) {
+              // 5. Create effects (1) (2) (make literal)
+              lits = [[
+                {pol: false, rel: "holding", args: [ref]},
+                {pol: true, rel: loc.rel, args: [heldId, ref]}
+              ]]; // [[lit]]
+            }
+          }
+        }
+        return lits;
       }
 
       /*
@@ -167,43 +194,20 @@ module Interpreter {
         return lit;
       }
 
-      moveFunc(loc : Parser.Location): (pol: boolean, objs: Parser.Object[]) => Literal[][] {
-        switch(loc.rel) {
-          case "leftof":
-            // return function that takes
-            //    polarity
-            //    other object ontop of these objects in arguments
-            //    call entities withobject after relation
-            //    and give the arguments in the new callstack to returned func +
-            //       other object from previous callstack
-            //       "leftof"
-            break;
-          case "rightof":
-            break;
-          case "inside":
-            break;
-          case "ontop":
-            break;
-          case "under":
-            break;
-          case "beside":
-            break;
-          default:
-            throw new Interpreter.Error("locations: unrecognized relation");
-        }
-        return null;
-      }
+      //////////////////////////////////////////////////////////////////////
+      // Helper methods
 
       /*
        * Searches world state to find target object/s refered in command.
-       * TODO: exemplify what is reference
+       * TODO: exemplify what is an reference
        */
       references(obj: Parser.Object): string[] {
         var matches: string[] = [];
         if(!obj.loc) {                       // base case: find all objects in spec
-          for(var id in this.state["objects"]) {
-            if(this.match(obj, id)) {
-              matches.push(id);
+          var ids = this.worldObjects();
+          for(var i=0; i<ids.length; i++) {
+            if(this.match(obj, ids[i])) {
+              matches.push(ids[i]);
             }
           }
         } else {                             // recursive case: filter out by location as well
@@ -225,7 +229,7 @@ module Interpreter {
       }
 
       /*
-       * Finds target object in relation (leftof, rightof, under, ontop) to
+       * Finds target object in relation (leftof, rightof, under, etc..) to
        * another object.
        * Logic error if index out of bounds or if no object exist in that place.
        */
@@ -244,17 +248,19 @@ module Interpreter {
                 case "rightof":
                   target = stacks[col+1][row];
                   break;
-                case "beside":                    // check if only one case is possible
+                case "beside":                    // check that only one case is possible
                   var left = stacks[col-1][row];
                   var right = stacks[col+1][row];
                   if(left && right)
-                    throw new Interpreter.Error("findTarget: semantic error (There are many targets)");
-                  if(left)
-                    target = left;
-                  if(right)
-                    target = right;
+                    throw new Interpreter.Error("findTarget: semantic error (There are too many targets)");
+                  if(left) target = left;
+                  if(right) target = right;
                   break;
+                case "above":                     // TODO: above and ontop not considered synonyms
                 case "ontop":
+                  var o = this.findObject(ref);   // objects cannot be "ontop" of boxes (Physical law)
+                  if(o.form === "box")
+                    throw new Interpreter.Error("findTarget: logic error (You cannot put something ontop of a box)");
                   target = stacks[col][row+1];
                   break;
                 case "inside":
@@ -267,44 +273,124 @@ module Interpreter {
             }
           }
         }
-        var rootObj = this.rootObject(obj);
-        return (this.match(rootObj, target) ? target : null);
+        return (this.match(obj, target) ? target : null);
       }
 
-      // helper methods
+      /*
+       * Check if object is allowed at location according to physical laws.
+       */
+      isAllowedPosition(obj: Parser.Object, rel: string, ref: string): boolean {
+        // 0. Elementary assumptions
+        var refObj = this.findObject(ref);
+        if(!obj || !refObj)
+          return false;
+        // 1. Balls must be in boxes or on the floor, otherwise they roll away.
+        if(obj.form === "ball" && (refObj.form !== "floor" || refObj.form !== "box"))
+          return false;
+        // 2. Balls cannot support anything.
+        if(refObj.form === "ball")
+          return false;
+        // 3. Small objects cannot support large objects.
+        if(this.size(refObj.size) < this.size(obj.size))
+          return false;
+        // 4. Boxes cannot contain pyramids, planks or boxes of the same size.
+        var possibleConflict = (obj.form === "plank")
+                            || (obj.form === "pyramid")
+                            || (obj.form === "box");
+        var equalSize = this.size(refObj.size) === this.size(obj.size);
+        if((refObj.form === "box") && possibleConflict && equalSize)
+          return false;
+        // 5. Small boxes cannot be supported by small bricks or pyramids.
+        var smallBox = (obj.form === "box") && (obj.size === "small");
+        var smallBrick = (refObj.form === "brick") && (refObj.size === "small");
+        if(smallBox && (smallBrick || (refObj.form === "pyramid")))
+          return false;
+        // 6. Large boxes cannot be supported by large pyramids.
+        var largeBox = (obj.form === "box") && (obj.size === "large");
+        if(largeBox && refObj.form === "pyramid" && refObj.size === "large")
+          return false;
+
+        // Otherwise
+        return true;
+      }
 
       /*
        * Checks if a given object matches the ObjectDefinition of an id in the
        * current world state.
        */
       match(obj: Parser.Object, id: string): boolean {
-        var def: ObjectDefinition = this.state["objects"][id];
-        if(!obj || !def)
+        var rootObj = this.rootObject(obj);
+        var def = this.findObject(id);
+        if(!rootObj || !rootObj.form || !def)
           return false;
-        if(obj.size && obj.size !== def.size)
+        if(rootObj.form !== "anyform" && rootObj.form !== def.form)
           return false;
-        if(obj.color && obj.color !== def.color)
+        if(rootObj.size && rootObj.size !== def.size)
           return false;
-        if(obj.form && obj.form !== def.form)
+        if(rootObj.color && rootObj.color !== def.color)
           return false;
         return true;
       }
 
       /*
+       * Returns all ids in the stacks of the world
+       */
+      worldObjects(): string[] {
+        var stacks = this.state["stacks"];
+        return [].concat.apply([], stacks);
+      }
+
+      /*
+       * Determines whether a object refers to the floor or not
+       */
+      isFloor(obj: Parser.Object): boolean {
+        var rootObj = this.rootObject(obj);
+        if(rootObj.form === "floor")
+          return true;
+        return false;
+      }
+
+      /*
+       * Literal that says object (id) is not ontop of any othe object in world
+       */
+      floorLiteral(id: string): Literal[][] {
+        var objs = this.worldObjects();
+        return [objs.map((ref: string) => {
+          return {pol: false, rel: "ontop", args: [id, ref]};
+        })];
+      }
+
+      /*
        * Gets the root object of an object, i.e the top level object that it
-       * specifies
+       * object describes
        */
       rootObject(obj: Parser.Object): Parser.Object {
         if(obj) {
           if(obj.size || obj.color || obj.form)
             return obj;
-          else
-            return this.rootObject(obj.obj);
+          return this.rootObject(obj.obj);
         }
       }
 
-    } // class Interpret
+      /*
+       * Lookups ObjectDefinition in state
+       */
+      findObject(id: string): ObjectDefinition {
+        return this.state["objects"][id];
+      }
 
+      /*
+       * Lets us compare Object size numerically
+       */
+      size(s: string): number {
+        if(s === "large")
+          return 1;
+        else if(s === "small")
+          return 0;
+        return 2; // no size specified in object, apply rule of least intervention
+      }
+
+    } // class Interpret
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
