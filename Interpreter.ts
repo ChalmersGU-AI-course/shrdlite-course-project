@@ -48,6 +48,12 @@ module Interpreter {
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
+        
+        // Find object to move
+        
+        // Find location to move to
+        
+        // Form goal
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
@@ -57,7 +63,10 @@ module Interpreter {
         ]];
         return intprt;
     }
-
+    
+    function identifyObj(cmd : Parser.Command, state : WorldState){
+            
+    }
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);

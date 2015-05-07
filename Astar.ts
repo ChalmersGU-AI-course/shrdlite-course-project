@@ -1,3 +1,5 @@
+/// <reference path="collections.ts" />
+
 interface Graph<T>{
     getneighbors(node: number):Array<number>;
     getcost(from: number,to:number):number;
@@ -11,7 +13,7 @@ class Astar <T>{
     constructor(g : Graph<T>){
         this.mGraph = g;
     }
-
+    // TODO make this a priority queue with (nodeIndex, fscore) as elements...
     private getMinFScore(fscore : number[], openset : number[]){        
         var result=fscore[fscore.length-1];
         var index : number = 0;
