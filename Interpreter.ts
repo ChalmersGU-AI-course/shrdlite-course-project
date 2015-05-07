@@ -23,7 +23,9 @@ module Interpreter {
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
-            interpretations.push(intprt);
+	    if(intprt.intp.length != 0) {
+		interpretations.push(intprt);
+	    }
         });
         if (interpretations.length == 1) {
             return interpretations;
@@ -63,7 +65,7 @@ module Interpreter {
 	var moveWithGoals = new collections.Dictionary<ObjectInfo, ObjectInfo[]>(function(a) {
 	    return a.name;
 	});
-	var ors : Literal[];
+	var ors : Literal[][];
 	if(cmd.cmd == "move") {
             var toMove : ObjectInfo[] = findValid(cmd.ent.obj, state);
            
@@ -72,7 +74,7 @@ module Interpreter {
 		moveWithGoals.setValue(toMove[i], validGoals);
             }
 
-	    ors = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel);
+	    ors = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel, state);
 
 	} else if(cmd.cmd == "take") {
 	    var toMove : ObjectInfo[] = findValid(cmd.ent.obj, state);
@@ -81,10 +83,10 @@ module Interpreter {
 		moveWithGoals.setValue(o, []);
 	    });
 
-	    ors = convertGoalsToPDDL(moveWithGoals, "holding");
+	    ors = convertGoalsToPDDL(moveWithGoals, "holding", state);
 
 	} else if(cmd.cmd == "put") {
-	    state.holding = "m";
+	    state.holding = "m"; //TODODODODODODODOD
 	    var o : Parser.Object = state.objects[state.holding];
 	    var objs : ObjectInfo[] = checkRelation(o, cmd.loc, state);
 
@@ -92,38 +94,95 @@ module Interpreter {
 	    var obj2 : ObjectInfo = {obj: o, pos: pos, name : state.holding};
 
 	    moveWithGoals.setValue(obj2, objs);
-	    ors = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel);
+	    ors = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel, state);
 
 	} else {
 	    throw new Interpreter.Error("Error parsing command");
 	}
 
-	 
-	var goals : Literal[][] = [];
-
-	ors.map(function(l) {
-	    goals.push([l]);
-	});
-
-	return goals;
+	return ors;
     }
 
-    function convertGoalsToPDDL(dict : collections.Dictionary<ObjectInfo, ObjectInfo[]>, relation : string) : Literal[] 
+    //Converts to a pddl subset of all relations
+    //rels £ {holding, above, ontop, column}
+    function convertGoalsToPDDL(dict : collections.Dictionary<ObjectInfo, ObjectInfo[]>, relation : string, state: WorldState) : Literal[][] 
     {
-        var lits : Literal[] = [];
+        var or : Literal[][] = [];
+        var and : Literal[] = [];
 
         dict.forEach(function(key: ObjectInfo, value : ObjectInfo[]) {
+	    and = [];
             if(relation == "holding") {
 		var p : Literal = {pol: true, rel : relation, args: [key.name]};
-		lits.push(p);
-	    } else{
+                or.push([p]);
+	    } else if(relation == "ontop" || relation == "above" || relation == "inside"){ 
 		for(var i = 0; i < value.length; i++) {
-                    var p : Literal = {pol: true, rel: relation, args: [key.name, value[i].name] };
-                    lits.push(p);
+                    var p : Literal = {pol: true, rel: relation == "inside" ? "ontop" : relation, args: [key.name, value[i].name] };
+                    or.push([p]);
 		}
-            }
+            } else if(relation == "below") {
+		for(var i = 0; i < value.length; i++) {
+                    var p : Literal = {pol: false, rel: "above", args: [key.name, value[i].name] };
+		    
+		    for(var j = 0; j < state.stacks.length; j++) {
+			and = [];
+			var p2 : Literal = {pol: true, rel: "column", args: [key.name, "" + j] };
+			var p3 : Literal = {pol: true, rel: "column", args: [value[i].name, "" + j] };
+			and.push(p);
+			and.push(p2);
+			and.push(p3);
+			or.push(and);
+		    }
+		}
+	    } else if(relation == "leftof" || relation == "rightof") {
+		var left : boolean = relation == "leftof";
+		for(var i = 0; i < value.length; i++) {
+		    for(var j = 0; j < state.stacks.length; j++) {
+			if(value[i].obj.form != "floor") {
+			    for(var k = 0; k < j;  k++) {
+				and = [];
+				var p1 : Literal = {pol: true, rel: "column", args: [key.name, "" + (left ? k : j)] };
+				var p2 : Literal = {pol: true, rel: "column", args: [value[i].name, "" + (left ? j : k)] };
+				and.push(p1);
+				and.push(p2);
+				or.push(and);
+			    }
+			} else {
+			    and = [];
+			    if(left && j < value[i].pos.x || !left && j > value[i].pos.x) {
+				var p : Literal = {pol: true, rel: "column", args: [key.name, "" + j ] };
+				and.push(p);
+				or.push(and);
+			    }
+			}
+		    }
+		}	
+	    } else if(relation == "beside") {
+		for(var i = 0; i < value.length; i++) {
+		    if(value[i].obj.form != "floor") {
+			for(var j = 0; j < state.stacks.length; j++) {
+			    and = [];
+			    var p1 : Literal = {pol: true, rel: "column", args: [key.name, "" + (j)] };
+			    var p2 : Literal = {pol: true, rel: "column", args: [value[i].name, "" + (j + 1)] };
+			    var p3 : Literal = {pol: true, rel: "column", args: [value[i].name, "" + (j - 1)] };
+			    and.push(p1);
+			    and.push(p2);
+			    or.push(and);
+
+			    and = [];
+			    and.push(p1);
+			    and.push(p3);
+			    or.push(and);
+			}
+		    } else {
+			and = [];
+			var p1 : Literal = {pol: true, rel: "column", args: [key.name, "" + (value[i].pos.x)] };
+			or.push([p1]);
+		    }
+		}
+	    }
         });
-        return lits;
+        return or;
     }
 
     //returns all valids targets for the object with the specified relation
@@ -214,7 +273,8 @@ module Interpreter {
     function getBesides(pos: Position, target: ObjectInfo, obj: Parser.Object, state : WorldState ) : ObjectInfo[] {
         var valids : ObjectInfo[] = [];
         if(pos.x < state.stacks.length && pos.x >= 0) {
-            for(var k = 0; k < state.stacks[pos.x].length; k++) {
+            valids.push({obj: {form: "floor"}, pos: {x: pos.x, y: -1}, name: ("f_" + pos.x)})
+	    for(var k = 0; k < state.stacks[pos.x].length; k++) {
                 var objR = getObjectAtPosition({x: pos.x, y: pos.y + k}, state);
                 var objInfo : ObjectInfo[] = findValid(obj, state);
                 for(var j = 0; j < objInfo.length; j++) {
