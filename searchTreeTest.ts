@@ -37,16 +37,20 @@ world.printWorld();
 //     new TextWorld(states[i]).printWorld();
 // }
 var tar: Interpreter.Literal[][] = [[
-    { pol: true, rel: "ontop", args: ["l", "floor"] },
+    { pol: true, rel: "ontop", args: ["b", "floor"] },
     { pol: true, rel: "holding", args: ["a"] }
 ]];
 var graphGoal = new Planner.MultipleGoals(tar);
 var graphD = new astar.Graph(new Planner.DijkstraHeuristic(), graphGoal);
 var graphStart = new Planner.PlannerNode(origState, null, null);
+var startD = new Date().getTime();
 var resultD = graphD.searchPath(graphStart);
+var timeD = new Date().getTime() - startD;
 
 var graphH = new astar.Graph(new Planner.SimpleHeuristic(tar[0]), graphGoal);
+var startH = new Date().getTime();
 var resultH = graphH.searchPath(graphStart);
+var timeH = new Date().getTime() - startH;
 // var heur = new Planner.SimpleHeuristic(tar[0]);
 // console.log("test heuristic")
 // console.log(heur.get(graphStart, null));
@@ -56,3 +60,7 @@ console.log("Heuristic path length: " + resultH.path.length);
 
 console.log("Dijkstra visited length: " + resultD.visited.length);
 console.log("Heuristic visited length: " + resultH.visited.length);
+
+
+console.log("Dijkstra runtime: " + timeD/1000 + "s");
+console.log("Heuristic runtime: " + timeH/1000 + "s");
