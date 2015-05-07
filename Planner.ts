@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="WorldRules.ts"/>
 
 ///<reference path="astar.ts" />
 ///<reference path="deepCopy.ts"/>
@@ -147,8 +148,8 @@ module Planner {
         }
 
         useArm(): PlannerNode {
+            var currentStack = this.state.stacks[this.state.arm];
             if (this.state.holding === null) {
-                var currentStack = this.state.stacks[this.state.arm];
                 if (currentStack.length > 0) {
                     var topItemIndex = currentStack.length - 1;
                     var newState = owl.deepCopy(this.state, 5);
@@ -159,11 +160,13 @@ module Planner {
                 }
             } else { // holding something at the moment
                 var newState = owl.deepCopy(this.state, 5);
-                //TODO: check if legal move
-                newState.stacks[newState.arm].push(newState.holding);
-                var newMessage = "Dropping the " + newState.objects[newState.holding].form;
-                newState.holding = null;
-                return new PlannerNode(newState, "d", newMessage);
+                //always legal if on top of floor, else check world rules
+                if (currentStack.length == 0 || WorldRules.canBeOntop(newState.holding, newState.objects[currentStack[currentStack.length - 1]])) {
+                    newState.stacks[newState.arm].push(newState.holding);
+                    var newMessage = "Dropping the " + newState.objects[newState.holding].form;
+                    newState.holding = null;
+                    return new PlannerNode(newState, "d", newMessage);
+                }
             }
             return null;
         }
