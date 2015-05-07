@@ -250,4 +250,64 @@ module Planner {
             return 0;
         }
     }
+
+    export class SimpleHeuristic implements astar.IHeuristic {
+        targets: Interpreter.Literal[] = null;
+
+        constructor (targets) {
+            this.targets = targets;
+        }
+
+        get(node: astar.INode, goal: astar.IGoal): number {
+            var n = <PlannerNode> node;
+            var maxEstimate = 0;
+
+            for (var i = 0; i < this.targets.length; i++) {
+                var currentLiteral = this.targets[i];
+
+                var currentEstimate = this.getEstimateForLiteral(currentLiteral, n.state);
+                if (currentEstimate > maxEstimate) {
+                    maxEstimate = currentEstimate;
+                }
+            }
+            return maxEstimate;
+        }
+
+        getEstimateForLiteral(lit: Interpreter.Literal, state: WorldState): number {
+            if (lit.rel == "holding") {
+                return this.getHoldingEstimate(lit, state);
+            }
+            return 0;
+        }
+
+        getHoldingEstimate(lit: Interpreter.Literal, state: WorldState): number {
+            var position = this.getPositionOfObject(lit.args[0], state);
+            if (position) {
+                var depth = state.stacks[position[0]].length - position[1] - 1;
+                var distance = Math.abs(position[0] - state.arm);
+                // to get away an object on top requires four actions
+                // we need to move to the according stack
+                // we need to pick up the desired object
+                return depth * 4 + distance + 1;
+            }
+            return 0;
+        }
+
+        getPositionOfObject(item: string, state: WorldState): number[] {
+            // check all stacks
+            for (var i = 0; i < state.stacks.length; ++i) {
+                var stack = state.stacks[i];
+
+                // if stack contains items
+                if (stack) {
+                    var position = stack.indexOf(item);
+                    // if item in stack, get position
+                    if (position >= 0) {
+                        return [i, position];
+                    }
+                }
+            }
+            return null;
+        }
+    }
 }

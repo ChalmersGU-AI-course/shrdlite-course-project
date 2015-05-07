@@ -38,11 +38,16 @@ world.printWorld();
 // }
 var tar: Interpreter.Literal[][] = [[
     { pol: true, rel: "ontop", args: ["l", "floor"] },
-    { pol: true, rel: "holding", args: ["b"] }
+    { pol: true, rel: "holding", args: ["a"] }
 ]];
 var graphGoal = new Planner.MultipleGoals(tar);
 var graph = new astar.Graph(new Planner.DijkstraHeuristic(), graphGoal);
 var graphStart = new Planner.PlannerNode(origState, null, null);
-var result = graph.searchPath(graphStart);
+// var result = graph.searchPath(graphStart);
 
-console.log(result.path)
+
+var heur = new Planner.SimpleHeuristic(tar[0]);
+console.log("test heuristic")
+console.log(heur.get(graphStart, null));
+
+// console.log(result.path)
