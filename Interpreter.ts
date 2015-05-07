@@ -67,34 +67,15 @@ module Interpreter {
 	});
 	var ors : Literal[][];
 	if(cmd.cmd == "move") {
-            var toMove : ObjectInfo[] = findValid(cmd.ent.obj, state);
-           
-            for(var i = 0; i < toMove.length; i++) {
-		var validGoals : ObjectInfo[] = checkRelation(toMove[i].obj, cmd.loc, state);
-		moveWithGoals.setValue(toMove[i], validGoals);
-            }
-
-	    ors = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel, state);
-
+	    ors = convertGoalsToPDDL(findValid(cmd.ent.obj, state), cmd.loc, state);
 	} else if(cmd.cmd == "take") {
-	    var toMove : ObjectInfo[] = findValid(cmd.ent.obj, state);
-
-	    toMove.map(function(o) {
-		moveWithGoals.setValue(o, []);
-	    });
-
-	    ors = convertGoalsToPDDL(moveWithGoals, "holding", state);
-
+	    ors = convertGoalsToPDDL(findValid(cmd.ent.obj, state), null , state);
 	} else if(cmd.cmd == "put") {
 	    state.holding = "m"; //TODODODODODODODOD
 	    var o : Parser.Object = state.objects[state.holding];
-	    var objs : ObjectInfo[] = checkRelation(o, cmd.loc, state);
-
 	    var pos : Position = findObject(state.holding, state);
 	    var obj2 : ObjectInfo = {obj: o, pos: pos, name : state.holding};
-
-	    moveWithGoals.setValue(obj2, objs);
-	    ors = convertGoalsToPDDL(moveWithGoals, cmd.loc.rel, state);
+	    ors = convertGoalsToPDDL([obj2],cmd.loc,state);
 
 	} else {
 	    throw new Interpreter.Error("Error parsing command");
@@ -105,159 +86,91 @@ module Interpreter {
 
     //Converts to a pddl subset of all relations
     //rels £ {holding, above, ontop, column}
-    function convertGoalsToPDDL(dict : collections.Dictionary<ObjectInfo, ObjectInfo[]>, relation : string, state: WorldState) : Literal[][] 
+    function convertGoalsToPDDL(key : ObjectInfo[], loc : Parser.Location, state: WorldState) : Literal[][] 
     {
         var or : Literal[][] = [];
         var and : Literal[] = [];
 
-        dict.forEach(function(key: ObjectInfo, value : ObjectInfo[]) {
-	    and = [];
-            if(relation == "holding") {
-		var p : Literal = {pol: true, rel : relation, args: [key.name]};
+	key.forEach(function (key) {
+	    if(loc == null) {
+		var p : Literal = {pol: true, rel : "holding", args: [key.name]};
                 or.push([p]);
-	    } else if(relation == "ontop" || relation == "above" || relation == "inside"){ 
-		for(var i = 0; i < value.length; i++) {
-                    var p : Literal = {pol: true, rel: relation == "inside" ? "ontop" : relation, args: [key.name, value[i].name] };
-                    or.push([p]);
-		}
-            } else if(relation == "below") {
-		for(var i = 0; i < value.length; i++) {
-                    var p : Literal = {pol: false, rel: "above", args: [key.name, value[i].name] };
-		    
-		    for(var j = 0; j < state.stacks.length; j++) {
-			and = [];
-			var p2 : Literal = {pol: true, rel: "column", args: [key.name, "" + j] };
-			var p3 : Literal = {pol: true, rel: "column", args: [value[i].name, "" + j] };
-			and.push(p);
-			and.push(p2);
-			and.push(p3);
-			or.push(and);
-		    }
-		}
-	    } else if(relation == "leftof" || relation == "rightof") {
-		var left : boolean = relation == "leftof";
-		for(var i = 0; i < value.length; i++) {
-		    for(var j = 0; j < state.stacks.length; j++) {
-			if(value[i].obj.form != "floor") {
-			    for(var k = 0; k < j;  k++) {
+	    } else {
+
+		var value :ObjectInfo[]  = findValid(loc.ent.obj, state);
+		var relation = loc.rel;
+
+		value.forEach(function(target) {
+		    and = [];
+		    if(relation == "ontop" || relation == "above" || relation == "inside"){ 
+			var p : Literal = {pol: true, rel: relation == "inside" ? "ontop" : relation, args: [key.name, target.name] };
+			if(checkSize(key.obj, target.obj)) {
+			    or.push([p]);
+			}
+		    } else if(relation == "under") {
+		
+			    var p : Literal = {pol: false, rel: "above", args: [key.name, target.name] };
+			    for(var j = 0; j < state.stacks.length; j++) {
 				and = [];
-				var p1 : Literal = {pol: true, rel: "column", args: [key.name, "" + (left ? k : j)] };
-				var p2 : Literal = {pol: true, rel: "column", args: [value[i].name, "" + (left ? j : k)] };
+				var p2 : Literal = {pol: true, rel: "column", args: [key.name, "" + j] };
+				var p3 : Literal = {pol: true, rel: "column", args: [target.name, "" + j] };
+				and.push(p);
+				and.push(p2);
+				and.push(p3);
+				if(checkSize(target.obj, key.obj)) {
+				    or.push(and);
+				}
+			    }
+			
+		    } else if(relation == "leftof" || relation == "rightof") {
+			var left : boolean = relation == "leftof";
+			for(var j = 0; j < state.stacks.length; j++) {
+			    if(target.obj.form != "floor") {
+				for(var k = 0; k < j;  k++) {
+				    and = [];
+				    var p1 : Literal = {pol: true, rel: "column", args: [key.name, "" + (left ? k : j)] };
+				    var p2 : Literal = {pol: true, rel: "column", args: [target.name, "" + (left ? j : k)] };
+				    and.push(p1);
+				    and.push(p2);
+				    or.push(and);
+				}
+			    } else {
+				and = [];
+				if(left && j < target.pos.x || !left && j > target.pos.x) {
+				    var p : Literal = {pol: true, rel: "column", args: [key.name, "" + j ] };
+				    and.push(p);
+				    or.push(and);
+				}
+			    }
+			}
+			
+		    } else if(relation == "beside") {
+			if(target.obj.form != "floor") {
+			    for(var j = 0; j < state.stacks.length; j++) {
+				and = [];
+				var p1 : Literal = {pol: true, rel: "column", args: [key.name, "" + (j)] };
+				var p2 : Literal = {pol: true, rel: "column", args: [target.name, "" + (j + 1)] };
+				var p3 : Literal = {pol: true, rel: "column", args: [target.name, "" + (j - 1)] };
 				and.push(p1);
 				and.push(p2);
+				or.push(and);
+
+				and = [];
+				and.push(p1);
+				and.push(p3);
 				or.push(and);
 			    }
 			} else {
 			    and = [];
-			    if(left && j < value[i].pos.x || !left && j > value[i].pos.x) {
-				var p : Literal = {pol: true, rel: "column", args: [key.name, "" + j ] };
-				and.push(p);
-				or.push(and);
-			    }
+			    var p1 : Literal = {pol: true, rel: "column", args: [key.name, "" + (target.pos.x)] };
+			    or.push([p1]);
 			}
 		    }
-		}	
-	    } else if(relation == "beside") {
-		for(var i = 0; i < value.length; i++) {
-		    if(value[i].obj.form != "floor") {
-			for(var j = 0; j < state.stacks.length; j++) {
-			    and = [];
-			    var p1 : Literal = {pol: true, rel: "column", args: [key.name, "" + (j)] };
-			    var p2 : Literal = {pol: true, rel: "column", args: [value[i].name, "" + (j + 1)] };
-			    var p3 : Literal = {pol: true, rel: "column", args: [value[i].name, "" + (j - 1)] };
-			    and.push(p1);
-			    and.push(p2);
-			    or.push(and);
-
-			    and = [];
-			    and.push(p1);
-			    and.push(p3);
-			    or.push(and);
-			}
-		    } else {
-			and = [];
-			var p1 : Literal = {pol: true, rel: "column", args: [key.name, "" + (value[i].pos.x)] };
-			or.push([p1]);
-		    }
-		}
+		});
 	    }
-        });
+	});
         return or;
     }
-
-    //returns all valids targets for the object with the specified relation
-    function checkRelation(obj : Parser.Object, loc : Parser.Location, state: WorldState) : ObjectInfo[] {
-        //find target
-        var targets : ObjectInfo[] = findValid(loc.ent.obj, state);
-        var valids  : ObjectInfo[] = [];
-        
-        for(var i = 0; i < targets.length; i++) {
-            if((loc.rel == "ontop") && checkSize(obj, targets[i].obj )) {
-                valids.push(targets[i]);
-            } else if(loc.rel == "inside" && checkSize(obj, targets[i].obj) && targets[i].obj.form == "box" ) {
-                valids.push(targets[i]);
-            } else if(loc.rel == "under") {
-                var stack : string[] = state.stacks[targets[i].pos.x];
-                for(var j = targets[i].pos.y; j >= -1; j--) {
-                    var objUnder : Parser.Object;
-                    var name : string;
-                    if(j == -1) {
-                        objUnder = {form : "floor"};
-                        name = "f_" + targets[i].pos.x;
-                    } else {
-                        objUnder = state.objects[stack[j]];
-                        name = stack[j];
-                    }
-                    if(objUnder.form == "floor" || checkSize(objUnder, obj)) {
-                        valids.push({obj: objUnder, pos: {x: targets[i].pos.x, y: j}, name: name});
-                    }
-                }
-            } else if(loc.rel == "beside") {
-                
-                var ls : ObjectInfo[] = getBesides({x: targets[i].pos.x + 1, y: targets[i].pos.y}, targets[i], obj, state );
-                ls.forEach(function(l) {
-                    valids.push(l);
-                });
-
-                var rs : ObjectInfo[] = getBesides({x: targets[i].pos.x - 1, y: targets[i].pos.y}, targets[i], obj, state );
-                rs.forEach(function(r) {
-                    valids.push(r);
-                });
-            }
-            else if(loc.rel == "above"){
-                var stack : string[] = state.stacks[targets[i].pos.x];
-                for(var j = targets[i].pos.y ; j < stack.length ; j++){
-                    var objAbove : Parser.Object;
-                    var name : string;
-                    if(j == -1){ //The floor
-                        objAbove = {form : "floor"};
-                        name = "f_" + targets[i].pos.x;
-                    }else{
-                        objAbove = state.objects[stack[j]];
-                        name = stack[j];
-                    }
-                    if(checkSize(obj, objAbove)){
-                        valids.push({obj: objAbove, pos: {x:targets[i].pos.x,y:j}, name: name});
-                    }
-                }
-            } else if(loc.rel == "rightof" || loc.rel == "leftof"){
-                var offset : number = loc.rel == "rightof" ? 1 : -1;
-
-                for(var x = targets[i].pos.x + offset ; x < state.stacks.length && x >= 0 ; x += offset){
-                    valids.push({obj: {form : "floor"}, name: "f_" + x, pos: {x:x, y:-1}});
-                    for(var y = 0 ; y < state.stacks[x].length ; y++){
-                        var target : Parser.Object = state.objects[state.stacks[x][y]];
-                        if(checkSize(obj,target)){
-                            valids.push({obj: target, name: state.stacks[x][y], pos: {x:x, y:y}});
-                        }
-                    }
-                }
-
-            }
-        }
-        return valids;
-    }
-
 
 
     function getObjectAtPosition(pos : Position, state : WorldState) : ObjectInfo {
@@ -311,7 +224,6 @@ module Interpreter {
         }
         return true;
     }
-
 
     function findValid(obj : Parser.Object, state : WorldState) : ObjectInfo[]{
         var valids : collections.Set<ObjectInfo> = new collections.Set<ObjectInfo>(function(a) {
@@ -374,7 +286,7 @@ module Interpreter {
                     rs.forEach(function(r){
                         valids.add(r);
                     });
-                
+                    
                 }else if (obj.loc.rel == "under") {
                     var objUnderTarget : string = null;
                     var level : number = valids3[i].pos.y;
@@ -389,22 +301,22 @@ module Interpreter {
                         level--;
                     }
                 } else if (obj.loc.rel == "beside"){
-        		    var objL : string = state.stacks[valids3[i].pos.x - 1][valids3[i].pos.y];
-        		    var objR : string = state.stacks[valids3[i].pos.x + 1][valids3[i].pos.y];
-        		    
-        		    var nr : number = checkObjInRelation(objL, valids2); 
-        		    if( nr != -1) {
-        			valids.add(valids2[nr]);
-        		    }
-        		    nr = checkObjInRelation(objL, valids2); 
-        		    if( nr != -1) {
-        		 	valids.add(valids2[nr]);
-        		    }
-		        }
-                    if(objUnderTarget && yes != -1) valids.add(valids2[yes]);
-                }
+        	    var objL : string = state.stacks[valids3[i].pos.x - 1][valids3[i].pos.y];
+        	    var objR : string = state.stacks[valids3[i].pos.x + 1][valids3[i].pos.y];
+        	    
+        	    var nr : number = checkObjInRelation(objL, valids2); 
+        	    if( nr != -1) {
+        		valids.add(valids2[nr]);
+        	    }
+        	    nr = checkObjInRelation(objL, valids2); 
+        	    if( nr != -1) {
+        		valids.add(valids2[nr]);
+        	    }
+		}
+                if(objUnderTarget && yes != -1) valids.add(valids2[yes]);
+            }
 
-        
+            
 
         } else { //Base case
             if(obj.form == "floor") {
