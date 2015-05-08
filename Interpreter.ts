@@ -95,11 +95,11 @@ module Interpreter {
        *    1. Arm should hold spec object
        */
       take(ent : Parser.Entity): Literal[][] {
+        var dropObject: Literal;
         var lits: Literal[][];
-        // 1. preconditions: (1) // TODO: add effect to literal (not holding the
-        // object)
+        // 1. preconditions: (1)
         if(this.state["holding"])
-          throw new Interpreter.Error("take: logic error (the robot is already holding an object)");
+          dropObject = {pol: false, rel: "holding", args: [this.state["holding"]]};
         // 2. Check logic errors in grammar
         if(ent.quant === "all")
           throw new Interpreter.Error("take: logic error (the robot has only one arm)");
@@ -112,10 +112,15 @@ module Interpreter {
               return [ {pol: true, rel: "holding", args: [ref]} ]; // [[lit] or [lit] or [lit]]
             });
           } else if(ent.quant === "the") { // there should only be one reference
-            if(refs.length > 1)
+            if(refs.length > 1) // TODO: ask "do you mean the large red pyramid or the small green?"
               throw new Interpreter.Error("take: semantic ambiguity (too many options to take)");
             lits = [[ {pol: true, rel: "holding", args: [refs.pop()]} ]]; // [[lit]]
           }
+        }
+        if(dropObject && lits) {           // if arm was holding add dropObject literal
+          lits.forEach((arr: Literal[]) => {
+            arr.push(dropObject);
+          });
         }
         return lits;
       }
@@ -159,7 +164,7 @@ module Interpreter {
               });
             }
           } else if(loc.ent.quant === "the") { // there should only be one reference
-            if(refs.length > 1)
+            if(refs.length > 1) // TODO: ask "do you mean the large red pyramid or the small green?"
               throw new Interpreter.Error("put: semantic ambiguity (too many options to take)");
             var ref = refs.pop();
             if(this.isAllowedPosition(heldObj, loc.rel, ref)) {
@@ -168,6 +173,8 @@ module Interpreter {
                 {pol: false, rel: "holding", args: [ref]},
                 {pol: true, rel: loc.rel, args: [heldId, ref]}
               ]]; // [[lit]]
+            } else {
+              throw new Interpreter.Error("put: not allowed to put the object on the location");
             }
           }
         }
@@ -199,7 +206,13 @@ module Interpreter {
 
       /*
        * Searches world state to find target object/s refered in command.
-       * TODO: exemplify what is an reference
+       *
+       * Example ref:
+       *  "take the ball beside the table inside the box to the left of the brick"
+       *
+       * In this case the table is the reference, and we want to figure out what
+       * table the sentence refers to, in order to know what ball to take.
+       *
        */
       references(obj: Parser.Object): string[] {
         var matches: string[] = [];
@@ -231,6 +244,7 @@ module Interpreter {
       /*
        * Finds target object in relation (leftof, rightof, under, etc..) to
        * another object.
+       *
        * Logic error if index out of bounds or if no object exist in that place.
        */
       findTarget(obj: Parser.Object, rel: string, ref: string): string {
