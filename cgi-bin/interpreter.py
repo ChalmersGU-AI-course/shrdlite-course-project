@@ -8,26 +8,29 @@ class InterpError(Exception):
         return self.descr
 
 def interpret(stacks, holding, objects, parses, **_): # fancy way of ignoring all other stuff
-    """for each parse return a collection of disjunctive goals, does not
-    care about if it is physically possible
+    """for each parse return a collection of disjunctive goals
     """
+
+    # find all possible goals
     goals = []
     for parse in parses:
         goals.append(interp_cmd(parse['prs'], objects, stacks, holding))
 
+    # remove goals that do not satisfy the laws of physic
     ok_goals = []
     for goal in goals:
         possible = []
         for alt in goal:
             if check_physics(alt, objects):
                 possible.append(alt)
-        if len(possible) > 1:
+        if len(possible) >= 1:
             ok_goals.append(possible)
 
+    # if there is more than 1 disj. goal left the command is ambiguous
     if not len(ok_goals) == 1:
         raise InterpError('Ambiguous parse: ' + str(goals))
 
-    return ok_goals
+    return ok_goals[0]
 
 def interp_cmd(cmd, objects, stacks, holding):
     """from command to disjunctive PDDL goal, list of pddl goals"""

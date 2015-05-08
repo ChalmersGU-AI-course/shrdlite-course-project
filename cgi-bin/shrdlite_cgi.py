@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import interpreter
+
 def main(state):
     # # Write to log for testing purposes
     # pretty_state = json.dumps(state, sort_keys=True, indent=2, separators=(',', ': '))
@@ -11,11 +13,13 @@ def main(state):
         state['objects'][floor] = {'color': None, 'form': 'floor', 'size': None}
         stack.insert(0, floor)
 
+    try:
+        intprt = interpreter.interpret(**state)
+    except InterpError as err:
+        return {'plan': [str(err)]}
 
-    # TODO: put floors in the bottom of the stacks :)
-
-    intprt = interpret(**state)
     plan = planner(intprt, **state)
+
     return {'int': intprt,
             'plan': plan,
     }
@@ -38,7 +42,7 @@ def planner(intprt, stacks, holding, arm, objects, utterance, parses):
         pickstack = random.randrange(len(stacks))
         if stacks[pickstack]:
             break
-            plan = []
+    plan = []
 
     # First move the arm to the selected stack
     if pickstack < arm:
