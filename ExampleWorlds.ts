@@ -1,8 +1,69 @@
 ///<reference path="World.ts"/>
 
 var ExampleWorlds : {[s:string]: WorldState} = {};
+	
+function stacksToPDDL(stacks:string[][]):collections.Set<predicate>{
+	var pddl = new collections.Set<predicate>(
+					function (p){		// ToString
+						var res:string;
+						res = p.rel + "(";
+						p.args.forEach((arg)=> 
+							res = res + arg + ", "
+						);
+						res = res.substring(0, res.length-2);
+						res = res + ")";
+				    	return res;
+				    });
+	for(var i = 0; i < stacks.length; i++){
+		for(var j = 0; j < stacks[i].length; j++){
+			if(j == 0){
+				pddl.add({rel:"ontop", args:[stacks[i][j],"f1"]})
+			}else{
+				pddl.add({rel:"ontop", args:[stacks[i][j],stacks[i][j-1]]})
+			}
+		}
+	}			    
+	return pddl;
+}
+	
+ExampleWorlds["complex"] = {
+	"stacks": [["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]],
+    "pddl": stacksToPDDL([["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]]),
+    "holding": null,
+    "arm": 0,
+    "objects": {
+        "a": { "form":"brick",   "size":"large",  "color":"yellow" },
+        "b": { "form":"brick",   "size":"small",  "color":"white" },
+        "c": { "form":"plank",   "size":"large",  "color":"red"   },
+        "d": { "form":"plank",   "size":"small",  "color":"green" },
+        "e": { "form":"ball",    "size":"large",  "color":"white" },
+        "f": { "form":"ball",    "size":"small",  "color":"black" },
+        "g": { "form":"table",   "size":"large",  "color":"blue"  },
+        "h": { "form":"table",   "size":"small",  "color":"red"   },
+        "i": { "form":"pyramid", "size":"large",  "color":"yellow"},
+        "j": { "form":"pyramid", "size":"small",  "color":"red"   },
+        "k": { "form":"box",     "size":"large",  "color":"yellow"},
+        "l": { "form":"box",     "size":"large",  "color":"red"   },
+        "m": { "form":"box",     "size":"small",  "color":"blue"  }
+    },
+    "examples": [
+        "put a box in a box",
+        "put all balls on the floor",
+        "take the yellow box",
+        "put any object under all tables",
+        "put any object under all tables on the floor",
+        "put a ball in a small box in a large box",
+        "put all balls in a large box",
+        "put all balls left of a ball",
+        "put all balls beside a ball",
+        "put all balls beside every ball",
+        "put a box beside all objects",
+        "put all red objects above a yellow object on the floor",
+        "put all yellow objects under a red object under an object"
+    ]
+};	
 
-
+/*
 ExampleWorlds["complex"] = {
     "stacks": [["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]],
     "holding": null,
@@ -132,3 +193,4 @@ ExampleWorlds["impossible"] = {
         "this is just an impossible world"
     ]
 };
+*/
