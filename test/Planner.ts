@@ -5,6 +5,7 @@
 
 import chai = require('chai');
 import A = require('../astar/AStar');
+import C = require('../lib/collections'); 
 
 
 module PlannerTest {
@@ -30,39 +31,114 @@ module PlannerTest {
         }
     }
 
+    class WorldObject {
+    	form: String;
+    	size: String;
+    	color: String;
+    	constructor(form: String, size: String, color: String) {
+    		this.form = form;
+    		this.size = size;
+    		this.color = color;
+    	}
+    	toString() {
+    		return this.form + " " + this.size + " " + this.color;
+    	}
+    }
+
+    var exampleWorldDescription = new C.collections.Dictionary<String, WorldObject>();
+    exampleWorldDescription.setValue("a", new WorldObject("brick", "large", "green"));
+    exampleWorldDescription.setValue("b", new WorldObject("brick", "small", "white"));
+    exampleWorldDescription.setValue("c", new WorldObject("plank", "large", "red"));
+    exampleWorldDescription.setValue("d", new WorldObject("plank", "small", "green"));
+    exampleWorldDescription.setValue("e", new WorldObject("ball", "large", "white"));
+    exampleWorldDescription.setValue("f", new WorldObject("ball", "small", "black"));
+    exampleWorldDescription.setValue("g", new WorldObject("table", "large", "blue"));
+    exampleWorldDescription.setValue("h", new WorldObject("table", "small", "red"));
+    exampleWorldDescription.setValue("i", new WorldObject("pyramid", "large", "yellow"));
+    exampleWorldDescription.setValue("j", new WorldObject("pyramid", "small", "red"));
+    exampleWorldDescription.setValue("k", new WorldObject("box", "large", "yellow"));
+    exampleWorldDescription.setValue("l", new WorldObject("box", "large", "red"));
+    exampleWorldDescription.setValue("m", new WorldObject("box", "small", "blue"));
+
     var exampleState = {
         "stacks": [["e"],["g","l"],[],["k","m","f"],[]],
         "holding":null,
-        "arm":0,
-        "objects":{
-            "a":{"form":"brick","size":"large","color":"green"},
-            "b":{"form":"brick","size":"small","color":"white"},
-            "c":{"form":"plank","size":"large","color":"red"},
-            "d":{"form":"plank","size":"small","color":"green"},
-            "e":{"form":"ball","size":"large","color":"white"},
-            "f":{"form":"ball","size":"small","color":"black"},
-            "g":{"form":"table","size":"large","color":"blue"},
-            "h":{"form":"table","size":"small","color":"red"},
-            "i":{"form":"pyramid","size":"large","color":"yellow"},
-            "j":{"form":"pyramid","size":"small","color":"red"},
-            "k":{"form":"box","size":"large","color":"yellow"},
-            "l":{"form":"box","size":"large","color":"red"},
-            "m":{"form":"box","size":"small","color":"blue"}
-            },
-        "examples":[]
+        "arm":0
     };
 
     var exampleGoal = "inside(f, k)";
 
     var expect = chai.expect;
 
-  describe('Planner', () => {
+    function checkIfValid(state) {
+    	for (var i = 0; i < state.stacks.length; i++) {
+    		for (var j = 1; j < state.stacks[i].length; j++) {
+    			var currentObjectDescription = exampleWorldDescription.getValue(state.stacks[i][j]);
+    			var belowObjectDescription = exampleWorldDescription.getValue(state.stacks[i][j-1]);
+    			// balls must be in boxes or on the floor, otherwise they roll away
+    			if (currentObjectDescription.form == "ball"
+    			  && belowObjectDescription.form != "box") 
+    				return false;
 
-    describe('Private function', () => {
-      it('1=1', (done) => {
-        done();
-      });
-    });
+    			// balls cannot support anything
+    			if (belowObjectDescription.form == "ball")
+    				return false;
 
-  });
+    			// small objects cannot support large objects
+    			if (currentObjectDescription.size == "large"
+    			  && belowObjectDescription.size == "small")
+    				return false;
+
+    			// boxes cannot contain pyramids, planks or boxes of the same size
+    			if ((currentObjectDescription.form == "pyramid"
+    			  || currentObjectDescription.form == "plank"
+    			  || currentObjectDescription.form == "boxes")
+    			  && belowObjectDescription.form == "box"
+    			  && belowObjectDescription.size == currentObjectDescription.size)
+    				return false;
+
+    			// small boxes cannot be supported by small bricks or pyramids
+    			if (currentObjectDescription.form == "box"
+    			  && currentObjectDescription.size == "small"
+    			  && belowObjectDescription.size == "small"
+    			  && (belowObjectDescription.form == "brick" || belowObjectDescription.form == "pyramid"))
+    				return false;
+
+    			// large boxes cannot be supported by large pyramids
+    			if (currentObjectDescription.form == "box"
+    			  && currentObjectDescription.size == "large"
+    			  && belowObjectDescription.form == "pyramid"
+    			  && belowObjectDescription.size == "large")
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+
+	describe('Planner', () => {
+
+		describe('Private function', () => {
+		  it('checkValidState', (done) => {
+		  	var example = {
+		  		"stacks": [["e"],["g","l"],[],["k","m","f"],[]],
+        		"holding":null,
+        		"arm":0
+		  	};
+		  	var valid = checkIfValid(example);
+		  	expect(valid).to.equal(true);
+		    done();
+		  });
+		  it('checkInvalidState', (done) => {
+		  	var example = {
+		  		"stacks": [["e"],["g","l"],["e","f"],["k","m","f"],[]],
+        		"holding":null,
+        		"arm":0
+		  	};
+		  	var valid = checkIfValid(example);
+		  	expect(valid).to.equal(false);
+		  	done();
+		  });
+		});
+
+	});
 }
