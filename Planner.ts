@@ -39,6 +39,28 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+    class WorldState implements A.Astar.State {
+        h: number;
+        stacks: Object[];
+        match(goal: WorldState) {
+          return this.stacks === goal.stacks;
+        }
+        heuristic(goal: WorldState) {
+          return 0;
+        }
+        expand() {
+          // TODO
+          return [];
+        }
+        toString() {
+          return "";
+        }
+        constructor(stacks: Object[], h: number) {
+          this.stacks = stacks;
+          this.h = h;
+        }
+    }
+
     function printLog(log : Object) : void {
         document.getElementById('log').innerHTML += JSON.stringify(log) + "<br/>";
     }
