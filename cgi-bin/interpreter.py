@@ -71,11 +71,6 @@ def interp_cmd_move(ent, loc, objects, stacks, holding):
             goals.append((rel, a, b))
     return goals
 
-# PDDL goals
-# ('relation', x, y)
-# relation = inside, under, ...
-# ('hold', x)
-
 def find_ent(ent, objects, stacks, holding):
     """ent:
     simple entity description:
