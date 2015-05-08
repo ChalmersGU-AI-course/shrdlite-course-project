@@ -1,4 +1,11 @@
 from PDDL import satisfy_pred
+from physics import check_physics
+
+class InterpError(Exception):
+    def __init__(self, descr):
+        self.descr = descr
+    def __str__(self):
+        return self.descr
 
 def interpret(stacks, holding, objects, parses, **_): # fancy way of ignoring all other stuff
     """for each parse return a collection of disjunctive goals, does not
@@ -8,7 +15,19 @@ def interpret(stacks, holding, objects, parses, **_): # fancy way of ignoring al
     for parse in parses:
         goals.append(interp_cmd(parse['prs'], objects, stacks, holding))
 
-    return goals
+    ok_goals = []
+    for goal in goals:
+        possible = []
+        for alt in goal:
+            if check_physics(alt, objects):
+                possible.append(alt)
+        if len(possible) > 1:
+            ok_goals.append(possible)
+
+    if not len(ok_goals) == 1:
+        raise InterpError('Ambiguous parse: ' + str(goals))
+
+    return ok_goals
 
 def interp_cmd(cmd, objects, stacks, holding):
     """from command to disjunctive PDDL goal, list of pddl goals"""
@@ -70,10 +89,12 @@ def find_ent(ent, objects, stacks, holding):
     returns: a list of names of possible objects
     """
 
+    os = []
+
     if not 'obj' in ent['obj']:
         # is a simple entity description
         # return all matching objects
-        return find_objs(ent['obj'], objects, stacks)
+        os = find_objs(ent['obj'], objects, stacks)
     else:
         # is a complex entity description (ie located somewhere)
 
@@ -91,7 +112,18 @@ def find_ent(ent, objects, stacks, holding):
                 if satisfy_pred((rel, a, b), stacks, holding):
                     matching.append(a)
 
-        return matching
+        os = matching
+
+    os_descr = [objects[o] for o in os]
+
+    if (False and ent['quant'] == 'the'
+        and len(os) > 1):
+        raise InterpError('Ambiguous object: what object did you mean? ' + ', '.join(map(obj_str, os_descr)))
+    else:
+        return os
+
+def obj_str(o):
+    return 'the ' + str(o) #' '.join([o['size'], o['color'], o['form']])
 
 def find_objs(obj, objects, stacks):
     """Find all possible objects fitting properties obj"""

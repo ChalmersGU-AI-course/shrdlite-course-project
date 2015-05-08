@@ -1,6 +1,5 @@
 """make sure that we don't break the physics!"""
 
-
 def check_physics(pred, objects):
     (rel, x, y) = pred
     return {'ontop':  check_ontop,
@@ -11,8 +10,10 @@ def check_ontop(t, b, objects):
     bot = objects[b]
 
     return (
+        # Balls must be in boxes or on the floor, otherwise they roll away.
+        not (is_ball(top) and not is_form(bot, {'box', 'floor'})) # TODO: verify
         # Balls cannot support anything.
-        not (is_ball(bot))
+        and not (is_ball(bot))
         # Small objects cannot support large objects.
         and not (is_small(bot) and is_large(top))
         # Boxes cannot contain pyramids, planks or boxes of the same size.

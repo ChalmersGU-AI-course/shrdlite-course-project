@@ -1,5 +1,4 @@
 import json
-
 from interpreter import *
 
 fp = open("example.json")
@@ -18,4 +17,4 @@ for idx, stack in enumerate(ss):
     stack.insert(0, floor)
 
 
-#interpret(**world)
+goal = interpret(**world)
