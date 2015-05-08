@@ -39,8 +39,37 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+    function printLog(log : Object) : void {
+        document.getElementById('log').innerHTML += JSON.stringify(log) + "<br/>";
+    }
+
+    var exampleState = {
+        "stacks": [["e"],["g","l"],[],["k","m","f"],[]],
+        "holding":null,
+        "arm":0,
+        "objects":{
+            "a":{"form":"brick","size":"large","color":"green"},
+            "b":{"form":"brick","size":"small","color":"white"},
+            "c":{"form":"plank","size":"large","color":"red"},
+            "d":{"form":"plank","size":"small","color":"green"},
+            "e":{"form":"ball","size":"large","color":"white"},
+            "f":{"form":"ball","size":"small","color":"black"},
+            "g":{"form":"table","size":"large","color":"blue"},
+            "h":{"form":"table","size":"small","color":"red"},
+            "i":{"form":"pyramid","size":"large","color":"yellow"},
+            "j":{"form":"pyramid","size":"small","color":"red"},
+            "k":{"form":"box","size":"large","color":"yellow"},
+            "l":{"form":"box","size":"large","color":"red"},
+            "m":{"form":"box","size":"small","color":"blue"}
+            },
+        "examples":[]
+    };
+
+    var exampleGoal = "inside(f, k)";
+
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         // This function returns a dummy plan involving a random stack
+        printLog(state);
         do {
             var pickstack = getRandomInt(state.stacks.length);
         } while (state.stacks[pickstack].length == 0);
