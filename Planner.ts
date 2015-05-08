@@ -68,12 +68,12 @@ module Planner {
     var exampleGoal = "inside(f, k)";
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
+        var plan : string[] = [];
         printLog(state);
-        do {
+        /*do {
             var pickstack = getRandomInt(state.stacks.length);
         } while (state.stacks[pickstack].length == 0);
-        var plan : string[] = [];
+        
 
         // First move the arm to the leftmost nonempty stack
         if (pickstack < state.arm) {
@@ -110,7 +110,7 @@ module Planner {
         // Finally put it down again
         plan.push("Dropping the " + state.objects[obj].form,
                   "d");
-
+        */
         return plan;
     }
 

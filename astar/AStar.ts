@@ -13,7 +13,6 @@ export module Astar {
     heuristic(solution: any): number;  // compare length to goal
     match(solution: any): boolean;     // see if goal is found
     expand(): Transition[];            // expand to next possible states
-    hash(): number; // TODO: for now, with current implementation
     toString(): string;
   }
 
@@ -72,8 +71,9 @@ export module Astar {
         for(var i=0; i<transitions.length; i++) {
           trans = transitions[i];
           neighbour = new ASNode<T>(<T>trans.state, trans.cost, current, null);
-          if(graph.set(neighbour))
+          if(graph.set(neighbour)) {
             frontier.enqueue(neighbour);
+          }
         }
       }
     } // while
@@ -97,28 +97,13 @@ export module Astar {
         console.log(space + node.state.toString()); // print
         var next = node.next;
         for(var i=0; i<next.length; i++) {
-          var nID = next[i];
-          var n = graph.get(nID);
+          var n = next[i];
           prettyPrint(n, indent+3, level+1);        // recursive printing
         }
       }
     }
     prettyPrint(start, 0, 0);
   }
-
-  // http://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
-  // Helper function to enable easier toNumber implementation for State type
-  export function hash(s: string): number {
-    var hash = 0;
-    if (s.length == 0) return hash;
-    for (var i = 0; i < s.length; i++) {
-      var chr = s.charCodeAt(i);
-      hash = ((hash << 5) - hash) + chr;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash;
-  }
-
 
   //////////////////////////////////////////////////////////////////////
   // private classes and functions
@@ -128,26 +113,22 @@ export module Astar {
    */
   class ASNode<T extends State> {
     state: T;
-    prev: number = 0; // (id of node) just one node enables a walk back.
-    next: number[] = [];
+    prev: ASNode<T>; // (id of node) just one node enables a walk back.
+    next: ASNode<T>[] = [];
     totalCost: number = 0;
-    constructor(state: T, cost: number, prev: ASNode<T>, next: [number]) {
+    constructor(state: T, cost: number, prev: ASNode<T>, next: [ASNode<T>]) {
       this.state = state;
       this.totalCost = cost;
       if(prev) {
-        this.prev = prev.state.hash();
+        this.prev = prev;
         this.totalCost += prev.totalCost;
       }
       if(next)
         this.next = next;
     }
-  }
-
-  /*
-   * Hash table is used internally in graph, TODO: for now
-   */
-  interface HashTable<T extends State> {
-    [key: number]: ASNode<T>;
+    toString() {
+      return this.state.toString();
+    }
   }
 
   /*
@@ -157,18 +138,17 @@ export module Astar {
    */
   class ASGraph<T extends State> {
     start: ASNode<T>;
-    table: HashTable<T>;             // ASGraph stores nodes in Hashtable to save space
+    table: C.collections.Dictionary<ASNode<T>, ASNode<T>>;             // ASGraph stores nodes in Hashtable to save space
     set(node: ASNode<T>): boolean {
-      var hash = node.state.hash();
-      var similarNode = this.table[hash];
+      var similarNode = this.table.getValue(node);
       // set node only if not already set or the current node is cheaper
-      if(!similarNode || node.totalCost < similarNode.totalCost) {
-        this.table[hash] = node;
+      if(!similarNode|| node.totalCost < similarNode.totalCost) {
+        this.table.setValue(node, node);
         if(node.prev) {
-          var prev = this.table[node.prev];
+          var prev = this.table.getValue(node.prev);
           // only add node to previous next if not already added
-          if(prev && !(prev.next.indexOf(node.state.hash()) > -1))
-            prev.next.push(hash);
+          if(prev && !(prev.next.indexOf(node) > -1)) // not sure about the second condition
+            prev.next.push(node);
         }
         return true;
       } else {
@@ -180,7 +160,7 @@ export module Astar {
     }
     constructor(node: ASNode<T>) {
       this.start = node;
-      this.table = [];
+      this.table = new C.collections.Dictionary<ASNode<T>, ASNode<T>>();
       this.set(node);
     }
   }
@@ -213,7 +193,7 @@ export module Astar {
     var _n = n;
     while(_n != null) {
       _path.push(_n.state)
-      _n = graph.get(_n.prev);
+      _n = _n.prev;
     }
     return _path.reverse();
   }

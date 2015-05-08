@@ -1,3 +1,4 @@
+import C = require('../lib/collections');
 /**
  * @namespace Top level namespace for astar
  */
@@ -7,7 +8,6 @@ declare module Astar {
     heuristic(solution: any): number;  // compare length to goal
     match(solution: any): boolean;     // see if goal is found
     expand(): Transition[];            // expand to next possible states
-    hash(): number; // TODO: for now, with current implementation
     toString(): string;
   }
 
@@ -39,8 +39,6 @@ declare module Astar {
 
   function printGraph<T extends State>(graph: ASGraph<T>, maxDepth: number);
 
-  function hash(s: string): number;
-
   //////////////////////////////////////////////////////////////////////
   // private classes and functions
 
@@ -49,17 +47,10 @@ declare module Astar {
    */
   class ASNode<T extends State> {
     state: T;
-    prev: number; // (id of node) just one node enables a walk back.
-    next: number[];
+    prev: ASNode<T>;
+    next: ASNode<T>[];
     totalCost: number;
-    constructor(state: T, cost: number, prev: ASNode<T>, next: [number]);
-  }
-
-  /*
-   * Hash table is used internally in graph, TODO: for now
-   */
-  interface HashTable<T extends State> {
-    [key: number]: ASNode<T>;
+    constructor(state: T, cost: number, prev: ASNode<T>, next: [ASNode<T>]);
   }
 
   /*
@@ -69,7 +60,7 @@ declare module Astar {
    */
   class ASGraph<T extends State> {
     start: ASNode<T>;
-    table: HashTable<T>;             // ASGraph stores nodes in Hashtable to save space
+    table: C.collections.Dictionary<ASNode<T>, ASNode<T>>;             // ASGraph stores nodes in Hashtable to save space
     set(node: ASNode<T>): boolean;
     get(k: number): ASNode<T>;
     constructor(node: ASNode<T>);

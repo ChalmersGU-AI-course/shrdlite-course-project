@@ -23,9 +23,6 @@ module AStarRomania {
     expand() {
       return map[this.name];
     }
-    hash() {
-      return A.Astar.hash(this.name + this.from);
-    }
     toString() {
       return "City: " + this.name + " and came from " + this.from;
     }

@@ -51,19 +51,6 @@ module AStarEuclidian {
       return transitions;
     }
 
-    // hash is a 9 digit key for each unique puzzle state
-    hash(): number {
-      var hash = 0;
-      var base = 1;
-      for (var i = 0; i < 3; i++) {
-        for (var j = 0; j < 3; j++) {
-          hash += this.puzzle[i][j] * base;
-          base *= 10;
-        }
-      }
-      return hash;
-    }
-
     toString() {
       var puzzleStr = "\n";
       for (var i = 0; i < 3; i++) {
