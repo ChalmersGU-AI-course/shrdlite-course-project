@@ -137,6 +137,8 @@ def matches_obj(a, b):
     """Does object a match object b, where b is a 'complete' object
     description
     """
-    return (not a['color'] or a['color'] == b['color']) \
-            and (not a['form'] or a['form'] == b['form']) \
-            and (not a['size'] or a['size'] == b['size'])
+    return ((not a['color'] or a['color'] == b['color'])
+            and (not a['form']
+                 or (a['form'] == 'anyform' and not b['form'] == 'floor')
+                 or a['form'] == b['form'])
+            and (not a['size'] or a['size'] == b['size']))

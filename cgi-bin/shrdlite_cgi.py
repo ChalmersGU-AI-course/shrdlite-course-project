@@ -7,15 +7,9 @@ def main(state):
     # pretty_state = json.dumps(state, sort_keys=True, indent=2, separators=(',', ': '))
     # writeToLog(pretty_state)
 
-    # add floors!
-    for idx, stack in enumerate(state['stacks']):
-        floor = "floor-" + str(idx)
-        state['objects'][floor] = {'color': None, 'form': 'floor', 'size': None}
-        stack.insert(0, floor)
-
     try:
         intprt = interpreter.interpret(**state)
-    except InterpError as err:
+    except interpreter.InterpError as err:
         return {'plan': [str(err)]}
 
     plan = planner(intprt, **state)
@@ -86,6 +80,16 @@ if __name__ == '__main__':
         form = cgi.FieldStorage()
         jsondata = form.getfirst('data')
         state = json.loads(jsondata)
+
+        # add floors!
+        for idx, stack in enumerate(state['stacks']):
+            floor = "floor-" + str(idx)
+            state['objects'][floor] = {'color': None, 'form': 'floor', 'size': None}
+            stack.insert(0, floor)
+
+        if not 'holding' in state:
+            state['holding'] = None
+
         result = main(state)
         print(json.dumps(result))
 
