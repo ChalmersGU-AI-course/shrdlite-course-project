@@ -1,5 +1,5 @@
 from PDDL import satisfy_pred
-from physics import check_physics
+import physics
 
 class InterpError(Exception):
     def __init__(self, descr):
@@ -21,7 +21,7 @@ def interpret(stacks, holding, objects, parses, **_): # fancy way of ignoring al
     for goal in goals:
         possible = []
         for alt in goal:
-            if check_physics(alt, objects):
+            if physics.check_physics(alt, objects):
                 possible.append(alt)
         if len(possible) >= 1:
             ok_goals.append(possible)
@@ -114,8 +114,9 @@ def find_ent(ent, objects, stacks, holding):
 
     os_descr = [objects[o] for o in os]
 
-    if (False and ent['quant'] == 'the'
-        and len(os) > 1):
+    if (ent['quant'] == 'the'
+        and len(os) > 1
+        and not all(map(lambda o: physics.is_floor(o), os_descr))):
         raise InterpError('Ambiguous object: what object did you mean? ' + ', '.join(map(obj_str, os_descr)))
     else:
         return os
