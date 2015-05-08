@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
 
+import interpreter
+
 def main(state):
     # # Write to log for testing purposes
     # pretty_state = json.dumps(state, sort_keys=True, indent=2, separators=(',', ': '))
     # writeToLog(pretty_state)
 
-    # add floors!
-    for idx, stack in enumerate(state['stacks']):
-        floor = "floor-" + str(idx)
-        state['objects'][floor] = {'color': None, 'form': 'floor', 'size': None}
-        stack.insert(0, floor)
+    try:
+        intprt = interpreter.interpret(**state)
+    except interpreter.InterpError as err:
+        return {'plan': [str(err)]}
 
-
-    # TODO: put floors in the bottom of the stacks :)
-
-    intprt = interpret(**state)
     plan = planner(intprt, **state)
+
     return {'int': intprt,
             'plan': plan,
     }
@@ -38,7 +36,7 @@ def planner(intprt, stacks, holding, arm, objects, utterance, parses):
         pickstack = random.randrange(len(stacks))
         if stacks[pickstack]:
             break
-            plan = []
+    plan = []
 
     # First move the arm to the selected stack
     if pickstack < arm:
@@ -82,6 +80,16 @@ if __name__ == '__main__':
         form = cgi.FieldStorage()
         jsondata = form.getfirst('data')
         state = json.loads(jsondata)
+
+        # add floors!
+        for idx, stack in enumerate(state['stacks']):
+            floor = "floor-" + str(idx)
+            state['objects'][floor] = {'color': None, 'form': 'floor', 'size': None}
+            stack.insert(0, floor)
+
+        if not 'holding' in state:
+            state['holding'] = None
+
         result = main(state)
         print(json.dumps(result))
 

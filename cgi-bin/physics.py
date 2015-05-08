@@ -49,6 +49,9 @@ def is_box(o):
 def is_table(o):
     return o['form'] == 'table'
 
+def is_floor(o):
+    return o['form'] == 'floor'
+
 def is_small(o):
     return o['size'] == 'small'
 

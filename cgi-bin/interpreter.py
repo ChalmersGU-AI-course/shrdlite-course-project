@@ -1,5 +1,5 @@
 from PDDL import satisfy_pred
-from physics import check_physics
+import physics
 
 class InterpError(Exception):
     def __init__(self, descr):
@@ -8,26 +8,29 @@ class InterpError(Exception):
         return self.descr
 
 def interpret(stacks, holding, objects, parses, **_): # fancy way of ignoring all other stuff
-    """for each parse return a collection of disjunctive goals, does not
-    care about if it is physically possible
+    """for each parse return a collection of disjunctive goals
     """
+
+    # find all possible goals
     goals = []
     for parse in parses:
         goals.append(interp_cmd(parse['prs'], objects, stacks, holding))
 
+    # remove goals that do not satisfy the laws of physic
     ok_goals = []
     for goal in goals:
         possible = []
         for alt in goal:
-            if check_physics(alt, objects):
+            if physics.check_physics(alt, objects):
                 possible.append(alt)
-        if len(possible) > 1:
+        if len(possible) >= 1:
             ok_goals.append(possible)
 
+    # if there is more than 1 disj. goal left the command is ambiguous
     if not len(ok_goals) == 1:
         raise InterpError('Ambiguous parse: ' + str(goals))
 
-    return ok_goals
+    return ok_goals[0]
 
 def interp_cmd(cmd, objects, stacks, holding):
     """from command to disjunctive PDDL goal, list of pddl goals"""
@@ -67,11 +70,6 @@ def interp_cmd_move(ent, loc, objects, stacks, holding):
         for b in find_ent(loc['ent'], objects, stacks, holding):
             goals.append((rel, a, b))
     return goals
-
-# PDDL goals
-# ('relation', x, y)
-# relation = inside, under, ...
-# ('hold', x)
 
 def find_ent(ent, objects, stacks, holding):
     """ent:
@@ -116,8 +114,9 @@ def find_ent(ent, objects, stacks, holding):
 
     os_descr = [objects[o] for o in os]
 
-    if (False and ent['quant'] == 'the'
-        and len(os) > 1):
+    if (ent['quant'] == 'the'
+        and len(os) > 1
+        and not all(map(lambda o: physics.is_floor(o), os_descr))):
         raise InterpError('Ambiguous object: what object did you mean? ' + ', '.join(map(obj_str, os_descr)))
     else:
         return os
@@ -134,6 +133,8 @@ def matches_obj(a, b):
     """Does object a match object b, where b is a 'complete' object
     description
     """
-    return (not a['color'] or a['color'] == b['color']) \
-            and (not a['form'] or a['form'] == b['form']) \
-            and (not a['size'] or a['size'] == b['size'])
+    return ((not a['color'] or a['color'] == b['color'])
+            and (not a['form']
+                 or (a['form'] == 'anyform' and not b['form'] == 'floor')
+                 or a['form'] == b['form'])
+            and (not a['size'] or a['size'] == b['size']))
