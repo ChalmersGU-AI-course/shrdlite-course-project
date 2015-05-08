@@ -6,6 +6,7 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
+	//todo: ambiguity, what to do when there are several possible interpretations?
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
         parses.forEach((parseresult) => {
@@ -91,7 +92,16 @@ module Interpreter {
 			for (var i = 0; i < this.nodeL[0].pos.length; i++) {
 				var x : number = this.nodeL[0].pos[i].x;
 				var y : number = this.nodeL[0].pos[i].y;
-				var s : string = (x == -1) ? "floor" : this.state.stacks[x][y];
+				var s : string = "";
+
+				if (x == -1) {
+					s = "floor";
+				} else if (x == -2) {
+					s = this.state.holding;
+				} else {
+					s = this.state.stacks[x][y];
+				}
+
 				t.push(s);
 			}
 			return t;
@@ -132,6 +142,7 @@ module Interpreter {
 		* @param {object} object representing an object pattern in the parse tree
 		* @return {Position[]} array of all positions that reflect the current object pattern in the world state
 		* returns [{x: -1, y: -1}] in case of "floor"
+		* returns [{x: -2, y: -2}] in case of holding
 		*/
 		private getPositions(o) : Position[] {
 			//in case of floor
@@ -141,18 +152,43 @@ module Interpreter {
 
 			//otherwise
 			var p : Position[] = [];
+			//is it held by the arm?
+			if (this.state.holding != null) {
+				var a = this.state.objects[this.state.holding];
+				if (this.objCompare(o,a)) {
+					var temp : Position = {x: -2, y: -2}; 
+					p.push(temp);	
+				}
+			}
+
+			//is it on the table?
 			for (var i = 0; i < this.state.stacks.length; i++) {
 				for (var j = 0; j < this.state.stacks[i].length; j++) {
 					var a = this.state.objects[this.state.stacks[i][j]];
-					if ((o.size == null || o.size == a.size) &&
-						(o.color == null || o.color == a.color) &&
-						(o.form == null || o.form == a.form || o.form == "anyform")) {
+						if (this.objCompare(o,a)) {
 							var temp : Position = {x: i, y: j}; 
 							p.push(temp);	
-					}
+						}
 				}
 			}
 			return p;
+		}
+
+		/**
+		* Do the objects match?
+		*
+		* @param {object} object representing an object pattern in the parse tree
+		* @param {object} object representing an actual object in the current world
+		* @return {boolean} true if they match, false if they do not match
+		*/
+		private objCompare(o,a) : boolean {
+			if ((o.size == null || o.size == a.size) &&
+			(o.color == null || o.color == a.color) &&
+			(o.form == null || o.form == a.form || o.form == "anyform")) {
+				return true;
+			}
+
+			return false;
 		}
 
 		/**
@@ -192,17 +228,17 @@ module Interpreter {
 						return true;
 					}
 					break;
-				case "leftof":
+				case "leftof": //as in "directly left of"
 					if (orig.x == (dest.x - 1)) {
 						return true;
 					}
 					break;
-				case "rightof":
+				case "rightof": //as in "directly right of"
 					if (orig.x == (dest.x + 1)) {
 						return true;
 					}
 					break;
-				case "beside":
+				case "beside": //as in "directly beside"
 					if (orig.x == (dest.x - 1) || orig.x == (dest.x + 1)) {
 						return true;
 					}
@@ -272,6 +308,29 @@ module Interpreter {
 		private buildLiteral(goal : string, quantOrig : string, quantDest : string, origs : string[], dests : string[]) {
 			var intprt : Literal[][] = [[]];
 			var n : number = 0;
+			//++n is like "or", n stays unchanged is like "and"
+
+			if (!dests.length) {
+				for (var i = 0; i < origs.length; i++) {
+					if (n>(intprt.length - 1))
+						intprt[n] = [];
+					var lit : Literal =  {pol:true, rel:goal, args:[origs[i]]};
+					intprt[n].push(lit);
+					n = (quantOrig == "all" || quantOrig == "the") ? n : ++n;
+				}
+				return intprt;
+			}
+
+			if (!origs.length) {
+				for (var i = 0; i < dests.length; i++) {
+					if (n>(intprt.length - 1))
+						intprt[n] = [];
+					var lit : Literal =  {pol:true, rel:goal, args:[dests[i]]};
+					intprt[n].push(lit);
+					n = (quantDest == "all" || quantDest == "the") ? n : ++n;
+				}
+				return intprt;
+			}
 
 			for (var i = 0; i < origs.length; i++) {
 				for (var j = 0; j < dests.length; j++) {
@@ -279,9 +338,9 @@ module Interpreter {
 						intprt[n] = [];
 					var lit : Literal =  {pol:true, rel:goal, args:[origs[i], dests[j]]};
 					intprt[n].push(lit);
-					n = (quantDest == "the") ? n : ++n;
+					n = (quantDest == "all" || quantDest == "the") ? n : ++n;
 				}
-				n = (quantOrig == "the") ? n : ++n;
+				n = (quantOrig == "all" || quantOrig == "the") ? n : ++n;
 			}
 
 			return intprt;
@@ -293,7 +352,7 @@ module Interpreter {
 		*
 		* @return {Literal[][]} Literal describing the PDDL goals
 		*/
-		//todo: actually interpret something, right now the return is just a dummy
+		//todo: ambigous stuff like "move the ball on the floor" currently produces two PDDL goals when there are two balls present
 		public getInterpretation() : Literal[][] {
 			//typeof this.cmd.ent !== "undefined"
 			//typeof this.cmd.loc !== "undefined"
