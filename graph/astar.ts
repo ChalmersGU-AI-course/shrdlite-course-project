@@ -70,11 +70,11 @@ module astar {
             );
 
             currentPath = pq.dequeue();
-            console.log("astar.comparePath: " + currentPath);
+            //console.log("astar.comparePath: " + currentPath);
             
             if (currentPath == undefined) {
                 //No path to the goal
-                //console.log("astar.comparePath: No path found to the goal");
+                ////console.log("astar.comparePath: No path found to the goal");
                 return undefined;
             }
 
@@ -86,7 +86,7 @@ module astar {
 
         }
 
-        //console.log("astar.comparePath:  *********************** End of astar ***********************");
+        ////console.log("astar.comparePath:  *********************** End of astar ***********************");
         return currentPath;
 
     }

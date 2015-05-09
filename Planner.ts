@@ -40,6 +40,20 @@ module Planner {
         public toString() {return this.name + ": " + this.message}
     }
 
+    /*
+    {cmd: "move",
+      ent: {quant: "the",
+            obj: {obj: {size: null, color: "white", form: "ball"},
+                  loc: {rel: "inside",
+                        ent: {quant: "any",
+                              obj: {size: null, color: null, form: "box"}}}}},
+      loc: {rel: "ontop",
+            ent: {quant: "the",
+                  obj: {size: null, color: null, form: "floor"}}}}
+    
+    
+    export interface Literal {pol:boolean; rel:string; args:string[];}
+    */
 
     //////////////////////////////////////////////////////////////////////
     // private functions
@@ -47,8 +61,20 @@ module Planner {
     // HERE IS THE PLACE WHERE WE SHOULD IMPLEMENT OUR PLANNER!
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
     
-        console.log("------------planInterpretation start------------");
-        console.log("Stacks1: " + prettyMat(state.stacks));
+        //console.log("------------planInterpretation start------------");
+        //console.log("Stacks1: " + prettyMat(state.stacks));
+        
+        if(intprt != undefined && intprt.length > 0){
+            var intList1 = intprt[0];
+            //console.log("Planner INT1: " + intList1.toString());
+            if(intList1.length > 0){
+                var intList2 = intList1[0];
+                //console.log("Planner INT2: " + intList2.toString());
+                //console.log("Planner INT21: " + intList2.pol.toString());
+                //console.log("Planner INT22: " + intList2.rel.toString());
+                //console.log("Planner INT23: " + intList2.args.toString());
+            }
+        }
         
         var plan : string[] = [];
         
@@ -59,7 +85,7 @@ module Planner {
         
         var dropPlan: string[] = []
        
-        console.log("holding: " + holding);
+        //console.log("holding: " + holding);
        
         var objectDropIndex: number = undefined;
         var armPositionWithoutDropPlan: number = state.arm;
@@ -68,18 +94,18 @@ module Planner {
         if(holding != null){
             //The arm holds something. "Drop" it at the first available place
             //TODO: kanske är dumt att bara lägga ner den, kan förvärra slutresultatet
-            console.log("starting to loop...");
+            //console.log("starting to loop...");
             for(var i = 0; i < startStack.length; i++){
-                console.log("Looping: " + i);
+                //console.log("Looping: " + i);
                 var bottomElement: string = undefined;
                 
                 if(startStack[i].length > 0){
                     bottomElement = startStack[i][startStack[i].length-1];
                 }
-                console.log("bottomElement: " + bottomElement);
+                //console.log("bottomElement: " + bottomElement);
                 
                 if(validPlacement(holding, bottomElement, state.objects)){
-                    console.log("found valid placement! at index=" + i);
+                    //console.log("found valid placement! at index=" + i);
                     moveArmTo(dropPlan, arm, i);
                     arm = i;
                     dropPlan.push("d");
@@ -89,8 +115,8 @@ module Planner {
                 }
             }
         } 
-        console.log("Stacks2.1: " + prettyMat(state.stacks));
-        console.log("Stacks2.2: " + prettyMat(startStack));
+        //console.log("Stacks2.1: " + prettyMat(state.stacks));
+        //console.log("Stacks2.2: " + prettyMat(startStack));
         
         var endStack = [[],["g","l", "e"],[],["k","m","f"],[]];
         
@@ -104,7 +130,7 @@ module Planner {
         //Add start node to the graph
         graph.addNode(startNode);
         
-        console.log("graph before A*: " + graph.toString());
+        //console.log("graph before A*: " + graph.toString());
         
         //Compute the shortest path!
         var path = astar.compute(graph, startId, 
@@ -121,17 +147,17 @@ module Planner {
             }
         );
         
-        console.log("A* done!");
+        //console.log("A* done!");
         
         //FIXME: ifall nuvarande state redan är målstate, kommer inte
         // A* att ge tillbaka en tom path? Då kan vi ju inte säga att 
         // "no path is found"?
         if(path == undefined){
             plan.push("No path found. (ノ ゜Д゜)ノ ︵ ┻━┻");
-            console.log("------------planInterpretation returns 2------------");
+            //console.log("------------planInterpretation returns 2------------");
             return plan;
         } else if(path.isEmpty()) {
-            console.log("The path is empty, meaning we're already in the final state.");
+            //console.log("The path is empty, meaning we're already in the final state.");
             //First we need to remove the object with ID objectID
             // from the worldstate, since we've cheated by putting it 
             // there while doing the A* search.
@@ -189,7 +215,7 @@ module Planner {
             }
         );
         
-        console.log("------------planInterpretation returns 3------------");
+        //console.log("------------planInterpretation returns 3------------");
         return plan;
         
     }
@@ -252,10 +278,10 @@ module Planner {
     }
     
     function moveArmTo(plan: string[], arm: number, to: number){
-        console.log("Planner.moveArmTo: ______________________");
-        console.log("Planner.moveArmTo: arm=" + arm);
-        console.log("Planner.moveArmTo: to=" + to);
-        console.log("Planner.moveArmTo: ----------------------");
+        //console.log("Planner.moveArmTo: ______________________");
+        //console.log("Planner.moveArmTo: arm=" + arm);
+        //console.log("Planner.moveArmTo: to=" + to);
+        //console.log("Planner.moveArmTo: ----------------------");
         if(arm == undefined || to == undefined){
             throw new Planner.Error("moveArmTo: arm or to is undefined!");
         }
@@ -268,9 +294,9 @@ module Planner {
                 plan.push("l")
             }
         }
-        console.log("Planner.moveArmTo: arm=" + arm);
-        console.log("Planner.moveArmTo: to=" + to);
-        console.log("Planner.moveArmTo: ______________________");
+        //console.log("Planner.moveArmTo: arm=" + arm);
+        //console.log("Planner.moveArmTo: to=" + to);
+        //console.log("Planner.moveArmTo: ______________________");
     }
     
     function matrixEquality(first: string[][], second: string[][]):boolean{
