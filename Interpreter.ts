@@ -65,6 +65,8 @@ module Interpreter {
                 var location = cmd.loc;
                 var locationTargets = findTargetEntities(location.ent, state);
 
+                // TODO use information about canSupport...
+
                 for (var ix in targets){
                     for(var jx in locationTargets){
                         intprt.push( [

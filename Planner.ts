@@ -123,7 +123,8 @@ module Planner {
                 var below = atom.args[1];
 
                 if(atom.pol){
-                    return heuristicDistance(s, target) + heuristicDistance(s, below);
+                    // return heuristicDistance(s, target) + heuristicDistance(s, below);
+                    return heuristicDifference(s, target, below, true);
                 }
                 // Same heuristic as for grabbing the target.
                 return heuristicDistance(s, target);
@@ -134,6 +135,55 @@ module Planner {
         }
 
         return 0;
+    }
+
+    function heuristicDifference(s : State, above : String, below : String, exactlyOntop : boolean) : number {
+
+        var stackA;
+        var stackB;
+        var heightA;
+        var heightB;
+
+        // TODO floor...
+
+        for(var stackNo in s.stacks){
+            var stack = s.stacks[stackNo];
+            for(var height in stack){
+                if(stack[height] === above){
+                    stackA = stackNo;
+                    heightA = height;
+                }
+                if(stack[height] === below){
+                    stackB = stackNo;
+                    heightB = height;
+                }
+            }
+        }
+        if(! stackA) throw new Planner.Error("stackA undefined!");
+        if(! stackB) throw new Planner.Error("stackB undefined!");
+        if(! heightA) throw new Planner.Error("heightA undefined!");
+        if(! heightB) throw new Planner.Error("heightB undefined!");
+
+        var armCost = abs(s.arm - stackA) + abs(stackA - stackB);
+
+        var aboveA = s.stacks[stackA].length -1 -heightA;
+        var aboveB = s.stacks[stackB].length -1 -heightB;
+
+        // Number of objects that needs to be moved.
+        var aboveCost;
+        if(exactlyOntop){
+            if(stackA === stackB){
+                aboveCost = max(aboveA, aboveB);
+            } else {
+                aboveCost = aboveA + aboveB;
+            }
+        } else {
+            // Just somewhere above is sufficient
+        }
+
+        if(! aboveCost) throw new Planner.Error("aboveCost undefined!");
+
+        return armCost + 4*aboveCost;
     }
 
     // Computes the expected number of actions to grab an object
@@ -185,8 +235,17 @@ module Planner {
 
     }
 
+    function max(a, b){
+        if(a > b){
+            return a;
+        }
+        return b;
+    }
+
     function abs(a : number) : number{
-        if(a < 0) return -a;
+        if(a < 0){
+            return -a;
+        }
         return a;
     }
 
