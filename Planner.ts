@@ -123,8 +123,8 @@ module Planner {
                 var below = atom.args[1];
 
                 if(atom.pol){
-                    // return heuristicDistance(s, target) + heuristicDistance(s, below);
-                    return heuristicDifference(s, target, below, true);
+                    return heuristicDistance(s, target) + heuristicDistance(s, below);
+                    // return heuristicDifference(s, target, below, true);
                 }
                 // Same heuristic as for grabbing the target.
                 return heuristicDistance(s, target);
@@ -176,6 +176,11 @@ module Planner {
 
         var armCost = abs(s.arm - stackA) + abs(stackA - stackB);
 
+        var holdCost = 0;
+        if(s.holding != null){
+            holdCost = 1;
+        }
+
         var aboveA = s.stacks[stackA].length -1 -heightA;
         var aboveB = s.stacks[stackB].length -1 -heightB;
 
@@ -183,7 +188,7 @@ module Planner {
         var aboveCost;
         if(exactlyOntop){
             if(stackA === stackB){
-                aboveCost = max(aboveA, aboveB);
+                aboveCost = 1 + max(aboveA, aboveB);
             } else {
                 aboveCost = aboveA + aboveB;
             }
@@ -194,7 +199,7 @@ module Planner {
 
         if(isUndefined(aboveCost)) throw new Planner.Error("aboveCost undefined!");
 
-        return armCost + 4*aboveCost;
+        return holdCost + armCost + 4*aboveCost;
     }
 
     function isUndefined(a){
