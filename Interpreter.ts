@@ -61,11 +61,10 @@ module Interpreter {
                 }
                 break;
             case "move":
-                console.log("Got move! which is not implemented yet...");
+                throw new Interpreter.Error("Got move! which is not implemented yet...");
                 break;
             default:
-                console.log("Interpreter: UNKNOWN cmd: " + cmd.cmd);
-                break;
+                throw new Interpreter.Error("Interpreter: UNKNOWN cmd: " + cmd.cmd);
         }
         return intprt;
     }

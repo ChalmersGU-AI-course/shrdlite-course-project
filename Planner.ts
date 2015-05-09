@@ -120,7 +120,7 @@ module Planner {
                 }
                 break;
             default:
-                console.log("!!! Unimplemented relation in heuristicAtom: "+atom.rel);
+                throw new Planner.Error("!!! Unimplemented relation in heuristicAtom: "+atom.rel);
                 return 0;
         }
 
@@ -155,7 +155,10 @@ module Planner {
             }
         }
 
-        console.log("!!! Error in heuristicDistance: must be able to find the target somewhere in the world...");
+        throw new Planner.Error("!!! Error in heuristicDistance: must be able to find the target somewhere in the world...");
+        // Of course unless the target is simply the floor...
+
+
         return 0;
 
     }
@@ -198,7 +201,7 @@ module Planner {
                 result = s.holding === atom.args[0];
                 break;
             default:
-                console.log("!!! Unimplemented relation in testAtom: "+atom.rel);
+                throw new Planner.Error("!!! Unimplemented relation in testAtom: "+atom.rel);
                 return true;
         }
         if(atom.pol){
@@ -266,7 +269,7 @@ module Planner {
                 newState.holding = null;
                 break;
             default:
-                console.log("ERROR: unknown action "+action);
+                throw new Planner.Error("ERROR: unknown action "+action);
                 return undefined;
         }
         return {state: newState, action: action};
@@ -277,7 +280,7 @@ module Planner {
         var objB : ObjectDefinition = worldDictionary[below];
 
         if(! objB){
-            console.log("DEBUG: objB undefined: "+below);
+            throw new Planner.Error("DEBUG: objB undefined: "+below);
         }
 
         if(objB.form == "floor"){
