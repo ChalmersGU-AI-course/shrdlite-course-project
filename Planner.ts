@@ -109,13 +109,14 @@ module Planner {
         //Compute the shortest path!
         var path = astar.compute(graph, startId, 
             (node: graphmodule.GraphNode<string[][]>) => {
-                return matrixEquality(node.data, endStack);
+                var int = intprt[0];
+                return check(int.args[0], int.rel, int.args[1], node);
             }
-        , 
+        ,
             (node:  string[][]) => {
-                return heuristics.worldHeuristics(startStack, endStack);
+                return heuristics.worldHeuristics(node, endStack);
             }
-        , 
+        ,
             (basedOn: graphmodule.GraphNode<string[][]>) => {
                 return permutateBasedOn(basedOn, state.objects);
             }
