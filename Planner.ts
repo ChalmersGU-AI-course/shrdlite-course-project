@@ -150,7 +150,7 @@ module Planner {
             for(var height in stack){
                 if(stack[height] === target){
                     var objectsAbove = stack.length -1 -height;
-                    return abs(stackNo - s.arm) + 4*objectsAbove + holdCost - emptyStacks;
+                    return abs(stackNo - s.arm) + 4*objectsAbove + holdCost; // - 0.5*emptyStacks;
                 }
             }
         }
