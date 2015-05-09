@@ -50,6 +50,7 @@ module Planner {
         var heur = computeHeuristicFunction(intprt);
 
         var plan : string[] = Astar.astar(neighbours, cost, heur, state, goal, false, 10000);
+        plan.shift();
 
         return plan;
     }
@@ -230,15 +231,17 @@ module Planner {
             var currStack = s.stacks[s.arm];
             if(currStack.length > 0){
                 var head : string = currStack[currStack.length-1];
-
                 if(canSupport(s.holding, head)){
 
                     // Can drop here
-                    // console.log(s.holding + " can support " + head);
+                    // console.log(s.holding + " can be supported by " + head);
                     result.push(performAction("d",s));
                 } else {
-                    // console.log(s.holding + " can't support " + head);
+                    // console.log(s.holding + " can't be supported by " + head);
                 }
+            } else {
+                // Floor
+                result.push(performAction("d",s));
             }
         }
 

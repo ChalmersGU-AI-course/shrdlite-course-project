@@ -3,7 +3,7 @@ TARGETS = html ajax ansi offline
 
 .DELETE_ON_ERROR:
 
-.PHONY: help clean all $(TARGETS)
+.PHONY: help clean all $(TARGETS) run
 
 
 TSFILES = $(wildcard *.ts)
@@ -25,4 +25,4 @@ grammar.js: grammar.ne
 	nearleyc $< > $@
 
 run: offline
-	node shrdlite-offline.js small "grasp the small box"
+	node shrdlite-offline.js small "grasp the large table"
