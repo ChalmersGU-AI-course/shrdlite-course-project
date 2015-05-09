@@ -61,7 +61,18 @@ module Interpreter {
                 }
                 break;
             case "move":
-                throw new Interpreter.Error("Got move! which is not implemented yet...");
+                var targets = findTargetEntities(cmd.ent, state);
+                var location = cmd.loc;
+                var locationTargets = findTargetEntities(location.ent, state);
+
+                for (var ix in targets){
+                    for(var jx in locationTargets){
+                        intprt.push( [
+                            {pol: true, rel: location.rel, args: [targets[ix], locationTargets[jx]] }
+                        ] );
+                    }
+                }
+                // throw new Interpreter.Error("Got move! which is not implemented yet...");
                 break;
             default:
                 throw new Interpreter.Error("Interpreter: UNKNOWN cmd: " + cmd.cmd);
@@ -76,6 +87,11 @@ module Interpreter {
     function findTargetEntities(en : Parser.Entity, state : WorldState) : string[] {
         var goalObj = en.obj;
         var result : string[] = [];
+
+        if(en.obj.form === "floor"){
+            result.push("floor");
+        }
+
         for(var objName in state.objects){
             var obj : ObjectDefinition = state.objects[objName];
 

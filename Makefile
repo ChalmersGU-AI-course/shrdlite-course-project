@@ -25,4 +25,5 @@ grammar.js: grammar.ne
 	nearleyc $< > $@
 
 run: offline
-	node shrdlite-offline.js small "put the small box on the floor"
+	# node shrdlite-offline.js small "grasp the blue table"
+	node shrdlite-offline.js small "put the blue table on a box"

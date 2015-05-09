@@ -110,15 +110,24 @@ module Planner {
 
                 if(atom.pol){
                     return heuristicDistance(s, target);
-                } else {
-                    if(holds){
-                        return 1;
-                        // Just drop it. Optionally: use canSupport function.
-                    } else {
-                        return 0;
-                    }
                 }
-                break;
+                if(holds){
+                    return 1;
+                    // Just drop it. Optionally: use canSupport function.
+                }
+                // Already done
+                return 0;
+
+            case "ontop":
+                var target = atom.args[0];
+                var below = atom.args[1];
+
+                if(atom.pol){
+                    return heuristicDistance(s, target) + heuristicDistance(s, below);
+                }
+                // Same heuristic as for grabbing the target.
+                return heuristicDistance(s, target);
+
             default:
                 throw new Planner.Error("!!! Unimplemented relation in heuristicAtom: "+atom.rel);
                 return 0;
@@ -143,6 +152,19 @@ module Planner {
             if(s.stacks[stackNo].length == 0){
                 emptyStacks = emptyStacks +1;
             }
+        }
+
+        if(target === "floor"){
+            var closest = Infinity;
+
+            for(var stackNo in s.stacks){
+                var stack = s.stacks[stackNo];
+                var cost = abs(stackNo - s.arm) + 4*stack.length;
+                if(closest > cost){
+                    closest = cost;
+                }
+            }
+            return closest;
         }
 
         for(var stackNo in s.stacks){
@@ -194,20 +216,47 @@ module Planner {
     }
 
     function testAtom(s : State, atom : Interpreter.Literal) : boolean {
+        var ret = (result => {
+            if(atom.pol){
+                return result;
+            }
+            return ! result;
+        })
+
         var result : boolean;
 
         switch(atom.rel){
             case "holding":
-                result = s.holding === atom.args[0];
-                break;
+                return ret(s.holding === atom.args[0]);
+            case "ontop":
+                var locationObject = atom.args[1];
+                if(locationObject === "floor"){
+                    for(var stackNo in s.stacks){
+                        var stack = s.stacks[stackNo];
+                        if(stack.length > 0 && stack[0] === atom.args[0]){
+                            return ret(true);
+                        }
+                    }
+                    return ret(false);
+                }
+
+                for(var stackNo in s.stacks){
+                    var stack = s.stacks[stackNo];
+                    for(var height in stack){
+                        if(stack[height] === atom.args[0]){
+                            return ret(height > 0 &&
+                                       stack[height-1] === locationObject);
+                        }
+                    }
+                }
+                return ret(false);
+
             default:
                 throw new Planner.Error("!!! Unimplemented relation in testAtom: "+atom.rel);
                 return true;
         }
-        if(atom.pol){
-            return result;
-        }
-        return ! result;
+        console.log("OOPS? testAtom: Default return for relation "+atom.rel);
+        return ret(false);
     }
 
 
