@@ -71,6 +71,72 @@ module Planner {
     }
 
     /**
+    * @return heuristic function for Astar.
+    */
+    function computeHeuristicFunction(intprt : Interpreter.Literal[][]) : Astar.Heuristic<State>{
+        return (s : State) => {
+            var hValue = Infinity;
+            for(var ix in intprt){
+                var hc = heuristicConjunctiveClause(s, intprt[ix]);
+                if(hValue > hc){
+                    hValue = hc;
+                }
+            }
+            // Return minimum heuristic value of the disjunction.
+            return hValue;
+        };
+    }
+
+    function heuristicConjunctiveClause(s : State, c : Interpreter.Literal[]) : number{
+        var hValue = 0;
+        for(var ix in c){
+            var hc = heuristicAtom(s, c[ix]);
+            if(hValue < hc){
+                hValue = hc;
+            }
+        }
+        // Return maximum heuristic value of the conjuction.
+        return hValue;
+    }
+
+    function heuristicAtom(s : State, atom : Interpreter.Literal) : number {
+
+        switch(atom.rel){
+            case "holding":
+                var target = atom.args[0];
+                var holds = s.holding === target;
+
+                if(atom.pol){
+                    return heuristicDistance(s, target);
+                } else {
+                    if(holds){
+                        return 1;
+                        // Just drop it. Optionally: use canSupport function.
+                    } else {
+                        return 0;
+                    }
+                }
+                break;
+            default:
+                console.log("!!! Unimplemented relation in heuristicAtom: "+atom.rel);
+                return 0;
+        }
+
+        return 0;
+    }
+
+    // Computes the expected number of actions to grab an object
+    function heuristicDistance(s : State, target : String) : number {
+        if(s.holding === target){
+            return 0;
+        }
+
+
+        return 0;
+
+    }
+
+    /**
     * @return goal function for Astar.
     */
     function computeGoalFunction(intprt : Interpreter.Literal[][]) : Astar.Goal<State>{
