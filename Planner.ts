@@ -139,10 +139,10 @@ module Planner {
 
     function heuristicDifference(s : State, above : String, below : String, exactlyOntop : boolean) : number {
 
-        var stackA;
-        var stackB;
-        var heightA;
-        var heightB;
+        var stackA : number;
+        var stackB : number;
+        var heightA : number;
+        var heightB : number;
 
         // TODO floor...
 
@@ -159,10 +159,20 @@ module Planner {
                 }
             }
         }
-        if(! stackA) throw new Planner.Error("stackA undefined!");
-        if(! stackB) throw new Planner.Error("stackB undefined!");
-        if(! heightA) throw new Planner.Error("heightA undefined!");
-        if(! heightB) throw new Planner.Error("heightB undefined!");
+        if(s.holding === above){
+            stackA = s.arm;
+            heightA = s.stacks[stackA].length -1;
+        }
+        if(s.holding === below){
+            stackB = s.arm;
+            heightB = s.stacks[stackB].length -1;
+        }
+        // OBS, can be in arm as well...
+
+        if(isUndefined(stackA)) throw new Planner.Error("stackA undefined! "+above);
+        if(isUndefined(stackB)) throw new Planner.Error("stackB undefined! "+below);
+        if(isUndefined(heightA)) throw new Planner.Error("heightA undefined! "+above);
+        if(isUndefined(heightB)) throw new Planner.Error("heightB undefined! "+below);
 
         var armCost = abs(s.arm - stackA) + abs(stackA - stackB);
 
@@ -178,12 +188,17 @@ module Planner {
                 aboveCost = aboveA + aboveB;
             }
         } else {
+            throw new Planner.Error("should not be here atm...");
             // Just somewhere above is sufficient
         }
 
-        if(! aboveCost) throw new Planner.Error("aboveCost undefined!");
+        if(isUndefined(aboveCost)) throw new Planner.Error("aboveCost undefined!");
 
         return armCost + 4*aboveCost;
+    }
+
+    function isUndefined(a){
+        return typeof a === 'undefined' ;
     }
 
     // Computes the expected number of actions to grab an object
