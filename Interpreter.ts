@@ -5,12 +5,21 @@ module Interpreter {
 
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
-
-    export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
+	var clairifyingparse :Parser.ResultAnswer[];
+    export function interpret(parses : Parser.Result[], clairifyparse:Parser.ResultAnswer[] , currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
+        clairifyingparse = clairifyparse;
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
-            intprt.intp = interpretCommand(intprt.prs, currentState);
+         //   try {
+            	if(intprt.prs.cmd){
+        			intprt.intp = interpretCommand(intprt.prs, currentState);
+				}else{
+					throw new Interpreter.ErrorInput("This is a statement. \"" + intprt.input +"\" . Please tell me a command.");
+				}
+         //   } catch (e) {
+		//	    throw new Interpreter.ErrorInput("This is a statement. \"" + intprt.input +"\" . Please tell me a command.");
+		//	}
             interpretations.push(intprt);
         });
         if (interpretations.length) {
@@ -23,6 +32,7 @@ module Interpreter {
 
     export interface Result extends Parser.Result {intp:Literal[][];}
     export interface Literal {pol:boolean; rel:string; args:string[];}
+    export interface ResultAnswer extends Parser.ResultAnswer {intp:Literal[][];}
 
 
     export function interpretationToString(res : Result) : string {
@@ -41,13 +51,17 @@ module Interpreter {
         constructor(public message? : string) {}
         public toString() {return this.name + ": " + this.message}
     }
+    export class ErrorInput implements Error {
+        public name = "Interpreter.ErrorInput";
+        constructor(public message? : string) {}
+        public toString() {return this.name + ": " + this.message}
+    }
 
 
     //////////////////////////////////////////////////////////////////////
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        // This returns a dummy interpretation involving two random objects in the world
         
         // Find object to move
         
@@ -61,20 +75,18 @@ module Interpreter {
       	
         //var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var pddls = state.pddl.toArray();
-        var a = objs[0];
-        if(loc){
-        	var b = loc[0];
-		}
-        var intprt : Literal[][] = [[
-            //{pol: true, rel: "ontop", args: [a, "floor"]},
-           // {pol: true, rel: "holding", args: [b]}
-        ]];
+        
+        var intprt : Literal[][] = [[]];
         if(loc){
         	var k = 0;
 	        for (var i = 0; i < objs.length; i++) {
 	        	for (var j = 0; j < loc.length; j++) {
-	        		intprt[k]= [{pol: true, rel: cmd.loc.rel, args: [objs[i], loc[j]]}];
-	        		k++;
+	        		var lit: Literal = {pol: true, rel: cmd.loc.rel, args: [objs[i], loc[j]]};
+	        			/////only interpet legal goals!
+	        		if(checkIllegal(lit, state)){
+	        			intprt[k]= [lit];
+	        			k++;
+	        		}
 	        	}
 	        }
 		}else{
@@ -82,12 +94,69 @@ module Interpreter {
 	        	intprt[i]= [{pol: true, rel: cmd.cmd, args: [objs[i]]}];
 	        }
 		}
-        
         return intprt;
     }
     
+    function checkIllegal(lit : Literal, state : WorldState):boolean{
+    	var a = state.objects[lit.args[0]];
+    	var b = state.objects[lit.args[1]];
+    	if(a==b){
+    		return false;
+    	}
+    	if(a.form == "ball" && (lit.rel != "ontop" && lit.rel != "inside")){
+    		return false;
+    	}
+    	if(b.form == "ball" && (lit.rel != "beside" && lit.rel != "leftof" && lit.rel != "rightof")){
+    		return false;
+    	}
+    	if(lit.rel == "inside" &&(a.form == "pyramid" || a.form == "plank" || 
+    			(a.form == "box" && (a.size == b.size || a.size == "large" && b.size == "small")))){
+    		return false;
+    	}
+    	if(lit.rel == "ontop" || lit.rel == "above" &&(a.size == "large" && b.size == "small")){
+    		return false;
+    	}
+    	if(b.form == "box" && lit.rel == "ontop"){
+    		return false;
+    	}
+    	
+    	return true;
+    }
+    
     function identifyLocation(loc : Parser.Location, state : WorldState):string[]{
-    	var objs = identifyObj(loc.ent.obj, state);
+    	var result:string[] = identifyObj(loc.ent.obj, state);
+    	var unqObjs:string[] = uniqeObjects(result);
+    	
+    	if(loc.ent.quant == "the"){
+    		if(unqObjs.length > 1){
+    			// ambigous interpet, use clairifying parse
+    			if(!clairifyingparse){
+    				throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I shoule move to?");
+    			}
+    			var objs = solveAmbiguity(unqObjs, state);
+    			if(objs.length > 1){
+    				throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I shoule move to?" + objs);
+    			}
+    			result = objs;
+    		}
+    		return result;
+    	}
+    	return result;
+    }
+    
+    function solveAmbiguity( objs : string[], state : WorldState):string[]{
+    	var newObj : Parser.Object = state.objects[objs[0]];
+    	var parseresult = clairifyingparse.pop();
+    	if(parseresult.prs.color){
+    		newObj.color = parseresult.prs.color;
+    	}
+    	if(parseresult.prs.size){
+    		newObj.size = parseresult.prs.size;
+    	}
+    	if(parseresult.prs.form){
+    		newObj.form = parseresult.prs.form;
+    	}
+    	objs = identifyObj(newObj, state);
     	return objs;
     }
     
@@ -95,16 +164,13 @@ module Interpreter {
        	var form = obj.form;
         var color = obj.color;
         var size = obj.size;
-    	var objs:collections.Set<string> = new collections.Set<string>(function (x){return x});
+    	var objs : collections.Set<string> = new collections.Set<string>(function (x){return x});
         if(form.length == 0){
         	return [];
         }
         var pddls = state.pddl.toArray();
         for (var index = 0; index < pddls.length; index++) {
         	var pddl = pddls[index];
-        	if(pddl.rel != "ontop"){
-        		continue;
-        	}
         	//check the first arg for form, color and size if it matches, add it to possibel objs
         	var a = state.objects[pddl.args[0]];
         	if(a.form != form){
@@ -129,12 +195,27 @@ module Interpreter {
     }
     
     function identifyEnt(ent:Parser.Entity, state :WorldState):string[]{
+    	var result:string[] = identifyObj(ent.obj, state);
+    	var resSize:number = uniqeObjects(result).length;
+    	if(ent.quant == "the"){
+    		if(resSize > 1){
+    			throw new Interpreter.Error("Ambigous result: " +  result);
+    		}
+    		return result;
+    	}
     	return identifyObj(ent.obj, state);
+    }
+    
+    function uniqeObjects(objs:string[]):string[]{
+    	var objset : collections.Set<string> = new collections.Set<string>(function(a){return a});
+    	objs.forEach((obj) =>
+    		objset.add(obj)
+    	);
+    	return objset.toArray();
     }
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
-
 }
 

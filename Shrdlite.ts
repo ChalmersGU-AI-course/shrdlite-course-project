@@ -4,10 +4,17 @@
 ///<reference path="Planner.ts"/>
 
 module Shrdlite {
-
+	var ambigious = false;
+	var inputPrompt = "";
+	var orgparses : Parser.Result[];
+	var standardinpromt = "What can I do for you today? ";
+	
     export function interactive(world : World) : void {
         function endlessLoop(utterance : string = "") : void {
-            var inputPrompt = "What can I do for you today? ";
+            //var inputPrompt = "What can I do for you today? ";
+           	if(!ambigious){
+        		inputPrompt = standardinpromt;
+        	}
             var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
             if (utterance.trim()) {
                 var plan : string[] = splitStringIntoPlan(utterance);
@@ -31,55 +38,79 @@ module Shrdlite {
     // - then it interprets the parse(s)
     // - then it creates plan(s) for the interpretation(s)
 
-    export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
-        world.printDebugInfo('Parsing utterance: "' + utterance + '"');
-        try {
-            var parses : Parser.Result[] = Parser.parse(utterance);
-        } catch(err) {
-            if (err instanceof Parser.Error) {
-                world.printError("Parsing error", err.message);
-                return;
-            } else {
-                throw err;
-            }
+    export function parseUtteranceIntoPlan(world : World, utter : string) : string[] {
+    	var plan = questionLoop(utter);
+    	
+    	function questionLoop(utterance : string = "") : string[] {
+	        world.printDebugInfo('Parsing utterance: "' + utterance + '"');
+	        try {
+	        	var parses = Parser.parse(utterance, ambigious);
+	        } catch(err) {
+	            if (err instanceof Parser.Error) {
+	                world.printError("Parsing error", err.message);
+	                return;
+	            } else {
+	            	throw err;
+	            }
+	        }
+	        world.printDebugInfo("Found " + parses.length + " parses");
+	        parses.forEach((res, n) => {
+	            world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
+	        });
+	        var clairifyingparse;
+	        if(ambigious){
+	        	clairifyingparse = parses;
+	       		parses = orgparses;
+	        }
+	        
+	        try {
+	            var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, clairifyingparse, world.currentState);
+	        } catch(err) {
+	            if (err instanceof Interpreter.Error) {
+	            	if(!ambigious){
+		            	ambigious = true;
+		            	orgparses = parses;
+	            	} 
+	            	inputPrompt = err.message;
+	            	//world.readUserInput(err.message, questionLoop);
+	                //world.printError("Interpretation error", err.message);
+	                return;
+	            } else if(err instanceof Interpreter.ErrorInput){
+	            	world.printError("Interpretation error", err.message);
+	            	return;
+	            } else {
+	                throw err;
+	            }
+	        }
+	        ambigious = false;
+	        inputPrompt = standardinpromt;
+	        world.printDebugInfo("Found " + interpretations.length + " interpretations");
+	        interpretations.forEach((res, n) => {
+	            world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
+	        });
+		
+	        try {
+	            var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
+	        } catch(err) {
+	            if (err instanceof Planner.Error) {
+	                world.printError("Planning error", err.message);
+	                return;
+	            } else {
+	                throw err;
+	            }
+	        }
+	        world.printDebugInfo("Found " + plans.length + " plans");
+	        plans.forEach((res, n) => {
+	            world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
+	        });
+		
+	        var planq : string[] = plans[0].plan;
+	        world.printDebugInfo("Final plan: " + planq.join(", "));
+	        return planq;
         }
-        world.printDebugInfo("Found " + parses.length + " parses");
-        parses.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
-        });
-
-        try {
-            var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
-        } catch(err) {
-            if (err instanceof Interpreter.Error) {
-                world.printError("Interpretation error", err.message);
-                return;
-            } else {
-                throw err;
-            }
+        if(!ambigious){
+        	questionLoop
         }
-        world.printDebugInfo("Found " + interpretations.length + " interpretations");
-        interpretations.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
-        });
-
-        try {
-            var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
-        } catch(err) {
-            if (err instanceof Planner.Error) {
-                world.printError("Planning error", err.message);
-                return;
-            } else {
-                throw err;
-            }
-        }
-        world.printDebugInfo("Found " + plans.length + " plans");
-        plans.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
-        });
-
-        var plan : string[] = plans[0].plan;
-        world.printDebugInfo("Final plan: " + plan.join(", "));
         return plan;
     }
 

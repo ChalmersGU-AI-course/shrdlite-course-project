@@ -66,6 +66,7 @@ class SVGWorld implements World {
         this.enableInput();
         this.inputCallback = callback;
     }
+    
 
     public printSystemOutput(output, participant="system", utterance?) {
         if (utterance == undefined) {

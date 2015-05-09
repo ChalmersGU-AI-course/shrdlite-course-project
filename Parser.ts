@@ -6,11 +6,12 @@ module Parser {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
-    export function parse(input:string) : Result[] {
+    export function parse(input:string, question:boolean) : Result[] {
         var nearleyParser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart);
         var parsestr = input.toLowerCase().replace(/\W/g, "");
         try {
-            var results : Command[] = nearleyParser.feed(parsestr).results;
+        	var results = nearleyParser.feed(parsestr).results;
+            
         } catch(err) {
             if ('offset' in err) {
                 throw new Parser.Error(
@@ -28,7 +29,8 @@ module Parser {
         });
     }
 
-
+	export interface ResultAnswer {input:string; prs:ObjDiscription;}
+	export interface ObjDiscription {size?:string; color?:string; form?:string;}
     export interface Result {input:string; prs:Command;}
     export interface Command {cmd:string; ent?:Entity; loc?:Location;}
     export interface Entity {quant:string; obj:Object;}
