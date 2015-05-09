@@ -48,6 +48,7 @@ ExampleWorlds["complex"] = {
     },
    // "objIds":["a","b","c","d","e","f","g","h","i","j", "k","l","m"],
     "examples": [
+    	"put a box in the box",
         "put a box in a box",
         "put all balls on the floor",
         "take the yellow box",

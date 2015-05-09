@@ -30,7 +30,7 @@ module Parser {
     }
 
 	export interface ResultAnswer {input:string; prs:ObjDiscription;}
-	export interface ObjDiscription {size?:string; color?:string; form?:string;}
+	export interface ObjDiscription {obj?:ObjDiscription; size?:string; color?:string; form?:string;}
     export interface Result {input:string; prs:Command;}
     export interface Command {cmd:string; ent?:Entity; loc?:Location;}
     export interface Entity {quant:string; obj:Object;}
@@ -54,7 +54,7 @@ module Parser {
     //////////////////////////////////////////////////////////////////////
     // Utilities
 
-    function clone<T>(obj: T): T {
+    export function clone<T>(obj: T): T {
         if (obj != null && typeof obj == "object") {
             var result : T = obj.constructor();
             for (var key in obj) {

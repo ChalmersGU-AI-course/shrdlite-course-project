@@ -11,15 +11,12 @@ module Interpreter {
         clairifyingparse = clairifyparse;
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
-         //   try {
-            	if(intprt.prs.cmd){
-        			intprt.intp = interpretCommand(intprt.prs, currentState);
-				}else{
-					throw new Interpreter.ErrorInput("This is a statement. \"" + intprt.input +"\" . Please tell me a command.");
-				}
-         //   } catch (e) {
-		//	    throw new Interpreter.ErrorInput("This is a statement. \"" + intprt.input +"\" . Please tell me a command.");
-		//	}
+        	if(intprt.prs.cmd){
+    			intprt.intp = interpretCommand(intprt.prs, currentState);
+			}else{
+				throw new Interpreter.ErrorInput("This is a statement. \"" + intprt.input +"\" . Please tell me a command.");
+			}
+
             interpretations.push(intprt);
         });
         if (interpretations.length) {
@@ -133,7 +130,7 @@ module Interpreter {
     			if(!clairifyingparse){
     				throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I shoule move to?");
     			}
-    			var objs = solveAmbiguity(unqObjs, state);
+    			var objs = solveAmbiguity(loc.ent.obj,unqObjs, state);
     			if(objs.length > 1){
     				throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I shoule move to?" + objs);
     			}
@@ -144,19 +141,28 @@ module Interpreter {
     	return result;
     }
     
-    function solveAmbiguity( objs : string[], state : WorldState):string[]{
-    	var newObj : Parser.Object = state.objects[objs[0]];
-    	var parseresult = clairifyingparse.pop();
-    	if(parseresult.prs.color){
-    		newObj.color = parseresult.prs.color;
+    function solveAmbiguity(obj : Parser.Object, objs : string[], state : WorldState):string[]{
+    	var parseresult = clairifyingparse[clairifyingparse.length-1].prs.obj;
+    	if(parseresult.form){
+    		if(obj.form && obj.form != parseresult.form){
+    			throw new Interpreter.ErrorInput("Are we talking in terms of " + obj.form + " or " + parseresult.form +"? I would say " + obj.form + ".");
+    		}
+    		obj.form = parseresult.form;
     	}
-    	if(parseresult.prs.size){
-    		newObj.size = parseresult.prs.size;
+    	if(parseresult.color){
+    		if(obj.color && obj.color != parseresult.color){
+    			throw new Interpreter.ErrorInput("You have already told me that the " + obj.form + " is " + obj.color +".");
+    		}
+    		obj.color = parseresult.color;
     	}
-    	if(parseresult.prs.form){
-    		newObj.form = parseresult.prs.form;
+    	if(parseresult.size){
+    		if(obj.size && obj.size != parseresult.size){
+    			throw new Interpreter.ErrorInput("You have already told me that the " + obj.form + " is " + obj.size+".");
+    		}
+    		obj.size = parseresult.size;
     	}
-    	objs = identifyObj(newObj, state);
+    	
+    	objs = identifyObj(obj, state);
     	return objs;
     }
     
