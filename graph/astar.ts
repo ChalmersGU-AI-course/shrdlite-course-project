@@ -4,16 +4,16 @@
 module astar {
 
     /** Compute the a path from the given start node to the given end node and the given graph */
-    export function compute<T>(graph: graphmodule.Graph<T>, startID: string, endStateFun: graphmodule.ValidStateFunction<T>, hFun: graphmodule.HeuristicFunction<T>, generateNeighbours: graphmodule.GenerateNodes<T>) {
+    export function compute<T>(graph: graphmodule.Graph<T>, startID: string, isEndState: graphmodule.ValidStateFunction<T>, hFun: graphmodule.HeuristicFunction<T>, generateNeighbours: graphmodule.GenerateNodes<T>) {
 
-        var goalNodeAd = graph.adjacencyMap.getValue(endID);
+        //var goalNodeAd = graph.adjacencyMap.getValue(endID);
         var currentAd = graph.adjacencyMap.getValue(startID);
 
-        if (goalNodeAd === undefined || currentAd === undefined) {
+        if (currentAd === undefined) { //goalNodeAd === undefined || 
             return undefined;
         }
 
-        var goalNode = goalNodeAd.node;
+        //var goalNode = goalNodeAd.node;
 
         var pq = new collections.PriorityQueue<graphmodule.Path<T>>(
             function comparePath(first: graphmodule.Path<T>, second: graphmodule.Path<T>) {
@@ -21,7 +21,7 @@ module astar {
                 //second: second path
                 //goalNode: The goal node
                 //hFun: The heuristic function that should be used
-                return graphmodule.comparePath(first, second, goalNode, hFun);
+                return graphmodule.comparePath(first, second, hFun); //goalNode, 
             }
         );
 
@@ -34,8 +34,7 @@ module astar {
         var currentNode = currentAd.node;
 
         visited.add(currentNode);
-
-		while (endStateFun(currentNode)) {
+		while (!isEndState(currentNode)) {
         
             //Create next states
             var neighbours = generateNeighbours(currentNode);
@@ -71,9 +70,11 @@ module astar {
             );
 
             currentPath = pq.dequeue();
-
-            if (currentPath === undefined) {
+            console.log("astar.comparePath: " + currentPath);
+            
+            if (currentPath == undefined) {
                 //No path to the goal
+                //console.log("astar.comparePath: No path found to the goal");
                 return undefined;
             }
 
@@ -85,6 +86,7 @@ module astar {
 
         }
 
+        //console.log("astar.comparePath:  *********************** End of astar ***********************");
         return currentPath;
 
     }

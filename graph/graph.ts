@@ -72,25 +72,51 @@ module graphmodule {
         }
 
         toString() {
-            return "Path [" + this.cost + "] = " + this.path.toString();
+            return "Path [" + this.cost + "] = " + this.printPath();
+        }
+        
+        isEmpty(){
+            return this.path.size() == 0;
+        }
+        
+        printPath(){
+            console.log("graph.Path.printPath: length=" + this.path.size());
+            if(this.path.size() == 0){
+                return "NO PATH";
+            }
+            var retString = "";
+            this.path.forEach(
+                (edge: Edge<T>) => {
+                    retString += edge.from.toString() + " ➔ ";
+                    return true;
+                }
+            );
+            console.log("graph.Path.printPath: last=" + this.path.last());
+            retString += this.path.last().to.toString();
+            return retString;
         }
     }
-
+    
     /** Function to compare two paths. Needs to know the goal node in order to use heuristics */
-    export function comparePath<T>(first: Path<T>, second: Path<T>, goal: GraphNode<T>, hFun: HeuristicFunction<T>) {
+    export function comparePath<T>(first: Path<T>, second: Path<T>, hFun: HeuristicFunction<T>) { //goal: GraphNode<T>, 
         //returns cost of: second - first in regard of reaching the goal
-        return (second.cost + hFun(second.path.last().to.data, goal.data)) -
-            (first.cost + hFun(first.path.last().to.data, goal.data));
+        return (second.cost + hFun(second.path.last().to.data)) -
+            (first.cost + hFun(first.path.last().to.data)); //, goal.data
     }
     
     /** Heuristic function */
     export interface HeuristicFunction<T>{
-        (startNode: T, goalNode: T): number;
+        (startNode: T): number; //, goalNode: T
     }
     
     /** Function which can generate nodes given a node */
     export interface GenerateNodes<T>{
         (basedOn: GraphNode<T>): GraphNode<T>[];
+    }
+    
+    /** Function which checks if a given node is valid as end-node */
+    export interface ValidStateFunction<T>{
+        (currentNode: GraphNode<T>): boolean;
     }
 
     /** Graph holding nodes and edges */
@@ -150,7 +176,19 @@ module graphmodule {
         }
 
         toString() {
-            return "---Graph<T>---\nNodes: " + this.nodes.toString() + "\nEdges: " + this.edges.toString() + "\n----------"
+            return "---Graph<T>---\nNodes: " + this.arrayToString() + "\nEdges: " + this.edges.toString() + "\n----------"
+        }
+        
+        arrayToString(){
+            var retString = "[";
+            this.nodes.forEach(
+                (node: GraphNode<T>) => {
+                    retString += node.toString() + "|";
+                    return true;
+                }
+            );
+            retString += "]";
+            return retString;
         }
     }
 }

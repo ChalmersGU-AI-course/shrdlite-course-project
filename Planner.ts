@@ -1,5 +1,10 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+/// <reference path="graph/graph.ts" />
+/// <reference path="graph/astar.ts" />
+/// <reference path="graph/permutate.ts"/>
+/// <reference path="heuristic/Heuristic.ts"/>
+///<reference path="Utils.ts"/>
 
 module Planner {
 
@@ -41,56 +46,245 @@ module Planner {
 
     // HERE IS THE PLACE WHERE WE SHOULD IMPLEMENT OUR PLANNER!
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
+    
+        console.log("------------planInterpretation start------------");
+        console.log("Stacks1: " + prettyMat(state.stacks));
+        
         var plan : string[] = [];
         
-        plan.push("Here is a comment");
-
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left just a liiiiiitle bit");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
+        var startStack = state.stacks;
+        var arm = state.arm;
+        
+        var holding = state.holding;
+        
+        var dropPlan: string[] = []
+       
+        console.log("holding: " + holding);
+       
+        var objectDropIndex: number = undefined;
+        var armPositionWithoutDropPlan: number = state.arm;
+       
+        //Check if the arm is holding anything
+        if(holding != null){
+            //The arm holds something. "Drop" it at the first available place
+            //TODO: kanske är dumt att bara lägga ner den, kan förvärra slutresultatet
+            console.log("starting to loop...");
+            for(var i = 0; i < startStack.length; i++){
+                console.log("Looping: " + i);
+                var bottomElement: string = undefined;
+                
+                if(startStack[i].length > 0){
+                    bottomElement = startStack[i][startStack[i].length-1];
+                }
+                console.log("bottomElement: " + bottomElement);
+                
+                if(validPlacement(holding, bottomElement, state.objects)){
+                    console.log("found valid placement! at index=" + i);
+                    moveArmTo(dropPlan, arm, i);
+                    arm = i;
+                    dropPlan.push("d");
+                    startStack[i].push(holding);
+                    objectDropIndex = i;
+                    break;
+                }
             }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
+        } 
+        console.log("Stacks2.1: " + prettyMat(state.stacks));
+        console.log("Stacks2.2: " + prettyMat(startStack));
+        
+        var endStack = [[],["g","l", "e"],[],["k","m","f"],[]];
+        
+        //Create the graph
+        var graph = new graphmodule.Graph<string[][]>();
+        
+        //Convert the startStack and starId to a node
+        var startId = generateID(startStack);
+        var startNode = new graphmodule.GraphNode<string[][]>(startId, startStack);
+        
+        //Add start node to the graph
+        graph.addNode(startNode);
+        
+        console.log("graph before A*: " + graph.toString());
+        
+        //Compute the shortest path!
+        var path = astar.compute(graph, startId, 
+            (node: graphmodule.GraphNode<string[][]>) => {
+                return matrixEquality(node.data, endStack);
             }
+        , 
+            (node:  string[][]) => {
+                return heuristics.worldHeuristics(startStack, endStack);
+            }
+        , 
+            (basedOn: graphmodule.GraphNode<string[][]>) => {
+                return permutateBasedOn(basedOn, state.objects);
+            }
+        );
+        
+        console.log("A* done!");
+        
+        //FIXME: ifall nuvarande state redan är målstate, kommer inte
+        // A* att ge tillbaka en tom path? Då kan vi ju inte säga att 
+        // "no path is found"?
+        if(path == undefined){
+            plan.push("No path found. (ノ ゜Д゜)ノ ︵ ┻━┻");
+            console.log("------------planInterpretation returns 2------------");
+            return plan;
+        } else if(path.isEmpty()) {
+            console.log("The path is empty, meaning we're already in the final state.");
+            //First we need to remove the object with ID objectID
+            // from the worldstate, since we've cheated by putting it 
+            // there while doing the A* search.
+            if(objectDropIndex != undefined){
+                //The object is now at column objectDropIndex
+                startStack[objectDropIndex].pop();
+            }
+            //Now only do the dropPlan
+            return dropPlan;
         }
-
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
-
-        if (pickstack < state.stacks.length-1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
-                plan.push("r");
+        
+        var first = true;
+        
+        //For each edge in the found path...
+        path.path.forEach(
+            (edge: graphmodule.Edge<string[][]>) => {
+                var fromState = edge.from.data;
+                var toState = edge.to.data;
+                var from = movedFrom(fromState, toState)
+                var to = movedTo(fromState, toState)
+                
+                //ID for the object that was moved
+                var objectID = fromState[from][fromState[from].length-1];
+                
+                var message: string = "Moving the " + getObject(state, objectID) + " to stack " + to
+                plan.push(message);
+                    
+                if(first){
+                    first = false;
+                    
+                    //First we need to remove the object with ID objectID
+                    // from the worldstate, since we've cheated by putting it 
+                    // there while doing the A* search.
+                    if(objectDropIndex != undefined){
+                        //The object is now at column objectDropIndex
+                        startStack[objectDropIndex].pop();
+                    }
+                    
+                    if(objectID == holding){
+                        //The dropPlan was not executed, so reset the arm position
+                        arm = armPositionWithoutDropPlan;
+                        
+                        moveArmTo(plan, arm, to);
+                        arm = to;
+                        plan.push("d");
+                    } else {
+                        plan.concat(dropPlan);
+                        arm = moveObject(plan, arm, from, to);
+                    }
+                }else{
+                    arm = moveObject(plan, arm, from, to);
+                }
+                    
+                return true;
             }
-
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
-                plan.push("l");
-            }
-        }
-
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
-
+        );
+        
+        console.log("------------planInterpretation returns 3------------");
         return plan;
+        
     }
-
-
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
+    
+    /** Move an object from the 'from' column index to the 'to' column index.
+     *  Returns the updated arm location */
+    function moveObject(plan: string[], arm: number, from: number, to: number){
+        //Move the arm to the pick-up point
+        moveArmTo(plan, arm, from);
+        //Say that the arm is now there
+        arm = from;
+        //Pick up the object
+        plan.push("p");
+        //Move the arm to the drop-off point
+        moveArmTo(plan, arm, to);
+        //Say that the arm is now there
+        arm = to;
+        //Drop the object
+        plan.push("d");
+        return to;
+    }
+    
+    function prettyMat(mat: string[][]){
+        var prettyString = "[";
+        for(var i=0; i<mat.length; i++){
+            prettyString+="[";
+            for(var j=0; j<mat[i].length; j++){
+                prettyString+= mat[i][j] + "";
+                if(j!=mat[i].length-1){
+                    prettyString+=",";
+                }
+            }
+            prettyString+="]";
+            if(i!=mat.length-1){
+                prettyString+=",";
+            }
+        }
+        prettyString+="]";
+        return prettyString;
+    }
+    
+    function getObject(world: WorldState, id: string){
+        var object =  world.objects[id];
+        return object.size + " " + object.color + " " + object.form;
+    }
+    
+    /** Finds from which stack (index) an object was moved */
+    function movedFrom(from: string[][], to: string[][]){
+        for(var i = 0; i < from.length; i++){
+            if(from[i].length>to[i].length){
+                return i;
+            }
+        }
+        return undefined;
+    }
+    
+    
+    function movedTo(from: string[][], to: string[][]){
+        return movedFrom(to, from);
+    }
+    
+    function moveArmTo(plan: string[], arm: number, to: number){
+        console.log("Planner.moveArmTo: ______________________");
+        console.log("Planner.moveArmTo: arm=" + arm);
+        console.log("Planner.moveArmTo: to=" + to);
+        console.log("Planner.moveArmTo: ----------------------");
+        if(arm == undefined || to == undefined){
+            throw new Planner.Error("moveArmTo: arm or to is undefined!");
+        }
+        while(arm!=to){
+            if(arm < to){
+                arm++;
+                plan.push("r")
+            }else{
+                arm--;
+                plan.push("l")
+            }
+        }
+        console.log("Planner.moveArmTo: arm=" + arm);
+        console.log("Planner.moveArmTo: to=" + to);
+        console.log("Planner.moveArmTo: ______________________");
+    }
+    
+    function matrixEquality(first: string[][], second: string[][]):boolean{
+        for(var i = 0; i < first.length; i++){
+            if(first[i].length != second[i].length){
+                return false;
+            }
+            for(var j = 0; j < first[i].length; j++){
+                if(first[i][j] != second[i][j]){
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
 }

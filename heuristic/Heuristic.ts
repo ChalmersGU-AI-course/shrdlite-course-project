@@ -21,13 +21,11 @@ Gives:
 module heuristics {
 
     /** Takes two stacks (world states) and calculates and returns the heuristic */
-    export function worldHeuristics(state1: WorldState, state2: WorldState): number{
+    export function worldHeuristics(stack1: string[][], stack2: string[][]): number{
         var heuristic = 0;
         
         //Check the stacks if they differ
-        for (var i = 0; i < state1.stacks.length; i++) {
-            var stack1 = state1.stacks[i];
-            var stack2 = state2.stacks[i];
+        for (var i = 0; i < stack1.length; i++) {
             
             for (var j = 0; j < stack1.length; j++){
                 var elem1 = stack1[j];
@@ -50,5 +48,13 @@ module heuristics {
         return heuristic;
     }
 
+    /** Takes a stack (world states) and a function and calculates and returns the heuristic */
+    export function worldHeuristicsFun(currentState: string[][], intprt : Interpreter.Literal[][]): number{
+        var heuristic = 0;
+        
+        
+        
+        return heuristic;
+    }
 
 }
