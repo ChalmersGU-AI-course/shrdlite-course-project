@@ -155,7 +155,7 @@ module Planner {
             }
         }
 
-
+        console.log("!!! Error in heuristicDistance: must be able to find the target somewhere in the world...");
         return 0;
 
     }
