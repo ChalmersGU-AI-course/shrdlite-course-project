@@ -230,7 +230,6 @@ module Interpreter {
         return quant == "the" && amount == 1 || quant != "the" && number > 0;
     }
 
-
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
