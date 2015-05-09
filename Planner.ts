@@ -67,11 +67,6 @@ module Planner {
         return 1;
     }
 
-    // Dummy heuristic function
-    function heuristic(s : State) : number{
-        return 0;
-    }
-
     /**
     * @return heuristic function for Astar.
     */
@@ -137,12 +132,16 @@ module Planner {
         return 0;
     }
 
+    // Another attempt at heuristic function. Doesn't work as well as the simple
+    // grab heuristic. However, that one isnt really admissible...
     function heuristicDifference(s : State, above : String, below : String, exactlyOntop : boolean) : number {
 
-        var stackA : number;
-        var stackB : number;
+        var stackA  : number;
+        var stackB  : number;
         var heightA : number;
         var heightB : number;
+        var aboveA  : number;
+        var aboveB  : number;
 
         // TODO floor...
 
@@ -164,27 +163,23 @@ module Planner {
         if(s.holding != null){
             holdCost = 1;
         }
+
+        // OBS, can be in arm as well...
         if(s.holding === above){
             stackA = s.arm;
-            heightA = s.stacks[stackA].length -1;
+            aboveA = 0;
+        } else {
+            aboveA = s.stacks[stackA].length -1 -heightA;
         }
+
         if(s.holding === below){
             stackB = s.arm;
-            heightB = s.stacks[stackB].length -1;
+            aboveB = 0;
+        } else {
+            aboveB = s.stacks[stackB].length -1 -heightB;
         }
-        // OBS, can be in arm as well...
-
-        // if(isUndefined(stackA)) throw new Planner.Error("stackA undefined! "+above);
-        // if(isUndefined(stackB)) throw new Planner.Error("stackB undefined! "+below);
-        // if(isUndefined(heightA)) throw new Planner.Error("heightA undefined! "+above);
-        // if(isUndefined(heightB)) throw new Planner.Error("heightB undefined! "+below);
 
         var armCost = abs(s.arm - stackA) + abs(stackA - stackB);
-
-
-
-        var aboveA = s.stacks[stackA].length -1 -heightA;
-        var aboveB = s.stacks[stackB].length -1 -heightB;
 
         // Number of objects that needs to be moved.
         var aboveCost;
@@ -196,18 +191,14 @@ module Planner {
             // }
             aboveCost = aboveA + aboveB;
         } else {
+            // ie Just somewhere above is sufficient
             throw new Planner.Error("should not be here atm...");
-            // Just somewhere above is sufficient
         }
-
-        if(isUndefined(aboveCost)) throw new Planner.Error("aboveCost undefined!");
-
+        // if(isUndefined(aboveCost)) throw new Planner.Error("aboveCost undefined!");
         return holdCost + armCost + 4*aboveCost;
     }
 
-    function isUndefined(a){
-        return typeof a === 'undefined' ;
-    }
+
 
     // Computes the expected number of actions to grab an object
     function heuristicDistance(s : State, target : String) : number {
@@ -256,20 +247,6 @@ module Planner {
 
         return 0;
 
-    }
-
-    function max(a, b){
-        if(a > b){
-            return a;
-        }
-        return b;
-    }
-
-    function abs(a : number) : number{
-        if(a < 0){
-            return -a;
-        }
-        return a;
     }
 
     /**
@@ -340,8 +317,6 @@ module Planner {
         console.log("OOPS? testAtom: Default return for relation "+atom.rel);
         return ret(false);
     }
-
-
 
     function neighbours(s : State) : Astar.Neighb<State>[]{
         var result = [];
@@ -464,6 +439,27 @@ module Planner {
 
         // Otherwise, can support
         return true;
+    }
+
+//////////////////////////////////////////////////////////////////////
+// Basic helper functions
+
+    function isUndefined(a){
+        return typeof a === 'undefined' ;
+    }
+
+    function max(a, b){
+        if(a > b){
+            return a;
+        }
+        return b;
+    }
+
+    function abs(a : number) : number{
+        if(a < 0){
+            return -a;
+        }
+        return a;
     }
 
     /**
