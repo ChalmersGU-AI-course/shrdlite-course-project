@@ -209,9 +209,10 @@ module Astar{
             order[x] = current ;
 
             if(isGoal(current.state)){
-                if(x > 1000){
-                    console.log("Completed but it took " + x + " iterations!");
-                }
+                // if(x > 1000){
+                //     console.log("Completed but it took " + x + " iterations!");
+                // }
+                console.log("Completed in " + x + " iterations.");
                 return postProcess<T>(order, x);
             }
 

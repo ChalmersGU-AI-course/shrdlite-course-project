@@ -47,8 +47,9 @@ module Planner {
         worldDictionary = state.objects;
 
         var goal = computeGoalFunction(intprt);
+        var heur = computeHeuristicFunction(intprt);
 
-        var plan : string[] = Astar.astar(neighbours, cost, heuristic, state, goal, false, 10000);
+        var plan : string[] = Astar.astar(neighbours, cost, heur, state, goal, false, 10000);
 
         return plan;
     }
@@ -131,9 +132,36 @@ module Planner {
             return 0;
         }
 
+        var holdCost = 0;
+        if(s.holding != null){
+            holdCost = 1;
+        }
+
+        var emptyStacks = 0;
+        for(var stackNo in s.stacks){
+            if(s.stacks[stackNo].length == 0){
+                emptyStacks = emptyStacks +1;
+            }
+        }
+
+        for(var stackNo in s.stacks){
+            var stack = s.stacks[stackNo];
+            for(var height in stack){
+                if(stack[height] === target){
+                    var objectsAbove = stack.length -1 -height;
+                    return abs(stackNo - s.arm) + 4*objectsAbove + holdCost - emptyStacks;
+                }
+            }
+        }
+
 
         return 0;
 
+    }
+
+    function abs(a : number) : number{
+        if(a < 0) return -a;
+        return a;
     }
 
     /**
