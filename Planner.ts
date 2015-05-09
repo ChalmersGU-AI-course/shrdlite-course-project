@@ -159,6 +159,11 @@ module Planner {
                 }
             }
         }
+
+        var holdCost = 0;
+        if(s.holding != null){
+            holdCost = 1;
+        }
         if(s.holding === above){
             stackA = s.arm;
             heightA = s.stacks[stackA].length -1;
@@ -169,17 +174,14 @@ module Planner {
         }
         // OBS, can be in arm as well...
 
-        if(isUndefined(stackA)) throw new Planner.Error("stackA undefined! "+above);
-        if(isUndefined(stackB)) throw new Planner.Error("stackB undefined! "+below);
-        if(isUndefined(heightA)) throw new Planner.Error("heightA undefined! "+above);
-        if(isUndefined(heightB)) throw new Planner.Error("heightB undefined! "+below);
+        // if(isUndefined(stackA)) throw new Planner.Error("stackA undefined! "+above);
+        // if(isUndefined(stackB)) throw new Planner.Error("stackB undefined! "+below);
+        // if(isUndefined(heightA)) throw new Planner.Error("heightA undefined! "+above);
+        // if(isUndefined(heightB)) throw new Planner.Error("heightB undefined! "+below);
 
         var armCost = abs(s.arm - stackA) + abs(stackA - stackB);
 
-        var holdCost = 0;
-        if(s.holding != null){
-            holdCost = 1;
-        }
+
 
         var aboveA = s.stacks[stackA].length -1 -heightA;
         var aboveB = s.stacks[stackB].length -1 -heightB;
@@ -187,11 +189,12 @@ module Planner {
         // Number of objects that needs to be moved.
         var aboveCost;
         if(exactlyOntop){
-            if(stackA === stackB){
-                aboveCost = 1 + max(aboveA, aboveB);
-            } else {
-                aboveCost = aboveA + aboveB;
-            }
+            // if(stackA === stackB){
+            //     aboveCost = 1 + max(aboveA, aboveB);
+            // } else {
+            //     aboveCost = aboveA + aboveB;
+            // }
+            aboveCost = aboveA + aboveB;
         } else {
             throw new Planner.Error("should not be here atm...");
             // Just somewhere above is sufficient
