@@ -74,7 +74,7 @@ module Interpreter {
                     objectKeys.forEach(
                         (key: string) => {
                             intprt.push(
-                                {pol: true, rel: "holding", args: [key]}
+                                [{pol: true, rel: "holding", args: [key]}]
                             );
                         }
                     );
@@ -86,6 +86,20 @@ module Interpreter {
                     var foundLocationKey = getObjectKey(cmd.loc.ent.obj, objs, state.objects, state.stacks);
                     
                     if(rightNumberOfResults(cmd.loc.ent.quant, foundLocationKey.length)){
+                        
+                        objectKeys.forEach(
+                        (key: string) => {
+                            
+                            foundLocationKey.forEach(
+                                (locationKey: string) => {
+                                    intprt.push(
+                                        [{pol: true, rel: cmd.loc.rel, args: [key, locationKey]}]
+                                    );
+                                }
+                            );
+                            
+                        }
+                    );
                         
                     }
                     
@@ -227,7 +241,7 @@ module Interpreter {
     }
     
     function rightNumberOfResults(quant: string, amount: number){
-        return quant == "the" && amount == 1 || quant != "the" && number > 0;
+        return quant == "the" && amount == 1 || quant != "the" && amount > 0;
     }
 
     function getRandomInt(max) {

@@ -95,7 +95,7 @@ function ontop(first: string, second: string, stacks: string[][]){
             }
         }else{
             for(var j=0; j<stacks[i].length; j++){
-                if(j<node[i].length-1 &&
+                if(j<stacks[i].length-1 &&
                    stacks[i][j] == first &&
                    stacks[i][j+1] == second){
                     return true;
@@ -171,17 +171,17 @@ function right(first: string, second: string, stacks: string[][]){
 function check(first: string, rel: string, second: string, stacks: string[][]){
     switch(rel){
         case "ontop" || "inside": 
-            return ontop(first, second, node);
+            return ontop(first, second, stacks);
         case "above":
-            return above(first, second, node);
+            return above(first, second, stacks);
         case "under":
-            return under(first, second, node);
+            return under(first, second, stacks);
         case "beside":
-            return beside(first, second, node);
+            return beside(first, second, stacks);
         case "left":
-            return left(first, second, node);
+            return left(first, second, stacks);
         case "right":
-            return right(first, second, node);
+            return right(first, second, stacks);
         default:
             return false;
     }

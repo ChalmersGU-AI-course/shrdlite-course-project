@@ -61,7 +61,8 @@ module Planner {
     // HERE IS THE PLACE WHERE WE SHOULD IMPLEMENT OUR PLANNER!
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
     
-        //console.log("------------planInterpretation start------------");
+        console.log("------------planInterpretation start------------");
+        
         //console.log("Stacks1: " + prettyMat(state.stacks));
         
         if(intprt != undefined && intprt.length > 0){
@@ -135,8 +136,8 @@ module Planner {
         //Compute the shortest path!
         var path = astar.compute(graph, startId, 
             (node: graphmodule.GraphNode<string[][]>) => {
-                var int = intprt[0];
-                return check(int.args[0], int.rel, int.args[1], node);
+                var int = intprt[0][0];
+                return check(int.args[0], int.rel, int.args[1], node.data);
             }
         ,
             (node:  string[][]) => {
