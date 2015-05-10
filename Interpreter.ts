@@ -70,14 +70,27 @@ module Interpreter {
             switch(cmd.cmd){
                 case "take":
                     
-                    //Just say that we should hold any of the found keys
-                    objectKeys.forEach(
-                        (key: string) => {
-                            intprt.push(
-                                [{pol: true, rel: "holding", args: [key]}]
-                            );
-                        }
-                    );
+                    if(cmd.ent.quant == "all"){
+                        var temp: Literal[] = [];
+                        objectKeys.forEach(
+                            (key: string) => {
+                                temp.push(
+                                    {pol: true, rel: "holding", args: [key]}
+                                );
+                            }
+                        );
+                        intprt.push(temp);
+                    } else {
+                        //Just say that we should hold any of the found keys
+                        objectKeys.forEach(
+                            (key: string) => {
+                                intprt.push(
+                                    [{pol: true, rel: "holding", args: [key]}]
+                                );
+                            }
+                        );
+                    }
+                    
                     
                     break;
                 case "move":
@@ -173,6 +186,12 @@ module Interpreter {
                         }
                     }
                     
+                } else if(object.form == "floor"){
+                    //Check if the location is the floor
+                    console.log("Interpreter ****** LOCATION IS FLOOR");
+                    returnList = [];
+                    returnList.push("floor");
+                    return false;
                 }
                 
                 currentHasColor = false;
@@ -209,6 +228,9 @@ module Interpreter {
         var returnList: string[] = [];
         //Get the object associated with the location
         var locationObjects = getObjectKeysWithoutObject(loc.ent.obj, availableObjects, objects);
+        
+        console.log("Interpreter ****** LOCATIONS: " + locationObjects.toString());
+        
         
         if(rightNumberOfResults(loc.ent.quant, locationObjects.length)){
             var breakTheLoops = false;
