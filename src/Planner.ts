@@ -90,19 +90,42 @@ module Planner {
     
     module checkPhysics {
         
-        var canHold: { [s:string]: string[]; };
-        canHold["ball"]=[];
-        canHold["box"]=[];
-        
         export function canBeOn(o1: ObjectDefinition, o2: ObjectDefinition) : boolean {
-            
-            return true;
+            var res = false;
+            switch(o2.form) {
+                case "ball":
+                    res = false;
+                    break;
+                case "box":
+                    var ob=["pyramid","plank","box"];
+                    res = ob.indexOf(o1.form)==-1 || o1.size!=o2.size;
+                    break;
+                case "brick":
+                    res = !(o1.form=="box" && o2.size=="small");
+                    break;
+                case "pyramid":
+                    res = !(o1.form=="box" && o1.size=="large");
+                    break;
+                default:
+                    res = true;
+            }
+            return res && (o2.form =="large" || o1.form=="small");
         }
         
     }
     
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         var plan = new Plan(state.arm);
+        
+        var moves = possibleMoves(state.stacks, state.objects);
+        var s="";
+        for(var i=0; i<moves.length; i++) {
+            s+=moves[i].pick+" --> "+moves[i].drop+" ; ";
+        }
+        console.log("Possible moves : "+s);
+        
+        plan.movesToPlan([moves[0]]);
+        
         //intprt.map((alternativeGoal) => solveByAStar([new Node(state.stacks,[])], alternativeGoal));
         return plan.plan;
         /*
