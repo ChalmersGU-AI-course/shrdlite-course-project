@@ -138,7 +138,7 @@ module Interpreter {
 		//return true;
     	for(var i = 0; i < lits.length; i++){
     		for(var j = i+1; j < lits.length; j++){
-    			if(lits[i].rel == lits[j].rel && (lits[i].rel == "ontop")
+    			if(lits[i].rel == lits[j].rel && (lits[i].rel == "ontop" || lits[i].rel == "inside")
     					&&(lits[i].args[0] == lits[j].args[0] ||
     					lits[i].args[1] == lits[j].args[1])){
 					return false;
