@@ -113,16 +113,17 @@ module Planner {
             if (this.state.holding === null) {
                 if (currentStack.length > 0) {
                     var topItemIndex = currentStack.length - 1;
-                    var newState = owl.deepCopy(this.state, 5);
+                    var newState = owl.deepCopy(this.state, 3);
                     newState.holding = currentStack[topItemIndex];
                     newState.stacks[this.state.arm].splice(topItemIndex, 1);
                     var newMessage = "Picking up the " + newState.objects[newState.holding].form;
                     return new PlannerNode(newState, "p", newMessage);
                 }
             } else { // holding something at the moment
-                var newState = owl.deepCopy(this.state, 5);
+                var newState = owl.deepCopy(this.state, 3);
                 //always legal if on top of floor, else check world rules
-                if (currentStack.length == 0 || WorldRules.canBeOntop(newState.holding, newState.objects[currentStack[currentStack.length - 1]])) {
+                if (currentStack.length == 0 || WorldRules.canBeOntop(newState.objects[newState.holding],
+                            newState.objects[currentStack[currentStack.length - 1]])) {
                     newState.stacks[newState.arm].push(newState.holding);
                     var newMessage = "Dropping the " + newState.objects[newState.holding].form;
                     newState.holding = null;
@@ -136,7 +137,7 @@ module Planner {
             var numberOfStacks = this.state.stacks.length;
             var targetPos = this.state.arm + direction;
             if (targetPos >= 0 && targetPos < numberOfStacks) {
-                var newState = owl.deepCopy(this.state, 5);
+                var newState = owl.deepCopy(this.state, 3);
                 newState.arm = targetPos;
                 var newMessage = "Moving " + (direction > 0 ? "right" : "left");
                 return new PlannerNode(newState, direction > 0 ? "r" : "l", newMessage);
