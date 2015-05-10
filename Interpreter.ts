@@ -59,6 +59,8 @@ module Interpreter {
         if (cmd.cmd == "move"){
         	console.log("entity--------------\n",checkStm(cmd.ent.obj, state));
         	console.log("location------------\n",checkStm(cmd.loc.ent.obj, state));
+        	console.log("PDDL\n", goalsToPDDL(cmd.ent, cmd.loc, state));
+        	//goalsToPDDL(checkStm(cmd.ent.obj, state), cmd.loc, state)
         }        
         return intprt;
     }
@@ -66,24 +68,55 @@ module Interpreter {
     class position {
     	public x : number;
     	public y : number;
-    	public obj : ObjectDefinition
-    	public wasFound : boolean
+    	public obj : ObjectDefinition;
+    	public name : string; 
 	
-    	constructor( x : number, y : number, obj : ObjectDefinition){
+    	constructor( x : number, y : number, obj : ObjectDefinition, name : string){
     		this.x = x;
     		this.y = y;
     		this.obj = obj;
-    		this.wasFound = true;
-    	}
-
-    	public setWasFound(b : boolean){
-    		this.wasFound = b;
+    		this.name = name; 
     	}
     }
     
-    function posToLiteral(obj : position[] , loc : Parser.Object , state : WorldState){
+    function goalsToPDDL(ent : Parser.Entity , loc : Parser.Location , state : WorldState) : Literal[][] {
+    	var lits : Literal[][] = [];
+    	var posList : position[] = checkStm (ent.obj, state);
+    	for(var i =0; i< posList.length;  i++){
+    		if(loc == null){
+    			var hold : Literal = {pol : true, rel : "holding", args : [posList[i].name]};
+    			lits.push([hold]);
+    		}else{
+    			var goal = checkStm (loc.ent.obj, state);
+    			for(var j =0; j< goal.length;  j++){
+    				if(loc.rel == "ontop"){
+    					var g : Literal = {pol : true, rel : "ontop", args : [posList[i].name, goal[j].name ]};
+    					if(goal[j].obj.form == "box"){
+    						g = {pol : true, rel : "inside", args : [posList[i].name, goal[j].name ]};
+    					}
+    					if(checkValidPos(posList[i].obj, goal[j].obj )){
+    						lits.push([g]);
+    					}
+    				}
+    			}
+    		}
+    	}
     	
     	
+    	return lits;
+    }
+    
+    function checkValidPos (over : ObjectDefinition, under : ObjectDefinition){
+    	if (under.form == "floor"){
+    		return true;
+    	}else if(over.form == "ball" ){
+    		if (under.form == "box" || under.form == "floor"){
+    			return true;
+    		}else{
+    			return false;
+    		}
+    	}
+    	return true;
     }
         
     function checkStm (objs : Parser.Object , state : WorldState) : position[] {
@@ -93,51 +126,26 @@ module Interpreter {
     		var stmObj = checkStm(objs.obj, state);
     		var stmLocObj = checkStm(objs.loc.ent.obj, state);
     	   	
-    	   	for(var i =0; i< stmLocObj.length;  i++){
+    	   	for(var i =0; i< stmLocObj.length;  i++){	//for every loc obj check every stm obj
     	   	
 				if( objs.loc.rel == "ontop" || objs.loc.rel == "inside"){
-					if (!stmLocObj[i].obj){				//check if floor exist
-					var len = list.length
-						for(var x =0; x< state.stacks.length;  x++){	//loop through every floor
-							 for(var y =0; y< stmObj.length;  y++){
-							 	 
-								 if (state.stacks[x][0] == state.stacks[stmObj[y].x][stmObj[y].y]){
-								 	list.push(stmObj[y]);
-								 	list.push(stmLocObj[i]);
-								 	break;
-								 }
-							 }
+					for(var j =0; j< stmObj.length;  j++){		//loops through every stmObject to check all objects matching with stmLocobj 
+						if(!(stmLocObj[i].y+1 > state.stacks[stmLocObj[i].x].length) && 
+							(state.stacks[stmLocObj[i].x][stmLocObj[i].y+1] == state.stacks[stmObj[j].x][stmObj[j].y])){
+					
+							list.push(stmObj[j]);
+							list.push(stmLocObj[i]);
 						}
-				/*		if(list.length == len){						//if no object was found on the floor 
-							var errPos = (new position(-1,-1,null));
-							errPos.setWasFound(false);
-							list.push(errPos);
-						}*/
-					}else{
-						for(var j =0; j< stmObj.length;  j++){
-							if(!(stmLocObj[i].y+1 > state.stacks[stmLocObj[i].x].length) && 
-								(state.stacks[stmLocObj[i].x][stmLocObj[i].y+1] == state.stacks[stmObj[j].x][stmObj[j].y])){
-						
-								list.push(stmObj[j]);
-								list.push(stmLocObj[i]);
-							}
-						}
-							/*else {
-							
-							stmObj[0].setWasFound(false);
-							stmLocObj[0].setWasFound(false);
-							list.push(stmObj[0]);
-							list.push(stmLocObj[0]);
-						}*/
 					}
 				}
-				
 			}		
 			return list;
     	} else { 		
     		
     		if (objs.form == "floor"){
-    			list.push(new position(-1,-1, null));
+    			for(var x =0; x< state.stacks.length;  x++){
+    				list.push(new position(x,-1, {form : "floor", size : "none" , color : "none"}, "floor"));
+    			}
     			
     	    }else{
 	    	    for(var x =0; x< state.stacks.length;  x++){
@@ -147,7 +155,7 @@ module Interpreter {
 		    				(objs.form == null || objs.form == state.objects[index].form)  && 
 		    				(objs.size == null || objs.size == state.objects[index].size)){
 		    
-		    				var pos = new position(x,y, state.objects[state.stacks[x][y]]);
+		    				var pos = new position(x,y, state.objects[state.stacks[x][y]], state.stacks[x][y]);
 		    				list.push(pos);
 		    			}
 	    			}
