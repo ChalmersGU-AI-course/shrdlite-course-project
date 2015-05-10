@@ -113,6 +113,7 @@ module Interpreter {
                                     );
                                     
                                 }
+                            );
                             intprt.push(temp);
                         } else {
                             objectKeys.forEach(
@@ -127,10 +128,8 @@ module Interpreter {
                                     );
                                     
                                 }
+                            );
                         }
-                        
-                        
-                    );
                         
                     }
                     
