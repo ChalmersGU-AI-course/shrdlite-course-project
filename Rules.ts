@@ -1,7 +1,7 @@
 ///<reference path="World.ts"/>
 
 module Rules{    
-     export function floorRules(o:ObjWCoord, obj:ObjWCoord, rel:string): boolean{
+     export function breakFloorRules(o:ObjectDefinition, obj:ObjectDefinition, rel:string): boolean{
         var bol = false;
         
         if(o.form == "floor" ||
@@ -13,7 +13,7 @@ module Rules{
         return bol;    
     }
     
-    export function boxRules(o:ObjWCoord, obj:ObjWCoord, rel:string): boolean{
+    export function breakBoxRules(o:ObjectDefinition, obj:ObjectDefinition, rel:string): boolean{
         var bol = false;
         
         if(obj.form == "box" && rel == "ontop"){
@@ -32,7 +32,7 @@ module Rules{
         return bol;
     }
     
-    export function ballRules(o:ObjWCoord, obj:ObjWCoord, rel:string): boolean{
+    export function breakBallRules(o:ObjectDefinition, obj:ObjectDefinition, rel:string): boolean{
         var bol = false;
             
         if(o.form == "ball" && obj.form == "ball"){
@@ -56,7 +56,7 @@ module Rules{
         return bol;
     }
     
-    export function smallSupportingBig(o:ObjWCoord, obj:ObjWCoord, rel:string): boolean{
+    export function breakSmallSupportingBig(o:ObjectDefinition, obj:ObjectDefinition, rel:string): boolean{
         var bol = false;
         if((rel == "ontop" || rel == "above" || rel == "inside") && 
            (o.size == "large" && obj.size == "small")){
@@ -67,6 +67,13 @@ module Rules{
         }
 
         return bol;
+    }
+    
+    export function breakRules(o:ObjectDefinition, obj:ObjectDefinition, rel:string){
+        return (Rules.breakFloorRules(o, obj, rel) ||
+                Rules.breakSmallSupportingBig(o, obj, rel) ||
+                Rules.breakBoxRules(o, obj, rel) ||
+                Rules.breakBallRules(o, obj, rel));    
     }
 
 }

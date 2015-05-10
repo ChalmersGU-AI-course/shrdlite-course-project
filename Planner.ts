@@ -34,13 +34,19 @@ module Planner {
         constructor(public message? : string) {}
         public toString() {return this.name + ": " + this.message}
     }
-
+    
+    function ch(s: ObjectDefinition): ObjectDefinition{var sw = s; sw.form ="as"; return sw}
+    
 
     //////////////////////////////////////////////////////////////////////
     // private functions
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
+       // This function returns a dummy plan involving a random stack
+        var test : ObjectDefinition[] = [{form: "brick", size: "large", color: "green"}];
+        var tmp: ObjectDefinition[][] = [];
+        tmp.push(test);
+        
         do {
             var pickstack = getRandomInt(state.stacks.length);
         } while (state.stacks[pickstack].length == 0);
@@ -89,5 +95,51 @@ module Planner {
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
+    
+    /*
+    // This function returns a dummy plan involving a random stack
+        do {
+            var pickstack = getRandomInt(state.stacks.length);
+        } while (state.stacks[pickstack].length == 0);
+        var plan : string[] = [];
+
+        // First move the arm to the leftmost nonempty stack
+        if (pickstack < state.arm) {
+            plan.push("Moving left");
+            for (var i = state.arm; i > pickstack; i--) {
+                plan.push("l");
+            }
+        } else if (pickstack > state.arm) {
+            plan.push("Moving right");
+            for (var i = state.arm; i < pickstack; i++) {
+                plan.push("r");
+            }
+        }
+
+        // Then pick up the object
+        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
+        plan.push("Picking up the " + state.objects[obj].form,
+                  "p");
+
+        if (pickstack < state.stacks.length-1) {
+            // Then move to the rightmost stack
+            plan.push("Moving as far right as possible");
+            for (var i = pickstack; i < state.stacks.length-1; i++) {
+                plan.push("r");
+            }
+
+            // Then move back
+            plan.push("Moving back");
+            for (var i = state.stacks.length-1; i > pickstack; i--) {
+                plan.push("l");
+            }
+        }
+
+        // Finally put it down again
+        plan.push("Dropping the " + state.objects[obj].form,
+                  "d");
+
+        return plan;
+    */
 
 }

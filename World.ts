@@ -7,12 +7,22 @@ interface ObjectDefinition {
     color: string;
 }
 
+interface Coord{
+        x: number; //x coordinate
+        y: number; //y coordinate
+    }
+    
+interface ObjWCoord extends ObjectDefinition{
+        coord?: Coord; //optional if an object is held
+        id: string; //Identifier
+    }
+
 interface WorldState {
     stacks: string[][];
     holding: string;
     arm: number;
     objects: { [s:string]: ObjectDefinition; };
-    examples: string[];
+    examples?: string[];
 }
 
 interface World {
