@@ -220,7 +220,7 @@ module Planner {
     }
 
     export class SimpleHeuristic implements astar.IHeuristic {
-        targets: Interpreter.Literal[] = null;
+        targets: Interpreter.Literal[][] = null;
 
         constructor (targets) {
             this.targets = targets;
@@ -228,19 +228,23 @@ module Planner {
 
         get(node: astar.INode, goal: astar.IGoal): number {
             var n = <PlannerNode> node;
-            var maxEstimate = 0;
+            var minEstimate = Number.MAX_VALUE;
 
-            for (var i = 0; i < this.targets.length; i++) {
-                var currentLiteral = this.targets[i];
+            for (var j = 0; j < this.targets.length; j++) {
+                var currentTargetsList = this.targets[j];
 
-                var currentEstimate = this.getEstimateForLiteral(currentLiteral, n.state);
-                // console.log(currentLiteral);
-                // console.log(currentEstimate);
-                if (currentEstimate > maxEstimate) {
-                    maxEstimate = currentEstimate;
+                var localMaxEstimate = 0;
+
+                for (var i = 0; i < currentTargetsList.length; i++) {
+                    var currentLiteral = currentTargetsList[i];
+
+                    var currentEstimate = this.getEstimateForLiteral(currentLiteral, n.state);
+                    localMaxEstimate = Math.max(localMaxEstimate, currentEstimate);
                 }
+
+                minEstimate = Math.min(minEstimate, localMaxEstimate);
             }
-            return maxEstimate;
+            return minEstimate;
         }
 
         getEstimateForLiteral(lit: Interpreter.Literal, state: WorldState): number {

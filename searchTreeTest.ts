@@ -47,7 +47,7 @@ var startD = new Date().getTime();
 var resultD = graphD.searchPath(graphStart);
 var timeD = new Date().getTime() - startD;
 
-var graphH = new astar.Graph(new Planner.SimpleHeuristic(tar[0]), graphGoal);
+var graphH = new astar.Graph(new Planner.SimpleHeuristic(tar), graphGoal);
 var startH = new Date().getTime();
 var resultH = graphH.searchPath(graphStart);
 var timeH = new Date().getTime() - startH;
