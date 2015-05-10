@@ -136,8 +136,22 @@ module Planner {
         //Compute the shortest path!
         var path = astar.compute(graph, startId, 
             (node: graphmodule.GraphNode<string[][]>) => {
-                var int = intprt[0][0];
-                return check(int.args[0], int.rel, int.args[1], node.data);
+                var ret = false;
+                for(var i=0; i<intprt.length; i++){
+                    for(var j=0; j<intprt[i].length; j++){
+                        var int = intprt[i][j];
+                        if(check(int.args[0], int.rel, int.args[1], node.data)){
+                            ret = true;
+                        }else{
+                            ret = false;
+                            break;
+                        }
+                    }
+                    if(ret){
+                        break;
+                    }
+                }
+                return ret;
             }
         ,
             (node:  string[][]) => {
