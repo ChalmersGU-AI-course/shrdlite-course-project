@@ -63,9 +63,12 @@ module Interpreter {
         
         // Find object to move
         
-        var objs = identifyEnt(cmd.ent, state);
+        var objs : string [][] = identifyEnt(cmd.ent, state);
+        if(!objs.length){
+        	return [];
+        }
         // Find location to move to
-        var loc;
+        var loc : string [][];
         if(cmd.cmd == "move" || cmd.cmd == "put" || cmd.cmd == "drop"){
         	loc = identifyLocation(cmd.loc, state);
         }
@@ -76,20 +79,34 @@ module Interpreter {
         
         var intprt : Literal[][] = [];
         if(loc){
-        	var k = 0;
+        	var n = 0;
+        	
+        	// Dimension 1
+        	
 	        for (var i = 0; i < objs.length; i++) {
-	        	for (var j = 0; j < loc.length; j++) {
-	        		var lit: Literal = {pol: true, rel: cmd.loc.rel, args: [objs[i], loc[j]]};
-	        			/////only interpet legal goals!
-	        		if(checkIllegal(lit, state)){
-	        			intprt[k]= [lit];
-	        			k++;
+	        	for (var j = 0; j < loc.length ; j++) {
+	        		// Dimension 2
+	        		var lits :Literal [] = [];
+	        		var nn = 0;
+	        		for (var k = 0; k < objs[i].length; k++) {
+	        			for (var l = 0; l < loc[j].length; l++) {
+			        		var lit: Literal = {pol: true, rel: cmd.loc.rel, args: [objs[i][k], loc[j][l]]};
+			        			/////only interpet legal goals!
+			        		if(checkIllegal(lit, state)){
+			        			lits[nn] = lit;
+			        			nn++;
+			        		}
+			        	}
 	        		}
+	        		intprt[n]= lits;
+			        n++;
 	        	}
 	        }
 		}else{
 	        for (var i = 0; i < objs.length; i++) {
-	        	intprt[i]= [{pol: true, rel: cmd.cmd, args: [objs[i]]}];
+	        	for (var j = 0; j < objs[i].length; j++) {
+	        		intprt[i]= [{pol: true, rel: cmd.cmd, args: [objs[i][j]]}];
+	        	}
 	        }
 		}
         return intprt;
@@ -111,7 +128,7 @@ module Interpreter {
     		return false;
     	}
     	if(a.form == "ball" && ((lit.rel == "ontop" && b.form != "floor") || (lit.rel == "inside" && 
-    			(b.form != "box" || (a.size == "large" && b.size == "small"))))){
+    			(a.size == "large" && b.size == "small")))){
     		return false;
     	}
     	if(b.form == "ball" && (lit.rel == "ontop" || lit.rel == "above" )){
@@ -120,11 +137,11 @@ module Interpreter {
     	if(lit.rel == "inside" && (b.form != "box")){
     		return false;
     	}
-    	if(lit.rel == "inside" && ((a.form == "pyramid" || a.form == "plank" || a.form == "floor" )&&
+    	if(lit.rel == "inside" && ((a.form == "pyramid" || a.form == "plank" || a.form == "floor" || a.form == "box")&&
     			(a.size == b.size || (a.size == "large" && b.size == "small")))){
     		return false;
     	}
-    	if((lit.rel == "ontop" || lit.rel == "above") && ((a.size == "large" && b.size == "small")|| a.form == "floor")){
+    	if((lit.rel == "ontop" || lit.rel == "above" || lit.rel == "inside") && ((a.size == "large" && b.size == "small")|| a.form == "floor")){
     		return false;
     	}
     	if(lit.rel == "under" && (b.size == "large" && a.size == "small")){
@@ -137,24 +154,12 @@ module Interpreter {
     	return true;
     }
     
-    function identifyLocation(loc : Parser.Location, state : WorldState):string[]{
-    	var result:string[] = identifyObj(loc.ent.obj, state);
-    	var unqObjs:string[] = uniqeObjects(result);
-    	
-    	if(loc.ent.quant == "the" && loc.ent.obj.form != "floor"){
-    		if(unqObjs.length > 1){
-    			// ambigous interpet, use clairifying parse
-    			if(!clairifyingparse){
-    				throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I should move to?");
-    			}
-    			var objs = solveAmbiguity(loc.ent.obj,unqObjs, state);
-    			if(objs.length > 1){
-    				throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I should move to?");
-    			}
-    			result = objs;
-    		}
-    		return result;
-    	}
+    function identifyLocation(loc : Parser.Location, state : WorldState):string[][]{
+    	try {
+        	var result:string[][] = identifyEnt(loc.ent, state);
+		} catch (e) {
+		    throw e;//TODO write a better error message !!  
+		}
     	return result;
     }
     
@@ -228,10 +233,11 @@ module Interpreter {
         return objs.toArray();
     }
     
-    function identifyEnt(ent:Parser.Entity, state :WorldState):string[]{
+    function identifyEnt(ent:Parser.Entity, state :WorldState):string[][]{
     	var result:string[] = identifyObj(ent.obj, state);
     	var unqObjs:string[] = uniqeObjects(result);
-    	if(ent.quant == "the"){
+    	var results : string[][] = [[]];
+    	if(ent.quant == "the" && ent.obj.form != "floor"){
     		// ambigous interpet, use clairifying parse
     		if(unqObjs.length > 1){
 				if(!clairifyingparse){
@@ -243,12 +249,20 @@ module Interpreter {
 				}
 				result = objs;
     		}
-    		return result;
-    	}
+    		for(var i = 0; i < result.length; i++){
+    			results[i] = [result[i]];
+    		}
+    	} else
     	if(ent.quant == "all"){
-    		
+    		for(var i = 0; i < result.length; i++){
+    			results[i] = result;
+    		}
+    	} else{ // any
+    		for(var i = 0; i < result.length ;i++){
+    			results[i] = [result[i]];
+    		}
     	}
-    	return identifyObj(ent.obj, state);
+    	return results;
     }
     
     function uniqeObjects(objs:string[]):string[]{
