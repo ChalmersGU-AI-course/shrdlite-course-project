@@ -12,13 +12,19 @@ module Interpreter {
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
-            interpretations.push(intprt);
+
+            if (intprt.intp.length > 0) {
+                interpretations.push(intprt);
+            }
         });
-        if (interpretations.length==1) {
-            return interpretations;
-        } 
-        else if(interpretations.length>1){
-            throw new Interpreter.Error("I found more than one interpretation");
+
+        if (interpretations && interpretations.length > 0) {
+            if (interpretations.length == 1) {
+                return interpretations;
+            }
+            else {
+                throw new Interpreter.Error("I found more than one interpretation");
+            }
         }
         else {
             throw new Interpreter.Error("Found no interpretation");
@@ -53,13 +59,32 @@ module Interpreter {
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
+        /*
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
         var intprt : Literal[][] = [[
             {pol: true, rel: "ontop", args: [a, "floor"]},
             {pol: true, rel: "holding", args: [b]}
-        ]];
+        ]];*/
+
+        var intprt = [];
+
+        if (cmd.cmd == "take") {
+            var orEntities = interpretEntity(cmd.ent, state);
+
+            for (var i = 0; i < orEntities.length; i++)
+            {
+                var andObjs = orEntities[i];
+
+                if (andObjs.length == 1) {
+                    var lit = { pol: true, rel: "holding", args: [andObjs[0]] };
+
+                    intprt.push([lit]);
+                }
+            }
+        }
+
         return intprt;
     }
 
@@ -74,7 +99,7 @@ module Interpreter {
         }
         else if(ent.quant == "the"){
             if(objects.length>1){
-                return null;
+                return [];
             }
             else{
                 return [objects];
@@ -87,17 +112,37 @@ module Interpreter {
 
     function interpretObject(obj: Parser.Object, state: WorldState): string[]{
         if (obj.obj && obj.loc) {
-            var objsToCheck = interpretObject(obj.obj, state);
+            // Find all objects that fit description
+            var objsToCheck: string[] = interpretObject(obj.obj, state);
 
-            var relEnitities = interpretEntity(obj.loc.ent, state);
 
-            // Loop through all objects that fit description
-            for (var i = 0; i < objsToCheck.length; i++) {
+            var relEnitities: string[][] = interpretEntity(obj.loc.ent, state);
 
-                var objToCheck = objsToCheck[i];
-
+            // Filter objects that fulfill location
+            return objsToCheck.filter(function(objToCheck: string) {
                 // Does the object to check fulfill the relation?
-            }
+                var objToCheckFulfills = false;
+
+                var orEntities = relEnitities;
+
+                for (var i = 0; i < orEntities.length; i++) {
+                    var andObjs = orEntities[i];
+
+                    var andFulfilled = true;
+
+                    for (var j = 0; j < andObjs.length; j++) {
+                        var lit = { pol: true, rel: obj.loc.rel, args: [objToCheck, andObjs[j]] };
+
+                        andFulfilled = andFulfilled && LiteralHelpers.isLiteralFullfilled(lit, state);
+                    }
+
+                    if (andFulfilled) {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
 
         }
         else {
@@ -108,23 +153,28 @@ module Interpreter {
     function getObjectsFromDescription(size: string, color: string, form: string, state: WorldState): string[]{
         var objNames : string[] = Array.prototype.concat.apply([], state.stacks);
         var objectsFromDescription = [];
-        for (var i = 0; i < objs.length;i++){
-            var currentObjectDescription = state.objects(objNames[i]);
+        for (var i = 0; i < objNames.length; i++){
+            var currentObjectDescription = state.objects[objNames[i]];
             if(objectFulfillsDescription(currentObjectDescription,size,color,form)){
                 objectsFromDescription.push(objNames[i]);
             }
         }
-        return objNames;
+        return objectsFromDescription;
     }
 
     function objectFulfillsDescription(objDef: ObjectDefinition, size: string, color: string, form: string): boolean{
-        var objOk = (objDef.form==form);
+        var objOk = true;
+
+        if (form && form != "anyform") {
+            objOk = objOk && (objDef.form == form);
+        }
         if(size){
             objOk = objOk && (objDef.size == size);
         }
         if(color){
             objOk = objOk && (objDef.color == color);
         }
+
         return objOk;
     }
 
