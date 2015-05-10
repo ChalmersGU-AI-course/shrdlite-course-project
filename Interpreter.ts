@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
+///<reference path="LiteralHelpers.ts"/>
 
 module Interpreter {
 
@@ -85,7 +86,23 @@ module Interpreter {
     }
 
     function interpretObject(obj: Parser.Object, state: WorldState): string[]{
+        if (obj.obj && obj.loc) {
+            var objsToCheck = interpretObject(obj.obj, state);
 
+            var relEnitities = interpretEntity(obj.loc.ent, state);
+
+            // Loop through all objects that fit description
+            for (var i = 0; i < objsToCheck.length; i++) {
+
+                var objToCheck = objsToCheck[i];
+
+                // Does the object to check fulfill the relation?
+            }
+
+        }
+        else {
+            return getObjectsFromDescription(obj.size, obj.color, obj.form, state);
+        }
     }
 
     function getObjectsFromDescription(size: string, color: string, form: string, state: WorldState): string[]{
