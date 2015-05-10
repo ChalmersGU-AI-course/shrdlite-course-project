@@ -46,7 +46,6 @@ module Planner {
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         console.log(intprt);
-        console.log(intprt[1]);
 
         var plan: string[] = [];
 

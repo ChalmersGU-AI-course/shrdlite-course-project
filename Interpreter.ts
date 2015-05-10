@@ -73,8 +73,7 @@ module Interpreter {
         if (cmd.cmd == "take") {
             var orEntities = interpretEntity(cmd.ent, state);
 
-            for (var i = 0; i < orEntities.length; i++)
-            {
+            for (var i = 0; i < orEntities.length; i++) {
                 var andObjs = orEntities[i];
 
                 if (andObjs.length == 1) {
@@ -82,6 +81,54 @@ module Interpreter {
 
                     intprt.push([lit]);
                 }
+            }
+        }
+        else if (cmd.cmd == "put") {
+            if (state.holding) {
+                var locOrEntities = interpretEntity(cmd.loc.ent, state);
+
+                for (var i = 0; i < locOrEntities.length; i++) {
+                    var locAndObjs = locOrEntities[i];
+
+                    var andLits = [];
+                    for (var j = 0; j < locAndObjs.length; j++) {
+                        var lit = { pol: true, rel: cmd.loc.rel, args: [state.holding, locAndObjs[j]] };
+
+                        andLits.push(lit);
+                    }
+                    intprt.push(andLits);
+                }
+            }
+        }
+        else if (cmd.cmd == "move") {
+            var orEntities = interpretEntity(cmd.ent, state);
+
+            // THERE IS PROBABLY A BUG HERE SOMEWHERE!
+            // How should this be interpreted?
+            
+            // What to move?
+            for (var i = 0; i < orEntities.length; i++) {
+                var andObjs = orEntities[i];
+
+                var andLits = [];
+                for (var j = 0; j < andObjs.length; j++) {
+
+                    // Where to move it?
+                    var locOrEntities = interpretEntity(cmd.loc.ent, state);
+
+                    for (var k = 0; k < locOrEntities.length; k++) {
+                        var locAndObjs = locOrEntities[k];
+
+                        for (var l = 0; l < locAndObjs.length; l++) {
+                            var lit = { pol: true, rel: cmd.loc.rel, args: [andObjs[j], locAndObjs[l]] };
+
+                            andLits.push(lit);
+                        }
+                    }
+                }
+
+                intprt.push(andLits);
+
             }
         }
 
@@ -151,18 +198,22 @@ module Interpreter {
     }
 
     function getObjectsFromDescription(size: string, color: string, form: string, state: WorldState): string[]{
-        var objNames : string[] = Array.prototype.concat.apply([], state.stacks);
         var objectsFromDescription = [];
-        for (var i = 0; i < objNames.length; i++){
-            var currentObjectDescription = state.objects[objNames[i]];
+
+        for (var objName in state.objects) {
+            var currentObjectDescription = state.objects[objName];
             if(objectFulfillsDescription(currentObjectDescription,size,color,form)){
-                objectsFromDescription.push(objNames[i]);
+                objectsFromDescription.push(objName);
             }
         }
         return objectsFromDescription;
     }
 
     function objectFulfillsDescription(objDef: ObjectDefinition, size: string, color: string, form: string): boolean{
+        if (!objDef) {
+            return true;
+        }
+
         var objOk = true;
 
         if (form && form != "anyform") {
