@@ -121,7 +121,6 @@ module Planner {
     }
     
     // NB: we would probably add some constraints argument over the previous objects which have been placed.
-    function solve(goals : Interpreter.Literal[], state : WorldState, plan : Plan) {
         var goal = goals[0];
         delete goals[0];
         var depCol = getCol(goal.args[0], state.stacks);
