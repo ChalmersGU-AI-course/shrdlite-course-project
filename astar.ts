@@ -71,6 +71,7 @@ module astar {
         }
 
         searchPath(start: INode): Result {
+            var TIMEOUT = 5000;
 
             var queue = new collections.PriorityQueue<QueueElement>(entryCompare);
             var visited = new collections.Dictionary<INode,number>(function(node: INode) { return node.getUniqueId(); });
@@ -78,7 +79,7 @@ module astar {
             queue.enqueue(new QueueElement([start],0,this.heuristic.get(start,this.goal)));
             visited.setValue(start,0);
 
-            while (queue.peek()) {
+            while (queue.peek() && visited.size() < TIMEOUT) {
                 var currentElement = queue.dequeue();
                 var currentNode = currentElement.path[currentElement.path.length-1];
 
