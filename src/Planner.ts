@@ -105,7 +105,7 @@ module Planner {
                     res = !(o1.form=="box" && o2.size=="small");
                     break;
                 case "pyramid":
-                    res = !(o1.form=="box" && o1.size=="large");
+                    res = !(o1.form=="box" && (o2.size=="small" || o1.size=="large"));
                     break;
                 default:
                     res = true;
@@ -125,7 +125,7 @@ module Planner {
         }
         console.log("Possible moves : "+s);
         
-        plan.movesToPlan([moves[getRandomInt(state.stacks.length)]]);
+        plan.movesToPlan([moves[getRandomInt(moves.length)]]);
         
         //intprt.map((alternativeGoal) => solveByAStar([new Node(state.stacks,[])], alternativeGoal));
         return plan.plan;
