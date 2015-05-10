@@ -2379,8 +2379,172 @@ var collections;
     collections.BSTree = BSTree; // end of BSTree
 })(collections || (collections = {})); // End of module 
 ///<reference path="World.ts"/>
+var Rules;
+(function (Rules) {
+    function breakFloorRules(o, obj, rel) {
+        var bol = false;
+        if (o.form == "floor" ||
+            (obj.form == "floor" && !(rel == "ontop" || rel == "above"))) {
+            bol = true;
+        }
+        return bol;
+    }
+    Rules.breakFloorRules = breakFloorRules;
+    function breakBoxRules(o, obj, rel) {
+        var bol = false;
+        if (obj.form == "box" && rel == "ontop") {
+            bol = true;
+        }
+        else if (obj.form == "box" && rel == "inside" &&
+            ((o.form == "pyramid" || o.form == "planck" || o.form == "box") && obj.size == o.size)) {
+            bol = true;
+        }
+        else if (o.form == "box" && rel == "ontop" &&
+            ((obj.size == "small" && obj.form == "brick") || (obj.form == "pyramid"))) {
+            bol = true;
+        }
+        else if (rel == "inside" && obj.form != "box") {
+            bol = true;
+        }
+        return bol;
+    }
+    Rules.breakBoxRules = breakBoxRules;
+    function breakBallRules(o, obj, rel) {
+        var bol = false;
+        if (o.form == "ball" && obj.form == "ball") {
+            if (!(rel == "beside" || rel == "rightof" || rel == "leftof")) {
+                bol = true;
+            }
+        }
+        else if (o.form == "ball") {
+            if (rel == "under") {
+                bol = true;
+            }
+            else if (!(rel == "leftof" || rel == "rightof" || rel == "beside" ||
+                (rel == "inside" && obj.form == "box") ||
+                (rel == "ontop" && obj.form == "floor"))) {
+                bol = true;
+            }
+        }
+        else if (obj.form == "ball") {
+            if (rel == "ontop" || rel == "inside" || rel == "above") {
+                bol = true;
+            }
+        }
+        return bol;
+    }
+    Rules.breakBallRules = breakBallRules;
+    function breakSmallSupportingBig(o, obj, rel) {
+        var bol = false;
+        if ((rel == "ontop" || rel == "above" || rel == "inside") &&
+            (o.size == "large" && obj.size == "small")) {
+            bol = true;
+        }
+        else if (rel == "under" &&
+            (obj.size == "large" && o.size == "small")) {
+            bol = true;
+        }
+        return bol;
+    }
+    Rules.breakSmallSupportingBig = breakSmallSupportingBig;
+    function breakRules(o, obj, rel) {
+        return (Rules.breakFloorRules(o, obj, rel) ||
+            Rules.breakSmallSupportingBig(o, obj, rel) ||
+            Rules.breakBoxRules(o, obj, rel) ||
+            Rules.breakBallRules(o, obj, rel));
+    }
+    Rules.breakRules = breakRules;
+})(Rules || (Rules = {}));
+var Helper;
+(function (Helper) {
+    function getObjsInStack(x, from, to, state, obj) {
+        var owc = [];
+        if (!(x < 0 || x >= state.stacks.length || from >= to || to <= -1 || to > state.stacks[x].length)) {
+            for (var i = from; i < to; i++) {
+                var pos = { x: x, y: i };
+                var relObj = getObjAtCoord(pos, state);
+                if (comparator(relObj, obj)) {
+                    var o = { size: relObj.size, color: relObj.color, form: relObj.form, coord: pos, id: state.stacks[pos.x][pos.y] };
+                    owc.push(o);
+                }
+            }
+        }
+        return owc;
+    }
+    Helper.getObjsInStack = getObjsInStack;
+    function comparator(relObj, obj) {
+        var o = obj.obj == null ? obj : obj.obj;
+        return ((relObj.size == o.size || o.size == null) &&
+            (relObj.form == o.form || o.form == "anyform") &&
+            (relObj.color == o.color || o.color == null));
+    }
+    Helper.comparator = comparator;
+    function isFloor(obj) {
+        return obj.form == "floor";
+    }
+    Helper.isFloor = isFloor;
+    function removeDuplicate(array) {
+        var s;
+        for (var i = 0; i < array.length; i++) {
+            s = array[i].id;
+            for (var j = i + 1; j < array.length; j++) {
+                if (array[j].id == s) {
+                    array.splice(j, 1);
+                    j--;
+                }
+            }
+        }
+        return array;
+    }
+    Helper.removeDuplicate = removeDuplicate;
+    function findIDs(obj, state) {
+        var objectIDs = [];
+        if (state.holding != null && comparator(state.objects[state.holding], obj)) {
+            objectIDs.push(state.holding);
+        }
+        for (var i = 0; i < state.stacks.length; i++) {
+            for (var j = 0; j < state.stacks[i].length; j++) {
+                var pos = { x: i, y: j };
+                var o = getObjAtCoord(pos, state);
+                if (comparator(o, obj)) {
+                    objectIDs.push(state.stacks[i][j]);
+                }
+            }
+        }
+        return objectIDs;
+    }
+    Helper.findIDs = findIDs;
+    function findCoord(id, state) {
+        for (var x = 0; x < state.stacks.length; x++) {
+            for (var y = 0; y < state.stacks[x].length; y++) {
+                if (state.stacks[x][y] == id) {
+                    return { x: x, y: y };
+                }
+            }
+        }
+        throw new Error("No such id in stacks");
+    }
+    Helper.findCoord = findCoord;
+    function getObjAtCoord(pos, state) {
+        if (pos.y == -1) {
+            return { "size": null, "color": null, form: "floor" };
+        }
+        else if (pos.x >= state.stacks.length || pos.x < 0 || pos.y >= state.stacks[pos.x].length || pos.y < -1) {
+            //Out of bounds
+            throw new Error("getObjAtCoord out of bounds");
+        }
+        else {
+            var id = state.stacks[pos.x][pos.y];
+            return state.objects[id];
+        }
+    }
+    Helper.getObjAtCoord = getObjAtCoord;
+})(Helper || (Helper = {}));
+///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
 ///<reference path="collections.ts"/>
+///<reference path="Rules.ts"/>
+///<reference path="Helper.ts"/>
 var Interpreter;
 (function (Interpreter) {
     //////////////////////////////////////////////////////////////////////
@@ -2435,22 +2599,25 @@ var Interpreter;
             1st part: Identifying the object to move
         */
         //"move it" cmd
-        if (cmd.ent.obj == null) {
+        if (cmd.ent == null) {
+            if (state.holding == null) {
+                throw new Error("No object is being held at the moment");
+            }
             var obj = state.objects[state.holding];
             var o = { id: state.holding, size: obj.size, form: obj.form, color: obj.color };
             tmp.push(o);
         }
         else {
             var myObj = cmd.ent.obj.obj == null ? cmd.ent.obj : cmd.ent.obj.obj;
-            if (isFloor(myObj)) {
+            if (Helper.isFloor(myObj)) {
                 throw new Error("Can't move the floor");
             }
-            tmp = recursionCheck(cmd.ent.obj, state);
+            tmp = recursionCheck(cmd.ent, state);
             if (tmp.length == 0) {
                 //No such object
                 return null;
             }
-            tmp = removeDuplicate(tmp);
+            tmp = Helper.removeDuplicate(tmp);
         }
         //-----------------------------------------------------------
         /*
@@ -2466,12 +2633,12 @@ var Interpreter;
         else {
             var rel = cmd.loc.rel;
             var myObj = cmd.loc.ent.obj.obj == null ? cmd.loc.ent.obj : cmd.loc.ent.obj.obj;
-            tmp2 = recursionCheck(cmd.loc.ent.obj, state);
+            tmp2 = recursionCheck(cmd.loc.ent, state);
             if (tmp2.length == 0) {
                 //No such object
                 return null;
             }
-            tmp2 = removeDuplicate(tmp2);
+            tmp2 = Helper.removeDuplicate(tmp2);
             for (var i = 0; i < tmp.length; i++) {
                 var tmpGoal = checkPhysicalLaws(tmp[i], tmp2, rel);
                 if (tmpGoal.length != 0) {
@@ -2486,14 +2653,15 @@ var Interpreter;
         }
         return intprt;
     }
-    function recursionCheck(o1, state) {
+    function recursionCheck(ent, state) {
         var owc = [];
-        if (o1.obj != null) {
-            if (!isFloor(o1)) {
-                owc = recursionCheck(o1.loc.ent.obj, state);
+        var o = ent.obj;
+        if (o.obj != null) {
+            if (!Helper.isFloor(o)) {
+                owc = recursionCheck(o.loc.ent, state);
                 var owcRelated = [];
                 for (var i = 0; i < owc.length; i++) {
-                    var objs = getObjsWithSpatialRelation(o1, owc[i], state);
+                    var objs = getObjsWithSpatialRelation(o, owc[i], state);
                     for (var j = 0; j < objs.length; j++) {
                         owcRelated.push(objs[j]);
                     }
@@ -2505,18 +2673,18 @@ var Interpreter;
             }
         }
         else {
-            if (isFloor(o1)) {
+            if (Helper.isFloor(o)) {
                 owc.push({ id: "floor", form: "floor", size: null, color: null });
             }
             else {
-                var ids = findIDs(o1, state);
+                var ids = Helper.findIDs(o, state);
                 for (var i = 0; i < ids.length; i++) {
-                    var obj = getObjAtCoord(findCoord(ids[i], state), state);
-                    var o = { id: ids[i], size: obj.size, form: obj.form, color: obj.color };
+                    var objAtCoord = Helper.getObjAtCoord(Helper.findCoord(ids[i], state), state);
+                    var obj = { id: ids[i], size: objAtCoord.size, form: objAtCoord.form, color: objAtCoord.color };
                     if (ids[i] != state.holding) {
-                        o.coord = findCoord(ids[i], state);
+                        obj.coord = Helper.findCoord(ids[i], state);
                     }
-                    owc.push(o);
+                    owc.push(obj);
                 }
             }
             return owc;
@@ -2548,208 +2716,48 @@ var Interpreter;
         var valid = [];
         for (var i = 0; i < objs.length; i++) {
             var curr = objs[i];
-            if (!(floorRules(o, curr, rel) ||
-                smallSupportingBig(o, curr, rel) ||
-                boxRules(o, curr, rel) ||
-                ballRules(o, curr, rel))) {
+            if (!(curr.id == o.id ||
+                Rules.breakRules(o, curr, rel))) {
                 valid.push(curr.id);
             }
         }
         return valid;
     }
-    function floorRules(o, obj, rel) {
-        var bol = false;
-        if (o.form == "floor" ||
-            (obj.form == "floor" && !(rel == "ontop" || rel == "above"))) {
-            bol = true;
-        }
-        if (bol) {
-            alert("floor rules");
-        }
-        return bol;
-    }
-    function boxRules(o, obj, rel) {
-        var bol = false;
-        if (obj.form == "box" && rel == "ontop") {
-            bol = true;
-        }
-        else if (obj.form == "box" && rel == "inside" &&
-            ((o.form == "pyramid" || o.form == "planck" || o.form == "box") && obj.size == o.size)) {
-            bol = true;
-        }
-        else if (o.form == "box" && rel == "ontop" &&
-            ((obj.size == "small" && obj.form == "brick") || (obj.form == "pyramid"))) {
-            bol = true;
-        }
-        else if (rel == "inside" && obj.form != "box") {
-            bol = true;
-        }
-        if (bol) {
-            alert("box rules");
-        }
-        return bol;
-    }
-    function ballRules(o, obj, rel) {
-        var bol = false;
-        if (o.form == "ball" && obj.form == "ball") {
-            if (!(rel == "beside" || rel == "rightof" || rel == "leftof")) {
-                bol = true;
-            }
-        }
-        else if (o.form == "ball") {
-            if (rel == "under") {
-                bol = true;
-            }
-            else if (!(rel == "leftof" || rel == "rightof" || rel == "beside" ||
-                (rel == "inside" && obj.form == "box") ||
-                (rel == "ontop" && rel == "floor"))) {
-                bol = true;
-            }
-        }
-        else if (obj.form == "ball") {
-            if (rel == "ontop" || rel == "inside" || rel == "above") {
-                bol = true;
-            }
-        }
-        if (bol) {
-            alert("ball rules");
-        }
-        return bol;
-    }
-    function smallSupportingBig(o, obj, rel) {
-        var bol = false;
-        if ((rel == "ontop" || rel == "above" || rel == "inside") &&
-            (o.size == "large" && obj.size == "small")) {
-            bol = true;
-        }
-        else if (rel == "under" &&
-            (obj.size == "large" && o.size == "small")) {
-            bol = true;
-        }
-        if (bol) {
-            alert("small big rules");
-        }
-        return bol;
-    }
-    function findIDs(obj, state) {
-        var objectIDs = [];
-        if (state.holding != null && comparator(state.objects[state.holding], obj)) {
-            objectIDs.push(state.holding);
-        }
-        for (var i = 0; i < state.stacks.length; i++) {
-            for (var j = 0; j < state.stacks[i].length; j++) {
-                var pos = { x: i, y: j };
-                var o = getObjAtCoord(pos, state);
-                if (comparator(o, obj)) {
-                    objectIDs.push(state.stacks[i][j]);
-                }
-            }
-        }
-        return objectIDs;
-    }
-    function getId(pos, state) {
-        return state.stacks[pos.x][pos.y];
-    }
-    function findCoord(id, state) {
-        for (var x = 0; x < state.stacks.length; x++) {
-            for (var y = 0; y < state.stacks[x].length; y++) {
-                if (state.stacks[x][y] == id) {
-                    return { x: x, y: y };
-                }
-            }
-        }
-        throw new Error("No such id in stacks");
-    }
-    function getObjAtCoord(pos, state) {
-        if (pos.y == -1) {
-            return { "size": null, "color": null, form: "floor" };
-        }
-        else if (pos.x >= state.stacks.length || pos.x < 0 || pos.y >= state.stacks[pos.x].length || pos.y < -1) {
-            //Out of bounds
-            throw new Error("getObjAtCoord out of bounds");
-        }
-        else {
-            var id = state.stacks[pos.x][pos.y];
-            return state.objects[id];
-        }
-    }
     function getObjsWithSpatialRelation(o1, o2, state) {
         var tmp = [];
         if (o2.form == "floor" && o1.loc.rel == "ontop") {
             for (var i = 0; i < state.stacks.length; i++) {
-                var objs = getObjsInStack(i, 0, 1, state, o1);
-                for (var j = 0; j < objs.length; j++) {
-                    tmp[tmp.length] = objs[j];
-                }
+                tmp = tmp.concat(Helper.getObjsInStack(i, 0, 1, state, o1));
             }
         }
         else if ((o1.loc.rel == "inside" && o2.form == "box") || (o1.loc.rel == "ontop" && o2.form != "box")) {
-            tmp = getObjsInStack(o2.coord.x, o2.coord.y + 1, o2.coord.y + 2, state, o1);
+            tmp = Helper.getObjsInStack(o2.coord.x, o2.coord.y + 1, o2.coord.y + 2, state, o1);
         }
         else if (o1.loc.rel == "above") {
-            tmp = getObjsInStack(o2.coord.x, o2.coord.y + 1, state.stacks[o2.coord.x].length, state, o1);
+            tmp = Helper.getObjsInStack(o2.coord.x, o2.coord.y + 1, state.stacks[o2.coord.x].length, state, o1);
         }
-        else if (!isFloor(o2) && o1.loc.rel == "under") {
-            tmp = getObjsInStack(o2.coord.x, 0, o2.coord.y, state, o1);
+        else if (!Helper.isFloor(o2) && o1.loc.rel == "under") {
+            tmp = Helper.getObjsInStack(o2.coord.x, 0, o2.coord.y, state, o1);
         }
-        else if (!isFloor(o2) && o1.loc.rel == "beside") {
+        else if (!Helper.isFloor(o2) && o1.loc.rel == "beside") {
             if (o2.coord.x > 0) {
-                tmp = getObjsInStack(o2.coord.x - 1, 0, state.stacks[o2.coord.x - 1].length, state, o1);
+                tmp = Helper.getObjsInStack(o2.coord.x - 1, 0, state.stacks[o2.coord.x - 1].length, state, o1);
             }
             if (o2.coord.x < state.stacks.length - 1) {
-                var objs = getObjsInStack(o2.coord.x + 1, 0, state.stacks[o2.coord.x + 1].length, state, o1);
-                for (var i = 0; i < objs.length; i++) {
-                    tmp[tmp.length] = objs[i];
-                }
+                tmp = tmp.concat(Helper.getObjsInStack(o2.coord.x + 1, 0, state.stacks[o2.coord.x + 1].length, state, o1));
             }
         }
-        else if (!isFloor(o2) && o1.loc.rel == "leftof") {
+        else if (!Helper.isFloor(o2) && o1.loc.rel == "leftof") {
             for (var i = 0; i < o2.coord.x; i++) {
-                tmp = getObjsInStack(i, 0, state.stacks[i].length, state, o1);
+                tmp = tmp.concat(Helper.getObjsInStack(i, 0, state.stacks[i].length, state, o1));
             }
         }
-        else if (!isFloor(o2) && o1.loc.rel == "rightof") {
+        else if (!Helper.isFloor(o2) && o1.loc.rel == "rightof") {
             for (var i = o2.coord.x + 1; i < state.stacks.length; i++) {
-                tmp = getObjsInStack(i, 0, state.stacks[i].length, state, o1);
+                tmp = tmp.concat(Helper.getObjsInStack(i, 0, state.stacks[i].length, state, o1));
             }
         }
         return tmp;
-    }
-    function getObjsInStack(x, from, to, state, obj) {
-        var owc = [];
-        if (!(x < 0 || x >= state.stacks.length || from >= to || to <= -1 || to > state.stacks[x].length)) {
-            for (var i = from; i < to; i++) {
-                var pos = { x: x, y: i };
-                var relObj = getObjAtCoord(pos, state);
-                if (comparator(relObj, obj)) {
-                    var o = { size: relObj.size, color: relObj.color, form: relObj.form, coord: pos, id: getId(pos, state) };
-                    owc.push(o);
-                }
-            }
-        }
-        return owc;
-    }
-    function comparator(relObj, obj) {
-        var o = obj.obj == null ? obj : obj.obj;
-        return ((relObj.size == o.size || o.size == null) &&
-            (relObj.form == o.form || o.form == "anyform") &&
-            (relObj.color == o.color || o.color == null));
-    }
-    function isFloor(obj) {
-        return obj.form == "floor";
-    }
-    function removeDuplicate(array) {
-        var s;
-        for (var i = 0; i < array.length; i++) {
-            s = array[i].id;
-            for (var j = i + 1; j < array.length; j++) {
-                if (array[j].id == s) {
-                    array.splice(j, 1);
-                    j--;
-                }
-            }
-        }
-        return array;
     }
 })(Interpreter || (Interpreter = {}));
 ///<reference path="World.ts"/>
@@ -2786,10 +2794,14 @@ var Planner;
         return Error;
     })();
     Planner.Error = Error;
+    function ch(s) { var sw = s; sw.form = "as"; return sw; }
     //////////////////////////////////////////////////////////////////////
     // private functions
     function planInterpretation(intprt, state) {
         // This function returns a dummy plan involving a random stack
+        var test = [{ form: "brick", size: "large", color: "green" }];
+        var tmp = [];
+        tmp.push(test);
         do {
             var pickstack = getRandomInt(state.stacks.length);
         } while (state.stacks[pickstack].length == 0);

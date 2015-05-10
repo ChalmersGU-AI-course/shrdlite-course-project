@@ -29,7 +29,7 @@ module Interpreter {
 
 
     export interface Result extends Parser.Result {intp:Literal[][];}
-    export interface Literal {pol:boolean; rel:string; args:string[];}
+    export interface Literal {pol:boolean; rel:string; args:string[]; }
 
 
     export function interpretationToString(res : Result) : string {
@@ -201,11 +201,7 @@ module Interpreter {
         for(var i = 0; i < objs.length; i++){
             var curr: ObjWCoord = objs[i];
             if(!(curr.id == o.id ||
-                Rules.floorRules(o, curr, rel) ||
-                Rules.smallSupportingBig(o, curr, rel) ||
-                Rules.boxRules(o, curr, rel) ||
-                Rules.ballRules(o, curr, rel))){
-                
+                Rules.breakRules(o, curr, rel))){
                 valid.push(curr.id);                
             }
         }
