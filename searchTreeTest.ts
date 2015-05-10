@@ -64,3 +64,6 @@ console.log("Heuristic visited length: " + resultH.visited.length);
 
 console.log("Dijkstra runtime: " + timeD/1000 + "s");
 console.log("Heuristic runtime: " + timeH/1000 + "s");
+
+console.log("Dijkstra result: " + resultD.found);
+console.log("Heuristic result: " + resultH.found);

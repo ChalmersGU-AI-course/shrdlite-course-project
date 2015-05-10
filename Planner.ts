@@ -45,50 +45,6 @@ module Planner {
     // private functions
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
-        // do {
-        //     var pickstack = getRandomInt(state.stacks.length);
-        // } while (state.stacks[pickstack].length == 0);
-        // var plan : string[] = [];
-
-        // // First move the arm to the leftmost nonempty stack
-        // if (pickstack < state.arm) {
-        //     plan.push("Moving left");
-        //     for (var i = state.arm; i > pickstack; i--) {
-        //         plan.push("l");
-        //     }
-        // } else if (pickstack > state.arm) {
-        //     plan.push("Moving right");
-        //     for (var i = state.arm; i < pickstack; i++) {
-        //         plan.push("r");
-        //     }
-        // }
-
-        // // Then pick up the object
-        // var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        // plan.push("Picking up the " + state.objects[obj].form,
-        //           "p");
-
-        // if (pickstack < state.stacks.length-1) {
-        //     // Then move to the rightmost stack
-        //     plan.push("Moving as far right as possible");
-        //     for (var i = pickstack; i < state.stacks.length-1; i++) {
-        //         plan.push("r");
-        //     }
-
-        //     // Then move back
-        //     plan.push("Moving back");
-        //     for (var i = state.stacks.length-1; i > pickstack; i--) {
-        //         plan.push("l");
-        //     }
-        // }
-
-        // // Finally put it down again
-        // plan.push("Dropping the " + state.objects[obj].form,
-        //           "d");
-
-        // return plan;
-
         console.log(intprt);
         console.log(intprt[1]);
 
@@ -99,13 +55,17 @@ module Planner {
         var graphStart = new PlannerNode(state, null, null);
         var result = graph.searchPath(graphStart);
 
-        for (var i = 1; i < result.path.length; i++) {
-            var current = <PlannerNode> result.path[i];
-            plan.push(current.actionMessage);
-            plan.push(current.lastAction);
+        if (result.found) {
+            for (var i = 1; i < result.path.length; i++) {
+                var current = <PlannerNode> result.path[i];
+                plan.push(current.actionMessage);
+                plan.push(current.lastAction);
+            }
+            plan.push("Taddaaa");
+            console.log(state);
+        } else {
+            plan.push("Could not find a way to do that. Timed out.");
         }
-        plan.push("Taddaaa");
-        console.log(state);
 
         return plan;
     }
@@ -277,6 +237,21 @@ module Planner {
         }
 
         getOntopEstimate(lit: Interpreter.Literal, state: WorldState): number {
+            var on = lit.args[0];
+            var position = LiteralHelpers.getPositionOfObject(on, state);
+
+            if (position) {
+                var depth = state.stacks[position[0]].length - position[1] - 1;
+                var distance = Math.abs(position[0] - state.arm);
+                // to get away an object on top requires four actions
+                // we need to move to the according stack
+                // we need to pick up the desired object, move it, drop it
+                return depth * 4 + distance + 3;
+            }
+            return 0;
+        }
+
+        getBesideEstimate(lit: Interpreter.Literal, state: WorldState): number {
             var on = lit.args[0];
             var position = LiteralHelpers.getPositionOfObject(on, state);
 
