@@ -136,7 +136,8 @@ module Planner {
             var numberOfStacks = this.state.stacks.length;
             var targetPos = this.state.arm + direction;
             if (targetPos >= 0 && targetPos < numberOfStacks) {
-                var newState = owl.deepCopy(this.state, 3);
+                // we can use copy here since we don't need a deep copy
+                var newState = owl.copy(this.state);
                 newState.arm = targetPos;
                 var newMessage = "Moving " + (direction > 0 ? "right" : "left");
                 return new PlannerNode(newState, direction > 0 ? "r" : "l", newMessage);
