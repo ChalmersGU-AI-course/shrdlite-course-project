@@ -151,9 +151,6 @@ module Planner {
         
         //console.log("A* done!");
         
-        //FIXME: ifall nuvarande state redan är målstate, kommer inte
-        // A* att ge tillbaka en tom path? Då kan vi ju inte säga att 
-        // "no path is found"?
         if(path == undefined){
             plan.push("No path found. (ノ ゜Д゜)ノ ︵ ┻━┻");
             //console.log("------------planInterpretation returns 2------------");

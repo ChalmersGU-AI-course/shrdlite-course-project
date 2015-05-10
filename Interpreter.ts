@@ -100,18 +100,36 @@ module Interpreter {
                     
                     if(rightNumberOfResults(cmd.loc.ent.quant, foundLocationKey.length)){
                         
-                        objectKeys.forEach(
-                        (key: string) => {
-                            
-                            foundLocationKey.forEach(
-                                (locationKey: string) => {
-                                    intprt.push(
-                                        [{pol: true, rel: cmd.loc.rel, args: [key, locationKey]}]
+                        if(cmd.ent.quant == "all"){
+                            var temp: Literal[] = [];
+                            objectKeys.forEach(
+                                (key: string) => {
+                                    foundLocationKey.forEach(
+                                        (locationKey: string) => {
+                                            temp.push(
+                                                {pol: true, rel: cmd.loc.rel, args: [key, locationKey]}
+                                            );
+                                        }
                                     );
+                                    
                                 }
-                            );
-                            
+                            intprt.push(temp);
+                        } else {
+                            objectKeys.forEach(
+                                (key: string) => {
+                                    
+                                    foundLocationKey.forEach(
+                                        (locationKey: string) => {
+                                            intprt.push(
+                                                [{pol: true, rel: cmd.loc.rel, args: [key, locationKey]}]
+                                            );
+                                        }
+                                    );
+                                    
+                                }
                         }
+                        
+                        
                     );
                         
                     }
