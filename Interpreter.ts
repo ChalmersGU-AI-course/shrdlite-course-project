@@ -145,11 +145,11 @@ module Interpreter {
     		if(unqObjs.length > 1){
     			// ambigous interpet, use clairifying parse
     			if(!clairifyingparse){
-    				throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I shoule move to?");
+    				throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I should move to?");
     			}
     			var objs = solveAmbiguity(loc.ent.obj,unqObjs, state);
     			if(objs.length > 1){
-    				throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I shoule move to?" + objs);
+    				throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I should move to?");
     			}
     			result = objs;
     		}
@@ -230,12 +230,23 @@ module Interpreter {
     
     function identifyEnt(ent:Parser.Entity, state :WorldState):string[]{
     	var result:string[] = identifyObj(ent.obj, state);
-    	var resSize:number = uniqeObjects(result).length;
+    	var unqObjs:string[] = uniqeObjects(result);
     	if(ent.quant == "the"){
-    		if(resSize > 1){
-    			throw new Interpreter.Error("Ambigous result: " +  result);
+    		// ambigous interpet, use clairifying parse
+    		if(unqObjs.length > 1){
+				if(!clairifyingparse){
+					throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I should move?");
+				}
+				var objs = solveAmbiguity(ent.obj,unqObjs, state);
+				if(objs.length > 1){
+					throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I should move?");
+				}
+				result = objs;
     		}
     		return result;
+    	}
+    	if(ent.quant == "all"){
+    		
     	}
     	return identifyObj(ent.obj, state);
     }
