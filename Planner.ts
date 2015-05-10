@@ -245,13 +245,13 @@ module Planner {
 
         getEstimateForLiteral(lit: Interpreter.Literal, state: WorldState): number {
             if (lit.rel == "ontop") {
-                if (checkHoldingLiteral(lit, state)) {
+                if (LiteralHelpers.checkHoldingLiteral(lit, state)) {
                     return 0;
                 }
                 return this.getOntopEstimate(lit, state);
             }
             if (lit.rel == "holding") {
-                if (checkHoldingLiteral(lit, state)) {
+                if (LiteralHelpers.checkHoldingLiteral(lit, state)) {
                     return 0;
                 }
                 return this.getHoldingEstimate(lit, state);
@@ -260,7 +260,7 @@ module Planner {
         }
 
         getHoldingEstimate(lit: Interpreter.Literal, state: WorldState): number {
-            var position = this.getPositionOfObject(lit.args[0], state);
+            var position = LiteralHelpers.getPositionOfObject(lit.args[0], state);
             if (position) {
                 var depth = state.stacks[position[0]].length - position[1] - 1;
                 var distance = Math.abs(position[0] - state.arm);
@@ -274,7 +274,7 @@ module Planner {
 
         getOntopEstimate(lit: Interpreter.Literal, state: WorldState): number {
             var on = lit.args[0];
-            var position = this.getPositionOfObject(on, state);
+            var position = LiteralHelpers.getPositionOfObject(on, state);
 
             if (position) {
                 var depth = state.stacks[position[0]].length - position[1] - 1;
@@ -285,23 +285,6 @@ module Planner {
                 return depth * 4 + distance + 3;
             }
             return 0;
-        }
-
-        getPositionOfObject(item: string, state: WorldState): number[] {
-            // check all stacks
-            for (var i = 0; i < state.stacks.length; ++i) {
-                var stack = state.stacks[i];
-
-                // if stack contains items
-                if (stack) {
-                    var position = stack.indexOf(item);
-                    // if item in stack, get position
-                    if (position >= 0) {
-                        return [i, position];
-                    }
-                }
-            }
-            return null;
         }
     }
 }

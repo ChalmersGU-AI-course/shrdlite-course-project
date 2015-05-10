@@ -4,24 +4,24 @@ module LiteralHelpers {
 
     export function isLiteralFullfilled(lit: Interpreter.Literal, state: WorldState): boolean {
         if (lit.rel == "ontop" || lit.rel == "inside") {
-            return LiteralHelpers.checkOntopLiteral(lit, state);
+            return checkOntopLiteral(lit, state);
         }
         if (lit.rel == "holding") {
             return checkHoldingLiteral(lit, state);
         }
         if (lit.rel == "under") {
-            //TODO: return checkUnderLiteral(lit, state);
+            return checkUnderLiteral(lit, state);
         }
         if (lit.rel == "beside") {
-            //TODO: return checkBesideLiteral(lit, state);
+            return checkBesideLiteral(lit, state);
         }
         if (lit.rel == "above") {
-            //TODO: return checkAboveLiteral(lit, state);
+            return checkAboveLiteral(lit, state);
         }
         return false;
     }
 
-    function checkOntopLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
+    export function checkOntopLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
         var on = lit.args[0];
         var under = lit.args[1];
 
@@ -49,7 +49,51 @@ module LiteralHelpers {
         return false;
     }
 
-    function checkHoldingLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
+    export function checkHoldingLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
         return state.holding == lit.args[0];
+    }
+
+    export function checkUnderLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
+        var swapLiteral = { pol: lit.pol, rel: lit.rel, args: [lit.args[1], lit.args[0]] };
+        return checkAboveLiteral(swapLiteral, state);
+    }
+
+    export function checkAboveLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
+        var posOn = getPositionOfObject(lit.args[0], state);
+        var posUnder = getPositionOfObject(lit.args[1], state);
+
+        if (posOn && posUnder) {
+            return (posOn[0] == posUnder[0] && posOn[1] > posUnder[1]);
+        }
+        return false;
+    }
+
+    export function checkBesideLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
+        var pos1 = getPositionOfObject(lit.args[0], state);
+        var pos2 = getPositionOfObject(lit.args[1], state);
+
+        if  (pos1 && pos2) {
+            return (Math.abs(pos1[0] - pos2[0]) == 1);
+        }
+        return false;
+    }
+
+
+
+    export function getPositionOfObject(item: string, state: WorldState): number[] {
+        // check all stacks
+        for (var i = 0; i < state.stacks.length; ++i) {
+            var stack = state.stacks[i];
+
+            // if stack contains items
+            if (stack) {
+                var position = stack.indexOf(item);
+                // if item in stack, get position
+                if (position >= 0) {
+                    return [i, position];
+                }
+            }
+        }
+        return null;
     }
 }
