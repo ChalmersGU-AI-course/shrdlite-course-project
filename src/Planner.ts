@@ -38,8 +38,39 @@ module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
-
+    
+    class Plan {
+        plan : string[];
+        arm : number;
+        
+        constructor(armPos : number) {
+            this.plan = [];
+            this.arm = armPos;
+        }
+        
+        public move(dest : number) {
+            var diff = dest-this.arm;
+            var m = diff<0 ? "l" : "r";
+            for(var i = 0; i<Math.abs(diff); i++) {
+                this.plan.push(m);
+            }
+        }
+        
+        public pick() {
+            this.plan.push("p");
+        }
+        
+        public drop() {
+            this.plan.push("d");
+        }
+    }
+    
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
+        var plan = new Plan(state.arm)
+        var orderedGoals = orderGoals(intprt, state)
+        solve(orderedGoals, state, plan)
+        return plan.plan;
+        /*
         // This function returns a dummy plan involving a random stack
         do {
             var pickstack = getRandomInt(state.stacks.length);
@@ -82,10 +113,58 @@ module Planner {
         plan.push("Dropping the " + state.objects[obj].form,
                   "d");
 
-        return plan;
+        return plan;*/
     }
-
-
+    
+    function orderGoals(intprt : Interpreter.Literal[][], state : WorldState) : Interpreter.Literal[] {
+        return intprt[0];
+    }
+    
+    // NB: we would probably add some constraints argument over the previous objects which have been placed.
+    function solve(goals : Interpreter.Literal[], state : WorldState, plan : Plan) {
+        var goal = goals[0];
+        delete goals[0];
+        var depCol = getCol(goal.args[0], state.stacks);
+        var forbid = [];
+        if (goal.args.length>1) {
+            forbid.push(getCol(goal.args[1], state.stacks));
+        }
+        unstack(depCol, goal.args[0], forbid, plan);
+        if (goal.args.length>1) {
+            unstack(forbid[0], goal.args[1], [depCol], plan);
+        }
+    }
+    
+    function getCol(obj : string, stacks : string[][]) : number {
+        var i : number;
+        for (i=0; i<stacks.length || stacks[i].indexOf(obj)<0; i++) {
+            
+        }
+        if (i==stacks.length) {i=-1;}
+        return i;
+    }
+    
+    function unstack(col : number, obj : string, forbid : number[], plan : Plan) {
+        
+    }
+    
+    /**
+     * Simply returns the sum of objects piled over the concerned objects defined in objectToMove.
+     * The contribution of each oject could be depending on their constraints.
+     * (Ex : ball > box > pyramid > table and small > large)
+     */
+    function heuristic(objToMove : string[], stacks : string[][]) : number {
+        var score = 0;
+        for(var i=0; i<stacks.length; i++) {
+            for(var j=0; j<stacks[i].length; j++) {
+                if (objToMove.indexOf(stacks[i][j])>-1) {
+                    score+=j;
+                }
+            }
+        }
+        return score;
+    }
+    
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
