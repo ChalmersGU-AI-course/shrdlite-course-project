@@ -5,7 +5,7 @@ module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
-    
+
     export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
         var plans : Result[] = [];
         interpretations.forEach((intprt) => {
@@ -38,26 +38,26 @@ module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
-    
+
     class Move {
         pick: number;
         drop: number;
-        
+
         constructor(p: number, d: number) {
             this.pick = p;
             this.drop = d;
         }
     }
-    
+
     class Plan {
         plan : string[];
         arm : number;
-        
+
         constructor(armPos : number) {
             this.plan = [];
             this.arm = armPos;
         }
-        
+
         public move(dest : number) {
             var diff = dest-this.arm;
             var m = diff<0 ? "l" : "r";
@@ -65,15 +65,15 @@ module Planner {
                 this.plan.push(m);
             }
         }
-        
+
         public pick() {
             this.plan.push("p");
         }
-        
+
         public drop() {
             this.plan.push("d");
         }
-        
+
         /**
          * Compute the plan for a given list of moves.
          * Ex : moves=[[2,3],[2,4]] ==> if arm==1 : r p r d l p r r d
@@ -87,20 +87,20 @@ module Planner {
             });
         }
     }
-    
+
     module checkPhysics {
-        
+
         var canHold: { [s:string]: string[]; };
         canHold["ball"]=[];
         canHold["box"]=[];
-        
+
         export function canBeOn(o1: ObjectDefinition, o2: ObjectDefinition) : boolean {
-            
+
             return true;
         }
-        
+
     }
-    
+
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         var plan = new Plan(state.arm);
         //intprt.map((alternativeGoal) => solveByAStar([new Node(state.stacks,[])], alternativeGoal));
@@ -150,7 +150,7 @@ module Planner {
 
         return plan;*/
     }
-    
+
     function possibleMoves(stacks: string[][], objects: { [s:string]: ObjectDefinition; }) : Move[] {
         var moves: Move[] = [];
         for(var p=0; p<stacks.length; p++) {
@@ -164,16 +164,25 @@ module Planner {
         }
         return moves;
     }
-    
+
     function getCol(obj : string, stacks : string[][]) : number {
         var i : number;
-        for (i=0; i<stacks.length || stacks[i].indexOf(obj)<0; i++) {
-            
+        for (i=0; i<stacks.length && stacks[i].indexOf(obj)<0; i++) {
+
         }
         if (i==stacks.length) {i=-1;}
         return i;
     }
-    
+
+    function getLocation(obj : string, stacks : string[][]) : number[] {
+        var col : number = -1;
+        var row : number = -1;
+        for (col=0; col<stacks.length && row<0; col++) {
+            row = stacks[col].indexOf(obj);
+        }
+        return [col,row];
+    }
+
     /**
      * Simply returns the sum of objects piled over the concerned objects defined in objectToMove.
      * The contribution of each oject could be depending on their constraints.
@@ -190,7 +199,7 @@ module Planner {
         }
         return score;
     }
-    
+
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
