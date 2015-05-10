@@ -80,6 +80,11 @@ module Interpreter {
     		this.wasFound = b;
     	}
     }
+    
+    function posToLiteral(obj : position[] , loc : Parser.Object , state : WorldState){
+    	
+    	
+    }
         
     function checkStm (objs : Parser.Object , state : WorldState) : position[] {
     	var list : position[] = [];
@@ -87,41 +92,48 @@ module Interpreter {
     	if(objs.obj){
     		var stmObj = checkStm(objs.obj, state);
     		var stmLocObj = checkStm(objs.loc.ent.obj, state);
-    	   				
-			if( objs.loc.rel == "ontop" || objs.loc.rel == "inside"){
-				if (!stmLocObj[0].obj){				//check if floor exist
-					for(var x =0; x< state.stacks.length;  x++){	//loop through every floor
-							 	for(var y =0; y< stmObj.length;  y++){
+    	   	
+    	   	for(var i =0; i< stmLocObj.length;  i++){
+    	   	
+				if( objs.loc.rel == "ontop" || objs.loc.rel == "inside"){
+					if (!stmLocObj[i].obj){				//check if floor exist
+					var len = list.length
+						for(var x =0; x< state.stacks.length;  x++){	//loop through every floor
+							 for(var y =0; y< stmObj.length;  y++){
 							 	 
 								 if (state.stacks[x][0] == state.stacks[stmObj[y].x][stmObj[y].y]){
 								 	list.push(stmObj[y]);
-								 	list.push(stmLocObj[0]);
+								 	list.push(stmLocObj[i]);
 								 	break;
 								 }
 							 }
-					}
-					if(list.length == 0){
-						var errPos = (new position(-1,-1,null));
-						errPos.setWasFound(false);
-						list.push(errPos);
-					}
-				}else{
-				
-					if(!(stmLocObj[0].y+1 > state.stacks[stmLocObj[0].x].length) && 
-						(state.stacks[stmLocObj[0].x][stmLocObj[0].y+1] == state.stacks[stmObj[0].x][stmObj[0].y])){
-				
-						list.push(stmObj[0]);
-						list.push(stmLocObj[0]);
-					}else {
+						}
+				/*		if(list.length == len){						//if no object was found on the floor 
+							var errPos = (new position(-1,-1,null));
+							errPos.setWasFound(false);
+							list.push(errPos);
+						}*/
+					}else{
+						for(var j =0; j< stmObj.length;  j++){
+							if(!(stmLocObj[i].y+1 > state.stacks[stmLocObj[i].x].length) && 
+								(state.stacks[stmLocObj[i].x][stmLocObj[i].y+1] == state.stacks[stmObj[j].x][stmObj[j].y])){
 						
-						stmObj[0].setWasFound(false);
-						stmLocObj[0].setWasFound(false);
-						list.push(stmObj[0]);
-						list.push(stmLocObj[0]);
+								list.push(stmObj[j]);
+								list.push(stmLocObj[i]);
+							}
+						}
+							/*else {
+							
+							stmObj[0].setWasFound(false);
+							stmLocObj[0].setWasFound(false);
+							list.push(stmObj[0]);
+							list.push(stmLocObj[0]);
+						}*/
 					}
 				}
-				return list;
+				
 			}		
+			return list;
     	} else { 		
     		
     		if (objs.form == "floor"){
