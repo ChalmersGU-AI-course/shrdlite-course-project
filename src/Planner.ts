@@ -5,7 +5,7 @@ module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
-
+    
     export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
         var plans : Result[] = [];
         interpretations.forEach((intprt) => {
@@ -39,6 +39,16 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
     
+    class Move {
+        pick: number;
+        drop: number;
+        
+        constructor(p: number, d: number) {
+            this.pick = p;
+            this.drop = d;
+        }
+    }
+    
     class Plan {
         plan : string[];
         arm : number;
@@ -63,12 +73,37 @@ module Planner {
         public drop() {
             this.plan.push("d");
         }
+        
+        /**
+         * Compute the plan for a given list of moves.
+         * Ex : moves=[[2,3],[2,4]] ==> if arm==1 : r p r d l p r r d
+         */
+        public movesToPlan(moves : Move[]) {
+            moves.forEach((move) => {
+                this.move(move.pick);
+                this.pick();
+                this.move(move.drop);
+                this.drop();
+            });
+        }
+    }
+    
+    module checkPhysics {
+        
+        var canHold: { [s:string]: string[]; };
+        canHold["ball"]=[];
+        canHold["box"]=[];
+        
+        export function canBeOn(o1: ObjectDefinition, o2: ObjectDefinition) : boolean {
+            
+            return true;
+        }
+        
     }
     
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        var plan = new Plan(state.arm)
-        var orderedGoals = orderGoals(intprt, state)
-        solve(orderedGoals, state, plan)
+        var plan = new Plan(state.arm);
+        //intprt.map((alternativeGoal) => solveByAStar([new Node(state.stacks,[])], alternativeGoal));
         return plan.plan;
         /*
         // This function returns a dummy plan involving a random stack
@@ -116,22 +151,18 @@ module Planner {
         return plan;*/
     }
     
-    function orderGoals(intprt : Interpreter.Literal[][], state : WorldState) : Interpreter.Literal[] {
-        return intprt[0];
-    }
-    
-    // NB: we would probably add some constraints argument over the previous objects which have been placed.
-        var goal = goals[0];
-        delete goals[0];
-        var depCol = getCol(goal.args[0], state.stacks);
-        var forbid = [];
-        if (goal.args.length>1) {
-            forbid.push(getCol(goal.args[1], state.stacks));
+    function possibleMoves(stacks: string[][], objects: { [s:string]: ObjectDefinition; }) : Move[] {
+        var moves: Move[] = [];
+        for(var p=0; p<stacks.length; p++) {
+            for(var d=0; d<stacks.length; d++) {
+                if(p!=d && stacks[p].length>0) {
+                    if(checkPhysics.canBeOn(objects[stacks[p][stacks.length-1]] , objects[stacks[d][stacks.length-1]])) {
+                        moves.push(new Move(p,d));
+                    }
+                }
+            }
         }
-        unstack(depCol, goal.args[0], forbid, plan);
-        if (goal.args.length>1) {
-            unstack(forbid[0], goal.args[1], [depCol], plan);
-        }
+        return moves;
     }
     
     function getCol(obj : string, stacks : string[][]) : number {
@@ -141,10 +172,6 @@ module Planner {
         }
         if (i==stacks.length) {i=-1;}
         return i;
-    }
-    
-    function unstack(col : number, obj : string, forbid : number[], plan : Plan) {
-        
     }
     
     /**
