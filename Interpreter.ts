@@ -27,7 +27,6 @@ module Interpreter {
         }
     }
 
-
     export interface Result extends Parser.Result {intp:Literal[][];}
     export interface Literal {pol:boolean; rel:string; args:string[];}
 
@@ -41,44 +40,39 @@ module Interpreter {
         return (lit.pol ? "" : "-") + lit.rel + "(" + lit.args.join(",") + ")";
     }
 
-
     export class Error implements Error {
         public name = "Interpreter.Error";
         constructor(public message? : string) {}
         public toString() {return this.name + ": " + this.message}
     }
 
-
     //////////////////////////////////////////////////////////////////////
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        // This returns a dummy interpretation involving two random objects in the world
-        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
 
 	var intprt : Literal[][] = [];
 	if(cmd.cmd === "take") {
-	    var entities : string[][] = interpretEntity(cmd.ent, state);
-	    entities.forEach( (entList) => {
-		//We can only hold 1 object, and we cannot hold the floor
-		if(entList[0] === "floor") throw new Error("I cannot pickup the floor");
-		if(entList.length == 1)
-		    intprt.push([{pol: true, rel: "holding", args : entList}]);
+	    var entities : string[] = interpretEntity(cmd.ent, state);
+
+	    entities.forEach( (ent) => {
+		if(ent === "floor") throw new Error("I cannot pickup the floor");
+		intprt.push([{pol: true, rel: "holding", args: [ent]}]);
 	    });
 	}
 	else if(cmd.cmd === "move") {
-	    var entity : string[][] = interpretEntity(cmd.ent, state);
+	    var entity : string[] = interpretEntity(cmd.ent, state);
 	    var locati : string[] = interpretLocation(cmd.loc, state);
-	    var x = Array.prototype.concat.apply([], entity);
-            var tmp = [];
+            var tmp : string[][] = [];
 
-	    for(var i = 0; i < x.length; i++) {
+	    for(var i = 0; i < entity.length; i++) {
 		for(var j = 0; j < locati.length; j++) {
-		    tmp.push([x[i],locati[j]]);
+		    if(entity[i] === "floor")
+			throw new Error("I cannot pickup the floor");
+		    else tmp.push([entity[i],locati[j]]);
 		}
 	    }
-	    tmp.forEach( (elem) => {
-		if(elem[0] === "floor") throw new Error("I cannot pickup the floor");
+	    tmp.forEach((elem) => { 
 		intprt.push([{pol: true, rel: cmd.loc.rel, args: elem}]);
 	    });
 	}
@@ -90,32 +84,29 @@ module Interpreter {
    	            intprt.push([{pol: true, rel: cmd.loc.rel, args: [state.holding, locElem]}]);
 		});
 	    }
-	    else throw new Error("Cannot put something I am not holding anything");
+	    else throw new Error("Cannot put down something I am not holding");
 	}
         return intprt;
     }
 
-    // uses same principle as Literal[][] but with string[][], is there a better way to do it ?
-    function interpretEntity(ent : Parser.Entity, state : WorldState) : string[][] {
+    function interpretEntity(ent : Parser.Entity, state : WorldState) : string[] {
 	var objs : string[] = interpretObject(ent.obj, state);
-	var intprt : string[][] = [];
+	var intprt : string[] = [];
 
-	// [[P],[Q]] => P OR Q
 	if(ent.quant === "any")	{
 		objs.forEach((elem) => {
-		    intprt.push([elem]);
+		    intprt.push(elem);
 
 		});
 	}
 	// there should only be one object for 'the' interpretation to be valid
 	else if(ent.quant === "the" && objs.length == 1) {
-		intprt.push([objs[0]]);
+		intprt.push(objs[0]);
 	}
-	// [[P, Q]] => P AND Q
-	// since this is optional, ignore it for now
 	else if(ent.quant == "all") {
 		throw new Error("Not Implemented Yet: all quantifier");
 	}
+	else throw new Error("unknown quantifier");
 	return intprt;
     }
 
@@ -135,90 +126,50 @@ module Interpreter {
     }
 
     function interpretLocation(loc : Parser.Location, state : WorldState) : string[] {
-	var intprt : string[] = [];
-	var entity : string[][] = interpretEntity(loc.ent, state);
+	var entity : string[] = interpretEntity(loc.ent, state);
 
-	if(loc.rel === "leftof") {
-	    // check if leftof is a valid location
-	    entity.forEach((list) => {
-		if(list.length != 1) throw new Error ("Assert failed: inner list of entity should only have 1 element");
-		else if(checkLeftof(list[0], state)){
-		    intprt.push(list[0]);
-		}		
-	    });
+	switch(loc.rel) {
+	    case "leftof":
+		return entity.filter((e) => { return validLeftof(e, state); });
+		break;
+	    case "rightof":
+		return entity.filter((e) => { return validRightof(e, state); });
+		break;
+	    case "inside":
+		return entity.filter((e) => { return validInside(e, state); });
+		break;
+	    case "ontop":
+		return entity.filter((e) => { return validOntop(e, state); });
+		break;
+	    case "under":
+		return entity.filter((e) => { return validUnder(e, state); });
+		break;
+	    case "beside":
+		return entity.filter((e) => { return validBeside(e, state); });
+		break;
+	    case "above":
+		return entity.filter((e) => { return validAbove(e, state); });
+		break;
+	    default:
+		throw new Error("Unknown location");
 	}
-	else if(loc.rel === "rightof") {
-	    // check if rightof is a valid location
-	    entity.forEach((list) => {
-
-		if(list.length != 1) throw new Error ("Assert failed: inner list of entity should only have 1 element");
-		else if(checkRightof(list[0], state)){
-		    intprt.push(list[0]);
-		}
-	    });
-	}
-	else if(loc.rel === "inside") {
-	    entity.forEach( (list) => {
-		if(list.length != 1) throw new Error ("Assert failed: inner list of entity should only have 1 element");
-		else if(checkInside(list[0], state)){
-		    intprt.push(list[0]);
-		}
-	    });
-	}
-	else if(loc.rel === "ontop") {
-	    entity.forEach( (list) => {
-		if(list.length != 1) throw new Error ("Assert failed: inner list of entity should only have 1 element");
-		else if(checkOntop(list[0], state)){
-		    intprt.push(list[0]);
-		}
-	    });
-	}
-	else if(loc.rel === "under") {
-	    entity.forEach( (list) => {
-		if(list.length != 1) throw new Error ("Assert failed: inner list of entity should only have 1 element");
-		else if(checkUnder(list[0], state)){
-		    intprt.push(list[0]);
-		}
-	    });
-	}
-	else if(loc.rel === "beside") {
-	    // check if beside is a valid location
-	    entity.forEach( (list) => {
-		if(list.length != 1) throw new Error ("Assert failed: inner list of entity should only have 1 element");
-		else if(checkBeside(list[0], state)){
-		    intprt.push(list[0]);
-		}
-	    });
-	}
-	else if(loc.rel === "above") {
-	    // check if above is a valid location
-	    entity.forEach( (list) => {
-		if(list.length != 1) throw new Error ("Assert failed: inner list of entity should only have 1 element");
-		else if(checkAbove(list[0], state)){
-		    intprt.push(list[0]);
-		}
-	    });
-	}
-	return intprt;
     }
 
     // obj = {size?, color?, form}
     // returns all matching objects from the stack
     // could probably be optimized
-    // todo: may need more cases for hasForm = false.
     function interpretSimpleObject(obj : Parser.Object, state : WorldState) : string[] {
 	var valid : string[] = [];
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
 	
 	// do we really need to check the whole state if the given object is floor?
-	// maybe we should just 'return valid;' here.
 	if(obj.form === "floor") {
 	    valid.push("floor");
 	    return valid;
 	}
 	
 	// if the form is of any form we dont check if the form match
-	// otherwise we do check if the form matc	h
+	// otherwise we do check if the form match
 	if(obj.form === "anyform") {
 		// if size an color are given we use them
 		if(obj.size && obj.color) {
@@ -380,7 +331,7 @@ module Interpreter {
 	else return false;
     }
 
-    function checkLeftof(obj : string, state : WorldState) : boolean {
+    function validLeftof(obj : string, state : WorldState) : boolean {
 	var flag : boolean = false;
 	state.stacks.forEach((stack) => {
 	    if(stack.indexOf(obj) >= 0 && state.stacks.indexOf(stack) < state.stacks.length-1) {
@@ -390,7 +341,7 @@ module Interpreter {
 	return flag;
     }
 
-    function checkRightof(obj : string, state : WorldState) : boolean {
+    function validRightof(obj : string, state : WorldState) : boolean {
 	var flag : boolean = false;
 	state.stacks.forEach((stack) => {
 	    if(stack.indexOf(obj) >= 0 && state.stacks.indexOf(stack) >= 0) {
@@ -400,23 +351,23 @@ module Interpreter {
 	return flag;
     }
 
-    function checkInside(obj : string, state : WorldState) : boolean {
+    function validInside(obj : string, state : WorldState) : boolean {
 	if(state.objects[obj].form === "box") return true;
 	else return false;
     }
 
-    function checkOntop(obj : string, state : WorldState) : boolean {
+    function validOntop(obj : string, state : WorldState) : boolean {
 	if(obj === "floor") return true;
 	else if(state.objects[obj].form === "box" || state.objects[obj].form === "ball") return false;
 	else return true;
     }
 
-    function checkUnder(obj : string, state : WorldState) : boolean {
+    function validUnder(obj : string, state : WorldState) : boolean {
 	if(obj === "floor") return false;
 	else return true;
     }
 
-    function checkBeside(obj : string, state : WorldState) : boolean {
+    function validBeside(obj : string, state : WorldState) : boolean {
 	var flag : boolean = false;	
 	state.stacks.forEach((stack) => {
 	     if(stack.indexOf(obj) >= 0 && state.stacks.indexOf(stack)+1 <= state.stacks.length && state.stacks.indexOf(stack)-1 >= 0 ) {
@@ -426,7 +377,7 @@ module Interpreter {
 	return flag;
     }
 
-    function checkAbove(obj : string, state : WorldState) : boolean {
+    function validAbove(obj : string, state : WorldState) : boolean {
 	if(obj === "ball") return false;
 	else return true;
     }
@@ -515,10 +466,5 @@ module Interpreter {
 	});
 	return flag;
     }
-
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
-    }
-
 }
 
