@@ -139,12 +139,13 @@ module Planner {
                 var ret = false;
                 for(var i=0; i<intprt.length; i++){
                     for(var j=0; j<intprt[i].length; j++){
-                    var int = intprt[i][j];
-                    if(check(int.args[0], int.rel, int.args[1], node.data)){
-                        ret = true;
-                    }else{
-                        ret = false;
-                        break;
+                        var int = intprt[i][j];
+                        if(check(int.args[0], int.rel, int.args[1], node.data)){
+                            ret = true;
+                        }else{
+                            ret = false;
+                            break;
+                        }
                     }
                     if(ret){
                         break;
