@@ -84,6 +84,7 @@ module Shrdlite {
 	        }
 	        ambigious = false;
 	        inputPrompt = standardinpromt;
+	        world.printDebugInfo("Ambigious " + ambigious );
 	        world.printDebugInfo("Found " + interpretations.length + " interpretations");
 	        interpretations.forEach((res, n) => {
 	            world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));

@@ -15,9 +15,13 @@ function stacksToPDDL(stacks:string[][]):collections.Set<predicate>{
 				    	return res;
 				    });
 	for(var i = 0; i < stacks.length; i++){
+		if(i < stacks.length-1){
+			pddl.add({rel:"leftof", args:["f"+i,"f"+(i+1)]})
+			pddl.add({rel:"rightof", args:["f"+(i+1),"f"+i]})
+		}
 		for(var j = 0; j < stacks[i].length; j++){
 			if(j == 0){
-				pddl.add({rel:"ontop", args:[stacks[i][j],"f1"]})
+				pddl.add({rel:"ontop", args:[stacks[i][j],"f"+i]})
 			}else{
 				pddl.add({rel:"ontop", args:[stacks[i][j],stacks[i][j-1]]})
 			}
@@ -44,10 +48,16 @@ ExampleWorlds["complex"] = {
         "j": { "form":"pyramid", "size":"small",  "color":"red"   },
         "k": { "form":"box",     "size":"large",  "color":"yellow"},
         "l": { "form":"box",     "size":"large",  "color":"red"   },
-        "m": { "form":"box",     "size":"small",  "color":"blue"  }
+        "m": { "form":"box",     "size":"small",  "color":"blue"  },
+        "f0": { "form":"floor",    "size":"large",  "color":"" },
+        "f1": { "form":"floor",    "size":"large",  "color":"" },
+        "f2": { "form":"floor",    "size":"large",  "color":"" },
+        "f3": { "form":"floor",    "size":"large",  "color":"" },
+        "f4": { "form":"floor",    "size":"large",  "color":"" }
     },
    // "objIds":["a","b","c","d","e","f","g","h","i","j", "k","l","m"],
     "examples": [
+    	"put a box on a floor",
     	"put a box in the box",
         "put a box in a box",
         "put all balls on the floor",

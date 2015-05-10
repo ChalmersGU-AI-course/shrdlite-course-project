@@ -16,8 +16,9 @@ module Interpreter {
 			}else{
 				throw new Interpreter.ErrorInput("This is a statement. \"" + intprt.input +"\" . Please tell me a command.");
 			}
-
-            interpretations.push(intprt);
+			if(intprt.intp.length){
+            	interpretations.push(intprt);
+            }
         });
         if (interpretations.length) {
             return interpretations;
@@ -73,7 +74,7 @@ module Interpreter {
         //var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var pddls = state.pddl.toArray();
         
-        var intprt : Literal[][] = [[]];
+        var intprt : Literal[][] = [];
         if(loc){
         	var k = 0;
 	        for (var i = 0; i < objs.length; i++) {
@@ -171,7 +172,7 @@ module Interpreter {
         var color = obj.color;
         var size = obj.size;
     	var objs : collections.Set<string> = new collections.Set<string>(function (x){return x});
-        if(form.length == 0){
+        if(!form){
         	return [];
         }
         var pddls = state.pddl.toArray();
