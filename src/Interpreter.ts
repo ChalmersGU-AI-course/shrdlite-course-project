@@ -57,6 +57,9 @@ module Interpreter {
         // var a = objs[getRandomInt(objs.length)];
         // var b = objs[getRandomInt(objs.length)];
 
+		var worldLit=worldToLiteral(state);
+		debugger;
+
         var intprt : Literal[][] = [[
             // {pol: true, rel: "ontop", args: [a, "floor"]},
             // {pol: true, rel: "holding", args: [b]}
@@ -88,7 +91,120 @@ module Interpreter {
       }
       return matches;
     }
+    
+    
+    // Returns list of literals that represent a PDDL Representation of the world
+    // portrait in state variable
+    // 
+    // Relations considered: 
+    //		ontop	above	under	right		left	beside
+    //
+    // TODO - decide if we wish to use all of them
+    //
+    
+       function worldToLiteral(state : WorldState) : Literal[] {
+    
+       var worldLiterals = [];
+       var stcks= state.stacks;
+       var leftObjs = [];           // 
+       var besideObjs = [];         //
+    
+    
+    	// Iterates through stacks 
+		for (var c in stcks) // #1
+			{
+                
+		        var col=stcks[c];
+		    	var underObjs = [];         //
+		    	var iter=0;
+		     		
+		     	// Iterates through objects in given stack       
+		    	for (var obj in col) // #2
+					{
+				
+				
+					
+					 	var o=col[obj];
+					 	var topRelation;
+					 	
+					 	
+		        		if(iter==0)
+		             		{
+		             			//adds ontop relation for 1st object (floor)
+					 			//TODO - Add number of floor space (number of column) - easy, gg 
+		             	   	 	topRelation={pol: true, rel: "ontop", args: [o, "floor"]}; 
+						 	    worldLiterals.push(topRelation);
+		    		 		}
+		    		 	else
+		    		 		{
+		    		 	    	var last=underObjs.length-1;
+		    		 	    	var under=underObjs[last];
+		    		 	    
+		    		 	    	//only box can have inside objects, the remaining are ontop
+		    		 	    	//TODO - ask if two boxes of same size can be ontop of each other
+						 	    if(state.objects[under].form=="box")  topRelation={pol: true, rel: "inside", args: [o, under]};  //box is the only form that can contain other objects
+						 	    else topRelation={pol: true, rel: "ontop", args: [o, under]};  // any other (valid) form has objects ontop and not inside
+						 	    
+						 	    worldLiterals.push(topRelation);
+						
+		    		 	        
+						 	    for(var uObj in underObjs) // #3
+							 	    {
+							 	        var u=underObjs[uObj];
+							 	        // TODO ??? what's inside is also above? 
+	  									// ??? what's "outside" is also under? 
+	  									// ??? decide if both are necessary 
+							 	    	var abvRelation={pol: true, rel: "above", args: [o, u]}; 
+							 	    	var undRelation={pol: true, rel: "under", args: [u, o]};  
+							 	    	worldLiterals.push(abvRelation);
+							 	    	worldLiterals.push(undRelation);
+							 	    } //end for #3
+		    		 	      
+		    		 		} //end else 
+		    		 	
+		    		 	
+		    		 	// add horizontal position relations
+		    		 	for(var lObj in leftObjs)  //#4
+		    		 		{
+		    		 		    var leftO=leftObjs[lObj];
+		    		 			var leftRelation={pol: true, rel: "left", args: [leftO , o]}; 
+		    		 			var rightRelation={pol: true, rel: "right", args: [o, leftO]};  // TODO ??? decide if both are necessary 
+		    		 			worldLiterals.push(leftRelation);
+		    		 			worldLiterals.push(rightRelation);
+		    		 		} //end for #4
+		    		 		 
+		    		    // add beside relations
+		    		 	for(var besideO in besideObjs)  //#5
+		    		 		{
+		    		 		    var besO=besideObjs[besideO]
+		    		 			var besideRelation={pol: true, rel: "beside", args: [besO , o]}; 
+		    		 			worldLiterals.push(besideRelation);
+		    		 		} //end for #5
+		    		 	
+		    		 	iter++;
+		    		 	underObjs.push(o); 
+		    		 	
+		    		} //end inside for #2
+		    
+		        //update lists for next stack
+		    	leftObjs=leftObjs.concat(underObjs);  //add objects from previously examined stack
+		    	besideObjs=underObjs;	
+        
+        } //end outside for #1
+    
+      return worldLiterals;
+    }
 
+
+    // 
+    //
+       function checkWorldPhysics(stateList: Literal[]) : Boolean {
+    
+    
+    
+    
+      return true;
+    }
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
