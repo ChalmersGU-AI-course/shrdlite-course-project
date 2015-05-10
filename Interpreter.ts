@@ -124,7 +124,10 @@ module Interpreter {
     function identifyLocation(loc : Parser.Location, state : WorldState):string[]{
     	var result:string[] = identifyObj(loc.ent.obj, state);
     	var unqObjs:string[] = uniqeObjects(result);
-    	
+    	if(loc.ent.obj.form == "floor"){
+    		// there are only one floor.
+    		loc.ent.quant == "any";
+    	}
     	if(loc.ent.quant == "the"){
     		if(unqObjs.length > 1){
     			// ambigous interpet, use clairifying parse
@@ -176,27 +179,38 @@ module Interpreter {
         	return [];
         }
         var pddls = state.pddl.toArray();
-        for (var index = 0; index < pddls.length; index++) {
-        	var pddl = pddls[index];
-        	//check the first arg for form, color and size if it matches, add it to possibel objs
-        	var a = state.objects[pddl.args[0]];
-        	if(a.form != form){
-        		continue;
-        	}
-        	if(!a){
-        		continue;
-        	}
-        	if(color != null){
-        		if(a.color != color){
-        			continue;
+        if(form == "floor"){	// special case for floor
+        	for (var index = 0; index < pddls.length; index++) {
+        		var pddl = pddls[index];
+        		
+        		if((pddl.rel == "leftof" || pddl.rel == "rightof") && pddl.args){
+        			var a = state.objects[pddl.args[0]];
+        			objs.add(pddl.args[0]);	
         		}
         	}
-        	if(size != null){
-        		if(a.size != size){
-        			continue;
-        		}
-        	}
-        	objs.add(pddl.args[0]);
+        }else{
+	        for (var index = 0; index < pddls.length; index++) {
+	        	var pddl = pddls[index];
+	        	//check the first arg for form, color and size if it matches, add it to possibel objs
+	        	var a = state.objects[pddl.args[0]];
+	        	if(a.form != form){
+	        		continue;
+	        	}
+	        	if(!a){
+	        		continue;
+	        	}
+	        	if(color != null){
+	        		if(a.color != color){
+	        			continue;
+	        		}
+	        	}
+	        	if(size != null){
+	        		if(a.size != size){
+	        			continue;
+	        		}
+	        	}
+	        	objs.add(pddl.args[0]);
+			}
 		}
         return objs.toArray();
     }
