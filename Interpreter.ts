@@ -81,27 +81,49 @@ module Interpreter {
         if(loc){
         	var n = 0;
         	
-        	// Dimension 1
-        	
-	        for (var i = 0; i < objs.length; i++) {
-	        	for (var j = 0; j < loc.length ; j++) {
-	        		// Dimension 2
-	        		var lits :Literal [] = [];
-	        		var nn = 0;
-	        		for (var k = 0; k < objs[i].length; k++) {
-	        			for (var l = 0; l < loc[j].length; l++) {
-			        		var lit: Literal = {pol: true, rel: cmd.loc.rel, args: [objs[i][k], loc[j][l]]};
+        	// gather all poss
+        	var lits :Literal [][] = [];
+        	for (var i = 0; i < objs.length; i++) {
+        		for (var k = 0; k < objs[i].length; k++) {
+        			var nn = 0;
+        			for (var j = 0; j < loc.length ; j++) {
+        				for (var l = 0; l < loc[j].length ; l++) {
+		        			var lit: Literal = {pol: true, rel: cmd.loc.rel, args: [objs[i][k], loc[j][l]]};
 			        			/////only interpet legal goals!
 			        		if(checkIllegal(lit, state)){
-			        			lits[nn] = lit;
+			        			if(lits[k]== null){
+			        				lits[k] = [];
+			        			}
+			        			lits[k][nn] = lit;
 			        			nn++;
 			        		}
 			        	}
-	        		}
-	        		intprt[n]= lits;
-			        n++;
-	        	}
-	        }
+		        	}
+        		}
+        	}
+        	// combine the results
+        	var litscomb :Literal [][] = [];
+        	var n = 0;
+        	for (var i = 0; i < lits.length; i++) {
+        		for (var j = 0; j < lits[i].length ; j++) {
+        			
+        			for (var k = 0; k < lits.length ; k++) {
+        				for (var l = 0; l < lits[k].length ; l++) {
+        					if(litscomb[n]== null){
+		        				litscomb[n] = [];
+		        			}
+		        			var combi : Literal[]= [];
+		        			combi.push(lits[i][j]);
+		        			combi.push(lits[k][l]);
+		        			if(checkIllegalCombi(combi, state)){
+	        					litscomb[n] = combi;
+	        					n++;
+	        				}
+        				}
+        			}
+        		}
+        	}
+        	intprt = litscomb;
 		}else{
 	        for (var i = 0; i < objs.length; i++) {
 	        	for (var j = 0; j < objs[i].length; j++) {
@@ -110,6 +132,22 @@ module Interpreter {
 	        }
 		}
         return intprt;
+    }
+    
+    function checkIllegalCombi (lits : Literal[], state : WorldState):boolean{
+		//return true;
+    	for(var i = 0; i < lits.length; i++){
+    		for(var j = i+1; j < lits.length; j++){
+    			if(lits[i].rel == lits[j].rel && (lits[i].rel == "ontop")
+    					&&(lits[i].args[0] == lits[j].args[0] ||
+    					lits[i].args[1] == lits[j].args[1])){
+					return false;
+				}
+    		}
+    	}
+    	
+    	
+    	return true;
     }
     
     function checkIllegal(lit : Literal, state : WorldState):boolean{
@@ -184,14 +222,14 @@ module Interpreter {
     		obj.size = parseresult.size;
     	}
     	
-    	objs = identifyObj(obj, state);
+    	objs = identifyObj(obj.form, obj.color, obj.size, state);
     	return objs;
     }
     
-    function identifyObj(obj : Parser.Object, state : WorldState):string[]{
-       	var form = obj.form;
-        var color = obj.color;
-        var size = obj.size;
+    function identifyObj(form :string, color :string, size :string, state : WorldState):string[]{
+       //	var form = obj.form;
+      //  var color = obj.color;
+      //  var size = obj.size;
     	var objs : collections.Set<string> = new collections.Set<string>(function (x){return x});
         if(!form){
         	return [];
@@ -217,12 +255,12 @@ module Interpreter {
 	        	if(!a){
 	        		continue;
 	        	}
-	        	if(color != null){
+	        	if(!(color == null || color.length == 0 )){
 	        		if(a.color != color){
 	        			continue;
 	        		}
 	        	}
-	        	if(size != null){
+	        	if(!(size == null || size.length == 0)){
 	        		if(a.size != size){
 	        			continue;
 	        		}
@@ -234,8 +272,8 @@ module Interpreter {
     }
     
     function identifyEnt(ent:Parser.Entity, state :WorldState):string[][]{
-    	var result:string[] = identifyObj(ent.obj, state);
-    	var unqObjs:string[] = uniqeObjects(result);
+    	var result : string[] = identifyObj(ent.obj.form, ent.obj.color, ent.obj.size, state);
+    	var unqObjs : string[] = uniqeObjects(result);
     	var results : string[][] = [[]];
     	if(ent.quant == "the" && ent.obj.form != "floor"){
     		// ambigous interpet, use clairifying parse
@@ -254,15 +292,32 @@ module Interpreter {
     		}
     	} else
     	if(ent.quant == "all"){
+    		var totalUnqObjs = findAllWithForm(ent.obj.form, state);
+    		if(unqObjs.length != totalUnqObjs.length){
+    			if(!clairifyingparse){
+					throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I should move?");
+				}
+				var objs = solveAmbiguity(ent.obj,unqObjs, state);
+				if(objs.length > 1){
+					throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I should move?");
+				}
+				result = objs;
+    		}
     		for(var i = 0; i < result.length; i++){
     			results[i] = result;
     		}
-    	} else{ // any
+    	} else
+    	if (ent.quant == "any" || ent.obj.form == "floor"){ // any
     		for(var i = 0; i < result.length ;i++){
     			results[i] = [result[i]];
     		}
     	}
     	return results;
+    }
+    
+    function findAllWithForm(form : string, state : WorldState):string[]{
+    	var objs = identifyObj(form, "", "",state);
+    	return uniqeObjects(objs);
     }
     
     function uniqeObjects(objs:string[]):string[]{
