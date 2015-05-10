@@ -64,6 +64,7 @@ module Planner {
             for(var i = 0; i<Math.abs(diff); i++) {
                 this.plan.push(m);
             }
+            this.arm=dest;
         }
 
         public pick() {
@@ -109,22 +110,22 @@ module Planner {
                 default:
                     res = true;
             }
-            return res && (o2.form =="large" || o1.form=="small");
+            return res && (o2.size =="large" || o1.size=="small") && (o1.form!="ball" || o2.form=="box");
         }
 
     }
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         var plan = new Plan(state.arm);
-        
         var moves = possibleMoves(state.stacks, state.objects);
         var s="";
+        console.log("Interpretation !");
         for(var i=0; i<moves.length; i++) {
             s+=moves[i].pick+" --> "+moves[i].drop+" ; ";
         }
         console.log("Possible moves : "+s);
         
-        plan.movesToPlan([moves[0]]);
+        plan.movesToPlan([moves[getRandomInt(state.stacks.length)]]);
         
         //intprt.map((alternativeGoal) => solveByAStar([new Node(state.stacks,[])], alternativeGoal));
         return plan.plan;
@@ -179,7 +180,7 @@ module Planner {
         for(var p=0; p<stacks.length; p++) {
             for(var d=0; d<stacks.length; d++) {
                 if(p!=d && stacks[p].length>0) {
-                    if(checkPhysics.canBeOn(objects[stacks[p][stacks.length-1]] , objects[stacks[d][stacks.length-1]])) {
+                    if(stacks[d].length==0 || checkPhysics.canBeOn(objects[stacks[p][stacks[p].length-1]] , objects[stacks[d][stacks[d].length-1]])) {
                         moves.push(new Move(p,d));
                     }
                 }
