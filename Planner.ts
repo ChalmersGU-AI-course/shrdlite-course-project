@@ -185,32 +185,47 @@ module Planner {
     }
 
     export class MultipleGoals implements astar.IGoal {
-        targets: Interpreter.Literal[] = null;
+        targets: Interpreter.Literal[][] = null;
 
         constructor(targetLiterals: Interpreter.Literal[][]) {
-            this.targets = targetLiterals[0];
+            this.targets = targetLiterals;
         }
 
         isReached(node: astar.INode): boolean {
             var n = <PlannerNode> node;
 
-            for (var i = 0; i < this.targets.length; i++) {
-                var currentLiteral = this.targets[i];
+            for (var iOrLiteral = 0; iOrLiteral < this.targets.length; iOrLiteral++) {
+                var currentOrLiteral = this.targets[iOrLiteral];
+                var goalReachable = true;
+                for (var i = 0; i < currentOrLiteral.length; i++) {
+                    var currentLiteral = currentOrLiteral[i];
 
-                if (!this.isLiteralFullfilled(currentLiteral, n.state)) {
-                    return false;
+                    if (!this.isLiteralFullfilled(currentLiteral, n.state)) {
+                        goalReachable = false;
+                    }
+                }
+                if (goalReachable) {
+                    return true;
                 }
             }
-
-            return true;
+            return false;
         }
 
         isLiteralFullfilled(lit: Interpreter.Literal, state: WorldState): boolean {
-            if (lit.rel == "ontop") {
+            if (lit.rel == "ontop" || lit.rel == "inside") {
                 return checkOntopLiteral(lit, state);
             }
             if (lit.rel == "holding") {
                 return checkHoldingLiteral(lit, state);
+            }
+            if (lit.rel == "under") {
+                //TODO: return checkUnderLiteral(lit, state);
+            }
+            if (lit.rel == "beside") {
+                //TODO: return checkBesideLiteral(lit, state);
+            }
+            if (lit.rel == "above") {
+                //TODO: return checkAboveLiteral(lit, state);
             }
             return false;
         }

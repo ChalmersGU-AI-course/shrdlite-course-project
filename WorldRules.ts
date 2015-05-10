@@ -6,7 +6,7 @@ module WorldRules {
         var okBallRules = ballRules(topObject, bottomObject);
         var okSmallRules = smallObjectRules(topObject, bottomObject);
         var okBoxRules = boxRules(topObject, bottomObject);
-        return okBallRules && okSmallRules && okBoxRules;
+        return (okBallRules && okSmallRules && okBoxRules);
     }
 
     function ballRules(topObject: ObjectDefinition, bottomObject: ObjectDefinition) : boolean {
@@ -47,8 +47,8 @@ module WorldRules {
         if(topObject.form == "box"){
             if(topObject.size == "small"){
                 //Small boxes cannot be supported by small bricks or pyramids.
-                var isSmallBrick = bottomObject.form == "brick" && bottomObject.size == "small";
-                var isPyramid = bottomObject.form == "pyramid";
+                var isSmallBrick = (bottomObject.form == "brick" && bottomObject.size == "small");
+                var isPyramid = (bottomObject.form == "pyramid");
                 if(isSmallBrick||isPyramid){
                     return false;
                 }
