@@ -96,8 +96,8 @@ function ontop(first: string, second: string, stacks: string[][]){
         }else{
             for(var j=0; j<stacks[i].length; j++){
                 if(j<stacks[i].length-1 &&
-                   stacks[i][j] == first &&
-                   stacks[i][j+1] == second){
+                   stacks[i][j+1] == first &&
+                   stacks[i][j] == second){
                     return true;
                 }
             }
@@ -170,7 +170,9 @@ function right(first: string, second: string, stacks: string[][]){
 
 function check(first: string, rel: string, second: string, stacks: string[][]){
     switch(rel){
-        case "ontop" || "inside": 
+        case "ontop": 
+            return ontop(first, second, stacks);
+        case "inside": 
             return ontop(first, second, stacks);
         case "above":
             return above(first, second, stacks);
