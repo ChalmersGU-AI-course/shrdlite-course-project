@@ -98,20 +98,36 @@ module Interpreter {
     function checkIllegal(lit : Literal, state : WorldState):boolean{
     	var a = state.objects[lit.args[0]];
     	var b = state.objects[lit.args[1]];
-    	if(a==b){
+    	if(lit.args[0] == lit.args[1]){
     		return false;
     	}
-    	if(a.form == "ball" && (lit.rel != "ontop" && lit.rel != "inside")){
+    	if(b.form == "floor" && a.form != b.form){
+    		if(lit.rel == "under"){
+    			return false;
+    		}
+    		return true;
+    	}
+    	if(a.form == "ball" && lit.rel == "under" ){
     		return false;
     	}
-    	if(b.form == "ball" && (lit.rel != "beside" && lit.rel != "leftof" && lit.rel != "rightof")){
+    	if(a.form == "ball" && ((lit.rel == "ontop" && b.form != "floor") || (lit.rel == "inside" && 
+    			(b.form != "box" || (a.size == "large" && b.size == "small"))))){
     		return false;
     	}
-    	if(lit.rel == "inside" &&(a.form == "pyramid" || a.form == "plank" || 
-    			(a.form == "box" && (a.size == b.size || a.size == "large" && b.size == "small")))){
+    	if(b.form == "ball" && (lit.rel == "ontop" || lit.rel == "above" )){
     		return false;
     	}
-    	if(lit.rel == "ontop" || lit.rel == "above" &&(a.size == "large" && b.size == "small")){
+    	if(lit.rel == "inside" && (b.form != "box")){
+    		return false;
+    	}
+    	if(lit.rel == "inside" && ((a.form == "pyramid" || a.form == "plank" || a.form == "floor" )&&
+    			(a.size == b.size || (a.size == "large" && b.size == "small")))){
+    		return false;
+    	}
+    	if((lit.rel == "ontop" || lit.rel == "above") && ((a.size == "large" && b.size == "small")|| a.form == "floor")){
+    		return false;
+    	}
+    	if(lit.rel == "under" && (b.size == "large" && a.size == "small")){
     		return false;
     	}
     	if(b.form == "box" && lit.rel == "ontop"){
@@ -124,11 +140,8 @@ module Interpreter {
     function identifyLocation(loc : Parser.Location, state : WorldState):string[]{
     	var result:string[] = identifyObj(loc.ent.obj, state);
     	var unqObjs:string[] = uniqeObjects(result);
-    	if(loc.ent.obj.form == "floor"){
-    		// there are only one floor.
-    		loc.ent.quant == "any";
-    	}
-    	if(loc.ent.quant == "the"){
+    	
+    	if(loc.ent.quant == "the" && loc.ent.obj.form != "floor"){
     		if(unqObjs.length > 1){
     			// ambigous interpet, use clairifying parse
     			if(!clairifyingparse){
