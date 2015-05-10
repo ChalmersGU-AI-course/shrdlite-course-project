@@ -2605,7 +2605,7 @@ var Interpreter;
             }
             var obj = state.objects[state.holding];
             var o = { id: state.holding, size: obj.size, form: obj.form, color: obj.color };
-            tmp.push(o);
+            tmp = [o];
         }
         else {
             var myObj = cmd.ent.obj.obj == null ? cmd.ent.obj : cmd.ent.obj.obj;
@@ -2679,8 +2679,7 @@ var Interpreter;
             else {
                 var ids = Helper.findIDs(o, state);
                 for (var i = 0; i < ids.length; i++) {
-                    var objAtCoord = Helper.getObjAtCoord(Helper.findCoord(ids[i], state), state);
-                    var obj = { id: ids[i], size: objAtCoord.size, form: objAtCoord.form, color: objAtCoord.color };
+                    var obj = { id: ids[i], size: state.objects[ids[i]].size, form: state.objects[ids[i]].form, color: state.objects[ids[i]].color };
                     if (ids[i] != state.holding) {
                         obj.coord = Helper.findCoord(ids[i], state);
                     }
@@ -2760,8 +2759,229 @@ var Interpreter;
         return tmp;
     }
 })(Interpreter || (Interpreter = {}));
+///<reference path="Rules.ts"/>
+///<reference path="Helper.ts"/>
+var MyNode = (function () {
+    function MyNode(s, lastAction) {
+        this.gcost = Number.MAX_VALUE; //Init for the algo
+        this.neighbors = new collections.Dictionary();
+        this.world = s;
+        this.lastAction = lastAction;
+    }
+    MyNode.prototype.getNeighbors = function () {
+        var nodes = [];
+        var actions = ["l", "r", "d", "p"];
+        for (var i = 0; i < 4; i++) {
+            if (!(actions[i] == "l" && this.lastAction == "r" ||
+                actions[i] == "r" && this.lastAction == "l" ||
+                actions[i] == "p" && this.lastAction == "d" ||
+                actions[i] == "d" && this.lastAction == "p")) {
+                var node = this.genNode(actions[i]);
+                if (node != null) {
+                    node.genHash();
+                    nodes.push(node);
+                }
+            }
+        }
+        return nodes;
+    };
+    MyNode.prototype.genHash = function () {
+        var s = this.world.stacks;
+        var arm = this.world.arm;
+        var tmp = arm.toString();
+        var l;
+        for (var i = 0; i < s.length; i++) {
+            l = s[i].length;
+            if (l == 0) {
+                tmp += "_";
+            }
+            else {
+                tmp += l.toString();
+                for (var j = 0; j < s[i].length; j++) {
+                    tmp += s[i][j];
+                }
+            }
+        }
+        this.hash = tmp;
+    };
+    MyNode.prototype.genNode = function (action) {
+        var node;
+        var world = this.world;
+        var newWState;
+        if (action == "l" && world.arm > 0) {
+            newWState = { stacks: world.stacks, holding: world.holding, arm: world.arm - 1, objects: world.objects };
+            node = new MyNode(newWState, action);
+        }
+        else if (action == "r" && world.arm < world.stacks.length - 1) {
+            newWState = { stacks: world.stacks, holding: world.holding, arm: world.arm + 1, objects: world.objects };
+            node = new MyNode(newWState, action);
+        }
+        else if (action == "p" && world.holding == null && world.stacks[world.arm].length != 0) {
+            var hold = world.stacks[world.arm][world.stacks[world.arm].length - 1];
+            newWState = { stacks: newStacks(world.stacks, world.arm), holding: hold, arm: world.arm, objects: world.objects };
+            node = new MyNode(newWState, action);
+        }
+        else if (action == "d" && world.holding != null) {
+            var relObj = Helper.getObjAtCoord({ x: world.arm, y: world.stacks[world.arm].length - 1 }, world);
+            var rel = relObj.form == "box" ? "inside" : "ontop";
+            if (!Rules.breakRules(world.objects[world.holding], relObj, rel)) {
+                newWState = { stacks: newStacks(world.stacks, world.arm, world.holding), holding: null, arm: world.arm, objects: world.objects };
+                node = new MyNode(newWState, action);
+            }
+        }
+        if (node != null) {
+            this.addNeighbor(node, 1);
+        }
+        return node;
+    };
+    MyNode.prototype.addNeighbor = function (neighbour, distances) {
+        this.neighbors.setValue(neighbour, distances);
+    };
+    MyNode.prototype.distanceToMyNode = function (n) {
+        return this.neighbors.getValue(n);
+    };
+    return MyNode;
+})();
+function newStacks(stacks, arm, holding) {
+    var newS = [];
+    for (var x = 0; x < stacks.length; x++) {
+        newS[x] = new Array();
+        for (var y = 0; y < stacks[x].length; y++) {
+            newS[x][y] = stacks[x][y];
+        }
+    }
+    if (holding == null) {
+        newS[arm].splice(newS[arm].length - 1, 1);
+    }
+    else {
+        newS[arm][newS[arm].length] = holding;
+    }
+    return newS;
+}
+///<reference path="collections.ts"/>
+///<reference path="MyNode.ts"/>
+/*
+Equality between states: prob on update of currWorld when drop or pick
+Define equality with the goal
+
+
+
+*/
+var SearchAlgo;
+(function (SearchAlgo) {
+    function aStar(start, goal) {
+        var closedset = new collections.Dictionary();
+        var openset = new collections.Dictionary();
+        openset.setValue(start.hash, start);
+        start.gcost = 0;
+        start.fcost = start.gcost + heuristic(start, goal);
+        while (!openset.isEmpty()) {
+            var current = minFcost(openset);
+            if (reachGoal(current.world, goal)) {
+                return reconstructPath(current);
+            }
+            openset.remove(current.hash);
+            closedset.setValue(current.hash, current);
+            var neighbors = current.getNeighbors();
+            for (var i = 0; i < neighbors.length; i++) {
+                var n = neighbors[i];
+                if (closedset.containsKey(n.hash)) {
+                    continue;
+                }
+                var tmpGCost = current.gcost + current.distanceToMyNode(n);
+                var opensetContains = openset.containsKey(n.hash);
+                if (!opensetContains || tmpGCost < n.gcost) {
+                    n.parent = current;
+                    n.gcost = tmpGCost;
+                    n.fcost = n.gcost + heuristic(n, goal);
+                    if (!opensetContains) {
+                        openset.setValue(n.hash, n);
+                    }
+                }
+            }
+        }
+        return [];
+    }
+    SearchAlgo.aStar = aStar;
+    function heuristic(start, goal) {
+        return 0;
+    }
+    function reconstructPath(goal) {
+        var path = [];
+        var current = goal;
+        while (current.parent != null) {
+            path.unshift(current.lastAction);
+            current = current.parent;
+        }
+        if (path.length == 0) {
+            path.push("Already true");
+        }
+        return path;
+    }
+    function minFcost(openset) {
+        var tmp;
+        openset.forEach(function (k, v) {
+            if (tmp == null || v.fcost < tmp.fcost) {
+                tmp = v;
+            }
+        });
+        return tmp;
+    }
+    function reachGoal(ws, goal) {
+        var found = false;
+        var innerFound;
+        var o1, o2, rel;
+        for (var x = 0; !found && x < goal.length; x++) {
+            for (var y = 0; !innerFound && y < goal[x].length; y++) {
+                if (y == 0) {
+                    innerFound = true;
+                }
+                innerFound = (innerFound && existsRelation(ws, goal[x][y]));
+            }
+            found = innerFound;
+        }
+        return found;
+    }
+    function existsRelation(ws, g) {
+        var found = false;
+        var rel = g.rel;
+        if (rel == "holding") {
+            found = (ws.holding == g.args[0]);
+        }
+        else if (!(g.args[0] == ws.holding || g.args[1] == ws.holding)) {
+            var c1 = Helper.findCoord(g.args[0], ws);
+            if (g.args[1] == "floor") {
+                found = (rel == "ontop" && c1.y == 0);
+            }
+            else {
+                var c2 = Helper.findCoord(g.args[1], ws);
+                if (rel == "ontop" || rel == "inside") {
+                    found = (c1.x == c2.x && c1.y == c2.y + 1);
+                }
+                else if (rel == "leftof") {
+                    found = (c1.x < c2.x);
+                }
+                else if (rel == "rightof") {
+                    found = (c1.x > c2.x);
+                }
+                else if (rel == "beside") {
+                    found = (c1.x == c2.x + 1 || c1.x == c2.x - 1);
+                }
+                else if (rel == "under") {
+                    found = (c1.x == c2.x && c1.y < c2.y);
+                }
+                else if (rel == "above") {
+                    found = (c1.x == c2.x && c1.y > c2.y);
+                }
+            }
+        }
+        return found;
+    }
+})(SearchAlgo || (SearchAlgo = {}));
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="SearchAlgo.ts"/>
+///<reference path="MyNode.ts"/>
 var Planner;
 (function (Planner) {
     //////////////////////////////////////////////////////////////////////
@@ -2794,48 +3014,12 @@ var Planner;
         return Error;
     })();
     Planner.Error = Error;
-    function ch(s) { var sw = s; sw.form = "as"; return sw; }
     //////////////////////////////////////////////////////////////////////
     // private functions
     function planInterpretation(intprt, state) {
-        // This function returns a dummy plan involving a random stack
-        var test = [{ form: "brick", size: "large", color: "green" }];
-        var tmp = [];
-        tmp.push(test);
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
-        var plan = [];
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
-            }
-        }
-        else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
-            }
-        }
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length - 1];
-        plan.push("Picking up the " + state.objects[obj].form, "p");
-        if (pickstack < state.stacks.length - 1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length - 1; i++) {
-                plan.push("r");
-            }
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length - 1; i > pickstack; i--) {
-                plan.push("l");
-            }
-        }
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form, "d");
+        var start = new MyNode(state, "");
+        start.genHash();
+        var plan = SearchAlgo.aStar(start, intprt);
         return plan;
     }
     function getRandomInt(max) {
@@ -2846,6 +3030,7 @@ var Planner;
 ///<reference path="Parser.ts"/>
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Planner.ts"/>
+///<reference path="Rules.ts"/>
 var Shrdlite;
 (function (Shrdlite) {
     function interactive(world) {

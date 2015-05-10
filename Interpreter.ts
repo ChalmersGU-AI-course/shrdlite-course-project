@@ -71,7 +71,7 @@ module Interpreter {
             var obj: ObjectDefinition = state.objects[state.holding];
             var o: ObjWCoord = {id: state.holding, size: obj.size, form: obj.form, color: obj.color};
             
-            tmp.push(o);
+            tmp =[o];
         //other cmd
         }else{
             var myObj: Parser.Object = cmd.ent.obj.obj == null ? cmd.ent.obj : cmd.ent.obj.obj;
@@ -158,8 +158,7 @@ module Interpreter {
             }else{
                 var ids: string[] = Helper.findIDs(o, state);   
                 for(var i = 0; i < ids.length; i++){ 
-                    var objAtCoord: ObjectDefinition = Helper.getObjAtCoord(Helper.findCoord(ids[i], state), state);
-                    var obj: ObjWCoord = {id: ids[i], size: objAtCoord.size, form: objAtCoord.form, color: objAtCoord.color};
+                    var obj: ObjWCoord = {id: ids[i], size: state.objects[ids[i]].size, form: state.objects[ids[i]].form, color: state.objects[ids[i]].color};
                     if(ids[i] != state.holding){
                         obj.coord = Helper.findCoord(ids[i], state);
                     }

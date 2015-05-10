@@ -16,8 +16,8 @@ if (process.argv.length != 4 || !ExampleWorlds[worldname]) {
     console.error(usage);
     process.exit(1);
 } 
-
-var world = new TextWorld(ExampleWorlds[worldname]);
+//used to be TextWorld
+var world = new ANSIWorld(ExampleWorlds[worldname]);
 
 var example = parseInt(utterance);
 if (!isNaN(example)) {
