@@ -6,15 +6,40 @@
 import chai = require('chai');
 import A = require('../astar/AStar');
 import C = require('../lib/collections'); 
-
+import I = require('../Interpreter');
 
 module PlannerTest {
+
+  class PDDL {
+    alternatives : Lit[][];
+  }
+
+  class Lit implements Literal {
+    pol:boolean; 
+    rel:string; 
+    args:string[]
+  }
+
   class WorldState implements A.Astar.State {
     h: number;
     stacks: WorldObject[][];
     crane: WorldObject;
     
-    match(goal: WorldState) {
+    match(goal: PDDL) {
+      for (i = 0; i < goal.alternatives.length; i++) {
+        if(this.checkAlt(goal.alternatives[i])){// alternative i is true
+          return true;
+        }
+      }
+      return false;
+    }
+
+    checkAlt(Lit[]){
+      
+      return true;
+    }
+
+/*    match(goal: WorldState) {
       for (var i = 0; i < this.stacks.length; i++) {
         if (this.stacks[i].length == 0 && goal.stacks[i].length == 0) {
           continue;
@@ -33,9 +58,9 @@ module PlannerTest {
         }
       }
       return true;
-    }
+    }*/
 
-    heuristic(goal: WorldState) {
+    heuristic(goal: PDDL) {
       return 0;
     }
     
