@@ -49,10 +49,9 @@ module Planner {
 
         var goal = computeGoalFunction(intprt);
         var heur = Heuristics.computeHeuristicFunction(intprt);
+        var start = new Heuristics.State(state.arm, state.holding, state.stacks);
 
-        // console.log("StartH: " + Heuristics.heuristicDifference(state, "g", "l", true) );
-
-        var plan : string[] = Astar.astar(neighbours, cost, heur, state, goal, true, 10000);
+        var plan : string[] = Astar.astar(neighbours, cost, heur, start, goal, true, 10000);
         plan.shift();
 
         console.log("This plan has " + plan.length + " elements...");
@@ -63,8 +62,6 @@ module Planner {
     function cost(a : Heuristics.State, b : Heuristics.State) : number{
         return 1;
     }
-
-
 
     /**
     * @return goal function for Astar.
