@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="AStar.ts"/>
 
 module Planner {
 
@@ -150,12 +151,6 @@ module Planner {
         public computeHash() {
             this.hash = this.stacks.join("|");
         }
-        
-        public move(m: Move) {
-            this.stacks[m.drop].push(this.stacks[m.pick].pop());
-            this.moves.push(m);
-            this.computeHash();
-        }
 
     }
 
@@ -172,7 +167,7 @@ module Planner {
 
         plan.movesToPlan([moves[getRandomInt(moves.length)]]);
         */
-
+        console.log("Planning !");
         var plans = intprt.map((alternativeGoal) => solveByAStar(new State(state.stacks,[]), alternativeGoal));
         plan.movesToPlan(plans[0]);
 
@@ -222,28 +217,33 @@ module Planner {
 
         return plan;*/
     }
-
-    function getCol(obj : string, stacks : string[][]) : number {
-        var i : number;
-        for (i=0; i<stacks.length && stacks[i].indexOf(obj)<0; i++) {
-
-        }
-        if (i==stacks.length) {i=-1;}
-        return i;
-    }
     
     /**
      * Return the location of an object in the stacks :
      * [column, row from bottom, row from top]
      * Each position starts from 0.
+     * Return [-1,-1,-1] if not found.
      */
     export function getLocation(obj : string, stacks : string[][]) : number[] {
         var col : number = -1;
         var row : number = -1;
-        for (col=0; col<stacks.length && row<0; col++) {
-            row = stacks[col].indexOf(obj);
+        if(obj=="floor") { // Return the location of the less loaded floor.
+            row=stacks[0].length;
+            col=0;
+            for (var c=1; c<stacks.length; c++) {
+                if(stacks[c].length<row) {
+                    row=stacks[c].length;
+                    col=c;
+                }
+            }
+            return [col,-1,row];
+        } else {
+            for (col=0; col<stacks.length && row<0; col++) {
+                row = stacks[col].indexOf(obj);
+            }
+            col--;
+            return [(row==-1) ? -1 : col,row,(row==-1) ? -1 : stacks[col].length-1-row];
         }
-        return [col,row,stacks[col].length-1-row];
     }
 
     /**
@@ -256,11 +256,13 @@ module Planner {
         for (var goal=0; goal<goalConditions.length; goal++) {
             if (goalConditions[goal].rel == "ontop" ) {
                 var top : number[] = Planner.getLocation(goalConditions[goal].args[0], state.stacks);
-                var bottom : number[] = Planner.getLocation(goalConditions[goal].args[1], state.stacks);
-                if(top[0]!=bottom[0]) {
-                    score+=top[2]+bottom[2]+1;
-                } else if(top[1]!=bottom[1]+1) {
-                    score+=Math.max(top[2],bottom[2])+1;
+                if(!(top[1]==0 && goalConditions[goal].args[1]=="floor")) {
+                    var bottom : number[] = Planner.getLocation(goalConditions[goal].args[1], state.stacks);
+                    if(top[0]!=bottom[0]) {
+                        score+=top[2]+bottom[2]+1;
+                    } else if(top[1]!=bottom[1]+1) {
+                        score+=Math.max(top[2],bottom[2])+1;
+                    }
                 }
             }
         }
@@ -272,14 +274,6 @@ module Planner {
      */
     function solveByAStar(state: State, goalConditions: Interpreter.Literal[]) : Move[] {
         return AStar.astar(new AStar.Node(state), goalConditions, heuristic);
-    }
-
-    /**
-     * Returns the objects concerned by the goal conditions if NOT satisfied in the given state.
-     */
-    function getFocusedObjects(state: State, goalConditions: Interpreter.Literal[]) : string[] {
-
-        return [];
     }
 
     function getRandomInt(max) {

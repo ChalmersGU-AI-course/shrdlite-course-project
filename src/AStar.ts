@@ -21,10 +21,11 @@ module AStar {
         //g_score.set(start, 0); // Cost from start along best known path.
         // Estimated total cost from start to goal through y.
         //f_score.set(start, g_score.get(start) + heuristic(start, goalConditions));
-
+        console.log("Début AStar !");
+        console.dir(openset);
         while (openset.size > 0) { // openset is not empty
             var current: Node = lowestFScoreNode(openset);
-            if (isGoalReached(current.content, goalConditions)) {
+            if (heuristic(current.content, goalConditions)==0) {
                 return current.content.moves;
             }
 
@@ -85,8 +86,11 @@ module AStar {
       computeNeighbors() {
           var moves = Planner.CheckPhysics.possibleMoves(this.content.stacks);
           moves.forEach((m) => {
-              var s: Planner.State = JSON.parse(JSON.stringify(this.content)); // We create the next state from the current one and the move.
-              s.move(m);
+              var stacks = this.content.stacks.map((stack)=>stack.slice(0)); // Copy the stacks
+              var moves = this.content.moves.map((move)=>new Planner.Move(move.pick,move.drop)); // Copy the moves
+              stacks[m.drop].push(stacks[m.pick].pop()); // Perform the move m
+              moves.push(m); // Add the move to the list
+              var s = new Planner.State(stacks,moves); // Creation of the new state
               this.addNeighbor(new Node(s), 1);
           });
       }
@@ -126,7 +130,7 @@ module AStar {
         return total_path
     }*/
 
-    function isGoalReached(state: Planner.State, goalConditions: Interpreter.Literal[]) : boolean {
+    /*function isGoalReached(state: Planner.State, goalConditions: Interpreter.Literal[]) : boolean {
         var res = true;
         for (var goal=0; goal<goalConditions.length; goal++) {
             if (goalConditions[goal].rel == "ontop" ) {
@@ -136,6 +140,6 @@ module AStar {
             }
         }
         return res;
-    }
+    }*/
 
 }
