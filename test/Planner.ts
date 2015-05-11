@@ -11,11 +11,20 @@ import C = require('../lib/collections');
 module PlannerTest {
   class WorldState implements A.Astar.State {
     h: number;
-    stacks: [[WorldObject]];
+    stacks: WorldObject[][];
     crane: WorldObject;
     
     match(goal: WorldState) {
       for (var i = 0; i < this.stacks.length; i++) {
+        if (this.stacks[i].length == 0 && goal.stacks[i].length == 0) {
+          continue;
+        }
+        if (this.stacks[i].length == 0 || goal.stacks[i].length == 0) {
+          return false;
+        }
+        if (this.stacks[i].length != goal.stacks[i].length) {
+          return false;
+        }
         for (var j = 0; j < this.stacks[i].length; j++) {
            if (this.stacks[i][j].form != goal.stacks[i][j].form
                || this.stacks[i][j].size != goal.stacks[i][j].size
@@ -31,10 +40,10 @@ module PlannerTest {
     }
     
     expand() {
-      var neighbours;//: [Transition];
+      var neighbours = new Array();
       if (this.crane == null) {
         for (var i = 0; i < this.stacks.length; i++) {
-          if (this.stacks[i].length == 0)
+          if (this.stacks[i][0] == undefined)
             continue;
           var topObject : WorldObject = this.stacks[i][this.stacks[i].length - 1];
           
@@ -51,18 +60,33 @@ module PlannerTest {
           neighbours.push({costs: 1, state: newWorld});
         }
       }
+      //console.log(neighbours);
       return neighbours;
     }
 
     toString() {
-      return this.stacks + " " + this.crane;
+      var s : string = "";
+      for (var i = 0; i < this.stacks.length; i++) {
+        s += "[";
+        for (var j = 0; j < this.stacks[i].length; j++) {
+          s += this.stacks[i][j] + ", ";
+        }
+        s += "]";
+      }
+      s += "\n" + this.crane + "\n\n";
+      return s; 
     }
 
-    constructor(stacks: [[string]], crane: string) {
+    constructor(stacks: string[][], crane: string) {
       if( stacks == null && crane == null){
         this.crane = null;
+        this.stacks = new Array<Array<WorldObject>>();
         this.h = 0;
       } else if (stacks != null){
+        this.stacks = new Array<Array<WorldObject>>();
+        for (var i = 0; i < stacks.length; i++) {
+          this.stacks[i] = new Array<WorldObject>();
+        }
         for (var i = 0; i < stacks.length; i++) {
           for (var j = 0; j < stacks[i].length; j++) {
             this.stacks[i].push(exampleWorldDescription.getValue(stacks[i][j]));
@@ -82,6 +106,7 @@ module PlannerTest {
     clone() : WorldState {
       var braveNewWorld : WorldState = new WorldState(null, null);
       for (var i = 0; i < this.stacks.length; i++) {
+        braveNewWorld.stacks[i] = new Array<WorldObject>();
         for (var j = 0; j < this.stacks[i].length; j++) {
           braveNewWorld.stacks[i].push(this.stacks[i][j]);
         }
@@ -95,30 +120,32 @@ module PlannerTest {
   	form: String;
   	size: String;
    	color: String;
-   	constructor(form: String, size: String, color: String) {
+    name: String;
+   	constructor(form: String, size: String, color: String, name: String) {
   	  this.form = form;
    	  this.size = size;
       this.color = color;
+      this.name = name;
     }
     toString() {
-      return this.form + " " + this.size + " " + this.color;
+      return this.name;
     }
   }
 //[[a,b] [c] [] [d, e] []]
   var exampleWorldDescription = new C.collections.Dictionary<String, WorldObject>();
-  exampleWorldDescription.setValue("a", new WorldObject("brick", "large", "green"));
-  exampleWorldDescription.setValue("b", new WorldObject("brick", "small", "white"));
-  exampleWorldDescription.setValue("c", new WorldObject("plank", "large", "red"));
-  exampleWorldDescription.setValue("d", new WorldObject("plank", "small", "green"));
-  exampleWorldDescription.setValue("e", new WorldObject("ball", "large", "white"));
-  exampleWorldDescription.setValue("f", new WorldObject("ball", "small", "black"));
-  exampleWorldDescription.setValue("g", new WorldObject("table", "large", "blue"));
-  exampleWorldDescription.setValue("h", new WorldObject("table", "small", "red"));
-  exampleWorldDescription.setValue("i", new WorldObject("pyramid", "large", "yellow"));
-  exampleWorldDescription.setValue("j", new WorldObject("pyramid", "small", "red"));
-  exampleWorldDescription.setValue("k", new WorldObject("box", "large", "yellow"));
-  exampleWorldDescription.setValue("l", new WorldObject("box", "large", "red"));
-  exampleWorldDescription.setValue("m", new WorldObject("box", "small", "blue"));
+  exampleWorldDescription.setValue("a", new WorldObject("brick", "large", "green", "a"));
+  exampleWorldDescription.setValue("b", new WorldObject("brick", "small", "white", "b"));
+  exampleWorldDescription.setValue("c", new WorldObject("plank", "large", "red", "c"));
+  exampleWorldDescription.setValue("d", new WorldObject("plank", "small", "green", "d"));
+  exampleWorldDescription.setValue("e", new WorldObject("ball", "large", "white", "e"));
+  exampleWorldDescription.setValue("f", new WorldObject("ball", "small", "black", "f"));
+  exampleWorldDescription.setValue("g", new WorldObject("table", "large", "blue", "g"));
+  exampleWorldDescription.setValue("h", new WorldObject("table", "small", "red", "h"));
+  exampleWorldDescription.setValue("i", new WorldObject("pyramid", "large", "yellow", "i"));
+  exampleWorldDescription.setValue("j", new WorldObject("pyramid", "small", "red", "j"));
+  exampleWorldDescription.setValue("k", new WorldObject("box", "large", "yellow", "k"));
+  exampleWorldDescription.setValue("l", new WorldObject("box", "large", "red", "l"));
+  exampleWorldDescription.setValue("m", new WorldObject("box", "small", "blue", "m"));
 
   var exampleState = {
     "stacks": [["e"],["g","l"],[],["k","m","f"],[]],
@@ -202,9 +229,14 @@ module PlannerTest {
     describe('AStar in the Planner', () => {
       it('test if a-star runs', (done) => {
         var nothing: string = null;
-        var state: WorldState = new WorldState([[nothing],["g","l"],["e","f"],["k","m","f"],[nothing]], null);
-        var goal: WorldState = new WorldState([[nothing],["l","g"],["e","f"],["k","m","f"],[nothing]], null);
+        var state: WorldState = new WorldState([new Array<string>(),["g","l"],["e","f"],["a"],new Array<string>()], null);
+        var goal: WorldState = new WorldState([new Array<string>(),["l","g"],["f","e"],["a"],new Array<string>()], null);
         var solution = A.Astar.search(state, null, goal);
+
+        for (var i = 0; i < solution.path.length; i++) {
+          console.log(solution.path[i].toString());
+        }
+        console.log(solution);
         done()
       })
     }
