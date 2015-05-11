@@ -50,7 +50,7 @@ module Planner {
         var plan: string[] = [];
 
         var graphGoal = new MultipleGoals(intprt);
-        var graph = new astar.Graph(new SimpleHeuristic(intprt[0]), graphGoal);
+        var graph = new astar.Graph(new SimpleHeuristic(intprt), graphGoal);
         var graphStart = new PlannerNode(state, null, null);
         var result = graph.searchPath(graphStart);
 
@@ -60,7 +60,7 @@ module Planner {
                 plan.push(current.actionMessage);
                 plan.push(current.lastAction);
             }
-            plan.push("Taddaaa");
+            plan.push("Taddaaa!");
             console.log(state);
         } else {
             plan.push("Could not find a way to do that. Timed out.");
@@ -105,6 +105,20 @@ module Planner {
                     new astar.Neighbor(moveRightState, 1));
             }
             return n;
+        }
+
+        getWorldClone(world: WorldState, changingStack: number): WorldState {
+            var clone: WorldState = Object.create(world);
+
+            clone.stacks = world.stacks;
+            clone.holding = world.holding;
+            clone.arm = world.arm;
+            clone.objects = world.objects;
+            clone.examples = world.examples;
+
+            clone.stacks[changingStack] = clone.stacks[changingStack].slice(0);
+
+            return clone;
         }
 
         useArm(): PlannerNode {

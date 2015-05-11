@@ -75,7 +75,10 @@ module Interpreter {
                 // specified
                 var locEntities = interpretEntity(cmd.loc.ent, state);
 
-                intprt = createBiLiteralsSpecifyFirst(locEntities, cmd.loc.rel, state.holding);
+                var lits = createBiLiteralsSpecifyFirstAND(locEntities, cmd.loc.rel, state.holding);
+
+                // TODO: Check if lits are allowed!
+                intprt = lits;
             }
         }
         else if (cmd.cmd == "move") {
@@ -84,8 +87,10 @@ module Interpreter {
 
             // What to move?
             var orPart = interpretEntity(cmd.ent, state);
+            console.log("what: " + orPart);
             // Where to move it?
             var locEntities = interpretEntity(cmd.loc.ent, state);
+            console.log("where:" + locEntities);
 
             // OR-part
             orPart.forEach(function(andPart: string[]) {
@@ -95,8 +100,9 @@ module Interpreter {
                 andPart.forEach(function(obj: string) {
                     // Create a set of literals for moving the current obj to
                     // any of the allowed locations
-                    var lits = createBiLiteralsSpecifyFirst(locEntities, cmd.loc.rel, obj);
+                    var lits = createBiLiteralsSpecifyFirstOR(locEntities, cmd.loc.rel, obj);
 
+                    // TODO: Check if lits are allowed!
                     orStatements.push(lits);
                 });
 
@@ -124,19 +130,17 @@ module Interpreter {
     }
 
     function interpretEntity(ent: Parser.Entity, state: WorldState): string[][] {
-        console.log("Interpreting entity: " + ent);
-
         // Get all matching objects in the world
-        var objects: string[] = interpretObject(ent.obj, state);
+        var objs: string[] = interpretObject(ent.obj, state);
 
         // Depending on the quantity, choose which to return
         if (ent.quant == "any") {
             // "Any" means that either/or is okay, so we separate
             // the objects into the OR-part of the array (outer array)
-            var output = [];
+            var output: string[][] = [];
 
-            objects.forEach(function(val: string, i: number) {
-                output[i] = [val];
+            objs.forEach(function(val: string, i: number) {
+                output.push([val]);
             });
 
             return output;
@@ -145,23 +149,21 @@ module Interpreter {
             // "The" can only refer to one object, so return nothing
             // if we find several matching objects. Else, return the
             // object as an AND-part array (inner array).
-            if (objects.length != 1) {
+            if (objs.length != 1) {
                 return [];
             }
             else{
-                return [objects];
+                return [objs];
             }
         }
         else if (ent.quant == "all") {
             // "All" means that we want all of the objects, so return
             // all objects as the AND-part of the array.
-            return [objects];
+            return [objs];
         }
     }
 
     function interpretObject(obj: Parser.Object, state: WorldState): string[] {
-        console.log("Interpreting object: " + obj);
-
         // Do we have an advanced object definition?
         if (obj.obj && obj.loc) {
             // Advanced object definition:
@@ -174,7 +176,7 @@ module Interpreter {
 
             return objsToCheck.filter(function(objToCheck: string) {
                 // Does the object-to-check fulfill the location requirement?
-                var lits = createBiLiteralsSpecifySecond(relEnitities, obj.loc.rel, objToCheck);
+                var lits = createBiLiteralsSpecifySecondAND(relEnitities, obj.loc.rel, objToCheck);
 
                 return LiteralHelpers.areLiteralsFulfilled(lits, state);
             });
@@ -226,6 +228,45 @@ module Interpreter {
         return objOk;
     }
 
+    // Compress two statements so that they fit into the format
+    // (a ^ b ^ c) v (d ^ f)
+    function flattenTwoOrStatements(orPartsA: Literal[][], orPartsB: Literal[][]): Literal[][] {
+        var outputOrParts: Literal[][] = [];
+
+        orPartsA.forEach(function(andPartsA: Literal[]) {
+            orPartsB.forEach(function(andPartsB: Literal[]) {
+                outputOrParts.push(andPartsA.concat(andPartsB));
+            });
+        });
+
+        return outputOrParts;
+    }
+
+    // Compress all statements so that they fit into the format
+    // (a ^ b ^ c) v (d ^ f)
+    function flattenOrStatements(orParts: Literal[][][]): Literal[][] {
+        if (orParts.length > 2) {
+            var firstTwoCompressed: Literal[][] = flattenTwoOrStatements(orParts[0], orParts[1]);
+
+            var restOrParts = orParts.slice(2);
+            restOrParts.push(firstTwoCompressed)
+
+            return flattenOrStatements(restOrParts);
+        }
+        else if (orParts.length == 2) {
+            return flattenTwoOrStatements(orParts[0], orParts[1]);
+        }
+        else if (orParts.length == 1) {
+            return orParts[0];
+        }
+        else {
+            return [];
+        }
+    }
+
+    // TODO: Restructure the following functions:
+    // The following functions are used to avoid code duplication,
+    // but are probably not the best way to generalize the behavior!
     function createUnLiterals(entities: string[][], relation: string): Literal[][] {
         var orPart: Literal[][] = [];
 
@@ -246,7 +287,7 @@ module Interpreter {
         return orPart;
     }
 
-    function createBiLiteralsSpecifyFirst(entities: string[][], relation: string, firstObj: string): Literal[][] {
+    function createBiLiteralsSpecifyFirstAND(entities: string[][], relation: string, firstObj: string): Literal[][] {
         var orPart: Literal[][] = [];
 
         // OR part
@@ -266,7 +307,23 @@ module Interpreter {
         return orPart;
     }
 
-    function createBiLiteralsSpecifySecond(entities: string[][], relation: string, secondObj: string): Literal[][] {
+    function createBiLiteralsSpecifyFirstOR(entities: string[][], relation: string, firstObj: string): Literal[][] {
+        var orPart: Literal[][] = [];
+
+        // OR part
+        entities.forEach(function(objs: string[]) {
+            // AND part
+            objs.forEach(function(obj: string) {
+                var lit = { pol: true, rel: relation, args: [firstObj, obj] };
+
+                orPart.push([lit]);
+            });
+        });
+
+        return orPart;
+    }
+
+    function createBiLiteralsSpecifySecondAND(entities: string[][], relation: string, secondObj: string): Literal[][] {
         var orPart: Literal[][] = [];
 
         // OR part
@@ -284,43 +341,6 @@ module Interpreter {
         });
 
         return orPart;
-    }
-
-    // Compress two statements so that they fit into the format
-    // (a ^ b ^ c) v (d ^ f)
-    function compressTwoOrStatements(orPartsA: Literal[][], orPartsB: Literal[][]): Literal[][] {
-        var outputOrParts: Literal[][] = [];
-
-        orPartsA.forEach(function(andA: Literal[]) {
-            var outputAndParts: Literal[] = andA;
-
-            orPartsB.forEach(function(andB: Literal[]) {
-                outputAndParts = outputAndParts.concat(andB);
-            });
-
-            outputOrParts.push(outputAndParts);
-        });
-
-        return outputOrParts;
-    }
-
-    // Compress all statements so that they fit into the format
-    // (a ^ b ^ c) v (d ^ f)
-    function flattenOrStatements(orParts: Literal[][][]): Literal[][] {
-        if (orParts.length > 2) {
-            var firstTwoCompressed: Literal[][] = compressTwoOrStatements(orParts[0], orParts[1]);
-
-            var restOrParts = orParts.slice(2);
-            restOrParts.push(firstTwoCompressed)
-
-            return flattenOrStatements(restOrParts);
-        }
-        else if (orParts.length == 2) {
-            return compressTwoOrStatements(orParts[0], orParts[1]);
-        }
-        else {
-            return orParts[0];
-        }
     }
 }
 
