@@ -52,7 +52,7 @@ module Planner {
 
         console.log("StartH: " + Heuristics.heuristicDifference(state, "g", "l", true) );
 
-        var plan : string[] = Astar.astar(neighbours, cost, heur, state, goal, false, 10000);
+        var plan : string[] = Astar.astar(neighbours, cost, heur, state, goal, true, 10000);
         plan.shift();
 
         console.log("This plan has " + plan.length + " elements...");
@@ -215,7 +215,7 @@ module Planner {
         for(var i in s.stacks){
             rs.push(s.stacks[i].slice());
         }
-        return {arm: s.arm, holding: s.holding, stacks: rs};
+        return new Heuristics.State(s.arm, s.holding, rs); // {arm: s.arm, holding: s.holding, stacks: rs};
     }
 
     function getRandomInt(max) {

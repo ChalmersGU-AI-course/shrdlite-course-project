@@ -6,10 +6,13 @@ module Heuristics {
 
     // Ducktyping subtype of WorldState :)
     // should be sufficient.
-    export interface State{
-        arm : number;
-        holding: string;
-        stacks : string[][];
+    export class State{
+        public constructor(public arm     : number,
+                           public holding : string,
+                           public stacks  : string[][]){}
+        public toString(){
+            return collections.makeString(this);
+        }
     }
 
     /**
