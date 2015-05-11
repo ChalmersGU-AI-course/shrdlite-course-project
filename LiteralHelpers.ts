@@ -2,6 +2,24 @@
 
 module LiteralHelpers {
 
+    export function areLiteralsFulfilled(orPart: Interpreter.Literal[][], state: WorldState): boolean {
+        // OR part
+        orPart.forEach(function(andPart: Interpreter.Literal[]) {
+            var andPartFulfilled = true;
+
+            // AND part
+            andPart.forEach(function(lit: Interpreter.Literal) {
+                andPartFulfilled = andPartFulfilled && isLiteralFullfilled(lit, state);
+            });
+
+            if (andPartFulfilled) {
+                return true;
+            }
+        });
+
+        return false;
+    }
+
     export function isLiteralFullfilled(lit: Interpreter.Literal, state: WorldState): boolean {
         if (lit.rel == "ontop" || lit.rel == "inside") {
             return checkOntopLiteral(lit, state);
