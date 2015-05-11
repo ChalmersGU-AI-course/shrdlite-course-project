@@ -3,7 +3,8 @@
 class Neighbour<T> {
 	constructor (
 		public Node: T,
-		public Cost: number
+		public Cost: number,
+		public Operation?: string
 	){}
 }
 
@@ -22,13 +23,16 @@ interface HeuristicFunction<T> {
 class Path<T> {
 	constructor(
 		public Nodes: T[],
+		public Steps: string[],
 		public Cost: number,
 		public HeuristicCost: number
 	){}
-	Add(node: T, cost: number, heuristicCost: number): Path<T> {
+	Add(node: T, operation: string, cost: number, heuristicCost: number): Path<T> {
 		var nodes = this.Nodes.slice();
 		nodes.push(node);
-		return new Path(nodes, this.Cost + cost, heuristicCost);
+		var steps = this.Steps.slice();
+		steps.push(operation);
+		return new Path(nodes, steps, this.Cost + cost, heuristicCost);
 	}
 	Last(): T {
 		return this.Nodes[this.Nodes.length - 1];
@@ -61,7 +65,7 @@ function Astar<T>(start: INode<T>, isGoal: GoalFunction<INode<T>>, heuristic: He
 	var visited = new collections.Dictionary<INode<T>, number>();
 
 	var numExpandedNodes = 0;
-	var startPath : Path<INode<T>> = new Path<INode<T>>([start], 0, 0);
+	var startPath : Path<INode<T>> = new Path<INode<T>>([start], [], 0, 0);
 	frontier.enqueue(startPath);
 	while (!frontier.isEmpty()) {
 		var path = frontier.dequeue();
@@ -75,7 +79,7 @@ function Astar<T>(start: INode<T>, isGoal: GoalFunction<INode<T>>, heuristic: He
 			var visitedCost = visited.getValue(neighbour.Node);
 			if (visitedCost === undefined || visitedCost > path.Cost + neighbour.Cost) {
 				var heuristicCost = heuristic(currentNode, neighbour.Node);
-				var newPath = path.Add(neighbour.Node, neighbour.Cost, heuristicCost);
+				var newPath = path.Add(neighbour.Node, neighbour.Operation, neighbour.Cost, heuristicCost);
 
 				visited.setValue(neighbour.Node, newPath.Cost);
 				frontier.enqueue(newPath);
