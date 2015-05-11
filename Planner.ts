@@ -15,7 +15,7 @@ module Planner {
         constructor(public state : WorldState) {this.pddl = null;}
 
         getState(){
-            if(this.pddl == null) this.pddl = stackToPddl(this.state);
+            if(this.pddl == null) {this.pddl = stackToPddl(this.state);}
             return this.pddl;
         }
 
@@ -44,13 +44,23 @@ module Planner {
             goal.forEach(function(and : Interpreter.Literal[]){
                 var goalReached = true;
                 and.forEach(function(lit : Interpreter.Literal){
-                    var found : boolean = lits.indexOf({pol:true, rel: lit.rel, args: lit.args}) != -1;
-                    if(found != lit.pol) goalReached = false;           
+                    var found : boolean = isElem(lit, lits);
+                    if(found != lit.pol) { goalReached = false; }
                 })
-                if(goalReached) allFound = true;
+                if(goalReached == true) { allFound = true; }
             })
             return allFound;
         }
+    }
+
+    function isElem(elem : Interpreter.Literal, arr : Interpreter.Literal[]): boolean {
+	for(var i = 0; i < arr.length; i++) {
+	    var a = arr[i];
+	    if(elem.rel == a.rel && elem.args.toString() == a.args.toString()) {
+		return true;
+	    }
+	}
+	return false;
     }
 
     export function generateChildren(state : WorldState) : AStar.Edge<Interpreter.Literal[]>[] {
@@ -63,7 +73,7 @@ module Planner {
 
         var edges : AStar.Edge<Interpreter.Literal[]>[] = [];
         map.forEach(function(key:string, value:WorldState){
-            if(value != null) edges.push({cost:1, end: new ShrdliteNode(value), label: key});
+            if(value != null) { edges.push({cost:1, end: new ShrdliteNode(value), label: key});}
         });
 
         return edges;
@@ -83,7 +93,7 @@ module Planner {
 
     export function moveRight(state : WorldState) : WorldState {
         
-        if(state.arm == state.stacks.length) return null;
+        if(state.arm == state.stacks.length) {return null;}
 
         var newState : WorldState = cloneWorldState(state);
         newState.arm += 1;
@@ -93,7 +103,7 @@ module Planner {
 
     export function moveLeft(state : WorldState) : WorldState {
         
-        if(state.arm == 0) return null;
+        if(state.arm == 0) {return null;}
 
         var newState : WorldState = cloneWorldState(state);
         newState.arm -= 1;
@@ -115,7 +125,7 @@ module Planner {
 
     export function pickup(state : WorldState) : WorldState {
         
-        if(state.holding != null && state.stacks[state.arm].length > 0) return null;
+        if(state.holding != null && state.stacks[state.arm].length > 0) {return null;}
 
         var newState : WorldState = cloneWorldState(state);
         newState.holding = newState.stacks[newState.arm].pop();

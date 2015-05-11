@@ -36,7 +36,7 @@ module AStar {
         push(e:Edge<S>):Path<S>{
             var p = new Path(this.path.concat([e.end])); 
             p.cost = this.cost + e.cost;
-            p.labels.push(e.label);
+            p.labels = this.labels.concat([e.label]);
             return p;
         }
 
@@ -82,6 +82,7 @@ module AStar {
 
         while(!frontier.isEmpty()) {
             var p = frontier.dequeue();
+	    var haha = p.peek().getState();
             if(goal(p.peek().getState())) {
                 return p;
             } else {
