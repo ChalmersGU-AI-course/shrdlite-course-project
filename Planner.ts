@@ -49,8 +49,10 @@ module Planner {
         var goal = computeGoalFunction(intprt);
         var heur = computeHeuristicFunction(intprt);
 
-        var plan : string[] = Astar.astar(neighbours, cost, h, state, goal, false, 10000);
+        var plan : string[] = Astar.astar(neighbours, cost, heur, state, goal, false, 10000);
         plan.shift();
+
+        console.log("This plan has " + plan.length + " elements...");
 
         return plan;
     }
