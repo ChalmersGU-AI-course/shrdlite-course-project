@@ -282,7 +282,7 @@ module Interpreter {
         	return [];
         }
         var pddls = state.pddl.toArray();
-        if(form == "floor"){	// special case for floor
+        if(form == "floor" ){	// special case for floor
         	for (var index = 0; index < pddls.length; index++) {
         		var pddl = pddls[index];
         		
@@ -296,7 +296,7 @@ module Interpreter {
 	        	var pddl = pddls[index];
 	        	//check the first arg for form, color and size if it matches, add it to possibel objs
 	        	var a = state.objects[pddl.args[0]];
-	        	if(a.form != form){
+	        	if(a.form != form && form != "anyform"){
 	        		continue;
 	        	}
 	        	if(!a){
