@@ -32,60 +32,7 @@ module Heuristics {
         };
     }
 
-    //////////////////////////////////////////////////////////////////////
-    // (mostly) private functions
-
-    function heuristicConjunctiveClause(s : State, c : Interpreter.Literal[]) : number{
-        var hValue = 0;
-        for(var ix in c){
-            var hc = heuristicAtom(s, c[ix]);
-            if(hValue < hc){
-                hValue = hc;
-            }
-        }
-        // Return maximum heuristic value of the conjuction.
-        return hValue;
-    }
-
-    function heuristicAtom(s : State, atom : Interpreter.Literal) : number {
-
-        switch(atom.rel){
-            case "holding":
-                var target = atom.args[0];
-                var holds = s.holding === target;
-
-                if(atom.pol){
-                    return heuristicDistance(s, target);
-                }
-                if(holds){
-                    return 1;
-                    // Just drop it. Optionally: use canSupport function.
-                }
-                // Already done
-                return 0;
-
-            case "inside": // Same as ontop.
-            case "ontop":
-                var target = atom.args[0];
-                var below = atom.args[1];
-
-                if(atom.pol){
-                    // return 0;
-                    // return heuristicDistance(s, target) + heuristicDistance(s, below);
-                    return heuristicDifference(s, target, below, true);
-                }
-                // Same heuristic as for grabbing the target.
-                return heuristicDistance(s, target);
-
-            default:
-                throw new Planner.Error("!!! Unimplemented relation in heuristicAtom: "+atom.rel);
-                return 0;
-        }
-
-        return 0;
-    }
-
-    class ObjectPosition {
+    export class ObjectPosition {
         constructor(public stackNo      : number,
                     public heightNo     : number,
                     public objectsAbove : number,
@@ -93,7 +40,7 @@ module Heuristics {
                     public isFloor      : boolean){}
     }
 
-    function computeObjectPosition(s : State, objA : String) : ObjectPosition{
+    export function computeObjectPosition(s : State, objA : String) : ObjectPosition{
         var stackA = -1;
         var heightA = -1;
         var aboveA = -1;
@@ -128,6 +75,69 @@ module Heuristics {
                    objA === "floor");
     }
 
+    //////////////////////////////////////////////////////////////////////
+    // (mostly) private functions
+
+    function heuristicConjunctiveClause(s : State, c : Interpreter.Literal[]) : number{
+        var hValue = 0;
+        for(var ix in c){
+            var hc = heuristicAtom(s, c[ix]);
+            if(hValue < hc){
+                hValue = hc;
+            }
+        }
+        // Return maximum heuristic value of the conjuction.
+        return hValue;
+    }
+
+    function heuristicAtom(s : State, atom : Interpreter.Literal) : number {
+
+        switch(atom.rel){
+            case "holding":
+                var target = atom.args[0];
+                var holds = s.holding === target;
+
+                if(atom.pol){
+                    return heuristicDistance(s, target);
+                }
+                if(holds){
+                    return 1;
+                    // Just drop it. Optionally: use canSupport function.
+                }
+                // Already done
+                return 0;
+
+            case "inside": // Same as ontop.
+            case "ontop":
+            case "above":
+                var target = atom.args[0];
+                var below = atom.args[1];
+
+                if(atom.pol){
+                    // return 0;
+                    return heuristicDifference(s, target, below, atom.rel != "above");
+                }
+                // Same heuristic as for grabbing the target.
+                return heuristicDistance(s, target);
+            // case "above":
+            //     var target = atom.args[0];
+            //     var below = atom.args[1];
+            //
+            //     if(atom.pol){
+            //         // return 0;
+            //         return heuristicDifference(s, target, below, false);
+            //     }
+            //     // Same heuristic as for grabbing the target.
+            //     return heuristicDistance(s, target);
+
+            default:
+                throw new Planner.Error("!!! Unimplemented relation in heuristicAtom: "+atom.rel);
+                return 0;
+        }
+
+        return 0;
+    }
+
     export function heuristicDifference(s : State, above : String, below : String, exactlyOntop : boolean) : number {
         var somewhereAbove : boolean = !exactlyOntop;
         var a = computeObjectPosition(s, above);
@@ -148,8 +158,9 @@ module Heuristics {
                 aboveCost = 4 * (a.objectsAbove + b.objectsAbove);
             }
         } else {
+            aboveCost = 4 * a.objectsAbove;
             // ie Just somewhere above is sufficient
-            throw new Planner.Error("should not be here atm...");
+            // throw new Planner.Error("should not be here atm...");
         }
         return holdCost + armCost + aboveCost;
     }
@@ -190,13 +201,6 @@ module Heuristics {
         if(s.holding != null){
             holdCost = 1;
         }
-
-        // var emptyStacks = 0;
-        // for(var stackNo in s.stacks){
-        //     if(s.stacks[stackNo].length == 0){
-        //         emptyStacks = emptyStacks +1;
-        //     }
-        // }
 
         if(target === "floor"){
             var closest = Infinity;
