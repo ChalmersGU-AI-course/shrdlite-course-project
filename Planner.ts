@@ -49,7 +49,7 @@ module Planner {
         var goal = computeGoalFunction(intprt);
         var heur = computeHeuristicFunction(intprt);
 
-        var plan : string[] = Astar.astar(neighbours, cost, heur, state, goal, false, 10000);
+        var plan : string[] = Astar.astar(neighbours, cost, h, state, goal, false, 10000);
         plan.shift();
 
         return plan;
@@ -96,6 +96,10 @@ module Planner {
         return hValue;
     }
 
+    function h(s){
+        return 0;
+    }
+
     function heuristicAtom(s : State, atom : Interpreter.Literal) : number {
 
         switch(atom.rel){
@@ -118,8 +122,8 @@ module Planner {
                 var below = atom.args[1];
 
                 if(atom.pol){
-                    return heuristicDistance(s, target) + heuristicDistance(s, below);
-                    // return heuristicDifference(s, target, below, true);
+                    // return heuristicDistance(s, target) + heuristicDistance(s, below);
+                    return heuristicDifference(s, target, below, true);
                 }
                 // Same heuristic as for grabbing the target.
                 return heuristicDistance(s, target);
@@ -385,60 +389,7 @@ module Planner {
         var objA : ObjectDefinition = worldDictionary[above];
         var objB : ObjectDefinition = worldDictionary[below];
 
-        if(! objB){
-            throw new Planner.Error("DEBUG: objB undefined: "+below);
-        }
-
-        if(objB.form == "floor"){
-            // The floor can support any object
-            return true;
-        }
-
-        var cs = compareSize(objB.size, objA.size);
-        if(cs < 0){
-            // No small object can support a large(r) one.
-            return false;
-        }
-
-        if(objA.form == "ball"){
-            // A ball can only be supported by the floor or a box.
-            return objB.form == "box";
-        }
-
-        if(objB.form == "ball"){
-            // A ball cannot support anything
-            return false;
-        }
-
-        if(objB.form == "box"){
-            if(cs > 0){
-                return true;
-            }
-            // Same size, so cannot support box, pyramid or plank.
-            switch(objA.form){
-                case "box":
-                case "pyramid":
-                case "plank":
-                    return false;
-                default:
-                    return true;
-            }
-        }
-
-        if(objA.form == "box"){
-            if(objA.form == "large"){
-                // Large boxes cannot be supported by (large) pyramids
-                return objB.form != "pyramid";
-            } else {
-                // Small boxes cannot be supported by small bricks or pyramids
-                if(objB.form == "brick" || objB.form == "pyramid"){
-                    return objB.size != "small";
-                }
-            }
-        }
-
-        // Otherwise, can support
-        return true;
+        return Interpreter.canSupport(objA, objB);
     }
 
 //////////////////////////////////////////////////////////////////////
@@ -462,19 +413,19 @@ module Planner {
         return a;
     }
 
-    /**
-    * Compares two sizes.
-    * returns positive if a > b, 0 if a == b and negative otherwise.
-    */
-    function compareSize(a : string, b : string) : number{
-        if (a == b){
-            return 0;
-        }
-        if( a == "large"){
-            return 1;
-        }
-        return -1;
-    }
+    // /**
+    // * Compares two sizes.
+    // * returns positive if a > b, 0 if a == b and negative otherwise.
+    // */
+    // function compareSize(a : string, b : string) : number{
+    //     if (a == b){
+    //         return 0;
+    //     }
+    //     if( a == "large"){
+    //         return 1;
+    //     }
+    //     return -1;
+    // }
 
     function cloneState(s : State) : State{
         var rs = [];
