@@ -112,7 +112,7 @@ module Interpreter {
             }
             tmp2 = Helper.removeDuplicate(tmp2);
             
-            
+            //Check that relations between tmp and tmp2 holds
             for(var i = 0; i < tmp.length; i++){
                 var tmpGoal: string[] = checkPhysicalLaws(tmp[i], tmp2, rel);
                 if(tmpGoal.length != 0){
@@ -120,7 +120,7 @@ module Interpreter {
                 }
             }
             
-             if(tmpGoal.length == 0){
+            if(tmpGoal.length == 0){
                 //Impossible
                 return null;    
             }
@@ -131,7 +131,13 @@ module Interpreter {
         return intprt;
     }
     
-     
+    /**
+     *	Find the objects that correspond to the input.
+     * 	ie: if parse gives: (a relation b relation c)
+     *      First find objects that correspond to c, then check if there exist such an
+     *      object c that relates to an object b, then check if there exist such an
+     *      object b that relates to an object a
+     */ 
     function recursionCheck(ent: Parser.Entity, state: WorldState): ObjWCoord[]{
         var owc: ObjWCoord[] = [];    
         var o = ent.obj;
@@ -170,10 +176,14 @@ module Interpreter {
         }
     }
     
+    /**
+     * Transform the goal map as a pddl representation
+     */
     function pddlTransformation(map: collections.Dictionary<string, string[]>, rel: string, hold: boolean): Literal[][]{
         var lits: Literal[][] = [];
         var i = 0;
         
+	//"take" cmd
         if(hold){
             map.forEach((key: string, values: string[]) => {
                 var lit: Literal[] = [{pol: true, rel: rel, args: [key]}];
@@ -194,6 +204,10 @@ module Interpreter {
         return lits;
     }
             
+    /**
+     * Verify that physical laws are respected between objects, and return the identifier
+     * of such objects.
+     */
     function checkPhysicalLaws(o:ObjWCoord, objs:ObjWCoord[], rel:string):string[]{
         var valid: string[] = [];
         
@@ -207,7 +221,10 @@ module Interpreter {
         
         return valid;
     }    
-
+    
+    /**
+     * Find objects in the world that matches through the spatial relations	
+     */
     function getObjsWithSpatialRelation(o1: Parser.Object, o2:ObjWCoord, state:WorldState): ObjWCoord[]{
         var tmp: ObjWCoord[] = [];
         

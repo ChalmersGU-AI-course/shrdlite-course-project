@@ -1,13 +1,6 @@
 ///<reference path="collections.ts"/>
 ///<reference path="MyNode.ts"/>
 
-/*
-Equality between states: prob on update of currWorld when drop or pick
-Define equality with the goal
-
-
-
-*/
 
 module SearchAlgo{
     export function aStar(start: MyNode, goal: Interpreter.Literal[][]): string[]{

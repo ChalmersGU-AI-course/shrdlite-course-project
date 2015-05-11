@@ -1,6 +1,9 @@
 ///<reference path="World.ts"/>
 
 module Rules{    
+     /**
+      * Check the rules that relate to the floor
+      */
      export function breakFloorRules(o:ObjectDefinition, obj:ObjectDefinition, rel:string): boolean{
         var bol = false;
         
@@ -13,6 +16,9 @@ module Rules{
         return bol;    
     }
     
+    /**
+     * Check the rules that relate to boxes
+     */
     export function breakBoxRules(o:ObjectDefinition, obj:ObjectDefinition, rel:string): boolean{
         var bol = false;
         
@@ -32,6 +38,9 @@ module Rules{
         return bol;
     }
     
+    /**
+     * Check the rules that relate to balls
+     */
     export function breakBallRules(o:ObjectDefinition, obj:ObjectDefinition, rel:string): boolean{
         var bol = false;
             
@@ -56,6 +65,9 @@ module Rules{
         return bol;
     }
     
+    /**
+     * Check the rules that relate to the size of objects
+     */
     export function breakSmallSupportingBig(o:ObjectDefinition, obj:ObjectDefinition, rel:string): boolean{
         var bol = false;
         if((rel == "ontop" || rel == "above" || rel == "inside") && 
@@ -69,6 +81,9 @@ module Rules{
         return bol;
     }
     
+    /**
+     * Union of all rules
+     */
     export function breakRules(o:ObjectDefinition, obj:ObjectDefinition, rel:string){
         return (Rules.breakFloorRules(o, obj, rel) ||
                 Rules.breakSmallSupportingBig(o, obj, rel) ||
