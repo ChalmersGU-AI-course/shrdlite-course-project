@@ -79,7 +79,7 @@ module Planner {
                         var newNode = null;
                         // We can either -lift- or -putDown-
                         if(!isHolding(oldNodeWorld)) {
-                            // We can always lift. TODO: not if we lack objects! Change liftObject to return null if no objects
+                            // We can't always lift - not if we lack objects!
                             var newerNodeWorld = liftObject(newNodeWorld, j);
                             if (newerNodeWorld) {
                                 newNode = new AStar.Node<PddlLiteral[]>(newerNodeWorld, [], Infinity, null, dir+cost+"p"+1);
@@ -101,6 +101,9 @@ module Planner {
                         if (newNode) {
                             var edge = new AStar.Edge<PddlLiteral[]>(oldNode, newNode, cost);
                             oldNode.neighbours.push(edge); // Note: we don't want a return edge
+
+                            // TODO: what happens when we do not push here?
+
                             nodes[i+1].push(newNode);
                         }
                     }
@@ -119,6 +122,7 @@ module Planner {
                 }*/
             }
         }
+        console.log("nodes",nodes);
 
 
         var searchResult = AStar.astar(startNode, createGoalFunction(intprt), createHeuristicFunction());
@@ -254,31 +258,25 @@ module Planner {
         var objectObj = state.objectsWithId[object];
         var topObjectObj = state.objectsWithId[topObject];
 
-        //console.log("obj obj:", objectObj, object);
-        //console.log("obj obj 2:", topObjectObj, topObject);
-        if (!objectObj.form || !topObjectObj.form) {
-            console.warn("ERROR ERROR", objectObj.form, topObjectObj.form);
-        }
         var objectForm    = objectObj.form
           , topObjectForm = topObjectObj.form;
+
         // TODO check if this placement is legal. If not, return null!
 
         // if object is a ball, and
         // if topObject is not floor or box,
         //   return null
         // TODO; this doesn't work!
-        //if (objectForm === 'ball'
-        // && (topObjectForm !== 'floor' || topObjectForm !== 'box')) {
-        //    return null;
-        //}
+        if (objectForm === 'ball' && (topObjectForm !== 'floor' || topObjectForm !== 'box')) {
+            //console.log("should return null");
+            //return null;
+        }
 
-        /*
         // if topObject is a ball,
         //   return null
         if (topObjectForm === 'ball') {
-            return null;
+            //return null;
         }
-        */
 
         // if topObject is small and
         // if object is large,
@@ -317,6 +315,7 @@ module Planner {
     // Assumes that the arm is in the right position to do so
     function liftObject(world:PddlLiteral[], floor: number):PddlLiteral[] {
         var newWorld: PddlLiteral[] = clonePddlWorld(world);
+        var foundObject = false;
 
         for(var i:number = 0; i<newWorld.length; i++){
             if(newWorld[i].rel === "attop" && newWorld[i].args[1] === "floor-"+floor) {
@@ -333,10 +332,15 @@ module Planner {
                 }
 
                 newWorld.push({pol: true, rel:"holding", args: ["arm", object]});
+                foundObject = true;
                 break;
             }
         }
-
+        //if (!foundObject) {
+        //    return null;
+        //} else {
+        //    return newWorld;
+        //}
         return newWorld;
     }
 
