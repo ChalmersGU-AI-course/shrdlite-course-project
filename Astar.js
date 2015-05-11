@@ -1,21 +1,25 @@
 ///<reference path="lib/collections.ts"/>
 var Neighbour = (function () {
-    function Neighbour(Node, Cost) {
+    function Neighbour(Node, Cost, Operation) {
         this.Node = Node;
         this.Cost = Cost;
+        this.Operation = Operation;
     }
     return Neighbour;
 })();
 var Path = (function () {
-    function Path(Nodes, Cost, HeuristicCost) {
+    function Path(Nodes, Steps, Cost, HeuristicCost) {
         this.Nodes = Nodes;
+        this.Steps = Steps;
         this.Cost = Cost;
         this.HeuristicCost = HeuristicCost;
     }
-    Path.prototype.Add = function (node, cost, heuristicCost) {
+    Path.prototype.Add = function (node, operation, cost, heuristicCost) {
         var nodes = this.Nodes.slice();
         nodes.push(node);
-        return new Path(nodes, this.Cost + cost, heuristicCost);
+        var steps = this.Steps.slice();
+        steps.push(operation);
+        return new Path(nodes, steps, this.Cost + cost, heuristicCost);
     };
     Path.prototype.Last = function () {
         return this.Nodes[this.Nodes.length - 1];
@@ -47,7 +51,7 @@ function Astar(start, isGoal, heuristic) {
     var frontier = new collections.PriorityQueue(PathCompare);
     var visited = new collections.Dictionary();
     var numExpandedNodes = 0;
-    var startPath = new Path([start], 0, 0);
+    var startPath = new Path([start], [], 0, 0);
     frontier.enqueue(startPath);
     while (!frontier.isEmpty()) {
         var path = frontier.dequeue();
@@ -61,7 +65,7 @@ function Astar(start, isGoal, heuristic) {
             var visitedCost = visited.getValue(neighbour.Node);
             if (visitedCost === undefined || visitedCost > path.Cost + neighbour.Cost) {
                 var heuristicCost = heuristic(currentNode, neighbour.Node);
-                var newPath = path.Add(neighbour.Node, neighbour.Cost, heuristicCost);
+                var newPath = path.Add(neighbour.Node, neighbour.Operation, neighbour.Cost, heuristicCost);
                 visited.setValue(neighbour.Node, newPath.Cost);
                 frontier.enqueue(newPath);
                 ++numExpandedNodes;
