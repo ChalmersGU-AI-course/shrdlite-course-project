@@ -99,7 +99,18 @@ module Interpreter {
     					if(checkValidPos(posList[i].obj, goal[j].obj )){
     						lits.push([a]);
     					}
-    				}
+    				}else if(loc.rel == "above"){
+                        var b : Literal = {pol : true, rel : "above", args : [posList[i].name, goal[j].name ]};
+                        //if(checkValidPos(posList[i].obj, goal[j].obj )){
+                            lits.push([b]);
+                        //}                        
+                    }else if(loc.rel == "under"){
+                        var b : Literal = {pol : false, rel : "above", args : [posList[i].name, goal[j].name ]};
+                        //if(checkValidPos(posList[i].obj, goal[j].obj )){
+                            lits.push([b]);
+                        //}                        
+ 
+                    }
     			}	
     		}
     	}
@@ -108,6 +119,7 @@ module Interpreter {
     	return lits;
     }
 
+    // Returns which height the object have in the given stack 
     function searchStack (stack : string[], obj : string ) : number {
         for(var i =0; i< stack.length;  i++){
             if(obj == stack[i]){
@@ -135,7 +147,29 @@ module Interpreter {
 							//list.push(stmLocObj[i]);
 						}
 					}
-				}
+				}else if( objs.loc.rel == "above"){
+                    for(var j =0; j< stmObj.length;  j++){      //loops through every stmObject to check all objects matching with stmLocobj 
+
+                        //Which height the object have in the given stack
+                        var objHeight : number = searchStack (state.stacks[stmLocObj[i].x],state.stacks[stmObj[j].x][stmObj[j].y]);  
+                        
+                        //check same x-cordinate && check that y-cordinate is greater
+                        if((stmLocObj[i].x == stmObj[j].x) && (objHeight < stmLocObj[j].y)) {                            
+                            list.push(stmObj[j]);
+                        }
+                    }
+                }else if( objs.loc.rel == "under"){
+                    for(var j =0; j< stmObj.length;  j++){      //loops through every stmObject to check all objects matching with stmLocobj 
+
+                        //Which height the object have in the given stack
+                        var objHeight : number = searchStack (state.stacks[stmLocObj[i].x],state.stacks[stmObj[j].x][stmObj[j].y]);  
+                        
+                        //check same x-cordinate && check that y-cordinate is lower
+                        if((stmLocObj[i].x == stmObj[j].x) && (objHeight > stmLocObj[j].y)) {                            
+                            list.push(stmObj[j]);
+                        }
+                    }
+                }
 			}		
 			return list;
     	} else { 		
@@ -222,7 +256,7 @@ function checkValidPos (over : ObjectDefinition, under : ObjectDefinition): bool
             
         }
         //Check that under is larger or of same size
-            if else(checkSizeUGE(over.size, under.size))
+            else if(checkSizeUGE(over.size, under.size))
             {
                 return true;
             }
