@@ -14,6 +14,7 @@ module Shrdlite {
             //var inputPrompt = "What can I do for you today? ";
            	if(!ambigious){
         		inputPrompt = standardinpromt;
+        		orgparses = [];
         	}
             var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
             if (utterance.trim()) {
@@ -109,9 +110,7 @@ module Shrdlite {
 	        world.printDebugInfo("Final plan: " + planq.join(", "));
 	        return planq;
         }
-        if(!ambigious){
-        	questionLoop
-        }
+        
         return plan;
     }
 

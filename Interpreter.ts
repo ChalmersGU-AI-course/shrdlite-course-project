@@ -123,7 +123,16 @@ module Interpreter {
         			}
         		}
         	}
-        	intprt = litscomb;
+        	// remove reoccurence
+        	var litset : collections.Set<Literal[]> = new collections.Set<Literal[]>(
+        		function(a){
+        			var res:Result = {input: "", prs: null ,intp: [a]};
+        			return interpretationToString(res);});
+	    	litscomb.forEach((obj) =>
+	    		litset.add(obj)
+	    	);
+	    	intprt =  litset.toArray();
+        	//intprt = litscomb;
 		}else{
 	        for (var i = 0; i < objs.length; i++) {
 	        	for (var j = 0; j < objs[i].length; j++) {
@@ -138,10 +147,12 @@ module Interpreter {
 		//return true;
     	for(var i = 0; i < lits.length; i++){
     		for(var j = i+1; j < lits.length; j++){
-    			if(lits[i].rel == lits[j].rel && (lits[i].rel == "ontop" || lits[i].rel == "inside")
-    					&&(lits[i].args[0] == lits[j].args[0] ||
-    					lits[i].args[1] == lits[j].args[1])){
-					return false;
+    			if(lits[i].rel == lits[j].rel ){
+    				if(	(lits[i].args[0] == lits[j].args[0] ||		// remove dubletter
+	    					lits[i].args[1] == lits[j].args[1])){
+    					return false;
+    				}
+    				
 				}
     		}
     	}
@@ -162,9 +173,6 @@ module Interpreter {
     		}
     		return true;
     	}
-    	if(a.form == "ball" && lit.rel == "under" ){
-    		return false;
-    	}
     	if(a.form == "ball" && ((lit.rel == "ontop" && b.form != "floor") || (lit.rel == "inside" && 
     			(a.size == "large" && b.size == "small")))){
     		return false;
@@ -182,7 +190,7 @@ module Interpreter {
     	if((lit.rel == "ontop" || lit.rel == "above" || lit.rel == "inside") && ((a.size == "large" && b.size == "small")|| a.form == "floor")){
     		return false;
     	}
-    	if(lit.rel == "under" && (b.size == "large" && a.size == "small")){
+    	if(lit.rel == "under" && ((b.size == "large" && a.size == "small") || a.form == "ball")){
     		return false;
     	}
     	if(b.form == "box" && lit.rel == "ontop"){
@@ -195,8 +203,15 @@ module Interpreter {
     function identifyLocation(loc : Parser.Location, state : WorldState):string[][]{
     	try {
         	var result:string[][] = identifyEnt(loc.ent, state);
-		} catch (e) {
-		    throw e;//TODO write a better error message !!  
+		} catch (err) {
+			if(err instanceof Interpreter.ErrorInput){
+				err.message = err.message.substring(0, err.message.length-1) + " to?";
+				throw err;
+				//TODO write a better error message !! 
+			}else{
+				throw err;
+			}
+		     
 		}
     	return result;
     }
@@ -275,6 +290,11 @@ module Interpreter {
     	var result : string[] = identifyObj(ent.obj.form, ent.obj.color, ent.obj.size, state);
     	var unqObjs : string[] = uniqeObjects(result);
     	var results : string[][] = [[]];
+    	if(ent.obj.loc){
+    		//TODO
+    		identifyLocation(ent.obj.loc, state);
+    	}
+    	
     	if(ent.quant == "the" && ent.obj.form != "floor"){
     		// ambigous interpet, use clairifying parse
     		if(unqObjs.length > 1){
