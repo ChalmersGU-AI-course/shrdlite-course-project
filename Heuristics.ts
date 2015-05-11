@@ -132,13 +132,15 @@ module Heuristics {
 
         var holdCost = dropCost(s, a, b, exactlyOntop);
 
-        var armCost = abs(s.arm - a.stackNo) + abs(a.stackNo - b.stackNo);
+        // var armCost = abs(s.arm - a.stackNo) + abs(a.stackNo - b.stackNo);
+        var armCost = moveCost(s, a, b, exactlyOntop);
 
         // Number of objects that needs to be moved.
         var aboveCost;
         if(exactlyOntop){
             if(a.stackNo === b.stackNo){
                 aboveCost = 4 * max(a.objectsAbove, b.objectsAbove);
+                // + 3?
             } else {
                 aboveCost = 4 * (a.objectsAbove + b.objectsAbove);
             }
@@ -164,6 +166,12 @@ module Heuristics {
         // Holds something but needs to drop it somewhere else...
         // ...and come back?
         return 3;
+    }
+
+    function moveCost(s : State, a : ObjectPosition, b : ObjectPosition, exactlyOntop : boolean) : number{
+        return abs(s.arm - a.stackNo) + abs(a.stackNo - b.stackNo);
+        // return abs(a.stackNo - b.stackNo) +
+        //        min(abs(s.arm - a.stackNo), abs(s.arm - b.stackNo));
     }
 
     ////////////////////////////////////////////////
@@ -218,8 +226,18 @@ module Heuristics {
 
     }
 
+    ///////////////////////////////////////////////////////
+    // Helper functions
+
     function max(a, b){
         if(a > b){
+            return a;
+        }
+        return b;
+    }
+
+    function min(a, b){
+        if(a < b){
             return a;
         }
         return b;

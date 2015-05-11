@@ -30,3 +30,6 @@ run: offline
 	node shrdlite-offline.js small "put the blue table on the red box"
 	# node shrdlite-offline.js small "put the white ball on the white ball"
 	# node shrdlite-offline.js small "put the blue box in the red box"
+
+medium: offline
+	node shrdlite-offline.js medium "put the blue box in the red box"
