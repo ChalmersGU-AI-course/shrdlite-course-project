@@ -74,7 +74,7 @@ module AStar {
     //
     // Returns a path (array of nodes)
 
-    export function astar(s: Node, t : Node, nodes : Node[], heuristic: (Node)=>number) : Node[] {
+    export function astar(s: Node, isGoal: (Node)=>boolean, nodes : Node[], heuristic: (Node)=>number) : Node[] {
 
         //Function that the heap uses to order itself
         var compFunc : collections.ICompareFunction<Node> = function(a:Node, b: Node){
@@ -112,7 +112,7 @@ module AStar {
             }
 
             // When we remove t from the frontier, we're done
-            if (v === t) {
+            if (isGoal(v)) {
                 frontier.clear();
             } else {
                 done.push(v);
@@ -122,7 +122,7 @@ module AStar {
 
         // Retrieve path
         var path = [];
-        var v = t;
+
         while (v !== s) {
             console.log(v.label);
             path.unshift(v);

@@ -39,7 +39,7 @@ module AStarTestCases {
         }
 
         console.log("Running astar correctness test ... ");
-        var path = AStar.astar(a, d, nodes, heuristic);
+        var path = AStar.astar(a, function(n){return n.label === "d"}, nodes, heuristic);
         var correctPath = [a,b,c,d];
         if (!test(arrayEquals(path, correctPath)))
             console.log("nodes: ",nodes);
@@ -86,7 +86,7 @@ module AStarTestCases {
         }
 
         console.log("Running astar correctness test ... ");
-        var path = AStar.astar(a, c, nodes, heuristic);
+        var path = AStar.astar(a, function(n){return n.label === "c"}, nodes, heuristic);
         var correctPath = [a,i,h,g,c];
         if (!test(arrayEquals(path, correctPath)))
             console.log("nodes: ",nodes);
