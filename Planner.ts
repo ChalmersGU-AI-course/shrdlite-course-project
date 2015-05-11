@@ -39,6 +39,35 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+
+	// state changing functions
+	function moveRight(world: WorldState) : WorldState
+	{
+		world.arm = world.arm+1;
+		return world;
+	}
+	
+	function moveLeft(world: WorldState) : WorldState
+	{
+		world.arm = world.arm-1;
+		return world;
+	}
+	function pickup(world:WorldState) : WorldState
+	{
+		world.holding = world.stacks[world.arm][world.stacks[world.arm].length-1];
+		world.stacks[world.arm].pop();
+		return world;
+	}
+	function putdown(world:WorldState) : WorldState
+	{
+		world.stacks[world.arm].push(world.holding);
+		world.holding = "";
+		
+		return world;
+	}
+	
+	
+	
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         // This function returns a dummy plan involving a random stack
         do {

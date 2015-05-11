@@ -213,7 +213,7 @@ module Interpreter {
 					res.push("floor-"+i);
 				}
 			}
-			return res;
+			return ['floor'];
         }
         if(typeof(inobj.loc) !== "undefined")
         {
@@ -275,10 +275,23 @@ module Interpreter {
                                                 });
                                                 break;
                                             case "ontop":
-                                                otherObjs.forEach((obj2) =>{
+												//console.log(otherObjs);
+												if(otherObjs[1] == 'floor')
+												{
+													//console.log(j);
+													if(j-1 < 0 )
+													{
+														res.push(object);
+													}
+												}
+                                                else
+												{
+												otherObjs.forEach((obj2) =>{
+													//console.log(obj2);
                                                     if(state.stacks[i][j+1] == obj2)
                                                     res.push(object);
                                                 });
+												}
                                                 break;
                                             case "under":
                                                 for(var m : number = 0; m < j; m++)
