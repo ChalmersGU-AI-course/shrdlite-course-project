@@ -107,19 +107,6 @@ module Interpreter {
     	
     	return lits;
     }
-    
-    function checkValidPos (over : ObjectDefinition, under : ObjectDefinition){
-    	if (under.form == "floor"){
-    		return true;
-    	}else if(over.form == "ball" ){
-    		if (under.form == "box" || under.form == "floor"){
-    			return true;
-    		}else{
-    			return false;
-    		}
-    	}
-    	return true;
-    }
 
     function searchStack (stack : string[], obj : string ) : number {
         for(var i =0; i< stack.length;  i++){
@@ -181,6 +168,108 @@ module Interpreter {
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
+
+    /**
+*   Check that the combination of over and under object is valid 
+**/
+function checkValidPos (over : ObjectDefinition, under : ObjectDefinition): boolean{
+        
+        if (under.form === "floor"){
+            return true;
+        }
+        //Ball
+        else if(under.form === "ball"){ return false; }
+        else if(over.form === "ball" )
+            {
+            if (under.form === "box" && checkSizeUGE(over.size, under.size) ){
+                return true;
+            }else{
+                return false;
+            }
+        }
+        //Box
+        else if(under.form ==="box" )
+        {
+            if(checkSizeUG(over.size, under.size))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        // Pyramid
+        else if (under.form === "pyramids" || under.form === "bricks")
+        {
+            if (over.form === "box")
+            {
+                // Large Box cant be over large Pyramid
+                // Small Box cant be over small Pyramid or Brick
+                if(checkSizeUG(over.size, under.size) && under.form==="pyramids")
+                {
+                    return true;
+                }
+                else if(checkSizeUGE(over.size, under.size) && under.form==="bricks")
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            
+        }
+        //Check that under is larger or of same size
+            if else(checkSizeUGE(over.size, under.size))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        
+        return false;
+    }
+
+
+/**
+* checks that over is of same size or smaller than under.
+**/
+function checkSizeUGE (over : string, under : string): boolean {
+
+        if(under === "large" )
+        {
+            return true;
+        }
+        else if(over ==="small")
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+
+}
+
+/**
+* checks that over is of same size or smaller than under.
+**/
+function checkSizeUG (over : string, under : string): boolean {
+
+        if(under === "large" && over =="small" )
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+
+}
 
 }
 
