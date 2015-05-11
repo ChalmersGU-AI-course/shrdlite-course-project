@@ -91,14 +91,16 @@ module Interpreter {
     			for(var j =0; j< goal.length;  j++){
     				if(loc.rel == "ontop"){
     					var g : Literal = {pol : true, rel : "ontop", args : [posList[i].name, goal[j].name ]};
-    					if(goal[j].obj.form == "box"){
-    						g = {pol : true, rel : "inside", args : [posList[i].name, goal[j].name ]};
-    					}
     					if(checkValidPos(posList[i].obj, goal[j].obj )){
     						lits.push([g]);
     					}
+    				}else if(loc.rel == "inside"){
+    					var	a : Literal = {pol : true, rel : "inside", args : [posList[i].name, goal[j].name ]};
+    					if(checkValidPos(posList[i].obj, goal[j].obj )){
+    						lits.push([a]);
+    					}
     				}
-    			}
+    			}	
     		}
     	}
     	
@@ -134,7 +136,7 @@ module Interpreter {
 							(state.stacks[stmLocObj[i].x][stmLocObj[i].y+1] == state.stacks[stmObj[j].x][stmObj[j].y])){
 					
 							list.push(stmObj[j]);
-							list.push(stmLocObj[i]);
+							//list.push(stmLocObj[i]);
 						}
 					}
 				}
@@ -144,7 +146,7 @@ module Interpreter {
     		
     		if (objs.form == "floor"){
     			for(var x =0; x< state.stacks.length;  x++){
-    				list.push(new position(x,-1, {form : "floor", size : "none" , color : "none"}, "floor"));
+    				list.push(new position(x,-1, {form : "floor", size : "none" , color : "none"}, "floor"+x));
     			}
     			
     	    }else{
