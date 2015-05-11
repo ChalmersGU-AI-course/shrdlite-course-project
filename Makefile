@@ -33,4 +33,5 @@ run: shrdlite-offline.js
 
 medium: shrdlite-offline.js
 	# node shrdlite-offline.js medium "put the blue box above the red box"
-	node shrdlite-offline.js medium "put the red box below the blue box"
+	# node shrdlite-offline.js medium "put the red box below the blue box"
+	node shrdlite-offline.js medium "put the green brick below the yellow pyramid"
