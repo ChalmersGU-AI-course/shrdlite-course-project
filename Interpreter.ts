@@ -151,18 +151,21 @@ module Interpreter {
     		if(lits.length > 1){
     			return false;
     		}
-    	}else if(ent.quant == "all" ){
+    	}else if(ent.quant == "all" && loc.ent.quant != "all" ||
+    				ent.quant != "all" && loc.ent.quant == "all"){
     		var totalUnqObjs = findAllWithForm(ent.obj.form, state);
-    		if( (loc.rel == "ontop" || loc.rel == "inside" )){
+    		if( (loc.rel != "beside")){
 	    		if(lits.length != totalUnqObjs.length){
 	    			return false;
 	    		}
     		}else if(loc.rel == "beside"){
-    			if((lits.length != totalUnqObjs.length && loc.ent.obj.form != ent.obj.form) || 
+    			if((loc.ent.obj.form != ent.obj.form && lits.length != totalUnqObjs.length) || 
     				(loc.ent.obj.form == ent.obj.form && lits.length != totalUnqObjs.length-1)){
 	    			return false;
 	    		}
     		}
+    	}else if(ent.quant == "all" && loc.ent.quant == "all"){
+    		
     	}
     	
     	return true;
