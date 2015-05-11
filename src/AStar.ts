@@ -1,47 +1,54 @@
 /// <reference path="./MySet"/>
+///<reference path="Interpreter.ts"/>
+///<reference path="Planner.ts"/>
 
 module AStar {
 
-    type THeuristicF = (start: Node, goalConditions: Interpreter.Literal[]) => number;
+    type THeuristicF = (state: Planner.State, goalConditions: Interpreter.Literal[]) => number;
 
     /*
      * @returns Node[] or null
      */
-    export function astar(start: Node, goalConditions: Interpreter.Literal[], heuristic: THeuristicF) : Node[] {
-        var closedset = new MySet<Node>(); // The set of nodes already evaluated.
-        var openset = new MySet<Node>(); // The set of tentative nodes to be evaluated, initially containing the start node
-        openset.add(start);
-        var came_from = new Map<Node, Node>(); // The map of navigated nodes.
-        var g_score = new Map<Node, number>();
-        var f_score = new Map<Node, number>();
+    export function astar(start: Node, goalConditions: Interpreter.Literal[], heuristic: THeuristicF) : Planner.Move[] {
+        var closedset = new MySet<string>(); // The set of nodes already evaluated.
+        var openset = new Map<string, Node>(); // The set of tentative nodes to be evaluated, initially containing the start node
+        //var came_from = new Map<Node, Node>(); // The map of navigated nodes.
+        //var g_score = new Map<Node, number>();
+        //var f_score = new Map<Node, number>();
 
-        g_score.set(start, 0); // Cost from start along best known path.
+        start.setScores(0,heuristic(start.content,goalConditions));
+        openset.set(start.content.hash, start);
+        //g_score.set(start, 0); // Cost from start along best known path.
         // Estimated total cost from start to goal through y.
-        f_score.set(start, g_score.get(start) + heuristic(start, goalConditions));
+        //f_score.set(start, g_score.get(start) + heuristic(start, goalConditions));
 
-        while (openset.size() > 0) { // openset is not empty
-            var current: Node = lowestFScoreNode(openset, heuristic, goalConditions);
+        while (openset.size > 0) { // openset is not empty
+            var current: Node = lowestFScoreNode(openset);
             if (isGoalReached(current.content, goalConditions)) {
-                return reconstruct_path(came_from, current);
+                return current.content.moves;
             }
 
-            openset.delete(current); // remove current from openset
-            closedset.add(current); // add current to closedset
-            current.neighbours.forEach((arc) => {
+            openset.delete(current.content.hash); // remove current from openset
+            closedset.add(current.content.hash); // add current to closedset
+            current.computeNeighbors();
+            current.neighbors.forEach((arc) => {
                 var neighbor = arc.destination;
                 var weight = arc.weight;
-                if (closedset.has(neighbor)) return; // continue
-
-                var tentative_g_score = g_score.get(current) + weight;
-
-                if (!openset.has(neighbor) || tentative_g_score < g_score.get(neighbor)) {
-                    came_from.set(neighbor, current);
+                if (closedset.has(neighbor.content.hash)) return; // continue
+                if (!openset.has(neighbor.content.hash) || current.g_score+weight < openset.get(neighbor.content.hash).g_score) {
+                    neighbor.setScores(current.g_score+weight, heuristic(neighbor.content, goalConditions));
+                    openset.set(neighbor.content.hash, neighbor);
+                }
+                
+                /*var tentative_g_score = g_score.get(current) + weight;
+                if (!openset.has(neighbor.content.hash) || tentative_g_score < g_score.get(neighbor)) {
+                    //came_from.set(neighbor, current);
                     g_score.set(neighbor, tentative_g_score);
                     f_score.set(neighbor, g_score.get(neighbor) + heuristic(neighbor, goalConditions));
-                    if (!openset.has(neighbor)) {
-                        openset.add(neighbor);
+                    if (!openset.has(neighbor.content.hash)) {
+                        openset.set(neighbor.content.hash, neighbor);
                     }
-                }
+                }*/
             });
         }
         return null;
@@ -56,53 +63,79 @@ module AStar {
 
     export class Node {
 
-      public neighbours: Arc[] = [];
+      public neighbors: Arc[] = [];
+      public g_score: number; // Cost from start along best known path
+      public f_score: number; // Estimated cost from start to goal g=f+heuristic
 
-      constructor(public content: any) {
+      constructor(public content: Planner.State) {
+          this.g_score = -1;
+          this.f_score = -1;
       }
-
-      addNeighbour(node: Node, weight: number) : void {
+      
+      setScores(g: number, h: number) {
+          this.g_score = g;
+          this.f_score = g+h;
+      }
+      
+      addNeighbor(node: Node, weight: number) : void {
         var arc = new Arc(node, weight);
-        this.neighbours.push(arc);
+        this.neighbors.push(arc);
       }
-
-      neighbourNodes(): Node[] {
-        return this.neighbours.map((arc) => arc.destination);
+      
+      computeNeighbors() {
+          var moves = Planner.CheckPhysics.possibleMoves(this.content.stacks);
+          moves.forEach((m) => {
+              var s: Planner.State = JSON.parse(JSON.stringify(this.content)); // We create the next state from the current one and the move.
+              s.move(m);
+              this.addNeighbor(new Node(s), 1);
+          });
+      }
+      
+      neighborNodes(): Node[] {
+        return this.neighbors.map((arc) => arc.destination);
       }
     }
 
-    function lowestFScoreNode(set: MySet<Node>, heuristic: THeuristicF, goalConditions: Interpreter.Literal[]) : Node {
-        // the node in openset having the lowest f_score[] value
-        var scoreFn = (node: Node) => {
+    function lowestFScoreNode(set: Map<string, Node>) : Node {
+        // the node in openset having the lowest f_score value
+        var min_f = Number.POSITIVE_INFINITY;
+        var min_node: Node = null;
+        set.forEach((node) => {
+            if(node.f_score<min_f) {
+                min_f=node.f_score;
+                min_node=node;
+            }
+        });
+        return min_node;
+        /*var scoreFn = (node: Node) => {
             return {score: heuristic(node, goalConditions), node: node}
         };
 
         return set.toArray()
             .map(scoreFn)
             .sort((a, b) => {return a.score - b.score})
-            .shift().node;
+            .shift().node;*/
     }
 
-    function reconstruct_path(came_from: Map<Node, Node>, current: Node) : Node[] {
+    /*function reconstruct_path(came_from: Map<Node, Node>, current: Node) : Node[] {
         var total_path = [current];
         while (came_from.has(current)) {
             current = came_from.get(current);
             total_path.push(current);
         }
         return total_path
-    }
+    }*/
 
-    function isGoalReached(state: Planner.State, goalConditions: Interpreter.Literal[][]) : boolean {
+    function isGoalReached(state: Planner.State, goalConditions: Interpreter.Literal[]) : boolean {
+        var res = true;
         for (var goal=0; goal<goalConditions.length; goal++) {
-            if (goalConditions[1][goal].rel == "ontop" ) {
-                var top : number[] = Planner.getLocation(goalConditions[1][goal].args[1], state.stacks);
-                var bottom : number[] = Planner.getLocation(goalConditions[1][goal].args[2], state.stacks);
-                if (!(top[1] == bottom[1] && top[2] == bottom[2]+1)) {
-                    return false;
-                }
+            if (goalConditions[goal].rel == "ontop" ) {
+                var top : number[] = Planner.getLocation(goalConditions[goal].args[0], state.stacks);
+                var bottom : number[] = Planner.getLocation(goalConditions[goal].args[1], state.stacks);
+                res = res && top[0] == bottom[0] && top[1] == bottom[1]+1;
             }
         }
-        return true;
+        return res;
     }
 
 }

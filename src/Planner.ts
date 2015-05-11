@@ -39,7 +39,7 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    class Move {
+    export class Move {
         pick: number;
         drop: number;
 
@@ -89,8 +89,10 @@ module Planner {
         }
     }
 
-    module checkPhysics {
-
+    export module CheckPhysics {
+        
+        var objects: { [s:string]: ObjectDefinition; };
+        
         export function canBeOn(o1: ObjectDefinition, o2: ObjectDefinition) : boolean {
             var res = false;
             switch(o2.form) {
@@ -112,6 +114,24 @@ module Planner {
             }
             return res && (o2.size =="large" || o1.size=="small") && (o1.form!="ball" || o2.form=="box");
         }
+        
+        export function possibleMoves(stacks: string[][]) : Move[] {
+            var moves: Move[] = [];
+            for(var p=0; p<stacks.length; p++) {
+                for(var d=0; d<stacks.length; d++) {
+                    if(p!=d && stacks[p].length>0) {
+                        if(stacks[d].length==0 || this.canBeOn(objects[stacks[p][stacks[p].length-1]] , objects[stacks[d][stacks[d].length-1]])) {
+                            moves.push(new Move(p,d));
+                        }
+                    }
+                }
+            }
+            return moves;
+        }
+        
+        export function setObjects(o: { [s:string]: ObjectDefinition; }) {
+            objects = o;
+        }
 
     }
 
@@ -119,17 +139,31 @@ module Planner {
 
         stacks: string[][];
         moves: Move[];
+        hash: string;
 
         constructor(sta: string[][], mo: Move[]) {
             this.stacks = sta;
             this.moves = mo;
+            this.computeHash();
+        }
+        
+        public computeHash() {
+            this.hash = this.stacks.join("|");
+        }
+        
+        public move(m: Move) {
+            this.stacks[m.drop].push(this.stacks[m.pick].pop());
+            this.moves.push(m);
+            this.computeHash();
         }
 
     }
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         var plan = new Plan(state.arm);
-        var moves = possibleMoves(state.stacks, state.objects);
+        CheckPhysics.setObjects(state.objects);
+        /*
+        var moves = CheckPhysics.possibleMoves(state.stacks);
         var s="";
         for(var i=0; i<moves.length; i++) {
             s+=moves[i].pick+" --> "+moves[i].drop+" ; ";
@@ -137,11 +171,10 @@ module Planner {
         console.log("Possible moves : "+s);
 
         plan.movesToPlan([moves[getRandomInt(moves.length)]]);
-
+        */
 
         var plans = intprt.map((alternativeGoal) => solveByAStar(new State(state.stacks,[]), alternativeGoal));
         plan.movesToPlan(plans[0]);
-
 
         return plan.plan;
         /*
@@ -190,20 +223,6 @@ module Planner {
         return plan;*/
     }
 
-    function possibleMoves(stacks: string[][], objects: { [s:string]: ObjectDefinition; }) : Move[] {
-        var moves: Move[] = [];
-        for(var p=0; p<stacks.length; p++) {
-            for(var d=0; d<stacks.length; d++) {
-                if(p!=d && stacks[p].length>0) {
-                    if(stacks[d].length==0 || checkPhysics.canBeOn(objects[stacks[p][stacks[p].length-1]] , objects[stacks[d][stacks[d].length-1]])) {
-                        moves.push(new Move(p,d));
-                    }
-                }
-            }
-        }
-        return moves;
-    }
-
     function getCol(obj : string, stacks : string[][]) : number {
         var i : number;
         for (i=0; i<stacks.length && stacks[i].indexOf(obj)<0; i++) {
@@ -212,14 +231,19 @@ module Planner {
         if (i==stacks.length) {i=-1;}
         return i;
     }
-
+    
+    /**
+     * Return the location of an object in the stacks :
+     * [column, row from bottom, row from top]
+     * Each position starts from 0.
+     */
     export function getLocation(obj : string, stacks : string[][]) : number[] {
         var col : number = -1;
         var row : number = -1;
         for (col=0; col<stacks.length && row<0; col++) {
             row = stacks[col].indexOf(obj);
         }
-        return [col,row];
+        return [col,row,stacks[col].length-1-row];
     }
 
     /**
@@ -227,12 +251,16 @@ module Planner {
      * The contribution of each oject could be depending on their constraints.
      * (Ex : ball > box > pyramid > table and small > large)
      */
-    function heuristic(objToMove : string[], stacks : string[][]) : number {
+    function heuristic(state: Planner.State, goalConditions: Interpreter.Literal[]) : number {
         var score = 0;
-        for(var i=0; i<stacks.length; i++) {
-            for(var j=0; j<stacks[i].length; j++) {
-                if (objToMove.indexOf(stacks[i][j])>-1) {
-                    score+=j;
+        for (var goal=0; goal<goalConditions.length; goal++) {
+            if (goalConditions[goal].rel == "ontop" ) {
+                var top : number[] = Planner.getLocation(goalConditions[goal].args[0], state.stacks);
+                var bottom : number[] = Planner.getLocation(goalConditions[goal].args[1], state.stacks);
+                if(top[0]!=bottom[0]) {
+                    score+=top[2]+bottom[2]+1;
+                } else if(top[1]!=bottom[1]+1) {
+                    score+=Math.max(top[2],bottom[2])+1;
                 }
             }
         }
@@ -243,9 +271,7 @@ module Planner {
      * Returns the moves to reach the goalConditions from the state Node.
      */
     function solveByAStar(state: State, goalConditions: Interpreter.Literal[]) : Move[] {
-
-
-        return [];
+        return AStar.astar(new AStar.Node(state), goalConditions, heuristic);
     }
 
     /**
