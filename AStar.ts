@@ -1,12 +1,26 @@
 /// <reference path="collections.ts" />
 module AStar {
  
-    //A graph contains a state of type S and a list of edges to its neighbours
-    export class Graph<S>{
+    //A StaticGraph contains a state of type S and a list of edges to its neighbours
+    export interface Graph<S> { 
+        getChildren() : Edge<S>[];
+        getState() : S;
+    }
+
+    export class StaticGraph<S> implements Graph<S> {
+        
         constructor(public children : Edge<S>[], public state : S){}
 
-        addEdge (e : Edge<S>) {
-            this.children.push(e);
+        getChildren(){
+            return this.children;
+        }
+
+        getState(){
+            return this.state;
+        }
+
+        addEdge(edge : Edge<S>){
+            this.children.push(edge);
         }
     }
  
@@ -55,17 +69,18 @@ module AStar {
     //A* search function
     export function astarSearch<S>(graph:Graph<S>,h:Heuristic<S>,goal:Goal<S>) : Path<S>{
         var frontier = new collections.PriorityQueue<Path<S>>(function(a,b) {
-            return (b.weight() + h(b.peek().state)) -  (a.weight() + h(a.peek().state))
+            return (b.weight() + h(b.peek().getState())) -  (a.weight() + h(a.peek().getState()))
         });
         frontier.add(new Path<S>([ graph]));
 
         while(!frontier.isEmpty()) {
             var p = frontier.dequeue();
-            if(goal(p.peek().state)) {
+            if(goal(p.peek().getState())) {
                 return p;
             } else {
-                for( var i = 0; i < p.peek().children.length; i++ ) {
-                    frontier.add( p.push(p.peek().children[i]));
+                var children = p.peek().getChildren();
+                for( var i = 0; i < children.length; i++ ) {
+                    frontier.add( p.push(children[i]));
                 }
             }
         }
@@ -74,9 +89,9 @@ module AStar {
 
     //Simple test
     export function test(){
-        var g1 = new Graph<number>([],4);
-        var g2 = new Graph([],3);
-        var g = new Graph<number>([{ cost: 1, end: g1},
+        var g1 = new StaticGraph<number>([],4);
+        var g2 = new StaticGraph([],3);
+        var g = new StaticGraph<number>([{ cost: 1, end: g1},
                                    {cost: 1, end: g2}], 0);
         g1.children.push({cost:1, end: g});
 
@@ -87,13 +102,13 @@ module AStar {
 
     //Complicated test geolocations
     export function geoTest() : string[] {
-        var l1 = new Graph<string>([], "gothenburg");
-        var l2 = new Graph<string>([], "boras");
-        var l3 = new Graph<string>([], "jonkoping");
-        var l4 = new Graph<string>([], "stockholm");
-        var l5 = new Graph<string>([], "malmo");
-        var l6 = new Graph<string>([], "varnamo");
-        var l7 = new Graph<string>([], "mellerud");
+        var l1 = new StaticGraph<string>([], "gothenburg");
+        var l2 = new StaticGraph<string>([], "boras");
+        var l3 = new StaticGraph<string>([], "jonkoping");
+        var l4 = new StaticGraph<string>([], "stockholm");
+        var l5 = new StaticGraph<string>([], "malmo");
+        var l6 = new StaticGraph<string>([], "varnamo");
+        var l7 = new StaticGraph<string>([], "mellerud");
 
 
         l1.addEdge({cost: 4,  end: l2});
@@ -135,7 +150,7 @@ module AStar {
         resPath = [];
         for (var i = 0; i < res.getPath().length; i++) {
             var g = res.getPath()[i];
-            resPath.push(g.state);
+            resPath.push(g.getState());
         }
         return resPath;
     }
