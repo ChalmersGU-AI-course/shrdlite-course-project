@@ -1,8 +1,11 @@
 ///<reference path="Shrdlite.ts"/>
 ///<reference path="SVGWorld.ts"/>
 ///<reference path="ExampleWorlds.ts"/>
+///<reference path="astarAlgorithm.ts" />
 ///<reference path="lib/jquery.d.ts" />
-///<reference path="tests/astartest.ts" />
+///<reference path="lib/collections.ts" />
+
+
 
 var defaultWorld = 'small';
 var defaultSpeech = false;
