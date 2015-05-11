@@ -34,7 +34,7 @@ module Parser {
     export interface Entity {quant:string; obj:Object;}
     export interface Location {rel:string; ent:Entity;}
     // The following should really be a union type, but TypeScript doesn't support that:
-    export interface Object {obj?:Object; loc?:Location; 
+    export interface Object {obj?:Object; loc?:Location;
                              size?:string; color?:string; form?:string;}
 
 
@@ -91,8 +91,6 @@ declare module "nearley" {
 if (typeof require !== 'undefined') {
     // Node.JS way of importing external modules
     // In a browser, they must be included from the HTML file
-    var nearley = require('./lib/nearley.js');
+    var nearley = require('../lib/nearley.js');
     var grammar = require('./grammar.js');
 }
-
-

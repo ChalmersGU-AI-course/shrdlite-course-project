@@ -23,6 +23,9 @@ all: $(TARGETS)
 start: all
 	python -m SimpleHTTPServer 8000
 
+# start-offline: all
+# 	node dist/shrdlite-offline.js complex 3
+
 run_example: $(DIST)/astar_example.js FORCE
 	node --harmony dist/astar_example.js
 
