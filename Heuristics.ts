@@ -29,6 +29,9 @@ module Heuristics {
         };
     }
 
+    //////////////////////////////////////////////////////////////////////
+    // (mostly) private functions
+
     function heuristicConjunctiveClause(s : State, c : Interpreter.Literal[]) : number{
         var hValue = 0;
         for(var ix in c){
@@ -87,31 +90,34 @@ module Heuristics {
                     public isFloor      : boolean){}
     }
 
-    class HeuristicState {
-        constructor(public above : ObjectPosition,
-                    public below : ObjectPosition){}
-    }
-
     function computeObjectPosition(s : State, objA : String) : ObjectPosition{
         var stackA = -1;
         var heightA = -1;
         var aboveA = -1;
 
-        for(var stackNo in s.stacks){
-            if(stackA > -1){
-                break;
-            }
-            var stack = s.stacks[stackNo];
-            for(var height in stack){
-                if(stack[height] === objA){
-                    stackA = stackNo;
-                    heightA = height;
+        if(objA != "floor"){
+            for(var stackNo in s.stacks){
+                if(stackA > -1){
+                    break;
                 }
+                var stack = s.stacks[stackNo];
+                for(var height in stack){
+                    if(stack[height] === objA){
+                        stackA = stackNo;
+                        heightA = height;
+                    }
+                }
+            }
+
+            if(stackA > -1){
+                aboveA = s.stacks[stackA].length -1 -heightA;
             }
         }
 
-        if(stackA > -1){
-            aboveA = s.stacks[stackA].length -1 -heightA;
+        if(s.holding === objA){
+            stackA = s.arm;
+            heightA = 0;
+            aboveA = 0;
         }
 
         return new ObjectPosition(stackA, heightA, aboveA,
@@ -119,72 +125,49 @@ module Heuristics {
                    objA === "floor");
     }
 
-    // Another attempt at heuristic function. Doesn't work as well as the simple
-    // grab heuristic. However, that one isnt really admissible...
     export function heuristicDifference(s : State, above : String, below : String, exactlyOntop : boolean) : number {
+        var somewhereAbove : boolean = !exactlyOntop;
+        var a = computeObjectPosition(s, above);
+        var b = computeObjectPosition(s, below);
 
-        var stackA  : number;
-        var stackB  : number;
-        var heightA : number;
-        var heightB : number;
-        var aboveA  : number;
-        var aboveB  : number;
+        var holdCost = dropCost(s, a, b, exactlyOntop);
 
-        // TODO floor...
-
-        for(var stackNo in s.stacks){
-            var stack = s.stacks[stackNo];
-            for(var height in stack){
-                if(stack[height] === above){
-                    stackA = stackNo;
-                    heightA = height;
-                }
-                if(stack[height] === below){
-                    stackB = stackNo;
-                    heightB = height;
-                }
-            }
-        }
-
-        var holdCost = 0;
-        if(s.holding != null){
-            holdCost = 1;
-        }
-
-        // OBS, can be in arm as well...
-        if(s.holding === above){
-            stackA = s.arm;
-            aboveA = 0;
-        } else {
-            aboveA = s.stacks[stackA].length -1 -heightA;
-        }
-
-        if(s.holding === below){
-            stackB = s.arm;
-            aboveB = 0;
-        } else {
-            aboveB = s.stacks[stackB].length -1 -heightB;
-        }
-
-        var armCost = abs(s.arm - stackA) + abs(stackA - stackB);
+        var armCost = abs(s.arm - a.stackNo) + abs(a.stackNo - b.stackNo);
 
         // Number of objects that needs to be moved.
         var aboveCost;
         if(exactlyOntop){
-            if(stackA === stackB){
-                aboveCost = 4 * max(aboveA, aboveB);
+            if(a.stackNo === b.stackNo){
+                aboveCost = 4 * max(a.objectsAbove, b.objectsAbove);
             } else {
-                aboveCost = 4 * (aboveA + aboveB);
+                aboveCost = 4 * (a.objectsAbove + b.objectsAbove);
             }
         } else {
             // ie Just somewhere above is sufficient
             throw new Planner.Error("should not be here atm...");
         }
-        // if(isUndefined(aboveCost)) throw new Planner.Error("aboveCost undefined!");
         return holdCost + armCost + aboveCost;
     }
 
+    function dropCost(s : State, a : ObjectPosition, b : ObjectPosition, exactlyOntop : boolean) : number{
+        var somewhereAbove : boolean = !exactlyOntop;
+        if(s.holding == null){
+            return 0;
+        } else if(a.isHeld && s.arm == b.stackNo &&
+                 (somewhereAbove || b.objectsAbove == 0) ){
+            return 1;
+        } else if (b.isHeld && s.arm != a.stackNo){
+            return 1;
+        } else if (s.arm != b.stackNo && s.arm != a.stackNo){
+            return 1;
+        }
+        // Holds something but needs to drop it somewhere else...
+        // ...and come back?
+        return 3;
+    }
 
+    ////////////////////////////////////////////////
+    // Other method...
 
     // Computes the expected number of actions to grab an object
     function heuristicDistance(s : State, target : String) : number {
@@ -197,12 +180,12 @@ module Heuristics {
             holdCost = 1;
         }
 
-        var emptyStacks = 0;
-        for(var stackNo in s.stacks){
-            if(s.stacks[stackNo].length == 0){
-                emptyStacks = emptyStacks +1;
-            }
-        }
+        // var emptyStacks = 0;
+        // for(var stackNo in s.stacks){
+        //     if(s.stacks[stackNo].length == 0){
+        //         emptyStacks = emptyStacks +1;
+        //     }
+        // }
 
         if(target === "floor"){
             var closest = Infinity;
