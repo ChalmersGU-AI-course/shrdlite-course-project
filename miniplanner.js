@@ -172,27 +172,29 @@ function is_possible (rules) {
     // e on top of k
 var rules = [["e", "k"], ["l", "floor"]]; //TMP, TODO proper
 
-function state_isgoal (state, this_should_be_rules) {
-    for (var rule of rules) {
-        var i, j;
-        for (i=0; i < state.stacks.length; i++) {
-            j = state.stacks[i].indexOf(rule[0]);
-            if (j !== -1) {
-                break;
-            }
+
+function object_ok(rule, state) {
+    var i, j;
+    // Find position of object.
+    for (i=0; i < state.stacks.length; i++) {
+        j = state.stacks[i].indexOf(rule[0]);
+        if (j !== -1) {
+            break;
         }
-        // Either:
-        //  * Arm holding it
-        //  * object is on floor and should be
-        //  * object is not ontop of object it should be ontop of
-        if (j === -1)
-            return false;
-        if (j === 0 && rule[1] == "floor")
-            continue;
-        if (state.stacks[i][j-1] != rule[1])
-            return false;
     }
-    return true;
+    // Either:
+    //  * Arm holding it
+    //  * object is on floor and should be
+    //  * return if object is ontop of object it should be ontop of
+    switch (j) {
+        case -1: return false;
+        case  0: return rule[1] == "floor";
+        default: return state.stacks[i][j-1] == rule[1];
+    }
+}
+
+function state_isgoal (state, this_should_be_rules) {
+    return rules.every(function (rule) {return object_ok(rule, state);});
 }
 
 
@@ -211,37 +213,21 @@ function closest_floor_dist(state) {
     return dist;
 }
 
-function h(state, rules) {
-    // var rets = [];
-    // for (rule of rules) {
-    //     var estimate = 0;
-    //     // We hold the object
-    //     if (state.holding == rule[0]) {
-    //         if (rule[1] == "floor") {
-    //             estimate += closest_floor_dist(state);
-    //         } else {
+function h(state, this_should_be_rules) {
+    var estimate = 0;
+    var held_any = false;
+    for (var rule of rules) {
+        if (state.holding == rule[0]) {
+            held_any = true;
+            estimate += 1; // put down
+        } else if (!object_ok(rule,state)) {
+            estimate += 3; // pick up, move at least 1, put down
+        }
+    }
+    // holding another object needs to be put away
+    estimate += ((!held_any) & (!!state.holding));
 
-    //         }
-
-    //     } else
-
-    //     if (state.holding != rule[0]) {
-    //         // we must at least move there and pick it up.
-    //         var i, j;
-    //         for (i=0; i < state.stacks.length; i++) {
-    //             j = state.stacks[i].indexOf(rule[0]);
-    //             if (j !== -1) {
-    //                 break;
-    //             }
-    //         }
-    //         estimate += Math.abs(state.arm-i);
-
-    //     }
-    //     if (rule[1] == "floor") {
-
-    //     }
-    // }
-    return 0;
+    return estimate;
 }
 
 function hash_state(state) {
@@ -266,6 +252,6 @@ var testgoal = {holding: null, arm: 3, stacks: [
     []
   ]};
 
-var startnode = {stacks: currentState.stacks, holding: currentState.holding, arm: currentState.arm}
-console.log(astar(cost, h, neighbors, hash_state, startnode, undefined, state_isgoal));
+var startnode = {stacks: currentState.stacks, holding: currentState.holding, arm: currentState.arm};
+console.log(astar(cost, h, neighbors, hash_state, startnode, undefined, state_isgoal).length);
 //
