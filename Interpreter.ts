@@ -60,6 +60,7 @@ module Interpreter {
     }
 
     export class Interpret {
+
       state: WorldState;
       constructor(state: WorldState) {
         this.state = state;
@@ -136,7 +137,7 @@ module Interpreter {
           throw new Interpreter.Error("put: logic error (the robot has only one arm)");
         // 3. if the command reference the floor make lit immediately
         if(this.isFloor(loc.ent.obj))
-          return this.floorLiteral(heldId);
+          return this.floorLiteral([heldId]);
         // 4. preconditions: (2)
         var refs = this.references(loc.ent.obj);
         if(refs && refs.length > 0) {
@@ -178,28 +179,25 @@ module Interpreter {
         var lits: Literal[][];
         var objs = this.references(ent.obj);       // objects
         var refs = this.references(loc.ent.obj);   // references
-        var objQuant = ent.quant;
-        var refQuant = loc.ent.quant;
+        var objQuant = ent.quant;                  // object quantity
+        var refQuant = loc.ent.quant;              // reference quantity
+        // 1. if the command reference the floor make lit immediately
+        if(this.isFloor(loc.ent.obj)) {
+          return this.floorLiteral(objs);
+        }
         switch(objQuant) {
           case "the":
-            // 1. preconditions (1)
-            function theHandler(objs: string[]): string {
-              if(!objs || objs.length === 0)
-                return "the: no objects are found";
+            // special error handler
+            function handler(objs: string[], refs: string[]): string {
               if(objs.length > 1)
-                return "the: too many objects are found";
+                return "move: too many objects are found";
               return null;
             }
             // Example: (handler, [x], ontop, any, [y1, y2])
-            lits = this.singular(theHandler, objs, loc.rel, refQuant, refs);
+            lits = this.singular(handler, objs, loc.rel, refQuant, refs);
             break;
           case "any":
-            function anyHandler(objs: string[]): string {
-              if(!objs || objs.length === 0)
-                return "any: no objects are found";
-              return null;
-            }
-            lits = this.singular(anyHandler, objs, loc.rel, refQuant, refs);
+            lits = this.singular(null, objs, loc.rel, refQuant, refs);
             break;
           case "all":
             lits = this.plural(objs, loc.rel, refQuant, refs); // (ball, ontop, any, [y1, y2])
@@ -208,16 +206,23 @@ module Interpreter {
         return lits;
       }
 
-      // TODO: isAllowed needs to be inserted
-      singular(handler: (obs: string[]) => string,
+      /*
+       * Handles singular case when object is quantified by "the" or "any"
+       */
+      singular(specialHandler: (objs: string[], refs: string[]) => string,
                objs: string[],
                rel: string,
                refQuant: string,
                refs: string[]): Literal[][] {
         var lits: Literal[][];
-        var error = handler(objs);
+
+        // Check if error occured with objects
+        var error = this.notEmptyHandler(objs, refs);
+        if(!error && specialHandler)
+          error = specialHandler(objs, refs);
         if(error)
           throw new Interpreter.Error(error);
+
         switch(refQuant) {
           case "all":           // "all" and "the" are handled the same way
           case "the":
@@ -234,8 +239,20 @@ module Interpreter {
         return lits;
       }
 
-      plural(objs: string[], rel: string, refQuant: string, refs: string[]): Literal[][] {
+      /*
+       * Handles plural case when object is quantified by "all"
+       */
+      plural(objs: string[],
+             rel: string,
+             refQuant: string,
+             refs: string[]): Literal[][] {
         var lits: Literal[][];
+
+        // Check if error occured with objects
+        var error = this.notEmptyHandler(objs, refs);
+        if(error)
+          throw new Interpreter.Error(error);
+
         switch(refQuant) {
           case "all":
           case "the":
@@ -245,12 +262,13 @@ module Interpreter {
             break;
           case "any":
             lits = this.literals(refs, objs, true, rel);
-            lits = this.modify(lits, (lit: Literal) => {
+            function swapArgs(lit: Literal) {
               var newArgs = [];
               newArgs[0] = lit.args[1];
               newArgs[1] = lit.args[0];
               return {pol: lit.pol, rel: lit.rel, args: newArgs};
-            });
+            };
+            lits = this.modify(lits, swapArgs);
             break;
         }
         return lits;
@@ -386,6 +404,18 @@ module Interpreter {
       }
 
       /*
+       * Error handler used in singular and plural to see if objs and refs are
+       * not empty
+       */
+      notEmptyHandler(objs: string[], refs: string[]): string {
+        if(!objs || objs.length === 0)
+          return "move: no objects found";
+        if(!refs || refs.length === 0)
+          return "move: no references found";
+        return null;
+      }
+
+      /*
        * Flatten matrix to an array
        */
       flatten(lits: Literal[][]): Literal[] {
@@ -439,7 +469,11 @@ module Interpreter {
       transform(matrix: Pair[][], pol: boolean, rel: string): Literal[][] {
         return matrix.map((arr: Pair[]) => {
           return arr.map((pair: Pair) => {
-            return {pol: pol, rel: rel, args: [pair.obj, pair.ref]};
+            var obj = this.state["objects"][pair.obj];
+            if(this.isAllowedPosition(obj, rel, pair.ref))
+              return {pol: pol, rel: rel, args: [pair.obj, pair.ref]};
+            else
+              throw new Interpreter.Error("transform: objects not allowed in relation");
           });
         });
       }
@@ -476,11 +510,13 @@ module Interpreter {
       /*
        * Literal that says object (id) is not ontop of any othe object in world
        */
-      floorLiteral(id: string): Literal[][] {
-        var objs = this.worldObjects();
-        return [objs.map((ref: string) => {
-          return {pol: false, rel: "ontop", args: [id, ref]};
-        })];
+      floorLiteral(ids: string[]): Literal[][] {
+        var refs = this.worldObjects();
+        return ids.map((id: string) => {
+          return refs.map((ref: string) => {
+            return {pol: false, rel: "ontop", args: [id, ref]};
+          });
+        });
       }
 
       /*
