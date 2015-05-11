@@ -1,7 +1,6 @@
 ///<reference path="collections.ts"/>
 ///<reference path="MyNode.ts"/>
 
-
 module SearchAlgo{
     /**
      * A* algorithm
@@ -16,7 +15,7 @@ module SearchAlgo{
         start.gcost = 0;
         start.fcost = start.gcost + heuristic(start, goal);
         
-        while(!openset.isEmpty()){
+         while(!openset.isEmpty()){
             var current: MyNode = minFcost(openset);
             
             if(reachGoal(current.world, goal)){
@@ -50,10 +49,87 @@ module SearchAlgo{
     }    
     
     /**
-     * Heuristic for the A* algorithm
+     * Heuristic for the A* algorithm, works for my case where the inside arrays are actually in each just a lonely literal.
+     * This heuristic is based on the distance between objects in the literal and the minimal number of pick and drop necessary
+     * for reach the final goal.
+     * After few trys I estimated that the number of steps needed to go through A-star were decreased by 25% to 40% 
+     * (Compared to a heuristic that returns 0)     
      */
-    function heuristic(start: MyNode, goal: Interpreter.Literal[][]): number{
-        return 0;
+    function heuristic(node: MyNode, goal: Interpreter.Literal[][]): number{
+        var fcosts: number[] = [];
+        var l: Interpreter.Literal;
+        var pos0: number;
+        var pos1: number
+        var state: WorldState = node.world;
+        var toAdd: number; // increase if there is a need to drop and/or pick objects
+        
+        for(var i = 0; i < goal.length; i++){
+            l = goal[i][0];
+            
+            //Case where the relation is "holding"
+            if(l.rel == "holding"){
+                if(node.world.holding == l.args[0]){
+                    fcosts[i] = 0;
+                }else{
+                    toAdd = (node.world.holding == null) ? 1 : 2; //minimal pick and drop = 1 pick or (1 drop and 1 pick)
+                    fcosts[i] = Math.abs(node.world.arm - Helper.findCoord(l.args[0], state).x) + toAdd;
+                }
+            //Case where the floor is the second argument
+            }else if(l.args[1] == "floor"){
+                var closestEmpty: number = Number.MAX_VALUE;
+                var smallestSize: number = Number.MAX_VALUE;
+                
+                if(node.world.holding == l.args[0]){
+                    toAdd = 1; //minimal pick and drop = 1 drop
+                    pos0 = node.world.arm;
+                }else{
+                    toAdd = (node.world.holding == null) ? 2 : 3; //minimal pick and drop = (1 pick and 1 drop) or (1 drop and 1 pick and 1 drop)
+                    pos0 = Helper.findCoord(l.args[0], state).x;
+                }
+                
+                //find the closest empty stack to the object
+                for(var j = 0; j < node.world.stacks.length; j++){
+                    if(node.world.stacks[j].length == 0 && closestEmpty >  Math.abs(pos0 - j)){
+                        closestEmpty = Math.abs(pos0 - j);
+                    }
+                }
+                
+                //if there are no empty stack return the min of drop and pick 
+                if(closestEmpty == Number.MAX_VALUE){
+                    fcosts[i] = toAdd+3;
+                }else{
+                    fcosts[i] = closestEmpty + toAdd;
+                }
+            //General case
+            }else{
+                if(node.world.holding == l.args[0] || node.world.holding == l.args[1]){
+                    toAdd = 1; //minimal pick and drop = 1 drop
+                    if(node.world.holding == l.args[0]){
+                        pos0 = node.world.arm;
+                        pos1 = Helper.findCoord(l.args[1], state).x;
+                    }else{
+                        pos0 = Helper.findCoord(l.args[0], state).x;
+                        pos1 = node.world.arm;
+                    }
+                }else{
+                    toAdd = node.world.holding == null ? 2 : 3; //minimal pick and drop = (1 pick and 1 drop) or (1 drop and 1 pick and 1 drop)
+                    pos0 = Helper.findCoord(l.args[0], state).x;
+                    pos1 = Helper.findCoord(l.args[1], state).x
+                }
+                    
+                if(l.rel == "ontop" || l.rel == "above" || l.rel == "under" || l.rel == "inside"){ 
+                    fcosts[i] = Math.abs(pos0 - pos1) + toAdd;
+                }else if(l.rel == "beside"){
+                    fcosts[i] = Math.min(Math.abs(pos0 - (pos1 + 1)), Math.abs(pos0 - (pos1 - 1))) + toAdd;
+                }else if(l.rel == "leftof"){
+                    fcosts[i] = pos0 < pos1 ? 0 : pos0 - (pos1 - 1) + toAdd;
+                }else if(l.rel == "rightof"){
+                    fcosts[i] = pos0 < pos1 ? 0 : pos0 - (pos1 + 1) + toAdd;
+                }
+            }
+        }
+
+        return min(fcosts);
     }
     
     /**
@@ -144,5 +220,15 @@ module SearchAlgo{
         
         return found;
     }
-
+    
+    /**
+     * Returns the minimal element in this array
+     */
+    function min(array: number[]): number{
+        var tmp: number = Number.MAX_VALUE;
+        for(var i = 0; i < array.length; i++){
+            tmp = Math.min(tmp, array[i]);    
+        }
+        return tmp;
+    }
 }

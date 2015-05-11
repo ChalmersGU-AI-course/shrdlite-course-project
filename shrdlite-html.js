@@ -2381,6 +2381,9 @@ var collections;
 ///<reference path="World.ts"/>
 var Rules;
 (function (Rules) {
+    /**
+     * Checks the rules that relate to the floor
+     */
     function breakFloorRules(o, obj, rel) {
         var bol = false;
         if (o.form == "floor" ||
@@ -2390,6 +2393,9 @@ var Rules;
         return bol;
     }
     Rules.breakFloorRules = breakFloorRules;
+    /**
+     * Checks the rules that relate to boxes
+     */
     function breakBoxRules(o, obj, rel) {
         var bol = false;
         if (obj.form == "box" && rel == "ontop") {
@@ -2409,6 +2415,9 @@ var Rules;
         return bol;
     }
     Rules.breakBoxRules = breakBoxRules;
+    /**
+     * Checks the rules that relate to balls
+     */
     function breakBallRules(o, obj, rel) {
         var bol = false;
         if (o.form == "ball" && obj.form == "ball") {
@@ -2434,6 +2443,9 @@ var Rules;
         return bol;
     }
     Rules.breakBallRules = breakBallRules;
+    /**
+     * Checks the rules that relate to the size of objects
+     */
     function breakSmallSupportingBig(o, obj, rel) {
         var bol = false;
         if ((rel == "ontop" || rel == "above" || rel == "inside") &&
@@ -2447,6 +2459,9 @@ var Rules;
         return bol;
     }
     Rules.breakSmallSupportingBig = breakSmallSupportingBig;
+    /**
+     * Union of all rules
+     */
     function breakRules(o, obj, rel) {
         return (Rules.breakFloorRules(o, obj, rel) ||
             Rules.breakSmallSupportingBig(o, obj, rel) ||
@@ -2457,6 +2472,9 @@ var Rules;
 })(Rules || (Rules = {}));
 var Helper;
 (function (Helper) {
+    /**
+    * Returns objects in the world that are at in the stack number x and that have their y coordinates in [from, to[
+    */
     function getObjsInStack(x, from, to, state, obj) {
         var owc = [];
         if (!(x < 0 || x >= state.stacks.length || from >= to || to <= -1 || to > state.stacks[x].length)) {
@@ -2472,6 +2490,9 @@ var Helper;
         return owc;
     }
     Helper.getObjsInStack = getObjsInStack;
+    /**
+    * Compares if two objects matches
+    */
     function comparator(relObj, obj) {
         var o = obj.obj == null ? obj : obj.obj;
         return ((relObj.size == o.size || o.size == null) &&
@@ -2479,10 +2500,16 @@ var Helper;
             (relObj.color == o.color || o.color == null));
     }
     Helper.comparator = comparator;
+    /**
+    * Finds out if an object is the floor
+    */
     function isFloor(obj) {
         return obj.form == "floor";
     }
     Helper.isFloor = isFloor;
+    /**
+    * Removes duplicates in an array
+    */
     function removeDuplicate(array) {
         var s;
         for (var i = 0; i < array.length; i++) {
@@ -2497,6 +2524,9 @@ var Helper;
         return array;
     }
     Helper.removeDuplicate = removeDuplicate;
+    /**
+    * returns id of objects that correspond to the description
+    */
     function findIDs(obj, state) {
         var objectIDs = [];
         if (state.holding != null && comparator(state.objects[state.holding], obj)) {
@@ -2514,6 +2544,9 @@ var Helper;
         return objectIDs;
     }
     Helper.findIDs = findIDs;
+    /**
+    * returns the coordinates of an object with such id
+    */
     function findCoord(id, state) {
         for (var x = 0; x < state.stacks.length; x++) {
             for (var y = 0; y < state.stacks[x].length; y++) {
@@ -2525,6 +2558,9 @@ var Helper;
         throw new Error("No such id in stacks");
     }
     Helper.findCoord = findCoord;
+    /**
+    * returns the object that has those coordinates
+    */
     function getObjAtCoord(pos, state) {
         if (pos.y == -1) {
             return { "size": null, "color": null, form: "floor" };
@@ -2551,12 +2587,16 @@ var Interpreter;
     // exported functions, classes and interfaces/types
     function interpret(parses, currentState) {
         var interpretations = [];
+        var hasAnInterpretation = [];
+        var i = 0;
         parses.forEach(function (parseresult) {
             var intprt = parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
             if (intprt.intp != null) {
                 interpretations.push(intprt);
+                hasAnInterpretation.push(i);
             }
+            i++;
         });
         if (interpretations.length == 1) {
             return interpretations;
@@ -2565,7 +2605,17 @@ var Interpreter;
             throw new Error("Found no interpretation");
         }
         else {
-            throw new Error("More than one parse gave an interpretation: ambiguity");
+            //throw new Error("More than one parse gave an interpretation: ambiguity");  
+            var newParses = [];
+            var selection;
+            alert("More than one parse gave an interpretation! \n");
+            for (var j = 0; j < hasAnInterpretation.length; j++) {
+                newParses[j] = j + ") " + clearerParse(parses[hasAnInterpretation[j]]);
+            }
+            do {
+                selection = parseInt(prompt("Enter the number that correspond to your parse: \n" + newParses.join("\n"), "0"));
+            } while (selection.toString() == "NaN" || selection < 0 || selection > hasAnInterpretation.length);
+            return [interpretations[selection]];
         }
     }
     Interpreter.interpret = interpret;
@@ -2590,6 +2640,11 @@ var Interpreter;
     Interpreter.Error = Error;
     //////////////////////////////////////////////////////////////////////
     // private functions
+    /**
+     * Interprets the command and return the goal as a pddl representation.
+     * Side note:
+     * - The quantifier "all", "any" and "the" are all interpreted the same way as "any"
+     */
     function interpretCommand(cmd, state) {
         var tmp;
         var tmp2;
@@ -2619,7 +2674,6 @@ var Interpreter;
             }
             tmp = Helper.removeDuplicate(tmp);
         }
-        //-----------------------------------------------------------
         /*
             2nd part: checking validity of location where to move the object
         */
@@ -2639,13 +2693,14 @@ var Interpreter;
                 return null;
             }
             tmp2 = Helper.removeDuplicate(tmp2);
+            //Check that relations between tmp and tmp2 holds
             for (var i = 0; i < tmp.length; i++) {
                 var tmpGoal = checkPhysicalLaws(tmp[i], tmp2, rel);
                 if (tmpGoal.length != 0) {
                     goalsAsMap.setValue(tmp[i].id, tmpGoal);
                 }
             }
-            if (tmpGoal.length == 0) {
+            if (goalsAsMap.isEmpty()) {
                 //Impossible
                 return null;
             }
@@ -2653,6 +2708,13 @@ var Interpreter;
         }
         return intprt;
     }
+    /**
+     *	Find the objects that correspond to the input.
+     * 	ie: if parse gives: (a relation b relation c)
+     *      First find objects that correspond to c, then check if there exist such an
+     *      object c that relates to an object b, then check if there exist such an
+     *      object b that relates to an object a
+     */
     function recursionCheck(ent, state) {
         var owc = [];
         var o = ent.obj;
@@ -2689,9 +2751,13 @@ var Interpreter;
             return owc;
         }
     }
+    /**
+     * Transform the goal map as a pddl representation
+     */
     function pddlTransformation(map, rel, hold) {
         var lits = [];
         var i = 0;
+        //"take" cmd
         if (hold) {
             map.forEach(function (key, values) {
                 var lit = [{ pol: true, rel: rel, args: [key] }];
@@ -2711,6 +2777,10 @@ var Interpreter;
         }
         return lits;
     }
+    /**
+     * Verify that physical laws are respected between objects, and return the identifier
+     * of such objects.
+     */
     function checkPhysicalLaws(o, objs, rel) {
         var valid = [];
         for (var i = 0; i < objs.length; i++) {
@@ -2722,6 +2792,9 @@ var Interpreter;
         }
         return valid;
     }
+    /**
+     * Find objects in the world that matches through the spatial relations
+     */
     function getObjsWithSpatialRelation(o1, o2, state) {
         var tmp = [];
         if (o2.form == "floor" && o1.loc.rel == "ontop") {
@@ -2758,16 +2831,41 @@ var Interpreter;
         }
         return tmp;
     }
+    function clearerParse(parse) {
+        var s = parse.input;
+        var ent = parse.prs.ent;
+        var index;
+        var form;
+        for (var i = 0; i < 2; i++) {
+            while (ent.obj.obj != null) {
+                form = ent.obj.obj.form == "anyform" ? "object" : ent.obj.obj.form;
+                index = s.indexOf(form) + form.length;
+                s = splice(s, index, 0, " that is");
+                ent = ent.obj.loc.ent;
+            }
+            ent = parse.prs.loc.ent;
+        }
+        return s;
+    }
+    function splice(toModify, idx, rem, s) {
+        return (toModify.slice(0, idx) + s + toModify.slice(idx + Math.abs(rem)));
+    }
 })(Interpreter || (Interpreter = {}));
 ///<reference path="Rules.ts"/>
 ///<reference path="Helper.ts"/>
+/**
+ * Representation of a node in the search tree of the search algorithm
+ */
 var MyNode = (function () {
     function MyNode(s, lastAction) {
         this.gcost = Number.MAX_VALUE; //Init for the algo
-        this.neighbors = new collections.Dictionary();
+        this.neighbors = new collections.Set(); //Map
         this.world = s;
         this.lastAction = lastAction;
     }
+    /**
+     * Generates the neighbors of this node (avoids to go back to the previous state)
+     */
     MyNode.prototype.getNeighbors = function () {
         var nodes = [];
         var actions = ["l", "r", "d", "p"];
@@ -2785,6 +2883,10 @@ var MyNode = (function () {
         }
         return nodes;
     };
+    /**
+     * Generates the hash of the node: arm position + stacks as a string
+     *
+     */
     MyNode.prototype.genHash = function () {
         var s = this.world.stacks;
         var arm = this.world.arm;
@@ -2804,6 +2906,9 @@ var MyNode = (function () {
         }
         this.hash = tmp;
     };
+    /**
+     * Generate the neighbor node after the specified action
+     */
     MyNode.prototype.genNode = function (action) {
         var node;
         var world = this.world;
@@ -2830,18 +2935,21 @@ var MyNode = (function () {
             }
         }
         if (node != null) {
-            this.addNeighbor(node, 1);
+            this.neighbors.add(node);
         }
         return node;
     };
-    MyNode.prototype.addNeighbor = function (neighbour, distances) {
-        this.neighbors.setValue(neighbour, distances);
-    };
+    /**
+     * At the moment each node are at distance of one form each other
+     */
     MyNode.prototype.distanceToMyNode = function (n) {
-        return this.neighbors.getValue(n);
+        return 1;
     };
     return MyNode;
 })();
+/**
+ * Generates the new stacks after a pick or a drop
+ */
 function newStacks(stacks, arm, holding) {
     var newS = [];
     for (var x = 0; x < stacks.length; x++) {
@@ -2850,6 +2958,7 @@ function newStacks(stacks, arm, holding) {
             newS[x][y] = stacks[x][y];
         }
     }
+    //pick
     if (holding == null) {
         newS[arm].splice(newS[arm].length - 1, 1);
     }
@@ -2860,24 +2969,24 @@ function newStacks(stacks, arm, holding) {
 }
 ///<reference path="collections.ts"/>
 ///<reference path="MyNode.ts"/>
-/*
-Equality between states: prob on update of currWorld when drop or pick
-Define equality with the goal
-
-
-
-*/
 var SearchAlgo;
 (function (SearchAlgo) {
+    /**
+     * A* algorithm
+     */
     function aStar(start, goal) {
+        //Dicitionaries are used because it provides efficient ways to add, delete and check if an element exists already in the data strucure
         var closedset = new collections.Dictionary();
         var openset = new collections.Dictionary();
         openset.setValue(start.hash, start);
         start.gcost = 0;
         start.fcost = start.gcost + heuristic(start, goal);
+        var iterations = 0;
         while (!openset.isEmpty()) {
+            iterations++;
             var current = minFcost(openset);
             if (reachGoal(current.world, goal)) {
+                alert(iterations);
                 return reconstructPath(current);
             }
             openset.remove(current.hash);
@@ -2903,9 +3012,93 @@ var SearchAlgo;
         return [];
     }
     SearchAlgo.aStar = aStar;
-    function heuristic(start, goal) {
-        return 0;
+    /**
+     * Heuristic for the A* algorithm, works for my case where the inside arrays are actually in each just a lonely literal.
+     * This heuristic is based on the distance between objects in the literal and the minimal number of pick and drop necessary
+     * for reach the final goal.
+     * After few trys I estimated that the number of steps needed to go through A-star were decreased by 25% to 40%
+     * (Compared to a heuristic that returns 0)
+     */
+    function heuristic(node, goal) {
+        var fcosts = [];
+        var l;
+        var pos0;
+        var pos1;
+        var state = node.world;
+        var toAdd; // increase if there is a need to drop and/or pick objects
+        for (var i = 0; i < goal.length; i++) {
+            l = goal[i][0];
+            //Case where the relation is "holding"
+            if (l.rel == "holding") {
+                if (node.world.holding == l.args[0]) {
+                    fcosts[i] = 0;
+                }
+                else {
+                    toAdd = (node.world.holding == null) ? 1 : 2; //minimal pick and drop = 1 pick or (1 drop and 1 pick)
+                    fcosts[i] = Math.abs(node.world.arm - Helper.findCoord(l.args[0], state).x) + toAdd;
+                }
+            }
+            else if (l.args[1] == "floor") {
+                var closestEmpty = Number.MAX_VALUE;
+                var smallestSize = Number.MAX_VALUE;
+                if (node.world.holding == l.args[0]) {
+                    toAdd = 1; //minimal pick and drop = 1 drop
+                    pos0 = node.world.arm;
+                }
+                else {
+                    toAdd = (node.world.holding == null) ? 2 : 3; //minimal pick and drop = (1 pick and 1 drop) or (1 drop and 1 pick and 1 drop)
+                    pos0 = Helper.findCoord(l.args[0], state).x;
+                }
+                //find the closest empty stack to the object
+                for (var j = 0; j < node.world.stacks.length; j++) {
+                    if (node.world.stacks[j].length == 0 && closestEmpty > Math.abs(pos0 - j)) {
+                        closestEmpty = Math.abs(pos0 - j);
+                    }
+                }
+                //if there are no empty stack return the min of drop and pick 
+                if (closestEmpty == Number.MAX_VALUE) {
+                    fcosts[i] = toAdd + 3;
+                }
+                else {
+                    fcosts[i] = closestEmpty + toAdd;
+                }
+            }
+            else {
+                if (node.world.holding == l.args[0] || node.world.holding == l.args[1]) {
+                    toAdd = 1; //minimal pick and drop = 1 drop
+                    if (node.world.holding == l.args[0]) {
+                        pos0 = node.world.arm;
+                        pos1 = Helper.findCoord(l.args[1], state).x;
+                    }
+                    else {
+                        pos0 = Helper.findCoord(l.args[0], state).x;
+                        pos1 = node.world.arm;
+                    }
+                }
+                else {
+                    toAdd = node.world.holding == null ? 2 : 3; //minimal pick and drop = (1 pick and 1 drop) or (1 drop and 1 pick and 1 drop)
+                    pos0 = Helper.findCoord(l.args[0], state).x;
+                    pos1 = Helper.findCoord(l.args[1], state).x;
+                }
+                if (l.rel == "ontop" || l.rel == "above" || l.rel == "under" || l.rel == "inside") {
+                    fcosts[i] = Math.abs(pos0 - pos1) + toAdd;
+                }
+                else if (l.rel == "beside") {
+                    fcosts[i] = Math.min(Math.abs(pos0 - (pos1 + 1)), Math.abs(pos0 - (pos1 - 1))) + toAdd;
+                }
+                else if (l.rel == "leftof") {
+                    fcosts[i] = pos0 < pos1 ? 0 : pos0 - (pos1 - 1) + toAdd;
+                }
+                else if (l.rel == "rightof") {
+                    fcosts[i] = pos0 < pos1 ? 0 : pos0 - (pos1 + 1) + toAdd;
+                }
+            }
+        }
+        return min(fcosts);
     }
+    /**
+     * Reconstruct the path that has been taken to reach the specified node
+     */
     function reconstructPath(goal) {
         var path = [];
         var current = goal;
@@ -2918,6 +3111,9 @@ var SearchAlgo;
         }
         return path;
     }
+    /**
+     * Returns the node with the minimal fcost
+     */
     function minFcost(openset) {
         var tmp;
         openset.forEach(function (k, v) {
@@ -2927,6 +3123,9 @@ var SearchAlgo;
         });
         return tmp;
     }
+    /**
+     * Checks if the goal has been reached
+     */
     function reachGoal(ws, goal) {
         var found = false;
         var innerFound;
@@ -2942,6 +3141,9 @@ var SearchAlgo;
         }
         return found;
     }
+    /**
+     * Checks if the literal can be found in the world
+     */
     function existsRelation(ws, g) {
         var found = false;
         var rel = g.rel;
@@ -2976,6 +3178,16 @@ var SearchAlgo;
             }
         }
         return found;
+    }
+    /**
+     * Returns the minimal element in this array
+     */
+    function min(array) {
+        var tmp = Number.MAX_VALUE;
+        for (var i = 0; i < array.length; i++) {
+            tmp = Math.min(tmp, array[i]);
+        }
+        return tmp;
     }
 })(SearchAlgo || (SearchAlgo = {}));
 ///<reference path="World.ts"/>
@@ -3092,6 +3304,7 @@ var Shrdlite;
         interpretations.forEach(function (res, n) {
             world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
         });
+        alert("break");
         try {
             var plans = Planner.plan(interpretations, world.currentState);
         }

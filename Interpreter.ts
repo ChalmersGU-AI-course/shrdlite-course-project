@@ -10,23 +10,37 @@ module Interpreter {
     
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
-        
+        var hasAnInterpretation: number[] = [];
+        var i = 0;
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
             if(intprt.intp != null){
                 interpretations.push(intprt);
+                hasAnInterpretation.push(i);
             }
+            i++;
         });
         if (interpretations.length == 1) {
             return interpretations;
         }else if(interpretations.length == 0){
              throw new Error("Found no interpretation");
         }else{
-            throw new Error("More than one parse gave an interpretation: ambiguity");    
+            //throw new Error("More than one parse gave an interpretation: ambiguity");  
+            var newParses: string[] = [];
+            var selection: number;
+            alert("More than one parse gave an interpretation! \n");
+            for(var j = 0; j < hasAnInterpretation.length; j++){
+                newParses[j] = j+") "+clearerParse(parses[hasAnInterpretation[j]]);
+            }
+            
+            do{
+                selection = parseInt(prompt("Enter the number that correspond to your parse: \n"+newParses.join("\n"),"0"));
+            }while(selection.toString() == "NaN" || selection < 0 || selection > hasAnInterpretation.length);
+            
+            return [interpretations[selection]];
         }
     }
-
 
     export interface Result extends Parser.Result {intp:Literal[][];}
     export interface Literal {pol:boolean; rel:string; args:string[]; }
@@ -124,7 +138,7 @@ module Interpreter {
                 }
             }
             
-            if(tmpGoal.length == 0){
+            if(goalsAsMap.isEmpty()){
                 //Impossible
                 return null;    
             }
@@ -263,6 +277,27 @@ module Interpreter {
         return tmp;      
     }
     
+    function clearerParse(parse: Parser.Result): string{
+        var s: string = parse.input;
+        var ent = parse.prs.ent;
+        var index;
+        var form: string;
+        
+        for(var i = 0; i < 2; i++){
+            while(ent.obj.obj != null){
+                form = ent.obj.obj.form == "anyform" ? "object" : ent.obj.obj.form;
+                index = s.indexOf(form)+form.length;
+                s = splice(s, index, 0, " that is");
+                ent = ent.obj.loc.ent;
+            }
+            ent = parse.prs.loc.ent;
+        }
+        return s;    
+    }
+
+    function splice(toModify: string, idx:number, rem:number, s:string ): string {
+        return (toModify.slice(0,idx) + s + toModify.slice(idx + Math.abs(rem)));
+    }
 
 }    
 
