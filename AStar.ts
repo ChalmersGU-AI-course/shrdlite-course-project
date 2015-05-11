@@ -2,12 +2,12 @@
 module AStar {
  
     //A StaticGraph contains a state of type S and a list of edges to its neighbours
-    export interface Graph<S> { 
+    export interface Node<S> { 
         getChildren() : Edge<S>[];
         getState() : S;
     }
 
-    export class StaticGraph<S> implements Graph<S> {
+    export class StaticNode<S> implements Node<S> {
         
         constructor(public children : Edge<S>[], public state : S){}
 
@@ -28,7 +28,7 @@ module AStar {
     //visited nodes
     export class Path<S>{
         cost : number;
-        constructor(private path : Graph<S>[]){this.cost = 0;}
+        constructor(private path : Node<S>[]){this.cost = 0;}
 
         //Returns a new path containing the graph contained in edge
         //appended to the old path
@@ -44,11 +44,11 @@ module AStar {
         }
 
         //Retrieves the last object on the path
-        peek():Graph<S> {
+        peek():Node<S> {
             return this.path[this.path.length - 1];
         }
 
-        getPath() : Graph<S>[] {
+        getPath() : Node<S>[] {
             return this.path;
         }
     }
@@ -63,11 +63,11 @@ module AStar {
 
     export interface Edge<S> {
         cost : number;
-        end  : Graph<S>;
+        end  : Node<S>;
     }
 
     //A* search function
-    export function astarSearch<S>(graph:Graph<S>,h:Heuristic<S>,goal:Goal<S>) : Path<S>{
+    export function astarSearch<S>(graph:Node<S>,h:Heuristic<S>,goal:Goal<S>) : Path<S>{
         var frontier = new collections.PriorityQueue<Path<S>>(function(a,b) {
             return (b.weight() + h(b.peek().getState())) -  (a.weight() + h(a.peek().getState()))
         });
@@ -89,9 +89,9 @@ module AStar {
 
     //Simple test
     export function test(){
-        var g1 = new StaticGraph<number>([],4);
-        var g2 = new StaticGraph([],3);
-        var g = new StaticGraph<number>([{ cost: 1, end: g1},
+        var g1 = new StaticNode<number>([],4);
+        var g2 = new StaticNode([],3);
+        var g = new StaticNode<number>([{ cost: 1, end: g1},
                                    {cost: 1, end: g2}], 0);
         g1.children.push({cost:1, end: g});
 
@@ -102,13 +102,13 @@ module AStar {
 
     //Complicated test geolocations
     export function geoTest() : string[] {
-        var l1 = new StaticGraph<string>([], "gothenburg");
-        var l2 = new StaticGraph<string>([], "boras");
-        var l3 = new StaticGraph<string>([], "jonkoping");
-        var l4 = new StaticGraph<string>([], "stockholm");
-        var l5 = new StaticGraph<string>([], "malmo");
-        var l6 = new StaticGraph<string>([], "varnamo");
-        var l7 = new StaticGraph<string>([], "mellerud");
+        var l1 = new StaticNode<string>([], "gothenburg");
+        var l2 = new StaticNode<string>([], "boras");
+        var l3 = new StaticNode<string>([], "jonkoping");
+        var l4 = new StaticNode<string>([], "stockholm");
+        var l5 = new StaticNode<string>([], "malmo");
+        var l6 = new StaticNode<string>([], "varnamo");
+        var l7 = new StaticNode<string>([], "mellerud");
 
 
         l1.addEdge({cost: 4,  end: l2});

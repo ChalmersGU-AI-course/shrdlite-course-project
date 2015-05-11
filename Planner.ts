@@ -1,10 +1,23 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="collections.ts"/>
+///<reference path="AStar.ts"/>
 
 module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
+
+    export class ShrdliteNode implements AStar.Node<Interpreter.Literal[]> {
+
+        constructor(public lits : Interpreter.Literal[]) {}
+
+        getState(){return this.lits;}
+
+        getChildren(){
+            return generateChildren(this.lits);
+        }
+    } 
 
     export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
         var plans : Result[] = [];
@@ -18,6 +31,38 @@ module Planner {
         } else {
             throw new Planner.Error("Found no plans");
         }
+    }
+
+    export function generateChildren(lits : Interpreter.Literal[]) : AStar.Edge<Interpreter.Literal[]>[] {
+        
+        var map : collections.Dictionary<string,Interpreter.Literal[]> = new collections.Dictionary<string,Interpreter.Literal[]>();
+        map.setValue("r", moveRight(lits));
+        map.setValue("l", moveLeft(lits));
+        map.setValue("d", drop(lits));
+        map.setValue("p", pickup(lits));
+
+        var edges : AStar.Edge<Interpreter.Literal[]>[] = [];
+        map.forEach(function(key:string, value:Interpreter.Literal[]){
+                edges.push({cost:1, end: new ShrdliteNode(value)});
+            });
+
+        return edges;
+    }
+
+    export function moveRight(lits : Interpreter.Literal[]) : Interpreter.Literal[] {
+        return lits;
+    }
+
+    export function moveLeft(lits : Interpreter.Literal[]) : Interpreter.Literal[] {
+        return lits;
+    }
+
+    export function drop(lits : Interpreter.Literal[]) : Interpreter.Literal[] {
+        return lits;
+    }
+
+    export function pickup(lits : Interpreter.Literal[]) : Interpreter.Literal[] {
+        return lits;
     }
 
 
@@ -39,10 +84,12 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
     function stackToPddl(state :WorldState) : Interpreter.Literal[] {
-	var pddl :Interpreter.Literal[] = [];
+    var pddl :Interpreter.Literal[] = [];
 	if(state.holding != null) {
 	    pddl.push({pol:true, rel: "holding", args: [state.holding]});
 	} 
+
+    pddl.push({pol:true, rel: "armpos", args: [state.arm + ""]})
 
 	for(var x = 0; x < state.stacks.length; x++) {
 	    //Create on top of floor
