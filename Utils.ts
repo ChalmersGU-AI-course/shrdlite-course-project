@@ -109,11 +109,11 @@ function above(first: string, second: string, stacks: string[][]){
     var bool = false;
     for(var i=0; i<stacks.length; i++){
         for(var j=0; j<stacks[i].length; j++){
-            if(bool && stacks[i][j] == second){
+            if(bool && stacks[i][j] == first){
                 return true;
             }
             if(j<stacks.length-1 &&
-               stacks[i][j] == first){
+               stacks[i][j] == second){
                 bool = true;
             }
         }
@@ -127,38 +127,30 @@ function under(first: string, second: string, stacks: string[][]){
     return above(second, first, stacks);
 }
 function beside(first: string, second: string, stacks: string[][]){
-    var bool = false;
     for(var i=0; i<stacks.length; i++){
         for(var j=0; j<stacks[i].length; j++){
-            if(bool){
-                if (stacks[i][j] == first || stacks[i][j] == second){
-                    return true;
-                }else if(j==stacks[i].length){
-                    return false;
+            if((stacks[i][j] == first || stacks[i][j] == second) && i<stacks.length-1){
+                for(var k=0; k<stacks[i+1].length; k++){
+                    if(stacks[i+1][k] == first || stacks[i+1][k] == second){
+                        return true;
+                    }
                 }
-            }
-            if(stacks[i][j] == first || stacks[i][j] == second){
-                bool = true;
-                break;
+                return false;
             }
         }
     }
     return false;
 }
 function left(first: string, second: string, stacks: string[][]){
-    var bool = false;
     for(var i=0; i<stacks.length; i++){
         for(var j=0; j<stacks[i].length; j++){
-            if(bool){
-                if (stacks[i][j] == second){
-                    return true;
-                }else if(j==stacks[i].length){
-                    return false;
+            if(stacks[i][j] == first && i<stacks.length-1){
+                for(var k=0; k<stacks[i+1].length; k++){
+                    if(stacks[i+1][k] == second){
+                        return true;
+                    }
                 }
-            }
-            if(stacks[i][j] == first){
-                bool = true;
-                break;
+                return false;
             }
         }
     }
@@ -169,6 +161,7 @@ function right(first: string, second: string, stacks: string[][]){
 }
 
 function check(first: string, rel: string, second: string, stacks: string[][]){
+    console.log("checking " + rel);
     switch(rel){
         case "ontop": 
             return ontop(first, second, stacks);
@@ -180,11 +173,12 @@ function check(first: string, rel: string, second: string, stacks: string[][]){
             return under(first, second, stacks);
         case "beside":
             return beside(first, second, stacks);
-        case "left":
+        case "leftof":
             return left(first, second, stacks);
-        case "right":
+        case "rightof":
             return right(first, second, stacks);
         default:
+            console.log("check no match");
             return false;
     }
 }
