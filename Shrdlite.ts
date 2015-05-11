@@ -31,6 +31,40 @@ module Shrdlite {
     // - then it interprets the parse(s)
     // - then it creates plan(s) for the interpretation(s)
 
+    /*
+    TODO
+
+     var utterance;
+     var world;
+
+     async.waterfall([
+     function(cb) {
+     var parses = Parser.parse(utterance);
+     cb(null, parses);
+     },
+     function(parses, cb) {
+     var interpretations = Interpreter.interpret(parses);
+     cb(null, interpretations);
+     }
+     ], function(err, interpretations) {
+     async.forever(
+     function(next) {
+     world.readUserInput("xxx", function(input) {
+     if (input) {
+     next(input);
+     } else {
+     next();
+     }
+     });
+     },
+     function() {
+     // TODO planner here
+     }
+     )
+     })
+
+     */
+
     //TODO convert the world to a pddl-world before sending it to interpreter and planner!
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
@@ -49,17 +83,10 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
         });
 
-
-        // TODO own function
-
         var extendedState = extendWorldState(world.currentState);
 
-
-        //console.log("stacks:",objStacks);
-        //console.log("pddlWorld:",pddlWorld);
-
         try {
-            var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, extendedState);
+            var interpretations : PddlLiteral[][][] = Interpreter.interpret(parses, extendedState);
         } catch(err) {
             if (err instanceof Interpreter.Error) {
                 world.printError("Interpretation error", err.message);
@@ -68,13 +95,26 @@ module Shrdlite {
                 throw err;
             }
         }
+        world.printSystemOutput("Found interpretations, count: "+interpretations.length);
+
+        // Ambiguity resolution
+        var interpretation : PddlLiteral[][] = null;
+        if (interpretations.length > 1) {
+            interpretation = resolveAmbiguity(interpretations);
+        } else {
+            interpretation = interpretations[0];
+        }
+
+
         world.printDebugInfo("Found " + interpretations.length + " interpretations");
         interpretations.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
         });
 
+
+        // Convert from interpretation to plan
         try {
-            var plans : Planner.Result[] = Planner.plan(interpretations, extendedState);
+            var plan : string[] = Planner.plan(interpretation, extendedState);
         } catch(err) {
             if (err instanceof Planner.Error) {
                 world.printError("Planning error", err.message);
@@ -83,14 +123,10 @@ module Shrdlite {
                 throw err;
             }
         }
-        world.printDebugInfo("Found " + plans.length + " plans");
-        plans.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
-        });
 
-        var plan : string[] = plans[0].plan;
         world.printDebugInfo("Final plan: " + plan.join(", "));
         return plan;
+
     }
 
 
@@ -107,6 +143,27 @@ module Shrdlite {
             plan.splice(i, 0, actions[plan[i]]);
         }
         return plan;
+    }
+
+    // Given several interpretations, prompts the user to select one of them
+    function resolveAmbiguity(interpretations : PddlLiteral[][][]) : PddlLiteral[][] {
+        var interpretation : PddlLiteral[][] = null;
+        // Loop until user has chosen one
+        while (!interpretation) {
+            // TODO: pretty-print here
+            // implement function which takes a list of objects, and pretty-prints them
+            // with as much detail as needed to distinguish them
+            var intpStrings = _.map(interpretations, (int,i) => {return i+". "+Interpreter.interpretationToString(int);})
+              , intpString  = _.reduce(intpStrings, (total, s) => {return total+"\n"+s;});
+            var i = Number(prompt("Multiple interpretations found:\n"+intpString+"\nWhich one did you mean?"));
+            if (i >= 0 && i < interpretations.length) {
+                interpretation = interpretations[i];
+            } else {
+                alert("Unfortunately, I didn't quite grasp that. Try again.");
+            }
+        }
+        return interpretation;
+
     }
 
 }

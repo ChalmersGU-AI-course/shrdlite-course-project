@@ -29,6 +29,18 @@ interface World {
     printError(error : string, message? : string) : void;
 }
 
+//Our own interfaces
+interface ObjectDefinitionWithId extends ObjectDefinition {
+    id: string;
+}
+interface PddlLiteral {pol:boolean; rel:string; args:string[];}
+
+interface ExtendedWorldState extends WorldState {
+    objStacks: ObjectDefinitionWithId[][];
+    objectsWithId: { [s:string]: ObjectDefinitionWithId; };
+    pddlWorld: PddlLiteral[];
+}
+
 
 // Our extended versions :)
 
@@ -101,17 +113,6 @@ function extendWorldState(state: WorldState) : ExtendedWorldState {
 
 // Concats a list of lists into a list
 // TODO: move to util file
-function concat(lists) {
+function concat(lists : any[][]) : any[] {
     return Array.prototype.concat.apply([], lists);
-}
-
-interface ObjectDefinitionWithId extends ObjectDefinition {
-    id: string;
-}
-interface PddlLiteral {pol:boolean; rel:string; args:string[];}
-
-interface ExtendedWorldState extends WorldState {
-    objStacks: ObjectDefinitionWithId[][];
-    objectsWithId: { [s:string]: ObjectDefinitionWithId; };
-    pddlWorld: PddlLiteral[];
 }
