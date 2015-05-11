@@ -347,10 +347,7 @@ module Planner {
                 if(canSupport(s.holding, head)){
 
                     // Can drop here
-                    // console.log(s.holding + " can be supported by " + head);
                     result.push(performAction("d",s));
-                } else {
-                    // console.log(s.holding + " can't be supported by " + head);
                 }
             } else {
                 // Floor
@@ -412,20 +409,6 @@ module Planner {
         }
         return a;
     }
-
-    // /**
-    // * Compares two sizes.
-    // * returns positive if a > b, 0 if a == b and negative otherwise.
-    // */
-    // function compareSize(a : string, b : string) : number{
-    //     if (a == b){
-    //         return 0;
-    //     }
-    //     if( a == "large"){
-    //         return 1;
-    //     }
-    //     return -1;
-    // }
 
     function cloneState(s : State) : State{
         var rs = [];
