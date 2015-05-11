@@ -23,6 +23,7 @@ def interpret(stacks, holding, objects, parses, **_): # fancy way of ignoring al
         for alt in goal:
             if physics.check_physics(alt, objects):
                 possible.append(alt)
+
         if len(possible) >= 1:
             ok_goals.append(possible)
 
@@ -122,7 +123,7 @@ def find_ent(ent, objects, stacks, holding):
         return os
 
 def obj_str(o):
-    return 'the ' + str(o) #' '.join([o['size'], o['color'], o['form']])
+    return 'the ' + ' '.join([o['size'], o['color'], o['form']])
 
 def find_objs(obj, objects, stacks):
     """Find all possible objects fitting properties obj"""
