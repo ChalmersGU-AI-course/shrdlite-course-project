@@ -35,12 +35,13 @@ module.exports = function (cost, h, neighbours, state_hash, start, goal, isgoal)
 
         // Finished, follow backlinks to reconstruct path.
         if (isgoal(elem.obj, goal)) {
-            var ret = [];
+            var ret = [elem.obj];
             var bs = previous.get(elem.obj);
             while (!Object.equals(bs, start)) {
                 ret.unshift(bs);
                 bs = previous.get(bs);
             }
+            ret.unshift(bs);
             console.log('Nodes evaluated: ' + evaluated.length);
             return ret;
         }

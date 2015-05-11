@@ -234,24 +234,32 @@ function hash_state(state) {
     return JSON.stringify(state.stacks) + state.arm + state.holding;
 }
 
+
+// d drop
+// p pick up
+// l left
+// r right
+function backlink(path) {
+    var link = [];
+    for (var i =0; i < path.length-1; i++) {
+        var a = path[i];
+        var b = path[i+1];
+        if (a.arm == b.arm) {
+            link.push(a.holding === null ? 'p' : 'd');
+        } else {
+            link.push(a.arm < b.arm ? 'r' : 'l');
+        }
+    }
+
+    return link;
+}
+
 var astar = require("./A-star/astar.js");
 
-var testgoal = {holding: null, arm: 3, stacks: [
-    [
-      "k", "e"
-    ],
-    [
-      "g",
-      "l"
-    ],
-    [],
-    [
-      "m",
-      "f"
-    ],
-    []
-  ]};
+
 
 var startnode = {stacks: currentState.stacks, holding: currentState.holding, arm: currentState.arm};
-console.log(astar(cost, h, neighbors, hash_state, startnode, undefined, state_isgoal).length);
+var res = astar(cost, h, neighbors, hash_state, startnode, undefined, state_isgoal);
+console.log(res.length-2);
+console.log(backlink(res));
 //
