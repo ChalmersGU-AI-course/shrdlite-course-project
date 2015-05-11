@@ -1,1 +1,4 @@
 shrdlite-*.js
+build
+lib
+node_modules
