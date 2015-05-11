@@ -120,6 +120,15 @@ module Interpreter {
     	}
     	return true;
     }
+
+    function searchStack (stack : string[], obj : string ) : number {
+        for(var i =0; i< stack.length;  i++){
+            if(obj == stack[i]){
+                return i;
+            }
+        }
+        return -1;
+    }
         
     function checkStm (objs : Parser.Object , state : WorldState) : position[] {
     	var list : position[] = [];
