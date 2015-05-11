@@ -135,8 +135,8 @@ module Heuristics {
 
         var holdCost = dropCost(s, a, b, exactlyOntop);
 
-        // var armCost = abs(s.arm - a.stackNo) + abs(a.stackNo - b.stackNo);
-        var armCost = moveCost(s, a, b, exactlyOntop);
+        var armCost = abs(s.arm - a.stackNo) + abs(a.stackNo - b.stackNo);
+        // var armCost = moveCost(s, a, b, exactlyOntop);
 
         // Number of objects that needs to be moved.
         var aboveCost;
@@ -171,11 +171,11 @@ module Heuristics {
         return 3;
     }
 
-    function moveCost(s : State, a : ObjectPosition, b : ObjectPosition, exactlyOntop : boolean) : number{
-        return abs(s.arm - a.stackNo) + abs(a.stackNo - b.stackNo);
-        // return abs(a.stackNo - b.stackNo) +
-        //        min(abs(s.arm - a.stackNo), abs(s.arm - b.stackNo));
-    }
+    // function moveCost(s : State, a : ObjectPosition, b : ObjectPosition, exactlyOntop : boolean) : number{
+    //     return abs(s.arm - a.stackNo) + abs(a.stackNo - b.stackNo);
+    //     // return abs(a.stackNo - b.stackNo) +
+    //     //        min(abs(s.arm - a.stackNo), abs(s.arm - b.stackNo));
+    // }
 
     ////////////////////////////////////////////////
     // Other method...
