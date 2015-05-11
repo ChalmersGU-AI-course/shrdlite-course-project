@@ -91,14 +91,14 @@ module Interpreter {
     			for(var j =0; j< goal.length;  j++){
     				if(loc.rel == "ontop"){
     					var g : Literal = {pol : true, rel : "ontop", args : [posList[i].name, goal[j].name ]};
-    					if(checkValidPos(posList[i].obj, goal[j].obj )){
+    				//	if(checkValidPos(posList[i].obj, goal[j].obj )){
     						lits.push([g]);
-    					}
+    				//	}
     				}else if(loc.rel == "inside"){
     					var	a : Literal = {pol : true, rel : "inside", args : [posList[i].name, goal[j].name ]};
-    					if(checkValidPos(posList[i].obj, goal[j].obj )){
+    				//	if(checkValidPos(posList[i].obj, goal[j].obj )){
     						lits.push([a]);
-    					}
+    				//	}
     				}else if(loc.rel == "above"){
                         var b : Literal = {pol : true, rel : "above", args : [posList[i].name, goal[j].name ]};
                         //if(checkValidPos(posList[i].obj, goal[j].obj )){
@@ -110,6 +110,11 @@ module Interpreter {
                             lits.push([b]);
                         //}                        
  
+                    }else if(loc.rel == "beside"){
+                        var a : Literal = {pol : true, rel : "beside", args : [posList[i].name, goal[j].name ]};
+                        //if(checkValidPos(posList[i].obj, goal[j].obj )){
+                            lits.push([a]);
+                        //}
                     }
     			}	
     		}
@@ -169,9 +174,20 @@ module Interpreter {
                             list.push(stmObj[j]);
                         }
                     }
+                }else if(objs.loc.rel == "beside"){
+                    for(var j =0; j< stmObj.length;  j++){
+                        var stack1 = searchStack(state.stacks[stmLocObj[i].x-1], state.stacks[stmObj[j].x][stmObj[j].y]);
+                        var stack2 = searchStack(state.stacks[stmLocObj[i].x+1], state.stacks[stmObj[j].x][stmObj[j].y]);
+                                                console.log("stack1", stack1);
+                        console.log("stack2", stack2);
+                        if(stack1 != -1){
+                            list.push(stmObj[j]);
+                        }else if(stack2 != -1){
+                            list.push(stmObj[j]);
+                        }
+                    }
                 }
 			}		
-			return list;
     	} else { 		
     		
     		if (objs.form == "floor"){
@@ -193,8 +209,8 @@ module Interpreter {
 	    			}
 	    		}
 			}						
-    	return list;
     	}
+        return list;
     }
     
 
