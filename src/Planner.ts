@@ -90,7 +90,7 @@ module Planner {
     }
 
     module checkPhysics {
-        
+
         export function canBeOn(o1: ObjectDefinition, o2: ObjectDefinition) : boolean {
             var res = false;
             switch(o2.form) {
@@ -114,17 +114,17 @@ module Planner {
         }
 
     }
-    
+
     export class State {
-        
+
         stacks: string[][];
         moves: Move[];
-        
+
         constructor(sta: string[][], mo: Move[]) {
             this.stacks = sta;
             this.moves = mo;
         }
-        
+
     }
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
@@ -135,14 +135,14 @@ module Planner {
             s+=moves[i].pick+" --> "+moves[i].drop+" ; ";
         }
         console.log("Possible moves : "+s);
-        
+
         plan.movesToPlan([moves[getRandomInt(moves.length)]]);
-        
-        
+
+
         var plans = intprt.map((alternativeGoal) => solveByAStar(new State(state.stacks,[]), alternativeGoal));
         plan.movesToPlan(plans[0]);
-        
-        
+
+
         return plan.plan;
         /*
         // This function returns a dummy plan involving a random stack
@@ -213,7 +213,7 @@ module Planner {
         return i;
     }
 
-    function getLocation(obj : string, stacks : string[][]) : number[] {
+    export function getLocation(obj : string, stacks : string[][]) : number[] {
         var col : number = -1;
         var row : number = -1;
         for (col=0; col<stacks.length && row<0; col++) {
@@ -238,24 +238,24 @@ module Planner {
         }
         return score;
     }
-    
+
     /**
      * Returns the moves to reach the goalConditions from the state Node.
      */
     function solveByAStar(state: State, goalConditions: Interpreter.Literal[]) : Move[] {
-        
-        
+
+
         return [];
     }
-    
+
     /**
      * Returns the objects concerned by the goal conditions if NOT satisfied in the given state.
      */
     function getFocusedObjects(state: State, goalConditions: Interpreter.Literal[]) : string[] {
-        
+
         return [];
     }
-    
+
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }

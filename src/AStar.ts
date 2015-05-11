@@ -91,9 +91,17 @@ module AStar {
         }
         return total_path
     }
-    
-    function isGoalReached(state: Planner.State, goalConditions: Interpreter.Literal[]) : boolean {
-        
+
+    function isGoalReached(state: Planner.State, goalConditions: Interpreter.Literal[][]) : boolean {
+        for (var goal=0; goal<goalConditions.length; goal++) {
+            if (goalConditions[1][goal].rel == "ontop" ) {
+                var top : number[] = Planner.getLocation(goalConditions[1][goal].args[1], state.stacks);
+                var bottom : number[] = Planner.getLocation(goalConditions[1][goal].args[2], state.stacks);
+                if (!(top[1] == bottom[1] && top[2] == bottom[2]+1)) {
+                    return false;
+                }
+            }
+        }
         return true;
     }
 
