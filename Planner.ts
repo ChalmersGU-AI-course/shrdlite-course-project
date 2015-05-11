@@ -10,12 +10,17 @@ module Planner {
 
     export class ShrdliteNode implements AStar.Node<Interpreter.Literal[]> {
 
-        constructor(public lits : Interpreter.Literal[]) {}
+        private pddl : Interpreter.Literal[]; 
 
-        getState(){return this.lits;}
+        constructor(public state : WorldState) {this.pddl = null;}
+
+        getState(){
+            if(this.pddl == null) this.pddl = stackToPddl(this.state);
+            return this.pddl;
+        }
 
         getChildren(){
-            return generateChildren(this.lits);
+            return generateChildren(this.state);
         }
     } 
 
@@ -33,36 +38,65 @@ module Planner {
         }
     }
 
-    export function generateChildren(lits : Interpreter.Literal[]) : AStar.Edge<Interpreter.Literal[]>[] {
+    export function generateChildren(state : WorldState) : AStar.Edge<Interpreter.Literal[]>[] {
         
-        var map : collections.Dictionary<string,Interpreter.Literal[]> = new collections.Dictionary<string,Interpreter.Literal[]>();
-        map.setValue("r", moveRight(lits));
-        map.setValue("l", moveLeft(lits));
-        map.setValue("d", drop(lits));
-        map.setValue("p", pickup(lits));
+        var map : collections.Dictionary<string,WorldState> = new collections.Dictionary<string,WorldState>();
+        map.setValue("r", moveRight(state));
+        map.setValue("l", moveLeft(state));
+        map.setValue("d", drop(state));
+        map.setValue("p", pickup(state));
 
         var edges : AStar.Edge<Interpreter.Literal[]>[] = [];
-        map.forEach(function(key:string, value:Interpreter.Literal[]){
+        map.forEach(function(key:string, value:WorldState){
                 edges.push({cost:1, end: new ShrdliteNode(value)});
             });
 
         return edges;
     }
 
-    export function moveRight(lits : Interpreter.Literal[]) : Interpreter.Literal[] {
-        return lits;
+    export function cloneWorldState(state : WorldState) : WorldState {
+        var newStack : string[][] = []; 
+        state.stacks.forEach(function(col: string[]){
+            var temp : string[] = [];
+            col.forEach(function(elem : string){
+                temp.push(elem);
+            })
+            newStack.push(temp);
+        })
+        return {arm: state.arm, holding: state.holding, examples: state.examples, objects: state.objects, stacks: newStack};
     }
 
-    export function moveLeft(lits : Interpreter.Literal[]) : Interpreter.Literal[] {
-        return lits;
+    export function moveRight(state : WorldState) : WorldState {
+        
+        var newState : WorldState = cloneWorldState(state);
+        newState.arm += 1;
+
+        return newState;
     }
 
-    export function drop(lits : Interpreter.Literal[]) : Interpreter.Literal[] {
-        return lits;
+    export function moveLeft(state : WorldState) : WorldState {
+        
+        var newState : WorldState = cloneWorldState(state);
+        newState.arm -= 1;
+
+        return newState;
     }
 
-    export function pickup(lits : Interpreter.Literal[]) : Interpreter.Literal[] {
-        return lits;
+    export function drop(state : WorldState) : WorldState {
+        
+        var newState : WorldState = cloneWorldState(state);
+        newState.stacks[newState.arm].push(newState.holding);
+        newState.holding = null;
+
+        return newState;
+    }
+
+    export function pickup(state : WorldState) : WorldState {
+        
+        var newState : WorldState = cloneWorldState(state);
+        newState.holding = newState.stacks[newState.arm].pop();
+
+        return newState;
     }
 
 
@@ -90,6 +124,7 @@ module Planner {
 	} 
 
     pddl.push({pol:true, rel: "armpos", args: [state.arm + ""]})
+    pddl.push({pol:true, rel: "maxcol", args: [state.stacks.length + ""]})
 
 	for(var x = 0; x < state.stacks.length; x++) {
 	    //Create on top of floor
@@ -112,7 +147,6 @@ module Planner {
 	    }
 	}
 	
-
 	return pddl;
     }
 
