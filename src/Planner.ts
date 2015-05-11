@@ -114,12 +114,23 @@ module Planner {
         }
 
     }
+    
+    export class State {
+        
+        stacks: string[][];
+        moves: Move[];
+        
+        constructor(sta: string[][], mo: Move[]) {
+            this.stacks = sta;
+            this.moves = mo;
+        }
+        
+    }
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         var plan = new Plan(state.arm);
         var moves = possibleMoves(state.stacks, state.objects);
         var s="";
-        console.log("Interpretation !");
         for(var i=0; i<moves.length; i++) {
             s+=moves[i].pick+" --> "+moves[i].drop+" ; ";
         }
@@ -127,7 +138,11 @@ module Planner {
         
         plan.movesToPlan([moves[getRandomInt(moves.length)]]);
         
-        //intprt.map((alternativeGoal) => solveByAStar([new Node(state.stacks,[])], alternativeGoal));
+        
+        var plans = intprt.map((alternativeGoal) => solveByAStar(new State(state.stacks,[]), alternativeGoal));
+        plan.movesToPlan(plans[0]);
+        
+        
         return plan.plan;
         /*
         // This function returns a dummy plan involving a random stack
@@ -223,7 +238,24 @@ module Planner {
         }
         return score;
     }
-
+    
+    /**
+     * Returns the moves to reach the goalConditions from the state Node.
+     */
+    function solveByAStar(state: State, goalConditions: Interpreter.Literal[]) : Move[] {
+        
+        
+        return [];
+    }
+    
+    /**
+     * Returns the objects concerned by the goal conditions if NOT satisfied in the given state.
+     */
+    function getFocusedObjects(state: State, goalConditions: Interpreter.Literal[]) : string[] {
+        
+        return [];
+    }
+    
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
