@@ -38,9 +38,42 @@ module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
+    function stackToPddl(state :WorldState) : Interpreter.Literal[] {
+	var pddl :Interpreter.Literal[] = [];
+	if(state.holding != null) {
+	    pddl.push({pol:true, rel: "holding", args: [state.holding]});
+	} 
+
+	for(var x = 0; x < state.stacks.length; x++) {
+	    //Create on top of floor
+	    var col : string[] = [];
+	    for(var y = 0; y < state.stacks[x].length; y++) {
+		var o : string = state.stacks[x][y];
+		if(y == 0) { // Add floors
+		    pddl.push({pol:true, rel: "ontop", args: [o, "f_" + x]});
+		} else {
+		    pddl.push({pol:true, rel: "ontop", args: [o, state.stacks[x][y-1]]});
+		}
+		
+		col.forEach(function(c) {
+		    pddl.push({pol:true, rel: "above", args: [o, c]});
+		});
+		col.push(o);
+
+		pddl.push({pol:true, rel: "column", args: [o, "" + x]});
+
+	    }
+	}
+	
+
+	return pddl;
+    }
+
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
+	var newState : Interpreter.Literal[] = stackToPddl(state);
+
+	// This function returns a dummy plan involving a random stack
         do {
             var pickstack = getRandomInt(state.stacks.length);
         } while (state.stacks[pickstack].length == 0);
