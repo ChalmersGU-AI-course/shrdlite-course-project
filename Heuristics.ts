@@ -109,7 +109,7 @@ module Heuristics {
 
             case "inside": // Same as ontop.
             case "ontop":
-            case "above":
+            case "above": // Also successfully incorporates "under"
                 var target = atom.args[0];
                 var below = atom.args[1];
 
@@ -119,16 +119,6 @@ module Heuristics {
                 }
                 // Same heuristic as for grabbing the target.
                 return heuristicDistance(s, target);
-            // case "above":
-            //     var target = atom.args[0];
-            //     var below = atom.args[1];
-            //
-            //     if(atom.pol){
-            //         // return 0;
-            //         return heuristicDifference(s, target, below, false);
-            //     }
-            //     // Same heuristic as for grabbing the target.
-            //     return heuristicDistance(s, target);
 
             default:
                 throw new Planner.Error("!!! Unimplemented relation in heuristicAtom: "+atom.rel);

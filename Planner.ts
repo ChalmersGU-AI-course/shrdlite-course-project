@@ -96,17 +96,19 @@ module Planner {
     * Otherwise, returns the number of objects in between.
     * Is negative if b is above a.
     */
-    function heightDifference(s : Heuristics.State, above : Heuristics.ObjectPosition, below : Heuristics.ObjectPosition) : number {
-        if(below.isHeld || above.isHeld){
+    function heightDifference(s : Heuristics.State, above : String, below : String) : number {
+        var a = Heuristics.computeObjectPosition(s, above);
+        var b = Heuristics.computeObjectPosition(s, below);
+        if(b.isHeld || a.isHeld){
             return -1;
         }
 
-        if(below.isFloor){
-            return above.heightNo;
+        if(b.isFloor){
+            return a.heightNo;
         }
 
-        if(above.stackNo == below.stackNo){
-            return above.heightNo - below.heightNo;
+        if(a.stackNo == b.stackNo){
+            return a.heightNo - b.heightNo;
         }
 
         return -1;
@@ -127,34 +129,15 @@ module Planner {
                 return ret(s.holding === atom.args[0]);
             case "inside": // Same as ontop.
             case "ontop":
-                var above = Heuristics.computeObjectPosition(s, atom.args[0]);
-                var below = Heuristics.computeObjectPosition(s, atom.args[1]);
+                var above = atom.args[0];
+                var below = atom.args[1];
                 return ret( heightDifference(s, above, below) === 1 );
-                // if(locationObject === "floor"){
-                //     for(var stackNo in s.stacks){
-                //         var stack = s.stacks[stackNo];
-                //         if(stack.length > 0 && stack[0] === atom.args[0]){
-                //             return ret(true);
-                //         }
-                //     }
-                //     return ret(false);
-                // }
-                //
-                // for(var stackNo in s.stacks){
-                //     var stack = s.stacks[stackNo];
-                //     for(var height in stack){
-                //         if(stack[height] === atom.args[0]){
-                //             return ret(height > 0 &&
-                //                        stack[height-1] === locationObject);
-                //         }
-                //     }
-                // }
-                // return ret(false);
 
-            case "above":
-                var above = Heuristics.computeObjectPosition(s, atom.args[0]);
-                var below = Heuristics.computeObjectPosition(s, atom.args[1]);
+            case "above":   // Also incorporates "under"
+                var above = atom.args[0];
+                var below = atom.args[1];
                 return ret( heightDifference(s, above, below) > 0 );
+
             default:
                 throw new Planner.Error("!!! Unimplemented relation in testAtom: "+atom.rel);
                 return true;

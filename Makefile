@@ -32,4 +32,5 @@ run: shrdlite-offline.js
 	# node shrdlite-offline.js small "put the blue box in the red box"
 
 medium: shrdlite-offline.js
-	node shrdlite-offline.js medium "put the blue box above the red box"
+	# node shrdlite-offline.js medium "put the blue box above the red box"
+	node shrdlite-offline.js medium "put the red box below the blue box"
