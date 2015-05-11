@@ -28,4 +28,4 @@ run: offline
 	# node shrdlite-offline.js small "grasp the blue table"
 	# node shrdlite-offline.js small "put the blue table on a box"
 	# node shrdlite-offline.js small "put the blue table on the red box"
-	node shrdlite-offline.js small "move the small ball on the floor"
+	node shrdlite-offline.js small "take all boxes"
