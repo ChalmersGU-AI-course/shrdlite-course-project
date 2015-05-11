@@ -334,11 +334,11 @@ module Interpreter {
     		// ambigous interpet, use clairifying parse
     		if(unqObjs.length > 1){
 				if(!clairifyingparse){
-					throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I should move?");
+					throw new Interpreter.ErrorInput("Could you tell me which " + state.objects[result[0]].form + " I should move?");
 				}
 				var objs = solveAmbiguity(ent.obj,unqObjs, state);
 				if(objs.length > 1){
-					throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I should move?");
+					throw new Interpreter.ErrorInput("Could you tell me which " + state.objects[result[0]].form + " I should move?");
 				}
 				result = objs;
     		}
@@ -350,11 +350,11 @@ module Interpreter {
     		var totalUnqObjs = findAllWithForm(ent.obj.form, state);
     		if(unqObjs.length != totalUnqObjs.length){
     			if(!clairifyingparse){
-					throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I should move?");
+					throw new Interpreter.ErrorInput("Could you tell me which " + state.objects[result[0]].form + " I should move?");
 				}
 				var objs = solveAmbiguity(ent.obj,unqObjs, state);
 				if(objs.length > 1){
-					throw new Interpreter.Error("Could you tell me which " + state.objects[result[0]].form + " I should move?");
+					throw new Interpreter.ErrorInput("Could you tell me which " + state.objects[result[0]].form + " I should move?");
 				}
 				result = objs;
     		}
