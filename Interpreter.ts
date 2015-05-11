@@ -87,10 +87,8 @@ module Interpreter {
 
             // What to move?
             var orPart = interpretEntity(cmd.ent, state);
-            console.log("what: " + orPart);
             // Where to move it?
             var locEntities = interpretEntity(cmd.loc.ent, state);
-            console.log("where:" + locEntities);
 
             // OR-part
             orPart.forEach(function(andPart: string[]) {

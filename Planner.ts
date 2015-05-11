@@ -44,9 +44,7 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        console.log(intprt);
-
+    function planInterpretation(intprt : Interpreter.Literal[][], state: WorldState) : string[] {
         var plan: string[] = [];
 
         var graphGoal = new MultipleGoals(intprt);
@@ -61,7 +59,6 @@ module Planner {
                 plan.push(current.lastAction);
             }
             plan.push("Taddaaa!");
-            console.log(state);
         } else {
             plan.push("Could not find a way to do that. Timed out.");
         }
@@ -107,57 +104,76 @@ module Planner {
             return n;
         }
 
-        // TODO: Function should be somewhere else!
-        // Doesn't work atm, so it's not used
-        getWorldClone(world: WorldState, changingStack: number): WorldState {
-            var clone: WorldState = Object.create(world);
+        // TODO: Move this function to a more appropriate location!
+        getWorldCloneShallow(world: WorldState): WorldState {
+            var clone = {
+                stacks: world.stacks,
+                holding: world.holding,
+                arm: world.arm,
+                objects: world.objects,
+                examples: world.examples
+            };
 
-            clone.stacks = world.stacks;
-            clone.holding = world.holding;
-            clone.arm = world.arm;
-            clone.objects = world.objects;
-            clone.examples = world.examples;
+            return clone;
+        }
 
-            clone.stacks[changingStack] = clone.stacks[changingStack].slice(0);
+        getWorldCloneDeep(world: WorldState, stackToDeepCopy: number): WorldState {
+            var clone = this.getWorldCloneShallow(world);
+
+            clone.stacks = clone.stacks.slice(0);
+            clone.stacks[stackToDeepCopy] = clone.stacks[stackToDeepCopy].slice(0);
 
             return clone;
         }
 
         useArm(): PlannerNode {
             var currentStack = this.state.stacks[this.state.arm];
+            var topItemIndex = currentStack.length - 1;
+            
             if (this.state.holding === null) {
                 if (currentStack.length > 0) {
-                    var topItemIndex = currentStack.length - 1;
-                    var newState = owl.deepCopy(this.state, 3);
+                    var newState = this.getWorldCloneDeep(this.state, this.state.arm);
+
                     newState.holding = currentStack[topItemIndex];
                     newState.stacks[this.state.arm].splice(topItemIndex, 1);
-                    var newMessage = "Picking up the " + newState.objects[newState.holding].form;
-                    return new PlannerNode(newState, "p", newMessage);
-                }
-            } else { // holding something at the moment
-                var newState = owl.deepCopy(this.state, 3);
-                //always legal if on top of floor, else check world rules
-                if (currentStack.length == 0 || WorldRules.canBeOntop(newState.objects[newState.holding],
-                            newState.objects[currentStack[currentStack.length - 1]])) {
-                    newState.stacks[newState.arm].push(newState.holding);
-                    var newMessage = "Dropping the " + newState.objects[newState.holding].form;
-                    newState.holding = null;
-                    return new PlannerNode(newState, "d", newMessage);
+
+                    var msg = "Picking up the " + newState.objects[newState.holding].form;
+                    return new PlannerNode(newState, "p", msg);
                 }
             }
+            else {
+                // Always legal if on top of floor, else check world rules
+                var holdingObj = this.state.objects[this.state.holding];
+                var topObj = this.state.objects[currentStack[topItemIndex]];
+
+                if (currentStack.length == 0 || WorldRules.canBeOntop(holdingObj, topObj)) {
+                    var newState = this.getWorldCloneDeep(this.state, this.state.arm);
+
+                    newState.stacks[newState.arm].push(newState.holding);
+                    newState.holding = null;
+
+                    var msg = "Dropping the " + holdingObj.form;
+                    return new PlannerNode(newState, "d", msg);
+                }
+            }
+
             return null;
         }
 
         moveArm(direction: number): PlannerNode {
             var numberOfStacks = this.state.stacks.length;
             var targetPos = this.state.arm + direction;
+
             if (targetPos >= 0 && targetPos < numberOfStacks) {
-                // we can use copy here since we don't need a deep copy
-                var newState = owl.copy(this.state);
+                // We can use copy here since we don't need a deep copy
+                var newState = this.getWorldCloneShallow(this.state);
+
                 newState.arm = targetPos;
-                var newMessage = "Moving " + (direction > 0 ? "right" : "left");
-                return new PlannerNode(newState, direction > 0 ? "r" : "l", newMessage);
+
+                var msg = "Moving " + (direction > 0 ? "right" : "left");
+                return new PlannerNode(newState, direction > 0 ? "r" : "l", msg);
             }
+
             return null;
         }
     }
@@ -172,6 +188,7 @@ module Planner {
         isReached(node: astar.INode): boolean {
             var n = <PlannerNode> node;
 
+            // TODO: Use LiteralHelpers
             for (var iOrLiteral = 0; iOrLiteral < this.targets.length; iOrLiteral++) {
                 var currentOrLiteral = this.targets[iOrLiteral];
                 var goalReachable = true;
@@ -199,7 +216,7 @@ module Planner {
     export class SimpleHeuristic implements astar.IHeuristic {
         targets: Interpreter.Literal[][] = null;
 
-        constructor (targets) {
+        constructor (targets: Interpreter.Literal[][]) {
             this.targets = targets;
         }
 
