@@ -31,6 +31,7 @@ module Interpreter {
     export interface Result extends Parser.Result {intp:Literal[][];}
     export interface Literal {pol:boolean; rel:string; args:string[];}
     export interface ResultAnswer extends Parser.ResultAnswer {intp:Literal[][];}
+    export interface IdentResult {pol:boolean; rel?:string; argss: string[][]; loc?:Location;}
 
 
     export function interpretationToString(res : Result) : string {
@@ -152,6 +153,10 @@ module Interpreter {
 	    					lits[i].args[1] == lits[j].args[1])){
     					return false;
     				}
+    				/*if(	(lits[i].args[0] == lits[j].args[1] ||		// remove dubletter
+	    					lits[i].args[1] == lits[j].args[0])){
+    					return false;
+    				}*/
     				
 				}
     		}
@@ -290,9 +295,12 @@ module Interpreter {
     	var result : string[] = identifyObj(ent.obj.form, ent.obj.color, ent.obj.size, state);
     	var unqObjs : string[] = uniqeObjects(result);
     	var results : string[][] = [[]];
+    	//TODO not sure how deal with nested objects
+    //	var idres : IdentResult = {pol:true , rel: null , argss :[]};
     	if(ent.obj.loc){
     		//TODO
-    		identifyLocation(ent.obj.loc, state);
+    	//	idres.rel = ent.obj.loc.rel;
+    	//	identifyLocation(ent.obj.loc, state);
     	}
     	
     	if(ent.quant == "the" && ent.obj.form != "floor"){
