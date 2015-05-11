@@ -9,26 +9,17 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
-    export function plan(interpretations : Interpreter.Result[], currentState : ExtendedWorldState) : Result[] {
-        var plans : Result[] = [];
-        interpretations.forEach((intprt) => {
-            var plan : Result = <Result>intprt;
-            plan.plan = planInterpretation(plan.intp, currentState);
-            plans.push(plan);
-        });
-        if (plans.length) {
-            return plans;
+    export function plan(interpretation : PddlLiteral[][], currentState : ExtendedWorldState) : string[] {
+        var plan : string[] = planInterpretation(interpretation, currentState);
+        if (plan) {
+            return plan;
         } else {
             throw new Planner.Error("Found no plans");
         }
     }
 
-
-    export interface Result extends Interpreter.Result {plan:string[];}
-
-
-    export function planToString(res : Result) : string {
-        return res.plan.join(", ");
+    export function planToString(res : string[]) : string {
+        return res.join(", ");
     }
 
 
@@ -43,6 +34,8 @@ module Planner {
     // private functions
     function planInterpretation(intprt : PddlLiteral[][], state : ExtendedWorldState) : string[] {
         var plan : string[] = [];
+
+        console.log("planInterpretation()");
 
         //TODO should this be moved somewhere? Argument och global parameter?
         var searchDepth = 7;
