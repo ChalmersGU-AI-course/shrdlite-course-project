@@ -98,10 +98,6 @@ module Planner {
         return hValue;
     }
 
-    function h(s){
-        return 0;
-    }
-
     function heuristicAtom(s : State, atom : Interpreter.Literal) : number {
 
         switch(atom.rel){
@@ -119,11 +115,13 @@ module Planner {
                 // Already done
                 return 0;
 
+            case "inside": // Same as ontop.
             case "ontop":
                 var target = atom.args[0];
                 var below = atom.args[1];
 
                 if(atom.pol){
+                    // return 0;
                     // return heuristicDistance(s, target) + heuristicDistance(s, below);
                     return heuristicDifference(s, target, below, true);
                 }
@@ -293,6 +291,7 @@ module Planner {
         switch(atom.rel){
             case "holding":
                 return ret(s.holding === atom.args[0]);
+            case "inside": // Same as ontop.
             case "ontop":
                 var locationObject = atom.args[1];
                 if(locationObject === "floor"){
