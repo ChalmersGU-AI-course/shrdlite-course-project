@@ -38,6 +38,21 @@ module Planner {
         }
     }
 
+    export function checkGoal(goal : Interpreter.Literal[][]) : AStar.Goal<Interpreter.Literal[]>{
+        return function(lits : Interpreter.Literal[]){
+            var allFound : boolean = false;
+            goal.forEach(function(and : Interpreter.Literal[]){
+                var goalReached = true;
+                and.forEach(function(lit : Interpreter.Literal){
+                    var found : boolean = lits.indexOf({pol:true, rel: lit.rel, args: lit.args}) != -1;
+                    if(found != lit.pol) goalReached = false;           
+                })
+                if(goalReached) allFound = true;
+            })
+            return allFound;
+        }
+    }
+
     export function generateChildren(state : WorldState) : AStar.Edge<Interpreter.Literal[]>[] {
         
         var map : collections.Dictionary<string,WorldState> = new collections.Dictionary<string,WorldState>();
@@ -48,8 +63,8 @@ module Planner {
 
         var edges : AStar.Edge<Interpreter.Literal[]>[] = [];
         map.forEach(function(key:string, value:WorldState){
-                edges.push({cost:1, end: new ShrdliteNode(value)});
-            });
+            if(value != null) edges.push({cost:1, end: new ShrdliteNode(value), label: key});
+        });
 
         return edges;
     }
@@ -68,6 +83,8 @@ module Planner {
 
     export function moveRight(state : WorldState) : WorldState {
         
+        if(state.arm == state.stacks.length) return null;
+
         var newState : WorldState = cloneWorldState(state);
         newState.arm += 1;
 
@@ -76,6 +93,8 @@ module Planner {
 
     export function moveLeft(state : WorldState) : WorldState {
         
+        if(state.arm == 0) return null;
+
         var newState : WorldState = cloneWorldState(state);
         newState.arm -= 1;
 
@@ -84,6 +103,9 @@ module Planner {
 
     export function drop(state : WorldState) : WorldState {
         
+        if(state.holding == null){
+            return null;
+        }
         var newState : WorldState = cloneWorldState(state);
         newState.stacks[newState.arm].push(newState.holding);
         newState.holding = null;
@@ -93,6 +115,8 @@ module Planner {
 
     export function pickup(state : WorldState) : WorldState {
         
+        if(state.holding != null && state.stacks[state.arm].length > 0) return null;
+
         var newState : WorldState = cloneWorldState(state);
         newState.holding = newState.stacks[newState.arm].pop();
 
@@ -152,51 +176,12 @@ module Planner {
 
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-	var newState : Interpreter.Literal[] = stackToPddl(state);
 
-	// This function returns a dummy plan involving a random stack
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
         var plan : string[] = [];
+        var node : ShrdliteNode = new ShrdliteNode(state);
+        var path : AStar.Path<Interpreter.Literal[]> = AStar.astarSearch<Interpreter.Literal[]>(node, function(x){return 0;}, checkGoal(intprt));  
 
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
-            }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
-            }
-        }
-
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
-
-        if (pickstack < state.stacks.length-1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
-                plan.push("r");
-            }
-
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
-                plan.push("l");
-            }
-        }
-
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
-
-        return plan;
+        return path.getLabelPath();      
     }
 
 

@@ -28,13 +28,15 @@ module AStar {
     //visited nodes
     export class Path<S>{
         cost : number;
-        constructor(private path : Node<S>[]){this.cost = 0;}
+        labels : string[];
+        constructor(private path : Node<S>[]){this.cost = 0; this.labels = [];}
 
         //Returns a new path containing the graph contained in edge
         //appended to the old path
         push(e:Edge<S>):Path<S>{
             var p = new Path(this.path.concat([e.end])); 
             p.cost = this.cost + e.cost;
+            p.labels.push(e.label);
             return p;
         }
 
@@ -51,6 +53,10 @@ module AStar {
         getPath() : Node<S>[] {
             return this.path;
         }
+
+        getLabelPath() : string[] {
+            return this.labels;
+        }
     }
 
     export interface Heuristic<S> {
@@ -62,8 +68,9 @@ module AStar {
     }
 
     export interface Edge<S> {
-        cost : number;
-        end  : Node<S>;
+        cost   : number;
+        label? : string;
+        end    : Node<S>;
     }
 
     //A* search function

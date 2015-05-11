@@ -71,7 +71,6 @@ module Interpreter {
 	} else if(cmd.cmd == "take") {
 	    ors = convertGoalsToPDDL(findValid(cmd.ent.obj, state), null , state);
 	} else if(cmd.cmd == "put") {
-	    state.holding = "m"; //TODODODODODODODOD
 	    var o : Parser.Object = state.objects[state.holding];
 	    var pos : Position = findObject(state.holding, state);
 	    var obj2 : ObjectInfo = {obj: o, pos: pos, name : state.holding};
