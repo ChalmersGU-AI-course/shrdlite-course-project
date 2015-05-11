@@ -31,6 +31,23 @@ def planner(intprt, stacks, holding, arm, objects, utterance, parses):
     """
     This function craetes a dummy plan involving a random stack
     """
+    import simple_planner
+    import AStar.algorithm
+
+    came_from, cost_so_far, goal = AStar.algorithm.a_star_search_new(simple_planner.getAction,
+                        (intprt, stacks, holding, arm, objects),
+                        simple_planner.goalWrapper,
+                        simple_planner.heuristic)
+
+    # current = goal
+    # plan = []
+    # while current in came_from:
+    #     (l,x,c) = current
+    #     plan.append(l)
+    #     current = came_from[current]
+
+    # return reversed(plan)
+
     import random
     while True:
         pickstack = random.randrange(len(stacks))
