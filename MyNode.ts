@@ -1,14 +1,17 @@
 ///<reference path="Rules.ts"/>
 ///<reference path="Helper.ts"/>
 
+/**
+ * Representation of a node in the search tree of the search algorithm
+ */
 class MyNode {
     world: WorldState;
     gcost : number = Number.MAX_VALUE; //Init for the algo
     fcost : number;
-    lastAction: string;
-    hash: string;
+    lastAction: string; 
+    hash: string; //Hash of the node (use to check if two nodes are the same)
     parent: MyNode ; // Previous MyNode in the graph when using the algorithm
-    neighbors: collections.Dictionary<MyNode, number> = new collections.Dictionary<MyNode, number>();
+    neighbors: collections.Set<MyNode> = new collections.Set<MyNode>(); //Map
     
     
     constructor(s: WorldState, lastAction: string){
@@ -16,6 +19,9 @@ class MyNode {
         this.lastAction = lastAction;   
     }
     
+    /**
+     * Generates the neighbors of this node (avoids to go back to the previous state)
+     */
     getNeighbors(): MyNode[]{
         var nodes: MyNode[] = [];
         var actions: string[] = ["l", "r", "d", "p"]; 
@@ -34,6 +40,10 @@ class MyNode {
         return nodes;
     }
     
+    /**
+     * Generates the hash of the node: arm position + stacks as a string
+     * 
+     */
     genHash(){
         var s = this.world.stacks;
         var arm = this.world.arm;
@@ -55,6 +65,9 @@ class MyNode {
         this.hash = tmp;
     }
     
+    /**
+     * Generate the neighbor node after the specified action
+     */
     genNode(action: string): MyNode{
         var node: MyNode;
         var world: WorldState = this.world;
@@ -80,21 +93,23 @@ class MyNode {
         }
         
         if(node != null){
-            this.addNeighbor(node, 1);    
+            this.neighbors.add(node);
         }
         
         return node;
     }
     
-    addNeighbor(neighbour: MyNode, distances: number) {
-        this.neighbors.setValue(neighbour, distances);
-    }
-    
+    /**
+     * At the moment each node are at distance of one form each other
+     */
     distanceToMyNode(n: MyNode): number{
-        return this.neighbors.getValue(n);
+        return 1;
     }         
 }
 
+/**
+ * Generates the new stacks after a pick or a drop 
+ */
 function newStacks(stacks: string[][], arm: number, holding?: string): string[][]{
     var newS: string[][] = [];
     
@@ -104,8 +119,11 @@ function newStacks(stacks: string[][], arm: number, holding?: string): string[][
             newS[x][y] = stacks[x][y];
         }    
     }
+    
+    //pick
     if(holding == null){
         newS[arm].splice(newS[arm].length-1, 1);
+    //drop
     }else{
         newS[arm][newS[arm].length] = holding;    
     }

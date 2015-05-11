@@ -8,16 +8,16 @@ interface ObjectDefinition {
 }
 
 /**
-* Interface used to keep track of the coordinates of objects
-*/
+ * Interface used to keep track of the coordinates of objects
+ */
 interface Coord{
         x: number; //x coordinate
         y: number; //y coordinate
     }
     
 /**
-*  Interface used to link an obj with its coordinates and its id
-*/
+ * Interface used to link an obj with its coordinates and its id
+ */
 interface ObjWCoord extends ObjectDefinition{
         coord?: Coord; //optional if an object is held
         id: string; //Identifier

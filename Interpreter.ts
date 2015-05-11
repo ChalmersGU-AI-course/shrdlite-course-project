@@ -52,7 +52,12 @@ module Interpreter {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
-
+    
+    /**
+     * Interprets the command and return the goal as a pddl representation.
+     * Side note:
+     * - The quantifier "all", "any" and "the" are all interpreted the same way as "any"
+     */
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         var tmp : ObjWCoord[];
         var tmp2: ObjWCoord[];
@@ -88,7 +93,6 @@ module Interpreter {
             
         }
         
-        //-----------------------------------------------------------
         /*
             2nd part: checking validity of location where to move the object
         */

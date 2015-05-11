@@ -3,7 +3,11 @@
 
 
 module SearchAlgo{
+    /**
+     * A* algorithm
+     */
     export function aStar(start: MyNode, goal: Interpreter.Literal[][]): string[]{
+        //Dicitionaries are used because it provides efficient ways to add, delete and check if an element exists already in the data strucure
         var closedset: collections.Dictionary<string, MyNode> = new collections.Dictionary<string, MyNode>();
         var openset: collections.Dictionary<string, MyNode> = new collections.Dictionary<string, MyNode>();
        
@@ -45,10 +49,16 @@ module SearchAlgo{
         return [];
     }    
     
+    /**
+     * Heuristic for the A* algorithm
+     */
     function heuristic(start: MyNode, goal: Interpreter.Literal[][]): number{
         return 0;
     }
     
+    /**
+     * Reconstruct the path that has been taken to reach the specified node
+     */
     function reconstructPath(goal: MyNode): string[]{
         var path: string[] = [];
         var current: MyNode = goal;
@@ -64,6 +74,9 @@ module SearchAlgo{
         return path;
     }
     
+    /**
+     * Returns the node with the minimal fcost
+     */
     function minFcost(openset: collections.Dictionary<string, MyNode>): MyNode {
         var tmp: MyNode;
         
@@ -76,6 +89,9 @@ module SearchAlgo{
         return tmp;
     }
     
+    /**
+     * Checks if the goal has been reached 
+     */
     function reachGoal(ws: WorldState, goal: Interpreter.Literal[][]): boolean{
         var found: boolean = false;
         var innerFound: boolean;
@@ -93,6 +109,9 @@ module SearchAlgo{
         return found;
     }
     
+    /**
+     * Checks if the literal can be found in the world
+     */
     function existsRelation(ws: WorldState, g: Interpreter.Literal): boolean{
         var found: boolean = false;
         var rel: string = g.rel;

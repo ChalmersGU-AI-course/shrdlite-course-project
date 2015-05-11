@@ -2,7 +2,7 @@
 
 module Rules{    
      /**
-      * Check the rules that relate to the floor
+      * Checks the rules that relate to the floor
       */
      export function breakFloorRules(o:ObjectDefinition, obj:ObjectDefinition, rel:string): boolean{
         var bol = false;
@@ -17,7 +17,7 @@ module Rules{
     }
     
     /**
-     * Check the rules that relate to boxes
+     * Checks the rules that relate to boxes
      */
     export function breakBoxRules(o:ObjectDefinition, obj:ObjectDefinition, rel:string): boolean{
         var bol = false;
@@ -39,7 +39,7 @@ module Rules{
     }
     
     /**
-     * Check the rules that relate to balls
+     * Checks the rules that relate to balls
      */
     export function breakBallRules(o:ObjectDefinition, obj:ObjectDefinition, rel:string): boolean{
         var bol = false;
@@ -66,7 +66,7 @@ module Rules{
     }
     
     /**
-     * Check the rules that relate to the size of objects
+     * Checks the rules that relate to the size of objects
      */
     export function breakSmallSupportingBig(o:ObjectDefinition, obj:ObjectDefinition, rel:string): boolean{
         var bol = false;
