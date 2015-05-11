@@ -22,7 +22,6 @@ module Planner {
         return res.join(", ");
     }
 
-
     export class Error implements Error {
         public name = "Planner.Error";
         constructor(public message? : string) {}
@@ -50,7 +49,7 @@ module Planner {
 
         console.log(intprt);
 
-        var boxes = findBoxes(state);
+        //var boxes = findBoxes(state);
 
         state.pddlWorld.push({pol:true, rel:"at", args:["arm", state.arm+""]});
         var startNode:AStar.Node<PddlLiteral[]> = new AStar.Node<PddlLiteral[]>(state.pddlWorld, [], Infinity, null);
@@ -68,36 +67,54 @@ module Planner {
         for(var i = 0; i<searchDepth; i++){
             nodes[i+1] = [];
             for(var n in nodes[i]){
-                var armPos = Number(getRel(nodes[i][n].label, "at").args[1]);
+                var oldNode      = nodes[i][n]
+                  , oldNodeWorld = oldNode.label
+                  , armPos       = Number(getRel(oldNodeWorld, "at").args[1]);
                 for(var j = 0; j<NUM_STACKS; j++) {
                     if(armPos != j) {
-                        var dir:string = j>armPos ? "r" : "l";
-                        var cost:number = Math.abs(armPos-j);
-                        var nodeWorld = moveArm(nodes[i][n].label, j);
+                        var dir  :string = j>armPos ? "r" : "l"
+                          , cost :number = Math.abs(armPos-j)
+                          , newNodeWorld = moveArm(oldNodeWorld, j);
 
-                        var node = null;
+                        var newNode = null;
+                        // We can either -lift- or -putDown-
+                        if(!isHolding(oldNodeWorld)) {
+                            // We can always lift. TODO: not if we lack objects! Change liftObject to return null if no objects
+                            var newerNodeWorld = liftObject(newNodeWorld, j);
+                            if (newerNodeWorld) {
+                                newNode = new AStar.Node<PddlLiteral[]>(newerNodeWorld, [], Infinity, null, dir+cost+"p"+1);
+                            } else {
+                                console.warn("breaking the first commandment");
+                            }
 
-                        if(!isHolding(nodes[i][n].label)) {
-                            node = new AStar.Node<PddlLiteral[]>(liftObject(nodeWorld, j), [], Infinity, null, dir+cost+"p"+1);
                         } else {
-                            node = new AStar.Node<PddlLiteral[]>(putDownObject(nodeWorld, j, boxes), [], Infinity, null, dir+cost+"d"+1);
+                            // Try to putDown. Will fail if move is illegal
+                            var newerNodeWorld = putDownObject(newNodeWorld, j, state);
+                            if (newerNodeWorld) {
+                                newNode = new AStar.Node<PddlLiteral[]>(newerNodeWorld, [], Infinity, null, dir+cost+"d"+1);
+                            } else {
+                                console.warn("breakin the laaw");
+                            }
                         }
 
-                        var edge = new AStar.Edge<PddlLiteral[]>(nodes[i][n], node, cost);
-                        nodes[i][n].neighbours.push(edge);
-                        nodes[i+1].push(node);
+                        // Check if performing action at current column was legal
+                        if (newNode) {
+                            var edge = new AStar.Edge<PddlLiteral[]>(oldNode, newNode, cost);
+                            oldNode.neighbours.push(edge); // Note: we don't want a return edge
+                            nodes[i+1].push(newNode);
+                        }
                     }
                 }
 /*
-                if(!isHolding(nodes[i][n].label)){
-                    var node = new AStar.Node<PddlLiteral[]>(liftObject(nodes[i][n].label, armPos), [], Infinity, null, "p"+1);
-                    var edge = new AStar.Edge<PddlLiteral[]>(nodes[i][n], node, 1);
-                    nodes[i][n].neighbours.push(edge);
+                if(!isHolding(oldNodeWorld)){
+                    var node = new AStar.Node<PddlLiteral[]>(liftObject(oldNodeWorld, armPos), [], Infinity, null, "p"+1);
+                    var edge = new AStar.Edge<PddlLiteral[]>(oldNode, node, 1);
+                    oldNode.neighbours.push(edge);
                     nodes[i+1].push(node);
                 } else {
-                    var node = new AStar.Node<PddlLiteral[]>(putDownObject(nodes[i][n].label,armPos, boxes), [], Infinity, null, "d"+1);
-                    var edge = new AStar.Edge<PddlLiteral[]>(nodes[i][n], node, 1);
-                    nodes[i][n].neighbours.push(edge);
+                    var node = new AStar.Node<PddlLiteral[]>(putDownObject(oldNodeWorld,armPos, boxes), [], Infinity, null, "d"+1);
+                    var edge = new AStar.Edge<PddlLiteral[]>(oldNode, node, 1);
+                    oldNode.neighbours.push(edge);
                     nodes[i+1].push(node);
                 }*/
             }
@@ -208,20 +225,22 @@ module Planner {
         return world;
     }
 
-    //Puts the given object cdown on the top object on the given stack
+    //Puts the held object down on the top object on the given stack
     //Takes a list of possible boxes to know if it should be "inside" or "ontop"
     //Returns the modified world, does not change the original!
-    function putDownObject(world:PddlLiteral[], floor: number, boxes:string[]):PddlLiteral[] {
+    function putDownObject(world:PddlLiteral[], floor: number, state : ExtendedWorldState):PddlLiteral[] {
         var newWorld: PddlLiteral[] = clonePddlWorld(world);
 
+        // Find currently held object
         var object = null;
         for(var i in newWorld) {
             if(newWorld[i].rel === "holding") {
                 object = newWorld[i].args[1];
             }
         }
+        if (!object) return null;
 
-
+        // Find the object on top of the indicated stack. Also remove its 'attop' preicate
         var topObject = "floor-"+floor;
         for(var i in newWorld) {
             if(world[i].rel === "attop" && world[i].args[1] === "floor-"+floor) {
@@ -230,13 +249,61 @@ module Planner {
                 break;
             }
         }
+        if (!topObject) return null;
 
-        var rel = "ontop";
+        var objectObj = state.objectsWithId[object];
+        var topObjectObj = state.objectsWithId[topObject];
 
-        for(var i in boxes) {
-            if(boxes[i] === topObject) {
-                rel = "inside";
-            }
+        //console.log("obj obj:", objectObj, object);
+        //console.log("obj obj 2:", topObjectObj, topObject);
+        if (!objectObj.form || !topObjectObj.form) {
+            console.warn("ERROR ERROR", objectObj.form, topObjectObj.form);
+        }
+        var objectForm    = objectObj.form
+          , topObjectForm = topObjectObj.form;
+        // TODO check if this placement is legal. If not, return null!
+
+        // if object is a ball, and
+        // if topObject is not floor or box,
+        //   return null
+        // TODO; this doesn't work!
+        //if (objectForm === 'ball'
+        // && (topObjectForm !== 'floor' || topObjectForm !== 'box')) {
+        //    return null;
+        //}
+
+        /*
+        // if topObject is a ball,
+        //   return null
+        if (topObjectForm === 'ball') {
+            return null;
+        }
+        */
+
+        // if topObject is small and
+        // if object is large,
+        //   return null
+
+        // if topObject is a box, and
+        // if object is a pyramid, plank or box, and
+        // if object and topObject have the same size,
+        //   return null
+
+        // if topObject is a (small brick) or pyramid, and
+        // if object is a small box,
+        //   return null
+
+        // Large boxes cannot be supported by large pyramids.
+        // if topObject is a large pyramid, and
+        // if object is a large box,
+        //   return null
+
+
+        // Determine 'rel' part of the new predicate
+        if (topObjectForm === 'box') {
+            var rel = "inside";
+        } else {
+            var rel = "ontop";
         }
 
         removeLiteral(newWorld, {pol:true, rel:"holding", args:["arm", object]});

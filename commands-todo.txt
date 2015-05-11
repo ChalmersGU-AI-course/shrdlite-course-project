@@ -1,1 +1,2 @@
 put the black ball on the floor - gör onödiga saker
+put all boxes on the floor - resulterar i felaktig
