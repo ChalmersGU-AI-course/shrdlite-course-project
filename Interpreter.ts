@@ -92,7 +92,7 @@ module Interpreter {
     function interpretEntity(ent : Parser.Entity, state : WorldState) : string[] {
 	var objs : string[] = interpretObject(ent.obj, state);
 	var intprt : string[] = [];
-
+	console.log(objs);
 	if(ent.quant === "any")	{
 		objs.forEach((elem) => {
 		    intprt.push(elem);
@@ -100,8 +100,9 @@ module Interpreter {
 		});
 	}
 	// there should only be one object for 'the' interpretation to be valid
-	else if(ent.quant === "the" && objs.length == 1) {
-		intprt.push(objs[0]);
+	else if(ent.quant === "the") {
+		if(objs.length == 1)
+    		    intprt.push(objs[0]);
 	}
 	else if(ent.quant == "all") {
 		throw new Error("Not Implemented Yet: all quantifier");
