@@ -89,38 +89,29 @@ module Interpreter {
 
       /*
        * preconditions:
-       *    1. Arm should not hold a object
-       *    2. Spec object(the) / objects(any) exist among the state objects
+       *    1. Spec object(the) / objects(any) exist among the state objects
        * effects:
        *    1. Arm should hold spec object
        */
       take(ent : Parser.Entity): Literal[][] {
         var dropObject: Literal;
         var lits: Literal[][];
-        // 1. preconditions: (1)
-        if(this.state["holding"])
-          dropObject = {pol: false, rel: "holding", args: [this.state["holding"]]};
-        // 2. Check logic errors in grammar
+        // 1. Check logic errors in grammar
         if(ent.quant === "all")
           throw new Interpreter.Error("take: logic error (the robot has only one arm)");
-        // 3. preconditions: (2)
-        var refs = this.references(ent.obj);
-        if(refs && refs.length > 0) {
-        // 4. Create effects (1) (make literal)
+        // 2. preconditions: (1)
+        var objs = this.references(ent.obj);
+        if(objs && objs.length > 0) {
+        // 3. Create effects (1) (make literal)
           if(ent.quant === "any") {        // it is possible to have many references
-            lits = refs.map((ref: string) => {
+            lits = objs.map((ref: string) => {
               return [ {pol: true, rel: "holding", args: [ref]} ]; // [[lit] or [lit] or [lit]]
             });
           } else if(ent.quant === "the") { // there should only be one reference
-            if(refs.length > 1) // TODO: ask "do you mean the large red pyramid or the small green?"
+            if(objs.length > 1) // TODO: ask "do you mean the large red pyramid or the small green?"
               throw new Interpreter.Error("take: semantic ambiguity (too many options to take)");
-            lits = [[ {pol: true, rel: "holding", args: [refs.pop()]} ]]; // [[lit]]
+            lits = [[ {pol: true, rel: "holding", args: [objs.pop()]} ]]; // [[lit]]
           }
-        }
-        if(dropObject && lits) {           // if arm was holding add dropObject literal
-          lits.forEach((arr: Literal[]) => {
-            arr.push(dropObject);
-          });
         }
         return lits;
       }
@@ -128,8 +119,7 @@ module Interpreter {
       /*
        * preconditions:
        *    1. Arm should hold a object
-       *    2. Held object can be located at spec location/s
-       *        (see function isAllowedPosition below)
+       *    2. Held object can be located at spec location/s (see isAllowedPosition)
        * effects:
        *    1. Arm should not move the reference object (Cheating otherwise)
        *    2. Held object should be located at spec location/s (s: "a", "an", "any")
@@ -143,7 +133,7 @@ module Interpreter {
           throw new Interpreter.Error("put: logic error (the robot is not holding an object)");
         // 2. Check logic errors in grammar
         if(loc.ent.quant === "all")
-          throw new Interpreter.Error("take: logic error (the robot has only one arm)");
+          throw new Interpreter.Error("put: logic error (the robot has only one arm)");
         // 3. if the command reference the floor make lit immediately
         if(this.isFloor(loc.ent.obj))
           return this.floorLiteral(heldId);
@@ -157,10 +147,8 @@ module Interpreter {
             if(allowed.length > 0) {
               // 5. Create effects (1) (2) (make literal)
               lits = allowed.map((ref: string) => {
-                return [
-                  {pol: false, rel: "holding", args: [ref]},
-                  {pol: true, rel: loc.rel, args: [heldId, ref]}
-                ]; // [[lit1, lit2] or [lit1, lit2] or [lit1, lit2]]
+                // [[lit1, lit2] or [lit1, lit2] or [lit1, lit2]]
+                return [ {pol: true, rel: loc.rel, args: [heldId, ref]} ];
               });
             }
           } else if(loc.ent.quant === "the") { // there should only be one reference
@@ -169,10 +157,7 @@ module Interpreter {
             var ref = refs.pop();
             if(this.isAllowedPosition(heldObj, loc.rel, ref)) {
               // 5. Create effects (1) (2) (make literal)
-              lits = [[
-                {pol: false, rel: "holding", args: [ref]},
-                {pol: true, rel: loc.rel, args: [heldId, ref]}
-              ]]; // [[lit]]
+              lits = [[ {pol: true, rel: loc.rel, args: [heldId, ref]} ]]; // [[lit]]
             } else {
               throw new Interpreter.Error("put: not allowed to put the object on the location");
             }
@@ -183,23 +168,94 @@ module Interpreter {
 
       /*
        * preconditions:
-       *    - Arm should not hold a object
-       *    - Spec object/s exist among objects
-       *    - Spec object/s can be located at spec location/s
+       *    1. Spec object/objects exist among the state objects
+       *    2. Spec object/s can be located at spec location/s
        * effects:
-       *    - Arm should not hold a object
-       *    - Spec object/s should be located at spec location/s
+       *    1. Arm should not hold a object
+       *    2. Spec object/s should be located at spec location/s
        */
       move(ent : Parser.Entity, loc : Parser.Location): Literal[][] {
-        // 1. Check precondition (1)
-        // 2. Find referred object in entity
-        // 3. Check precondition (2)
-        // 4. Find referred location
-        // 5. Check precondition (3)
-        // 6. Make Literal
-        var lit: Literal[][];
-        return lit;
+        var lits: Literal[][];
+        var objs = this.references(ent.obj);       // objects
+        var refs = this.references(loc.ent.obj);   // references
+        var objQuant = ent.quant;
+        var refQuant = loc.ent.quant;
+        switch(objQuant) {
+          case "the":
+            // 1. preconditions (1)
+            function theHandler(objs: string[]): string {
+              if(!objs || objs.length === 0)
+                return "the: no objects are found";
+              if(objs.length > 1)
+                return "the: too many objects are found";
+              return null;
+            }
+            // Example: (handler, [x], ontop, any, [y1, y2])
+            lits = this.singular(theHandler, objs, loc.rel, refQuant, refs);
+            break;
+          case "any":
+            function anyHandler(objs: string[]): string {
+              if(!objs || objs.length === 0)
+                return "any: no objects are found";
+              return null;
+            }
+            lits = this.singular(anyHandler, objs, loc.rel, refQuant, refs);
+            break;
+          case "all":
+            lits = this.plural(objs, loc.rel, refQuant, refs); // (ball, ontop, any, [y1, y2])
+            break;
+        }
+        return lits;
       }
+
+      // TODO: isAllowed needs to be inserted
+      singular(handler: (obs: string[]) => string,
+               objs: string[],
+               rel: string,
+               refQuant: string,
+               refs: string[]): Literal[][] {
+        var lits: Literal[][];
+        var error = handler(objs);
+        if(error)
+          throw new Interpreter.Error(error);
+        switch(refQuant) {
+          case "all":           // "all" and "the" are handled the same way
+          case "the":
+            lits = this.literals(objs, refs, true, rel);
+            break;
+          case "any":
+            lits = this.literals(objs, refs, true, rel);
+            var flattened = this.flatten(lits)
+            lits = flattened.map((lit: Literal) => {
+              return [lit];
+            });
+            break;
+        }
+        return lits;
+      }
+
+      plural(objs: string[], rel: string, refQuant: string, refs: string[]): Literal[][] {
+        var lits: Literal[][];
+        switch(refQuant) {
+          case "all":
+          case "the":
+            lits = this.literals(objs, refs, true, rel);
+            var flattened = this.flatten(lits)
+            lits = [flattened];
+            break;
+          case "any":
+            lits = this.literals(refs, objs, true, rel);
+            lits = this.modify(lits, (lit: Literal) => {
+              var newArgs = [];
+              newArgs[0] = lit.args[1];
+              newArgs[1] = lit.args[0];
+              return {pol: lit.pol, rel: lit.rel, args: newArgs};
+            });
+            break;
+        }
+        return lits;
+      }
+
 
       //////////////////////////////////////////////////////////////////////
       // Helper methods
@@ -321,11 +377,19 @@ module Interpreter {
           return false;
         // 6. Large boxes cannot be supported by large pyramids.
         var largeBox = (obj.form === "box") && (obj.size === "large");
-        if(largeBox && refObj.form === "pyramid" && refObj.size === "large")
+        var largePyramid = (refObj.form === "pyramid") && (refObj.size === "large");
+        if(largeBox && largePyramid)
           return false;
 
         // Otherwise
         return true;
+      }
+
+      /*
+       * Flatten matrix to an array
+       */
+      flatten(lits: Literal[][]): Literal[] {
+        return [].concat.apply([], lits);
       }
 
       /*
@@ -344,6 +408,51 @@ module Interpreter {
         if(rootObj.color && rootObj.color !== def.color)
           return false;
         return true;
+      }
+
+      /*
+       * Makes literals of objects and references, specified by pol and relation
+       */
+      literals(objs: string[], refs: string[], pol: boolean, rel: string): Literal[][] {
+        var combs = this.combinations(objs, refs);
+        return this.transform(combs, pol, rel);
+      }
+
+      /*
+       * Gives the combinations of two lists of strings in form of Pair[][]
+       */
+      combinations(objs: string[], refs: string[]): Pair[][] {
+        var combs: Pair[][];
+        if(objs.length > 0 && refs.length > 0) {
+          combs = objs.map((o: string) => {
+            return refs.map((r: string) => {
+              return {obj: o, ref: r};
+            });
+          });
+        }
+        return combs;
+      }
+
+      /*
+       * tranform Pair[][] to Literal[][]
+       */
+      transform(matrix: Pair[][], pol: boolean, rel: string): Literal[][] {
+        return matrix.map((arr: Pair[]) => {
+          return arr.map((pair: Pair) => {
+            return {pol: pol, rel: rel, args: [pair.obj, pair.ref]};
+          });
+        });
+      }
+
+      /*
+       * Lets us modify a Literal[][] with help of callback
+       */
+      modify(lits: Literal[][], callback: (lit: Literal) => Literal): Literal[][] {
+        return lits.map((arr: Literal[]) => {
+          return arr.map((lit: Literal) => {
+            return callback(lit);
+          });
+        });
       }
 
       /*
@@ -405,6 +514,11 @@ module Interpreter {
       }
 
     } // class Interpret
+
+    interface Pair {
+      obj: string;
+      ref: string;
+    }
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
