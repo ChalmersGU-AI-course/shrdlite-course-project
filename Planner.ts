@@ -107,6 +107,8 @@ module Planner {
             return n;
         }
 
+        // TODO: Function should be somewhere else!
+        // Doesn't work atm, so it's not used
         getWorldClone(world: WorldState, changingStack: number): WorldState {
             var clone: WorldState = Object.create(world);
 
