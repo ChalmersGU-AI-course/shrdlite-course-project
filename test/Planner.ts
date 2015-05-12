@@ -27,6 +27,8 @@ module PlannerTest {
     rel:string; 
     //the objects on which the relationsship works
     args:string[]
+
+
   }
 
   class WorldState implements A.Astar.State {
@@ -40,7 +42,7 @@ module PlannerTest {
     //returns true if a PDDL matches on the current state
     match(goal: PDDL) {
       for (i = 0; i < goal.alternatives.length; i++) {
-        if(this.checkAlt(goal.alternatives[i])){// alternative i is true
+        if(this.checkAlt(goal.alternatives[i])){
           return true;
         }
       }
@@ -48,10 +50,20 @@ module PlannerTest {
     }
 
     //returns true if ALL literals are true
-    checkAlt(Lit[]){
-      
-      return true;
+    checkAlt(lits: Lit[]): boolean{
+      result: boolean = true;
+      for(int i = 0; i < lits.length; i++) {
+        result &= lits[i].eval();
+      }
+      return result;
     }
+
+    eval(lit: Lits): boolean {
+      var res: boolean = true;
+      //TODO: eval rel with args
+      return res == lits.pol;
+    }
+    
 
 /*    match(goal: WorldState) {
       for (var i = 0; i < this.stacks.length; i++) {
