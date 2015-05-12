@@ -131,7 +131,7 @@ module Interpreter {
     //generate rule from prepared array
     //for example , 
     // query : put the black ball in a box on the floor
-    // temp = ["move","the","black","ball","inside","any","box","ontop","the","floor"]
+    // tokens = ["move","the","black","ball","inside","any","box","ontop","the","floor"]
     //modify some algorithm here to properly generate new rule. e.g. inside(a,b), ontop(a,b)
     function genRule(tokens : string[], state : WorldState) : Literal[] {
         var rules : Literal[] = [];
