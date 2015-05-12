@@ -294,20 +294,28 @@ module Interpreter {
     
     function clearerParse(parse: Parser.Result): string{
         var s: string = parse.input;
+        
         var ent = parse.prs.ent;
         var index: number = 0;
         var form: string;
-        
+
         for(var i = 0; i < 2; i++){
-            while(ent.obj.obj != null){
-                form = ent.obj.obj.form == "anyform" ? "object" : ent.obj.obj.form;
-                index = s.indexOf(form, index+form.length)+form.length;
-                s = splice(s, index, 0, " that is");
-                ent = ent.obj.loc.ent;
+            if(ent.obj.obj == null){
+                form = ent.obj.form == "anyform" ? "object" : ent.obj.form;
+                index = s.indexOf(form, index)+form.length;
+            }else{
+                while(ent.obj.obj != null){
+                    form = ent.obj.obj.form == "anyform" ? "object" : ent.obj.obj.form;
+                    index = s.indexOf(form, index)+form.length;
+                    s = splice(s, index, 0, " that is");
+                    index += " that is".length;
+                    ent = ent.obj.loc.ent;
+                }
             }
             ent = parse.prs.loc.ent;
         }
         return s;    
+
     }
 
     function splice(toModify: string, idx:number, rem:number, s:string ): string {
