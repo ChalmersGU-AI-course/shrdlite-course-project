@@ -1,5 +1,5 @@
-/// <reference path="collections.ts" />
-/// <reference path="astarAlgorithm.ts" />
+/// <reference path="../lib/collections.ts" />
+/// <reference path="../astarAlgorithm.ts" />
 
 module Tests{
 
@@ -32,7 +32,7 @@ module Tests{
   var townDistanceDictionary;
   var townNameDictionary;
   
-  function get_town_dist(t1:Town,t2:Town){ //NYI
+  function get_town_dist(t1:Town,t2:Town){ 
     var townTuple = new NodeTuple();
     townTuple.a = t1;
     townTuple.b = t2;
@@ -43,19 +43,10 @@ module Tests{
     townDistanceDictionary.setValue({a:t1,b:t2},dist)
     townDistanceDictionary.setValue({a:t2,b:t1},dist)
   }
-  
-  
-  //Extend Nodes with a number
-  class Square extends Astar.Node{
-    num: number
+
+  function static_children(n1:Town){
+    return n1.children
   }
-  function puzzle_hier(t1:Square,t2:Square){ //NYI
-    return 0 
-  }
-  function puzzle_dist(t1:Square,t2:Square){ //NYI
-    return 0 
-  }
-  
   
   export class astarTest {
     /*
@@ -202,7 +193,6 @@ module Tests{
       set_town_dist(vaslui,iasi,92)
       set_town_dist(iasi,neamt,87)
 
-      //return 0
     }
 
     findPath(startId:string,goalId:string) {
@@ -210,7 +200,7 @@ module Tests{
       var start = townNameDictionary.getValue(startId)
       var goal = townNameDictionary.getValue(goalId)
 
-      var path = Astar.Astar(start,goal,{heuristic_approx: town_hier,dist_between: get_town_dist})
+      var path = Astar.Astar(start,goal,{heuristic_approx: town_hier, dist_between: get_town_dist, get_children: static_children})
       for (var n in path) {
         document.write(path[n].id);
         document.write(" ");
