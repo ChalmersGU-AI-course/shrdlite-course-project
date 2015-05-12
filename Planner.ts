@@ -148,9 +148,35 @@ module Planner {
             return null;
         }
 
-        CanPutObjectOntop(object: ObjectDefinition, baseObject: ObjectDefinition): boolean {
-            if (baseObject.form == "circle") {
+    CanPutObjectOntop(object: ObjectDefinition, baseObject: ObjectDefinition): boolean {
+            //Balls cannot support anything.
+            if (baseObject.form == "ball") {
                 return false;
+            }
+            //Small objects cannot support large objects.
+            if(baseObject.size == "small" && object.size =="big"){
+                return false;
+            }
+            //Balls must be in boxes or on the floor, otherwise they roll away.
+            //TODO check if baseobject is floor
+            if(object.form == "ball" && !(baseObject.form == "box")){
+                    return false;
+            }
+            //Boxes cannot contain pyramids, planks or boxes of the same size.
+            if(baseObject.form == "box" && 
+              (object.form == "pyramid" || object.form =="plank" ||
+              (object.form == "box" && baseObject.size == object.size))){
+                return false;
+            }
+            //Small boxes cannot be supported by small bricks or pyramids.
+            if(object.size == "small" && object.form == "box" && 
+              (baseObject.form == "brick" ||baseObject.form == "pyramid")){
+                return false
+            }
+
+            //Large boxes cannot be supported by large pyramids.
+            if(baseObject.form == "pyramid" && baseObject.size == "large" &&
+               object.form == "box" && object.size == "large"){
             }
             return true;
         }
