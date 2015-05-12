@@ -292,6 +292,10 @@ module Interpreter {
         return tmp;      
     }
     
+
+    /**
+     * Add "that is" on the user input such that there are no ambiguity
+     */
     function clearerParse(parse: Parser.Result): string{
         var s: string = parse.input;
         
@@ -318,6 +322,9 @@ module Interpreter {
 
     }
 
+    /**
+     * Splice a string (same as in JS)
+     */
     function splice(toModify: string, idx:number, rem:number, s:string ): string {
         return (toModify.slice(0,idx) + s + toModify.slice(idx + Math.abs(rem)));
     }
