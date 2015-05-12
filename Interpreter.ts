@@ -200,8 +200,8 @@ module Interpreter {
                     var obj: ObjWCoord = {id: ids[i], size: state.objects[ids[i]].size, form: state.objects[ids[i]].form, color: state.objects[ids[i]].color};
                     if(ids[i] != state.holding){
                         obj.coord = Helper.findCoord(ids[i], state);
+                        owc.push(obj);
                     }
-                    owc.push(obj);
                 }
             }
             
