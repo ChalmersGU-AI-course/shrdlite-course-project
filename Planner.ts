@@ -9,12 +9,14 @@ module Planner {
     // exported functions, classes and interfaces/types
 
     export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
+
         var plans : Result[] = [];
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
             plan.plan = planInterpretation(plan.intp, currentState);
             plans.push(plan);
         });
+
         if (plans.length) {
             return plans;
         } else {

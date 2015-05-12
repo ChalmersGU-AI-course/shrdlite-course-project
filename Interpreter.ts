@@ -7,6 +7,13 @@ module Interpreter {
     // exported functions, classes and interfaces/types
 
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
+
+
+        var a = Heuristics.computeObjectPosition(currentState, "floor");
+        console.log("A#####");
+        console.log(a);
+        console.log("A#####");
+
         var interpretations : Result[] = [];
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
