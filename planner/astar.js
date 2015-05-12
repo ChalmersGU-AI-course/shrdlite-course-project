@@ -14,19 +14,19 @@ var Set = require("collections/set");
 // neighbours: returns the neighbours from any given node
 // start, goal: obvious
 // Returns list of an optimal path or undefined if there is none.
-module.exports = function (cost, h, neighbours, state_hash, start, goal, isgoal) {
+module.exports = function (G, start) {
     // Frontier, heap map sorted by lowest approximated distance
-    var front = new Heap(state_hash);
+    var front = new Heap(G.state_hash);
     // Nodes that are already completely evaluated to prevent reevaluation
-    var evaluated = new Set([], Object.equals, state_hash);
+    var evaluated = new Set([], Object.equals, G.state_hash);
     // Map of backlinks of best path.
-    var previous = new Map([], Object.equals, state_hash);
+    var previous = new Map([], Object.equals, G.state_hash);
     // Map of actual distances from the start node;
-    var d = new Map([], Object.equals, state_hash);
+    var d = new Map([], Object.equals, G.state_hash);
 
     // Start exploring
     d.set(start, 0);
-    front.add(start, h(start, goal));
+    front.add(start, G.h(start));
 
     // When there are elements in the frontier, get the one with the lowest heuristic distance
     while (front.length > 0) {
@@ -34,7 +34,7 @@ module.exports = function (cost, h, neighbours, state_hash, start, goal, isgoal)
         evaluated.add(elem.obj);
 
         // Finished, follow backlinks to reconstruct path.
-        if (isgoal(elem.obj, goal)) {
+        if (G.isgoal(elem.obj)) {
             var ret = [elem.obj];
             var bs = previous.get(elem.obj);
             while (!Object.equals(bs, start)) {
@@ -47,19 +47,19 @@ module.exports = function (cost, h, neighbours, state_hash, start, goal, isgoal)
         }
 
         // Check every neighbour and see if this path improves the distance to it.
-        for (var neigh of neighbours(elem.obj)) {
+        for (var neigh of G.neighbours(elem.obj)) {
             if (evaluated.has(neigh)) {
                 continue;
             }
 
             var old_distance = d.get(neigh, Infinity);
-            var new_distance = d.get(elem.obj) + cost(elem.obj, neigh);
+            var new_distance = d.get(elem.obj) + G.cost(elem.obj, neigh);
             if (new_distance < old_distance) {
                 d.set(neigh, new_distance);
                 previous.set(neigh, elem.obj);
 
                 // Update front
-                var new_approx = new_distance + h(neigh, goal);
+                var new_approx = new_distance + G.h(neigh);
                 if (!front.changePriority(neigh, new_approx)) {
                     front.add(neigh, new_approx);
                 }
