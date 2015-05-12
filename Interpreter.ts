@@ -52,7 +52,7 @@ module Interpreter {
     //dictionary to store pair of information.
     //e.g. (take,cmd)  (white,color)  (ball,form)
     //useful function from dictionary
-    //getValue(key) : string
+    //getValue(key) : value
     //setValue(key,value)
     var globalDic  = new collections.Dictionary<string,string>();
 
