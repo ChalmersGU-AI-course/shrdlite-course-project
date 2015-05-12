@@ -2,10 +2,12 @@
 ///<reference path="Interpreter.ts"/>
 var Planner = {};
 
+
 Planner.plan = function plan(interpretations, currentState) {
+    var TMP_rules = [["e", "k"], ["l", "floor"]];
     var plans = [];
     for (var inter of interpretations) {
-        inter.plan = ["r", "r", "l"];
+        inter.plan = window.plannerCore(currentState, TMP_rules);
         plans.push(inter);
     }
     // interpretations.forEach(function (intprt) {
