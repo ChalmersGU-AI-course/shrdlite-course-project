@@ -49,7 +49,10 @@ def getAction(state):
 def goalWrapper(intprt, stacks, holding, arm, objects):
     """    Passed as a parameter to A*, check if a state satisfied a goal.
     """
-    return satisfy_pred(intprt,stacks,holding)
+    for goal in intprt:
+        if satisfy_pred(goal,stacks,holding):
+            return True
+    return False 
 
 def heuristic(goal, current):
     """    Passed as a parameter to A*, The heuristicfunciton for this problem.
