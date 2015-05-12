@@ -121,8 +121,10 @@ module Interpreter {
 
         //add new rule according to parsed array
         var newRules = genRule(tokens,state);
-        intprt.push(newRules);
-
+        if(newRules != null){
+            intprt.push(newRules);
+        }
+        else return [];
 
 
         return intprt;
@@ -134,105 +136,139 @@ module Interpreter {
     // tokens = ["move","the","black","ball","inside","any","box","ontop","the","floor"]
     //modify some algorithm here to properly generate new rule. e.g. inside(a,b), ontop(a,b)
     function genRule(tokens : string[], state : WorldState) : Literal[] {
+       
         var rules : Literal[] = [];
-        var forms : Array<string> = [];
 
-        var argMax = 0;
-        var argFilled = 0;
+        var selPol = true;
+        var selRel = "";
+        var foundRel = false;
+        var foundForm = false;
+        var maxArg = 0;
+        var currentArg = 0;
+        var selSize = "";
+        var selColor = "";
+        var selForm = "";
+        var prevObj = "";
 
-        var relEmpty = false;
-        var formEmpty = true;
+        //case take cmd
+        if(tokens[0] == "take"){
+            selPol = true;
+            selRel = "holding";
+            foundRel = true;
+            maxArg = 1;
+            currentArg = 0;
+        }
+        //case put cmd
+        if(tokens[0] == "put"){
+            selPol = false;
+            selRel = "holding";
+            foundRel = true;
+            foundForm = true;
+            maxArg = 2;
+            currentArg = 1;
 
-
-        var sRel = "";
-        var sSize = "";
-        var sColor = "";
-        var sForm = "";
-        var objArg1 = "";
-        var objArg2 = "";
-
-        for(var i = 0;i < tokens.length ; i++){
-            var keyword = tokens[i];
-            var keytype = globalDic.getValue(keyword);
-
-            //skipped quant
-            if(keytype == "quant"){
-                //...
-            }
-            if(keytype == "cmd" && keyword == "take"){
-                relEmpty = false;
-                sRel = "holding";
-                argMax = 1;
-            }
-            
-            if(keytype == "size"){
-                sSize = keyword;
-            }
-            if(keytype == "color"){
-                sColor = keyword;
-            }
-            if(keytype == "form"){
-                formEmpty = false;
-                sForm = keyword;
-            }
-            if(keytype == "rel"){
-                relEmpty = false;
-                sRel = keyword;
-                argMax = 2;
-            }
-
-            if(!formEmpty){
-                //get object representation in world
-                var objRep = searchObject(sSize,sColor,sForm,state);
-                forms.push(objRep);
-
-                if(argFilled == 0){
-                    argFilled++;
-                    objArg1 = objRep;
-
-                }else if(argFilled == 1){
-                    argFilled++;
-                    objArg2 = objRep;
-                }
-
-            }
-
-            if(argFilled == argMax && !relEmpty){
-                if(argMax == 1){
-                    var newRule : Literal = {pol: true, rel: sRel, args: [objArg1]};
-                    rules.push(newRule);
-                }else if(argMax == 2){
-                    var newRule : Literal = {pol: true, rel: sRel, args: [objArg1,objArg2]};
-                    rules.push(newRule);
-                }
-
-                argMax = 0;
-                argFilled = 0;
-
-                sRel = "";
-                sSize = "";
-                sColor = "";
-                sForm = "";
-                objArg1 = "";
-                objArg2 = "";
-
-                formEmpty = true;
-                relEmpty = true;
-            }
+            //hard code for testing
+            //the object "e" should be the value from state.holding
+            var newRule : Literal = {pol: selPol, rel: selRel, args: ["e"]};
+            rules.push(newRule);
+            prevObj = "e";
 
         }
-        // construct new rule after loop ended using previous form
-        if(forms.length > 1){
-            var n = forms.length;
-
-                if(argMax == 1){
-                    var newRule : Literal = {pol: true, rel: sRel, args: [forms[n - 1]]};
-                    rules.push(newRule);
-                }else if(argMax == 2){
-                    var newRule : Literal = {pol: true, rel: sRel, args: [forms[n - 1],forms[n - 2]]};
-                    rules.push(newRule);
-                }
+        //case move cmd
+        if(tokens[0] == "move"){
+            selPol = true;
+            selRel = "";
+            foundRel = false;
+            maxArg = 2;
+            currentArg = 0;
         }
+
+        for(var i = 1;i < tokens.length; i++){
+
+            var token = tokens[i];
+            var tokenType = globalDic.getValue(token);
+
+            switch(tokenType) {
+
+                case "size":
+                    selSize = token;
+                    break;
+                case "color":
+                    selColor = token;
+                    break;
+                case "form":
+                    selForm = token;
+                    foundForm = true;
+                    currentArg++;
+                    break;
+                case "rel":
+                    selRel = token;
+                    foundRel = true;
+                    maxArg = 2;
+                    break;
+                case "quant": 
+                    //... to do
+                    break;
+
+                default:
+                    console.log("token error...");
+
+            }
+            if(currentArg != maxArg && !foundRel && foundForm){
+                var currentObj = searchObject(selSize,selColor,selForm,state);
+                if(currentObj == ""){
+                    return null;
+                }
+
+                foundForm = false;
+                selSize = "";
+                selColor = "";
+                selForm = "";
+                prevObj = currentObj;
+
+            }
+
+            if(currentArg == maxArg && foundRel && foundForm){
+                var currentObj = searchObject(selSize,selColor,selForm,state);
+
+                if(currentObj == ""){
+                    return null;
+                }
+
+                if(maxArg == 1){
+                    var newRule : Literal = {pol: selPol, rel: selRel, args: [currentObj]};
+                    rules.push(newRule);
+
+                    selPol = true;
+                    selRel = "";
+                    foundRel = false;
+                    foundForm = false;
+                    maxArg = 2;
+                    currentArg = 1;
+                    selSize = "";
+                    selColor = "";
+                    selForm = "";
+                    prevObj = currentObj;
+
+                }else if(maxArg == 2){
+                    var newRule : Literal = {pol: true, rel: selRel, args: [prevObj,currentObj]};
+                    rules.push(newRule);
+
+                    selPol = true;
+                    selRel = "";
+                    foundRel = false;
+                    foundForm = false;
+                    maxArg = 2;
+                    currentArg = 1;
+                    selSize = "";
+                    selColor = "";
+                    selForm = "";
+                    prevObj = currentObj;
+
+                }
+            }
+        }
+
 
         return rules;
     }
@@ -244,6 +280,9 @@ module Interpreter {
 
         //it can match more than 1 object that can cause ambiguous
         //but skipped ambiguous by now so it always match the first item in current world
+        
+        if(form == "floor")
+            return "floor";
 
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var matchCount = 0;
