@@ -2401,8 +2401,8 @@ var Rules;
         if (obj.form == "box" && rel == "ontop") {
             bol = true;
         }
-        else if (obj.form == "box" && rel == "inside" &&
-            ((o.form == "pyramid" || o.form == "planck" || o.form == "box") && obj.size == o.size)) {
+        else if (obj.form == "box" && rel == "inside" && obj.size == o.size &&
+            (o.form == "pyramid" || o.form == "plank" || o.form == "box")) {
             bol = true;
         }
         else if (o.form == "box" && rel == "ontop" &&
@@ -2845,22 +2845,35 @@ var Interpreter;
         }
         return tmp;
     }
+    /**
+     * Add "that is" on the user input such that there are no ambiguity
+     */
     function clearerParse(parse) {
         var s = parse.input;
         var ent = parse.prs.ent;
         var index = 0;
         var form;
         for (var i = 0; i < 2; i++) {
-            while (ent.obj.obj != null) {
-                form = ent.obj.obj.form == "anyform" ? "object" : ent.obj.obj.form;
-                index = s.indexOf(form, index + form.length) + form.length;
-                s = splice(s, index, 0, " that is");
-                ent = ent.obj.loc.ent;
+            if (ent.obj.obj == null) {
+                form = ent.obj.form == "anyform" ? "object" : ent.obj.form;
+                index = s.indexOf(form, index) + form.length;
+            }
+            else {
+                while (ent.obj.obj != null) {
+                    form = ent.obj.obj.form == "anyform" ? "object" : ent.obj.obj.form;
+                    index = s.indexOf(form, index) + form.length;
+                    s = splice(s, index, 0, " that is");
+                    index += " that is".length;
+                    ent = ent.obj.loc.ent;
+                }
             }
             ent = parse.prs.loc.ent;
         }
         return s;
     }
+    /**
+     * Splice a string (same as in JS)
+     */
     function splice(toModify, idx, rem, s) {
         return (toModify.slice(0, idx) + s + toModify.slice(idx + Math.abs(rem)));
     }

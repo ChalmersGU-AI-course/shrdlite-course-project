@@ -24,8 +24,8 @@ module Rules{
         
         if(obj.form == "box" && rel == "ontop"){
             bol = true;
-        }else if(obj.form == "box" && rel == "inside" && 
-                 ((o.form == "pyramid" || o.form == "planck" || o.form == "box") && obj.size == o.size )){
+        }else if(obj.form == "box" && rel == "inside" && obj.size == o.size && 
+                 (o.form == "pyramid" || o.form == "plank" || o.form == "box")){
             bol = true;
             
         }else if(o.form == "box" && rel == "ontop" &&
