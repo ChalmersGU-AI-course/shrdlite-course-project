@@ -14,16 +14,17 @@ def _right(intprt, stacks, holding, arm, objects):
     return None
 
 def _grasp(intprt, stacks, holding, arm, objects):
+
     if not holding and stacks[arm]:
         return (intprt, 
                 _changeStack(stacks[arm][:-1], arm, stacks),
                 stacks[arm][-1], 
                 arm, 
-                objects)
+                objects)    
     return None
 
 def _ungrasp(intprt, stacks, holding, arm, objects):
-    if not holding is None and physics(holding, stacks[arm][-1:], objects):
+    if holding and physics(holding, stacks[arm][-1:], objects):
         return (intprt, 
                 _changeStack(stacks[arm]+[holding],arm,stacks),
                 None, 
