@@ -10,21 +10,34 @@ import I = require('../Interpreter');
 
 module PlannerTest {
 
+  //a expression in the Planning Domain Definition Language
   class PDDL {
+    //the inner array describes literals connected with an AND,
+    //the outer one connected with an OR
     alternatives : Lit[][];
   }
 
+  //one expression describing a property of a goal
   class Lit implements Literal {
+    //true/false: goal must/must not forfill the property
     pol:boolean; 
+    //a relationship between objects as describet in the grammar
+    //TODO: is this useful? Maybe TypeScript allows to have a smaller
+    //space of relationsships
     rel:string; 
+    //the objects on which the relationsship works
     args:string[]
   }
 
   class WorldState implements A.Astar.State {
-    h: number;
+    //heuristical value for this state. Useful if you don't want to call
+    //the heuristical function each time
+    h: number; 
+    //represents an array of stacks 
     stacks: WorldObject[][];
     crane: WorldObject;
     
+    //returns true if a PDDL matches on the current state
     match(goal: PDDL) {
       for (i = 0; i < goal.alternatives.length; i++) {
         if(this.checkAlt(goal.alternatives[i])){// alternative i is true
@@ -34,6 +47,7 @@ module PlannerTest {
       return false;
     }
 
+    //returns true if ALL literals are true
     checkAlt(Lit[]){
       
       return true;
@@ -60,10 +74,13 @@ module PlannerTest {
       return true;
     }*/
 
+    //guesses a distance from the current state to goals describet in a PDDL
     heuristic(goal: PDDL) {
       return 0;
     }
     
+    //returns all possible neigbours of a state
+    //TODO: reduce number of states by checking if they are valid
     expand() {
       var neighbours = new Array();
       if (this.crane == null) {
@@ -102,12 +119,18 @@ module PlannerTest {
       return s; 
     }
 
+    //usage: either both parameter null, then create an empty WorldState
+    // OR  : stacks not null, then create a WorldState with the given
+    // stacks. 
+    // WARNING: stacks null, but crane not null will throw an error.
     constructor(stacks: string[][], crane: string) {
+      //if both parameter null, create an empty WorldState
       if( stacks == null && crane == null){
         this.crane = null;
         this.stacks = new Array<Array<WorldObject>>();
         this.h = 0;
       } else if (stacks != null){
+        //if stacks are given, use them.
         this.stacks = new Array<Array<WorldObject>>();
         for (var i = 0; i < stacks.length; i++) {
           this.stacks[i] = new Array<WorldObject>();
@@ -118,12 +141,15 @@ module PlannerTest {
           }
         }
         if(crane != null){
+          //if stacks are given and crane is given, use also the crane
           this.crane = exampleWorldDescription.getValue(crane);
         } else {
           this.crane = null;
         }
+        //predefive a heuristic value
         this.h = 0;
       } else {
+        //if crane is given, but stacks is null
         throw new Error("You are stupid! You cant create a world without a stack but with a crane!");
       }
     }
@@ -141,21 +167,29 @@ module PlannerTest {
     }
   }
 
+  //describes an object in a world
   class WorldObject {
-  	form: String;
-  	size: String;
-   	color: String;
+    form: String;
+    size: String;
+    color: String;
     name: String;
-   	constructor(form: String, size: String, color: String, name: String) {
-  	  this.form = form;
-   	  this.size = size;
+
+    constructor(form: String, size: String, color: String, name: String) {
+      this.form = form;
+      this.size = size;
       this.color = color;
       this.name = name;
     }
+
     toString() {
       return this.name;
     }
   }
+
+  ////////////////////////////////////////
+  // HERE THE TEST DESCRIPTION BEGINNS  //
+  ///////////////////////////////////////
+
 //[[a,b] [c] [] [d, e] []]
   var exampleWorldDescription = new C.collections.Dictionary<String, WorldObject>();
   exampleWorldDescription.setValue("a", new WorldObject("brick", "large", "green", "a"));
@@ -226,8 +260,14 @@ module PlannerTest {
     return true;
   }
 
+  ////////////////////////////////////
+  // HERE THE TEST SECTION BEGINNS  //
+  ////////////////////////////////////
+
+
   describe('Planner', () => {
 
+    //test to check if validy checks work
     describe('checkValidState', () => {
       it('returns true when the state is valid', (done) => {
         var example = {
@@ -251,6 +291,8 @@ module PlannerTest {
       });
     });
     
+
+    //test to check if AStar is called
     describe('AStar in the Planner', () => {
       it('test if a-star runs', (done) => {
         var nothing: string = null;
@@ -258,15 +300,14 @@ module PlannerTest {
         var goal: WorldState = new WorldState([new Array<string>(),["l","g"],["f","e"],["a"],new Array<string>()], null);
         var solution = A.Astar.search(state, null, goal);
 
+        //print out the path
         for (var i = 0; i < solution.path.length; i++) {
           console.log(solution.path[i].toString());
         }
+        //print out the solution
         console.log(solution);
         done()
       })
-    }
-
-
-)
+    });
   });
 }
