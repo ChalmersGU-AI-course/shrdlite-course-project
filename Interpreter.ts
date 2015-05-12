@@ -64,19 +64,45 @@ module Interpreter {
         
         // Find object to move
         
-        var objs : string [][] = identifyEnt(cmd.ent, state);
+        var objs : Literal [][] = identifyEnt(cmd.ent, cmd.cmd, state);
         if(!objs.length){
         	return [];
         }
         // Find location to move to
-        var loc : string [][];
+        var loc : Literal [][] = [];
         if(cmd.cmd == "move" || cmd.cmd == "put" || cmd.cmd == "drop"){
         	loc = identifyLocation(cmd.loc, state);
         }
         // Form goal
+        var intprt : Literal[][] = [];
+        // combine with possible locations
+        for(var l = 0; l < objs.length; l++){
+			for(var i = 0; i < objs[l].length; i++){
+				var lit : Literal;
+				if(loc.length){
+					for(var j = 0 ; j < loc.length ;j++){
+						for(var k = 0 ; k < loc[j].length ;k++){
+							lit = {pol : true, rel : cmd.loc.rel, args : [objs[l][i].args[0], loc[j][k].args[0]]};
+							if(checkIllegal(lit, state)){
+								if(!intprt[j]){
+									intprt[j] = [];
+								}
+								intprt[j].push(lit);
+							}
+						}
+					}
+				}else{
+					lit = {pol : true, rel : cmd.cmd, args : [objs[l][i].args[0]]};
+					if(!intprt[i]){
+						intprt[i] = [];
+					}
+					intprt[i].push(lit);
+				}
+			}
+		}
       	
         //var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        var pddls = state.pddl.toArray();
+       /* var pddls = state.pddl.toArray();
         
         var intprt : Literal[][] = [];
         if(loc){
@@ -142,7 +168,8 @@ module Interpreter {
 	        		intprt[i]= [{pol: true, rel: cmd.cmd, args: [objs[i][j]]}];
 	        	}
 	        }
-		}
+		}*/
+	//	var intprt = objs;
         return intprt;
     }
     
@@ -232,9 +259,9 @@ module Interpreter {
     	return true;
     }
     
-    function identifyLocation(loc : Parser.Location, state : WorldState):string[][]{
+    function identifyLocation(loc : Parser.Location, state : WorldState):Literal[][]{
     	try {
-        	var result:string[][] = identifyEnt(loc.ent, state);
+        	var result : Literal[][] = identifyEnt(loc.ent, "location", state);
 		} catch (err) {
 			if(err instanceof Interpreter.ErrorInput){
 				err.message = err.message.substring(0, err.message.length-1) + " to?";
@@ -318,16 +345,21 @@ module Interpreter {
         return objs.toArray();
     }
     
-    function identifyEnt(ent:Parser.Entity, state :WorldState):string[][]{
+    
+    
+    function identifyEnt(ent : Parser.Entity, rel : string ,state : WorldState):Literal[][]{
     	var result : string[] = identifyObj(ent.obj.form, ent.obj.color, ent.obj.size, state);
     	var unqObjs : string[] = uniqeObjects(result);
-    	var results : string[][] = [[]];
-    	//TODO not sure how deal with nested objects
-    //	var idres : IdentResult = {pol:true , rel: null , argss :[]};
+    	var results : Literal[][] = [];
     	if(ent.obj.loc){
-    		//TODO
-    	//	idres.rel = ent.obj.loc.rel;
-    	//	identifyLocation(ent.obj.loc, state);
+
+    		var locres : Literal [][]= identifyLocation(ent.obj.loc, state);
+    		for(var i = 0; i < locres.length; i ++){
+    			if(!results[i]){
+    				results[i] = [];
+    			}
+    			results[i] = append<Literal>(results[i], locres[i]);
+    		}
     	}
     	
     	if(ent.quant == "the" && ent.obj.form != "floor"){
@@ -342,9 +374,7 @@ module Interpreter {
 				}
 				result = objs;
     		}
-    		for(var i = 0; i < result.length; i++){
-    			results[i] = [result[i]];
-    		}
+    		
     	} else
     	if(ent.quant == "all"){
     		var totalUnqObjs = findAllWithForm(ent.obj.form, state);
@@ -358,15 +388,30 @@ module Interpreter {
 				}
 				result = objs;
     		}
-    		for(var i = 0; i < result.length; i++){
-    			results[i] = result;
-    		}
+
     	} else
     	if (ent.quant == "any" || ent.obj.form == "floor"){ // any
-    		for(var i = 0; i < result.length ;i++){
-    			results[i] = [result[i]];
-    		}
+   			;// TODO
     	}
+    	// combine with possible locations
+		for(var i = 0; i < result.length; i++){
+			var lit : Literal;
+			if(ent.obj.loc){
+				for(var j = 0 ; j < results.length ;j++){
+					for(var k = 0 ; k < results[j].length ;k++){
+						lit = {pol : true, rel : ent.obj.loc.rel, args : [result[i], results[j][k].args[0]]};
+						results[j].push(lit);
+					}
+				}
+			}else{
+				lit = {pol : true, rel : rel, args : [result[i]]};
+				if(!results[i]){
+					results[i] = [];
+				}
+				results[i].push(lit);
+			}
+		}
+			
     	return results;
     }
     
@@ -381,6 +426,13 @@ module Interpreter {
     		objset.add(obj)
     	);
     	return objset.toArray();
+    }
+    
+    function append<T>(a : T [],b :T []):T[]{
+    	for(var i = 0; i < b.length; i++){
+    		a.push(b[i]);
+    	}
+    	return a;
     }
 
     function getRandomInt(max) {
