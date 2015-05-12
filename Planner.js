@@ -4,6 +4,7 @@ var Planner = {};
 
 
 Planner.plan = function plan(interpretations, currentState) {
+    window.debugstate = currentState.objects;
     var TMP_rules = [["e", "k"], ["l", "floor"]];
     var plans = [];
     for (var inter of interpretations) {
