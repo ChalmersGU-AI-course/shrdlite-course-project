@@ -9,7 +9,7 @@ def _left(intprt, stacks, holding, arm, objects):
     return None
 
 def _right(intprt, stacks, holding, arm, objects):
-    if not arm is len(stacks):
+    if not arm is len(stacks)-1:
         return (intprt, stacks, holding, arm+1, objects)
     return None
 

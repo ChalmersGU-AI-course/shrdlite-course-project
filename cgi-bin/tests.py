@@ -58,7 +58,7 @@ class TestAction(unittest.TestCase):
         self.assertEqual(stacks,[[],['b','a']])
 
 
-class TestUngrasp(unittest.TestCase):
+class TestActions2(unittest.TestCase):
 
     def setUp(self):
         self.stacks = [['a'],[]]
@@ -72,6 +72,18 @@ class TestUngrasp(unittest.TestCase):
     def test_ungrasp(self):
         self.assertEqual(simple_planner._ungrasp(*self.state),
             (self.intprt, [['a'],['b']], None, 1, self.objects))
+
+    def test_left(self):
+        self.assertEqual(simple_planner._left(*self.state),
+            (self.intprt, [['a'],[]], 'b', 0, self.objects))       
+
+    def test_right(self):
+        self.assertEqual(simple_planner._right(*self.state),
+            None)
+
+    def test_grasp(self):
+        self.assertEqual(simple_planner._grasp(*self.state),
+            None)
 
 
 class TestGoal(unittest.TestCase):
