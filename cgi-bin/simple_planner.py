@@ -24,7 +24,6 @@ def _grasp(intprt, stacks, holding, arm, objects):
     return None
 
 def _ungrasp(intprt, stacks, holding, arm, objects):
-    
     if not holding is None and physics(holding, stacks[arm][-1:], objects):
         return (intprt, 
                 _changeStack(stacks[arm]+[holding],arm,stacks),
@@ -34,8 +33,10 @@ def _ungrasp(intprt, stacks, holding, arm, objects):
     return None
 
 def getAction(state):
+    """    Returns a list of triple tuples, with avavible actions from given state.
+           (command, new state, cost - required for A*)
+    """
     cost = 1
-    # TripleTuples with action label,State,cost
     actions =  [
                     ('l',_left(*state),cost),
                     ('r',_right(*state),cost),
@@ -45,15 +46,22 @@ def getAction(state):
     return [(l,x,c) for (l,x,c) in actions if x is not None]
 
 
-def goalWrapper(current):
-    (intprt, stacks, holding, arm, objects) = current
+def goalWrapper(intprt, stacks, holding, arm, objects):
+    """    Passed as a parameter to A*, check if a state satisfied a goal.
+    """
     return satisfy_pred(intprt,stacks,holding)
 
 def heuristic(goal, current):
+    """    Passed as a parameter to A*, The heuristicfunciton for this problem.
+    """
     return 1
 
 def _changeStack(newStack,index,stacks):
+    """    Helperfunction to change a stack in stacks given an index
+    """
     return [newStack if i is index else x for i,x in enumerate(stacks)]
+
+
 
 #borde refaktoreras till physics!!!!!!!
 def physics(top,bottom,objects):

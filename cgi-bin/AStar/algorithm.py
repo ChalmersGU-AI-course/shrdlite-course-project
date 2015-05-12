@@ -49,9 +49,8 @@ def a_star_search_new(GetAction, start, goal, heuristic):
     while not frontier.empty():
         current = frontier.get()
         
-        
         print(current)
-        if goal(current):
+        if goal(*current):
             return came_from, cost_so_far, actions_so_far, current
         
         for next in GetAction(current): 

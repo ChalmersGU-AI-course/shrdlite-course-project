@@ -6,29 +6,7 @@ import PDDL
 import simple_planner
 import AStar.algorithm
 
-# class TestWorldState(unittest.TestCase):
-
-#     def setUp(self):
-#         stacks = [['a', 'b'], []]
-#         objects = {'a': {'size': 'large', 'form': 'ball', 'color': 'blue'},
-#                    'b': {'size': 'large', 'form': 'table', 'color': 'red'}}
-#         entities = {}
-#         for label, features in objects.items():                  
-#             entity = PDDL.Entity(features['size'], features['color'], features['form']) 
-#             entities[label] = entity
-
-#         self.worldState = interpreter.WorldState(stacks, entities)
-
-#     def test_isAbove(self):
-#         self.assertTrue(self.worldState.isAbove('a', 'b'))
-#         self.assertFalse(self.worldState.isAbove('b', 'a'))
-
-#     def test_lookupEntities(self):
-#         self.assertTrue(len(self.worldState.lookupEntity('large', None, None)) == 2)
-#         self.assertTrue(len(self.worldState.lookupEntity(None, 'ball', None)) == 1)
-#         self.assertTrue(len(self.worldState.lookupEntity(None, None, 'yellow')) == 0)
-
-class TestAction(unittest.TestCase):
+class TestMain(unittest.TestCase):
     
     def setUp(self):
         self.stacks = [['a'],['b']]
@@ -39,15 +17,13 @@ class TestAction(unittest.TestCase):
         self.intprt = ('inside','a','b')
         self.state = (self.intprt,self.stacks,self.holding,self.arm,self.objects)
 
-
-
     def test_action(self):
         self.assertEqual(simple_planner.getAction(self.state),[('r',(self.intprt,self.stacks, self.holding, self.arm+1,self.objects),1),
                                                                ('p',(self.intprt,[[],['b']], 'a', self.arm ,self.objects),1),
                                                               ])
 
     def test_goal(self):
-        self.assertFalse(simple_planner.goalWrapper(self.state))
+        self.assertFalse(simple_planner.goalWrapper(*self.state))
 
     def test_AStar(self):
         came_from, cost_so_far, actions_so_far, goal = AStar.algorithm.a_star_search_new(   simple_planner.getAction,
@@ -57,8 +33,7 @@ class TestAction(unittest.TestCase):
         (intprt, stacks, holding, arm, objects) = goal
         self.assertEqual(stacks,[[],['b','a']])
 
-
-class TestActions2(unittest.TestCase):
+class TestActions(unittest.TestCase):
 
     def setUp(self):
         self.stacks = [['a'],[]]
@@ -94,11 +69,39 @@ class TestGoal(unittest.TestCase):
                         'b': {'size': 'large', 'form': 'box', 'color': 'red'}}        
         self.arm = 0
         self.holding = None
-        self.intprt = ('inside','a','b')
-        self.state = (self.intprt,self.stacks,self.holding,self.arm,self.objects)
+        # ('inside','a','b')
+        # ('ontop','a','b')
+        # ('above','a','b')
+        # ('under','a','b')
+        # ('beside','a','b')
+        # ('leftof','a','b')
+        # ('rightof','a','b')
+        # ('holding','a','b')
 
-    def test_goal(self):
-        self.assertTrue(simple_planner.goalWrapper(self.state))
+        self.state = (self.stacks,self.holding,self.arm,self.objects)
+
+    def test_inside_true(self):
+        self.assertTrue(simple_planner.goalWrapper(('inside','a','b'),*self.state))
+
+    def test_inside_false_holding(self):
+        self.assertFalse(simple_planner.goalWrapper(('inside','a','b'),
+                                                     [[],['b']],
+                                                     'a', 
+                                                     1, 
+                                                     self.objects)
+                                                    )
+
+    def test_inside_false(self):
+        self.assertFalse(simple_planner.goalWrapper(('inside','b','a'),*self.state))
+
+    def test_ontop_true(self):
+        self.assertTrue(simple_planner.goalWrapper(('ontop','a','b'),*self.state))
+
+    def test_ontop_false(self):
+        self.assertFalse(simple_planner.goalWrapper(('ontop','b','a'),*self.state))
+
+    def test_holding_true(self):
+        self.assertTrue(simple_planner.goalWrapper(('holding',None, None),*self.state))    
 
 if __name__ == '__main__':
     unittest.main()
