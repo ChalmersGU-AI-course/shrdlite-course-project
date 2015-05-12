@@ -49,6 +49,11 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+    //dictionary to store pair of information.
+    //e.g. (take,cmd)  (white,color)  (ball,form)
+    //useful function from dictionary
+    //getValue(key) : string
+    //setValue(key,value)
     var globalDic  = new collections.Dictionary<string,string>();
 
 
