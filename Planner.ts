@@ -51,10 +51,19 @@ module Planner {
 
         //var boxes = findBoxes(state);
 
+        console.log(state);
+
         state.pddlWorld.push({pol:true, rel:"at", args:["arm", state.arm+""]});
+        var secNode;
+        if(state.holding) {
+            state.pddlWorld.push({pol:true, rel:"holding", args:["arm", state.holding]});
+            secNode = new AStar.Node<PddlLiteral[]>(putDownObject(state.pddlWorld, state.arm, state), [], Infinity, null,"d"+1);
+        } else {
+            secNode = new AStar.Node<PddlLiteral[]>(liftObject(state.pddlWorld, state.arm), [], Infinity, null,"p"+1);
+        }
         var startNode:AStar.Node<PddlLiteral[]> = new AStar.Node<PddlLiteral[]>(state.pddlWorld, [], Infinity, null);
-        var nPickUp = new AStar.Node<PddlLiteral[]>(liftObject(state.pddlWorld, 0), [], Infinity, null,"p"+1);
-        var ePickUp = new AStar.Edge<PddlLiteral[]>(startNode, nPickUp, 1);
+
+        var ePickUp = new AStar.Edge<PddlLiteral[]>(startNode, secNode, 1);
         startNode.neighbours.push(ePickUp);
 
         //Will hold all the created nodes
