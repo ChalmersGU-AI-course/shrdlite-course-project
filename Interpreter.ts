@@ -91,30 +91,40 @@ module Interpreter {
     			for(var j =0; j< goal.length;  j++){
     				if(loc.rel == "ontop"){
     					var g : Literal = {pol : true, rel : "ontop", args : [posList[i].name, goal[j].name ]};
-    				//	if(checkValidPos(posList[i].obj, goal[j].obj )){
+    					if(checkValidPos(posList[i].obj, goal[j].obj )){
     						lits.push([g]);
-    				//	}
+    					}
     				}else if(loc.rel == "inside"){
     					var	a : Literal = {pol : true, rel : "inside", args : [posList[i].name, goal[j].name ]};
-    				//	if(checkValidPos(posList[i].obj, goal[j].obj )){
+    					if(checkValidPos(posList[i].obj, goal[j].obj )){
     						lits.push([a]);
-    				//	}
+    					}
     				}else if(loc.rel == "above"){
                         var b : Literal = {pol : true, rel : "above", args : [posList[i].name, goal[j].name ]};
-                        //if(checkValidPos(posList[i].obj, goal[j].obj )){
+                        if(checkValidPos(posList[i].obj, goal[j].obj )){
                             lits.push([b]);
-                        //}                        
+                        }                        
                     }else if(loc.rel == "under"){
                         var b : Literal = {pol : false, rel : "above", args : [posList[i].name, goal[j].name ]};
-                        //if(checkValidPos(posList[i].obj, goal[j].obj )){
+                        if(checkValidPos(posList[i].obj, goal[j].obj )){
                             lits.push([b]);
-                        //}                        
+                        }                        
  
                     }else if(loc.rel == "beside"){
                         var a : Literal = {pol : true, rel : "beside", args : [posList[i].name, goal[j].name ]};
-                        //if(checkValidPos(posList[i].obj, goal[j].obj )){
+                        if(checkValidPos(posList[i].obj, goal[j].obj )){
                             lits.push([a]);
-                        //}
+                        }
+                    }else if(loc.rel == "leftof"){
+                        var a : Literal = {pol : true, rel : "leftof", args : [posList[i].name, goal[j].name ]};
+                        if(checkValidPos(posList[i].obj, goal[j].obj )){
+                            lits.push([a]);
+                        }
+                    }else if(loc.rel == "rightof"){
+                        var a : Literal = {pol : false, rel : "leftof", args : [posList[i].name, goal[j].name ]};
+                        if(checkValidPos(posList[i].obj, goal[j].obj )){
+                            lits.push([a]);
+                        }
                     }
     			}	
     		}
@@ -157,9 +167,8 @@ module Interpreter {
 
                         //Which height the object have in the given stack
                         var objHeight : number = searchStack (state.stacks[stmLocObj[i].x],state.stacks[stmObj[j].x][stmObj[j].y]);  
-                        
                         //check same x-cordinate && check that y-cordinate is greater
-                        if((stmLocObj[i].x == stmObj[j].x) && (objHeight < stmLocObj[j].y)) {                            
+                        if((stmLocObj[i].x == stmObj[j].x) && (objHeight > stmLocObj[j].y)) {                            
                             list.push(stmObj[j]);
                         }
                     }
@@ -170,7 +179,7 @@ module Interpreter {
                         var objHeight : number = searchStack (state.stacks[stmLocObj[i].x],state.stacks[stmObj[j].x][stmObj[j].y]);  
                         
                         //check same x-cordinate && check that y-cordinate is lower
-                        if((stmLocObj[i].x == stmObj[j].x) && (objHeight > stmLocObj[j].y)) {                            
+                        if((stmLocObj[i].x == stmObj[j].x) && (objHeight < stmLocObj[j].y)) {                            
                             list.push(stmObj[j]);
                         }
                     }
@@ -178,17 +187,33 @@ module Interpreter {
                     for(var j =0; j< stmObj.length;  j++){
                         var stack1 = searchStack(state.stacks[stmLocObj[i].x-1], state.stacks[stmObj[j].x][stmObj[j].y]);
                         var stack2 = searchStack(state.stacks[stmLocObj[i].x+1], state.stacks[stmObj[j].x][stmObj[j].y]);
-                                                console.log("stack1", stack1);
-                        console.log("stack2", stack2);
                         if(stack1 != -1){
                             list.push(stmObj[j]);
                         }else if(stack2 != -1){
                             list.push(stmObj[j]);
                         }
                     }
+                }else if(objs.loc.rel == "leftof"){
+                	for(var j =0; j< stmObj.length;  j++){
+	                	for(var t =0; t < stmLocObj[i].x; t++){
+	                		var stack = searchStack(state.stacks[t], state.stacks[stmObj[j].x][stmObj[j].y]);
+	                		if (stack != -1){
+	                			list.push(stmObj[j]);
+	                		}
+	                	}
+	                }
+                }else if(objs.loc.rel == "rightof"){
+                	for(var j =0; j< stmObj.length;  j++){
+	                	for(var t =stmLocObj[i].x; t < state.stacks.length; t++){
+	                		var stack = searchStack(state.stacks[t], state.stacks[stmObj[j].x][stmObj[j].y]);
+	                		if (stack != -1){
+	                			list.push(stmObj[j]);
+	                		}
+	                	}
+	                }
                 }
 			}		
-    	} else { 		
+    	} else {
     		
     		if (objs.form == "floor"){
     			for(var x =0; x< state.stacks.length;  x++){
@@ -223,6 +248,8 @@ module Interpreter {
 *   Check that the combination of over and under object is valid 
 **/
 function checkValidPos (over : ObjectDefinition, under : ObjectDefinition): boolean{
+	console.log(over);
+	console.log(under);
         
         if (under.form === "floor"){
             return true;
