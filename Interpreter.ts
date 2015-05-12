@@ -73,6 +73,7 @@ module Interpreter {
 
 
         //case take cmd (ent)
+        //parse the result from cmd into new finite Array
         if(cmd.cmd == "take"){
             var currentEnt = cmd.ent;
 
@@ -89,6 +90,7 @@ module Interpreter {
         }
 
         //case move cmd (ent,loc)
+        //parse the result from cmd into new finite Array
         if(cmd.cmd == "move"){
             var currentEnt = cmd.ent;
             var currentLoc = cmd.loc;
@@ -109,6 +111,7 @@ module Interpreter {
 
         console.log(temp);
 
+        //add new rule according to parsed array
         var newRules = genRule(temp,state);
         intprt.push(newRules);
 
@@ -118,6 +121,7 @@ module Interpreter {
     }
 
     //generate rule from prepared array
+    //modify some algorithm here to properly generate new rule. e.g. inside(a,b), ontop(a,b), holding(a)
     function genRule(temp : string[], state : WorldState) : Literal[] {
         var rules : Literal[] = [];
         var forms : Array<string> = [];
@@ -222,11 +226,13 @@ module Interpreter {
         return rules;
     }
 
-    //search object representation
+    //search object representation from size, color, form
+    //return an object representation in current world e.g. "a", "b", "c"
+    //return emptystring if there is no object found in current world so it means that impossible to be solved
     function searchObject(size : string, color : string, form : string, state : WorldState) : string {
 
         //it can match more than 1 object that can cause ambiguous
-        //but skipped ambiguous by now
+        //but skipped ambiguous by now so it always match the first item in current world
 
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var matchCount = 0;
@@ -265,6 +271,7 @@ module Interpreter {
 
     }
 
+    //traverse through object to get finite array
     function recursiveObject(currentObj : Parser.Object) : string[] {
         var temp : string[] = [];
 
@@ -301,6 +308,7 @@ module Interpreter {
 
     }
 
+    //traverse through object to get finite array
     function recursiveLocation(currentLoc : Parser.Location) : string[] {
         var temp : string[] = [];
 
