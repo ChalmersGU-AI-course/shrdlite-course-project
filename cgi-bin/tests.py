@@ -57,6 +57,23 @@ class TestAction(unittest.TestCase):
         (intprt, stacks, holding, arm, objects) = goal
         self.assertEqual(stacks,[[],['b','a']])
 
+
+class TestUngrasp(unittest.TestCase):
+
+    def setUp(self):
+        self.stacks = [['a'],[]]
+        self.objects = {'a': {'size': 'large', 'form': 'ball', 'color': 'blue'},
+                   'b': {'size': 'large', 'form': 'box', 'color': 'red'}}        
+        self.arm = 1
+        self.holding = 'b'
+        self.intprt = ('inside','a','b')
+        self.state = (self.intprt,self.stacks,self.holding,self.arm,self.objects)
+
+    def test_ungrasp(self):
+        self.assertEqual(simple_planner._ungrasp(*self.state),
+            (self.intprt, [['a'],['b']], None, 1, self.objects))
+
+
 class TestGoal(unittest.TestCase):
 
     def setUp(self):
