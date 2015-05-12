@@ -64,7 +64,7 @@ module Interpreter {
         
         // Find object to move
         
-        var objs : Literal [][] = identifyEnt(cmd.ent, cmd.cmd, state);
+        var objs : Literal [][] = identifyEnt(cmd.ent, null , state);
         if(!objs.length){
         	return [];
         }
@@ -75,102 +75,77 @@ module Interpreter {
         }
         // Form goal
         var intprt : Literal[][] = [];
-        // combine with possible locations
+        
+        // combine a obj with possible locations
+       	var n = 0;
         for(var l = 0; l < objs.length; l++){
 			for(var i = 0; i < objs[l].length; i++){
 				var lit : Literal;
 				if(loc.length){
 					for(var j = 0 ; j < loc.length ;j++){
 						for(var k = 0 ; k < loc[j].length ;k++){
-							lit = {pol : true, rel : cmd.loc.rel, args : [objs[l][i].args[0], loc[j][k].args[0]]};
-							if(checkIllegal(lit, state)){
-								if(!intprt[j]){
-									intprt[j] = [];
+							lit = {pol : true, rel : cmd.loc.rel, args : [objs[l][i].args[objs[l][i].args.length -1], loc[j][k].args[0]]};
+							
+							if(checkIllegal(lit, state) ){
+								if(!intprt[n]){
+									intprt[n] = [];
 								}
-								intprt[j].push(lit);
+								if(checkIllegal(objs[l][i], state)){
+									intprt[n].push(objs[l][i]);
+								}
+								if(checkIllegal(loc[j][k], state)){
+									intprt[n].push(loc[j][k]);
+								}
+								intprt[n].push(lit);
+								n++;
 							}
 						}
 					}
 				}else{
-					lit = {pol : true, rel : cmd.cmd, args : [objs[l][i].args[0]]};
-					if(!intprt[i]){
-						intprt[i] = [];
+					lit = {pol : true, rel : null, args : [objs[l][i].args[0]]};
+					if(checkIllegal(lit, state)){
+						if(!intprt[l]){
+							intprt[l] = [];
+						}
+						intprt[l].push(lit);
 					}
-					intprt[i].push(lit);
 				}
 			}
 		}
-      	
-        //var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-       /* var pddls = state.pddl.toArray();
-        
-        var intprt : Literal[][] = [];
-        if(loc){
-        	var n = 0;
-        	
-        	// gather all poss
-        	var lits :Literal [][] = [];
-        	for (var i = 0; i < objs.length; i++) {
-        		for (var k = 0; k < objs[i].length; k++) {
-        			var nn = 0;
-        			for (var j = 0; j < loc.length ; j++) {
-        				for (var l = 0; l < loc[j].length ; l++) {
-		        			var lit: Literal = {pol: true, rel: cmd.loc.rel, args: [objs[i][k], loc[j][l]]};
-			        			/////only interpet legal goals!
-			        		if(checkIllegal(lit, state)){
-			        			if(lits[k]== null){
-			        				lits[k] = [];
-			        			}
-			        			lits[k][nn] = lit;
-			        			nn++;
-			        		}
-			        	}
-		        	}
-        		}
-        	}
-        	// combine the results
-        	var litscomb :Literal [][] = [];
-        	var n = 0;
-        	for (var i = 0; i < lits.length; i++) {
-        		for (var j = 0; j < lits[i].length ; j++) {
-        			
-        			for (var k = 0; k < lits.length ; k++) {
-        				for (var l = 0; l < lits[k].length ; l++) {
-        					if(litscomb[n]== null){
-		        				litscomb[n] = [];
-		        			}
-		        			var combi : Literal[]= [];
-		        			combi.push(lits[i][j]);
-		        			if(i != k && j != l){
-		        				combi.push(lits[k][l]);
-		        			}
-		        			if(checkIllegalCombi(combi, litscomb, state) && checkQuantifyer(combi, cmd.ent, cmd.loc,state)){
-	        					litscomb[n] = combi;
-	        					n++;
-	        				}
-        				}
-        			}
-        		}
-        	}
-        	// remove reoccurence
-        	var litset : collections.Set<Literal[]> = new collections.Set<Literal[]>(
-        		function(a){
-        			var res:Result = {input: "", prs: null ,intp: [a]};
-        			return interpretationToString(res);});
-	    	litscomb.forEach((obj) =>
-	    		litset.add(obj)
-	    	);
-	    	intprt =  litset.toArray();
-        	//intprt = litscomb;
-		}else{
-	        for (var i = 0; i < objs.length; i++) {
-	        	for (var j = 0; j < objs[i].length; j++) {
-	        		intprt[i]= [{pol: true, rel: cmd.cmd, args: [objs[i][j]]}];
-	        	}
-	        }
-		}*/
-	//	var intprt = objs;
-        return intprt;
+		var resintprt : Literal[][] = [];
+		var max : number = findMaxdepth(objs)+ findMaxdepth(loc) -1;
+		
+		
+		// filter incomplete intrepretations
+		for(var i = 0; i < intprt.length; i++){
+			if(checkCompleteness(max, intprt[i])){
+				if(!resintprt[i]){
+					resintprt[i] = [];
+				}
+				resintprt[i] = intprt[i];
+			}
+		}
+
+        return resintprt;
+    }
+    
+    function findMaxdepth(litss : Literal[][]):number{
+    	var max : number = 0;
+		litss.forEach((lits) =>{
+			if(max < lits.length){
+				max = lits.length;
+			}
+		});
+		return max;
+    }
+    
+    function checkCompleteness(max : number, lits : Literal []):boolean{
+
+    	//if(lits.length <= max && max > 2){
+    	//	return false;
+    	//}
+    	
+    	return true;
     }
     
     function checkQuantifyer(lits : Literal[], ent : Parser.Entity, loc : Parser.Location, state : WorldState):boolean{
@@ -223,6 +198,10 @@ module Interpreter {
     function checkIllegal(lit : Literal, state : WorldState):boolean{
     	var a = state.objects[lit.args[0]];
     	var b = state.objects[lit.args[1]];
+    	
+    	if(!lit.rel || lit.rel == null){
+    		return false;
+    	}
     	if(lit.args[0] == lit.args[1]){
     		return false;
     	}
@@ -261,7 +240,7 @@ module Interpreter {
     
     function identifyLocation(loc : Parser.Location, state : WorldState):Literal[][]{
     	try {
-        	var result : Literal[][] = identifyEnt(loc.ent, "location", state);
+        	var result : Literal[][] = identifyEnt(loc.ent, null, state);
 		} catch (err) {
 			if(err instanceof Interpreter.ErrorInput){
 				err.message = err.message.substring(0, err.message.length-1) + " to?";
@@ -348,7 +327,13 @@ module Interpreter {
     
     
     function identifyEnt(ent : Parser.Entity, rel : string ,state : WorldState):Literal[][]{
-    	var result : string[] = identifyObj(ent.obj.form, ent.obj.color, ent.obj.size, state);
+    	var result : string[];
+    	if (ent.obj.loc){
+    		result = identifyObj(ent.obj.obj.form, ent.obj.obj.color, ent.obj.obj.size, state);
+    	}else{
+    		result = identifyObj(ent.obj.form, ent.obj.color, ent.obj.size, state);
+    	}
+    	 
     	var unqObjs : string[] = uniqeObjects(result);
     	var results : Literal[][] = [];
     	if(ent.obj.loc){
@@ -394,30 +379,52 @@ module Interpreter {
    			;// TODO
     	}
     	// combine with possible locations
+    	var intrpt : Literal[][] = [];
 		for(var i = 0; i < result.length; i++){
 			var lit : Literal;
 			if(ent.obj.loc){
 				for(var j = 0 ; j < results.length ;j++){
 					for(var k = 0 ; k < results[j].length ;k++){
 						lit = {pol : true, rel : ent.obj.loc.rel, args : [result[i], results[j][k].args[0]]};
-						results[j].push(lit);
+						if(checkIllegal(lit, state)){
+							if(!intrpt[j]){
+								intrpt[j] = [];
+							}
+							if(checkIllegal(results[j][k], state)){
+								intrpt[j].push(results[j][k]);
+							}
+							intrpt[j].push(lit);
+						}
 					}
 				}
 			}else{
 				lit = {pol : true, rel : rel, args : [result[i]]};
-				if(!results[i]){
-					results[i] = [];
+				if(!intrpt[i]){
+					intrpt[i] = [];
 				}
-				results[i].push(lit);
+				intrpt[i].push(lit);
 			}
 		}
 			
-    	return results;
+    	return intrpt;
     }
     
     function findAllWithForm(form : string, state : WorldState):string[]{
     	var objs = identifyObj(form, "", "",state);
     	return uniqeObjects(objs);
+    }
+    
+    function uniqeObjsFromLits(lits: Literal[]):collections.Set<string>{
+    	var objset : collections.Set<string> = new collections.Set<string>(function(a){return a});
+    	lits.forEach((lit) => {
+    		if(lit.args[0]){
+    			objset.add(lit.args[0]);
+    		}
+    		if(lit.args[1]){
+    			objset.add(lit.args[1]);
+    		}
+    	});
+    	return objset;
     }
     
     function uniqeObjects(objs:string[]):string[]{
