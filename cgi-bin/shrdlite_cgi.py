@@ -34,54 +34,49 @@ def planner(intprt, stacks, holding, arm, objects, utterance, parses):
     import simple_planner
     import AStar.algorithm
 
-    came_from, cost_so_far, goal = AStar.algorithm.a_star_search_new(simple_planner.getAction,
+
+    came_from, cost_so_far, actions_so_far, goal = AStar.algorithm.a_star_search_new(simple_planner.getAction,
                         (intprt, stacks, holding, arm, objects),
                         simple_planner.goalWrapper,
                         simple_planner.heuristic)
 
-    # current = goal
+
+    return AStar.algorithm.getPlan(goal, came_from, actions_so_far)
+
+    # import random
+    # while True:
+    #     pickstack = random.randrange(len(stacks))
+    #     if stacks[pickstack]:
+    #         break
     # plan = []
-    # while current in came_from:
-    #     (l,x,c) = current
-    #     plan.append(l)
-    #     current = came_from[current]
 
-    # return reversed(plan)
+    # # First move the arm to the selected stack
+    # if pickstack < arm:
+    #     plan += ["Moving left"]
+    #     plan += ["l"] * (arm - pickstack)
+    # elif pickstack > arm:
+    #     plan += ["Moving right"]
+    #     plan += ["r"] * (pickstack - arm)
 
-    import random
-    while True:
-        pickstack = random.randrange(len(stacks))
-        if stacks[pickstack]:
-            break
-    plan = []
+    # # Then pick up the object
+    # obj = stacks[pickstack][-1];
+    # plan += ["Picking up the " + objects[obj]['form'],
+    #          "p"]
 
-    # First move the arm to the selected stack
-    if pickstack < arm:
-        plan += ["Moving left"]
-        plan += ["l"] * (arm - pickstack)
-    elif pickstack > arm:
-        plan += ["Moving right"]
-        plan += ["r"] * (pickstack - arm)
+    # if pickstack < len(stacks) - 1:
+    #     # Then move to the rightmost stack
+    #     plan += ["Moving as far right as possible"]
+    #     plan += ["r"] * (len(stacks) - pickstack - 1)
 
-    # Then pick up the object
-    obj = stacks[pickstack][-1];
-    plan += ["Picking up the " + objects[obj]['form'],
-             "p"]
+    #     # Then move back
+    #     plan += ["Moving back"]
+    #     plan += ["l"] * (len(stacks) - pickstack - 1)
 
-    if pickstack < len(stacks) - 1:
-        # Then move to the rightmost stack
-        plan += ["Moving as far right as possible"]
-        plan += ["r"] * (len(stacks) - pickstack - 1)
+    # # Finally put it down again
+    # plan += ["Dropping the " + objects[obj]['form'],
+    #          "d"]
 
-        # Then move back
-        plan += ["Moving back"]
-        plan += ["l"] * (len(stacks) - pickstack - 1)
-
-    # Finally put it down again
-    plan += ["Dropping the " + objects[obj]['form'],
-             "d"]
-
-    return plan
+    # return plan
 
 
 ######################################################################

@@ -32,6 +32,28 @@ class TestMain(unittest.TestCase):
                                                             simple_planner.heuristic)
         (intprt, stacks, holding, arm, objects) = goal
         self.assertEqual(stacks,[[],['b','a']])
+        self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far), ['start','p','r','d'])
+
+
+class TestAStar(unittest.TestCase):
+    
+    def setUp(self):
+        self.stacks = [['a'],[],['b'],[]]
+        self.objects = {'a': {'size': 'large', 'form': 'ball', 'color': 'blue'},
+                   'b': {'size': 'large', 'form': 'box', 'color': 'red'}}        
+        self.arm = 0
+        self.holding = None
+        self.intprt = ('inside','a','b')
+        self.state = (self.intprt,self.stacks,self.holding,self.arm,self.objects)
+
+    def test_AStar(self):
+        came_from, cost_so_far, actions_so_far, goal = AStar.algorithm.a_star_search_new(   simple_planner.getAction,
+                                                            self.state,
+                                                            simple_planner.goalWrapper,
+                                                            simple_planner.heuristic)
+        (intprt, stacks, holding, arm, objects) = goal
+        self.assertEqual(stacks,[[],[],['b','a'],[]])
+        self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far), ['start','p','r','r','d'])
 
 class TestActions(unittest.TestCase):
 
@@ -47,6 +69,14 @@ class TestActions(unittest.TestCase):
     def test_ungrasp(self):
         self.assertEqual(simple_planner._ungrasp(*self.state),
             (self.intprt, [['a'],['b']], None, 1, self.objects))
+
+    def test_grasp(self):
+        self.assertEqual(simple_planner._ungrasp(self.intprt,
+                                                 [['a'],['b']],
+                                                 None,
+                                                 0,
+                                                 self.objects),
+            (self.intprt, [[],['b']], 'a', 1, self.objects))
 
     def test_left(self):
         self.assertEqual(simple_planner._left(*self.state),
