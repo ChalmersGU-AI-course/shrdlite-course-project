@@ -4,6 +4,24 @@
 ///<reference path="Rules.ts"/>
 ///<reference path="Helper.ts"/>
 
+
+    /**
+     * An inerpretation of a parse will consider the relations between objects in the current world, for example:
+     * If the world has two white balls, one in a box the other on the floor, and the user input is take the white ball, then
+     * the goal will only consist of one literal.
+     * 
+     * Moreover if the user input gives multiple parse trees like "put the white ball in a box on the floor", it will try to 
+     * interpret each parse but if for example there are no white ball in a box but a box on the floor, only one interpretation
+     * will be returned.
+     * 
+     * The quantifier "all", "any" and "the" are all interpreted the same way as "any".
+     * 
+     * Extension:
+     * Ask the user to choose wich of the parses were intended (In the case where there are multiple).
+     * For example:
+     * if the user input was "put the white ball in a box on the floor" and two interpretations are found then the user hasto choose between
+     * the following choices: put the white ball in a box that is on the floor" or "put the white ball that is in a box on the floor"
+     */
 module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
@@ -26,7 +44,6 @@ module Interpreter {
         }else if(interpretations.length == 0){
              throw new Error("Found no interpretation");
         }else{
-            //throw new Error("More than one parse gave an interpretation: ambiguity");  
             var newParses: string[] = [];
             var selection: number;
             alert("More than one parse gave an interpretation! \n");
@@ -69,8 +86,6 @@ module Interpreter {
     
     /**
      * Interprets the command and return the goal as a pddl representation.
-     * Side note:
-     * - The quantifier "all", "any" and "the" are all interpreted the same way as "any"
      */
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         var tmp : ObjWCoord[];
@@ -280,13 +295,13 @@ module Interpreter {
     function clearerParse(parse: Parser.Result): string{
         var s: string = parse.input;
         var ent = parse.prs.ent;
-        var index;
+        var index: number = 0;
         var form: string;
         
         for(var i = 0; i < 2; i++){
             while(ent.obj.obj != null){
                 form = ent.obj.obj.form == "anyform" ? "object" : ent.obj.obj.form;
-                index = s.indexOf(form)+form.length;
+                index = s.indexOf(form, index)+form.length;
                 s = splice(s, index, 0, " that is");
                 ent = ent.obj.loc.ent;
             }
