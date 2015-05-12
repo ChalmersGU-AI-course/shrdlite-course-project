@@ -39,6 +39,35 @@ module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
+    function makeGoalFunc(relTargets: Interpreter.Literal[][]) {
+        return function IsWorldGoal(world: WorldNode) : boolean {
+            for (var i=0; i < relTargets.length; ++i) {
+                var relTarget : Interpreter.Literal[] = relTargets[i]
+                var isMatch : boolean = true;
+                for (var j=0; j< relTarget.length; ++j) {
+                    if (!stateSatisfiesLiteral(world.State, relTarget[j])) {
+                        isMatch = false;
+                        break;
+                    }
+                }
+                if (isMatch) {
+                    return true;
+                }
+
+            }
+            return false;
+        }
+    }
+
+    function stateSatisfiesLiteral(state: WorldState, literal: Interpreter.Literal) : boolean {
+        if (literal.rel === "holding") {
+            return state.holding === literal.args[0];
+        }
+
+        var firstObject : string = literal.args[0];
+        var secondObject : string = literal.args[1];
+        return Interpreter.isRelativeMatch(firstObject, literal.rel, secondObject, state);
+    }
 
     class WorldNode implements INode<WorldNode> {
         constructor(

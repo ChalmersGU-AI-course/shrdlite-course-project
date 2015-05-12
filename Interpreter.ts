@@ -182,7 +182,8 @@ module Interpreter {
         return false;
     }
 
-    function isRelativeMatch(firstObject: string, relation: string, secondObject: string, world: WorldState): boolean {
+    //TODO: refactor into world.ts or something
+    export function isRelativeMatch(firstObject: string, relation: string, secondObject: string, world: WorldState): boolean {
         var firstPosition = getObjectPosition(firstObject, world);
         var secondPosition: ObjectPosition;
 
