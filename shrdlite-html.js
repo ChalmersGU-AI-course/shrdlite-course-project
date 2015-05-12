@@ -2853,7 +2853,7 @@ var Interpreter;
         for (var i = 0; i < 2; i++) {
             while (ent.obj.obj != null) {
                 form = ent.obj.obj.form == "anyform" ? "object" : ent.obj.obj.form;
-                index = s.indexOf(form, index) + form.length;
+                index = s.indexOf(form, index + form.length) + form.length;
                 s = splice(s, index, 0, " that is");
                 ent = ent.obj.loc.ent;
             }
