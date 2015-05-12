@@ -30,7 +30,7 @@ run: shrdlite-offline.js
 	# node shrdlite-offline.js small "put the blue table above the red box"
 	# node shrdlite-offline.js small "put the white ball on the white ball"
 	# node shrdlite-offline.js small "put the blue box in the red box"
-	node shrdlite-offline.js small "take all boxes"
+	node shrdlite-offline.js small "put the red box on the floor"
 
 medium: shrdlite-offline.js
 	# node shrdlite-offline.js medium "put the blue box above the red box"
