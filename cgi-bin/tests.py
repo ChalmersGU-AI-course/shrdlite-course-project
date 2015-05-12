@@ -15,7 +15,7 @@ class TestMain(unittest.TestCase):
                    'b': {'size': 'large', 'form': 'box', 'color': 'red'}}        
         self.arm = 0
         self.holding = None
-        self.intprt = ('inside','a','b')
+        self.intprt = [('inside','a','b')]
         self.state = (self.intprt,self.stacks,self.holding,self.arm,self.objects)
 
     def test_action(self):
@@ -44,7 +44,7 @@ class TestAStar(unittest.TestCase):
                    'b': {'size': 'large', 'form': 'box', 'color': 'red'}}        
         self.arm = 0
         self.holding = None
-        self.intprt = ('inside','a','b')
+        self.intprt = [('inside','a','b')]
         self.state = (self.intprt,self.stacks,self.holding,self.arm,self.objects)
 
     def test_AStar(self):
@@ -230,85 +230,85 @@ class TestGoal(unittest.TestCase):
 
         # Testing inside PDDL
     def test_inside_true(self):
-        self.assertTrue(simple_planner.goalWrapper(('inside','a','b'),*self.state))
+        self.assertTrue(simple_planner.goalWrapper([('inside','a','b')],*self.state))
 
     def test_inside_false_holding(self):
         self.assertFalse(simple_planner.goalWrapper(
-            ('inside','a','b'),[[],['b']],'a', 1, self.objects))
+            [('inside','a','b')],[[],['b']],'a', 1, self.objects))
 
     def test_inside_false(self):
-        self.assertFalse(simple_planner.goalWrapper(('inside','b','a'),*self.state))
+        self.assertFalse(simple_planner.goalWrapper([('inside','b','a')],*self.state))
 
 
         # Testing ontop PDDL
     def test_ontop_true(self):
-        self.assertTrue(simple_planner.goalWrapper(('ontop','a','b'),*self.state))
+        self.assertTrue(simple_planner.goalWrapper([('ontop','a','b')],*self.state))
 
     def test_ontop_false(self):
-        self.assertFalse(simple_planner.goalWrapper(('ontop','b','a'),*self.state))
+        self.assertFalse(simple_planner.goalWrapper([('ontop','b','a')],*self.state))
 
 
         # Testing holding PDDL
     def test_holding_true(self):
-        self.assertTrue(simple_planner.goalWrapper(('holding',None, None),*self.state))
+        self.assertTrue(simple_planner.goalWrapper([('holding',None, None)],*self.state))
 
 
         # Testing above PDDL
     def test_above_true(self):
         self.assertTrue(simple_planner.goalWrapper(
-            ('above','a','b'),[[],[],['b','c','a']],None,0,self.objects))
+            [('above','a','b')],[[],[],['b','c','a']],None,0,self.objects))
 
     def test_above_false(self):
         self.assertFalse(simple_planner.goalWrapper(
-            ('above','a','b'),[[],[],['a','c','b']],None,0,self.objects))
+            [('above','a','b')],[[],[],['a','c','b']],None,0,self.objects))
 
 
         # Testing under PDDL
     def test_under_true(self):
         self.assertTrue(simple_planner.goalWrapper(
-            ('under','a','b'),[[],[],['a','c','b']],None,0,self.objects))
+            [('under','a','b')],[[],[],['a','c','b']],None,0,self.objects))
 
     def test_under_false(self):
         self.assertFalse(simple_planner.goalWrapper(
-            ('under','a','b'),[[],[],['b','c','a']],None,0,self.objects))
+            [('under','a','b')],[[],[],['b','c','a']],None,0,self.objects))
 
 
         # Testing beside PDDL
     def test_beside_true_2Stacks(self):
         self.assertTrue(simple_planner.goalWrapper(
-            ('beside','a','b'),[['a'],['b']],None,0,self.objects))
+            [('beside','a','b')],[['a'],['b']],None,0,self.objects))
 
     def test_beside_true(self):
         self.assertTrue(simple_planner.goalWrapper(
-            ('beside','a','c'),[['a'],['c'],['b']],None,0,self.objects))
+            [('beside','a','c')],[['a'],['c'],['b']],None,0,self.objects))
 
     def test_beside_false(self):
         self.assertFalse(simple_planner.goalWrapper(
-            ('beside','a','b'),[['a'],['c'],['b']],None,0,self.objects))
+            [('beside','a','b')],[['a'],['c'],['b']],None,0,self.objects))
 
     def test_beside_notFound(self):
         self.assertFalse(simple_planner.goalWrapper(
-            ('beside','a','b'),[['a'],['c'],[]],'b',0,self.objects))
+            [('beside','a','b')],[['a'],['c'],[]],'b',0,self.objects))
 
 
         # Testing leftof PDDL
     def test_leftof_true(self):
         self.assertTrue(simple_planner.goalWrapper(
-            ('leftof','a','b'),[['a'],['c'],['b']],None,0,self.objects))
+            [('leftof','a','b')],[['a'],['c'],['b']],None,0,self.objects))
 
     def test_leftof_false(self):
         self.assertFalse(simple_planner.goalWrapper(
-            ('leftof','c','a'),[['a'],[],['b']],'c',0,self.objects))
+            [('leftof','c','a')],[['a'],[],['b']],'c',0,self.objects))
 
 
         # Testing rightof PDDL
     def test_rightof_true(self):
         self.assertTrue(simple_planner.goalWrapper(
-            ('rightof','b','a'),[['a'],['c'],['b']],None,0,self.objects))
+            [('rightof','b','a')],[['a'],['c'],['b']],None,0,self.objects))
 
     def test_rightof_false(self):
         self.assertFalse(simple_planner.goalWrapper(
-            ('rightof','a','b'),[['a'],['c'],['b']],None,0,self.objects))
+            [('rightof','a','b')],[['a'],['c'],['b']],None,0,self.objects))
 
 if __name__ == '__main__':
     unittest.main()
