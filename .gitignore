@@ -9,4 +9,6 @@ Interpreter.js
 Astar.js
 
 Experiment.js
+World.js
+lib/collections.js
 Heuristics.js
