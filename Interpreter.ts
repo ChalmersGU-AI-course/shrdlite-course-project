@@ -101,11 +101,14 @@ module Interpreter {
 
 		value.forEach(function(target) {
 		    and = [];
-		    if(relation == "ontop" || relation == "above" || relation == "inside"){ 
+		    if(relation == "ontop" || relation == "inside"){ 
 			var p : Literal = {pol: true, rel: relation == "inside" ? "ontop" : relation, args: [key.name, target.name] };
 			if(checkSize(key.obj, target.obj)) {
 			    or.push([p]);
 			}
+		    } else if (relation == "above") {
+			var p : Literal = {pol: true, rel: relation == "inside" ? "ontop" : relation, args: [key.name, target.name] };
+			or.push([p]);
 		    } else if(relation == "under") {
 		
 			    var p : Literal = {pol: false, rel: "above", args: [key.name, target.name] };
@@ -201,7 +204,7 @@ module Interpreter {
     }
 
 
-    function checkSize(above : Parser.Object, below : Parser.Object) : boolean {
+    export function checkSize(above : Parser.Object, below : Parser.Object) : boolean {
         if(below.form == "floor") {
             return true;
         } else if (below.form == "ball") {
