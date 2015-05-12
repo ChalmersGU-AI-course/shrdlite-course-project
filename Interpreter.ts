@@ -133,22 +133,10 @@ module Interpreter {
                 var location = cmd.loc;
                 var locationTargets = findTargetEntities(location.ent, state);
 
-                for (var ix in targets){
-                    for(var jx in locationTargets){
-                        var above = targets[ix];
-                        var below = locationTargets[jx];
-
-                        if( above == below){
-                            continue;
-                        }
-                        if(! canSupport(state.objects[above], state.objects[below])){
-                            continue;
-                        }
-
-                        intprt.push( [
-                            {pol: true, rel: location.rel, args: [above, below] }
-                        ] );
-                    }
+                if(location.rel === "under"){
+                    moveObj(state, intprt, "above", locationTargets, targets);
+                } else {
+                    moveObj(state, intprt, location.rel, targets, locationTargets);
                 }
                 break;
             default:
@@ -156,6 +144,26 @@ module Interpreter {
         }
 
         return intprt;
+    }
+
+    function moveObj(state, intprt, locationRel, fromList, toList){
+        for (var ix in fromList){
+            for(var jx in toList){
+                var above = fromList[ix];
+                var below = toList[jx];
+
+                if( above == below){
+                    continue;
+                }
+                if(! canSupport(state.objects[above], state.objects[below])){
+                    continue;
+                }
+
+                intprt.push( [
+                    {pol: true, rel: locationRel, args: [above, below] }
+                ] );
+            }
+        }
     }
 
 

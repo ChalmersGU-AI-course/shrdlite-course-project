@@ -24,8 +24,14 @@ $(TARGETS): %: shrdlite-%.js
 grammar.js: grammar.ne
 	nearleyc $< > $@
 
-run: offline
-	# node shrdlite-offline.js small "grasp the blue table"
+run: shrdlite-offline.js
+	# node shrdlite-offline.js small "grasp the yellow box"
 	# node shrdlite-offline.js small "put the blue table on a box"
-	# node shrdlite-offline.js small "put the blue table on the red box"
+	# node shrdlite-offline.js small "put the blue table above the red box"
+	# node shrdlite-offline.js small "put the white ball on the white ball"
+	# node shrdlite-offline.js small "put the blue box in the red box"
 	node shrdlite-offline.js small "take all boxes"
+
+medium: shrdlite-offline.js
+	# node shrdlite-offline.js medium "put the blue box above the red box"
+	node shrdlite-offline.js medium "put the red box below the blue box"
