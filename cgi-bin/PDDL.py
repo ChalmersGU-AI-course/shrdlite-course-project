@@ -29,12 +29,16 @@ def satisfy_ontop(a, b, stacks, holding):
     """a ontop of b: some stack: bot, ..., b, a, ..., top"""
     (astack, apos) = find_obj(a, stacks)
     (bstack, bpos) = find_obj(b, stacks)
+    if not astack or not bstack:
+        return False
     return astack == bstack and apos - bpos == 1
 
 def satisfy_above(x, y, stacks, holding):
     """x is above y if it is somewhere above"""
     (xstack, xpos) = find_obj(x, stacks)
     (ystack, ypos) = find_obj(y, stacks)
+    if not xstack or not ystack:
+        return False
     return xstack == ystack and xpos > ypos
 
 def satisfy_under(x, y, stacks, holding):
@@ -45,12 +49,16 @@ def satisfy_beside(x, y, stacks, holding):
     """x is beside y if they are in adjacent stacks"""
     (xstack, xpos) = find_obj(x, stacks)
     (ystack, ypos) = find_obj(y, stacks)
+    if not xstack or not ystack:
+        return False
     return abs(xstack - ystack) == 1
 
 def satisfy_leftof(x, y, stacks, holding):
     """x is left of y if it is somewhere to the left"""
     (xstack, xpos) = find_obj(x, stacks)
     (ystack, ypos) = find_obj(y, stacks)
+    if not xstack or not ystack:
+        return False    
     return xstack < ystack
 
 def satisfy_rightof(x, y, stacks, holding):
@@ -63,7 +71,9 @@ def satisfy_holding(x, _, stacks, holding):
 
 def find_obj(o, stacks):
     """return (stack, position), (0,0) = bottom of leftmost stack"""
+    # Hittar ej obj när roboten håller i det. 
     for stackno, stack in enumerate(stacks):
         for pos, obj in enumerate(stack):
             if o == obj:
                 return (stackno, pos)
+    return (None, None)

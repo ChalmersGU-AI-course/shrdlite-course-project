@@ -31,6 +31,17 @@ def planner(intprt, stacks, holding, arm, objects, utterance, parses):
     """
     This function craetes a dummy plan involving a random stack
     """
+    
+    import simple_planner
+    import AStar.algorithm
+
+    came_from, cost_so_far, actions_so_far, goal = AStar.algorithm.a_star_search_new(simple_planner.getAction,
+                        (intprt, stacks, holding, arm, objects),
+                        simple_planner.goalWrapper,
+                        simple_planner.heuristic)
+
+    return AStar.algorithm.getPlan(goal, came_from, actions_so_far)
+
     import random
     while True:
         pickstack = random.randrange(len(stacks))
@@ -47,9 +58,9 @@ def planner(intprt, stacks, holding, arm, objects, utterance, parses):
         plan += ["r"] * (pickstack - arm)
 
     # Then pick up the object
-    obj = stacks[pickstack][-1];
-    plan += ["Picking up the " + objects[obj]['form'],
-             "p"]
+    #obj = stacks[pickstack][-1];
+    #plan += ["Picking up the " + objects[obj]['form'],
+    #         "p"]
 
     if pickstack < len(stacks) - 1:
         # Then move to the rightmost stack
@@ -61,8 +72,8 @@ def planner(intprt, stacks, holding, arm, objects, utterance, parses):
         plan += ["l"] * (len(stacks) - pickstack - 1)
 
     # Finally put it down again
-    plan += ["Dropping the " + objects[obj]['form'],
-             "d"]
+    #plan += ["Dropping the " + objects[obj]['form'],
+    #         "d"]
 
     return plan
 
