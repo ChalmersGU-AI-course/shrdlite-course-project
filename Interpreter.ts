@@ -64,89 +64,79 @@ module Interpreter {
         
         // Find object to move
         
-        var objs : Literal [][] = identifyEnt(cmd.ent, null , state);
+        var objs : Literal [][] = identifyEnt(cmd.ent, null, null, state);
         if(!objs.length){
         	return [];
         }
-        // Find location to move to
-        var loc : Literal [][] = [];
-        if(cmd.cmd == "move" || cmd.cmd == "put" || cmd.cmd == "drop"){
-        	loc = identifyLocation(cmd.loc, state);
-        }
-        // Form goal
-        var intprt : Literal[][] = [];
         
-        // combine a obj with possible locations
-       	var n = 0;
-        for(var l = 0; l < objs.length; l++){
-			for(var i = 0; i < objs[l].length; i++){
-				var lit : Literal;
-				if(loc.length){
-					for(var j = 0 ; j < loc.length ;j++){
-						for(var k = 0 ; k < loc[j].length ;k++){
-							lit = {pol : true, rel : cmd.loc.rel, args : [objs[l][i].args[objs[l][i].args.length -1], loc[j][k].args[0]]};
-							
-							if(checkIllegal(lit, state) ){
-								if(!intprt[n]){
-									intprt[n] = [];
-								}
-								if(checkIllegal(objs[l][i], state)){
-									intprt[n].push(objs[l][i]);
-								}
-								if(checkIllegal(loc[j][k], state)){
-									intprt[n].push(loc[j][k]);
-								}
-								intprt[n].push(lit);
-								n++;
-							}
-						}
-					}
-				}else{
-					lit = {pol : true, rel : null, args : [objs[l][i].args[0]]};
-					if(checkIllegal(lit, state)){
-						if(!intprt[l]){
-							intprt[l] = [];
-						}
-						intprt[l].push(lit);
-					}
-				}
-			}
-		}
-		var resintprt : Literal[][] = [];
-		var max : number = findMaxdepth(objs)+ findMaxdepth(loc) -1;
-		
-		
-		// filter incomplete intrepretations
-		for(var i = 0; i < intprt.length; i++){
-			if(checkCompleteness(max, intprt[i])){
-				if(!resintprt[i]){
-					resintprt[i] = [];
-				}
-				resintprt[i] = intprt[i];
-			}
-		}
+        // Find location to move to
+        var intprt : Literal[][] = [];
+        var loc : Literal [][] = [];
+        var n : number = 0; 
+        if(cmd.cmd == "move" || cmd.cmd == "put" || cmd.cmd == "drop"){
+        	var temp : Literal [][] = [];
+        	for(var i = 0; i < objs.length; i++){
+        		var lstlits : string[] = findendliterals(objs[i]);
+        		
+        		for(var l = 0; l < lstlits.length; l++){
+        			var ob = state.objects[lstlits[l]];
+        			var object : Parser.Object = {obj: {obj:null, loc :null,size:ob.size, color: ob.color, form:ob.form}, 
+        						loc : cmd.loc , size:ob.size, color: ob.color, form:ob.form};
+        			var tempent : Parser.Entity = {quant:"any", obj: object};
+        			temp = identifyEnt(tempent, null, lstlits[l], state);
+        		
+	        		for(var j = 0; j < temp.length; j++){
+	        			var temp2 : Literal[]= clearIlligal(clone<Literal[]>(objs[i]), state);
+	        			
+	        			for(var k = 0; k < temp[j].length; k++){
+	        				if(checkIllegal(temp[j][k], state)){
+		        				intprt[n] = temp2;
+		        				intprt[n].push(temp[j][k]);
+		        				n++;
+	        				}
+	        			}
+	        		}
+        		}
+        		
+        	}
+        }
+        else if(cmd.cmd == "take"){
+        	intprt[0] =[{pol:true, rel:cmd.cmd, args : findendliterals(objs[0])}];
+        }
 
-        return resintprt;
+        return intprt;
     }
     
-    function findMaxdepth(litss : Literal[][]):number{
-    	var max : number = 0;
-		litss.forEach((lits) =>{
-			if(max < lits.length){
-				max = lits.length;
-			}
-		});
-		return max;
+    function clearIlligal(lits : Literal[], state): Literal[]{
+    	var cleared : Literal[] = [];
+    	for(var i = 0; i < lits.length;i++){
+    		if(checkIllegal(lits[i], state)){
+    			cleared.push(lits[i]);
+    		}
+    	}
+    	return cleared;
     }
     
-    function checkCompleteness(max : number, lits : Literal []):boolean{
-
-    	//if(lits.length <= max && max > 2){
-    	//	return false;
-    	//}
-    	
-    	return true;
+    function findendliterals(lits : Literal []): string[]{
+    	var temp : Literal [] = [];
+    	var end : string[] = [];
+    	var found : boolean = true;
+    	for(var i = 0; i < lits.length; i++){
+    		var lit : Literal = lits[i];
+    		found = true;
+    		for(var j = 0; j < lits.length; j++){
+    			var lit2 : Literal = lits[i];
+    			if(lit2.args[0] == lit.args[1]){
+    				found = false;
+    			}
+    		}
+    		if(found){
+    			end.push(lit.args[lit.args.length-1]);
+    		}
+    	}
+    	return end;
     }
+    
     
     function checkQuantifyer(lits : Literal[], ent : Parser.Entity, loc : Parser.Location, state : WorldState):boolean{
     	if(ent.quant == "the"){
@@ -240,7 +230,7 @@ module Interpreter {
     
     function identifyLocation(loc : Parser.Location, state : WorldState):Literal[][]{
     	try {
-        	var result : Literal[][] = identifyEnt(loc.ent, null, state);
+        	var result : Literal[][] = identifyEnt(loc.ent, null, null,state);
 		} catch (err) {
 			if(err instanceof Interpreter.ErrorInput){
 				err.message = err.message.substring(0, err.message.length-1) + " to?";
@@ -326,12 +316,16 @@ module Interpreter {
     
     
     
-    function identifyEnt(ent : Parser.Entity, rel : string ,state : WorldState):Literal[][]{
+    function identifyEnt(ent : Parser.Entity, rel : string , obj : string ,state : WorldState):Literal[][]{
     	var result : string[];
-    	if (ent.obj.loc){
-    		result = identifyObj(ent.obj.obj.form, ent.obj.obj.color, ent.obj.obj.size, state);
+    	if(obj == null && ent.obj){
+	    	if(ent.obj.loc && ent.obj.obj){
+	    		result = identifyObj(ent.obj.obj.form, ent.obj.obj.color, ent.obj.obj.size, state);
+	    	}else{
+	    		result = identifyObj(ent.obj.form, ent.obj.color, ent.obj.size, state);
+	    	}
     	}else{
-    		result = identifyObj(ent.obj.form, ent.obj.color, ent.obj.size, state);
+    		result = [obj];
     	}
     	 
     	var unqObjs : string[] = uniqeObjects(result);
@@ -340,6 +334,7 @@ module Interpreter {
 
     		var locres : Literal [][]= identifyLocation(ent.obj.loc, state);
     		for(var i = 0; i < locres.length; i ++){
+    			//if()
     			if(!results[i]){
     				results[i] = [];
     			}
@@ -380,6 +375,7 @@ module Interpreter {
     	}
     	// combine with possible locations
     	var intrpt : Literal[][] = [];
+    	var n : number = 0; 
 		for(var i = 0; i < result.length; i++){
 			var lit : Literal;
 			if(ent.obj.loc){
@@ -387,13 +383,14 @@ module Interpreter {
 					for(var k = 0 ; k < results[j].length ;k++){
 						lit = {pol : true, rel : ent.obj.loc.rel, args : [result[i], results[j][k].args[0]]};
 						if(checkIllegal(lit, state)){
-							if(!intrpt[j]){
-								intrpt[j] = [];
+							if(!intrpt[n]){ 	// used j before
+								intrpt[n] = []; 
 							}
 							if(checkIllegal(results[j][k], state)){
-								intrpt[j].push(results[j][k]);
+								intrpt[n].push(results[j][k]);
 							}
-							intrpt[j].push(lit);
+							intrpt[n].push(lit);
+							n++;
 						}
 					}
 				}
@@ -444,6 +441,20 @@ module Interpreter {
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
+    }
+    
+	function clone<T>(obj: T): T {
+        if (obj != null && typeof obj == "object") {
+            var result : T = obj.constructor();
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    result[key] = clone(obj[key]);
+                }
+            }
+            return result;
+        } else {
+            return obj;
+        }
     }
 }
 
