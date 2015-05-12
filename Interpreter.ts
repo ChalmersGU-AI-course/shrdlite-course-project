@@ -51,73 +51,76 @@ module Interpreter {
 
     //dictionary to store pair of information.
     //e.g. (take,cmd)  (white,color)  (ball,form)
-    //useful function from dictionary
+    //useful functions from dictionary
     //getValue(key) : value
     //setValue(key,value)
     var globalDic  = new collections.Dictionary<string,string>();
 
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        // This returns a dummy interpretation involving two random objects in the world
-        // var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        // var a = objs[getRandomInt(objs.length)];
-        // var b = objs[getRandomInt(objs.length)];
-        // var intprt : Literal[][] = [[
-        //     {pol: true, rel: "ontop", args: [a, "floor"]},
-        //     {pol: true, rel: "holding", args: [b]}
-        // ]];
-
 
         console.log(cmd);
         console.log(state);
         var intprt : Literal[][] = [];
-        var temp : string[] = [];
+        var tokens : string[] = [];
 
-        temp.push(cmd.cmd);
+        tokens.push(cmd.cmd);
         globalDic.setValue(cmd.cmd,"cmd");
 
 
-        //case take cmd (ent)
-        //parse the result from cmd into new finite Array
+        //case take||grasp||pickup entity === take ent
+        //parse the result from cmd into new finite Array named tokens
         if(cmd.cmd == "take"){
             var currentEnt = cmd.ent;
 
-            temp.push(currentEnt.quant);
+            tokens.push(currentEnt.quant);
             globalDic.setValue(currentEnt.quant,"quant");
 
 
             if(currentEnt.obj != null){
                 var objArrays = recursiveObject(currentEnt.obj);
-                temp = temp.concat(objArrays);
+                tokens = tokens.concat(objArrays);
             }
 
 
         }
 
-        //case move cmd (ent,loc)
-        //parse the result from cmd into new finite Array
+        //case move||put||drop "it" loc === put loc
+        //parse the result from cmd into new finite Array named tokens
+        if(cmd.cmd == "put"){
+            var currentLoc = cmd.loc;
+
+            if(currentLoc != null){
+                var objArrays = recursiveLocation(currentLoc);
+                tokens = tokens.concat(objArrays);
+            }
+
+        }
+
+        //case move||put||drop entity location === move ent loc
+        //parse the result from cmd into new finite Array named tokens
         if(cmd.cmd == "move"){
             var currentEnt = cmd.ent;
             var currentLoc = cmd.loc;
 
-            temp.push(currentEnt.quant);
+            tokens.push(currentEnt.quant);
             globalDic.setValue(currentEnt.quant,"quant");
 
             if(currentEnt.obj != null){
                 var objArrays = recursiveObject(currentEnt.obj);
-                temp = temp.concat(objArrays);
+                tokens = tokens.concat(objArrays);
             }
 
             if(currentLoc != null){
                 var objArrays = recursiveLocation(currentLoc);
-                temp = temp.concat(objArrays);
+                tokens = tokens.concat(objArrays);
             }
         }
 
-        console.log(temp);
+        console.log(tokens);
 
         //add new rule according to parsed array
-        var newRules = genRule(temp,state);
+        var newRules = genRule(tokens,state);
         intprt.push(newRules);
 
 
@@ -130,7 +133,7 @@ module Interpreter {
     // query : put the black ball in a box on the floor
     // temp = ["move","the","black","ball","inside","any","box","ontop","the","floor"]
     //modify some algorithm here to properly generate new rule. e.g. inside(a,b), ontop(a,b)
-    function genRule(temp : string[], state : WorldState) : Literal[] {
+    function genRule(tokens : string[], state : WorldState) : Literal[] {
         var rules : Literal[] = [];
         var forms : Array<string> = [];
 
@@ -148,8 +151,8 @@ module Interpreter {
         var objArg1 = "";
         var objArg2 = "";
 
-        for(var i = 0;i < temp.length ; i++){
-            var keyword = temp[i];
+        for(var i = 0;i < tokens.length ; i++){
+            var keyword = tokens[i];
             var keytype = globalDic.getValue(keyword);
 
             //skipped quant
@@ -342,8 +345,6 @@ module Interpreter {
         return temp;
 
     }
-
-
 
 
     function getRandomInt(max) {
