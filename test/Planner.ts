@@ -18,7 +18,7 @@ module PlannerTest {
   }
 
   //one expression describing a property of a goal
-  class Lit implements Literal {
+  class Lit implements I.Interpreter.Literal {
     //true/false: goal must/must not forfill the property
     pol:boolean; 
     //a relationship between objects as describet in the grammar
@@ -41,7 +41,7 @@ module PlannerTest {
     
     //returns true if a PDDL matches on the current state
     match(goal: PDDL) {
-      for (i = 0; i < goal.alternatives.length; i++) {
+      for (var i = 0; i < goal.alternatives.length; i++) {
         if(this.checkAlt(goal.alternatives[i])){
           return true;
         }
@@ -51,17 +51,17 @@ module PlannerTest {
 
     //returns true if ALL literals are true
     checkAlt(lits: Lit[]): boolean{
-      result: boolean = true;
-      for(int i = 0; i < lits.length; i++) {
-        result &= lits[i].eval();
+      var result: boolean = true;
+      for(var i = 0; i < lits.length; i++) {
+        result = result && this.eval(lits[i]);
       }
       return result;
     }
 
-    eval(lit: Lits): boolean {
+    eval(lit: Lit): boolean {
       var res: boolean = true;
       //TODO: eval rel with args
-      return res == lits.pol;
+      return res == lit.pol;
     }
     
 
