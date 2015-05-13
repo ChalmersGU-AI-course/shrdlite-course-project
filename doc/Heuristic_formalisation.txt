@@ -1,0 +1,38 @@
+Formalisation of heuristic in WorldStates, the minimum defined moves needed for each goal.
+
+x is on top of y if it is directly on top – the same relation is called inside if y is a box.
+	Remove each object that is above y, and remove each object above x but not above y.
+	Pick up x.
+	Move arm to y's stack.
+	Drop x.
+
+
+x is above y if it is somewhere above.
+	Remove each object above x.
+	Pick up x.
+	Move arm to y's stack.
+	Drop x.
+
+x is under y if it is somewhere below.
+	Remove each object above y.
+	Pick up y.
+	Move arm to x's stack.
+	Drop y.
+
+x is beside y if they are in adjacent stacks.
+	Remove each object above x or y, choosing the one with the smallest overhead.
+	Pick up chosen one.
+	Move to closest adjacent stack of other one.
+	Drop chosen one.
+
+x is left of y if it is somewhere to the left.
+	Remove each object above x or y, choosing the one with the smallest overhead.
+	Pick up chosen one.
+	Move to left adjacent stack of other one.
+	Drop chosen one.
+
+x is right of y if it is somewhere to the right.
+	Remove each object above x or y, choosing the one with the smallest overhead.
+	Pick up chosen one.
+	Move to right adjacent stack of other one.
+	Drop chosen one.
