@@ -36,12 +36,14 @@ def getAction(state):
     """    Returns a list of triple tuples, with avavible actions from given state.
            (command, new state, cost - required for A*)
     """
-    cost = 1
+    costMove = 1
+    costPick = 8
+
     actions =  [
-                    ('l',_left(*state),cost),
-                    ('r',_right(*state),cost),
-                    ('d',_ungrasp(*state),cost),
-                    ('p',_grasp(*state),cost)
+                    ('l',_left(*state),costMove),
+                    ('r',_right(*state),costMove),
+                    ('d',_ungrasp(*state),costPick),
+                    ('p',_grasp(*state),costPick)
                 ]
     return [(l,x,c) for (l,x,c) in actions if x is not None]
 

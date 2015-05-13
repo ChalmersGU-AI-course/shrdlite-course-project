@@ -18,12 +18,14 @@ class TestMain(unittest.TestCase):
                         'floor1': {'color': None, 'form': 'floor', 'size': None}}        
         self.arm = 0
         self.holding = None
+        self.costPick = 8
+        self.costMove = 1
         self.intprt = [('inside','a','b')]
         self.state = (self.intprt,self.stacks,self.holding,self.arm,self.objects)
 
     def test_action(self):
-        self.assertEqual(simple_planner.getAction(self.state),[('r',(self.intprt,self.stacks, self.holding, self.arm+1,self.objects),1),
-                                                               ('p',(self.intprt,[['floor0'],['floor1','b']], 'a', self.arm ,self.objects),1),
+        self.assertEqual(simple_planner.getAction(self.state),[('r',(self.intprt,self.stacks, self.holding, self.arm+1,self.objects),self.costMove),
+                                                               ('p',(self.intprt,[['floor0'],['floor1','b']], 'a', self.arm ,self.objects),self.costPick),
                                                               ])
 
     def test_goal(self):
