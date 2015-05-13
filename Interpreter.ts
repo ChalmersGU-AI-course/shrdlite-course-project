@@ -81,8 +81,12 @@ module Interpreter {
             TODO: Do correct stuff with "take"
                 -Identify what obj we want
                 -See if such an object exists in the world
-                -If ambiguity and the quantifier is 'the', ask for clarification //Om samma size, ändå fråga?
+                -If ambiguity and the quantifier is 'the', ask for clarification //Om samma size, ï¿½ndï¿½ frï¿½ga?
             */
+            if(pobjs.length===0){
+                console.log("Can't pickup something that is not real");
+                return null;
+            }
             for (var i = 0; i < pobjs.length; i++) {
                 intprt.push([{ pol: true, rel: "holding", args: [pobjs[i]] }]);
             }    
