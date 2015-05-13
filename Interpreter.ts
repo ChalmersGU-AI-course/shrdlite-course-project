@@ -69,8 +69,6 @@ module Interpreter {
         
         // Get possible objects the parse is referring to
         var pobjs = getPossibleObjects(cmd, state);
-        console.log("DUUUUUUUUMMMMMYYYYYY!!!!");
-        console.log(pobjs);
         var b = pobjs[0];
         if (cmd.cmd === "take") {
             if (cmd.ent.quant === "all") {
@@ -136,7 +134,6 @@ module Interpreter {
         var possibleObjects = [];
         // Loop through the world and look for possible items
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        console.log(objs);
         for(var s = 0; s < objs.length; s++){
           var otemp = state.objects[objs[s]];
           var stemp = new collections.Set<string>();
