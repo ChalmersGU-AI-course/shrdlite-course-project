@@ -240,14 +240,16 @@ module PlannerTest {
           var newWorld : WorldState = this.clone();
           newWorld.stacks[i].splice(this.stacks[i].length - 1, 1); 
           newWorld.crane = topObject;
-          neighbours.push({cost: 1, state: newWorld});
+          if (checkIfValid(newWorld))
+            neighbours.push({cost: 1, state: newWorld});
         }
       } else {
         for (var i = 0; i < this.stacks.length; i++) {
           var newWorld : WorldState = this.clone();
           newWorld.stacks[i].push(this.crane);
           newWorld.crane = null;
-          neighbours.push({cost: 1, state: newWorld});
+          if (checkIfValid(newWorld))
+            neighbours.push({cost: 1, state: newWorld});
         }
       }
       //console.log(neighbours);
@@ -366,8 +368,9 @@ module PlannerTest {
   function checkIfValid(state) {
     for (var i = 0; i < state.stacks.length; i++) {
       for (var j = 1; j < state.stacks[i].length; j++) {
-        var currentObjectDescription = exampleWorldDescription.getValue(state.stacks[i][j]);
-        var belowObjectDescription = exampleWorldDescription.getValue(state.stacks[i][j-1]);
+        if (!state.stacks[i][j] || !state.stacks[i][j-1]) continue;
+        var currentObjectDescription = state.stacks[i][j];
+        var belowObjectDescription = state.stacks[i][j-1];
         // balls must be in boxes or on the floor, otherwise they roll away
         if (currentObjectDescription.form == "ball"
             && belowObjectDescription.form != "box") 
@@ -415,39 +418,12 @@ module PlannerTest {
 
   describe('Planner', () => {
 
-    //test to check if validy checks work
-    describe('checkValidState', () => {
-      it('returns true when the state is valid', (done) => {
-        var example = {
-          "stacks": [["e"],["g","l"],[],["k","m","f"],[]],
-          "holding":null,
-          "arm":0
-        };
-        var valid = checkIfValid(example);
-        expect(valid).to.equal(true);
-        done();
-      });
-      it('return false when the state is invalid', (done) => {
-        var example = {
-          "stacks": [["e"],["g","l"],["e","f"],["k","m","f"],[]],
-          "holding":null,
-          "arm":0
-        };
-        var valid = checkIfValid(example);
-        expect(valid).to.equal(false);
-        done();
-      });
-    });
-    
-
     //test to check if AStar is called
     describe('AStar in the Planner', () => {
       it('test if a-star runs', (done) => {
-        var nothing: string = null;
-        var state: WorldState = new WorldState([new
-                                                Array<string>(),["g","e","f"],["l"],["a"],new Array<string>()],
+        var state: WorldState = new WorldState([["e"],["g","l"],["k", "m", "f"], new Array<string>(), new Array<string>()],
                                                null);
-        var lit : Lit[][] = new Array( new Array( new Lit(true, "ontop",
+        var lit : Lit[][] = new Array( new Array( new Lit(true, "inside",
                                                           ["f", "l"])));
         var goal: PDDL = new PDDL(lit);
         var solution = A.Astar.search(state, null, goal);
