@@ -1,7 +1,7 @@
 /// <reference path="../typescript-collections/collections.ts" />
 /// <reference path="../astar-example/graph.ts" />
 
-var logging = true;
+var logging = false;
 
 module aStar {
     export function aStar<T extends GraphNode>(graph : Graph<T>, fromNode : T, toNode : T) : Path<T> {
@@ -44,12 +44,11 @@ module aStar {
   			var edgesN = graph.getEdgesTo(currentNode.getNode());
   			for (var i = 0; i < edgesN.length; i++) {
   				var e = edgesN[i];
-  				var n = e.getFromNode().equals(currentNode) ? 
-  					e.getEndNode() 
-  					: e.getFromNode();
+  				var n = e.getFromNode().equals(currentNode) ? e.getEndNode() : e.getFromNode();
   				var dist = currentNode.getDistance() + e.getCost();
   				var starNeighbor = new Path(n, dist, n.distanceTo(toNode), currentNode.getPath());
-  				if(!evaluatedNodes.contains(starNeighbor)) {
+
+                if(!evaluatedNodes.contains(starNeighbor)) {
   					starNeighbor.updatePath(e);
   					nodesToEvaluate.add(starNeighbor);
                     if(logging)

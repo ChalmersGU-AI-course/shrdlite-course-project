@@ -2,66 +2,139 @@
 ///<reference path="Interpreter.ts"/>
 class WorldStateNode implements GraphNode{
 	goalState : Interpreter.Result;
-	thisState : WorldState; 
+	state : WorldState;
 	heuristic : number;
 	constructor(thisState : WorldState, goalState : Interpreter.Result){
-		this.thisState = thisState;
+		this.state = thisState;
 		this.goalState = goalState;
 
 		//Setting heuristic value.
-		this.heuristic = 0;
-		this.goalState.intp.forEach((intrprt) =>{ 
-			var test : boolean = true;
+		this.heuristic = 100000;
+		this.goalState.intp.forEach((intrprt) => {
+			var intrprtHeuristic = 0;
+
 			intrprt.forEach((goal) => {
-				if(goal.rel === "onTop"){
-					var a = goal.args[0];
-					var b = goal.args[1];
-					this.thisState.stacks.forEach((stack) => {
-						var i = stack.indexOf(a);
-						if(i>=0){
-							this.heuristic = this.heuristic + (stack.length - 1) - i;
-						}
-						var i = stack.indexOf(b);
-						if(i>=0){
-							this.heuristic = this.heuristic + (stack.length - 1) - i;
-						}
-						//Might be problematic for "floor" object.
-						
-					});
-				} else if(goal.rel === "beside"){
-					//Carry on with more relations. 
+				var fstObj = goal.args[0];
+				var sndObj = goal.args[1];
+
+				switch (goal.rel) {
+					case "ontop":
+					case "inside":
+						intrprtHeuristic += this.onTopHeuristic(fstObj,sndObj);
+						break;
+					case "above":
+						intrprtHeuristic += this.aboveHeuristic(fstObj,sndObj);
+						break;
+					case "under":
+						intrprtHeuristic += this.aboveHeuristic(sndObj,fstObj);
+						break;
+					case "beside":
+						intrprtHeuristic += this.besideHeuristic(fstObj,sndObj,"either");
+						break;
+					case "left":
+						intrprtHeuristic += this.besideHeuristic(fstObj,sndObj,"left");
+						break;
+					case "right":
+						intrprtHeuristic += this.besideHeuristic(fstObj,sndObj,"right");
+						break;
 				}
 			});
+
+			this.heuristic = intrprtHeuristic < this.heuristic ? intrprtHeuristic : this.heuristic;
 		}); 
 		//end of Setting heuristic value.
+	}
+
+	onTopHeuristic(fstObj : string, sndObj : string) : number {
+		var heuristic = 0;
+		var distance = this.state.getDistance(fstObj,sndObj);
+
+		heuristic += this.state.objectsOnTop(sndObj);
+
+		if (distance != 0) {
+			heuristic += this.state.objectsOnTop(fstObj);
+		}
+
+		heuristic += 2 + distance;
+
+		return heuristic;
+	}
+
+	aboveHeuristic(fstObj : string, sndObj : string) : number {
+		var heuristic = 0;
+
+		heuristic += this.state.objectsOnTop(fstObj);
+		heuristic += 2 + this.state.getDistance(fstObj,sndObj);
+
+		return heuristic;
+	}
+
+	besideHeuristic(fstObj : string, sndObj : string, side : string) : number {
+		var heuristic = 0;
+		var distance = Math.abs(this.state.getStackNumber(fstObj) - this.state.getStackNumber(sndObj));
+		var chosenObj = this.state.objectsOnTop(fstObj) < this.state.objectsOnTop(sndObj) ? fstObj : sndObj;
+
+		heuristic += this.state.objectsOnTop(chosenObj);
+		heuristic += 2;
+
+		if (side === "either") {
+			heuristic += this.state.getDistance(fstObj,sndObj) - 1;
+		} else {
+			heuristic += this.state.getDistance(fstObj,sndObj) + 1;
+		}
+
+		return heuristic;
 	}
 
 	getId() : number{
 		return -1;
 	}
 
-	equals(otherNode : GraphNode) : boolean{
-		//Haxx. ignoring the other node. Comparing with the goalstate. 
-		this.goalState.intp.forEach((intrprt) =>{ 
-			var test : boolean = true;
+	isGoalSatisfied() : boolean {
+		this.goalState.intp.forEach((intrprt) => {
+			var result = true;
+
 			intrprt.forEach((goal) => {
-				if(goal.rel === "onTop"){
-					var a = goal.args[0];
-					var b = goal.args[1];
-					this.thisState.stacks.forEach((stack) => {
-						var i = stack.indexOf(a);
-						if(i>=0){
-							test = test && (b ==="floor" || stack[i] === b);
-						}
-					});
-				} else if(goal.rel === "beside"){
-					//Carry on with more relations. 
+				var fstObj = goal.args[0];
+				var sndObj = goal.args[1];
+
+				switch (goal.rel) {
+					case "ontop":
+					case "inside":
+						result = result && this.state.isOnTopOf(fstObj,sndObj);
+						break;
+					case "above":
+						result = result && this.state.isAbove(fstObj,sndObj);
+						break;
+					case "under":
+						result = result && this.state.isAbove(sndObj,fstObj);
+						break;
+					case "beside":
+						result = result && this.state.isBeside(fstObj,sndObj);
+						break;
+					case "left":
+						result = result && this.state.isLeftOf(fstObj,sndObj);
+						break;
+					case "right":
+						result = result && this.state.isRightOf(fstObj,sndObj);
+						break;
 				}
 			});
-			if(test){
+
+			if (result) {
 				return true;
 			}
-		}); 	
+		});
+		return false;
+	}
+
+	equals(otherNode : GraphNode) : boolean{
+		if (otherNode instanceof WorldStateNode) {
+			return this.goalState === otherNode.goalState
+				&& this.heuristic == this.heuristic
+				&& this.state.equals(otherNode.state);
+		}
+
 		return false;
 	}
 
@@ -71,7 +144,7 @@ class WorldStateNode implements GraphNode{
 
 	getNeighbors() : GraphNode[] {
 		var neighbors : WorldStateNode[] = [];
-		var newStates = this.thisState.getNewStates();
+		var newStates = this.state.getNewStates();
 
 		newStates.forEach((state) => {
 			neighbors.push(new WorldStateNode(state,this.goalState));

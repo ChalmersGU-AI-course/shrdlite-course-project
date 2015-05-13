@@ -83,7 +83,7 @@ declare module "nearley" {
         constructor(rules: {[s:string]:any}, start: string);
         feed(sentence: string) : {
             results : Parser.Command[];
-        }
+        };
     }
 }
 
