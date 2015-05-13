@@ -111,6 +111,25 @@ module Planner {
         return -1;
     }
 
+    /**
+    * Returns negative value if o2 is left of o1.
+    * Returns positive value if o2 is right of o1.
+    * Value is the difference in stacks (1 or -1 if in stacks beside each other, 0 if same stack).
+    */
+    function stackDifference(s : Heuristics.State, o1 : String, o2 : String) : number {
+        var a = Heuristics.computeObjectPosition(s, o1);
+        var b = Heuristics.computeObjectPosition(s, o2);
+        if(b.isHeld || a.isHeld){
+            return 0;
+        }
+
+        if(b.isFloor || a.isFloor){
+            return 0;
+        }
+
+        return a.stackNo - b.stackNo;
+    }
+
     function testAtom(s : Heuristics.State, atom : Interpreter.Literal) : boolean {
         var ret = (result => {
             if(atom.pol){
@@ -134,6 +153,21 @@ module Planner {
                 var above = atom.args[0];
                 var below = atom.args[1];
                 return ret( heightDifference(s, above, below) > 0 );
+
+            case "beside": // In the stack directly to left or right
+                var o1 = atom.args[0];
+                var o2 = atom.args[1];
+                return ret( Math.abs(stackDifference(s, o1, o2)) === 1 );
+
+            case "leftof": // In the stack directly to left or right
+                var o1 = atom.args[0];
+                var o2 = atom.args[1];
+                return ret( stackDifference(s, o1, o2) < 0 );
+
+            case "rightof": // In the stack directly to left or right
+                var o1 = atom.args[0];
+                var o2 = atom.args[1];
+                return ret( stackDifference(s, o1, o2) > 0 );
 
             default:
                 throw new Planner.Error("!!! Unimplemented relation in testAtom: "+atom.rel);

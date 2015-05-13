@@ -120,6 +120,11 @@ module Heuristics {
                 // Same heuristic as for grabbing the target.
                 return heuristicDistance(s, target);
 
+            case "beside":
+            case "leftof":
+            case "rightof":
+                return 0;
+
             default:
                 throw new Planner.Error("!!! Unimplemented relation in heuristicAtom: "+atom.rel);
                 return 0;
