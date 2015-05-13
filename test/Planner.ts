@@ -194,24 +194,28 @@ module PlannerTest {
       var curr = 0;
       var min = Number.MAX_VALUE;
       var found = false;
-//      return 0; 
+//      return 0;
      //go through all OR parts
       for(var i = 0; i < goal.alternatives.length; i++) {
         //go through all AND parts
         for(var j = 0; j < goal.alternatives[i].length; j++){
-//          console.log("check AND-part " + j);
           //go through all touched argumends
+            if(this.eval(goal.alternatives[i][j])){
+              //if the AND-statement is already forfilled, don't
+              //increase the heuristic
+              break;
+            }
           for(var k = 0; k < goal.alternatives[i][j].args.length; k++) {
-            //go through all stacks to find it
+//            console.log("check argument " + k);
             found = false;
+            //go through all stacks to find it
             for(var l = 0; l < this.stacks.length && !found; l++) {
               for(var m = 0; m < this.stacks[l].length && !found; m++) {
                 //add the number of things above the currend element to
                 //the heuristic value
 //                console.log(this.stacks[l][m].name + " vs. " + goal.alternatives[i][j].args[k]);                
                 if(this.stacks[l][m] 
-                   && this.stacks[l][m].name ==
-                   goal.alternatives[i][j].args[k]) {
+                   && this.stacks[l][m].name == goal.alternatives[i][j].args[k]) {
                   curr += (this.stacks[l].length - m);
                   found = true;
                 }
@@ -224,7 +228,8 @@ module PlannerTest {
         }
         curr = 0;
       }
-      return 0;// min;
+//      console.log("heuristic = " + min);
+      return min;
     }
     
     //returns all possible neigbours of a state
@@ -445,10 +450,12 @@ module PlannerTest {
       it('test if a-star runs', (done) => {
         var nothing: string = null;
         var state: WorldState = new WorldState([new
-                                                Array<string>(),["g","e","f"],["l"],["a"],new Array<string>()],
+                                                Array<string>(),["l"],["a"],["g","e","f"],new Array<string>()],
                                                null);
-        var lit : Lit[][] = new Array( new Array( new Lit(true, "ontop",
-                                                          ["f", "l"])));
+        var lit : Lit[][] = new Array( new Array( new Lit(true, "ontop",["f", "l"]),
+                                                  new Lit(true, "ontop",["g", "f"]),
+                                                  new Lit(true, "ontop",["e", "g"]), 
+                                                  new Lit(true, "ontop",["a", "e"])));
         var goal: PDDL = new PDDL(lit);
         var solution = A.Astar.search(state, null, goal);
 
