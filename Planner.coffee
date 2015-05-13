@@ -4,8 +4,7 @@ Planner.plan = (interpretations, currentState) ->
   
   plans = []
   plan = interpretations[0]
-  goalRep = [ { pol: true, rel: 'ontop', args: [ 'm', 'floor' ] },
-  { pol: true, rel: 'holding', args: [ 'e' ] } ]
+  goalRep = plan.intp
   movesToGoal = Astar(currentState, goalRep, heuristicFunction,
      nextMoves, getNextState, satisfaction, equality)
   plan.plan = planInterpretation(movesToGoal)

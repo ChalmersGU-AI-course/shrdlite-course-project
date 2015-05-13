@@ -10,10 +10,10 @@ files[3]="shrdlite-ajax.js"
 # The parts to be compiled
 coffee[0]="Planner.coffee"
 coffee[1]="Astar.coffee"
-#coffee[2]="Interpreter.coffee"
+coffee[2]="Interpreter.coffee"
 # The old parts from typescript
 parts[1]="js-template/Parser.js"
-parts[2]="js-template/Interpreter.js"
+#parts[2]="js-template/Interpreter.js"
 parts[3]="js-template/Shrdlite.js"
 
 args=()
