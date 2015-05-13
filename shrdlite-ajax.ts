@@ -4,7 +4,7 @@
 ///<reference path="lib/jquery.d.ts" />
 
 // Replace this with the URL to your CGI script:
-var ajaxScript = "cgi-bin/main.py";
+var ajaxScript = "cgi-bin/shrdlite_cgi.py";
 
 
 $(function(){
