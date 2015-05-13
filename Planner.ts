@@ -39,7 +39,7 @@ module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
-    function makeGoalFunc(relTargets: Interpreter.Literal[][]) {
+    function getGoalFunc(relTargets: Interpreter.Literal[][]) {
         return function IsWorldGoal(world: WorldNode) : boolean {
             for (var i=0; i < relTargets.length; ++i) {
                 var relTarget : Interpreter.Literal[] = relTargets[i]
@@ -67,6 +67,30 @@ module Planner {
         var firstObject : string = literal.args[0];
         var secondObject : string = literal.args[1];
         return Interpreter.isRelativeMatch(firstObject, literal.rel, secondObject, state);
+    }
+
+    function getHeuristicFunction(targetLiteral : Interpreter.Literal[][]) {
+        return function numberOfMismatches(fromWorld : WorldNode, world : WorldNode) : number {
+            var minCost = Infinity;
+            for (var i=0; i < targetLiteral.length; ++i) {
+                var relTarget : Interpreter.Literal[] = targetLiteral[i]
+                var mismatches : number = 0;
+                //var objectList : string[] = [];
+                for (var j=0; j< relTarget.length; ++j) {
+                    if (!stateSatisfiesLiteral(world.State, relTarget[j])) {
+                        ++mismatches;
+                    }
+                    //objectList.concat(relTarget[j]);
+                }
+                //var objects = new Set(objectList);
+                //var numBlockingObjects : number = GetBlockingObjects(world.State, objects);
+                var currentCost : number = mismatches;// + numBlockingObjects;
+                if (currentCost < minCost){
+                    minCost = currentCost;
+                }
+            }
+            return minCost;
+        };
     }
 
     class WorldNode implements INode<WorldNode> {
@@ -178,7 +202,14 @@ module Planner {
             return null;
         }
 
-    CanPutObjectOntop(object: ObjectDefinition, baseObject: ObjectDefinition): boolean {
+        CanPutObjectOntop(object: ObjectDefinition, baseObject: ObjectDefinition): boolean {
+            if (!baseObject) {
+                baseObject = {
+                    form: "floor",
+                    size: null,
+                    color: null,
+                };
+            }
             //Balls cannot support anything.
             if (baseObject.form == "ball") {
                 return false;
@@ -189,7 +220,7 @@ module Planner {
             }
             //Balls must be in boxes or on the floor, otherwise they roll away.
             //TODO check if baseobject is floor
-            if(object.form == "ball" && !(baseObject.form == "box")){
+            if(object.form == "ball" && !(baseObject.form == "box" || baseObject.form == "floor")){
                     return false;
             }
             //Boxes cannot contain pyramids, planks or boxes of the same size.
@@ -210,52 +241,21 @@ module Planner {
             }
             return true;
         }
+        toString() : string {
+            return this.State.stacks.toString() + this.State.holding + this.State.arm;
+        }
     }
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
-        var plan : string[] = [];
+        var goalFunc = getGoalFunc(intprt);
+        var heuristicFunc = getHeuristicFunction(intprt);
+        var world = new WorldNode(state)
+        var astarResult = Astar(world, goalFunc, heuristicFunc);
 
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
-            }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
-            }
+        if (!astarResult || !astarResult.Path){
+            return null;
         }
-
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
-
-        if (pickstack < state.stacks.length-1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
-                plan.push("r");
-            }
-
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
-                plan.push("l");
-            }
-        }
-
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
-
-        return plan;
+        return astarResult.Path.Steps;
     }
 
 

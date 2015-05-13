@@ -185,15 +185,17 @@ module Interpreter {
     //TODO: refactor into world.ts or something
     export function isRelativeMatch(firstObject: string, relation: string, secondObject: string, world: WorldState): boolean {
         var firstPosition = getObjectPosition(firstObject, world);
+        if (!firstPosition){
+            return false;
+        }
         var secondPosition: ObjectPosition;
-
         if (secondObject === "floor") {
             secondPosition = new ObjectPosition(firstPosition.Stack, -1);
         } else {
             secondPosition = getObjectPosition(secondObject, world);
         }
 
-        if (!firstPosition || !secondPosition) {
+        if (!secondPosition) {
             return false;
         }
 
