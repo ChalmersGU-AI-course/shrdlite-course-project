@@ -6,6 +6,7 @@ import PDDL
 import simple_planner
 import AStar.algorithm
 import physics
+import heuristic
 
 class TestMain(unittest.TestCase):
     
@@ -30,7 +31,7 @@ class TestMain(unittest.TestCase):
         came_from, cost_so_far, actions_so_far, goal = AStar.algorithm.a_star_search_new(   simple_planner.getAction,
                                                             self.state,
                                                             simple_planner.goalWrapper,
-                                                            simple_planner.heuristic)
+                                                            heuristic.heuristic)
         (intprt, stacks, holding, arm, objects) = goal
         self.assertEqual(stacks,[[],['b','a']])
         self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far), ['start','p','r','d'])
@@ -51,7 +52,7 @@ class TestAStar(unittest.TestCase):
         came_from, cost_so_far, actions_so_far, goal = AStar.algorithm.a_star_search_new(   simple_planner.getAction,
                                                             self.state,
                                                             simple_planner.goalWrapper,
-                                                            simple_planner.heuristic)
+                                                            heuristic.heuristic)
         (intprt, stacks, holding, arm, objects) = goal
         self.assertEqual(stacks,[[],[],['b','a'],[]])
         self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far), ['start','p','r','r','d'])
@@ -61,7 +62,10 @@ class TestActions(unittest.TestCase):
     def setUp(self):
         self.stacks = [['a'],[]]
         self.objects = {'a': {'size': 'large', 'form': 'ball', 'color': 'blue'},
-                        'b': {'size': 'large', 'form': 'box', 'color': 'red'}}        
+                        'b': {'size': 'large', 'form': 'box', 'color': 'red'},
+                        'floor0': {'color': None, 'form': 'floor', 'size': None},
+                        'floor1': {'color': None, 'form': 'floor', 'size': None}
+                        }        
         self.arm = 1
         self.holding = 'b'
         self.intprt = ('inside','a','b')
@@ -75,6 +79,16 @@ class TestActions(unittest.TestCase):
         self.assertEqual(simple_planner._grasp(
              self.intprt,[['a'],['b']],None,0,self.objects),
             (self.intprt, [[],['b']], 'a', 0, self.objects))
+
+    def test_grasp_two_obj(self):
+        self.assertEqual(simple_planner._grasp(
+            self.intprt, [['b'],[]], 'a',0, self.objects),
+            None)
+
+    def test_grasp_floor(self):
+        self.assertEqual(simple_planner._grasp(
+            self.intprt, [['floor0','b','a'],['floor1']], None,1, self.objects),
+            None)
 
     def test_left(self):
         self.assertEqual(simple_planner._left(*self.state),
