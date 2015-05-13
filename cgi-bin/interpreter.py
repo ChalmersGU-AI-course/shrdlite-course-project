@@ -58,6 +58,8 @@ def interp_cmd_put(_, loc, objects, stacks, holding):
     1. find where we want to put it
     2. create goal
     """
+    if holding == None:
+        raise InterpreterException('I am not holding any object!')
     rel = loc['rel']
     ent = loc['ent']
     ents = find_ent(ent, objects, stacks, holding)
@@ -92,7 +94,7 @@ def find_ent(ent, objects, stacks, holding):
     returns: a list of names of possible objects
     """
 
-    os = []
+    os = set()
 
     if not 'obj' in ent['obj']:
         # is a simple entity description
@@ -109,11 +111,11 @@ def find_ent(ent, objects, stacks, holding):
 
         # 3. find any possible_objs that are 'rel' to possible_rels
         rel = ent['obj']['loc']['rel']
-        matching = []
+        matching = set()
         for a in possible_objs:
             for b in possible_rels:
                 if satisfy_pred((rel, a, b), stacks, holding):
-                    matching.append(a)
+                    matching.add(a)
 
         os = matching
 
@@ -131,8 +133,8 @@ def obj_str(o):
 
 def find_objs(obj, objects, stacks):
     """Find all possible objects fitting properties obj"""
-    return [name for name, props in objects.items()
-            if matches_obj(obj, props)]
+    return set([name for name, props in objects.items()
+                if matches_obj(obj, props)])
 
 def matches_obj(a, b):
     """Does object a match object b, where b is a 'complete' object

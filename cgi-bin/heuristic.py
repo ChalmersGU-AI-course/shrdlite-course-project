@@ -46,9 +46,7 @@ def heuristic(intprt, stacks, holding, arm, objects):
             scoreList.append(score)
 
         else:
-            print(pred)
             scoreList.append(0)            
-    
     return min(scoreList)
 
 # Function for deciding the position of a object given the stacks of the world
