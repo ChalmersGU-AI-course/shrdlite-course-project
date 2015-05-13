@@ -53,8 +53,8 @@ module Interpreter {
             var locs : Sayings = interpretLocation(cmd.loc, state);
             var it : number = 0;
             for(var i : number = 0; i < objs.length; i++){
-                lit[it] = [];
                 for(var j : number= 0; j< locs.objs.length; j++){
+                    lit[it] = [];
                     //TODO:: AND between interpretations
                     lit[it++][0] = {pol: true, rel : locs.rel, args : [objs[i],locs.objs[j]]};    
                 }
@@ -78,14 +78,21 @@ module Interpreter {
         //Assuming only single objects. 
         //TODO: quant == all, any.
         var objs : string[] = interpretObject(ent.obj, state);
+        //TODO:: FILTER objects that aren't on their locations 
         console.log(ent+": "+ objs.length);
         return objs;
     }
 
     function interpretObject(obj : Parser.Object, state : WorldState) : string[] {
         if(obj.obj != null){
+            var objs : string[] = interpretObject(obj.obj, state);
+            var locs : Sayings = interpretLocation(obj.loc, state);
+            //if rel === ontop index obj == index loc+1 && same column
+            //if rel === above index of obj > loc && same column
+            //if rel === nextto     not same column. obj.column == loc.column -(or+) 1
+            
             //Todo :: check loc
-            return interpretObject(obj.obj, state);
+            return objs;
             
         }else{
             //identify obj from woldstatt-
@@ -111,6 +118,7 @@ module Interpreter {
     }
 
     function interpretLocation(loc : Parser.Location, state : WorldState) : Sayings {
+        //TODO:: FILTER objects that aren't on their locations 
         return {rel:loc.rel, objs:interpretEntity(loc.ent, state)};
     }
 
