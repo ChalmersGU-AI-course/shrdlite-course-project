@@ -38,7 +38,18 @@ class TestMain(unittest.TestCase):
                                                             heuristic.heuristic)
         (intprt, stacks, holding, arm, objects) = goal
         self.assertEqual(stacks,[['floor0'],['floor1','b','a']])
-        self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far), ['start','p','r','d'])
+
+        self.assertEqual(
+                        AStar.algorithm.getPlan(goal, came_from, actions_so_far), 
+                        ['started on solution','p','r','d']
+                        )
+
+        self.assertEqual(
+                        AStar.algorithm.voiceCommand(['start','p','r','d'], goal, came_from, actions_so_far, self.objects), 
+                                                     ['start','Pick','p','r','Drop','d']
+                        )
+
+
 
 
 class TestAStar(unittest.TestCase):
@@ -63,7 +74,7 @@ class TestAStar(unittest.TestCase):
                                                             heuristic.heuristic)
         (intprt, stacks, holding, arm, objects) = goal
         self.assertEqual(stacks,[['floor0'],['floor1'],['floor2','b','a'],['floor3']])
-        self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far), ['start','p','r','r','d'])
+        self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far), ['started on solution','p','r','r','d'])
 
 class TestActions(unittest.TestCase):
 

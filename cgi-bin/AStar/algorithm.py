@@ -10,12 +10,13 @@ def a_star_search_new(GetAction, start, goal, heuristic):
     frontier = PriorityQueue()
     frontier.put(start, 0)
 
-    came_from = {}      # Map a node with previous node
-    cost_so_far = {}    # Map a node with the lowest known cost from start
-    actions_so_far = {}
+    came_from        = {}      # Map a node with previous node
+    cost_so_far      = {}      # Map a node with the lowest known cost from start
+    actions_so_far   = {}      # Best action to the state
+    speech           = {}      # Describes what action to do
 
     came_from[_getkey(start)] = None      
-    actions_so_far[_getkey(start)] = "start"
+    actions_so_far[_getkey(start)] = "started on solution"
     cost_so_far[_getkey(start)] = 0  
     
     while not frontier.empty():
@@ -51,6 +52,24 @@ def getPlan(goal,came_from,actions_so_far):
         current = next
 
     return plan[::-1] #Reverse the list
+
+def voiceCommand(plan, goal, came_from, actions_so_far, objects):
+
+    voicePlan = []
+    for command in plan:
+        if command is 'p':
+            voicePlan += ['Pick','p']
+        elif command is 'd':
+            voicePlan += ['Drop','d']
+        else:
+            voicePlan += [command]
+
+    return voicePlan
+
+import re
+def keytoObj(strkey):
+    strkey= re.sub('()', '', strkey)
+    return strkey.split(',')[1]
 
 def _getkey(state):
   (intprt,stacks,holding,arm,objects) = state
