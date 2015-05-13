@@ -106,7 +106,40 @@ module PlannerTest {
 
     //guesses a distance from the current state to goals describet in a PDDL
     heuristic(goal: PDDL) {
-      return 0;
+      var curr = 0;
+      var min = Number.MAX_VALUE;
+      var found = false;
+//      return 0; 
+     //go through all OR parts
+      for(var i = 0; i < goal.alternatives.length; i++) {
+        //go through all AND parts
+        for(var j = 0; j < goal.alternatives[i].length; j++){
+//          console.log("check AND-part " + j);
+          //go through all touched argumends
+          for(var k = 0; k < goal.alternatives[i][j].args.length; k++) {
+            //go through all stacks to find it
+            found = false;
+            for(var l = 0; l < this.stacks.length && !found; l++) {
+              for(var m = 0; m < this.stacks[l].length && !found; m++) {
+                //add the number of things above the currend element to
+                //the heuristic value
+//                console.log(this.stacks[l][m].name + " vs. " + goal.alternatives[i][j].args[k]);                
+                if(this.stacks[l][m] 
+                   && this.stacks[l][m].name ==
+                   goal.alternatives[i][j].args[k]) {
+                  curr += (this.stacks[l].length - m);
+                  found = true;
+                }
+              }
+            }
+          }
+        }
+        if( curr < min) {
+          min = curr;
+        }
+        curr = 0;
+      }
+      return 0;// min;
     }
     
     //returns all possible neigbours of a state
@@ -122,14 +155,14 @@ module PlannerTest {
           var newWorld : WorldState = this.clone();
           newWorld.stacks[i].splice(this.stacks[i].length - 1, 1); 
           newWorld.crane = topObject;
-          neighbours.push({costs: 1, state: newWorld});
+          neighbours.push({cost: 1, state: newWorld});
         }
       } else {
         for (var i = 0; i < this.stacks.length; i++) {
           var newWorld : WorldState = this.clone();
           newWorld.stacks[i].push(this.crane);
           newWorld.crane = null;
-          neighbours.push({costs: 1, state: newWorld});
+          neighbours.push({cost: 1, state: newWorld});
         }
       }
       //console.log(neighbours);
@@ -327,12 +360,11 @@ module PlannerTest {
       it('test if a-star runs', (done) => {
         var nothing: string = null;
         var state: WorldState = new WorldState([new
-                                                Array<string>(),["g","l"],["e","f"],["a"],new Array<string>()],
+                                                Array<string>(),["g","e","f"],["l"],["a"],new Array<string>()],
                                                null);
         var lit : Lit[][] = new Array( new Array( new Lit(true, "ontop",
-                                                          ["l", "g"])));
+                                                          ["f", "l"])));
         var goal: PDDL = new PDDL(lit);
-//        var goal: WorldState = new WorldState([new Array<string>(),["l","g"],["f","e"],["a"],new Array<string>()], null);
         var solution = A.Astar.search(state, null, goal);
 
         //print out the path
