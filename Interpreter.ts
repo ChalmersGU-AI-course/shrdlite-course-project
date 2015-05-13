@@ -77,34 +77,71 @@ module Interpreter {
         	var temp : Literal [][] = [];
         	for(var i = 0; i < objs.length; i++){
         		var lstlits : string[] = findendliterals(objs[i]);
-        		
+        		var tint : Literal[][] = [];
         		for(var l = 0; l < lstlits.length; l++){
+        			if(cmd.ent.quant == "all"){
+        				n = 0;
+        			}
         			var ob = state.objects[lstlits[l]];
         			var object : Parser.Object = {obj: {obj:null, loc :null,size:ob.size, color: ob.color, form:ob.form}, 
         						loc : cmd.loc , size:ob.size, color: ob.color, form:ob.form};
         			var tempent : Parser.Entity = {quant:"any", obj: object};
         			temp = identifyEnt(tempent, null, lstlits[l], state);
-        		
-	        		for(var j = 0; j < temp.length; j++){
+        		//	tint = append(tint, temp);
+        			if(cmd.ent.quant == "all"){
+        				tint = merge(tint, temp);
+        			}else{
+        				tint = append(tint, temp);
+        			}
+	        	/*	for(var j = 0; j < temp.length; j++){
 	        			var temp2 : Literal[]= clearIlligal(clone<Literal[]>(objs[i]), state);
 	        			
 	        			for(var k = 0; k < temp[j].length; k++){
 	        				if(checkIllegal(temp[j][k], state)){
-		        				intprt[n] = temp2;
+		        				intprt[n] = append(intprt[n], temp2);
 		        				intprt[n].push(temp[j][k]);
 		        				n++;
 	        				}
 	        			}
-	        		}
+	        		}*/
         		}
+        		var test = combineLiterals([],tint, objs[i], 0, 0, 0);
+    			for(var m = 0; m < test.length; m++){
+    				test[m] = clearIlligal(clone<Literal[]>(test[m]), state);
+    			}
+    			intprt = append(intprt,test);
         		
         	}
         }
+        
         else if(cmd.cmd == "take"){
         	intprt[0] =[{pol:true, rel:cmd.cmd, args : findendliterals(objs[0])}];
         }
 
         return intprt;
+    }
+    
+    function combineLiterals(litss : Literal[][], loclitss : Literal[][]
+    			, objlits : Literal[], k : number, k2 :number , k3 : number):Literal[][]{
+    	// 1 x 5  = 5 
+    	if(k == Math.pow(loclitss.length,  objlits.length)){
+    		return litss;
+    	}
+    //	for(var i = 0; i < objlits.length; i++){
+    		
+			litss[k] = append(litss[k], objlits);
+			litss[k] = append(litss[k], [loclitss[ (k2) % loclitss.length][0]]);
+			litss[k] = append(litss[k], [loclitss[ (k3) % loclitss.length][1]]);
+			if(k3 == loclitss.length-1){
+    			k3 = 0;
+    			k2 ++;
+    		}else{
+    			k3++;
+    		}
+    		
+			return combineLiterals(litss, loclitss, objlits, k+1, k2 ,k3);
+			
+  //  	}
     }
     
     function clearIlligal(lits : Literal[], state): Literal[]{
@@ -125,7 +162,7 @@ module Interpreter {
     		var lit : Literal = lits[i];
     		found = true;
     		for(var j = 0; j < lits.length; j++){
-    			var lit2 : Literal = lits[i];
+    			var lit2 : Literal = lits[j];
     			if(lit2.args[0] == lit.args[1]){
     				found = false;
     			}
@@ -395,11 +432,14 @@ module Interpreter {
 					}
 				}
 			}else{
-				lit = {pol : true, rel : rel, args : [result[i]]};
-				if(!intrpt[i]){
-					intrpt[i] = [];
+				if(ent.quant != "all"){
+					n = i;
 				}
-				intrpt[i].push(lit);
+				lit = {pol : true, rel : rel, args : [result[i]]};
+				if(!intrpt[n]){
+					intrpt[n] = [];
+				}
+				intrpt[n].push(lit);
 			}
 		}
 			
@@ -432,7 +472,20 @@ module Interpreter {
     	return objset.toArray();
     }
     
+    function merge(a : Literal [][],b :Literal [][]):Literal[][]{
+    	if(!a){
+    		a = [];
+    	}
+    	for(var i = 0; i < b.length; i++){
+    		a[i] = append(a[i], b[i]);
+    	}
+    	return a;
+    }
+    
     function append<T>(a : T [],b :T []):T[]{
+    	if(!a){
+    		a = [];
+    	}
     	for(var i = 0; i < b.length; i++){
     		a.push(b[i]);
     	}
