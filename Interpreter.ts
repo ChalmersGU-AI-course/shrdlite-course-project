@@ -52,12 +52,15 @@ module Interpreter {
             var objs : string[] = interpretEntity(cmd.ent, state);
             var locs : Sayings = interpretLocation(cmd.loc, state);
             var it : number = 0;
-            
             for(var i : number = 0; i < objs.length; i++){
+                lit[it] = [];
                 for(var j : number= 0; j< locs.objs.length; j++){
-                    lit[it++][0] = {pol: true, rel : locs.rel, args : [objs[i],locs.objs[j]]};
+                    //TODO:: AND between interpretations
+                    lit[it++][0] = {pol: true, rel : locs.rel, args : [objs[i],locs.objs[j]]};    
                 }
+
             }
+            console.log("yolo");
             //check if valid.
             return lit;    
         }
@@ -75,6 +78,7 @@ module Interpreter {
         //Assuming only single objects. 
         //TODO: quant == all, any.
         var objs : string[] = interpretObject(ent.obj, state);
+        console.log(ent+": "+ objs.length);
         return objs;
     }
 
@@ -89,15 +93,19 @@ module Interpreter {
                 return ["floor"];
             }
             var objsindexes : string[] = Array.prototype.concat.apply([], state.stacks);
+            console.log(objsindexes.length);
             if(obj.size != null){
                 objsindexes = objsindexes.filter(e=> state.objects[e].size === obj.size);
             }
+            console.log(objsindexes.length);
             if(obj.form != null){
                 objsindexes = objsindexes.filter(e=> state.objects[e].form === obj.form);
             }
+            console.log(objsindexes.length);
             if(obj.color != null){
                 objsindexes = objsindexes.filter(e=> state.objects[e].color === obj.color);
             }
+            console.log(objsindexes.length);
             return objsindexes;
         }
     }
