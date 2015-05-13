@@ -40,13 +40,23 @@ class TestMain(unittest.TestCase):
         self.assertEqual(stacks,[['floor0'],['floor1','b','a']])
 
         self.assertEqual(
-                        AStar.algorithm.getPlan(goal, came_from, actions_so_far), 
-                        ['started on solution','p','r','d']
+                        AStar.algorithm.getPlan(goal, came_from, actions_so_far,self.objects), 
+                        ['started on solution','Pick up the large blue ball','p','r','Drop it like its hot','d']
                         )
 
+
+    def test_keyToObj(self):
         self.assertEqual(
-                        AStar.algorithm.voiceCommand(['start','p','r','d'], goal, came_from, actions_so_far, self.objects), 
-                                                     ['start','Pick','p','r','Drop','d']
+                        AStar.algorithm.keyToObj( str(([['floor0'], ['floor1', 'b', 'a']], None, 1)), self.objects),
+                        None
+                        )
+        self.assertEqual(
+                        AStar.algorithm.keyToObj( str(([['floor0'], ['floor1', 'b']], 'a', 1)), self.objects),
+                        {'size': 'large', 'form': 'ball', 'color': 'blue'}
+                        )
+        self.assertEqual(
+                        AStar.algorithm.keyToObj( str(([['floor0'], ['floor1', 'b'],['floor1']], 'b', 1)), self.objects),
+                        {'size': 'large', 'form': 'box', 'color': 'red'}
                         )
 
 
@@ -74,7 +84,7 @@ class TestAStar(unittest.TestCase):
                                                             heuristic.heuristic)
         (intprt, stacks, holding, arm, objects) = goal
         self.assertEqual(stacks,[['floor0'],['floor1'],['floor2','b','a'],['floor3']])
-        self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far), ['started on solution','p','r','r','d'])
+        self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far,self.objects), ['started on solution','Pick up the large blue ball','p','r','r','Drop it like its hot','d'])
 
 class TestActions(unittest.TestCase):
 

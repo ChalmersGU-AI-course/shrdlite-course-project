@@ -42,34 +42,33 @@ def a_star_search_new(GetAction, start, goal, heuristic):
     
     return None
 
-def getPlan(goal,came_from,actions_so_far):
+def getPlan(goal,came_from,actions_so_far,objects):
     current = _getkey(goal)
     plan = []
     while current in came_from:
         next    = came_from[current]
         command = actions_so_far[current]
-        plan.append(command)
+
+        if command is 'p':
+            obj = keyToObj(current,objects)
+            plan += ['p',
+                     'Pick up the ' + obj.get('size')  + ' '
+                                    + obj.get('color') + ' '
+                                    + obj.get('form')
+                                    ]
+        elif command is 'd':
+            plan += ['d','Drop it like its hot']
+        else:
+            plan += [command]
         current = next
 
     return plan[::-1] #Reverse the list
 
-def voiceCommand(plan, goal, came_from, actions_so_far, objects):
 
-    voicePlan = []
-    for command in plan:
-        if command is 'p':
-            voicePlan += ['Pick','p']
-        elif command is 'd':
-            voicePlan += ['Drop','d']
-        else:
-            voicePlan += [command]
+def keyToObj(strkey,objects):
+    k = strkey.split(',')[-2].strip().strip("'")
+    return objects.get(k)
 
-    return voicePlan
-
-import re
-def keytoObj(strkey):
-    strkey= re.sub('()', '', strkey)
-    return strkey.split(',')[1]
 
 def _getkey(state):
   (intprt,stacks,holding,arm,objects) = state
