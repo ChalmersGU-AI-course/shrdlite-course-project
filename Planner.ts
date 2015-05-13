@@ -217,47 +217,37 @@ module Planner {
 
     function getHeur(ors : Interpreter.Literal[][], lits: Interpreter.Literal[]) : number {
 //	return 0;
-	var isHolding : boolean = function() {
-	    lits.forEach(function(lit) {
-		if(lit.rel == "holding") { return true; }
-	    });
-	    return false;
-	}();
+
+	var isHolding : boolean = false;
+	for(var i = 0; i < lits.length; i++){
+	    if(lits[i].rel == "holding") {  isHolding = true; break; }
+	}
+	
+
+	var colData = [];
+	lits.forEach(function(lit) {
+	    if(lit.rel == "column") {
+		colData[lit.args[0]] = lit.args[1];
+	    }
+	});
 
 
 	var lowestCost : number = 600000000;
 	ors.forEach(function(ands) {
 	    var cost : number = 0;
 	    ands.forEach(function(and) {
-		if(and.rel == "ontop") {
-		    var coldiff : number = function(){
-			
-			var start: number;
-			var end: number;
-			for(var i = 0; i < lits.length; i++) {
-			    var lit = lits[i];
-			    if(lit.rel == "column" && lit.args[0] == and.args[0]) {start = parseInt(lit.args[1]);}
-			    else if(lit.rel == "column" && lit.args[0] == and.args[1]) {end = parseInt(lit.args[1]);}
-			}
-			return Math.min(1, Math.abs(start - end));
-		    }();
+		if(and.rel == "ontop" || and.rel == "above") {
 		    if(isHolding) {
-			cost += 1 + coldiff;
+			cost += 1;
 		    } else {
-			cost += 2 + coldiff;
+			//if( parseInt(colData[and.args[0]]) - parseInt(colData[and.args[1]]) != 0) { cost += 1;}
 		    }
 		} else if( and.rel == "holding" && !isHolding) {
 		    cost += 1;
 		} else if (and.rel == "column") {
-		    for(var i = 0; i < lits.length; i++) {
-			var lit = lits[i];
-			if(lit.rel == and.rel && lit.args[0] == and.args[0]) {
-			    cost += Math.abs(parseInt(and.args[1]) - parseInt(lit.args[1]));
-			    break;
-			}
+		    if(!isHolding){
+			cost += Math.abs(parseInt(and.args[1]) - parseInt(colData[and.args[0]]));
 		    }
-		} else if(and.rel== "above") {
-		    cost += 2; //TODO REMOVE IF QUANTIFIERS
 		}
 	    });
 	    if(cost < lowestCost) { lowestCost = cost; }
