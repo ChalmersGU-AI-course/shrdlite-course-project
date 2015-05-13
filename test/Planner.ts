@@ -68,23 +68,17 @@ module PlannerTest {
 
     eval(lit: Lit): boolean {
       var res: boolean = true;
-/*      switch(lit.rel) {
-        case "any"
-        "any"
-        "the"
-        "inside"
-        "ontop"
-        "under"
-        "beside"
-        "above"
-        "small"
-        "large"
-        "black"
-        "white"
-        "blue" 
-        "green"
-        "yellow"
-        "red" */
+      switch(lit.rel) {
+        case "ontop":
+          for (var i = 0; i < this.stacks.length; i++) {
+            for (var j = 0; j < this.stacks[i].length; j++) {
+              return this.stacks[i][j+1]
+                     && lit.args[0] == this.stacks[i][j].name
+                     && lit.args[1] == this.stacks[i][j+1].name;
+            }
+          }
+          break;
+      }
       return false;
     }
     
@@ -336,7 +330,7 @@ module PlannerTest {
                                                 Array<string>(),["g","l"],["e","f"],["a"],new Array<string>()],
                                                null);
         var lit : Lit[][] = new Array( new Array( new Lit(true, "ontop",
-                                                          ["g", "l"])));
+                                                          ["l", "g"])));
         var goal: PDDL = new PDDL(lit);
 //        var goal: WorldState = new WorldState([new Array<string>(),["l","g"],["f","e"],["a"],new Array<string>()], null);
         var solution = A.Astar.search(state, null, goal);
