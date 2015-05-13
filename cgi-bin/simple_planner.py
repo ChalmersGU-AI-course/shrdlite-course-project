@@ -53,17 +53,10 @@ def goalWrapper(intprt, stacks, holding, arm, objects):
             return True
     return False 
 
-def heuristic(goal, current):
-    """    Passed as a parameter to A*, The heuristicfunciton for this problem.
-    """
-    return 1
-
 def _changeStack(newStack,index,stacks):
     """    Helperfunction to change a stack in stacks given an index
     """
     return [newStack if i is index else x for i,x in enumerate(stacks)]
-
-
 
 #borde refaktoreras till physics!!!!!!!
 def physics(top,bottom,objects):
