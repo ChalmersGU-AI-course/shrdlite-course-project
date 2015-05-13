@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
+///<reference path="lib/collections"/>
 
 module Interpreter {
 
@@ -48,8 +49,68 @@ module Interpreter {
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // This returns a dummy interpretation involving two random objects in the world
+        //console.log(cmd);
+        
+        // This function is called once for each parse found.
+        // cmd is the command found for this particular parse
+        // state should be the current WorldState
+        
+
+        // By going through the objs variable throug the state.objects
+        // We can then compare these objects to those found in the cmd variable
+        // How do we check location, like ontop under 
+        
+
+        // Identify the possible objects to be moved.
+
+        // Bring out the info from the found object
+        
+        // What quantity are we looking for? 0 = any, 1 = the, 2 = all
+        var quant = -1
+        if(cmd.ent.quant == "the")
+          quant = 1;
+        else if (cmd.ent.quant == "any")
+          quant = 0;
+        else if (cmd.ent.quant == "all")
+          quant = 2;
+        
+        // Extract the descriptive parts of the object
+        // By using a set we do not have to handle the null parts.
+        // We could just check that the parsed object's set is a subset of 
+        // the object from the stack
+        var objSet = new collections.Set<string>(); // Store the values of the object
+        var o = cmd.ent.obj;
+        if(o.size != null)
+          objSet.add(o.form);
+        if(o.color != null)
+          objSet.add(o.color);
+        if(o.form != null)
+          objSet.add(o.form);
+
+        var possibleObjects = [];
+        // Loop through the world and look for possible items
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        var a = objs[getRandomInt(objs.length)];
+        for(var s in objs){
+          var otemp = state.objects[s];
+          var stemp = new collections.Set<string>();
+          // Extract the parts of o into s and check if objSet is subset of s.
+          if(otemp.form != null)
+            stemp.add(otemp.form);
+          if(otemp.size != null)
+            stemp.add(otemp.size);
+          if(otemp.color != null)
+            stemp.add(otemp.color);
+          
+          // If the parse object is subset of the current object add to "possible objects"-array
+          if(objSet.isSubsetOf(stemp))
+            possibleObjects.push(s);
+
+        }
+        
+        // Dummy stuff
+        // take first object send into WorldState.objects and see what info we get.
+        //var o = state.objects[objs[0]];
+        var a = objs[2];
         var b = objs[getRandomInt(objs.length)];
         var intprt : Literal[][] = [[
             {pol: true, rel: "ontop", args: [a, "floor"]},
