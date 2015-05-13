@@ -209,6 +209,7 @@ ExampleWorlds["medium"] = {
         "m": { "form": "box", "size": "small", "color": "blue" }
     },
     "examples": [
+        "put the small box on the plank on the floor",
         "put the brick that is to the left of a pyramid in a box",
         "put the white ball in a box on the floor",
         "move the large ball inside a yellow box on the floor",
