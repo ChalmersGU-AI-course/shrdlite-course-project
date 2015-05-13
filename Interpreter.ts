@@ -81,7 +81,7 @@ module Interpreter {
                 console.log("Please be more specific with the target location");
                 return null;
             }
-            intprt = convertToPDDL(cmd, pobjs, possibleTargets);
+            intprt = convertToPDDL(cmd, pobjs, possibleTargets, state);
             return intprt;
         }
 
