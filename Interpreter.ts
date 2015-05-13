@@ -69,27 +69,37 @@ module Interpreter {
 
 
         // Get possible objects the parse is referring to
-        var pobjs = getPossibleObjects(cmd, state);
-        var b = pobjs[0];
+        //  -Identify what objects we want
+        //  -See if such an object exists in the world
+        var pobjs = getPrimaryObjects(cmd, state);
+
+
+        //  -If no object found, abort
+        //  -If ambiguity and the quantifier is 'the', ask for clarification
+        if (pobjs.length === 0) {
+            console.log("Can't pickup something that is not real");
+            return null;
+        } else if (cmd.ent.quant === "the" && pobjs.length > 1) {   //Working with command 'put'?
+            console.log("Please be more specific");
+            //Possible extension to save the current data and ask a clarification question      <---TODO?
+            return null;
+        }
 
         /*
-            TODO: Do correct stuff with "take"
-                -Identify what object we want
+            TODO: Structure for "take"
+                -Identify what objects we want
                 -See if such an object exists in the world
+                -If no object found, abort
                 -If ambiguity and the quantifier is 'the', ask for clarification
+                -If quantifier is 'all', abort
+                -Convert possible objects to interpretations in PDDL 
+                -Return possible interpretations
         */
         if (cmd.cmd === "take") {
             if (cmd.ent.quant === "all") {
                 //Can't hold more than one object
                 //CHANGE IF ADDING ANOTHER ARM
                 console.log("Can't hold more than one object");
-                return null;
-            } else if (cmd.ent.quant === "the" && pobjs.length > 1) {
-                console.log("Please be more specific");
-                //Possible extension to save the current data and ask a clarification question      <---TODO?
-                return null;
-            } else if (pobjs.length === 0) {
-                console.log("Can't pickup something that is not real");
                 return null;
             }
 
@@ -99,12 +109,14 @@ module Interpreter {
         }
 
         /*
-            TODO: Do correct stuff with "put"
+            TODO: Structure for "put"
                 -See if we hold an object o
-                -Identify the target object t (i.e. "floor")
+                -Identify the target objects t[] (i.e. "floor")
                 -See if such an object exists in the world
-                -Check if the positioning is valid, (i.e. under(o, t))
                 -If ambiguity and the quantifier is 'the', ask for clarification
+                -Check if the positioning is valid, (i.e. under(o, t))
+                -Convert possible objects to interpretations in PDDL //Possibly more here?
+                -Return interpretations
         */
         else if (cmd.cmd === "put") {
             if (state.holding === null) {
@@ -112,6 +124,15 @@ module Interpreter {
                 console.log("No knowledge of 'it'");
                 return null;
             }
+            var possibleTargets = getTargetObjects(cmd, state);
+            if (possibleTargets.length < 1) {
+                console.log("No target found");
+                return null;
+            } else if (possibleTargets.length > 1 && cmd.loc.ent.quant === "the") {
+                console.log("Please be more specific with the target location");
+                return null;
+            }
+            convertToPDDL(pobjs, possibleTargets);
         }
 
         /*
@@ -167,14 +188,28 @@ module Interpreter {
         */
     }
 
-    function getPossibleObjects(cmd: Parser.Command, state: WorldState) {
+    function getPrimaryObjects(cmd: Parser.Command, state: WorldState) {
+        var visuallyPossibleObjs = getPossibleObjects(cmd.ent.obj, state);
+        //TODO: Filter out based on location
+
+        return visuallyPossibleObjs;
+    }
+
+    function getTargetObjects(cmd: Parser.Command, state: WorldState) {
+        var visuallyPossibleObjs = getPossibleObjects(cmd.loc.ent.obj, state);
+        //TODO: Filter out based on location
+
+        return visuallyPossibleObjs;
+    }
+
+    function getPossibleObjects(obj: Parser.Object, state: WorldState) {
         // Extract the descriptive parts of the object
         // By using a set we do not have to handle the null parts.
         // We could just check that the parsed object's set is a subset of 
         // the object from the stack
 
         var objSet = new collections.Set<string>(); // Store the values of the object
-        var o = cmd.ent.obj;
+        var o = obj;
         objSet.add(o.size);
         objSet.add(o.color);
         objSet.add(o.form);
