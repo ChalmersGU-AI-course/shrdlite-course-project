@@ -48,23 +48,11 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        // This returns a dummy interpretation involving two random objects in the world
-        //console.log(cmd);
         
         // This function is called once for each parse found.
         // cmd is the command found for this particular parse
         // state should be the current WorldState
-        
 
-        // By going through the objs variable throug the state.objects
-        // We can then compare these objects to those found in the cmd variable
-        // How do we check location, like ontop under 
-        
-
-        // Identify the possible objects to be moved.
-
-        // Bring out the info from the found object
-        
         // What quantity are we looking for? 0 = any, 1 = the, 2 = all
         var quant = -1
         if(cmd.ent.quant == "the")
@@ -101,15 +89,13 @@ module Interpreter {
           if(otemp.color != null)
             stemp.add(otemp.color);
           
-          // If the parse object is subset of the current object add to "possible objects"-array
+          // If the parse object is subset of the current temp object add to "possible objects"-array
           if(objSet.isSubsetOf(stemp))
             possibleObjects.push(s);
 
         }
         
         // Dummy stuff
-        // take first object send into WorldState.objects and see what info we get.
-        //var o = state.objects[objs[0]];
         var a = objs[2];
         var b = objs[getRandomInt(objs.length)];
         var intprt : Literal[][] = [[
