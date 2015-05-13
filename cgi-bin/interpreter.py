@@ -1,7 +1,7 @@
 from PDDL import satisfy_pred
 import physics
 
-class InterpError(Exception):
+class InterpreterException(Exception):
     def __init__(self, descr):
         self.descr = descr
     def __str__(self):
@@ -27,9 +27,13 @@ def interpret(stacks, holding, objects, parses, **_): # fancy way of ignoring al
         if len(possible) >= 1:
             ok_goals.append(possible)
 
+    # no possible goals, impossible to do!
+    if len(ok_goals) < 1:
+        raise InterpreterException('Physically impossible!')
     # if there is more than 1 disj. goal left the command is ambiguous
-    if not len(ok_goals) == 1:
-        raise InterpError('Ambiguous parse: ' + str(goals))
+    elif not len(ok_goals) == 1:
+        raise InterpreterException('Ambiguous parse: ' + str(ok_goals))
+
 
     return ok_goals[0]
 
@@ -118,7 +122,7 @@ def find_ent(ent, objects, stacks, holding):
     if (ent['quant'] == 'the'
         and len(os) > 1
         and not all(map(lambda o: physics.is_floor(o), os_descr))):
-        raise InterpError('Ambiguous object: what object did you mean? ' + ', '.join(map(obj_str, os_descr)))
+        raise InterpreterException('Ambiguous object, possible objects: ' + ', '.join(map(obj_str, os_descr)))
     else:
         return os
 

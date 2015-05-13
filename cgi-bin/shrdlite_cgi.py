@@ -9,7 +9,7 @@ def main(state):
 
     try:
         intprt = interpreter.interpret(**state)
-    except interpreter.InterpError as err:
+    except interpreter.InterpreterException as err:
         return {'plan': [str(err)]}
 
     plan = planner(intprt, **state)
