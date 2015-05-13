@@ -13,16 +13,27 @@ module Planner {
     export class ShrdliteNode implements AStar.Node<Interpreter.Literal[]> {
 
         private pddl : Interpreter.Literal[]; 
+	private heur : number;
 
-        constructor(public state : WorldState, public lastAction : string) {this.pddl = null;}
+        constructor(public state : WorldState, public lastAction : string, public goals : Interpreter.Literal[][]) {
+	    this.pddl = stackToPddl(this.state);
+	    this.heur = getHeur(this.goals, this.pddl);
+	}
 
         getState(){
-            if(this.pddl == null) {this.pddl = stackToPddl(this.state);}
             return this.pddl;
         }
 
+	getHeuristic() {
+	    return this.heur;
+	}
+
+	getGoal() {
+	    return this.goals;
+	}
+
         getChildren(){
-            return generateChildren(this.state, this.lastAction);
+            return generateChildren(this.state, this.lastAction, this.goals);
         }
     } 
 
@@ -46,7 +57,7 @@ module Planner {
             goal.forEach(function(and : Interpreter.Literal[]){
                 var goalReached = true;
                 and.forEach(function(lit : Interpreter.Literal){
-                    var found : boolean = isElem(lit, lits);
+                    var found : boolean = isElem2(lit, lits);
                     if(found != lit.pol) { goalReached = false; }
                 })
                 if(goalReached == true) { allFound = true; }
@@ -55,17 +66,19 @@ module Planner {
         }
     }
 
-    function isElem(elem : Interpreter.Literal, arr : Interpreter.Literal[]): boolean {
-	for(var i = 0; i < arr.length; i++) {
+    function isElem2(elem : Interpreter.Literal, arr : Interpreter.Literal[]): boolean {
+        for(var i = 0; i < arr.length; i++) {
 	    var a = arr[i];
 	    if(elem.rel == a.rel && elem.args.toString() == a.args.toString()) {
-		return true;
+                return true;
 	    }
-	}
-	return false;
+        }
+        return false;
     }
 
-    export function generateChildren(state : WorldState, lastAction : string) : AStar.Edge<Interpreter.Literal[]>[] {
+
+
+    export function generateChildren(state : WorldState, lastAction : string, goals : Interpreter.Literal[][]) : AStar.Edge<Interpreter.Literal[]>[] {
         
         var map : collections.Dictionary<string,WorldState> = new collections.Dictionary<string,WorldState>();
         map.setValue("r", moveRight(state, lastAction));
@@ -75,7 +88,7 @@ module Planner {
 
         var edges : AStar.Edge<Interpreter.Literal[]>[] = [];
         map.forEach(function(key:string, value:WorldState){
-            if(value != null) { edges.push({cost:1, end: new ShrdliteNode(value, key), label: key});}
+            if(value != null) { edges.push({cost:1, end: new ShrdliteNode(value, key, goals), label: key});}
         });
 
         return edges;
@@ -187,19 +200,12 @@ module Planner {
 	return pddl;
     }
 
-    function heuristicFunc(intprt: Interpreter.Literal[][]) : AStar.Heuristic<Interpreter.Literal[]>{
-	return function(lits: Interpreter.Literal[]) : number {
-	    return 0;
-	}
-    }
-
-
-
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
 
         var plan : string[] = [];
-        var node : ShrdliteNode = new ShrdliteNode(state, "");
-        var path : AStar.Path<Interpreter.Literal[]> = AStar.astarSearch<Interpreter.Literal[]>(node, heuristicFunc(intprt), checkGoal(intprt));  
+        var node : ShrdliteNode = new ShrdliteNode(state, "", intprt);
+
+        var path : AStar.Path<Interpreter.Literal[]> = AStar.astarSearch<Interpreter.Literal[]>(node, checkGoal(intprt));  
 
         return path.getLabelPath();      
     }
@@ -207,6 +213,56 @@ module Planner {
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
+    }
+
+    function getHeur(ors : Interpreter.Literal[][], lits: Interpreter.Literal[]) : number {
+//	return 0;
+	var isHolding : boolean = function() {
+	    lits.forEach(function(lit) {
+		if(lit.rel == "holding") { return true; }
+	    });
+	    return false;
+	}();
+
+
+	var lowestCost : number = 600000000;
+	ors.forEach(function(ands) {
+	    var cost : number = 0;
+	    ands.forEach(function(and) {
+		if(and.rel == "ontop") {
+		    var coldiff : number = function(){
+			
+			var start: number;
+			var end: number;
+			for(var i = 0; i < lits.length; i++) {
+			    var lit = lits[i];
+			    if(lit.rel == "column" && lit.args[0] == and.args[0]) {start = parseInt(lit.args[1]);}
+			    else if(lit.rel == "column" && lit.args[0] == and.args[1]) {end = parseInt(lit.args[1]);}
+			}
+			return Math.min(1, Math.abs(start - end));
+		    }();
+		    if(isHolding) {
+			cost += 1 + coldiff;
+		    } else {
+			cost += 2 + coldiff;
+		    }
+		} else if( and.rel == "holding" && !isHolding) {
+		    cost += 1;
+		} else if (and.rel == "column") {
+		    for(var i = 0; i < lits.length; i++) {
+			var lit = lits[i];
+			if(lit.rel == and.rel && lit.args[0] == and.args[0]) {
+			    cost += Math.abs(parseInt(and.args[1]) - parseInt(lit.args[1]));
+			    break;
+			}
+		    }
+		} else if(and.rel== "above") {
+		    cost += 2; //TODO REMOVE IF QUANTIFIERS
+		}
+	    });
+	    if(cost < lowestCost) { lowestCost = cost; }
+	});
+	return lowestCost;
     }
 
 }

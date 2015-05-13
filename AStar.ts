@@ -5,11 +5,12 @@ module AStar {
     export interface Node<S> { 
         getChildren() : Edge<S>[];
         getState() : S;
+	getHeuristic() : number;
     }
 
     export class StaticNode<S> implements Node<S> {
         
-        constructor(public children : Edge<S>[], public state : S){}
+        constructor(public children : Edge<S>[], public h: Heuristic<S>, public state : S){}
 
         getChildren(){
             return this.children;
@@ -22,6 +23,10 @@ module AStar {
         addEdge(edge : Edge<S>){
             this.children.push(edge);
         }
+
+	getHeuristic() {
+	    return this.h(this.state);
+	}
     }
  
     //A path contains the total cost of the path and a list of
@@ -59,12 +64,12 @@ module AStar {
         }
     }
 
-    export interface Heuristic<S> {
-        (s : S):number
+    export interface Goal<S> {
+        (s : S):boolean;
     }
 
-    export interface Goal<S> {
-        (s : S):boolean
+    export interface Heuristic<S> {
+	(s : S) : number;
     }
 
     export interface Edge<S> {
@@ -74,16 +79,20 @@ module AStar {
     }
 
     //A* search function
-    export function astarSearch<S>(graph:Node<S>,h:Heuristic<S>,goal:Goal<S>) : Path<S>{
+    export function astarSearch<S>(graph:Node<S>,goal:Goal<S>) : Path<S>{
         var frontier = new collections.PriorityQueue<Path<S>>(function(a,b) {
-            return (b.weight() + h(b.peek().getState())) -  (a.weight() + h(a.peek().getState()))
+            return (b.weight() + b.peek().getHeuristic()) -  (a.weight() + a.peek().getHeuristic())
         });
         frontier.add(new Path<S>([ graph]));
 
+	var j : number = 0;
+	var time : number = new Date().getTime();
+
         while(!frontier.isEmpty()) {
             var p = frontier.dequeue();
-	    var haha = p.peek().getState();
+	    j++;
             if(goal(p.peek().getState())) {
+		alert("Number of iterations: " + j + "\nTime taken: " + (new Date().getTime() - time));
                 return p;
             } else {
                 var children = p.peek().getChildren();
@@ -97,26 +106,46 @@ module AStar {
 
     //Simple test
     export function test(){
-        var g1 = new StaticNode<number>([],4);
-        var g2 = new StaticNode([],3);
+	var heur = function(a){return 0;};
+
+        var g1 = new StaticNode<number>([],heur,4);
+        var g2 = new StaticNode([],heur,3);
         var g = new StaticNode<number>([{ cost: 1, end: g1},
-                                   {cost: 1, end: g2}], 0);
+					{cost: 1, end: g2}], heur, 0);
         g1.children.push({cost:1, end: g});
 
-        var h = astarSearch<number>(g,function(a){return 0;},function(a : number){return a == 3;})
+        var h = astarSearch<number>(g,function(a : number){return a == 3;})
         return h;
     }
     
 
     //Complicated test geolocations
     export function geoTest() : string[] {
-        var l1 = new StaticNode<string>([], "gothenburg");
-        var l2 = new StaticNode<string>([], "boras");
-        var l3 = new StaticNode<string>([], "jonkoping");
-        var l4 = new StaticNode<string>([], "stockholm");
-        var l5 = new StaticNode<string>([], "malmo");
-        var l6 = new StaticNode<string>([], "varnamo");
-        var l7 = new StaticNode<string>([], "mellerud");
+	var heur = function(a : string){ //H(n)
+            if(a == "gothenburg") {
+                return Math.sqrt(4*4 + 15*15);
+            } else if(a == "malmo"){
+                return Math.sqrt(16*16+15*15);
+            } else if(a == "varnamo"){
+                return 32;
+            } else if(a == "mellerud"){
+                return 42-16;
+            } else if(a == "boras") {
+                return 14;
+            } else if(a == "jonkoping") {
+                return 15;
+            } else if(a == "stockholm") {
+                return 0;
+            }
+        };
+
+        var l1 = new StaticNode<string>([], heur,"gothenburg");
+        var l2 = new StaticNode<string>([], heur,"boras");
+        var l3 = new StaticNode<string>([], heur,"jonkoping");
+        var l4 = new StaticNode<string>([], heur,"stockholm");
+        var l5 = new StaticNode<string>([], heur,"malmo");
+        var l6 = new StaticNode<string>([], heur,"varnamo");
+        var l7 = new StaticNode<string>([], heur,"mellerud");
 
 
         l1.addEdge({cost: 4,  end: l2});
@@ -133,24 +162,7 @@ module AStar {
         l6.addEdge({cost: 23, end: l3});
         l7.addEdge({cost: 42, end: l3});
 
-        var res =  astarSearch<string>(l1 //Start node
-                                   ,function(a : string){ //H(n)
-                                       if(a == "gothenburg") {
-                                           return Math.sqrt(4*4 + 15*15);
-                                       } else if(a == "malmo"){
-                                           return Math.sqrt(16*16+15*15);
-                                       } else if(a == "varnamo"){
-                                           return 32;
-                                       } else if(a == "mellerud"){
-                                           return 42-16;
-                                       } else if(a == "boras") {
-                                           return 14;
-                                       } else if(a == "jonkoping") {
-                                           return 15;
-                                       } else if(a == "stockholm") {
-                                           return 0;
-                                       }
-                                   }, //Goal
+        var res =  astarSearch<string>(l1, 
                                    function(a : string){
                                        return a == "stockholm";
                                    });
