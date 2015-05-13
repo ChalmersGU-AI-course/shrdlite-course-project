@@ -10,25 +10,28 @@ module AStar {
      * @returns Node[] or null
      */
     export function astar(start: Node, goalConditions: Interpreter.Literal[], heuristic: THeuristicF) : Planner.Move[] {
-        var closedset = new MySet<string>(); // The set of nodes already evaluated.
-        var openset = new Map<string, Node>(); // The set of tentative nodes to be evaluated, initially containing the start node
-        //var came_from = new Map<Node, Node>(); // The map of navigated nodes.
-        //var g_score = new Map<Node, number>();
-        //var f_score = new Map<Node, number>();
+        var closedset = new MySet<string>(); // The set of nodes already evaluated. It contains the hash of the states.
+        var openset = new Map<string, Node>(); // The set of tentative nodes to be evaluated, initially containing the start node. It maps hash of states to the best corresponding Node.
 
         start.setScores(0,heuristic(start.content,goalConditions));
         openset.set(start.content.hash, start);
-        //g_score.set(start, 0); // Cost from start along best known path.
-        // Estimated total cost from start to goal through y.
-        //f_score.set(start, g_score.get(start) + heuristic(start, goalConditions));
+        
         console.log("Début AStar !");
         console.dir(openset);
         while (openset.size > 0) { // openset is not empty
             var current: Node = lowestFScoreNode(openset);
-            if (heuristic(current.content, goalConditions)==0) {
+            if (current.f_score==current.g_score) { // <=> heuristic(current.content, goalConditions)==0 : SUCCESS !!
+                // In the case of holding objects.
+                var hold: string = null;
+                goalConditions.forEach((goal) => {
+                    if(goal.rel=="holding") {hold=goal.args[0];}
+                });
+                if(hold) {
+                    var m = new Planner.Move(Planner.getLocation(hold, current.content.stacks)[0], -1);
+                    current.content.moves.push(m);
+                }
                 return current.content.moves;
             }
-
             openset.delete(current.content.hash); // remove current from openset
             closedset.add(current.content.hash); // add current to closedset
             current.computeNeighbors();
@@ -40,16 +43,6 @@ module AStar {
                     neighbor.setScores(current.g_score+weight, heuristic(neighbor.content, goalConditions));
                     openset.set(neighbor.content.hash, neighbor);
                 }
-                
-                /*var tentative_g_score = g_score.get(current) + weight;
-                if (!openset.has(neighbor.content.hash) || tentative_g_score < g_score.get(neighbor)) {
-                    //came_from.set(neighbor, current);
-                    g_score.set(neighbor, tentative_g_score);
-                    f_score.set(neighbor, g_score.get(neighbor) + heuristic(neighbor, goalConditions));
-                    if (!openset.has(neighbor.content.hash)) {
-                        openset.set(neighbor.content.hash, neighbor);
-                    }
-                }*/
             });
         }
         return null;
@@ -111,35 +104,5 @@ module AStar {
             }
         });
         return min_node;
-        /*var scoreFn = (node: Node) => {
-            return {score: heuristic(node, goalConditions), node: node}
-        };
-
-        return set.toArray()
-            .map(scoreFn)
-            .sort((a, b) => {return a.score - b.score})
-            .shift().node;*/
     }
-
-    /*function reconstruct_path(came_from: Map<Node, Node>, current: Node) : Node[] {
-        var total_path = [current];
-        while (came_from.has(current)) {
-            current = came_from.get(current);
-            total_path.push(current);
-        }
-        return total_path
-    }*/
-
-    /*function isGoalReached(state: Planner.State, goalConditions: Interpreter.Literal[]) : boolean {
-        var res = true;
-        for (var goal=0; goal<goalConditions.length; goal++) {
-            if (goalConditions[goal].rel == "ontop" ) {
-                var top : number[] = Planner.getLocation(goalConditions[goal].args[0], state.stacks);
-                var bottom : number[] = Planner.getLocation(goalConditions[goal].args[1], state.stacks);
-                res = res && top[0] == bottom[0] && top[1] == bottom[1]+1;
-            }
-        }
-        return res;
-    }*/
-
 }

@@ -155,67 +155,46 @@ module Planner {
     }
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        var plan = new Plan(state.arm);
         CheckPhysics.setObjects(state.objects);
-        /*
-        var moves = CheckPhysics.possibleMoves(state.stacks);
-        var s="";
-        for(var i=0; i<moves.length; i++) {
-            s+=moves[i].pick+" --> "+moves[i].drop+" ; ";
+        var plans: Plan[] = [];
+        var i_Min = 0;
+        var len_Min = Number.POSITIVE_INFINITY;
+        if(state.holding) { // We drop the hold object for the AStar resolution.
+            state.stacks[state.arm].push(state.holding);
         }
-        console.log("Possible moves : "+s);
-
-        plan.movesToPlan([moves[getRandomInt(moves.length)]]);
-        */
-        console.log("Planning !");
-        var plans = intprt.map((alternativeGoal) => solveByAStar(new State(state.stacks,[]), alternativeGoal));
-        plan.movesToPlan(plans[0]);
-
-        return plan.plan;
-        /*
-        // This function returns a dummy plan involving a random stack
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
-        var plan : string[] = [];
-
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
+        for(var i=0; i<intprt.length; i++) { // Plan each interpretation.
+            var plan = new Plan(state.arm);
+            var moves = solveByAStar(new State(state.stacks,[]), intprt[i]);
+            if(state.holding && moves.length!=0) { // If the arm was holding something
+                if(moves[0].pick==state.arm) {
+                    var drop=moves.shift().drop;
+                    if(drop!=-1) { // In the stupid case where the arm already holds the object.
+                        plan.move(drop);
+                        plan.drop();
+                    }
+                } else {
+                    plan.drop();
+                }
             }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
+            var pick=-1;
+            if(moves.length!=0 && moves[moves.length-1].drop==-1) { // If the arm should hold something at the end.
+                pick=moves.pop().pick;
             }
+            plan.movesToPlan(moves); // We plan all the moves.
+            if(pick!=-1) {
+                plan.move(pick);
+                plan.pick();
+            }
+            if(plan.plan.length<len_Min) { // To select the shorter planning.
+                len_Min = plan.plan.length;
+                i_Min=i;
+            }
+            plans.push(plan);
         }
-
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
-
-        if (pickstack < state.stacks.length-1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
-                plan.push("r");
-            }
-
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
-                plan.push("l");
-            }
+        if(state.holding) { // We remove the hold object from the pile.
+            state.stacks[state.arm].pop();
         }
-
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
-
-        return plan;*/
+        return plans[i_Min].plan;
     }
     
     /**
@@ -247,23 +226,53 @@ module Planner {
     }
 
     /**
-     * Simply returns the sum of objects piled over the concerned objects defined in objectToMove.
-     * The contribution of each oject could be depending on their constraints.
-     * (Ex : ball > box > pyramid > table and small > large)
+     * The heuristic ! It returns the minimal number of moves to solve the goals.
+     * It basically relies on the number of objects piled over the concerned objects.
+     * The calculation depends on the relation used for each goal.
      */
     function heuristic(state: Planner.State, goalConditions: Interpreter.Literal[]) : number {
         var score = 0;
         for (var goal=0; goal<goalConditions.length; goal++) {
-            if (goalConditions[goal].rel == "ontop" ) {
-                var top : number[] = Planner.getLocation(goalConditions[goal].args[0], state.stacks);
-                if(!(top[1]==0 && goalConditions[goal].args[1]=="floor")) {
-                    var bottom : number[] = Planner.getLocation(goalConditions[goal].args[1], state.stacks);
+            var g = goalConditions[goal];
+            if (g.rel == "ontop" ) {
+                var top : number[] = Planner.getLocation(g.args[0], state.stacks);
+                if(!(top[1]==0 && g.args[1]=="floor")) {
+                    var bottom : number[] = Planner.getLocation(g.args[1], state.stacks);
                     if(top[0]!=bottom[0]) {
                         score+=top[2]+bottom[2]+1;
                     } else if(top[1]!=bottom[1]+1) {
                         score+=Math.max(top[2],bottom[2])+1;
                     }
                 }
+            } else if(g.rel == "beside") {
+                var o1 : number[] = Planner.getLocation(g.args[0], state.stacks);
+                var o2 : number[] = Planner.getLocation(g.args[1], state.stacks);
+                if(Math.abs(o1[0]-o2[0])!=1) {
+                    score+=Math.min(o1[2],o2[2])+1;
+                }
+            } else if(g.rel == "above" || g.rel == "under") {
+                var top : number[] = Planner.getLocation(g.args[(g.rel=="above") ? 0 : 1], state.stacks);
+                var bottom : number[] = Planner.getLocation(g.args[(g.rel=="above") ? 1 : 0], state.stacks);
+                if(!(top[0]==bottom[0] && bottom[1]<top[1])) {
+                    score+=top[2]+1;
+                }
+            } else if(g.rel == "right" || g.rel == "left") {
+                var right : number[] = Planner.getLocation(g.args[(g.rel=="right") ? 0 : 1], state.stacks);
+                var left : number[] = Planner.getLocation(g.args[(g.rel=="right") ? 1 : 0], state.stacks);
+                if(!(right[0]>left[0])) {
+                    if(right[0]==0) {
+                        score+=right[2]+1;
+                    }
+                    if(left[0]==state.stacks.length-1) {
+                        score+=left[2]+1;
+                    }
+                    if(right[0]!=0 && left[0]!=state.stacks.length-1) {
+                        score+=Math.min(right[2],left[2])+1;
+                    }
+                }
+            } else if(g.rel == "holding") {
+                var obj : number[] = Planner.getLocation(g.args[0], state.stacks);
+                score+=obj[2];
             }
         }
         return score;

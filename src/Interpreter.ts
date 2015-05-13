@@ -51,11 +51,29 @@ module Interpreter {
         /*var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];*/
-        var intprt : Literal[][] = [[
+        /*var intprt : Literal[][] = [[
             {pol: true, rel: "ontop", args: ["a", "c"]},
             //{pol: true, rel: "ontop", args: ["m", "floor"]},
+            {pol: true, rel: "ontop", args: ["g", "a"]},
+            {pol: true, rel: "ontop", args: ["h", "g"]},
+            //{pol: true, rel: "ontop", args: ["i", "a"]},
             {pol: true, rel: "holding", args: ["f"]}
+        ]];*/
+        var intprt : Literal[][] = [[
+            {pol: true, rel: "ontop", args: ["l", "floor"]},
+            {pol: true, rel: "ontop", args: ["k", "floor"]},
+            {pol: true, rel: "ontop", args: ["m", "floor"]}
         ]];
+        /*var intprt : Literal[][] = [[
+            {pol: true, rel: "left", args: ["g", "e"]},
+            {pol: true, rel: "beside", args: ["c", "a"]},
+            {pol: true, rel: "holding", args: ["k"]}
+        ]];*/
+        /*var intprt : Literal[][] = [[
+            {pol: true, rel: "ontop", args: ["h", "floor"]},
+            {pol: true, rel: "ontop", args: ["g", "floor"]},
+            {pol: true, rel: "holding", args: ["k"]}
+        ]];*/
         return intprt;
     }
 
