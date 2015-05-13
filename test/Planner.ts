@@ -15,6 +15,10 @@ module PlannerTest {
     //the inner array describes literals connected with an AND,
     //the outer one connected with an OR
     alternatives : Lit[][];
+
+    constructor (input : Lit[][]) {
+      this.alternatives = input;
+    }
   }
 
   //one expression describing a property of a goal
@@ -27,8 +31,12 @@ module PlannerTest {
     rel:string; 
     //the objects on which the relationsship works
     args:string[]
-
-
+    
+    constructor(pol: boolean, rel: string, args: string[]) {
+      this.pol = pol;
+      this.rel = rel;
+      this.args = args;
+    }
   }
 
   class WorldState implements A.Astar.State {
@@ -60,8 +68,24 @@ module PlannerTest {
 
     eval(lit: Lit): boolean {
       var res: boolean = true;
-      //TODO: eval rel with args
-      return res == lit.pol;
+/*      switch(lit.rel) {
+        case "any"
+        "any"
+        "the"
+        "inside"
+        "ontop"
+        "under"
+        "beside"
+        "above"
+        "small"
+        "large"
+        "black"
+        "white"
+        "blue" 
+        "green"
+        "yellow"
+        "red" */
+      return false;
     }
     
 
@@ -308,14 +332,19 @@ module PlannerTest {
     describe('AStar in the Planner', () => {
       it('test if a-star runs', (done) => {
         var nothing: string = null;
-        var state: WorldState = new WorldState([new Array<string>(),["g","l"],["e","f"],["a"],new Array<string>()], null);
-        var goal: WorldState = new WorldState([new Array<string>(),["l","g"],["f","e"],["a"],new Array<string>()], null);
+        var state: WorldState = new WorldState([new
+                                                Array<string>(),["g","l"],["e","f"],["a"],new Array<string>()],
+                                               null);
+        var lit : Lit[][] = new Array( new Array( new Lit(true, "ontop",
+                                                          ["g", "l"])));
+        var goal: PDDL = new PDDL(lit);
+//        var goal: WorldState = new WorldState([new Array<string>(),["l","g"],["f","e"],["a"],new Array<string>()], null);
         var solution = A.Astar.search(state, null, goal);
 
         //print out the path
-        for (var i = 0; i < solution.path.length; i++) {
-          console.log(solution.path[i].toString());
-        }
+//        for (var i = 0; i < solution.path.length; i++) {
+//          console.log(solution.path[i].toString());
+//        }
         //print out the solution
         console.log(solution);
         done()
