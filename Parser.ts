@@ -39,7 +39,7 @@ module Parser {
 
 
     export function parseToString(res : Result) : string {
-        return JSON.stringify(res.prs);
+        return JSON.stringify(res.prs, null, 2);
     }
 
 
