@@ -6,6 +6,7 @@ import PDDL
 import simple_planner
 import AStar.algorithm
 import physics
+import heuristic
 
 class TestMain(unittest.TestCase):
     
@@ -30,7 +31,7 @@ class TestMain(unittest.TestCase):
         came_from, cost_so_far, actions_so_far, goal = AStar.algorithm.a_star_search_new(   simple_planner.getAction,
                                                             self.state,
                                                             simple_planner.goalWrapper,
-                                                            simple_planner.heuristic)
+                                                            heuristic.heuristic)
         (intprt, stacks, holding, arm, objects) = goal
         self.assertEqual(stacks,[[],['b','a']])
         self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far), ['start','p','r','d'])
@@ -51,7 +52,7 @@ class TestAStar(unittest.TestCase):
         came_from, cost_so_far, actions_so_far, goal = AStar.algorithm.a_star_search_new(   simple_planner.getAction,
                                                             self.state,
                                                             simple_planner.goalWrapper,
-                                                            simple_planner.heuristic)
+                                                            heuristic.heuristic)
         (intprt, stacks, holding, arm, objects) = goal
         self.assertEqual(stacks,[[],[],['b','a'],[]])
         self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far), ['start','p','r','r','d'])
@@ -322,6 +323,28 @@ class TestGoal(unittest.TestCase):
     def test_rightof_false(self):
         self.assertFalse(simple_planner.goalWrapper(
             [('rightof','a','b')],[['a'],['c'],['b']],None,0,self.objects))
+
+class TestHeuristic(unittest.TestCase):
+
+    def setUp(self):
+        self.stacks = [['a','b'],[]]
+        self.objects = {'a': {'size': 'large', 'form': 'brick', 'color': 'blue'},
+                   'b': {'size': 'large', 'form': 'brick', 'color': 'red'},
+                   'c': {'size': 'large', 'form': 'brick', 'color': 'red'},
+                   'd': {'size': 'large', 'form': 'brick', 'color': 'red'},
+                   'e': {'size': 'large', 'form': 'brick', 'color': 'red'},
+                   'f': {'size': 'large', 'form': 'brick', 'color': 'red'}}        
+        self.arm = 0
+        self.holding = None
+        self.intprt = [('ontop','a','b')]
+        self.state = (self.intprt,self.stacks,self.holding,self.arm,self.objects)
+
+    def test_heuristic_one(self):
+        self.assertEqual(heuristic.heuristic(*self.state),1)
+
+    def test_heuristic_zero(self):
+        self.assertEqual(heuristic.heuristic(self.intprt, [['c','f','a'],['d','e','b']], self.holding, self.arm, self.objects),0)
+
 
 if __name__ == '__main__':
     unittest.main()
