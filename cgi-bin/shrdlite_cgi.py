@@ -107,7 +107,7 @@ if __name__ == '__main__':
         # remove objects that are not in any stack from objects
         new_objs = {}
         for obj, props in state['objects'].items():
-            if not PDDL.find_obj(obj, state['stacks']) == (None, None):
+            if not PDDL.find_obj(obj, state['stacks']) == (None, None) or obj == state['holding']:
                 new_objs[obj] = props
 
         state['objects'] = new_objs
