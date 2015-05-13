@@ -71,7 +71,6 @@ def satisfy_holding(x, _, stacks, holding):
 
 def find_obj(o, stacks):
     """return (stack, position), (0,0) = bottom of leftmost stack"""
-    # Hittar ej obj när roboten håller i det. 
     for stackno, stack in enumerate(stacks):
         for pos, obj in enumerate(stack):
             if o == obj:

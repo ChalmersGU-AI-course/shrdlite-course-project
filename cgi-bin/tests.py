@@ -278,9 +278,22 @@ class TestGoal(unittest.TestCase):
         self.assertTrue(simple_planner.goalWrapper(
             [('beside','a','b')],[['a'],['b']],None,0,self.objects))
 
+    def test_beside_true_2Stacks2(self):
+        self.assertTrue(PDDL.satisfy_pred(
+            ('beside','a','b'),[['a'],['b']],None))
+
+    def test_beside_true_2stacks3(self):
+        self.assertTrue(PDDL.satisfy_beside(
+            'a', 'b', [['a'],['b']], None
+            ))
+
     def test_beside_true(self):
         self.assertTrue(simple_planner.goalWrapper(
             [('beside','a','c')],[['a'],['c'],['b']],None,0,self.objects))
+
+    def test_beside_true2(self):
+        self.assertTrue(PDDL.satisfy_beside(
+            'a','b',[[],['a'],['b'],[]], None))        
 
     def test_beside_false(self):
         self.assertFalse(simple_planner.goalWrapper(
