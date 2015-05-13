@@ -54,13 +54,19 @@ module Interpreter {
         var intprt : Literal[][] = []
         
         if (cmd.cmd == "move"){
-        	console.log("entity--------------\n",checkStm(cmd.ent.obj, state));
-        	console.log("location------------\n",checkStm(cmd.loc.ent.obj, state));
-        	console.log("PDDL\n", goalsToPDDL(cmd.ent, cmd.loc, state));
+        //	console.log("entity--------------\n",checkStm(cmd.ent.obj, state));
+        //	console.log("location------------\n",checkStm(cmd.loc.ent.obj, state));
+        //	console.log("PDDL\n", goalsToPDDL(cmd.ent, cmd.loc, state));
         	intprt = goalsToPDDL(cmd.ent, cmd.loc, state);
         }else if(cmd.cmd == "take"){
         	intprt = goalsToPDDL(cmd.ent, null, state);
-        } 
+        }else if(cmd.cmd == "put"){
+	    var o : Parser.Object = state.objects[state.holding];
+	    //var pos : Position = findObject(state.holding, state);
+	    //var obj2 : ObjectInfo = {obj: o, pos: pos, name : state.holding};
+	    intprt = goalsToPDDL({quant:"the", obj:o},cmd.loc,state);
+	    console.log("hhhhhhhhhhhhhhhh",o);
+        }  
         return intprt;
     }
     
@@ -240,8 +246,8 @@ module Interpreter {
 *   Check that the combination of over and under object is valid 
 **/
 function checkValidPos (over : ObjectDefinition, under : ObjectDefinition): boolean{
-	console.log(over);
-	console.log(under);
+	//console.log(over);
+	//console.log(under);
         
         if (under.form === "floor"){
             return true;

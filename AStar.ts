@@ -118,9 +118,9 @@ module AStar {
 			nod = nod.getCameFrom();
 			i++;
 		}
-		pathList[pathList.length] = "<br> The Path: " + startNod.getid();
-		pathList[pathList.length] = "The cost of the total path: " + cost;
-		pathList[pathList.length] ="";
+	//	pathList[pathList.length] = "<br> The Path: " + startNod.getid();
+	//	pathList[pathList.length] = "The cost of the total path: " + cost;
+	//	pathList[pathList.length] ="";
 		return pathList.reverse();
 	}
 	
@@ -144,41 +144,35 @@ module AStar {
 		var frontier = new collections.PriorityQueue<Nod>(function (a :Nod, b :Nod)	{	//frontier as a priority queue, sorted on lowest f score
 					return b.getf_score() - a.getf_score();});
 	
-		var haveSeen = new collections.Set<Nod>(); 	// Set to remember if we have calculated this node before
+		var haveSeen = new collections.Set<Nod>(function (a )	{	//frontier as a priority queue, sorted on lowest f score
+					return JSON.stringify(a.getWorldState());}); 	// Set to remember if we have calculated this node before
 		
 		startNode.setf_score(0 +h(startNode.getid()) ); // Set the f score to 0 + the heuristic value (it's cost is 0 from start)
 		frontier.add(startNode );
-	
+		Planner.addNearbyNodes(startNode);
 		while ( !frontier.isEmpty()){
-			var current : Nod = frontier.dequeue();
-			console.log("checkGOAL-----------",checkGoal (Planner.worldToPPDL (current.getWorldState()) , goal));
-			console.log("current-----------",current.getWorldState());
-			console.log("GOAL-------------",goal);
-			
+			var current : Nod = frontier.dequeue();		
 			if (checkGoal (Planner.worldToPPDL (current.getWorldState()) , goal)){
 				  var a = getPath (startNode, current);	//return the path if we found the goal
-					a[0]="Number of visited nodes " +haveSeen.size() + " ";
-					a[1]="<br>" + a[1];				
+			//		a[0]="Number of visited nodes " +haveSeen.size() + " ";
+			//		a[1]="<br>" + a[1];				
 				return a;
 			}
 	
 			haveSeen.add(current);
-			// 1 här ska vi lägga till nya noder kopplade med arcs till current
-			Planner.addNearbyNodes(current);
-			
-			console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ,current.getArcList().length);
 			
 			for (var i = 0 ; i < current.getArcList().length;  i++) {		//iterate through all the nearby nodes of the current node
-			console.log("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" ,current.getArcList().length);
 				var chooseNearBy : Boolean;							//Boolean to deside if we should update nearby node
 				var nearBy : Nod = current.getArcList()[i].getArcNode();
-				if (haveSeen.contains(nearBy)){						//if we already calculated this node pick the next
+					if (haveSeen.contains(nearBy)){						//if we already calculated this node pick the next
 					continue;
 				}
 				var tempCost : number = current.getCValue() + current.getEndNod(nearBy);	//calculate current cost + the Arc cost the the nearby node
 		
 				if (!(frontier.contains (nearBy))){		//add the node to frontier if it's not there
+					
 					frontier.add(nearBy);
+					Planner.addNearbyNodes(nearBy);
 					chooseNearBy = true;
 				} else if (tempCost < nearBy.getCValue()){
 					chooseNearBy = true;
@@ -193,6 +187,7 @@ module AStar {
 				}
 			}
 		}
+		console.log("haveseeen--------------------------",haveSeen);
 		return ["No path was found"];
 	}
 }

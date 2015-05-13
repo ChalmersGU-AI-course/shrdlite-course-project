@@ -68,6 +68,7 @@ module Planner {
 				}
 			}	
 		}
+		//console.log("nodeList----------------------", nodeList);
 		current.setArcList(nodeList);
 	}
 
@@ -81,62 +82,31 @@ module Planner {
 			var pState = copyParent(parent);
 			var dState = copyParent(parent);
 			
+			if(parent.arm == parent.stacks.length -1){
+				rState = null;
+			}else{
+				rState.arm +=1;	
+			}
 			
-				if(parent.holding != null){
-					if(parent.arm == 0){
-						//go right
-						 rState.arm = 1;	
-						//drop
-						dState.stacks[0][dState.stacks[0].length] = dState.holding;
-						dState.holding = null;
-						ans.push(rState,null,null,dState);
-						
-					}else if(parent.arm == parent.stacks.length){
-	 					//go left
-						 lState.arm = parent.arm -1;	
-						//drop
-						dState.stacks[parent.stacks.length][dState.stacks[parent.stacks.length].length] = dState.holding;
-						dState.holding = null;
-						ans.push(null,lState,null,dState);
-					}else{
-						//go right 
-						 rState.arm = parent.arm +1;
-						//go left
-						lState.arm = parent.arm -1;	
-						//drop
-						dState.stacks[parent.stacks.length][dState.stacks[parent.stacks.length].length] = dState.holding;
-						dState.holding = null;
-						ans.push(rState,lState,null,dState);
-					}
-					
-				}else{
-					if(parent.arm == 0){
-						//go right
-						 rState.arm = 1;	
-						//take
-						pState.holding = pState.stacks[0][pState.stacks[0].length-1];
-						pState.stacks[0].splice(pState.stacks[0].length-1, 1);
-						ans.push(rState,null,pState,null);
-						
-					}else if(parent.arm == parent.stacks.length){
-	 					//go left
-						 lState.arm = parent.arm -1;
-						//take
-						pState.holding = pState.stacks[parent.arm][pState.stacks[parent.arm].length-1];
-						pState.stacks[parent.arm][pState.stacks[parent.arm].length-1] = null;
-						ans.push(null,lState,pState,null);
-					}else{
-						//go right 
-						 rState.arm = parent.arm +1;
-						//go left
-						lState.arm = parent.arm -1;	
-						//take
-						pState.holding = pState.stacks[parent.arm][pState.stacks[parent.arm].length-1];
-						pState.stacks[0].splice(pState.stacks[0].length-1, 1);
-						ans.push(rState,lState,pState, null);
-					}
-				} 
+			if(parent.arm == 0){
+				lState = null;
+			}else{
+				lState.arm -=1;	
+			}
 			
+			if(parent.holding != null || parent.stacks[parent.arm].length == 0){
+				pState = null;
+			}else{
+				pState.holding = pState.stacks[parent.arm].pop();
+			}
+			
+			if(parent.holding == null || parent.stacks[parent.arm].length == 0){
+				dState = null;
+			}else{
+				dState.holding = dState.stacks[parent.arm].pop();
+			}
+			ans.push(rState, lState, pState, dState);
+			//console.log("ans............", ans);
 			return ans;
 		}
 
@@ -151,7 +121,7 @@ module Planner {
 			lits.push(lit);
 		}
 		
-		return {stacks : lits, holding : parent.holding, arm : parent.arm , objects : parent.objects ,examples : [] };
+		return {stacks : lits, holding : parent.holding, arm : parent.arm , objects : parent.objects ,examples : parent.examples };
 	} 
 	
 	
@@ -196,7 +166,66 @@ module Planner {
 //			
 //			return;
 //		}
-	
+
+
+
+//				if(parent.holding != null){
+//					if(parent.arm == 0){
+//						//go right
+//						 rState.arm = 1;	
+//						//drop
+//						dState.stacks[0][dState.stacks[0].length] = dState.holding;
+//						dState.holding = null;
+//						ans.push(rState,null,null,dState);
+//						
+//					}else if(parent.arm == parent.stacks.length){
+//	 					//go left
+//						 lState.arm = parent.arm -1;	
+//						//drop
+//						dState.stacks[parent.stacks.length-1][dState.stacks[parent.stacks.length].length-1] = dState.holding;
+//						dState.holding = null;
+//						ans.push(null,lState,null,dState);
+//					}else{
+//						//go right 
+//						 rState.arm = parent.arm +1;
+//						//go left
+//						lState.arm = parent.arm -1;	
+//						//drop
+//						dState.stacks[parent.arm][dState.stacks[parent.arm].length -1] = dState.holding;
+//						dState.holding = null;
+//						ans.push(rState,lState,null,dState);
+//					}
+//					
+//				}else{
+//					if(parent.arm == 0){
+//						//go right
+//						 rState.arm = 1;	
+//						//take
+//						pState.holding = pState.stacks[0][pState.stacks[0].length-1];
+//						pState.stacks[0].splice(pState.stacks[0].length-1, 1);
+//						ans.push(rState,null,pState,null);
+//						
+//					}else if(parent.arm == parent.stacks.length){
+//	 					//go left
+//						 lState.arm = parent.arm -1;
+//						//take
+//						pState.holding = pState.stacks[parent.arm][parent.stacks[parent.arm].length-1];
+//						pState.stacks[parent.arm][pState.stacks[parent.arm].length-1] = null;
+//						ans.push(null,lState,pState,null);
+//					}else{
+//						//go right 
+//						 rState.arm = parent.arm +1;
+//						//go left
+//						lState.arm = parent.arm -1;	
+//						//take
+//						pState.holding = pState.stacks[parent.arm][pState.stacks[parent.arm].length-1];
+//						pState.stacks[0].splice(pState.stacks[0].length-1, 1);
+//						ans.push(rState,lState,pState, null);
+//					}
+//				} 
+
+
+
     
     //coverts worldstate to ppdl
     export function worldToPPDL (state : WorldState) : Interpreter.Literal[][] {
@@ -212,7 +241,7 @@ module Planner {
 		}	
 		
 		lits.push([{pol : true, rel : "arm", args : ["" + state.arm, "" + state.stacks.length ]}]);
-		if(null == state.holding){
+		if(state.holding == null){
 			lits.push([{pol : false, rel : "holding", args : [state.holding] }]);
 		}else{
 			lits.push([{pol : true, rel : "holding", args : [state.holding] }]);
