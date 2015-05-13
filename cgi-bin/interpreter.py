@@ -58,6 +58,8 @@ def interp_cmd_put(_, loc, objects, stacks, holding):
     1. find where we want to put it
     2. create goal
     """
+    if holding == None:
+        raise InterpreterException('I am not holding any object!')
     rel = loc['rel']
     ent = loc['ent']
     ents = find_ent(ent, objects, stacks, holding)
