@@ -171,7 +171,8 @@ module Planner {
 
             for (var i = stack.length - 1; i >= 0; --i) {
                 if (stack[i]) {
-                    return this.State.objects[i];
+                    var retObject = this.State.objects[stack[i]];
+                    return retObject;
                 }
             }
             return null;
