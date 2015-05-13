@@ -79,13 +79,10 @@ module Interpreter {
         switch(cmd.cmd) {
           case "take":
             return this.take(cmd.ent);
-            break;
           case "put":
             return this.put(cmd.loc);
-            break;
           case "move":
             return this.move(cmd.ent, cmd.loc);
-            break;
           default:
             throw new Interpreter.Error("derive: unrecognized verb");
         }
