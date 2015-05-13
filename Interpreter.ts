@@ -109,22 +109,15 @@ module Interpreter {
                         if(checkValidPos(posList[i].obj, goal[j].obj )){
                             lits.push([b]);
                         }                        
- 
                     }else if(loc.rel == "beside"){
                         var a : Literal = {pol : true, rel : "beside", args : [posList[i].name, goal[j].name ]};
-                        if(checkValidPos(posList[i].obj, goal[j].obj )){
                             lits.push([a]);
-                        }
                     }else if(loc.rel == "leftof"){
                         var a : Literal = {pol : true, rel : "leftof", args : [posList[i].name, goal[j].name ]};
-                        if(checkValidPos(posList[i].obj, goal[j].obj )){
                             lits.push([a]);
-                        }
                     }else if(loc.rel == "rightof"){
                         var a : Literal = {pol : false, rel : "leftof", args : [posList[i].name, goal[j].name ]};
-                        if(checkValidPos(posList[i].obj, goal[j].obj )){
                             lits.push([a]);
-                        }
                     }
     			}	
     		}
