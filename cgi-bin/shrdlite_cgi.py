@@ -33,12 +33,13 @@ def planner(intprt, stacks, holding, arm, objects, utterance, parses):
     """
 
     import simple_planner
-    import AStar.algorithm
+    import AStar.algorithm, heuristic
+
 
     came_from, cost_so_far, actions_so_far, goal = AStar.algorithm.a_star_search_new(simple_planner.getAction,
                         (intprt, stacks, holding, arm, objects),
                         simple_planner.goalWrapper,
-                        simple_planner.heuristic)
+                        heuristic.heuristic)
 
     return AStar.algorithm.getPlan(goal, came_from, actions_so_far)
 

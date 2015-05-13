@@ -27,7 +27,7 @@ def a_star_search(graph, start, goal, heuristic):
             # We have not visited the node before or the new cost is lower then the old one
             if next not in cost_so_far or new_cost < cost_so_far[next]:
                 cost_so_far[next] = new_cost 
-                priority = new_cost + heuristic(goal, next) #Priority is new cost and expected cost
+                priority = new_cost + heuristic(*next) #Priority is new cost and expected cost
                 frontier.put(next, priority)
                 came_from[next] = current 
     
@@ -63,7 +63,7 @@ def a_star_search_new(GetAction, start, goal, heuristic):
             if _getkey(nextState) not in cost_so_far or new_cost < cost_so_far[_getkey(nextState)]:
                 cost_so_far[_getkey(nextState)] = new_cost 
                 actions_so_far[_getkey(nextState)] = cmd
-                priority = new_cost + heuristic(goal, nextState) #Priority is new cost and expected cost
+                priority = new_cost + heuristic(*nextState) #Priority is new cost and expected cost
                 frontier.put(nextState, priority)
                 came_from[_getkey(nextState)] = _getkey(current)
     
