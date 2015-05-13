@@ -339,11 +339,37 @@ class TestHeuristic(unittest.TestCase):
         self.intprt = [('ontop','a','b')]
         self.state = (self.intprt,self.stacks,self.holding,self.arm,self.objects)
 
-    def test_heuristic_one(self):
-        self.assertEqual(heuristic.heuristic(*self.state),1)
+    def test_heuristic_stackpenalty(self):
+        self.assertEqual(heuristic.heuristic(*self.state),heuristic.PLACE_IN_STACK_PENALTY+heuristic.NOT_HOLDING_PENALTY)
 
-    def test_heuristic_zero(self):
-        self.assertEqual(heuristic.heuristic(self.intprt, [['c','f','a'],['d','e','b']], self.holding, self.arm, self.objects),0)
+    def test_heuristic_zeroholding(self):
+        self.assertEqual(heuristic.heuristic(self.intprt, [['c','f','a'],['d','e','b']], self.holding, self.arm, self.objects),
+            0+heuristic.NOT_HOLDING_PENALTY)
+
+    def test_heuristic_beside(self):
+        self.assertEqual(heuristic.heuristic([('beside', 'a', 'b')],[['a'], ['b','c','d']], 
+            self.holding, self.arm, self.objects),0)
+
+    def test_heuristic_beside_bad(self):
+        self.assertEqual(heuristic.heuristic([('beside', 'a', 'b')],[['a','e','f','g'], [], ['b','c','d']], 
+            self.holding, self.arm, self.objects),10)
+
+    # We assume the stackScore function to return zero if the arm is holding the object.
+    def test_stackScore_zero(self):
+        self.assertEqual(heuristic._stackScore('a', [[],[]]), 0)
+
+    def test_stackScore_three(self):
+        self.assertEqual(heuristic._stackScore('a', [['a','b','c','d'],[]]), 3*heuristic.PLACE_IN_STACK_PENALTY)
+
+    def test_placeScore_twenty(self):
+        self.assertEqual(heuristic._placeScore('b', [['b'],['a'],['c']], 'leftof'), heuristic.CLOSE_TO_EDGE_PENALTY)
+
+    def test_placeScore_huge(self):
+        self.assertEqual(heuristic._placeScore('b', [['c'],['a'],['b','d','e','f','g']], 'rightof'), 
+            heuristic.CLOSE_TO_EDGE_PENALTY+heuristic.PLACE_IN_STACK_PENALTY*4)
+
+    def test_holdingTest(self):
+        self.assertEqual(heuristic._holdingScore('a', 'a'), 0)
 
 
 if __name__ == '__main__':
