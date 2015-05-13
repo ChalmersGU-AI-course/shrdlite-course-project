@@ -37,7 +37,7 @@ def satisfy_above(x, y, stacks, holding):
     """x is above y if it is somewhere above"""
     (xstack, xpos) = find_obj(x, stacks)
     (ystack, ypos) = find_obj(y, stacks)
-    if not xstack or not ystack:
+    if xstack == None or ystack == None:
         return False
     return xstack == ystack and xpos > ypos
 
@@ -49,7 +49,7 @@ def satisfy_beside(x, y, stacks, holding):
     """x is beside y if they are in adjacent stacks"""
     (xstack, xpos) = find_obj(x, stacks)
     (ystack, ypos) = find_obj(y, stacks)
-    if not xstack or not ystack:
+    if xstack == None or ystack == None:
         return False
     return abs(xstack - ystack) == 1
 
@@ -57,8 +57,8 @@ def satisfy_leftof(x, y, stacks, holding):
     """x is left of y if it is somewhere to the left"""
     (xstack, xpos) = find_obj(x, stacks)
     (ystack, ypos) = find_obj(y, stacks)
-    if not xstack or not ystack:
-        return False    
+    if xstack == None or ystack == None:
+        return False
     return xstack < ystack
 
 def satisfy_rightof(x, y, stacks, holding):
