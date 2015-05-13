@@ -10,8 +10,8 @@ def heuristic(intprt, stacks, holding, arm, objects):
             score += _stackScore(obj2, stacks)
             scoreList.append(score)
         else:
-            scoreList.append(0)            
-    
+            scoreList.append(0)
+
     return min(scoreList)
 
 def _stackScore(obj, stacks):
@@ -22,4 +22,4 @@ def _stackScore(obj, stacks):
                 return score
     #If obj was not found in any stack, assume that the arms is holding it
     return 0
-            
+

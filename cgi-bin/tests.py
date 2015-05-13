@@ -11,9 +11,11 @@ import heuristic
 class TestMain(unittest.TestCase):
     
     def setUp(self):
-        self.stacks = [['a'],['b']]
+        self.stacks = [['floor0','a'],['floor1','b']]
         self.objects = {'a': {'size': 'large', 'form': 'ball', 'color': 'blue'},
-                   'b': {'size': 'large', 'form': 'box', 'color': 'red'}}        
+                        'b': {'size': 'large', 'form': 'box', 'color': 'red'},
+                        'floor0': {'color': None, 'form': 'floor', 'size': None},
+                        'floor1': {'color': None, 'form': 'floor', 'size': None}}        
         self.arm = 0
         self.holding = None
         self.intprt = [('inside','a','b')]
@@ -21,7 +23,7 @@ class TestMain(unittest.TestCase):
 
     def test_action(self):
         self.assertEqual(simple_planner.getAction(self.state),[('r',(self.intprt,self.stacks, self.holding, self.arm+1,self.objects),1),
-                                                               ('p',(self.intprt,[[],['b']], 'a', self.arm ,self.objects),1),
+                                                               ('p',(self.intprt,[['floor0'],['floor1','b']], 'a', self.arm ,self.objects),1),
                                                               ])
 
     def test_goal(self):
@@ -33,16 +35,20 @@ class TestMain(unittest.TestCase):
                                                             simple_planner.goalWrapper,
                                                             heuristic.heuristic)
         (intprt, stacks, holding, arm, objects) = goal
-        self.assertEqual(stacks,[[],['b','a']])
+        self.assertEqual(stacks,[['floor0'],['floor1','b','a']])
         self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far), ['start','p','r','d'])
 
 
 class TestAStar(unittest.TestCase):
     
     def setUp(self):
-        self.stacks = [['a'],[],['b'],[]]
+        self.stacks = [['floor0','a'],['floor1'],['floor2','b'],['floor3']]
         self.objects = {'a': {'size': 'large', 'form': 'ball', 'color': 'blue'},
-                   'b': {'size': 'large', 'form': 'box', 'color': 'red'}}        
+                        'b': {'size': 'large', 'form': 'box', 'color': 'red'},
+                        'floor0': {'color': None, 'form': 'floor', 'size': None},
+                        'floor1': {'color': None, 'form': 'floor', 'size': None},
+                        'floor2': {'color': None, 'form': 'floor', 'size': None},
+                        'floor3': {'color': None, 'form': 'floor', 'size': None}}        
         self.arm = 0
         self.holding = None
         self.intprt = [('inside','a','b')]
@@ -54,13 +60,13 @@ class TestAStar(unittest.TestCase):
                                                             simple_planner.goalWrapper,
                                                             heuristic.heuristic)
         (intprt, stacks, holding, arm, objects) = goal
-        self.assertEqual(stacks,[[],[],['b','a'],[]])
+        self.assertEqual(stacks,[['floor0'],['floor1'],['floor2','b','a'],['floor3']])
         self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far), ['start','p','r','r','d'])
 
 class TestActions(unittest.TestCase):
 
     def setUp(self):
-        self.stacks = [['a'],[]]
+        self.stacks = [['floor0','a'],['floor1']]
         self.objects = {'a': {'size': 'large', 'form': 'ball', 'color': 'blue'},
                         'b': {'size': 'large', 'form': 'box', 'color': 'red'},
                         'floor0': {'color': None, 'form': 'floor', 'size': None},
@@ -73,16 +79,16 @@ class TestActions(unittest.TestCase):
 
     def test_ungrasp(self):
         self.assertEqual(simple_planner._ungrasp(*self.state),
-            (self.intprt, [['a'],['b']], None, 1, self.objects))
+            (self.intprt, [['floor0','a'],['floor1','b']], None, 1, self.objects))
 
     def test_grasp(self):
         self.assertEqual(simple_planner._grasp(
-             self.intprt,[['a'],['b']],None,0,self.objects),
-            (self.intprt, [[],['b']], 'a', 0, self.objects))
+             self.intprt,[['floor0','a'],['floor1','b']],None,0,self.objects),
+            (self.intprt, [['floor0'],['floor1','b']], 'a', 0, self.objects))
 
     def test_grasp_two_obj(self):
         self.assertEqual(simple_planner._grasp(
-            self.intprt, [['b'],[]], 'a',0, self.objects),
+            self.intprt, [['floor0','b'],['floor1']], 'a',0, self.objects),
             None)
 
     def test_grasp_floor(self):
@@ -92,11 +98,11 @@ class TestActions(unittest.TestCase):
 
     def test_left(self):
         self.assertEqual(simple_planner._left(*self.state),
-            (self.intprt, [['a'],[]], 'b', 0, self.objects)) 
+            (self.intprt, [['floor0','a'],['floor1']], 'b', 0, self.objects)) 
 
     def test_left_None(self):
         self.assertEqual(simple_planner._left(
-            self.intprt,[['a'],['b']],None,0,self.objects),
+            self.intprt,[['floor0','a'],['floor1','b']],None,0,self.objects),
             None)
 
     def test_right_None(self):
@@ -340,13 +346,16 @@ class TestGoal(unittest.TestCase):
 class TestHeuristic(unittest.TestCase):
 
     def setUp(self):
-        self.stacks = [['a','b'],[]]
+        self.stacks = [['floor0','a','b'],['floor1']]
         self.objects = {'a': {'size': 'large', 'form': 'brick', 'color': 'blue'},
-                   'b': {'size': 'large', 'form': 'brick', 'color': 'red'},
-                   'c': {'size': 'large', 'form': 'brick', 'color': 'red'},
-                   'd': {'size': 'large', 'form': 'brick', 'color': 'red'},
-                   'e': {'size': 'large', 'form': 'brick', 'color': 'red'},
-                   'f': {'size': 'large', 'form': 'brick', 'color': 'red'}}        
+                        'b': {'size': 'large', 'form': 'brick', 'color': 'red'},
+                        'c': {'size': 'large', 'form': 'brick', 'color': 'red'},
+                        'd': {'size': 'large', 'form': 'brick', 'color': 'red'},
+                        'e': {'size': 'large', 'form': 'brick', 'color': 'red'},
+                        'f': {'size': 'large', 'form': 'brick', 'color': 'red'},
+                        'floor0': {'color': None, 'form': 'floor', 'size': None},
+                        'floor1': {'color': None, 'form': 'floor', 'size': None}
+                        }        
         self.arm = 0
         self.holding = None
         self.intprt = [('ontop','a','b')]
@@ -356,7 +365,7 @@ class TestHeuristic(unittest.TestCase):
         self.assertEqual(heuristic.heuristic(*self.state),1)
 
     def test_heuristic_zero(self):
-        self.assertEqual(heuristic.heuristic(self.intprt, [['c','f','a'],['d','e','b']], self.holding, self.arm, self.objects),0)
+        self.assertEqual(heuristic.heuristic(self.intprt, [['floor0','c','f','a'],['floor1','d','e','b']], self.holding, self.arm, self.objects),0)
 
 
 if __name__ == '__main__':
