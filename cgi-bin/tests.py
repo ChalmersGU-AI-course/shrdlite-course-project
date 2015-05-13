@@ -337,5 +337,27 @@ class TestGoal(unittest.TestCase):
         self.assertFalse(simple_planner.goalWrapper(
             [('rightof','a','b')],[['a'],['c'],['b']],None,0,self.objects))
 
+class TestHeuristic(unittest.TestCase):
+
+    def setUp(self):
+        self.stacks = [['a','b'],[]]
+        self.objects = {'a': {'size': 'large', 'form': 'brick', 'color': 'blue'},
+                   'b': {'size': 'large', 'form': 'brick', 'color': 'red'},
+                   'c': {'size': 'large', 'form': 'brick', 'color': 'red'},
+                   'd': {'size': 'large', 'form': 'brick', 'color': 'red'},
+                   'e': {'size': 'large', 'form': 'brick', 'color': 'red'},
+                   'f': {'size': 'large', 'form': 'brick', 'color': 'red'}}        
+        self.arm = 0
+        self.holding = None
+        self.intprt = [('ontop','a','b')]
+        self.state = (self.intprt,self.stacks,self.holding,self.arm,self.objects)
+
+    def test_heuristic_one(self):
+        self.assertEqual(heuristic.heuristic(*self.state),1)
+
+    def test_heuristic_zero(self):
+        self.assertEqual(heuristic.heuristic(self.intprt, [['c','f','a'],['d','e','b']], self.holding, self.arm, self.objects),0)
+
+
 if __name__ == '__main__':
     unittest.main()
