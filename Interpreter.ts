@@ -79,11 +79,15 @@ module Interpreter {
                 console.log("Can't hold more than one object");
                 return null;
             }
-            //TODO: Do correct stuff with "take"
-            //Identify what obj we want
-            //See if such an object exists in the world
-            //If ambiguity and the quantifier is 'the', ask for clarification //Om samma size, ändå fråga?
-            intprt.push([{ pol: true, rel: "holding", args: [b] }]);
+            /*
+            TODO: Do correct stuff with "take"
+                -Identify what obj we want
+                -See if such an object exists in the world
+                -If ambiguity and the quantifier is 'the', ask for clarification //Om samma size, ändå fråga?
+            */
+            for (var i = 0; i < pobjs.length; i++) {
+                intprt.push([{ pol: true, rel: "holding", args: [pobjs[i]] }]);
+            }    
         }
         else if (cmd.cmd === "put") {
             if (state.holding === null) {
@@ -100,17 +104,22 @@ module Interpreter {
             return null;
         }
         return intprt;
-        //WONT REACH FURTHER DOWN, JUST KEEPING AS EXAMPLE
+
+    /*
+        WONT REACH FURTHER DOWN, JUST KEEPING AS EXAMPLE
+
         // Dummy stuff
-//        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-//        var a = objs[2];
-//        var b = objs[getRandomInt(objs.length)];
-//        var intprt : Literal[][] = [[
-//            {pol: true, rel: "ontop", args: [a, "floor"]},
-//            {pol: true, rel: "holding", args: [b]}
-//        ]];
-//        return intprt;
+        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        var a = objs[2];
+        var b = objs[getRandomInt(objs.length)];
+        var intprt : Literal[][] = [[
+            {pol: true, rel: "ontop", args: [a, "floor"]},
+            {pol: true, rel: "holding", args: [b]}
+        ]];
+        return intprt;
+    */
     }
+
     function getPossibleObjects(cmd : Parser.Command, state : WorldState){
         // Extract the descriptive parts of the object
         // By using a set we do not have to handle the null parts.
