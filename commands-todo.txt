@@ -1,2 +1,12 @@
 put the black ball on the floor - gör onödiga saker
 put all boxes on the floor - resulterar i felaktig
+
+
+disable balls on balls:
+put the black ball on the white ball
+ x 2 => "TypeError: Cannot read property 'form' of undefined", UH OH
+
+In step 2 to 3, e disappears from stack 4.
+The 'bot believes that e is still there, hence the confusion
+It either lifts from state 1, or lifts two things from state 2
+TODO no longer the case with current code, after adding check for state 2. coincidence? See where probem is now. maybe nondeterministic

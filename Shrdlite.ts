@@ -3,6 +3,43 @@
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Planner.ts"/>
 
+window['fn'] = function (state) {
+    var temp2 = state.map(function(node) {return _.filter(node.label, function(pddl) {return pddl['rel'] === "at";});});
+    return temp2.map(function(obj) {return obj[0].args[1];});
+};
+
+window['makeStacks'] = function (ppdlWorld) {
+    var stacks = [];
+    for (var i=0;i<5;i++) {
+        //console.log("i=",i);
+        stacks[i] = [];
+        var next = "floor-"+i;
+        while (next != null) {
+            stacks[i].push(next);
+            var nextObj = _.find(ppdlWorld, function(ppdl) {
+                var obj1 = ppdl['args'][1];
+                //console.log("searching object",ppdl);
+                return (obj1 == next && (ppdl['rel'] == 'ontop' ||ppdl['rel'] == 'inside'))
+            });
+            if (nextObj) {
+                next = nextObj['args'][0];
+                //console.log("next",next);
+            } else {
+                next = null;
+                //console.log("null",next);
+            }
+        }
+    }
+    stacks[5] = _.find(ppdlWorld, {'rel':'at'})['args'][1];
+    var armHolding = _.find(ppdlWorld, {'rel':'holding'});
+    stacks[6] = armHolding ? armHolding['args'][1] : null;
+    var lift = _.find(ppdlWorld, {'rel':'dbg-lift'});
+    var drop = _.find(ppdlWorld, {'rel':'dbg-drop'});
+    stacks[7] = lift ? 'lift' : (drop? 'drop': 'ERRORr');
+    return stacks;
+
+};
+
 module Shrdlite {
 
     export function interactive(world : World) : void {
@@ -67,6 +104,7 @@ module Shrdlite {
 
     //TODO convert the world to a pddl-world before sending it to interpreter and planner!
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
+
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
             var parses : Parser.Result[] = Parser.parse(utterance);
@@ -123,6 +161,10 @@ module Shrdlite {
                 throw err;
             }
         }
+
+        window['extendedState'] = extendedState;
+        window['world'] = world;
+
 
         world.printDebugInfo("Final plan: " + plan.join(", "));
         return plan;

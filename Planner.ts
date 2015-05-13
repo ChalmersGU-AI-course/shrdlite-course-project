@@ -34,7 +34,7 @@ module Planner {
     function planInterpretation(intprt : PddlLiteral[][], state : ExtendedWorldState) : string[] {
         var plan : string[] = [];
 
-        console.log("planInterpretation()");
+        console.log("planInterpretation()", state);
 
         //TODO should this be moved somewhere? Argument och global parameter?
         var searchDepth = 7;
@@ -57,14 +57,27 @@ module Planner {
         var secNode;
         if(state.holding) {
             state.pddlWorld.push({pol:true, rel:"holding", args:["arm", state.holding]});
-            secNode = new AStar.Node<PddlLiteral[]>(putDownObject(state.pddlWorld, state.arm, state), [], Infinity, null,"d"+1);
+            var secNodeState = putDownObject(state.pddlWorld, state.arm, state);
+            if (secNodeState) {
+                secNode = new AStar.Node<PddlLiteral[]>(secNodeState, [], Infinity, null, "d" + 1);
+            } else {
+                console.warn("Second node can't legally drop!");
+            }
         } else {
-            secNode = new AStar.Node<PddlLiteral[]>(liftObject(state.pddlWorld, state.arm), [], Infinity, null,"p"+1);
+            var secNodeState = liftObject(state.pddlWorld, state.arm);
+            if (secNodeState) {
+                secNode = new AStar.Node<PddlLiteral[]>(secNodeState, [], Infinity, null,"p"+1);
+            } else {
+                console.warn("Second node can't legally pick!");
+            }
         }
         var startNode:AStar.Node<PddlLiteral[]> = new AStar.Node<PddlLiteral[]>(state.pddlWorld, [], Infinity, null);
 
-        var ePickUp = new AStar.Edge<PddlLiteral[]>(startNode, secNode, 1);
-        startNode.neighbours.push(ePickUp);
+        if (secNode) {
+            var ePickUp = new AStar.Edge<PddlLiteral[]>(startNode, secNode, 1);
+            startNode.neighbours.push(ePickUp);
+        }
+
 
         //Will hold all the created nodes
         //One of the dimensions is the "layers" of the node generation
@@ -85,24 +98,30 @@ module Planner {
                           , cost :number = Math.abs(armPos-j)
                           , newNodeWorld = moveArm(oldNodeWorld, j);
 
+                        _.remove(newNodeWorld, {rel: 'dbg-lift'});
+                        _.remove(newNodeWorld, {rel: 'dbg-drop'});
+                        _.remove(newNodeWorld, {rel: 'dbg-liftwhat'});
+
                         var newNode = null;
                         // We can either -lift- or -putDown-
                         if(!isHolding(oldNodeWorld)) {
                             // We can't always lift - not if we lack objects!
                             var newerNodeWorld = liftObject(newNodeWorld, j);
                             if (newerNodeWorld) {
+                                newerNodeWorld.push({pol:true, rel:'dbg-lift', args: []});
                                 newNode = new AStar.Node<PddlLiteral[]>(newerNodeWorld, [], Infinity, null, dir+cost+"p"+1);
                             } else {
-                                console.warn("breaking the first commandment");
+                                //console.warn("breaking the first commandment");
                             }
 
                         } else {
                             // Try to putDown. Will fail if move is illegal
                             var newerNodeWorld = putDownObject(newNodeWorld, j, state);
                             if (newerNodeWorld) {
+                                newerNodeWorld.push({pol:true, rel:'dbg-drop', args: []});
                                 newNode = new AStar.Node<PddlLiteral[]>(newerNodeWorld, [], Infinity, null, dir+cost+"d"+1);
                             } else {
-                                console.warn("breakin the laaw");
+                                //console.warn("breakin the laaw");
                             }
                         }
 
@@ -145,6 +164,14 @@ module Planner {
                 searchResult[s].action = searchResult[s].action.slice(2,searchResult[s].action.length);
             }
 
+        }
+        //console.log("final state:",searchResult[0].label);
+        //var stacks = window['makeStacks'](searchResult[0].label);
+        //console.log("final stacks:",stacks);
+        for (var s in searchResult) {
+            //console.log("final state:",searchResult[searchResult.length-1].label);
+            var stacks = window['makeStacks'](searchResult[s].label);
+            console.log(s+" stacks:",stacks);
         }
 
 
@@ -284,7 +311,7 @@ module Planner {
         // if topObject is a ball,
         //   return null
         if (topObjectForm === 'ball') {
-            //return null;
+            return null;
         }
 
         // if topObject is small and
@@ -345,12 +372,24 @@ module Planner {
                 break;
             }
         }
-        //if (!foundObject) {
-        //    return null;
-        //} else {
-        //    return newWorld;
-        //}
-        return newWorld;
+
+
+
+        if (!foundObject) {
+            return null;
+        } else {
+            if (floor === 4) {
+                //console.log("lifting from floor-4", object, newWorld);
+                //newWorld.push({pol:true, rel:"itsalie", args: [object]}); // try to find the faulty lift
+                if (object === "m") {
+                    console.log("lifting blue ball from floor-4", object, newWorld);
+                    newWorld.push({pol:true, rel:"itsalie", args: [object, JSON.stringify(newWorld)]}); // try to find the faulty lift
+
+                }
+            }
+            return newWorld;
+        }
+        //return newWorld;
     }
 
     //Takes a PDDL-world and returns an array of all the objects that are on top
