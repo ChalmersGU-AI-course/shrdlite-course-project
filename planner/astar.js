@@ -35,8 +35,8 @@ module.exports = function (G, start) {
 
         // Finished, follow backlinks to reconstruct path.
         if (G.isgoal(elem.obj)) {
-            var ret = [elem.obj];
-            var bs = previous.get(elem.obj);
+            var ret = [];
+            var bs = elem.obj;
             while (!Object.equals(bs, start)) {
                 ret.unshift(bs);
                 bs = previous.get(bs);

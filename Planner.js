@@ -9,7 +9,17 @@ Planner.plan = function plan(interpretations, currentState) {
     var plans = [];
     for (var inter of interpretations) {
         inter.plan = window.plannerCore(currentState, TMP_rules);
-        plans.push(inter);
+        console.log(inter.plan);
+        if (inter.plan == "impossible") {
+            throw new Planner.Error("It is not possible to solve the problem");
+        } else if (inter.plan === undefined) {
+            continue;
+        } else if (inter.plan.length === 1) {
+            plans.push(["Already satisfied"]);
+        } else {
+            plans.push(inter);
+        }
+
     }
     // interpretations.forEach(function (intprt) {
     //     var plan = intprt;
