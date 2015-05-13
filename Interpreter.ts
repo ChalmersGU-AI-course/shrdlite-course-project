@@ -12,7 +12,9 @@ module Interpreter {
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
-            interpretations.push(intprt);
+            if (intprt.intp !== null) {
+                interpretations.push(intprt);
+            }
         });
         if (interpretations.length) {
             return interpretations;
@@ -53,6 +55,8 @@ module Interpreter {
         // cmd is the command found for this particular parse
         // state should be the current WorldState
 
+        var intprt: Literal[][] = [];
+
         // What quantity are we looking for? 0 = any, 1 = the, 2 = all
         var quant = -1
         if(cmd.ent.quant == "the")
@@ -65,15 +69,44 @@ module Interpreter {
         // Get possible objects the parse is referring to
         var pobjs = getPossibleObjects(cmd, state);
 
-        // Dummy stuff
-        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        var a = objs[2];
-        var b = objs[getRandomInt(objs.length)];
-        var intprt : Literal[][] = [[
-            {pol: true, rel: "ontop", args: [a, "floor"]},
-            {pol: true, rel: "holding", args: [b]}
-        ]];
+        if (cmd.cmd === "take") {
+            if (cmd.ent.quant === "all") {
+                //Can't hold more than one object
+                //CHANGE IF ADDING ANOTHER ARM
+                console.log("Can't hold more than one object");
+                return null;
+            }
+            //TODO: Do correct stuff with "take"
+            //Identify what obj we want
+            //See if such an object exists in the world
+            //If ambiguity and the quantifier is 'the', ask for clarification //Om samma size, ändå fråga?
+            intprt.push([{ pol: true, rel: "holding", args: [b] }]);
+        }
+        else if (cmd.cmd === "put") {
+            if (state.holding === null) {
+                //No knowledge of "it"
+                console.log("No knowledge of 'it'");
+                return null;
+            }
+            //TODO: Do correct stuff with "put"
+        }
+        else if (cmd.cmd === "move") {
+            //TODO: Do correct stuff with "move"
+        } else {
+            console.log("Found no valid command");
+            return null;
+        }
         return intprt;
+        //WONT REACH FURTHER DOWN, JUST KEEPING AS EXAMPLE
+        // Dummy stuff
+//        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+//        var a = objs[2];
+//        var b = objs[getRandomInt(objs.length)];
+//        var intprt : Literal[][] = [[
+//            {pol: true, rel: "ontop", args: [a, "floor"]},
+//            {pol: true, rel: "holding", args: [b]}
+//        ]];
+//        return intprt;
     }
     function getPossibleObjects(cmd : Parser.Command, state : WorldState){
       // Extract the descriptive parts of the object
