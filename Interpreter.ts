@@ -47,6 +47,7 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
+        console.log(":::::::::::NEW INTERPRETATION:::::::::::::");
         var lit : Literal[][] = [[]];
         if(cmd.cmd === "move" || cmd.cmd === "put"){
             var objs : string[] = interpretEntity(cmd.ent, state);
@@ -79,7 +80,8 @@ module Interpreter {
         //TODO: quant == all, any.
         var objs : string[] = interpretObject(ent.obj, state);
         //TODO:: FILTER objects that aren't on their locations 
-        console.log(ent+": "+ objs.length);
+        //console.log(ent+": "+ objs.length);
+        
         return objs;
     }
 
@@ -87,10 +89,44 @@ module Interpreter {
         if(obj.obj != null){
             var objs : string[] = interpretObject(obj.obj, state);
             var locs : Sayings = interpretLocation(obj.loc, state);
+            console.log(locs.rel + locs.objs.length);
+            if(locs.rel === "ontop"){
+                console.log("ontop: " + locs.objs.length);
+                console.log(objs[0]);
+                console.log(locs.objs[0]);
+                for(var i : number = 0; i < objs.length;i++){
+                    var works : boolean = false;
+                    for(var j : number = 0; j < locs.objs.length && !works; j++){
+                        if(locs.objs[j] === "floor"){
+                            works = state.stacks.some(e => e.indexOf(objs[i]) === 0);
+                        } else{
+                            works = state.stacks.some(
+                                function(e){ 
+                                    console.log("loc: "+locs.objs[j] + " obj: "+objs[i]);
+                                    //if not in stack indexOf returns -1.
+                                    var bottomIndex = e.indexOf(locs.objs[j]);
+                                    var topIndex = e.indexOf(objs[i]);
+                                    console.log("top: "+topIndex + " bottom: "+bottomIndex);
+                                    return bottomIndex >=0 && topIndex >=0 && topIndex - bottomIndex === 1;
+                                });
+                            //test the rest
+                        }
+                    }
+                    if(!works){
+                        console.log("removing obj: "+objs[i]);
+                        objs.splice(i--,1);
+                    }
+                }
+            } else if(locs.rel === "inside"){
+                //console.log("inside: " + locs.objs.length);
+
+            } else if(locs.rel === "beside"){
+                //todo all other rels.
+            }
             //if rel === ontop index obj == index loc+1 && same column
             //if rel === above index of obj > loc && same column
             //if rel === nextto     not same column. obj.column == loc.column -(or+) 1
-            
+               
             //Todo :: check loc
             return objs;
             
@@ -100,26 +136,26 @@ module Interpreter {
                 return ["floor"];
             }
             var objsindexes : string[] = Array.prototype.concat.apply([], state.stacks);
-            console.log(objsindexes.length);
+            //console.log("prefilter:"+objsindexes.length);
             if(obj.size != null){
                 objsindexes = objsindexes.filter(e=> state.objects[e].size === obj.size);
             }
-            console.log(objsindexes.length);
+            //console.log("afterfilersize: "+objsindexes.length);
             if(obj.form != null){
                 objsindexes = objsindexes.filter(e=> state.objects[e].form === obj.form);
             }
-            console.log(objsindexes.length);
+            //console.log("afterfilerform: "+objsindexes.length);
             if(obj.color != null){
                 objsindexes = objsindexes.filter(e=> state.objects[e].color === obj.color);
             }
-            console.log(objsindexes.length);
+            //console.log("afterfilercolor: "+objsindexes.length);
             return objsindexes;
         }
     }
 
     function interpretLocation(loc : Parser.Location, state : WorldState) : Sayings {
-        //TODO:: FILTER objects that aren't on their locations 
-        return {rel:loc.rel, objs:interpretEntity(loc.ent, state)};
+        var locs : Sayings = {rel:loc.rel, objs:interpretEntity(loc.ent, state)} 
+        return locs;
     }
 
 
