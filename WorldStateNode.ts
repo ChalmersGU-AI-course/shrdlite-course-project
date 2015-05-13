@@ -67,7 +67,23 @@ class WorldStateNode implements GraphNode{
 
 	distanceTo(to : GraphNode) : number{
 		return this.heuristic;
-	}	
+	}
+
+	getNeighbors() : GraphNode[] {
+		var neighbors : WorldStateNode[] = [];
+		var newStates = this.thisState.getNewStates();
+
+		newStates.forEach((state) => {
+			neighbors.push(new WorldStateNode(state,this.goalState));
+		});
+
+		return neighbors;
+	}
+
+	satisfiesConditions(conditions : Literal[]) : boolean {
+		return false;
+	}
+
 	toString() : string{
 		return "";
 	}

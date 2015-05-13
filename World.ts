@@ -1,19 +1,5 @@
-
+///<reference path="WorldState.ts"/>
 // Interface definitions for worlds
-
-interface ObjectDefinition {
-    form: string; 
-    size: string; 
-    color: string;
-}
-
-interface WorldState {
-    stacks: string[][];
-    holding: string;
-    arm: number;
-    objects: { [s:string]: ObjectDefinition; };
-    examples: string[];
-}
 
 interface World {
     currentState : WorldState;
