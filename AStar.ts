@@ -1,4 +1,6 @@
 /// <reference path="collections.ts" />
+/// <reference path="Planner.ts" />
+/// <reference path="Interpreter.ts" />
 
 module AStar {
 	
@@ -12,11 +14,23 @@ module AStar {
 		private f_score  : number;		// cost + heuristic
 		private arches 	 : Arc[] = [];	// a list of the arches connected to nearBy nodes
 		private cameFrom : Nod;			// a reference to the previous node
+		private inst 	 : string;
+		private worldState : WorldState;
 	
-		constructor (id:string) {
+		constructor (id:string, worldState : WorldState, inst : string) {
 			this.id		= id;
 			this.cValue = 0; 
-			this.arches = [];	
+			this.arches = [];
+			this.worldState = worldState;
+			this.inst = inst;
+		}
+		
+		public getInst(){
+			return this.inst;
+		}
+		
+		public getWorldState(){
+			return this.worldState;
 		}
 		
 		public getArcList(){
@@ -100,7 +114,7 @@ module AStar {
 		var i : number = 0 ;
 		var cost : number = nod.getCValue();
 		while (nod.getCameFrom() != null){
-			pathList[i] = nod.getid();
+			pathList[i] = nod.getInst();
 			nod = nod.getCameFrom();
 			i++;
 		}
@@ -110,10 +124,22 @@ module AStar {
 		return pathList.reverse();
 	}
 	
+	function checkGoal(worldLits : Interpreter.Literal[][], goalLits : Interpreter.Literal[][]) : boolean{
+		for (var i = 0 ; i < worldLits.length;  i++) {
+			for (var j = 0 ; j < goalLits.length;  j++) {
+				if(worldLits[i][0].pol == goalLits[j][0].pol && worldLits[i][0].rel == goalLits[j][0].rel && worldLits[i][0].args[0] == goalLits[j][0].args[0] && worldLits[i][0].args[1] == goalLits[j][0].args[1] ){
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
 	/**
 	*	The A* function that take: list of nodes, start node, Goal node and heuristic function
 	**/
-	export function runAStar(graph : Nod[] , startNode : Nod, goal : Nod, h) : string[] {
+	export function runAStar(graph : Nod[] , startNode : Nod, goal : Interpreter.Literal[][], h) : string[] {
 		
 		var frontier = new collections.PriorityQueue<Nod>(function (a :Nod, b :Nod)	{	//frontier as a priority queue, sorted on lowest f score
 					return b.getf_score() - a.getf_score();});
@@ -125,7 +151,11 @@ module AStar {
 	
 		while ( !frontier.isEmpty()){
 			var current : Nod = frontier.dequeue();
-			if (current == goal){
+			console.log("checkGOAL-----------",checkGoal (Planner.worldToPPDL (current.getWorldState()) , goal));
+			console.log("current-----------",current.getWorldState());
+			console.log("GOAL-------------",goal);
+			
+			if (checkGoal (Planner.worldToPPDL (current.getWorldState()) , goal)){
 				  var a = getPath (startNode, current);	//return the path if we found the goal
 					a[0]="Number of visited nodes " +haveSeen.size() + " ";
 					a[1]="<br>" + a[1];				
@@ -133,8 +163,13 @@ module AStar {
 			}
 	
 			haveSeen.add(current);
-	a
+			// 1 här ska vi lägga till nya noder kopplade med arcs till current
+			Planner.addNearbyNodes(current);
+			
+			console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ,current.getArcList().length);
+			
 			for (var i = 0 ; i < current.getArcList().length;  i++) {		//iterate through all the nearby nodes of the current node
+			console.log("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" ,current.getArcList().length);
 				var chooseNearBy : Boolean;							//Boolean to deside if we should update nearby node
 				var nearBy : Nod = current.getArcList()[i].getArcNode();
 				if (haveSeen.contains(nearBy)){						//if we already calculated this node pick the next

@@ -51,17 +51,16 @@ module Interpreter {
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
-        var intprt : Literal[][] = [[
-            {pol: true, rel: "ontop", args: [a, "floor"]},
-            {pol: true, rel: "holding", args: [b]}
-        ]];
+        var intprt : Literal[][] = []
         
         if (cmd.cmd == "move"){
         	console.log("entity--------------\n",checkStm(cmd.ent.obj, state));
         	console.log("location------------\n",checkStm(cmd.loc.ent.obj, state));
         	console.log("PDDL\n", goalsToPDDL(cmd.ent, cmd.loc, state));
-        	//goalsToPDDL(checkStm(cmd.ent.obj, state), cmd.loc, state)
-        }        
+        	intprt = goalsToPDDL(cmd.ent, cmd.loc, state);
+        }else if(cmd.cmd == "take"){
+        	intprt = goalsToPDDL(cmd.ent, null, state);
+        } 
         return intprt;
     }
     
