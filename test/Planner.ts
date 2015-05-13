@@ -72,9 +72,94 @@ module PlannerTest {
         case "ontop":
           for (var i = 0; i < this.stacks.length; i++) {
             for (var j = 0; j < this.stacks[i].length; j++) {
-              return this.stacks[i][j+1]
+              if (this.stacks[i][j-1]
                      && lit.args[0] == this.stacks[i][j].name
-                     && lit.args[1] == this.stacks[i][j+1].name;
+                     && lit.args[1] == this.stacks[i][j-1].name)
+                return true;
+            }
+          }
+          break;
+        case "leftof":
+          for (var i = 0; i < this.stacks.length; i++) {
+            for (var j = 0; j < this.stacks[i].length; j++) {
+              if (this.stacks[i][j].name == lit.args[0]) {
+                for (var k = i-1; k < this.stacks.length; k--) {
+                  for (var l = 0; l < this.stacks[k].length; l++) {
+                    if (this.stacks[k][l].name == lit.args[1])
+                      return true;
+                  }
+                }
+              }
+            }
+          }
+          break;
+        case "rightof":
+          for (var i = 0; i < this.stacks.length; i++) {
+            for (var j = 0; j < this.stacks[i].length; j++) {
+              if (this.stacks[i][j].name == lit.args[0]) {
+                for (var k = i+1; k < this.stacks.length; k++) {
+                  for (var l = 0; l < this.stacks[k].length; l++) {
+                    if (this.stacks[k][l].name == lit.args[1])
+                      return true;
+                  }
+                }
+              }
+            }
+          }
+          break;
+        case "inside": // the same as ontop
+          for (var i = 0; i < this.stacks.length; i++) {
+            for (var j = 0; j < this.stacks[i].length; j++) {
+              if (lit.args[0] == this.stacks[i][j].name
+                  && this.stacks[i][j-1]
+                  && lit.args[1] == this.stacks[i][j-1].name)
+                return true;
+            }
+          }
+          break;
+        case "under":
+          for (var i = 0; i < this.stacks.length; i++) {
+            for (var j = 0; j < this.stacks[i].length; j++) {
+              if (lit.args[0] == this.stacks[i][j].name) {
+                for (var k = 0; k < j; k++) {
+                  if (lit.args[1] == this.stacks[i][k].name)
+                    return true;
+                }
+              }
+            }
+          }
+          break;
+        case "beside":
+          for (var i = 0; i < this.stacks.length; i++) {
+            for (var j = 0; j < this.stacks[i].length; j++) {
+              if (lit.args[0] == this.stacks[i][j].name) {
+                if (this.stacks[i-1]) {
+                  for (var k = 0; k < this.stacks[i-1].length; k++) {
+                    if (this.stacks[i-1][k].name == lit.args[1]) {
+                      return true;
+                    }
+                  }
+                }
+                if (this.stacks[i+1]) {
+                  for (var k = 0; k < this.stacks[i+1].length; k++) {
+                    if (this.stacks[i+1][k].name == lit.args[1]) {
+                      return true;
+                    }
+                  }
+                }
+              }
+            }
+          }
+          break;
+        case "above":
+          for (var i = 0; i < this.stacks.length; i++) {
+            for (var j = 0; j < this.stacks[i].length; j++) {
+              if (lit.args[0] == this.stacks[i][j].name) {
+                for (var k = j+1; k < this.stacks[i].length; k++) {
+                  if (this.stacks[i][k] && this.stacks[i][k].name == lit.args[1])
+                    return true;
+                }
+              }
             }
           }
           break;
@@ -330,15 +415,15 @@ module PlannerTest {
                                                 Array<string>(),["g","l"],["e","f"],["a"],new Array<string>()],
                                                null);
         var lit : Lit[][] = new Array( new Array( new Lit(true, "ontop",
-                                                          ["l", "g"])));
+                                                          ["g", "l"])));
         var goal: PDDL = new PDDL(lit);
 //        var goal: WorldState = new WorldState([new Array<string>(),["l","g"],["f","e"],["a"],new Array<string>()], null);
         var solution = A.Astar.search(state, null, goal);
 
         //print out the path
-//        for (var i = 0; i < solution.path.length; i++) {
-//          console.log(solution.path[i].toString());
-//        }
+        for (var i = 0; i < solution.path.length; i++) {
+          console.log(solution.path[i].toString());
+        }
         //print out the solution
         console.log(solution);
         done()
