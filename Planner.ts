@@ -71,7 +71,7 @@ module Planner {
         //The other dimension is the nodes within that layer
         var nodes: AStar.Node<PddlLiteral[]>[][] = [[]];
         nodes[0].push(startNode);
-        nodes[0].push(nPickUp);
+        nodes[0].push(secNode); // ?
 
         for(var i = 0; i<searchDepth; i++){
             nodes[i+1] = [];
