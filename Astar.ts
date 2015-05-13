@@ -110,4 +110,145 @@ class Astar <T>{
         console.error("Astar: no path found!");
         return []; 
     }
+
+     private reachedGoal(cond: Literal[], state : WorldState):boolean{
+        for(var i = 0; cond.lenght; i++ ){
+            if(!checkGoal(cond[i], state))
+                return false;
+        }
+        return true;
+    }
+
+    private checkGoal(cond: Literal, state : Worldstate):boolean {
+        var a = state.objects[cond.args[0]];
+        var b = state.objects[cond.args[1]];
+        var pddls = state.pddl.toArray();
+
+        if(cond.rel == "above"){
+            for(var index = 0; index < pddls.length; index++){
+                var pddl = pddls[index];
+                var x = pddl.args[0];
+                if(x == a){
+                    var y = pddl.args[1];
+                    if(y == b)
+                        return true;
+                    else if(state.objects[y].form == "floor") //hopefully this is the correct syntax
+                        return false;
+                    else{
+                       a=x;
+                       index =-1;
+                    }
+                }
+            }
+        }
+        else if(cond.rel == "ontop" || cond.rel == "inside"){
+            for(var index = 0; index < pddls.length; index++){
+                 var pddl = pddls[index];
+                 if(pddl.args[0] == a){
+                    if(pddl.args[1] == b)
+                        return true;
+                    return false;
+                 }
+            }
+        }
+        else if(cond.rel == "under"){
+             for(var index = 0; index < pddls.length; index++){
+                var pddl = pddls[index];
+                var x = pddl.args[0];
+                if(x == b){
+                    var y = pddl.args[1];
+                    if(y == a)
+                        return true;
+                    else if(state.objects[y].form == "floor") 
+                        return false;
+                    else{
+                       b=x;
+                       index =-1;
+                    }
+                }
+            }
+            
+        }
+        else if(cond.rel == "beside"|| cond.rel == "rightof"|| cond.rel == "leftof"){
+            if(cond.rel == "beside"|| cond.rel == "rightof"){
+                //find floor (a is rightof b, so floor to left of floor and search upwards)
+                var floor;
+                for(var index = 0; index < pddls.length; index++){
+                    var pddl = pddls[index];
+                    var x = pddl.args[0];
+                    if(x == a){
+                        if(state.objects[pddl.args[1]].form == "floor")
+                            var floor = pddl.args[1];//found floor
+                        else{
+                           a=x;
+                           index =-1;
+                        }
+                    }
+                }
+                var floor2;
+                for(var indexFloor= 0; indexFloor < pddls.length; indexFloor++){
+                    var pddl = pddls[indexFloor];
+                    var x = pddl.args[0];
+                    if(pddl.rel == "rightof" && x == floor){
+                        floor2 = pddl.args[1];
+                    }
+                    //found floor, now work up
+                }
+                for(var indexLeft = 0; indexLeft < pddls.length; indexLeft++){
+                    var pddl = pddls[indexLeft];
+                    var x = pddl.args[1];
+                    if(x == floor2){
+                        if(pddl.args[0]== b)
+                            return true;
+                        else{
+                            floor2 = pddl.args[0];
+                            indexLeft = -1;
+                        }
+                    }
+
+                }
+
+            }
+            if(cond.rel == "beside"|| cond.rel == "leftof"){
+                var floor;
+                for(var index = 0; index < pddls.length; index++){
+                    var pddl = pddls[index];
+                    var x = pddl.args[0];
+                    if(x == a){
+                        if(state.objects[pddl.args[1]].form == "floor")
+                            var floor = pddl.args[1];//found floor
+                        else{
+                           a=x;
+                           index =-1;
+                        }
+                    }
+                }
+                var floor2;
+                for(var indexFloor= 0; indexFloor < pddls.length; indexFloor++){
+                    var pddl = pddls[indexFloor];
+                    var x = pddl.args[0];
+                    if(pddl.rel == "leftof" && x == floor){
+                        floor2 = pddl.args[1];
+                    }
+                    //found floor, now work up
+                }
+                for(var indexRight = 0; indexRight < pddls.length; indexRight++){
+                    var pddl = pddls[indexRight];
+                    var x = pddl.args[1];
+                    if(x == floor2){
+                        if(pddl.args[0]== b)
+                            return true;
+                        else{
+                            floor2 = pddl.args[0];
+                            indexRight = -1;
+                        }
+                    }
+
+                }
+            }
+            return false;
+            
+        }
+        return true;
+    }
 }
