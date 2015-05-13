@@ -65,10 +65,13 @@ module Interpreter {
           quant = 0;
         else if (cmd.ent.quant == "all")
           quant = 2;
-
+        
+        
         // Get possible objects the parse is referring to
         var pobjs = getPossibleObjects(cmd, state);
-
+        console.log("DUUUUUUUUMMMMMYYYYYY!!!!");
+        console.log(pobjs);
+        var b = pobjs[0];
         if (cmd.cmd === "take") {
             if (cmd.ent.quant === "all") {
                 //Can't hold more than one object
@@ -109,40 +112,36 @@ module Interpreter {
 //        return intprt;
     }
     function getPossibleObjects(cmd : Parser.Command, state : WorldState){
-      // Extract the descriptive parts of the object
-      // By using a set we do not have to handle the null parts.
-      // We could just check that the parsed object's set is a subset of 
-      // the object from the stack
+        // Extract the descriptive parts of the object
+        // By using a set we do not have to handle the null parts.
+        // We could just check that the parsed object's set is a subset of 
+        // the object from the stack
      
-      var objSet = new collections.Set<string>(); // Store the values of the object
-      var o = cmd.ent.obj;
-      if(o.size != null)
-        objSet.add(o.form);
-      if(o.color != null)
+        var objSet = new collections.Set<string>(); // Store the values of the object
+        var o = cmd.ent.obj;
+        objSet.add(o.size);
         objSet.add(o.color);
-      if(o.form != null)
         objSet.add(o.form);
+        objSet.remove(null);
 
-      var possibleObjects = [];
-      // Loop through the world and look for possible items
-      var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-      for(var s in objs){
-        var otemp = state.objects[s];
-        var stemp = new collections.Set<string>();
-        // Extract the parts of o into s and check if objSet is subset of s.
-        if(otemp.form != null)
+        var possibleObjects = [];
+        // Loop through the world and look for possible items
+        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        console.log(objs);
+        for(var s = 0; s < objs.length; s++){
+          var otemp = state.objects[objs[s]];
+          var stemp = new collections.Set<string>();
+        
+          // Extract the parts of o into s and check if objSet is subset of s.
           stemp.add(otemp.form);
-        if(otemp.size != null)
           stemp.add(otemp.size);
-        if(otemp.color != null)
           stemp.add(otemp.color);
         
         // If the parse object is subset of the current temp object add to "possible objects"-array
-        if(objSet.isSubsetOf(stemp))
-          possibleObjects.push(s);
-          
-      }
-      return possibleObjects;
+          if(objSet.isSubsetOf(stemp))
+            possibleObjects.push(objs[s]);   
+        }
+        return possibleObjects;
     }
 
     function getRandomInt(max) {
