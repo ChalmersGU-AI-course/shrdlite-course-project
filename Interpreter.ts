@@ -57,29 +57,45 @@ module Interpreter {
 
         var intprt: Literal[][] = [];
 
-        //Used for anything?
-        // What quantity are we looking for? 0 = any, 1 = the, 2 = all
-        var quant = -1
-        if (cmd.ent.quant == "the")
-            quant = 1;
-        else if (cmd.ent.quant == "any")
-            quant = 0;
-        else if (cmd.ent.quant == "all")
-            quant = 2;
-
+        /*
+            TODO: Structure for "put"
+                -See if we hold an object o
+                -Identify the target objects t[] (i.e. "floor")
+                -See if such an object exists in the world
+                -If ambiguity and the quantifier is 'the', ask for clarification
+                -Check if the positioning is valid, (i.e. under(o, t))
+                -Convert possible objects to interpretations in PDDL //Possibly more here?
+                -Return interpretations
+        */
+        if (cmd.cmd === "put") {
+            if (state.holding === null) {
+                //No knowledge of "it"
+                console.log("No knowledge of 'it'");
+                return null;
+            }
+            var possibleTargets = getTargetObjects(cmd, state);
+            if (possibleTargets.length < 1) {
+                console.log("No target found");
+                return null;
+            } else if (possibleTargets.length > 1 && cmd.loc.ent.quant === "the") {
+                console.log("Please be more specific with the target location");
+                return null;
+            }
+            intprt = convertToPDDL(cmd, pobjs, possibleTargets);
+            return intprt;
+        }
 
         // Get possible objects the parse is referring to
         //  -Identify what objects we want
         //  -See if such an object exists in the world
         var pobjs = getPrimaryObjects(cmd, state);
 
-
         //  -If no object found, abort
         //  -If ambiguity and the quantifier is 'the', ask for clarification
         if (pobjs.length === 0) {
             console.log("Can't pickup something that is not real");
             return null;
-        } else if (cmd.ent.quant === "the" && pobjs.length > 1) {   //Working with command 'put'?
+        } else if (cmd.ent.quant === "the" && pobjs.length > 1) {
             console.log("Please be more specific");
             //Possible extension to save the current data and ask a clarification question      <---TODO?
             return null;
@@ -102,37 +118,9 @@ module Interpreter {
                 console.log("Can't hold more than one object");
                 return null;
             }
-
             for (var i = 0; i < pobjs.length; i++) {
                 intprt.push([{ pol: true, rel: "holding", args: [pobjs[i]] }]);
             }
-        }
-
-        /*
-            TODO: Structure for "put"
-                -See if we hold an object o
-                -Identify the target objects t[] (i.e. "floor")
-                -See if such an object exists in the world
-                -If ambiguity and the quantifier is 'the', ask for clarification
-                -Check if the positioning is valid, (i.e. under(o, t))
-                -Convert possible objects to interpretations in PDDL //Possibly more here?
-                -Return interpretations
-        */
-        else if (cmd.cmd === "put") {
-            if (state.holding === null) {
-                //No knowledge of "it"
-                console.log("No knowledge of 'it'");
-                return null;
-            }
-            var possibleTargets = getTargetObjects(cmd, state);
-            if (possibleTargets.length < 1) {
-                console.log("No target found");
-                return null;
-            } else if (possibleTargets.length > 1 && cmd.loc.ent.quant === "the") {
-                console.log("Please be more specific with the target location");
-                return null;
-            }
-            convertToPDDL(pobjs, possibleTargets);
         }
 
         /*
@@ -232,6 +220,14 @@ module Interpreter {
                 possibleObjects.push(objs[s]);
         }
         return possibleObjects;
+    }
+
+    //This method will take primary and target objects and check the command to see which relations is wanted and use the world state
+    //to see existing sizes and relations
+    function convertToPDDL(cmd: Parser.Command, primobj: string[], targets : string[], state : WorldState) : Literal[][] {
+        var interpretations: Literal[][] = [];
+        //TODO
+        return interpretations;
     }
 
     function getRandomInt(max) {
