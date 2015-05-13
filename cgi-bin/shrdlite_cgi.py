@@ -31,7 +31,7 @@ def planner(intprt, stacks, holding, arm, objects, utterance, parses):
     """
     This function craetes a dummy plan involving a random stack
     """
-    
+
     import simple_planner
     import AStar.algorithm, heuristic
 
@@ -101,6 +101,16 @@ if __name__ == '__main__':
 
         if not 'holding' in state:
             state['holding'] = None
+
+        import PDDL
+
+        # remove objects that are not in any stack from objects
+        new_objs = {}
+        for obj, props in state['objects'].items():
+            if not PDDL.find_obj(obj, state['stacks']) == (None, None):
+                new_objs[obj] = props
+
+        state['objects'] = new_objs
 
         result = main(state)
         print(json.dumps(result))
