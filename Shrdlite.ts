@@ -36,6 +36,18 @@ window['makeStacks'] = function (ppdlWorld) {
     var lift = _.find(ppdlWorld, {'rel':'dbg-lift'});
     var drop = _.find(ppdlWorld, {'rel':'dbg-drop'});
     stacks[7] = lift ? 'lift' : (drop? 'drop': 'ERRORr');
+
+    var lens = _.map(stacks, function(stack) {
+        return (stack && (typeof stack==='object'))? (stack.length || 0) : 0
+    });
+    var sum = _.reduce(lens, function(a,b){return a+b;});
+    stacks['sum'] = sum;
+
+    var severalAttop = _.find(ppdlWorld, {'rel':'dbg-several-attop'});
+    if (severalAttop) {
+        stacks['severalAttop'] = severalAttop['args'];
+    }
+
     return stacks;
 
 };

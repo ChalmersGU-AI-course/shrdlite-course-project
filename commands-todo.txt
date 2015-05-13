@@ -1,12 +1,17 @@
 put the black ball on the floor - gör onödiga saker
 put all boxes on the floor - resulterar i felaktig
 
+when "don't pick up from empty" and "disable balls on balls" is activated:
+-------------------------------------------
+How to reproduce:
+"put the black ball on the white ball" x 2 => "TypeError: Cannot read property 'form' of undefined", UH OH
 
-disable balls on balls:
-put the black ball on the white ball
- x 2 => "TypeError: Cannot read property 'form' of undefined", UH OH
+Problem:
+In step 7, the robot tries to lift from stack 4 when it's empty. Why!? That node should not exist, since I added the "don't pick up from empty" rule.
 
+Additional information:
 In step 2 to 3, e disappears from stack 4.
-The 'bot believes that e is still there, hence the confusion
-It either lifts from state 1, or lifts two things from state 2
-TODO no longer the case with current code, after adding check for state 2. coincidence? See where probem is now. maybe nondeterministic
+The 'bot probably believes that e is still there, hence the confusion
+It either lifts e from state 0/1, or lifts two things from state 2
+
+In step 7, e reappears when we pick it up from stack 4.

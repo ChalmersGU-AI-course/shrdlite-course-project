@@ -39,6 +39,7 @@ module Planner {
         //TODO should this be moved somewhere? Argument och global parameter?
         var searchDepth = 7;
 
+        // Update world state with 'attop' and 'arm'
         for(var i = 0; i<NUM_STACKS; i++) {
             var obs = state.objStacks[i];
             var obj = state.objStacks[i][obs.length-1];
@@ -46,17 +47,14 @@ module Planner {
                 state.pddlWorld.push({pol:true, rel:"attop", args:[obj.id, "floor-"+i]});
             }
         }
-
-        console.log(intprt);
-
-        //var boxes = findBoxes(state);
-
-        console.log(state);
-
         state.pddlWorld.push({pol:true, rel:"at", args:["arm", state.arm+""]});
+
+
         var secNode;
         if(state.holding) {
+            // Update state with 'holding' (if any)
             state.pddlWorld.push({pol:true, rel:"holding", args:["arm", state.holding]});
+            // Try to put down what we're holding
             var secNodeState = putDownObject(state.pddlWorld, state.arm, state);
             if (secNodeState) {
                 secNode = new AStar.Node<PddlLiteral[]>(secNodeState, [], Infinity, null, "d" + 1);
@@ -64,6 +62,7 @@ module Planner {
                 console.warn("Second node can't legally drop!");
             }
         } else {
+            // Try to lift something
             var secNodeState = liftObject(state.pddlWorld, state.arm);
             if (secNodeState) {
                 secNode = new AStar.Node<PddlLiteral[]>(secNodeState, [], Infinity, null,"p"+1);
@@ -71,20 +70,22 @@ module Planner {
                 console.warn("Second node can't legally pick!");
             }
         }
-        var startNode:AStar.Node<PddlLiteral[]> = new AStar.Node<PddlLiteral[]>(state.pddlWorld, [], Infinity, null);
-
-        if (secNode) {
-            var ePickUp = new AStar.Edge<PddlLiteral[]>(startNode, secNode, 1);
-            startNode.neighbours.push(ePickUp);
-        }
-
 
         //Will hold all the created nodes
         //One of the dimensions is the "layers" of the node generation
         //The other dimension is the nodes within that layer
         var nodes: AStar.Node<PddlLiteral[]>[][] = [[]];
+
+        // Create initial node
+        var startNode:AStar.Node<PddlLiteral[]> = new AStar.Node<PddlLiteral[]>(state.pddlWorld, [], Infinity, null);
         nodes[0].push(startNode);
-        nodes[0].push(secNode); // ?
+
+        // If an action was possible in the current position, do it
+        if (secNode) {
+            var eSnd = new AStar.Edge<PddlLiteral[]>(startNode, secNode, 1);
+            startNode.neighbours.push(eSnd);
+            nodes[0].push(secNode);
+        }
 
         for(var i = 0; i<searchDepth; i++){
             nodes[i+1] = [];
@@ -98,6 +99,7 @@ module Planner {
                           , cost :number = Math.abs(armPos-j)
                           , newNodeWorld = moveArm(oldNodeWorld, j);
 
+                        // Clear debug info from nodes
                         _.remove(newNodeWorld, {rel: 'dbg-lift'});
                         _.remove(newNodeWorld, {rel: 'dbg-drop'});
                         _.remove(newNodeWorld, {rel: 'dbg-liftwhat'});
@@ -351,10 +353,32 @@ module Planner {
     // Assumes that the arm is in the right position to do so
     function liftObject(world:PddlLiteral[], floor: number):PddlLiteral[] {
         var newWorld: PddlLiteral[] = clonePddlWorld(world);
-        var foundObject = false;
+        var foundObject : any = false;
+
+        // Error hunting
+        // Doesn't catch anything. :(
+        var attops = [];
+        for (var i = 0; i < 5; i++) {
+            var attops2 = _.filter(newWorld, function(pddl) {
+                return pddl.rel === 'attop' && pddl.args[1] === 'floor-'+i;
+            });
+            if (attops2.length>1) {
+                attops = attops.concat(attops2);
+            }
+        }
+        if (attops.length>1) {
+            console.warn("several attops!");
+            newWorld.push({pol: true, rel: 'dbg-several-attop', args: [JSON.stringify(attops)]});
+        }
 
         for(var i:number = 0; i<newWorld.length; i++){
             if(newWorld[i].rel === "attop" && newWorld[i].args[1] === "floor-"+floor) {
+
+                if (foundObject) {
+                    //console.warn("Found several 'attop' for floor-"+floor+"!");
+                    //newWorld.push({pol: true, rel: 'dbg-several-attop', args: [""+foundObject, newWorld[i]['args'][0], JSON.stringify(newWorld)]});
+                }
+
                 var object = newWorld[i].args[0];
                 newWorld.splice(i, 1);
 
@@ -368,7 +392,7 @@ module Planner {
                 }
 
                 newWorld.push({pol: true, rel:"holding", args: ["arm", object]});
-                foundObject = true;
+                foundObject = object;
                 break;
             }
         }
