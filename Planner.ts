@@ -82,28 +82,31 @@ module Planner {
 			var pState = copyParent(parent);
 			var dState = copyParent(parent);
 			
+			//cant go right
 			if(parent.arm == parent.stacks.length -1){
 				rState = null;
 			}else{
 				rState.arm +=1;	
 			}
-			
+			//cant go left
 			if(parent.arm == 0){
 				lState = null;
 			}else{
 				lState.arm -=1;	
 			}
-			
+			// cant pick up if stack is empty or allready holdning
 			if(parent.holding != null || parent.stacks[parent.arm].length == 0){
 				pState = null;
 			}else{
 				pState.holding = pState.stacks[parent.arm].pop();
 			}
-			
-			if(parent.holding == null || parent.stacks[parent.arm].length == 0){
+			// can i drop here check if legal to move
+			if(parent.holding == null || parent.stacks[parent.arm].length != 0 && !(Interpreter.checkValidPos (parent.objects[parent.holding],parent.objects[dState.stacks[parent.arm][dState.stacks[parent.arm].length-1] ]))){
 				dState = null;
 			}else{
-				dState.holding = dState.stacks[parent.arm].pop();
+				//dState.holding = dState.stacks[parent.arm].pop();
+				dState.stacks[parent.arm][dState.stacks[parent.arm].length]=dState.holding
+				dState.holding = null;
 			}
 			ans.push(rState, lState, pState, dState);
 			//console.log("ans............", ans);

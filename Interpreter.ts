@@ -245,7 +245,7 @@ module Interpreter {
     /**
 *   Check that the combination of over and under object is valid 
 **/
-function checkValidPos (over : ObjectDefinition, under : ObjectDefinition): boolean{
+export function checkValidPos (over : ObjectDefinition, under : ObjectDefinition): boolean{
 	//console.log(over);
 	//console.log(under);
         
