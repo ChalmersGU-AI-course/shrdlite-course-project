@@ -40,7 +40,10 @@ heuristicFunction = (state, goalRep) ->
       for stack,i in state.stacks
         # If the item is in a stack add distance to it
         if item in stack
-          sum += Math.abs( state.arm - i )# + 1
+          sum += Math.abs( state.arm - i )
+          sum += 3*(stack.length-stack.indexOf(item)+1)
+      sum += if item isnt state.holding then 1 else 0 # add cost to pick it up
+
     else # All other relations has two arguments
       e1 = goal.args[0][0]
       e2 = goal.args[1][0]
