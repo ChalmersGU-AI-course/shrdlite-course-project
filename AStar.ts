@@ -119,22 +119,39 @@ module AStar {
 			i++;
 		}
 	//	pathList[pathList.length] = "<br> The Path: " + startNod.getid();
-	//	pathList[pathList.length] = "The cost of the total path: " + cost;
+		pathList[pathList.length] = "The cost of the total path: " + cost;
 	//	pathList[pathList.length] ="";
 		return pathList.reverse();
 	}
 	
-	function checkGoal(worldLits : Interpreter.Literal[][], goalLits : Interpreter.Literal[][]) : boolean{
-		for (var i = 0 ; i < worldLits.length;  i++) {
-			for (var j = 0 ; j < goalLits.length;  j++) {
+	export function checkGoal(worldLits : Interpreter.Literal[][], goalLits : Interpreter.Literal[][]) : boolean{
+		for (var j = 0 ; j < goalLits.length;  j++) {
+			var goalFound : boolean = false;
+			for (var i = 0 ; i < worldLits.length;  i++) {
 				if(worldLits[i][0].pol == goalLits[j][0].pol && worldLits[i][0].rel == goalLits[j][0].rel && worldLits[i][0].args[0] == goalLits[j][0].args[0] && worldLits[i][0].args[1] == goalLits[j][0].args[1] ){
-					return true;
+					goalFound = true;
 				}
+			}
+			if(!goalFound){
+				return false;
 			}
 		}
 		
-		return false;
+		return true;
 	}
+	
+//		function checkGoal(worldLits : Interpreter.Literal[][], goalLits : Interpreter.Literal[][]) : boolean{
+//		for (var i = 0 ; i < worldLits.length;  i++) {
+//			for (var j = 0 ; j < goalLits.length;  j++) {
+//				if(worldLits[i][0].pol == goalLits[j][0].pol && worldLits[i][0].rel == goalLits[j][0].rel && worldLits[i][0].args[0] == goalLits[j][0].args[0] && worldLits[i][0].args[1] == goalLits[j][0].args[1] ){
+//					return true;
+//				}
+//			}
+//		}
+//		
+//		return false;
+//	}
+	
 	
 	/**
 	*	The A* function that take: list of nodes, start node, Goal node and heuristic function
@@ -154,7 +171,7 @@ module AStar {
 			var current : Nod = frontier.dequeue();		
 			if (checkGoal (Planner.worldToPPDL (current.getWorldState()) , goal)){
 				  var a = getPath (startNode, current);	//return the path if we found the goal
-			//		a[0]="Number of visited nodes " +haveSeen.size() + " ";
+					a[0]="Number of visited nodes " +haveSeen.size() + " ";
 			//		a[1]="<br>" + a[1];				
 				return a;
 			}
