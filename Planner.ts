@@ -12,7 +12,9 @@ module Planner {
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
             plan.plan = planInterpretation(plan.intp, currentState);
-            plans.push(plan);
+            if (plan.plan) {
+                plans.push(plan);
+            }
         });
         if (plans.length) {
             return plans;
@@ -91,6 +93,124 @@ module Planner {
             }
             return minCost;
         };
+    }
+
+    function getHeuristicFunction2(targetLiteral: Interpreter.Literal[][]) {
+        var heuristicSubFunctions = [numBlockingObjectsHeuristic, distanceHeuristic];
+
+        return function(fromWorld: WorldNode, world: WorldNode): number {
+            var heuristics = targetLiteral.map(function(literal) {
+                var subHeuristics = heuristicSubFunctions.map(function(f) {
+                    return f(literal, world);
+                });
+                return sum(subHeuristics);
+            });
+            return min(heuristics);
+        }
+    }
+
+    function numBlockingObjectsHeuristic(target: Interpreter.Literal[], world: WorldNode): number {
+        var blockingObjects = {};
+        var numBlocking = 0;
+
+        var unsatisfied: Interpreter.Literal[] = target.filter(function(literal) {
+            return stateSatisfiesLiteral(world.State, literal);
+        })
+
+        var relevantObjects: string[] = getAllArgs(unsatisfied);
+        for (var i = 0; i < relevantObjects.length; ++i) {
+            var blocking = world.GetBlockingObjects(relevantObjects[i]);
+            for (var j = 0; j < blocking.length; ++j) {
+                if (!blockingObjects[blocking[j]]) {
+                    blockingObjects[blocking[j]] = true;
+                    numBlocking++;
+                }
+            }
+        }
+
+        return numBlocking;
+    }
+
+    function getAllArgs(target: Interpreter.Literal[]): string[] {
+        var allArgs: string[] = [];
+        for (var i = 0; i < target.length; ++i) {
+            var literal = target[i];
+            for (var j = 0; j < literal.args.length; ++j) {
+                allArgs.push(literal.args[i]);
+            }
+        }
+        return allArgs;
+    }
+
+    function distanceHeuristic(target: Interpreter.Literal[], world: WorldNode): number {
+        var distances = [];
+
+        for (var i = 0; i < target.length; ++i) {
+            var literal = target[i];
+            if (stateSatisfiesLiteral(world.State, literal)) {
+                continue;
+            }
+
+            var argDistances = literal.args.map(function(arg) {
+                var position = world.GetObjectColumn(arg);
+                if (position) {
+                    return Math.abs(position - world.State.arm);
+                }
+                return 0;
+            });
+
+            var distance = min(argDistances);
+
+            if (literal.rel == "ontop" || literal.rel == "inside") {
+                for (var j = 1; j < literal.args.length; ++j) {
+                    var firstPos = world.GetObjectColumn(literal.args[j - 1]);
+                    var secondPos = world.GetObjectColumn(literal.args[j]);
+                    if (firstPos && secondPos) {
+                        distance += Math.abs(firstPos - secondPos);
+                    }
+                }
+            }
+
+            distances.push(distance);
+        }
+
+        return max(distances);
+    }
+
+    function sum(list: number[]): number {
+        var total = 0;
+        for (var i = 0; i < list.length; ++i) {
+            total += list[i];
+        }
+        return total;
+    }
+
+    function min(list: number[]): number {
+        var min = list[0];
+
+        for (var i = 1; i < list.length; ++i) {
+            if (list[i] < min) {
+                min = list[i];
+            }
+        }
+        return min;
+    }
+
+    function max(list: number[]): number {
+        var max = list[0];
+        for (var i = 1; i < list.length; ++i) {
+            if (list[i] > max) {
+                max = list[i];
+            }
+        }
+        return max;
+    }
+
+    class ObjectPosition {
+        constructor (
+            public Column: number,
+            public Row: number
+        ){}
     }
 
     class WorldNode implements INode<WorldNode> {
@@ -190,6 +310,43 @@ module Planner {
             return new WorldNode(state);
         }
 
+        FindObjectPosition(object: string): ObjectPosition {
+            for (var i = 0; i < this.State.stacks.length; ++i) {
+                var stack = this.State.stacks[i];
+                for (var j = 0; j < stack.length; ++j) {
+                    if (stack[j] == object) {
+                        return new ObjectPosition(i, j);
+                    }
+                }
+            }
+            return null;
+        }
+
+        GetObjectColumn(object: string): number {
+            var position = this.FindObjectPosition(object);
+            if (position) {
+                return position.Column;
+            }
+            if (this.State.holding == object) {
+                return this.State.arm;
+            }
+            return null;
+        }
+
+        GetBlockingObjects(object: string): string[] {
+            var position = this.FindObjectPosition(object);
+            if (!position) {
+                return [];
+            }
+
+            var stack = this.State.stacks[position.Column];
+            var blocking = [];
+            for (var i = position.Row + 1; i < stack.length; ++i) {
+                blocking.push(stack[i]);
+            }
+            return blocking;
+        }
+
         GetTopObjectInColumn(column: number): ObjectDefinition {
             var stack = this.State.stacks[column];
 
@@ -247,8 +404,12 @@ module Planner {
     }
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
+        if (intprt.length == 0) {
+            return null;
+        }
+
         var goalFunc = getGoalFunc(intprt);
-        var heuristicFunc = getHeuristicFunction(intprt);
+        var heuristicFunc = getHeuristicFunction2(intprt);
         var world = new WorldNode(state)
         var astarResult = Astar(world, goalFunc, heuristicFunc);
 
