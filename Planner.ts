@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="lib/astar-worldstate/astar.ts"/>
 
 module Planner {
 
@@ -29,7 +30,7 @@ module Planner {
     }
 
 
-    export class Error implements Error {
+    export class Error {
         public name = "Planner.Error";
         constructor(public message? : string) {}
         public toString() {return this.name + ": " + this.message}
@@ -40,6 +41,9 @@ module Planner {
     // private functions
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
+
+        console.log(aStar.aStar(new WorldStateNode(state), intprt).toString());
+
         // This function returns a dummy plan involving a random stack
         do {
             var pickstack = getRandomInt(state.stacks.length);
@@ -61,8 +65,7 @@ module Planner {
 
         // Then pick up the object
         var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
+        plan.push("Picking up the " + state.objects[obj].form, "p");
 
         if (pickstack < state.stacks.length-1) {
             // Then move to the rightmost stack
@@ -79,8 +82,7 @@ module Planner {
         }
 
         // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
+        plan.push("Dropping the " + state.objects[obj].form, "d");
 
         return plan;
     }

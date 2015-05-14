@@ -1,3 +1,4 @@
+/// <reference path="lib/typescript-collections/collections.ts" />
 /// <reference path="ObjectDefinition.ts" />
 /// <reference path="Interpreter.ts" />
 
@@ -45,7 +46,7 @@ class WorldState {
         return true;
     }
 
-    satisifiesConditions(conditions : Literal[]) : boolean {
+    satisifiesConditions(conditions : Interpreter.Literal[]) : boolean {
         var result = true;
 
         conditions.forEach((goal) => {
@@ -82,21 +83,21 @@ class WorldState {
     }
 
     // This can perhaps be made smarter. Instead of moving one step at a time, we could reason about how objects can be moved.
-    getNewStates() : WorldState[] {
-        var newStates : WorldState[] = [];
+    getNewStates() : collections.Dictionary<string,WorldState> {
+        var newStates = new collections.Dictionary<string,WorldState>(ws => ws.toString());
 
         if (this.canMoveLeft()) {
-            newStates.push(this.newWorldMoveLeft());
+            newStates["l"] = this.newWorldMoveLeft();
         }
 
         if (this.canMoveRight()) {
-            newStates.push(this.newWorldMoveRight());
+            newStates["r"] = this.newWorldMoveRight();
         }
 
         if (!this.isHolding()) {
-            newStates.push(this.newWorldPick());
+            newStates["p"] = this.newWorldPick();
         } else if (this.canDrop()) {
-            newStates.push(this.newWorldDrop());
+            newStates["d"] = this.newWorldDrop();
         }
 
         return newStates;
@@ -228,11 +229,13 @@ class WorldState {
             var topObj : ObjectDefinition = this.objects[topObjName];
             var currObj : ObjectDefinition = this.objects[this.holding];
 
+            console.log(currObj.toString());
+            console.log(topObj.toString());
             return currObj.canBePutOn(topObj);
         }
     }
 
     isHolding() : boolean {
-        return this.arm != null;
+        return this.holding !== null;
     }
 }

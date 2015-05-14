@@ -43,4 +43,8 @@ class ObjectDefinition {
     smallerThan(otherObj : ObjectDefinition) : boolean {
         return this.size == "small" && otherObj.size == "large";
     }
+
+    toString() : string {
+        return this.form + ", " + this.size + ", " + this.color + ".";
+    }
 }

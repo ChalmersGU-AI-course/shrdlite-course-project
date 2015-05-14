@@ -1165,9 +1165,9 @@ interface JQueryStatic {
      */
     isWindow(obj: any): boolean;
     /**
-     * Check to see if a DOM node is within an XML document (or is an XML document).
+     * Check to see if a DOM endNode is within an XML document (or is an XML document).
      *
-     * @param node he DOM node that will be checked to see if it's in an XML document.
+     * @param node he DOM endNode that will be checked to see if it's in an XML document.
      */
     isXMLDoc(node: Node): boolean;
 
@@ -3757,23 +3757,23 @@ interface JQuery {
     nextAll(selector?: string): JQuery;
 
     /**
-     * Get all following siblings of each element up to but not including the element matched by the selector, DOM node, or jQuery object passed.
+     * Get all following siblings of each element up to but not including the element matched by the selector, DOM endNode, or jQuery object passed.
      * 
      * @param selector A string containing a selector expression to indicate where to stop matching following sibling elements.
      * @param filter A string containing a selector expression to match elements against.
      */
     nextUntil(selector?: string, filter?: string): JQuery;
     /**
-     * Get all following siblings of each element up to but not including the element matched by the selector, DOM node, or jQuery object passed.
+     * Get all following siblings of each element up to but not including the element matched by the selector, DOM endNode, or jQuery object passed.
      * 
-     * @param element A DOM node or jQuery object indicating where to stop matching following sibling elements.
+     * @param element A DOM endNode or jQuery object indicating where to stop matching following sibling elements.
      * @param filter A string containing a selector expression to match elements against.
      */
     nextUntil(element?: Element, filter?: string): JQuery;
     /**
-     * Get all following siblings of each element up to but not including the element matched by the selector, DOM node, or jQuery object passed.
+     * Get all following siblings of each element up to but not including the element matched by the selector, DOM endNode, or jQuery object passed.
      * 
-     * @param obj A DOM node or jQuery object indicating where to stop matching following sibling elements.
+     * @param obj A DOM endNode or jQuery object indicating where to stop matching following sibling elements.
      * @param filter A string containing a selector expression to match elements against.
      */
     nextUntil(obj?: JQuery, filter?: string): JQuery;
@@ -3823,23 +3823,23 @@ interface JQuery {
     parents(selector?: string): JQuery;
 
     /**
-     * Get the ancestors of each element in the current set of matched elements, up to but not including the element matched by the selector, DOM node, or jQuery object.
+     * Get the ancestors of each element in the current set of matched elements, up to but not including the element matched by the selector, DOM endNode, or jQuery object.
      * 
      * @param selector A string containing a selector expression to indicate where to stop matching ancestor elements.
      * @param filter A string containing a selector expression to match elements against.
      */
     parentsUntil(selector?: string, filter?: string): JQuery;
     /**
-     * Get the ancestors of each element in the current set of matched elements, up to but not including the element matched by the selector, DOM node, or jQuery object.
+     * Get the ancestors of each element in the current set of matched elements, up to but not including the element matched by the selector, DOM endNode, or jQuery object.
      * 
-     * @param element A DOM node or jQuery object indicating where to stop matching ancestor elements.
+     * @param element A DOM endNode or jQuery object indicating where to stop matching ancestor elements.
      * @param filter A string containing a selector expression to match elements against.
      */
     parentsUntil(element?: Element, filter?: string): JQuery;
     /**
-     * Get the ancestors of each element in the current set of matched elements, up to but not including the element matched by the selector, DOM node, or jQuery object.
+     * Get the ancestors of each element in the current set of matched elements, up to but not including the element matched by the selector, DOM endNode, or jQuery object.
      * 
-     * @param obj A DOM node or jQuery object indicating where to stop matching ancestor elements.
+     * @param obj A DOM endNode or jQuery object indicating where to stop matching ancestor elements.
      * @param filter A string containing a selector expression to match elements against.
      */
     parentsUntil(obj?: JQuery, filter?: string): JQuery;
@@ -3859,23 +3859,23 @@ interface JQuery {
     prevAll(selector?: string): JQuery;
 
     /**
-     * Get all preceding siblings of each element up to but not including the element matched by the selector, DOM node, or jQuery object.
+     * Get all preceding siblings of each element up to but not including the element matched by the selector, DOM endNode, or jQuery object.
      * 
      * @param selector A string containing a selector expression to indicate where to stop matching preceding sibling elements.
      * @param filter A string containing a selector expression to match elements against.
      */
     prevUntil(selector?: string, filter?: string): JQuery;
     /**
-     * Get all preceding siblings of each element up to but not including the element matched by the selector, DOM node, or jQuery object.
+     * Get all preceding siblings of each element up to but not including the element matched by the selector, DOM endNode, or jQuery object.
      * 
-     * @param element A DOM node or jQuery object indicating where to stop matching preceding sibling elements.
+     * @param element A DOM endNode or jQuery object indicating where to stop matching preceding sibling elements.
      * @param filter A string containing a selector expression to match elements against.
      */
     prevUntil(element?: Element, filter?: string): JQuery;
     /**
-     * Get all preceding siblings of each element up to but not including the element matched by the selector, DOM node, or jQuery object.
+     * Get all preceding siblings of each element up to but not including the element matched by the selector, DOM endNode, or jQuery object.
      * 
-     * @param obj A DOM node or jQuery object indicating where to stop matching preceding sibling elements.
+     * @param obj A DOM endNode or jQuery object indicating where to stop matching preceding sibling elements.
      * @param filter A string containing a selector expression to match elements against.
      */
     prevUntil(obj?: JQuery, filter?: string): JQuery;

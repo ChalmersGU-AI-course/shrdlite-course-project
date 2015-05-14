@@ -1,63 +1,55 @@
 /// <reference path="../typescript-collections/collections.ts" />
-/// <reference path="../astar-worldstate/graph.ts" />
+/// <reference path="WorldStateNode.ts" />
+/// <reference path="../../Interpreter.ts" />
+/// <reference path="WorldStateEdge.ts" />
 
-var logging = false;
+var logging = true;
 
 module aStar {
-    export function aStar<T extends GraphNode>(graph : Graph<T>, fromNode : T, toNode : T) : Path<T> {
-        if(!graph.contains(fromNode) || !graph.contains(toNode)) {
-            throw "ERROR, nodes are not in graph.";
-        }
-        
-        var evaluatedNodes = new collections.Set<Path<T>>(n => n.getId().toString());
-        var nodesToEvaluate = new collections.PriorityQueue<Path<T>>(compareNodes);
-        var startingPath = new collections.LinkedList<Edge<T>>();
+    export function aStar(start : WorldStateNode, goals : Interpreter.Literal[][]) : WorldStateEdge[] {
+        var evaluatedPaths = new collections.Set<Path>(n => n.toString());
+        var pathsToEvaluate = new collections.PriorityQueue<Path>(comparePaths);
 
-        var sFrom = new Path<T>(fromNode, 0, fromNode.distanceTo(toNode), startingPath);
-
-        nodesToEvaluate.add(sFrom);
+        pathsToEvaluate.add(new Path(start, 0, start.heuristicTo(goals), new collections.LinkedList<WorldStateEdge>()));
         if(logging) {
             console.log("======== Starting ========");
         }
 
-        while(!nodesToEvaluate.isEmpty()) {
-            var currentNode = nodesToEvaluate.dequeue();
+        while(!pathsToEvaluate.isEmpty()) {
+            var currentPath : Path = pathsToEvaluate.dequeue();
 
             if(logging) {
-                console.log("evaluating " + currentNode.toString());
-                console.log("Distance is  " + currentNode.getDistance());
-                console.log("Heuristic is " + currentNode.getHeuristicDistance());
-                console.log("Their sum is " + currentNode.getTotalDistance());
+                console.log("evaluating " + currentPath.toString());
+                console.log("Distance is  " + currentPath.getDistance());
+                console.log("Heuristic is " + currentPath.getHeuristicDistance());
+                console.log("Their sum is " + currentPath.getTotalDistance());
             }
             
-            evaluatedNodes.add(currentNode);
+            evaluatedPaths.add(currentPath);
             if(logging)
-                console.log("Evaluated nodes: " + evaluatedNodes.size() + "/" + graph.getNumberOfNodes());
+                console.log("Evaluated nodes: " + evaluatedPaths.size());
 
-            if(currentNode.equals(toNode)) {
+            if(currentPath.getNode().isSatisfied(goals)) {
                 if(logging)
-                    console.log("found goal! " + currentNode.toString());
-                return currentNode;
+                    console.log("found goal! " + currentPath.toString());
+                return currentPath.getEdges();
             }
 
             if(logging)
                 console.log("======== Adding neighbors to frontier ========");
 
-            var edgesN = graph.getEdgesTo(currentNode.getNode());
+            currentPath.getEdges().forEach((edge) => {
+                var nextNode = edge.getEndNode();
+                var dist = currentPath.getDistance() + edge.getCost();
+                var newPath : Path = new Path(nextNode, dist, nextNode.heuristicTo(goals), currentPath.getPath());
 
-            for (var i = 0; i < edgesN.length; i++) {
-  				var e = edgesN[i];
-  				var n = e.getFromNode().equals(currentNode) ? e.getEndNode() : e.getFromNode();
-  				var dist = currentNode.getDistance() + e.getCost();
-  				var starNeighbor = new Path(n, dist, n.distanceTo(toNode), currentNode.getPath());
-
-                if(!evaluatedNodes.contains(starNeighbor)) {
-  					starNeighbor.updatePath(e);
-  					nodesToEvaluate.add(starNeighbor);
+                if(!evaluatedPaths.contains(newPath)) {
+                    newPath.addEdge(edge);
+                    pathsToEvaluate.add(newPath);
                     if(logging)
-                        console.log("Adding " + starNeighbor.toString() + " to frontier. Distance+heuristic is: " + starNeighbor.getTotalDistance());
-  				}
-  			}
+                        console.log("Adding " + newPath.toString() + " to frontier. Distance+heuristic is: " + newPath.getTotalDistance());
+                }
+            });
 
             if(logging)
                 console.log("======= Evaluating next node ========");
@@ -66,48 +58,52 @@ module aStar {
         return null;
     }
 
-    function compareNodes<T extends GraphNode>(a : Path<T> , b : Path<T>){
-    	return b.getTotalDistance() - a.getTotalDistance();
+    function comparePaths(fst : Path , snd : Path){
+    	return snd.getTotalDistance() - fst.getTotalDistance();
     }
 
-    class Path<T extends GraphNode> {
+    class Path {
         distanceSoFar : number;
         heuristicDistance : number;
-        id : number; 
-        finalNode : T;
-        pathTo = new collections.LinkedList<Edge<T>>();
+        endNode : WorldStateNode;
+        pathTo = new collections.LinkedList<WorldStateEdge>();
 
-        constructor(node : T, distance : number, heuristic : number, path : collections.LinkedList<Edge<T>>) {
-            this.finalNode = node;
+        constructor(node : WorldStateNode, distance : number, heuristic : number, path : collections.LinkedList<WorldStateEdge>) {
+            this.endNode = node;
             this.distanceSoFar = distance;
             this.heuristicDistance = heuristic;
             path.forEach(p => this.pathTo.add(p));
         }
 
-        getId() : number{
-            return this.finalNode.getId();
-        }
         toString() : string{
-            return this.finalNode.toString();
-        }
-        getNode() : T {
-            return this.finalNode;
+            return this.endNode.toString();
         }
 
-        distanceTo(toNode : T ) : number {
-            return this.finalNode.distanceTo(toNode);
+        getNode() : WorldStateNode {
+            return this.endNode;
         }
 
-        updatePath(newEdge : Edge<T>) {
+        heuristicTo(goals : Interpreter.Literal[][] ) : number {
+            return this.endNode.heuristicTo(goals);
+        }
+
+        addEdge(newEdge : WorldStateEdge) {
             this.pathTo.add(newEdge);
         }
 
-        getPath() : collections.LinkedList<Edge<T>> {
+        getPath() : collections.LinkedList<WorldStateEdge> {
             return this.pathTo;   
         }
 
-        equals(otherNode : T) : boolean {
-            return this.getId() == otherNode.getId();
+        getEdges() : WorldStateEdge[] {
+            console.log(this.endNode.getNeighbors().size());
+
+            var neighbors = this.endNode.getNeighbors();
+            var edges : WorldStateEdge[] = [];
+            neighbors.forEach((value, neighbor) => {
+                edges.push(new WorldStateEdge(1, this.endNode, neighbor, value));
+            });
+            return edges;
         }
 
         getDistance() : number {

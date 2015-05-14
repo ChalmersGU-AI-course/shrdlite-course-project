@@ -332,7 +332,7 @@ module collections {
     }
 
 
-    // A linked list node
+    // A linked list endNode
     export interface ILinkedListNode<T>{
         element: T;
         next: ILinkedListNode<T>;
@@ -341,13 +341,13 @@ module collections {
     export class LinkedList<T> {
 
         /**
-        * First node in the list
+        * First endNode in the list
         * @type {Object}
         * @private
         */
         public firstNode: ILinkedListNode<T> = null;
         /**
-        * Last node in the list
+        * Last endNode in the list
         * @type {Object}
         * @private
         */
@@ -386,7 +386,7 @@ module collections {
             }
             var newNode = this.createNode(item);
             if (this.nElements === 0) {
-                // First node in the list.
+                // First endNode in the list.
                 this.firstNode = newNode;
                 this.lastNode = newNode;
             } else if (index === this.nElements) {
@@ -394,7 +394,7 @@ module collections {
                 this.lastNode.next = newNode;
                 this.lastNode = newNode;
             } else if (index === 0) {
-                // Change first node.
+                // Change first endNode.
                 newNode.next = this.firstNode;
                 this.firstNode = newNode;
             } else {
@@ -611,7 +611,7 @@ module collections {
             }
             var element: T;
             if (this.nElements === 1) {
-                //First node in the list.
+                //First endNode in the list.
                 element = this.firstNode.element;
                 this.firstNode = null;
                 this.lastNode = null;
@@ -1168,7 +1168,7 @@ module collections {
          * Creates an empty Heap.
          * @class 
          * <p>A heap is a binary tree, where the nodes maintain the heap property: 
-         * each node is smaller than each of its children and therefore a MinHeap 
+         * each endNode is smaller than each of its children and therefore a MinHeap
          * This implementation uses an array to store elements.</p>
          * <p>If the inserted elements are custom objects a compare function must be provided, 
          *  at construction time, otherwise the <=, === and >= operators are 
@@ -1212,8 +1212,8 @@ module collections {
         }
 
         /**
-         * Returns the index of the left child of the node at the given index.
-         * @param {number} nodeIndex The index of the node to get the left child
+         * Returns the index of the left child of the endNode at the given index.
+         * @param {number} nodeIndex The index of the endNode to get the left child
          * for.
          * @return {number} The index of the left child.
          * @private
@@ -1222,8 +1222,8 @@ module collections {
             return (2 * nodeIndex) + 1;
         }
         /**
-         * Returns the index of the right child of the node at the given index.
-         * @param {number} nodeIndex The index of the node to get the right child
+         * Returns the index of the right child of the endNode at the given index.
+         * @param {number} nodeIndex The index of the endNode to get the right child
          * for.
          * @return {number} The index of the right child.
          * @private
@@ -1232,8 +1232,8 @@ module collections {
             return (2 * nodeIndex) + 2;
         }
         /**
-         * Returns the index of the parent of the node at the given index.
-         * @param {number} nodeIndex The index of the node to get the parent for.
+         * Returns the index of the parent of the endNode at the given index.
+         * @param {number} nodeIndex The index of the endNode to get the parent for.
          * @return {number} The index of the parent.
          * @private
          */
@@ -1241,7 +1241,7 @@ module collections {
             return Math.floor((nodeIndex - 1) / 2);
         }
         /**
-         * Returns the index of the smaller child node (if it exists).
+         * Returns the index of the smaller child endNode (if it exists).
          * @param {number} leftChild left child index.
          * @param {number} rightChild right child index.
          * @return {number} the index with the minimum value or -1 if it doesn't
@@ -1265,8 +1265,8 @@ module collections {
             }
         }
         /**
-         * Moves the node at the given index up to its proper place in the heap.
-         * @param {number} index The index of the node to move up.
+         * Moves the endNode at the given index up to its proper place in the heap.
+         * @param {number} index The index of the endNode to move up.
          * @private
          */
         private siftUp(index: number): void {
@@ -1279,8 +1279,8 @@ module collections {
             }
         }
         /**
-         * Moves the node at the given index down to its proper place in the heap.
-         * @param {number} nodeIndex The index of the node to move down.
+         * Moves the endNode at the given index down to its proper place in the heap.
+         * @param {number} nodeIndex The index of the endNode to move down.
          * @private
          */
         private siftDown(nodeIndex: number): void {
@@ -2126,16 +2126,16 @@ module collections {
         /**
          * Creates an empty binary search tree.
          * @class <p>A binary search tree is a binary tree in which each 
-         * internal node stores an element such that the elements stored in the 
+         * internal endNode stores an element such that the elements stored in the
          * left subtree are less than it and the elements 
          * stored in the right subtree are greater.</p>
-         * <p>Formally, a binary search tree is a node-based binary tree data structure which 
+         * <p>Formally, a binary search tree is a endNode-based binary tree data structure which
          * has the following properties:</p>
          * <ul>
-         * <li>The left subtree of a node contains only nodes with elements less 
-         * than the node's element</li>
-         * <li>The right subtree of a node contains only nodes with elements greater 
-         * than the node's element</li>
+         * <li>The left subtree of a endNode contains only nodes with elements less
+         * than the endNode's element</li>
+         * <li>The right subtree of a endNode contains only nodes with elements greater
+         * than the endNode's element</li>
          * <li>Both the left and right subtrees must also be binary search trees.</li>
          * </ul>
          * <p>If the inserted elements are custom objects a compare function must 

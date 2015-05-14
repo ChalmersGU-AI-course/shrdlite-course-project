@@ -1,16 +1,15 @@
-///<reference path="lib/astar-worldstate/graphnode.ts"/>
-///<reference path="Interpreter.ts"/>
+///<reference path="../../Interpreter.ts"/>
 
-class WorldStateNode implements GraphNode{
+class WorldStateNode{
     state : WorldState;
 
     constructor(state : WorldState) {
         this.state = state;
     }
 
-    private heuristicTo(goalConditions : Literal[][]) {
+    heuristicTo(goal : Interpreter.Literal[][]) {
         var returnValue = 100000;
-        goalConditions.forEach((intrprt) => {
+        goal.forEach((intrprt) => {
             var intrprtHeuristic = 0;
 
             intrprt.forEach((goal) => {
@@ -86,35 +85,27 @@ class WorldStateNode implements GraphNode{
 		return heuristic;
 	}
 
-	isGoalSatisfied(goal : Goal<WorldStateNode>) : boolean {
-		goal.forEach((intrprt) => {
-			if(this.state.satisifiesConditions(intrprt)) {
-                return true;
-            }
-		});
-
-        return false;
-	}
-
-	distanceTo(to : Goal<WorldStateNode>) : number {
-        return this.heuristicTo(to);
-    }
-
-	getNeighbors() : WorldStateNode[] {
-		var neighbors : WorldStateNode[] = [];
+	getNeighbors() : collections.Dictionary<string,WorldStateNode> {
+		var neighbors = new collections.Dictionary<string,WorldStateNode>(wsn => wsn.toString());
 		var newStates = this.state.getNewStates();
 
-		newStates.forEach((state) => {
-			neighbors.push(new WorldStateNode(state));
+		newStates.forEach((value, state) => {
+            neighbors[value] = new WorldStateNode(state);
 		});
 
 		return neighbors;
 	}
 
-    equals(otherNode : GraphNode) : boolean{
-        if (otherNode instanceof WorldStateNode) {
-            return this.state.equals(otherNode.state);
-        }
+    equals(otherNode : WorldStateNode) : boolean{
+        return this.state.equals(otherNode.state);
+    }
+
+    isSatisfied(goals : Interpreter.Literal[][]) : boolean {
+        goals.forEach((intrprt) => {
+            if(this.state.satisifiesConditions(intrprt)) {
+                return true;
+            }
+        });
 
         return false;
     }
