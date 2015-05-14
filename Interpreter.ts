@@ -327,16 +327,12 @@ module Interpreter {
               found = true;                       // found: stop searching...
               switch(rel) {
                 case "leftof":
-                  // target = stacks[col-1][row];
                   target = this.findToLeft(stacks, obj, col, row)
                   break;
                 case "rightof":
-                  // target = stacks[col+1][row];
                   target = this.findToRight(stacks, obj, col, row)
                   break;
                 case "beside":                    // check that only one case is possible
-                  // var left = stacks[col-1][row];
-                  // var right = stacks[col+1][row];
                   var left = this.findToLeft(stacks, obj, col, row)
                   var right = this.findToRight(stacks, obj, col, row)
                   if(left && right)
