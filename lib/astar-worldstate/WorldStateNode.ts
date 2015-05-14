@@ -89,8 +89,8 @@ class WorldStateNode{
 		var neighbors = new collections.Dictionary<string,WorldStateNode>(wsn => wsn.toString());
 		var newStates = this.state.getNewStates();
 
-		newStates.forEach((value, state) => {
-            neighbors[value] = new WorldStateNode(state);
+		newStates.forEach((command, state) => {
+            neighbors.setValue(command,new WorldStateNode(state));
 		});
 
 		return neighbors;

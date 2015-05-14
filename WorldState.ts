@@ -87,17 +87,17 @@ class WorldState {
         var newStates = new collections.Dictionary<string,WorldState>(ws => ws.toString());
 
         if (this.canMoveLeft()) {
-            newStates["l"] = this.newWorldMoveLeft();
+            newStates.setValue("l",this.newWorldMoveLeft());
         }
 
         if (this.canMoveRight()) {
-            newStates["r"] = this.newWorldMoveRight();
+            newStates.setValue("r",this.newWorldMoveRight());
         }
 
         if (!this.isHolding()) {
-            newStates["p"] = this.newWorldPick();
+            newStates.setValue("p",this.newWorldPick());
         } else if (this.canDrop()) {
-            newStates["d"] = this.newWorldDrop();
+            newStates.setValue("d",this.newWorldDrop());
         }
 
         return newStates;
@@ -197,6 +197,10 @@ class WorldState {
 
     newWorldDrop() : WorldState {
         var newStacks : string[][] = this.stacks;
+
+        console.log("Stack: " + newStacks[this.arm].toString());
+        console.log("Holding: " + this.holding);
+
         newStacks[this.arm].push(this.holding);
 
         return new WorldState(newStacks, null, this.arm, this.objects, this.examples);
@@ -205,6 +209,8 @@ class WorldState {
     newWorldPick() : WorldState {
         var newStacks : string[][] = this.stacks;
         var newHolding : string = newStacks[this.arm].pop();
+
+        console.log("Picked up: " + newHolding);
 
         return new WorldState(newStacks, newHolding, this.arm, this.objects, this.examples);
     }
@@ -229,8 +235,16 @@ class WorldState {
             var topObj : ObjectDefinition = this.objects[topObjName];
             var currObj : ObjectDefinition = this.objects[this.holding];
 
+            console.log("Stack size: " + stackHeight);
+            console.log("Stack: " + this.stacks[this.arm]);
+            console.log("Top obj: " + topObj);
+            console.log("Holding:" + this.holding);
+/*
+            console.log(this.stacks[this.arm].length);
+            console.log(stackHeight-1);
             console.log(currObj.toString());
             console.log(topObj.toString());
+            */
             return currObj.canBePutOn(topObj);
         }
     }
