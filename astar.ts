@@ -22,31 +22,30 @@ module AStar {
 		while(!frontier.isEmpty()) {
 			var cur : T = frontier.dequeue();
 			if(checkGoal(cur)) {
-			//	var finalPath = recons_path<T>(cameFrom, goal);
-			//	console.log("[INFO] Done in " + counter  + " iterations, final path: " + finalPath);
-				return cur;
+				var finalPath = recons_path<T>(cameFrom, cur);
+				return finalPath;
 			}
 			var adjacentNodes : T[] = adj(cur);
 			adjacentNodes.forEach((node : T) => {
 				var newCost : number = costSoFar.getValue(cur) + cost(cur, node);
-				//if(!costSoFar.containsKey(node) || newCost < costSoFar.getValue(node)) {
+				if(!costSoFar.containsKey(node) || newCost < costSoFar.getValue(node)) {
 					costSoFar.setValue(node, newCost);
 					frontier.enqueue(node);
 					cameFrom.setValue(node, cur);
-				//}
+				}
 			});
 		}
 		return null;
 	}
 
 	function recons_path<T>(came_from, current) {
-		var total_path = new collections.LinkedList<T>();
+		var total_path : T[] = [];
 		var temp_came_from = came_from;
-		total_path.add(current);
+		total_path.push(current);
 		while( temp_came_from.containsKey(current) ) {
 			var next = temp_came_from.remove(current);
 			current = next;
-			total_path.add(current);
+			total_path.push(current);
 		}
 		return total_path;
 	}

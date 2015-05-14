@@ -43,17 +43,29 @@ module Planner {
 	
 	var goalFunc = makeGoalFunc(intprt);
 	var x : string[] = [];
-	var initState : State = {stacks: state.stacks, holding:state.holding, armpos:state.arm};
+	var initState : State = new State(state.stacks, state.holding, state.arm, "");
 
-	var bla = AStar.AStarSearch<State>(initState, goalFunc, h, costFunc, adjacent);
-	console.log(bla);
+	var bla = AStar.AStarSearch<State>(copyState(initState), goalFunc, h, costFunc, adjacent);
+	bla.forEach((elem) => {
+	    x.push(elem.action);
+	});
 	return x;
     }
-
+/*
     interface State {
 	stacks: string[][];
 	holding: string;
 	armpos : number;
+	action : string;
+	toString(): string; 
+    }
+*/
+    class State {
+	constructor(public stacks: string[][], public holding: string, public armpos : number, public action : string) {
+	}
+	toString() {
+	    return collections.makeString(this);
+	}
     }
 
     function copyState(st : State) : State {
@@ -62,7 +74,7 @@ module Planner {
         newStacks.push(stack.slice(0));
       });
 
-      return {stacks: newStacks, holding: st.holding, armpos:st.armpos };
+      return new State(newStacks, st.holding, st.armpos, st.action );
     }
 
     function costFunc(a : State, b : State) : number {
@@ -81,12 +93,14 @@ module Planner {
         if(state.armpos > 0) {
             var newState = copyState(state);
             newState.armpos -= 1;
+	    newState.action = "l";
             st.push(newState);
         }   
         //right
         if(state.armpos < state.stacks.length) {
             var newState = copyState(state);
             newState.armpos += 1;
+	    newState.action = "r";
             st.push(newState);
         }
 
@@ -95,12 +109,14 @@ module Planner {
             var newState = copyState(state);
             state.stacks[state.armpos].push(state.holding)
             newState.holding = null;
+	    newState.action = "d";
             st.push(newState);
         }
         //pickup
         if(!state.holding) {
             var newState = copyState(state);
             newState.holding = state.stacks[state.armpos].pop();
+	    newState.action = "p";
             st.push(newState);
         }
 
