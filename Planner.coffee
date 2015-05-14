@@ -311,8 +311,8 @@ satisfaction = (state, goalRep) ->
   result = true
   for goal in goalRep
     p = goal.pol
-    q1 = "all"#goal.quantifier1
-    q2 = "all"#goal.quantifier2
+    q1 = goal.quantifier1
+    q2 = goal.quantifier2
     c = false
     switch goal.rel
       when "holding"
