@@ -1,7 +1,7 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
 
-export module Interpreter {
+module Interpreter {
 
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types

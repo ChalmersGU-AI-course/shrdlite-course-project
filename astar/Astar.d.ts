@@ -1,4 +1,3 @@
-import C = require('../lib/collections');
 /**
  * @namespace Top level namespace for astar
  */
@@ -60,7 +59,7 @@ declare module Astar {
    */
   class ASGraph<T extends State> {
     start: ASNode<T>;
-    table: C.collections.Dictionary<ASNode<T>, ASNode<T>>;             // ASGraph stores nodes in Hashtable to save space
+    table: collections.Dictionary<ASNode<T>, ASNode<T>>;             // ASGraph stores nodes in Hashtable to save space
     set(node: ASNode<T>): boolean;
     get(k: number): ASNode<T>;
     constructor(node: ASNode<T>);

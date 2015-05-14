@@ -1,78 +1,85 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="./lib/node.d.ts"/>
+///<reference path="./astar/AStar.ts"/>
+///<reference path="./lib/collections.ts"/>
 
 module Planner {
 
   ////////////////////////////////
   // global variables
 
-  var currentWorldDescription = new C.collections.Dictionary<String, WorldObject>();
+  var currentWorldDescription = new collections.Dictionary<String, WorldObject>();
+  var position : number = 0;
 
 
-    //////////////////////////////////////////////////////////////////////
-    // exported functions, classes and interfaces/types
+  //////////////////////////////////////////////////////////////////////
+  // exported functions, classes and interfaces/types
 
-    export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
-        var plans : Result[] = [];
-        interpretations.forEach((intprt) => {
-            var plan : Result = <Result>intprt;
-            plan.plan = planInterpretation(plan.intp, currentState);
-            plans.push(plan);
-        });
-        if (plans.length) {
-            return plans;
-        } else {
-            throw new Planner.Error("Found no plans");
-        }
+  export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
+    var plans : Result[] = [];
+    interpretations.forEach((intprt) => {
+        var plan : Result = <Result>intprt;
+        plan.plan = planInterpretation(plan.intp, currentState);
+        plans.push(plan);
+    });
+    if (plans.length) {
+      return plans;
+    } else {
+      throw new Planner.Error("Found no plans");
     }
+  }
 
 
-    export interface Result extends Interpreter.Result {plan:string[];}
+  export interface Result extends Interpreter.Result {plan:string[];}
 
 
-    export function planToString(res : Result) : string {
-        return res.plan.join(", ");
+  export function planToString(res : Result) : string {
+    return res.plan.join(", ");
+  }
+
+
+  export class Error implements Error {
+    public name = "Planner.Error";
+    constructor(public message? : string) {}
+    public toString() {return this.name + ": " + this.message}
+  }
+  
+  //////////////////////////////////////////////////////////////////////
+  // private functions
+
+  function printLog(log : Object) : void {
+    //document.getElementById('log').innerHTML += JSON.stringify(log) + "<br/>";
+  }
+
+  function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
+    var plan : string[] = [];
+    printLog(state);
+
+    var goal: PDDL = new PDDL(intprt);
+
+    var solution = Astar.search(convert(state), null, goal);
+   
+    var plan:string[] = new Array<string>();
+    
+    console.log(solution.toString());
+
+    for (var i = 0; i < solution.path.length; i++) {
+      //print out the path
+      console.log(solution.path[i].toString());
     }
-
-
-    export class Error implements Error {
-        public name = "Planner.Error";
-        constructor(public message? : string) {}
-        public toString() {return this.name + ": " + this.message}
+    
+    for (var i = 1; i < solution.path.length; i++) {
+      plan = plan.concat(div(solution.path[i-1], solution.path[i]));
     }
-
-
-    //////////////////////////////////////////////////////////////////////
-    // private functions
-
-    function printLog(log : Object) : void {
-        document.getElementById('log').innerHTML += JSON.stringify(log) + "<br/>";
-    }
-
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        var plan : string[] = [];
-        printLog(state);
-
-      var solution = A.Astar.search(convert(state), null, goal);
-       
-        var plan:string[] = new Array<string>();
-        for (var i = 0; i < solution.path.length; i++) {
-          //print out the path
-          console.log(solution.path[i].toString());
-          
-        }
-        for (var i = 1; i < solution.path.length; i++) {
-          plan.concat(div(solution.path[i-1], solution.path[i]));
-        }
-        
-        //print out the solution
-        console.log(solution);
-        console.log(plan);
+    
+    //print out the solution
+    console.log("plan " + plan);
 
 
 
-        return plan;
-    }
+    return plan;
+  }
 
   function div(state1: WorldDescription, state2: WorldDescription): string[] {
     var ret: string[] = new Array<string>();
@@ -97,6 +104,7 @@ module Planner {
         }
       }
     }
+    //console.log("div: " + ret);
     return ret;
   }
 
@@ -119,7 +127,7 @@ module Planner {
   }
 
   //one expression describing a property of a goal
-  class Lit implements I.Interpreter.Literal {
+  class Lit implements Interpreter.Literal {
     //true/false: goal must/must not forfill the property
     pol:boolean; 
     //a relationship between objects as describet in the grammar
@@ -136,7 +144,7 @@ module Planner {
     }
   }
 
-  class WorldDescription implements A.Astar.State {
+  class WorldDescription implements Astar.State {
     //heuristical value for this state. Useful if you don't want to call
     //the heuristical function each time
     h: number; 
@@ -164,12 +172,12 @@ module Planner {
         }
         for (var i = 0; i < stacks.length; i++) {
           for (var j = 0; j < stacks[i].length; j++) {
-            this.stacks[i].push(exampleWorldDescription.getValue(stacks[i][j]));
+            this.stacks[i].push(currentWorldDescription.getValue(stacks[i][j]));
           }
         }
         if(crane != null){
           //if stacks are given and crane is given, use also the crane
-          this.crane = exampleWorldDescription.getValue(crane);
+          this.crane = currentWorldDescription.getValue(crane);
         } else {
           this.crane = null;
         }
@@ -232,10 +240,14 @@ module Planner {
         case "ontop":
           for (var i = 0; i < this.stacks.length; i++) {
             for (var j = 0; j < this.stacks[i].length; j++) {
+              if (lit.args[0] == this.stacks[i][j].name && lit.args[1] == "floor"
+                  && j == 0)
+                return true == lit.pol;
+
               if (this.stacks[i][j-1]
                      && lit.args[0] == this.stacks[i][j].name
                      && lit.args[1] == this.stacks[i][j-1].name)
-                return true;
+                return true == lit.pol;
             }
           }
           break;
@@ -246,7 +258,7 @@ module Planner {
                 for (var k = i-1; k < this.stacks.length; k--) {
                   for (var l = 0; l < this.stacks[k].length; l++) {
                     if (this.stacks[k][l].name == lit.args[1])
-                      return true;
+                      return true == lit.pol;
                   }
                 }
               }
@@ -260,7 +272,7 @@ module Planner {
                 for (var k = i+1; k < this.stacks.length; k++) {
                   for (var l = 0; l < this.stacks[k].length; l++) {
                     if (this.stacks[k][l].name == lit.args[1])
-                      return true;
+                      return true == lit.pol;
                   }
                 }
               }
@@ -273,7 +285,7 @@ module Planner {
               if (lit.args[0] == this.stacks[i][j].name
                   && this.stacks[i][j-1]
                   && lit.args[1] == this.stacks[i][j-1].name)
-                return true;
+                return true == lit.pol;
             }
           }
           break;
@@ -283,7 +295,7 @@ module Planner {
               if (lit.args[0] == this.stacks[i][j].name) {
                 for (var k = 0; k < j; k++) {
                   if (lit.args[1] == this.stacks[i][k].name)
-                    return true;
+                    return true == lit.pol;
                 }
               }
             }
@@ -296,14 +308,14 @@ module Planner {
                 if (this.stacks[i-1]) {
                   for (var k = 0; k < this.stacks[i-1].length; k++) {
                     if (this.stacks[i-1][k].name == lit.args[1]) {
-                      return true;
+                      return true == lit.pol;
                     }
                   }
                 }
                 if (this.stacks[i+1]) {
                   for (var k = 0; k < this.stacks[i+1].length; k++) {
                     if (this.stacks[i+1][k].name == lit.args[1]) {
-                      return true;
+                      return true == lit.pol;
                     }
                   }
                 }
@@ -317,37 +329,19 @@ module Planner {
               if (lit.args[0] == this.stacks[i][j].name) {
                 for (var k = j+1; k < this.stacks[i].length; k++) {
                   if (this.stacks[i][k] && this.stacks[i][k].name == lit.args[1])
-                    return true;
+                    return true == lit.pol;
                 }
               }
             }
           }
           break;
+        case "holding":
+          if (this.crane)
+            return this.crane.name == lit.args[0];
+        break;
       }
-      return false;
+      return false == lit.pol;
     }
-    
-
-/*    match(goal: WorldDescription) {
-      for (var i = 0; i < this.stacks.length; i++) {
-        if (this.stacks[i].length == 0 && goal.stacks[i].length == 0) {
-          continue;
-        }
-        if (this.stacks[i].length == 0 || goal.stacks[i].length == 0) {
-          return false;
-        }
-        if (this.stacks[i].length != goal.stacks[i].length) {
-          return false;
-        }
-        for (var j = 0; j < this.stacks[i].length; j++) {
-           if (this.stacks[i][j].form != goal.stacks[i][j].form
-               || this.stacks[i][j].size != goal.stacks[i][j].size
-               || this.stacks[i][j].color != goal.stacks[i][j].color)
-             return false;
-        }
-      }
-      return true;
-    }*/
 
     //guesses a distance from the current state to goals describet in a PDDL
     heuristic(goal: PDDL) {
@@ -442,22 +436,59 @@ module Planner {
   }
 
   function convert(input: WorldState): WorldDescription {
-    var stacks = new Array(new Array<WorldObject>());
-    var crane =  new WorldObject();
+    for (var name in input.objects) {
+      currentWorldDescription.setValue(name, new WorldObject(input.objects[name].form, 
+                                                             input.objects[name].size,
+                                                             input.objects[name].color,
+                                                             name));
+    }
 
-    currentWorldDescription.setValue
-    input.objects.forEach(s => {
-      currentWorldDescription.setValue(s, input[objects][s]);
-    });
+    return new WorldDescription(input.stacks, input.holding);
+  }
 
-    for(var i = 0; i < input.stacks.length; i++){
-      for(var j = 0; j < input.stacks[i].length; j++) {
-        stacks = currentWorldDescription.getValue(input.stacks[i][j]);
+  function checkIfValid(state) {
+    for (var i = 0; i < state.stacks.length; i++) {
+      for (var j = 1; j < state.stacks[i].length; j++) {
+        if (!state.stacks[i][j] || !state.stacks[i][j-1]) continue;
+        var currentObjectDescription = state.stacks[i][j];
+        var belowObjectDescription = state.stacks[i][j-1];
+        // balls must be in boxes or on the floor, otherwise they roll away
+        if (currentObjectDescription.form == "ball"
+            && belowObjectDescription.form != "box") 
+          return false;
+
+        // balls cannot support anything
+        if (belowObjectDescription.form == "ball")
+          return false;
+
+        // small objects cannot support large objects
+        if (currentObjectDescription.size == "large"
+            && belowObjectDescription.size == "small")
+          return false;
+
+        // boxes cannot contain pyramids, planks or boxes of the same size
+        if ((currentObjectDescription.form == "pyramid"
+             || currentObjectDescription.form == "plank"
+             || currentObjectDescription.form == "boxes")
+            && belowObjectDescription.form == "box"
+            && belowObjectDescription.size == currentObjectDescription.size)
+          return false;
+
+        // small boxes cannot be supported by small bricks or pyramids
+        if (currentObjectDescription.form == "box"
+            && currentObjectDescription.size == "small"
+            && belowObjectDescription.size == "small"
+            && (belowObjectDescription.form == "brick" || belowObjectDescription.form == "pyramid"))
+          return false;
+
+        // large boxes cannot be supported by large pyramids
+        if (currentObjectDescription.form == "box"
+            && currentObjectDescription.size == "large"
+            && belowObjectDescription.form == "pyramid"
+            && belowObjectDescription.size == "large")
+          return false;
       }
     }
-    crane = currentWorldDescription.getValue(input.holding);
-    return new WorldDescription(stacks, crane);
-//    input[objects]["a"]
-//    var ret = new WorldDescription(input.stacks, )
+    return true;
   }
 }

@@ -1,9 +1,7 @@
 ///<reference path="../lib/node.d.ts"/>
-///<reference path="../lib/collections.d.ts"/>
+///<reference path="../lib/collections.ts"/>
 
-import C = require('../lib/collections'); // TODO: remove require for enabling jsage in html
-
-export module Astar {
+module Astar {
 
   /*
    * Necessary Interface for usage of the astar search function.
@@ -45,7 +43,7 @@ export module Astar {
     var startNode = new ASNode<T>(start, 0, null, null);
     var expansions = 0, visited = 0;              // count the nr of expansions and visits
     var graph = g? g : new ASGraph<T>(startNode); // if graph not given create one
-    var frontier = new C.collections.PriorityQueue<ASNode<T>>(comparator(goal));
+    var frontier = new collections.PriorityQueue<ASNode<T>>(comparator(goal));
 
     frontier.enqueue(startNode);
 
@@ -138,7 +136,7 @@ export module Astar {
    */
   class ASGraph<T extends State> {
     start: ASNode<T>;
-    table: C.collections.Dictionary<ASNode<T>, ASNode<T>>;             // ASGraph stores nodes in Hashtable to save space
+    table: collections.Dictionary<ASNode<T>, ASNode<T>>;             // ASGraph stores nodes in Hashtable to save space
     set(node: ASNode<T>): boolean {
       var similarNode = this.table.getValue(node);
       // set node only if not already set or the current node is cheaper
@@ -160,7 +158,7 @@ export module Astar {
     }
     constructor(node: ASNode<T>) {
       this.start = node;
-      this.table = new C.collections.Dictionary<ASNode<T>, ASNode<T>>();
+      this.table = new collections.Dictionary<ASNode<T>, ASNode<T>>();
       this.set(node);
     }
   }
