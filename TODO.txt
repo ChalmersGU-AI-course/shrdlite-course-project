@@ -1,4 +1,0 @@
--Complicated goals
-any/all (list R list)
-
--Faster algorithm
