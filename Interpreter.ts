@@ -576,7 +576,7 @@ module Interpreter {
           litArr.push({pol: false, rel: "holding", args: [id]});
           return litArr;
         });
-        return lits;
+        return [this.flatten(lits)];
       }
 
       /*
