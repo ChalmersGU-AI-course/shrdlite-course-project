@@ -97,7 +97,14 @@ var TMP_currentState = {
   ]
 };
 
-var TMP_rules = [["e", "k"], ["l", "floor"]];
+// var TMP_rules = [["e", "k"], ["l", "floor"]];
+var TMP_rules = [{rel: "ontop", args: ["e", "k"]},
+                {rel: "floor", args: ["l"]}];
+
+var TMP_rules = [{rel: 'beside', args: ['e', 'k']}];
+//
+// var TMP_rules = [{rel: 'beside', args:['e', {form: 'box', size: null, color: 'yellow'}  ]}];
+    var TMP_rules = [{rel: 'beside', args:['e', {form: 'pyramid', size: null, color: null}  ]}];
 
 var planner = require("./planner-core.js");
 

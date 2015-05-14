@@ -1,6 +1,13 @@
 /*jslint node: true, esnext: true */
 "use strict";
 
+Array.prototype.contains = function(e) {
+    return this.indexOf(e) !== -1;
+};
+
+Array.prototype.last = function() {
+    return this[this.length-1];
+};
 
 Array.prototype.max = function() {
   return Math.max.apply(null, this);
@@ -24,12 +31,12 @@ var SearchGraph = function (currentState, pddl) {
 // Forms: Bricks, planks, balls, pyramids, boxes and tables.
 // Colors: Red, black, blue, green, yellow, white.
 // Sizes: Large, small.
-SearchGraph.prototype.valid_substack = function(top, bottom) {
-    if (bottom == "floor") {
+SearchGraph.prototype.can_place = function(top, stack) {
+    if (stack.length === 0) {
         return true;
     }
     var objArm = this.objects[top];
-    var objTop = this.objects[bottom];
+    var objTop = this.objects[stack.last()];
     // Balls must be in boxes or on the floor, otherwise they roll away.
     // Balls cannot support anything.
     // Small objects cannot support large objects.
@@ -39,8 +46,8 @@ SearchGraph.prototype.valid_substack = function(top, bottom) {
     return !(objTop.form == "ball" ||
         (objArm.form == "ball"  && objTop.form != "box") ||
         (objArm.size == "large" && objTop.size == "small") ||
-        (objTop.form == "box" && ["pyramid", "plank", "box"].indexOf(objArm.form) !== -1 &&  objArm.size == objTop.size) ||
-        (objArm.form == "box" && objArm.size == "small" && objTop.size == "small" && ["brick", "pyramid"].indexOf(objTop.form) !== -1) ||
+        (objTop.form == "box" && ["pyramid", "plank", "box"].contains(objArm.form) &&  objArm.size == objTop.size) ||
+        (objArm.form == "box" && objArm.size == "small" && objTop.size == "small" && ["brick", "pyramid"].contains(objTop.form)) ||
         (objArm.form == "box" && objArm.size == "large" && objArm.form == "pyramid" && objArm.size == "large")
     );
 };
@@ -60,20 +67,16 @@ SearchGraph.prototype.neighbours = function* (state) {
 
     // Lower if possible
     if (state.holding !== null) {
-        if (state.stacks[state.arm].length === 0 ||
-            this.valid_substack(state.holding, state.stacks[state.arm].slice(-1)[0]) ) {
-            var new_stacks = state.stacks.slice(0);
-            new_stacks[state.arm] = new_stacks[state.arm].slice(0);
+        if (this.can_place(state.holding, state.stacks[state.arm])){
+            var new_stacks = state.stacks.slice();
+            new_stacks[state.arm] = new_stacks[state.arm].slice();
             new_stacks[state.arm].push(state.holding);
-
             yield {arm: state.arm, holding: null, stacks: new_stacks};
         }
-
-
     } else if (state.stacks[state.arm].length > 0) {
         // Pick up if possible
-        var new_stacks = state.stacks.slice(0);
-        new_stacks[state.arm] = new_stacks[state.arm].slice(0);
+        var new_stacks = state.stacks.slice();
+        new_stacks[state.arm] = new_stacks[state.arm].slice();
         yield {arm: state.arm, holding: new_stacks[state.arm].pop(), stacks: new_stacks};
     }
 };
@@ -83,48 +86,151 @@ SearchGraph.prototype.cost = function(from, to) {
     return 1;
 };
 
-SearchGraph.prototype.h = function(state) {
-    var estimate = 0;
-    var held_any = false;
-    for (var rule of this.pddl) {
-        if (state.holding == rule[0]) {
-            held_any = true;
-            estimate += 1; // put down
-        } else if (!object_ok(rule,state)) {
-            estimate += 3; // pick up, move at least 1, put down
-        }
-    }
-    // holding another object needs to be put away
-    estimate += ((!held_any) & (!!state.holding));
 
-    return estimate;
+
+// If a constraint is satisfied for a given object
+SearchGraph.prototype.binds = function(constr, obj) {
+    if (typeof constr == 'string') {
+        return constr == obj;
+    }
+    var desc = this.objects[obj];
+    return (constr.form  === null || constr.form  == desc.form) &&
+           (constr.size  === null || constr.size  == desc.size) &&
+           (constr.color === null || constr.color == desc.color);
 };
 
-
-function object_ok(rule, state) {
-    var i, j;
-    // Find position of object.
-    for (i=0; i < state.stacks.length; i++) {
-        j = state.stacks[i].indexOf(rule[0]);
+// If one PDDL rule is satisfied for a state
+SearchGraph.prototype.rule_satisfied = function(rule, state) {
+    // Find the object
+    var i = 0;
+    var j = -1;
+    for (var stack of state.stacks) {
+        j = stack.indexOf(rule.args[0]);
         if (j !== -1) {
             break;
         }
+        i++;
     }
-    // Either:
-    //  * Arm holding it
-    //  * object is on floor and should be
-    //  * return if object is ontop of object it should be ontop of
-    switch (j) {
-        case -1: return false;
-        case  0: return rule[1] == "floor";
-        default: return state.stacks[i][j-1] == rule[1];
-    }
-}
 
-SearchGraph.prototype.isgoal = function(state) {
-    return this.pddl.every(function (rule) {return object_ok(rule, state);});
+    switch (rule.rel) {
+        case "holding":
+            return state.holding == rule.args[0];
+
+        case "floor":
+            return j === 0;
+
+        case "ontop":
+            return j > 0 && this.binds(rule.args[1], stack[j-1]);
+
+        case "beside":
+            if (j === -1) {
+                return false;
+            }
+            var check = [];
+            if (i !== 0) {
+                check.push.apply(check, state.stacks[i-1]);
+            }
+            if (i !== state.stacks.length) {
+                check.push.apply(check, state.stacks[i+1]);
+            }
+            for (var obj of check) {
+                if (this.binds(rule.args[1], obj)) {
+                    return true;
+                }
+            }
+            return false;
+
+        case "left":
+            if (j === -1) {
+                return false;
+            }
+            for (i=i+1; i < state.stacks.length; i++) {
+                if (this.binds(rule.args[1], obj)) {
+                    return true;
+                }
+            }
+            return false;
+
+        case "right":
+            if (j === -1) {
+                return false;
+            }
+            for (i=i-1; i >= 0; i--) {
+                if (this.binds(rule.args[1], obj)) {
+                    return true;
+                }
+            }
+            return false;
+
+        default:
+            throw "ERRORRRR";
+    }
 
 };
+
+
+// Check if all PDDL goals are satisfied.
+SearchGraph.prototype.isgoal = function(state) {
+    for (var rule of this.pddl) {
+        if (!this.rule_satisfied(rule, state)) {
+            return false;
+        }
+    }
+    return true;
+};
+
+
+
+SearchGraph.prototype.closest_legal_putdown = function(obj, state) {
+    var dist = state.stacks.length;
+    var i = 0;
+    for (var stack of state.stacks) {
+        if (this.can_place(obj, state.stacks[i])) {
+            dist = Math.min(dist, Math.abs(i-state.arm));
+        }
+        i++;
+    }
+    return dist;
+};
+
+SearchGraph.prototype.h = function () {
+    return 0;
+};
+
+// SearchGraph.prototype.h = function(state) {
+//     var estimate = 0;
+//     return 0;
+//     for (var rule of this.pddl) {
+//         if (object_ok(rule, state)) {
+//             continue;
+//         }
+//         var obj = rule[0];
+//         var constraints = rule[1];
+
+//         // Find and pick up
+//         if (state.holding != obj) {
+//             var i=0, j;
+//             // Find position of object.
+//             for (var stack of state.stacks) {
+//                 j = stack.indexOf(obj);
+//                 if (j !== -1) {
+//                     break;
+//                 }
+//                 i++;
+//             }
+//             estimate += Math.abs(i-state.arm) + 1;
+//             estimate += (stack.length-1-j)*4;
+//             estimate += putdown_dist(i, )
+
+//         }
+
+//         // Put down somewhere
+
+
+//     }
+//     return estimate;
+// };
+
 
 
 SearchGraph.prototype.state_hash = function(state) {
@@ -132,12 +238,12 @@ SearchGraph.prototype.state_hash = function(state) {
 };
 
 SearchGraph.prototype.isPossible = function() {
-    for (var rule of this.pddl) {
-        // TODO: check that each object exists.?
-        if (!this.valid_substack(rule[0], rule[1])) {
-            return false;
-        }
-    }
+    // for (var rule of this.pddl) {
+    //     // TODO: check that each object exists.?
+    //     if (!this.valid_substack(rule[0], rule[1])) {
+    //         return false;
+    //     }
+    // }
     return true;
 };
 
@@ -164,7 +270,6 @@ function backlink(path) {
 var astar = require("./astar.js");
 
 module.exports = function(currentState, pddl) {
-    console.log(currentState);
     var g = new SearchGraph(currentState, pddl);
     if (!g.isPossible()) {
         return "impossible";

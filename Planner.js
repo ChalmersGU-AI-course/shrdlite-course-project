@@ -5,7 +5,9 @@ var Planner = {};
 
 Planner.plan = function plan(interpretations, currentState) {
     window.debugstate = currentState.objects;
-    var TMP_rules = [["e", "k"], ["l", "floor"]];
+    // var TMP_rules = [{rel: "ontop", args: ["e", "k"]},
+    //                 {rel: "ontop", args: ["l", "floor"]}];
+    var TMP_rules = [{rel: 'beside', args:['e', {form: 'pyramid', size: null, color: null}  ]}];
     var plans = [];
     for (var inter of interpretations) {
         inter.plan = window.plannerCore(currentState, TMP_rules);
@@ -19,6 +21,7 @@ Planner.plan = function plan(interpretations, currentState) {
         } else {
             plans.push(inter);
         }
+        break;
 
     }
     // interpretations.forEach(function (intprt) {
