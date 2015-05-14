@@ -1,56 +1,52 @@
-///<reference path="lib/astar-example/graph.ts"/>
+///<reference path="lib/astar-worldstate/graphnode.ts"/>
 ///<reference path="Interpreter.ts"/>
+
 class WorldStateNode implements GraphNode{
-	goalConditions : Interpreter.Result;
-	state : WorldState;
-	heuristic : number;
+    state : WorldState;
 
-	constructor(thisState : WorldState, goalState : Interpreter.Result){
-		this.state = thisState;
-		this.goalConditions = goalState;
-
-		//Setting heuristic value.
-		this.heuristic = 100000;
-		this.goalConditions.intp.forEach((intrprt) => {
-			var intrprtHeuristic = 0;
-
-			intrprt.forEach((goal) => {
-				var fstObj = goal.args[0];
-				var sndObj = goal.args[1];
-
-				switch (goal.rel) {
-					case "ontop":
-					case "inside":
-						intrprtHeuristic += this.onTopHeuristic(fstObj,sndObj);
-						break;
-					case "above":
-						intrprtHeuristic += this.aboveHeuristic(fstObj,sndObj);
-						break;
-					case "under":
-						intrprtHeuristic += this.aboveHeuristic(sndObj,fstObj);
-						break;
-					case "beside":
-						intrprtHeuristic += this.besideHeuristic(fstObj,sndObj,"either");
-						break;
-					case "left":
-						intrprtHeuristic += this.besideHeuristic(fstObj,sndObj,"left");
-						break;
-					case "right":
-						intrprtHeuristic += this.besideHeuristic(fstObj,sndObj,"right");
-						break;
-				}
-			});
-
-			this.heuristic = intrprtHeuristic < this.heuristic ? intrprtHeuristic : this.heuristic;
-		}); 
-		//end of Setting heuristic value.
-	}
-
-    toString() : string {
-        return this.state.toString() + this.heuristic.toString() + this.goalConditions.toString();
+    constructor(state : WorldState) {
+        this.state = state;
     }
 
-	onTopHeuristic(fstObj : string, sndObj : string) : number {
+    private heuristicTo(goalConditions : Literal[][]) {
+        var returnValue = 100000;
+        goalConditions.forEach((intrprt) => {
+            var intrprtHeuristic = 0;
+
+            intrprt.forEach((goal) => {
+                var fstObj = goal.args[0];
+                var sndObj = goal.args[1];
+
+                switch (goal.rel) {
+                    case "ontop":
+                    case "inside":
+                        intrprtHeuristic += this.onTopHeuristic(fstObj, sndObj);
+                        break;
+                    case "above":
+                        intrprtHeuristic += this.aboveHeuristic(fstObj, sndObj);
+                        break;
+                    case "under":
+                        intrprtHeuristic += this.aboveHeuristic(sndObj, fstObj);
+                        break;
+                    case "beside":
+                        intrprtHeuristic += this.besideHeuristic(fstObj, sndObj, "either");
+                        break;
+                    case "left":
+                        intrprtHeuristic += this.besideHeuristic(fstObj, sndObj, "left");
+                        break;
+                    case "right":
+                        intrprtHeuristic += this.besideHeuristic(fstObj, sndObj, "right");
+                        break;
+                }
+            });
+
+            returnValue = intrprtHeuristic < returnValue ? intrprtHeuristic : returnValue;
+        });
+
+        return returnValue;
+    }
+
+	private onTopHeuristic(fstObj : string, sndObj : string) : number {
 		var heuristic = 0;
 		var distance = this.state.getDistance(fstObj,sndObj);
 
@@ -65,7 +61,7 @@ class WorldStateNode implements GraphNode{
 		return heuristic;
 	}
 
-	aboveHeuristic(fstObj : string, sndObj : string) : number {
+    private aboveHeuristic(fstObj : string, sndObj : string) : number {
 		var heuristic = 0;
 
 		heuristic += this.state.objectsOnTop(fstObj);
@@ -74,7 +70,7 @@ class WorldStateNode implements GraphNode{
 		return heuristic;
 	}
 
-	besideHeuristic(fstObj : string, sndObj : string, side : string) : number {
+	private besideHeuristic(fstObj : string, sndObj : string, side : string) : number {
 		var heuristic = 0;
 		var chosenObj = this.state.objectsOnTop(fstObj) < this.state.objectsOnTop(sndObj) ? fstObj : sndObj;
 
@@ -90,75 +86,36 @@ class WorldStateNode implements GraphNode{
 		return heuristic;
 	}
 
-    // TODO: Needs to be implemented.
-    // Maybe stack1stack2stackN mod heuristic
-	getId() : number{
-
-        return -1;
-	}
-
-	isGoalSatisfied() : boolean {
-		this.goalConditions.intp.forEach((intrprt) => {
-			var result = true;
-
-			intrprt.forEach((goal) => {
-				var fstObj = goal.args[0];
-				var sndObj = goal.args[1];
-
-				switch (goal.rel) {
-					case "ontop":
-					case "inside":
-						result = result && this.state.isOnTopOf(fstObj,sndObj);
-						break;
-					case "above":
-						result = result && this.state.isAbove(fstObj,sndObj);
-						break;
-					case "under":
-						result = result && this.state.isAbove(sndObj,fstObj);
-						break;
-					case "beside":
-						result = result && this.state.isBeside(fstObj,sndObj);
-						break;
-					case "left":
-						result = result && this.state.isLeftOf(fstObj,sndObj);
-						break;
-					case "right":
-						result = result && this.state.isRightOf(fstObj,sndObj);
-						break;
-				}
-			});
-
-			if (result) {
-				return true;
-			}
+	isGoalSatisfied(goal : Goal<WorldStateNode>) : boolean {
+		goal.forEach((intrprt) => {
+			if(this.state.satisifiesConditions(intrprt)) {
+                return true;
+            }
 		});
-		return false;
+
+        return false;
 	}
 
-	equals(otherNode : GraphNode) : boolean{
-		if (otherNode instanceof WorldStateNode) {
-			return this.goalConditions === otherNode.goalConditions
-				&& this.heuristic == this.heuristic
-				&& this.state.equals(otherNode.state);
-		}
+	distanceTo(to : Goal<WorldStateNode>) : number {
+        return this.heuristicTo(to);
+    }
 
-		return false;
-	}
-
-    // TODO: Needs to be implemented.
-	distanceTo(to : GraphNode) : number {
-		return this.heuristic;
-	}
-
-	getNeighbors() : GraphNode[] {
+	getNeighbors() : WorldStateNode[] {
 		var neighbors : WorldStateNode[] = [];
 		var newStates = this.state.getNewStates();
 
 		newStates.forEach((state) => {
-			neighbors.push(new WorldStateNode(state,this.goalConditions));
+			neighbors.push(new WorldStateNode(state));
 		});
 
 		return neighbors;
 	}
 
+    equals(otherNode : GraphNode) : boolean{
+        if (otherNode instanceof WorldStateNode) {
+            return this.state.equals(otherNode.state);
+        }
+
+        return false;
+    }
 }

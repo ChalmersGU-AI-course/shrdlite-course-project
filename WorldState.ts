@@ -1,4 +1,5 @@
 /// <reference path="ObjectDefinition.ts" />
+/// <reference path="Interpreter.ts" />
 
 class WorldState {
     stacks: string[][];
@@ -42,6 +43,42 @@ class WorldState {
         }
 
         return true;
+    }
+
+    satisifiesConditions(conditions : Literal[]) : boolean {
+        var result = true;
+
+        conditions.forEach((goal) => {
+            var fstObj = goal.args[0];
+            var sndObj = goal.args[1];
+
+            switch (goal.rel) {
+                case "ontop":
+                case "inside":
+                    result = result && this.isOnTopOf(fstObj,sndObj);
+                    break;
+                case "above":
+                    result = result && this.isAbove(fstObj,sndObj);
+                    break;
+                case "under":
+                    result = result && this.isAbove(sndObj,fstObj);
+                    break;
+                case "beside":
+                    result = result && this.isBeside(fstObj,sndObj);
+                    break;
+                case "left":
+                    result = result && this.isLeftOf(fstObj,sndObj);
+                    break;
+                case "right":
+                    result = result && this.isRightOf(fstObj,sndObj);
+                    break;
+            }
+        });
+
+        if (result) {
+            return true;
+        }
+        return false;
     }
 
     // This can perhaps be made smarter. Instead of moving one step at a time, we could reason about how objects can be moved.
