@@ -39,55 +39,18 @@ module Planner {
     // private functions
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
-        var plan : string[] = [];
-
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
-            }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
-            }
-        }
-
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
-
-        if (pickstack < state.stacks.length-1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
-                plan.push("r");
-            }
-
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
-                plan.push("l");
-            }
-        }
-
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
+	
+	var 
 
         return plan;
     }
-interface State {
-    stacks: string[][];
-    holding: string;
-    armpos : number;
+
+    interface State {
+	stacks: string[][];
+	holding: string;
+	armpos : number;
     }
+
     function copyState(st : State) : State {
       var newStacks = [];
       st.stacks.forEach((stack) => {
@@ -96,8 +59,6 @@ interface State {
 
       return {stacks: newStacks, holding: st.holding, armpos:st.armpos };
     }
-
-
 
     function adjacent(state : State) : State[] {
         
@@ -132,9 +93,25 @@ interface State {
 
         return st;
     }
-    function isGoal(state : State) : Boolean {
-
-            return false;
-    }
     
+    function makeGoalFunc(intprt : Interpreter.Literal[][]) {
+	return (s : State) => {
+	    var flag : boolean = false;
+	    intprt.forEach((i) => {
+		if(compareState(s, i[0]) flag = true;
+	    });
+	    return flag;
+	};
+    }
+
+    // TODO Finish for all cases, only holding is working now.
+    function compareState(s : State, lit : Interpreter.Literal) : boolean {
+	var flag : boolean = false;
+	if(lit.rel === "holding") {
+	    flag = s.holding === lit.args[0];
+	}
+
+	if(lit.pol) return flag;
+	else return ! flag;
+    }
 }
