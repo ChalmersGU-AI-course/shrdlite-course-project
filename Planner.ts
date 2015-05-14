@@ -85,7 +85,6 @@ module Planner {
         return plan;
     }
 
-
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }

@@ -25,4 +25,4 @@ grammar.js: grammar.ne
 	nearleyc $< > $@
 
 astar:
-	tsc --out astarexample.js collections.ts graph.ts astar.ts astarexample.ts
+	tsc --out collections.ts graph.ts astar.ts 

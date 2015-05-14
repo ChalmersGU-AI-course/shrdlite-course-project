@@ -2,7 +2,13 @@
 /// <reference path="graph.ts" />
 module AStar {
 
-	export function AStarSearch<T>(graph: graph.Graph<T>, start: T, goal: T, h: (_h:T) => number) {
+	// start: startNode
+	// checkGoal: function checking if found the goal
+	// h: heuristic-function
+	// cost: function calculating the cost from a to b
+	// adj: function for finding adjacent nodes.
+	export function AStarSearch<T>(start: T, checkGoal: (_n:T) => boolean, h: (_h:T) => number,
+				       cost: (a:T,b:T) => number, adj: (n:T) => T[]) {
 	
 		var cameFrom = new collections.Dictionary<T, T>();
 		var costSoFar = new collections.Dictionary<T, number>();
@@ -18,17 +24,28 @@ module AStar {
 
 		while(!frontier.isEmpty()) {
 			var cur = frontier.dequeue();
-			if(cur === goal) {
-				var finalPath = recons_path<T>(cameFrom, goal);
-				console.log("[INFO] Done in " + counter  + " iterations, final path: " + finalPath);
-				return finalPath;
+//			if(cur === goal) {
+			if(checkGoal(cur)) {
+			//	var finalPath = recons_path<T>(cameFrom, goal);
+			//	console.log("[INFO] Done in " + counter  + " iterations, final path: " + finalPath);
+				return cur;
 			}
-			graph.nodeMap.getValue(cur).neighbors.forEach( (k,v) => {
+			var adjacentNodes : T[] = adj(cur);
+/*			graph.nodeMap.getValue(cur).neighbors.forEach( (k,v) => {
 				var newCost = costSoFar.getValue(k) + graph.cost(cur, k);
 				if(!costSoFar.containsKey(k) || newCost < costSoFar.getValue(k)) {
 					costSoFar.setValue(k, newCost);
 					frontier.enqueue(k);
 					cameFrom.setValue(k, cur);					
+				}
+			});
+*/
+			adjacentNodes.forEach((node) => {
+				var newCost : number = costSoFar.getValue(node) + cost(cur, node);
+				if(!costSoFar.containsKey(node) || newCost < costSoFar.getValue(node)) {
+					costSoFar.setValue(node, newCost);
+					frontier.enqueue(node);
+					cameFrom.setValue(node, cur);
 				}
 			});
 			console.log("[INFO] Iteration done, result: ");
