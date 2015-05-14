@@ -14,6 +14,9 @@ module Interpreter {
             interpretations.push(intprt);
         });
         if (interpretations.length) {
+            if(interpretations.length>1){
+                throw new Interpreter.Error("Found ambiguos interpretations");    
+            }
             return interpretations;
         } else {
             throw new Interpreter.Error("Found no interpretation");
@@ -47,15 +50,22 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        console.log(":::::::::::NEW INTERPRETATION:::::::::::::");
         var lit : Literal[][] = [[]];
         if(cmd.cmd === "move" || cmd.cmd === "put"){
-            var objs : string[] = interpretEntity(cmd.ent, state);
+            var objs : string[];
+            if(cmd.cmd === "put"){
+                if(state.holding === null){
+                    return lit;
+                    //TODO: Throw error?
+                }
+                objs = [state.holding];
+            } else{
+                objs = interpretEntity(cmd.ent, state);
+            }
             var locs : Sayings = interpretLocation(cmd.loc, state);
             var physics : {keys:string[] ;locs: {[s:string]: string[]}} = checkPhysics(true, objs, locs, state);
             objs = physics.keys;
-            //objs = checkPhysics(objs, locs, state);
-            
+
             //Only place we know which object to put where
             var it : number = 0;
             for(var i : number = 0; i < objs.length; i++){
@@ -64,7 +74,6 @@ module Interpreter {
                     //TODO:: AND between interpretations
                     lit[it++][0] = {pol: true, rel : locs.rel, args : [objs[i],physics.locs[objs[i]][j]]};    
                 }
-
             }
             //check if valid.
             return lit;    
@@ -72,8 +81,8 @@ module Interpreter {
         else{
             var objs : string[] = interpretEntity(cmd.ent, state);
             for(var i : number = 0; i < objs.length; i++){
-                    lit[i] = [];//lit[i][0] = {pol: false, rel : ontop, args : [objs[i],]};
-                    lit[i][0] = {pol: true, rel : "holding", args : [objs[i]]};   
+                lit[i] = [];
+                lit[i][0] = {pol: true, rel : "holding", args : [objs[i]]};   
             }
             return lit;
         }
@@ -84,8 +93,6 @@ module Interpreter {
         //TODO: quant == all, any.
         var objs : string[] = interpretObject(ent.obj, state);
         //TODO Check quantifier
-       // console.log("quantity"+": "+ ent.quantity);
-        
         return objs;
     }
 
@@ -105,11 +112,9 @@ module Interpreter {
             if(obj.form === "floor"){
                 return ["floor"];
             }
-            //console.log("prefilter:"+objsindexes.length);
             if(obj.size !== null ){
                 objsindexes = objsindexes.filter(e=> state.objects[e].size === obj.size);
             }
-            //console.log("afterfilersize: "+objsindexes.length);
             if(obj.color !== null){
                 objsindexes = objsindexes.filter(e=> state.objects[e].color === obj.color);
             }
@@ -118,8 +123,6 @@ module Interpreter {
             } else if (obj.size === null && obj.color === null) {
                 objsindexes.push("floor");
             }
-            //console.log("afterfilerform: "+objsindexes.length);
-            //console.log("afterfilercolor: "+objsindexes.length);
             return objsindexes;
         }
     }
@@ -131,11 +134,6 @@ module Interpreter {
 
 
     function checkPhysics(futureState: boolean, objs : string[], locs : Sayings, state : WorldState) : {keys:string[] ;locs: {[s:string]: string[]}} {
-        //TODO: Physical limitations
-            //TODO: relation to self.
-            //TODO: MAYBE handle ball in box or floor.
-            //TODO: handle box's contents size.
-        //WÄRVIK: Handle physics where intepretEntity is called
         var result : {keys:string[] ;locs: {[s:string]: string[]}} = {"keys" : [] , "locs": {}}; 
         for(var i : number = 0; i < objs.length;i++){
             var sayingsI : string[] = [];
@@ -145,11 +143,7 @@ module Interpreter {
                 if(locs.objs[j]===objs[i]){
                     continue;
                 }
-
                 if(locs.rel === "ontop"){
-                    if(!futureState){
-
-                    }
                    if(locs.objs[j] === "floor"){
                         works = futureState || state.stacks.some(e => e.indexOf(objs[i]) === 0);
                         
@@ -157,14 +151,11 @@ module Interpreter {
                         works = futureState ||state.stacks.some(e => isOntop(e, locs.objs[j],objs[i]));
                         works = works && formCorrectlyOnTop(locs.objs[j],objs[i], state);
                         works = works && smallOnTopOfLarge(locs.objs[j],objs[i], state);
-                        
                     }   
                 } else if(locs.rel === "inside"){
                     if(locs.objs[j] !== "floor"){
                         works = futureState ||state.stacks.some(e => isOntop(e, locs.objs[j],objs[i]));
-                        console.log("works1: "+works+ "\tloc obj: "+locs.objs[j]+ "\tobj: "+objs[i]);
                         works = works && formCorrectlyInside(locs.objs[j],objs[i], state);
-                        console.log("works2: "+works+ "\tloc obj: "+locs.objs[j]+ "\tobj: "+objs[i]);
                     }  
                 } else if(locs.rel === "beside"){
                     if(locs.objs[j] !== "floor"){
@@ -195,25 +186,14 @@ module Interpreter {
                 } 
                 if(works){
                     sayingsI.push(locs.objs[j]);
-                    console.log("sayingsI: "+sayingsI.length+ "\tloc obj: "+locs.objs[j]);
                 }
             }
             if(sayingsI.length>0){
                 result.keys.push(objs[i]);
                 result.locs[objs[i]] = sayingsI;
-                console.log("keys: "+result.keys.length);
             }
         }
-
-            //if rel === ontop index obj == index loc+1 && same column
-            //if rel === above index of obj > loc && same column
-            //if rel === nextto     not same column. obj.column == loc.column -(or+) 1
-               
-            //Todo :: check loc
-
-        //Have it like this or make multiple functions as in relational check?
         return result;
-
     }
 
     function getindexOfObject(stacks : string[][], obj : string) : number[] {
@@ -272,7 +252,6 @@ module Interpreter {
                 return !((locForm === "brick" || locForm === "pyramid") && locSize === "small");
             }
             return !(locForm === "pyramid");
-
         }
         return notAboveBall(locationObject,state);
 
@@ -280,7 +259,6 @@ module Interpreter {
 
     function notAboveBall(bottomObject : string, state : WorldState) :boolean {
        return bottomObject === "floor" || state.objects[bottomObject].form !== "ball";
-
     }
 
 
@@ -302,13 +280,11 @@ module Interpreter {
     }
 
     function isOntop(stack: string[], bottom : string, top : string) : boolean{
-        //if not in stack indexOf returns -1.
         var bottomIndex = stack.indexOf(bottom);
         var topIndex = stack.indexOf(top);
         return bottomIndex >=0 && topIndex >=0 && topIndex - bottomIndex === 1;
     }
     function isAbove(stack: string[], bottom : string, top : string) : boolean{
-        //if not in stack indexOf returns -1.
         var bottomIndex = stack.indexOf(bottom);
         var topIndex = stack.indexOf(top);
         return bottomIndex >=0 && topIndex >=0 && topIndex - bottomIndex > 0;
