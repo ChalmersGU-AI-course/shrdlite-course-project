@@ -569,11 +569,14 @@ module Interpreter {
        */
       floorLiteral(ids: string[]): Literal[][] {
         var refs = this.worldObjects();
-        return ids.map((id: string) => {
-          return refs.map((ref: string) => {
+        var lits = ids.map((id: string) => {
+          var litArr = refs.map((ref: string) => {
             return {pol: false, rel: "ontop", args: [id, ref]};
           });
+          litArr.push({pol: false, rel: "holding", args: [id]});
+          return litArr;
         });
+        return lits;
       }
 
       /*
@@ -682,7 +685,6 @@ module Interpreter {
         return lits.map((lit) => literalToString(lit)).join(" & ");
       }).join(" | ");
     }
-
 
 }
 
