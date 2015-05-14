@@ -22,7 +22,8 @@ Astar = (start, goal, heuristicFunction, nextMoves, getNextState,
   while openSet.length > 0
     current = openSet.dequeue()
     if satisfaction(current.state, goal)
-      console.log "Number of states seacrhed in Astar: " + closedSet.length
+      console.log "Number of states searched in Astar: " + closedSet.length
+      console.log "Length of solution: " + current.moves.length
       return current.moves
     closedSet.push(current.state)
     listOfPossibleMoves = nextMoves(current.state)
