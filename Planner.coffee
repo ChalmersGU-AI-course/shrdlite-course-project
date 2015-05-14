@@ -90,15 +90,17 @@ heuristicFunction = (state, goalRep) ->
               # If they are in different stacks then add for both elements
               else # Add 3 for all items on top of e1 and e2
                 if e1 isnt state.holding
-                  s1 = state.stacks[si1]
-                  sum += 3*(s1.length - s1.indexOf(e1) + 1)
+                  stack = state.stacks[si1]
+                  sum += 3*(stack.length - stack.indexOf(e1) + 1)
                 if e2 isnt state.holding
-                  s2 = state.stacks[si2]
-                  sum += 3*(s2.length - s2.indexOf(e2) + 1)
+                  stack = state.stacks[si2]
+                  sum += 3*(stack.length - stack.indexOf(e2) + 1)
 
-                sum += 2 # add pick and drop cost for the item to move
+                sum += 1 # add drop cost for the item to move
+                if e1 isnt state.holding # add pick up cost for the item
+                  sum += 1
 
-                # Also add for the difference in columns between them
+                # Also add for the difference in columns between the items
                 pos1 = if si1 is -1 then state.arm else si1
                 pos2 = if si2 is -1 then state.arm else si2
                 sum += Math.abs(pos1 - pos2)
