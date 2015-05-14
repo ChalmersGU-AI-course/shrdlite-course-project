@@ -21,7 +21,7 @@ module Planner {
 
 
 
-    function adjecent(state : State) : State[] {
+    function adjacent(state : State) : State[] {
         
         var st : State[] = [];
         // left
@@ -32,7 +32,7 @@ module Planner {
             st.push(newState);
         }   
         //right
-        if(state.armpos < state.stacks.length()) {
+        if(state.armpos < state.stacks.length) {
             var newState = copyState(state);
             newState.armpos += 1;
             st.push(newState);
@@ -47,9 +47,9 @@ module Planner {
         }
         //pickup
         if(!state.holding) {
-            var newSate = copyState(state);
-            newstate.holding = state.stacks[state.armpos].pop();
-            st.push(newstate)
+            var newState = copyState(state);
+            newState.holding = state.stacks[state.armpos].pop();
+            st.push(newState)
         }
 
         return st;

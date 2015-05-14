@@ -31,8 +31,8 @@ module Interpreter {
     	intp:Literal[][]
     ;}
     export interface Literal {
-    	pol : boolean; r
-    	el:string; 
+    	pol : boolean; 
+	rel:string; 
     	args:string[];}
 
     export function interpretationToString(res : Result) : string {
