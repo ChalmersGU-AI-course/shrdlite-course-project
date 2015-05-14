@@ -239,8 +239,10 @@ module Interpreter {
     function smallOverLarge(bottomObject : string, topObject : string, state : WorldState) : boolean {
         var topSize : string  = state.objects[topObject].size;
 	var bottomSize : string = state.objects[bottomObject].size;
-        return true
-
+	if(bottomSize === "large") {
+            return topSize === "large"
+	}
+        return topSize === "small";
     }
 
     function correctSupport(bottomObject : string, topObject : string, state: WorldState) : boolean {
