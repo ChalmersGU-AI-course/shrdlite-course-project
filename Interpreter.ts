@@ -327,24 +327,29 @@ module Interpreter {
               found = true;                       // found: stop searching...
               switch(rel) {
                 case "leftof":
-                  target = stacks[col-1][row];    // TODO: anywhere left of
+                  // target = stacks[col-1][row];
+                  target = this.findToLeft(stacks, obj, col, row)
                   break;
                 case "rightof":
-                  target = stacks[col+1][row];    // TODO: anywhere right of
+                  // target = stacks[col+1][row];
+                  target = this.findToRight(stacks, obj, col, row)
                   break;
                 case "beside":                    // check that only one case is possible
-                  var left = stacks[col-1][row];
-                  var right = stacks[col+1][row];
+                  // var left = stacks[col-1][row];
+                  // var right = stacks[col+1][row];
+                  var left = this.findToLeft(stacks, obj, col, row)
+                  var right = this.findToRight(stacks, obj, col, row)
                   if(left && right)
                     throw new Interpreter.Error("findTarget: semantic error (There are too many targets)");
                   if(left) target = left;
                   if(right) target = right;
                   break;
-                case "above":                     // TODO: above and ontop not considered synonyms
+                case "above":
+                  target = this.findAbove(stacks, obj, col, row)
+                  break;
                 case "ontop":
-                  if(onFloor) {
-                    if(this.match(obj, ref))
-                      target = ref
+                  if(onFloor) {  // special: take the x ontop of the floor
+                    target = ref
                   } else {
                     var r = this.findObject(ref);
                     if(r.form === "box")          // objects cannot be "ontop" of boxes (Physical law)
@@ -359,13 +364,52 @@ module Interpreter {
                   target = stacks[col][row+1];
                   break;
                 case "under":
-                  target = stacks[col][row-1];     // TODO: could be anywhere under
+                  // target = stacks[col][row-1];
+                  target = this.findUnder(stacks, obj, col, row)
                   break;
               }
             }
           }
         }
         return (this.match(obj, target) ? target : null);
+      }
+
+      findToLeft(stacks: string[][], obj: Parser.Object, col: number, row: number): string {
+        return this.find(stacks, obj, col-1, -1, 0, 1);
+      }
+
+      findToRight(stacks: string[][], obj: Parser.Object, col: number, row: number): string {
+        return this.find(stacks, obj, col+1, 1, 0, 1);
+      }
+
+      findAbove(stacks: string[][], obj: Parser.Object, col: number, row: number): string {
+        return this.find(stacks, obj, col, 0, row+1, 1);
+      }
+
+      findUnder(stacks: string[][], obj: Parser.Object, col: number, row: number): string {
+        return this.find(stacks, obj, col, 0, row-1, -1);
+      }
+
+      /*
+       * Move through stacks from col and row position in col direction and row
+       * direction, and look for object
+       */
+      find(stacks: string[][], obj: Parser.Object, col: number, cdir: number, row: number, rdir: number): string {
+        var ref: string;
+        var found = false;
+        var c = col+cdir;
+        while((c < stacks.length && c >= 0) && !found) { // columns
+          c += cdir;
+          for(var r = row; (r < stacks[c].length && r >= 0) && !found; r += rdir) { // rows
+            if(this.match(obj, stacks[c][r])) {
+              found = true;
+              ref = stacks[c][r];
+            }
+          }
+          if(c + cdir === c) // only look up or down (no other column)
+            break;
+        }
+        return ref;
       }
 
       //////////////////////////////////////////////////////////////////////
