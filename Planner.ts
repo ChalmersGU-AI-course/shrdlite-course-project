@@ -102,8 +102,14 @@ module Planner {
             return -1;
         }
 
+        if(a.isFloor){
+            throw new Planner.Error("heightDiff: Floor cannot be above anything... "+
+                                    "Should never happen.");
+        }
+
         if(b.isFloor){
-            return a.heightNo;
+            // Dont touch this line!!! Becomes string concatenation otherwise...
+            return (+a.heightNo) + 1;
         }
 
         if(a.stackNo == b.stackNo){

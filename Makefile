@@ -37,4 +37,5 @@ medium: shrdlite-offline.js
 	node shrdlite-offline.js medium "put the green brick below the yellow pyramid"
 
 floor: shrdlite-offline.js
-	node shrdlite-offline.js medium "put the green brick on the floor"
+	node shrdlite-offline.js medium "put the red table on the floor"
+	# node shrdlite-offline.js medium "put the green brick above the floor"
