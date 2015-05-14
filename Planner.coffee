@@ -36,14 +36,14 @@ heuristicFunction = (state, goalRep) ->
   sum = 0
   for goal in goalRep
     if goal.rel is "holding"
-      item = goal.args[0]
+      item = goal.args[0][0]
       for stack,i in state.stacks
         # If the item is in a stack add distance to it
         if item in stack
           sum += Math.abs( state.arm - i )# + 1
     else # All other relations has two arguments
-      e1 = goal.args[0]
-      e2 = goal.args[1]
+      e1 = goal.args[0][0]
+      e2 = goal.args[1][0]
       si1 = -1 # The stackindex of e1
       si2 = -1 # The stackindex of e2
       for stack,i in state.stacks
@@ -272,38 +272,75 @@ aboveCheck = (state, above, below) ->
         result = true
   return result
 
+besideCheck = (state, a, b) ->
+  return leftOfCheck(state,a,b) or leftOfCheck(state,b,a)
+
+# For each element in itemList1, the relation is evaluated for
+# all elements in itemList2. 
+#
+# The first quantifier describes the items of the first list.
+# The second quantifier describes the items of the second list
+# in relation to the items of the first list.
+#
+# examples:
+# 1) foo(state, "all", [all objects], onTopCheck, "the", ["floor"])
+#     all objects are on the floor.
+# 2) foo(state, "any", [all balls], leftOfCheck, "any", [all boxes]
+#     any one ball is to the left of any one box.
+# 3) foo(state, "all", [Small Green Table], onTopCheck, [Big Red Box])
+#     the Small Green Table is inside the Big Red Box
+# 4) foo(state, "all", [all balls], inside, "any", [all boxes]
+#     any one ball is to the left of any one box.
+checkRelation = (state, quantifier1, itemList1, relation, quantifier2, itemList2) ->
+  result = if quantifier1 is "any" then false else true
+  for item1 in itemList1
+    # quant
+    itemResult = if quantifier2 is "any" then false else true
+    for item2 in itemList2
+      if quantifier2 is "any"
+        itemResult = itemResult or relation(state, item1, item2)
+      if quantifier2 is "all"
+        itemResult = itemResult and relation(state, item1, item2) 
+    if quantifier1 is "any"
+      result = result or itemResult
+    if quantifier1 is "all"
+      result = result and itemResult
+  return result
+
 satisfaction = (state, goalRep) ->
   result = true
   for goal in goalRep
     p = goal.pol
+    q1 = "all"#goal.quantifier1
+    q2 = "all"#goal.quantifier2
     c = false
     switch goal.rel
       when "holding"
-        c = (goal.args[0] is state.holding)
+        c = (goal.args[0][0] is state.holding)
       when "ontop", "inside"
-        a = goal.args[0]
-        b = goal.args[1]
-        c = onTopCheck(state,a,b)
+        A = goal.args[0]
+        B = goal.args[1]
+        c = checkRelation(state, q1, A, onTopCheck, q2, B)
       when "leftof"
-        a = goal.args[0]
-        b = goal.args[1]
-        c = leftOfCheck(state,a,b)
+        A = goal.args[0]
+        B = goal.args[1]
+        c = checkRelation(state, q1, A, leftOfCheck, q2, B)
       when "rightof"
-        a = goal.args[0]
-        b = goal.args[1]
-        c = leftOfCheck(state,b,a)
+        A = goal.args[0]
+        B = goal.args[1]
+        c = checkRelation(state, q1, B, leftOfCheck, q2, A)
       when "beside"
-        a = goal.args[0]
-        b = goal.args[1]
-        c = leftOfCheck(state,a,b) or leftOfCheck(state,b,a)
+        A = goal.args[0]
+        B = goal.args[1]
+        c = checkRelation(state, q1, A, besideCheck, q2, B)
       when "above"
-        a = goal.args[0]
-        b = goal.args[1]
-        c = aboveCheck(state,a,b)
+        A = goal.args[0]
+        B = goal.args[1]
+        c = checkRelation(state, q1, A, aboveCheck, q2, B)
       when "under"
-        a = goal.args[0]
-        b = goal.args[1]
-        c = aboveCheck(state,b,a)
+        A = goal.args[0]
+        B = goal.args[1]
+        c = checkRelation(state, q1, A, aboveCheck, q2, B)
     result = result and polarity(p, c)
 
   return result
