@@ -5,7 +5,59 @@ module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
+    interface State {
+    stacks: string[][];
+    holding: string;
+    armpos : number;
+    }
+    function copyState(st : State) : State {
+      var newStacks = [];
+      st.stacks.forEach((stack) => {
+        newStacks.push(stack.slice(0));
+      });
 
+      return {stacks: newStacks, holding: st.holding, armpos:st.armpos };
+    }
+
+
+
+    function adjecent(state : State) : State[] {
+        
+        var st : State[] = [];
+        // left
+
+        if(state.armpos > 0) {
+            var newState = copyState(state);
+            newState.armpos -= 1;
+            st.push(newState);
+        }   
+        //right
+        if(state.armpos < state.stacks.length()) {
+            var newState = copyState(state);
+            newState.armpos += 1;
+            st.push(newState);
+        }
+
+        //drop
+        if(state.holding) {
+            var newState = copyState(state);
+            state.stacks[state.armpos].push(state.holding)
+            newState.holding = null;
+            st.push(newState)
+        }
+        //pickup
+        if(!state.holding) {
+            var newSate = copyState(state);
+            newstate.holding = state.stacks[state.armpos].pop();
+            st.push(newstate)
+        }
+
+        return st;
+    }
+    function isGoal(state : State) : Boolean {
+
+            return false;
+    }
     export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
         var plans : Result[] = [];
         interpretations.forEach((intprt) => {

@@ -27,8 +27,13 @@ module Interpreter {
         }
     }
 
-    export interface Result extends Parser.Result {intp:Literal[][];}
-    export interface Literal {pol:boolean; rel:string; args:string[];}
+    export interface Result extends Parser.Result {
+    	intp:Literal[][]
+    ;}
+    export interface Literal {
+    	pol : boolean; r
+    	el:string; 
+    	args:string[];}
 
     export function interpretationToString(res : Result) : string {
         return res.intp.map((lits) => {
