@@ -41,9 +41,9 @@ module Heuristics {
     }
 
     export function computeObjectPosition(s : State, objA : String) : ObjectPosition{
-        var stackA = -1;
-        var heightA = -1;
-        var aboveA = -1;
+        var stackA  : number = -1;
+        var heightA : number = -1;
+        var aboveA  : number = -1;
 
         if(objA != "floor"){
             for(var stackNo in s.stacks){

@@ -9,12 +9,14 @@ module Planner {
     // exported functions, classes and interfaces/types
 
     export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
+
         var plans : Result[] = [];
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
             plan.plan = planInterpretation(plan.intp, currentState);
             plans.push(plan);
         });
+
         if (plans.length) {
             return plans;
         } else {
@@ -100,8 +102,14 @@ module Planner {
             return -1;
         }
 
+        if(a.isFloor){
+            throw new Planner.Error("heightDiff: Floor cannot be above anything... "+
+                                    "Should never happen.");
+        }
+
         if(b.isFloor){
-            return a.heightNo;
+            // Dont touch this line!!! Becomes string concatenation otherwise...
+            return (+a.heightNo) + 1;
         }
 
         if(a.stackNo == b.stackNo){
