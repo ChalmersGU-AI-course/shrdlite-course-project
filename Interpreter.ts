@@ -210,7 +210,7 @@ module Interpreter {
         } else if (below.form == "ball") {
             return false;
         } else if (above.form == "ball"){
-            if(below.form == "floor" || below.form == "box"){
+            if(below.form == "floor" || (below.form == "box" && below.size <= above.size)){
                 return true;
             }else{
                 return false;
