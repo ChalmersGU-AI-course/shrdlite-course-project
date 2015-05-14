@@ -1,54 +1,29 @@
 class Interpreter
 
     Interpreter.interpret = (parses, currentState) ->
-        console.log "-------Interpreter-------"
-        console.log parses
-        console.log parses[0].prs.ent
-        console.log parses[0].prs.loc
-        console.log "---"
-        console.log parses[1].prs.ent
-        console.log parses[1].prs.loc
-        console.log "-------End-------"
         parseInterpList = []
         for parse in parses
-            console.log "-----parse----"
             matchingObjEntities = getMatchingEntities(parse.prs.ent, currentState)
-            matchingLocEntities = getMatchingEntities(parse.prs.loc.ent, currentState)
-            console.log matchingObjEntities
-            console.log matchingLocEntities
-            for obj in matchingObjEntities
-                for locObj in matchingLocEntities
+            if parse.prs.loc?
+                matchingLocEntities = getMatchingEntities(parse.prs.loc.ent, currentState)
+                for obj in matchingObjEntities
+                    for locObj in matchingLocEntities
+                        intrp = {
+                            input: parse.input,
+                            prs: parse.prs,
+                            intp: [{ pol: true, rel: parse.prs.loc.rel, args: [obj, locObj]}]
+                        }
+                        parseInterpList.push(intrp)
+            else
+                for obj in matchingObjEntities
                     intrp = {
-                        input: parse.input,
-                        prs: parse.prs,
-                        intp: [{ pol: true, rel: parse.prs.loc.rel, args: [obj, locObj]}]
-                    }
-                    parseInterpList.push(intrp)
-            console.log "----endparse-----"
-        console.log parseInterpList
+                            input: parse.input,
+                            prs: parse.prs,
+                            intp: [{ pol: true, rel: "holding", args: [obj]}]
+                        }
+                    parseInterpList.push(intrp)    
         parseInterpList
-        ###
-            intrp = { 
-                input: 'move the bug to the bug catcher',
-                prs: {
-                    cmd: 'move',
-                    ent: { 
-                        quant: 'the',
-                        obj: [Object]
-                    },
-                    loc: { 
-                        rel: 'ontop',
-                        ent: [Object]
-                    }
-                },
-                intp: [ { pol: true, rel: 'ontop', args: [ 'm', 'floor' ] },
-                        { pol: true, rel: 'holding', args: [ 'e' ] } ]
-                }
-            interpretations = []
-            interpretations.push intrp
-            interpretations.push intrp
-            interpretations
-        ###
+
     getMatchingEntities = (entity, currentState) ->
         if entity.obj.loc?
             retObjs = []
@@ -66,10 +41,6 @@ class Interpreter
                     when "beside" then relFun = ((s, a, b) -> leftOfCheck(s, a, b) or leftOfCheck(s, b, a))
                 for obj in objs
                     for locObj in objsOnLoc
-                        console.log "---pair----"
-                        console.log obj
-                        console.log locObj
-                        console.log "---endair----"
                         if relFun(currentState, obj, locObj)
                             retObjs.push(obj)
             retObjs
@@ -84,7 +55,7 @@ class Interpreter
             for k,stateObj of currentState.objects
                 if object.size is null or object.size is stateObj.size
                     if object.color is null or object.color is stateObj.color
-                        if object.form is null or object.form is stateObj.form
+                        if object.form is null or object.form is "anyform" or object.form is stateObj.form
                             objs.push(k)
         objs
 
