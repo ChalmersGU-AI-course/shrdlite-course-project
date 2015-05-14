@@ -51,7 +51,9 @@ module Interpreter {
         var lit : Literal[][] = [[]];
         if(cmd.cmd === "move" || cmd.cmd === "put"){
             var objs : string[] = interpretEntity(cmd.ent, state);
-            var locs : Sayings = interpretLocation(cmd.loc, state);
+	    var locs : Sayings = interpretLocation(cmd.loc, state);
+	    //TODO:: CHECK PHYSICS
+	    //Only place we know which object to put where
             var it : number = 0;
             for(var i : number = 0; i < objs.length; i++){
                 for(var j : number= 0; j< locs.objs.length; j++){
@@ -105,7 +107,7 @@ module Interpreter {
         if(indexLoc>=0 && indexobj>=0 ){
             return indexobj - indexLoc;
         } 
-        console.log("if this happens... everything is broken. :(");
+        throw("if this happens... everything is broken. :(");
         return 0;
     }
 
@@ -129,6 +131,7 @@ module Interpreter {
             //TODO: relation to self.
             //TODO: MAYBE handle ball in box or floor.
             //TODO: handle box's contents size.
+	    //WÄRVIK: Handle physics where intepretEntity is called
                 for(var i : number = 0; i < objs.length;i++){
                     var works : boolean = false;
                     for(var j : number = 0; j < locs.objs.length && !works; j++){
@@ -146,8 +149,6 @@ module Interpreter {
                             if(locs.objs[j] !== "floor"){
                                 works = Math.abs(checkHorizontalDistance(state.stacks ,objs[i], locs.objs[j])) == 1
                             }
-                            //todo all other rels.
-                            //TODO: remove beside floor
                         } else if(locs.rel === "rightof"){
                             if(locs.objs[j] !== "floor"){
                                 works = checkHorizontalDistance(state.stacks ,objs[i], locs.objs[j]) >= 1
@@ -209,10 +210,29 @@ module Interpreter {
         return locs;
     }
 
+    function checkPhysics(loc : String, object : String, state : WorldState) {
+        //Have it like this or make multiple functions as in relational check?
 
+    }
+
+    function insideBox(inside : Boolean, locationObject : String, state : WorldState) : Boolean {
+    	if(inside) {
+            return state.objects[locationObject] === "box";	
+	}
+        return state.objects[locationObject] !== "box"; 
+    }
+
+    //Balls must be in boxes or on the floor
+    //Object are "inside" boxes but "ontop" - need change?
+    //Balls cannot support anything
+    //small objects cannot support large objects
+    //boxes cannot contain pyramids, planks, or boxes of same size
+    //Small boxes cannot be supportet by small bricks or pyramids
+    //Large boxes cannot be supported by large pyramids
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
+	
     }
 
 }
