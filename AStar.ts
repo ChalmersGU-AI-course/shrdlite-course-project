@@ -126,18 +126,19 @@ module AStar {
 	
 	export function checkGoal(worldLits : Interpreter.Literal[][], goalLits : Interpreter.Literal[][]) : boolean{
 		for (var j = 0 ; j < goalLits.length;  j++) {
-			var goalFound : boolean = false;
+			//var goalFound : boolean = false;
 			for (var i = 0 ; i < worldLits.length;  i++) {
 				if(worldLits[i][0].pol == goalLits[j][0].pol && worldLits[i][0].rel == goalLits[j][0].rel && worldLits[i][0].args[0] == goalLits[j][0].args[0] && worldLits[i][0].args[1] == goalLits[j][0].args[1] ){
-					goalFound = true;
+					return true;
+					//goalFound = false;
 				}
 			}
-			if(!goalFound){
-				return false;
-			}
+			//if(!goalFound){
+			//	return false;
+			//}
 		}
 		
-		return true;
+		return false;
 	}
 	
 //		function checkGoal(worldLits : Interpreter.Literal[][], goalLits : Interpreter.Literal[][]) : boolean{
@@ -174,6 +175,10 @@ module AStar {
 					a[0]="Number of visited nodes " +haveSeen.size() + " ";
 			//		a[1]="<br>" + a[1];				
 				return a;
+			}
+			
+			if(haveSeen.size() == 10000){
+				return ["10000 nodes searched and no solution was found"];
 			}
 	
 			haveSeen.add(current);

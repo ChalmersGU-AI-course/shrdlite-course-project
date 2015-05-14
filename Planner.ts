@@ -11,11 +11,13 @@ module Planner {
         var plans : Result[] = [];
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
-            plan.plan = planInterpretation(plan.intp, currentState);
-            plans.push(plan);
-            console.log ("PPDLSTATE-----------------------",worldToPPDL(currentState));
+            console.log ("worldToPPDL-----------------------",worldToPPDL(currentState));
             console.log ("Worldstate-----------------------",currentState);
             console.log ("parentState-----------------------",createMoves(currentState));
+            
+            plan.plan = planInterpretation(plan.intp, currentState);
+            plans.push(plan);
+
         });
         if (plans.length) {
             return plans;
@@ -43,10 +45,6 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
     
-    
-    //if(form == "box"){
-	//				var b : Interpreter.Literal = {pol : true, rel : "inside", args : [state.stacks[i][j], goal[j].name ]};
-	//			}
 	
 	//Adds nearby child nodes to current node
 	export function addNearbyNodes(current : AStar.Nod){
@@ -101,11 +99,11 @@ module Planner {
 				pState.holding = pState.stacks[parent.arm].pop();
 			}
 			// can i drop here check if legal to move
-			if(parent.holding == null || parent.stacks[parent.arm].length != 0 && !(Interpreter.checkValidPos (parent.objects[parent.holding],parent.objects[dState.stacks[parent.arm][dState.stacks[parent.arm].length-1] ]))){
+			if(parent.holding == null || parent.stacks[parent.arm].length != 0 && !(Interpreter.checkValidPos (parent.objects[parent.holding],parent.objects[parent.stacks[parent.arm][dState.stacks[parent.arm].length-1] ]))){
 				dState = null;
 			}else{
-				//dState.holding = dState.stacks[parent.arm].pop();
-				dState.stacks[parent.arm][dState.stacks[parent.arm].length]=dState.holding
+				dState.stacks[parent.arm][dState.stacks[parent.arm].length]=dState.holding;
+				//dState.stacks[parent.arm].push(dState.holding);
 				dState.holding = null;
 			}
 			ans.push(rState, lState, pState, dState);
@@ -128,106 +126,6 @@ module Planner {
 	} 
 	
 	
-//	function createMoves(parent:Interpreter.Literal[][]):[Interpreter.Literal[][]]{
-//			
-//			var ans:[Interpreter.Literal[][]]=[[]];
-//			
-//			var l1=copyParent(parent);
-//			var l2=copyParent(parent);
-//			var l3=copyParent(parent);
-//			var l4=copyParent(parent);
-//			
-//			// arm position index as number
-//			var arm:number = +parent[parent.length-2][0].args[0];
-//			var armMaxPos : number = +parent[parent.length-2][0].args[1];
-//			// is arm holding bool 
-//			var holding:boolean = parent[parent.length-1][0].pol;
-//			
-//			//for(var x =0; x<parent.length; x++ ){
-//				if(holding){
-//					if(arm == 0){
-//					//go right
-//					 l1[l1.length-2][0].args[0]=(""+arm+1);	
-//					//drop
-//					l1[l1.length-1][0].pol = false;
-//					l1[0][]
-//					}else if(arm == armMaxPos){
-//						
-//					}
-//				//	else
-//					
-//					//
-//					//
-//					//
-//				}
-//				else if(!holding){
-//					//
-//					//
-//					//
-//				} 
-//			//}
-//			
-//			return;
-//		}
-
-
-
-//				if(parent.holding != null){
-//					if(parent.arm == 0){
-//						//go right
-//						 rState.arm = 1;	
-//						//drop
-//						dState.stacks[0][dState.stacks[0].length] = dState.holding;
-//						dState.holding = null;
-//						ans.push(rState,null,null,dState);
-//						
-//					}else if(parent.arm == parent.stacks.length){
-//	 					//go left
-//						 lState.arm = parent.arm -1;	
-//						//drop
-//						dState.stacks[parent.stacks.length-1][dState.stacks[parent.stacks.length].length-1] = dState.holding;
-//						dState.holding = null;
-//						ans.push(null,lState,null,dState);
-//					}else{
-//						//go right 
-//						 rState.arm = parent.arm +1;
-//						//go left
-//						lState.arm = parent.arm -1;	
-//						//drop
-//						dState.stacks[parent.arm][dState.stacks[parent.arm].length -1] = dState.holding;
-//						dState.holding = null;
-//						ans.push(rState,lState,null,dState);
-//					}
-//					
-//				}else{
-//					if(parent.arm == 0){
-//						//go right
-//						 rState.arm = 1;	
-//						//take
-//						pState.holding = pState.stacks[0][pState.stacks[0].length-1];
-//						pState.stacks[0].splice(pState.stacks[0].length-1, 1);
-//						ans.push(rState,null,pState,null);
-//						
-//					}else if(parent.arm == parent.stacks.length){
-//	 					//go left
-//						 lState.arm = parent.arm -1;
-//						//take
-//						pState.holding = pState.stacks[parent.arm][parent.stacks[parent.arm].length-1];
-//						pState.stacks[parent.arm][pState.stacks[parent.arm].length-1] = null;
-//						ans.push(null,lState,pState,null);
-//					}else{
-//						//go right 
-//						 rState.arm = parent.arm +1;
-//						//go left
-//						lState.arm = parent.arm -1;	
-//						//take
-//						pState.holding = pState.stacks[parent.arm][pState.stacks[parent.arm].length-1];
-//						pState.stacks[0].splice(pState.stacks[0].length-1, 1);
-//						ans.push(rState,lState,pState, null);
-//					}
-//				} 
-
-
 
     
     //coverts worldstate to ppdl
@@ -238,10 +136,23 @@ module Planner {
 				if(y == 0){
 					lits.push([{pol : true, rel : "ontop", args : [state.stacks[x][0], "floor"+x ]}]);
 				}else{
-					lits.push([{pol : true, rel : "ontop", args : [state.stacks[x][y], state.stacks[x][y-1] ]}]);
+					if(state.objects[state.stacks[x][y-1]].form == "box"){
+						lits.push([{pol : true, rel : "inside", args : [state.stacks[x][y], state.stacks[x][y-1] ]}]);
+					}else{
+						lits.push([{pol : true, rel : "ontop", args : [state.stacks[x][y], state.stacks[x][y-1] ]}]);
+					}
 				}
 			}
-		}	
+		}
+		
+		for(var x =0; x<state.stacks.length; x++ ){
+			for(var y =0; y<state.stacks[x].length; y++ ){
+				for(var z = y+1; z<state.stacks[x].length; z++ ){
+					lits.push([{pol : true, rel : "above", args : [state.stacks[x][z], state.stacks[x][y] ]}]);
+				}
+			}
+		}
+			
 		
 		lits.push([{pol : true, rel : "arm", args : ["" + state.arm, "" + state.stacks.length ]}]);
 		if(state.holding == null){
@@ -262,56 +173,17 @@ module Planner {
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
 		var plan : string[] = [];
-		plan = AStar.runAStar([], new AStar.Nod("",state,""), intprt , heuristicFunc);
+		if(!AStar.checkGoal(worldToPPDL(state), intprt )){
+			plan = AStar.runAStar([], new AStar.Nod("",state,""), intprt , heuristicFunc);
+		}else{
+			plan = ["Goal already found"];
+			console.log("error-------------------------------------");
+		}
 		console.log("plan-------------------------------------", plan);
 		console.log("intprt-------------------------------------", intprt);
 		
 		return plan;
     }
-
-//
-//        do {
-//            var pickstack = getRandomInt(state.stacks.length);
-//        } while (state.stacks[pickstack].length == 0);
-//        var plan : string[] = [];
-//
-//        // First move the arm to the leftmost nonempty stack
-//        if (pickstack < state.arm) {
-//            plan.push("Moving left");
-//            for (var i = state.arm; i > pickstack; i--) {
-//                plan.push("l");
-//            }
-//        } else if (pickstack > state.arm) {
-//            plan.push("Moving right");
-//            for (var i = state.arm; i < pickstack; i++) {
-//                plan.push("r");
-//            }
-//        }
-//
-//        // Then pick up the object
-//        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-//        plan.push("Picking up the " + state.objects[obj].form,
-//                  "p");
-//
-//        if (pickstack < state.stacks.length-1) {
-//            // Then move to the rightmost stack
-//            plan.push("Moving as far right as possible");
-//            for (var i = pickstack; i < state.stacks.length-1; i++) {
-//                plan.push("r");
-//            }
-//
-//            // Then move back
-//            plan.push("Moving back");
-//            for (var i = state.stacks.length-1; i > pickstack; i--) {
-//                plan.push("l");
-//            }
-//        }
-//
-//        // Finally put it down again
-//        plan.push("Dropping the " + state.objects[obj].form,
-//                  "d");
-
-
 
 
     function getRandomInt(max) {

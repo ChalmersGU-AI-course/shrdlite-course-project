@@ -54,19 +54,14 @@ module Interpreter {
         var intprt : Literal[][] = []
         
         if (cmd.cmd == "move"){
-        //	console.log("entity--------------\n",checkStm(cmd.ent.obj, state));
-        //	console.log("location------------\n",checkStm(cmd.loc.ent.obj, state));
-        //	console.log("PDDL\n", goalsToPDDL(cmd.ent, cmd.loc, state));
         	intprt = goalsToPDDL(cmd.ent, cmd.loc, state);
         }else if(cmd.cmd == "take"){
         	intprt = goalsToPDDL(cmd.ent, null, state);
         }else if(cmd.cmd == "put"){
-	    var o : Parser.Object = state.objects[state.holding];
-	    //var pos : Position = findObject(state.holding, state);
-	    //var obj2 : ObjectInfo = {obj: o, pos: pos, name : state.holding};
-	    intprt = goalsToPDDL({quant:"the", obj:o},cmd.loc,state);
-	    console.log("hhhhhhhhhhhhhhhh",o);
-        }  
+	    var o : ObjectDefinition = state.objects[state.holding];
+	    intprt = goalsToPDDL({quant:"holding", obj:o},cmd.loc,state);
+        }
+        console.log("interpreter--------------", intprt);
         return intprt;
     }
     
@@ -86,13 +81,20 @@ module Interpreter {
     
     function goalsToPDDL(ent : Parser.Entity , loc : Parser.Location , state : WorldState) : Literal[][] {
     	var lits : Literal[][] = [];
-    	var posList : position[] = checkStm (ent.obj, state);
+    	var posList : position[] = [];
+    	if(ent.quant == "holding"){
+    		posList =  [new position(0,0,{form: ent.obj.form, color: ent.obj.color, size: ent.obj.size}, state.holding)];
+    	}else{
+    		posList = checkStm (ent.obj, state);
+    	}
+    	console.log("Entity-----------", posList);
     	for(var i =0; i< posList.length;  i++){
     		if(loc == null){
     			var hold : Literal = {pol : true, rel : "holding", args : [posList[i].name]};
     			lits.push([hold]);
     		}else{
     			var goal = checkStm (loc.ent.obj, state);
+    			console.log("Location-----------", goal);
     			for(var j =0; j< goal.length;  j++){
     				if(loc.rel == "ontop"){
     					var g : Literal = {pol : true, rel : "ontop", args : [posList[i].name, goal[j].name ]};
@@ -106,9 +108,9 @@ module Interpreter {
     					}
     				}else if(loc.rel == "above"){
                         var b : Literal = {pol : true, rel : "above", args : [posList[i].name, goal[j].name ]};
-                        if(checkValidPos(posList[i].obj, goal[j].obj )){
+                        //if(checkValidPos(posList[i].obj, goal[j].obj )){
                             lits.push([b]);
-                        }                        
+                        //}                        
                     }else if(loc.rel == "under"){
                         var b : Literal = {pol : false, rel : "above", args : [posList[i].name, goal[j].name ]};
                         if(checkValidPos(posList[i].obj, goal[j].obj )){
@@ -117,9 +119,11 @@ module Interpreter {
                     }else if(loc.rel == "beside"){
                         var a : Literal = {pol : true, rel : "beside", args : [posList[i].name, goal[j].name ]};
                             lits.push([a]);
+                            
                     }else if(loc.rel == "leftof"){
                         var a : Literal = {pol : true, rel : "leftof", args : [posList[i].name, goal[j].name ]};
                             lits.push([a]);
+                            
                     }else if(loc.rel == "rightof"){
                         var a : Literal = {pol : false, rel : "leftof", args : [posList[i].name, goal[j].name ]};
                             lits.push([a]);
@@ -335,7 +339,7 @@ function checkSizeUGE (over : string, under : string): boolean {
 **/
 function checkSizeUG (over : string, under : string): boolean {
 
-        if(under === "large" && over =="small" )
+        if(under === "large" && (over === "small" || over === "large") || under === "small" && over === "small")
         {
             return true;
         }
