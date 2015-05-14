@@ -140,6 +140,8 @@ module Interpreter {
                 var location = cmd.loc;
                 var locationTargets = findTargetEntities(location.ent, state);
 
+                console.log("Target: "+locationTargets[0]);
+
                 if(location.rel === "under"){
                     moveObj(state, intprt, "above", locationTargets, targets);
                 } else {
@@ -153,7 +155,7 @@ module Interpreter {
         return intprt;
     }
 
-    function moveObj(state, intprt, locationRel, fromList, toList){
+    function moveObj(state : WorldState, intprt, locationRel, fromList, toList){
         for (var ix in fromList){
             for(var jx in toList){
                 var above = fromList[ix];
@@ -162,7 +164,9 @@ module Interpreter {
                 if( above == below){
                     continue;
                 }
-                if(! canSupport(state.objects[above], state.objects[below])){
+                // Found the bug!
+                if(! canSupport( findObjDef(state, above), findObjDef(state, below))){
+                    // state.objects[above], state.objects[below])){
                     continue;
                 }
 
@@ -170,6 +174,14 @@ module Interpreter {
                     {pol: true, rel: locationRel, args: [above, below] }
                 ] );
             }
+        }
+    }
+
+    function findObjDef(state : WorldState, name : string) : ObjectDefinition{
+        if(name === "floor"){
+            return {form: "floor", size: null, color: null};
+        } else {
+            return state.objects[name];
         }
     }
 
