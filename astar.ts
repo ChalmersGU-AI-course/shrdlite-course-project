@@ -19,39 +19,22 @@ module AStar {
 		costSoFar.setValue(start, 0);
 		frontier.enqueue(start);
 
-		var counter = 0;
-
 		while(!frontier.isEmpty()) {
-			var cur = frontier.dequeue();
-//			if(cur === goal) {
+			var cur : T = frontier.dequeue();
 			if(checkGoal(cur)) {
 			//	var finalPath = recons_path<T>(cameFrom, goal);
 			//	console.log("[INFO] Done in " + counter  + " iterations, final path: " + finalPath);
 				return cur;
 			}
 			var adjacentNodes : T[] = adj(cur);
-/*			graph.nodeMap.getValue(cur).neighbors.forEach( (k,v) => {
-				var newCost = costSoFar.getValue(k) + graph.cost(cur, k);
-				if(!costSoFar.containsKey(k) || newCost < costSoFar.getValue(k)) {
-					costSoFar.setValue(k, newCost);
-					frontier.enqueue(k);
-					cameFrom.setValue(k, cur);					
-				}
-			});
-*/
-			adjacentNodes.forEach((node) => {
-				var newCost : number = costSoFar.getValue(node) + cost(cur, node);
-				if(!costSoFar.containsKey(node) || newCost < costSoFar.getValue(node)) {
+			adjacentNodes.forEach((node : T) => {
+				var newCost : number = costSoFar.getValue(cur) + cost(cur, node);
+				//if(!costSoFar.containsKey(node) || newCost < costSoFar.getValue(node)) {
 					costSoFar.setValue(node, newCost);
 					frontier.enqueue(node);
 					cameFrom.setValue(node, cur);
-				}
+				//}
 			});
-			console.log("[INFO] Iteration done, result: ");
-			console.log("\tcurrent node: " + cur);
-			console.log("\tnext node: " + frontier.peek());
-			console.log("\tfrontier: ");
-			counter++;
 		}
 		return null;
 	}

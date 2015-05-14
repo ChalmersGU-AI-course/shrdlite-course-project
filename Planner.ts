@@ -44,6 +44,7 @@ module Planner {
 	var goalFunc = makeGoalFunc(intprt);
 	var x : string[] = [];
 	var initState : State = {stacks: state.stacks, holding:state.holding, armpos:state.arm};
+
 	var bla = AStar.AStarSearch<State>(initState, goalFunc, h, costFunc, adjacent);
 	console.log(bla);
 	return x;
@@ -94,13 +95,13 @@ module Planner {
             var newState = copyState(state);
             state.stacks[state.armpos].push(state.holding)
             newState.holding = null;
-            st.push(newState)
+            st.push(newState);
         }
         //pickup
         if(!state.holding) {
             var newState = copyState(state);
             newState.holding = state.stacks[state.armpos].pop();
-            st.push(newState)
+            st.push(newState);
         }
 
         return st;
