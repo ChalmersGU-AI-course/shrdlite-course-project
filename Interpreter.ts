@@ -139,7 +139,8 @@ module Interpreter {
                            if(locs.objs[j] === "floor"){
                                 works = state.stacks.some(e => e.indexOf(objs[i]) === 0);
                             } else{
-                                works = state.stacks.some(e => filterOntop(e, locs.objs[j],objs[i]));
+			        works = state.stacks.some(e => filterOntop(e, locs.objs[j],objs[i]));
+                                works = works && insideBox(false, locs.objs[j], state);
                             }   
                         } else if(locs.rel === "inside"){
                             if(locs.objs[j] !== "floor"){
@@ -215,20 +216,40 @@ module Interpreter {
 
     }
 
-    function insideBox(inside : Boolean, locationObject : String, state : WorldState) : Boolean {
+
+    //Keep this or change inside and ontop to depend on context?
+    function insideBox(inside : boolean, locationObject : string, state : WorldState) : boolean {
     	if(inside) {
-            return state.objects[locationObject] === "box";	
+            return state.objects[locationObject].form === "box";	
 	}
-        return state.objects[locationObject] !== "box"; 
+        return state.objects[locationObject].form !== "box"; 
     }
 
-    //Balls must be in boxes or on the floor
-    //Object are "inside" boxes but "ontop" - need change?
-    //Balls cannot support anything
-    //small objects cannot support large objects
-    //boxes cannot contain pyramids, planks, or boxes of same size
-    //Small boxes cannot be supportet by small bricks or pyramids
-    //Large boxes cannot be supported by large pyramids
+    function ballOnFloor(locationObject : string, object : string, state : WorldState) : boolean {
+        return true;
+
+    }
+
+    function notAboveBall(locationObject : string, object : string, state : WorldState) :boolean {
+       return true;
+
+    }
+
+
+    function smallOverLarge(bottomObject : string, topObject : string, state : WorldState) : boolean {
+        var topSize : string  = state.objects[topObject].size;
+	var bottomSize : string = state.objects[bottomObject].size;
+        return true
+
+    }
+
+    function correctSupport(bottomObject : string, topObject : string, state: WorldState) : boolean {
+        return true;
+        //boxes cannot contain pyramids, planks, or boxes of same size
+        //Small boxes cannot be supportet by small bricks or pyramids
+        //Large boxes cannot be supported by large pyramids
+
+    }
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
