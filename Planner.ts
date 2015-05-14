@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="astar.ts"/>
 
 module Planner {
 
@@ -40,9 +41,12 @@ module Planner {
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
 	
-	var 
-
-        return plan;
+	var goalFunc = makeGoalFunc(intprt);
+	var x : string[] = [];
+	var initState : State = {stacks: state.stacks, holding:state.holding, armpos:state.arm};
+	var bla = AStar.AStarSearch<State>(initState, goalFunc, h, costFunc, adjacent);
+	console.log(bla);
+	return x;
     }
 
     interface State {
@@ -58,6 +62,14 @@ module Planner {
       });
 
       return {stacks: newStacks, holding: st.holding, armpos:st.armpos };
+    }
+
+    function costFunc(a : State, b : State) : number {
+	return 1;
+    }
+
+    function h(s : State) : number {
+	return 0;
     }
 
     function adjacent(state : State) : State[] {
@@ -98,7 +110,7 @@ module Planner {
 	return (s : State) => {
 	    var flag : boolean = false;
 	    intprt.forEach((i) => {
-		if(compareState(s, i[0]) flag = true;
+		if(compareState(s, i[0])) flag = true;
 	    });
 	    return flag;
 	};

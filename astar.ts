@@ -1,5 +1,4 @@
 /// <reference path="collections.ts" />
-/// <reference path="graph.ts" />
 module AStar {
 
 	// start: startNode
