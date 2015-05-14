@@ -56,7 +56,7 @@ heuristicFunction = (state, goalRep) ->
         #dist to nearest empty spot, else 
         mindist = 10000 #INF
         for stack,i in state.stacks
-          if si1 == i
+          if si1 is i
             mindist = Math.min(mindist, 6 + 3*stack.indexOf(e1))
           else
             if e1 isnt state.holding
@@ -77,6 +77,7 @@ heuristicFunction = (state, goalRep) ->
           sum += mindist - 1 - (i+1)
       else
         # Found the stack of both items
+        # incorrect, stack -1 if holding
         switch goal.rel
           when "ontop", "inside"
             if not onTopCheck(state, e1, e2)
@@ -88,14 +89,16 @@ heuristicFunction = (state, goalRep) ->
                 sum = sum + 3*(state.stacks[si1].length - minPos)
               # If they are in different stacks then add for both elements
               else # Add 3 for all items on top of e1 and e2
-                s1 = state.stacks[si1]
-                s2 = state.stacks[si2]
                 if e1 isnt state.holding
+                  s1 = state.stacks[si1]
                   sum += 3*(s1.length-s1.indexOf(e1))
                 if e2 isnt state.holding
+                  s2 = state.stacks[si2]
                   sum += 3*(s2.length-s2.indexOf(e2))
                 # Also add for the difference in columns between them
-                sum += Math.abs(si1 - si2)
+                pos1 = if si1 is -1 then state.arm else si1
+                pos2 = if si2 is -1 then state.arm else si2
+                sum += Math.abs(pos1 - pos2)
           when "leftof"
             if e1 is state.holding
               # The distance should be 1 and +1 for drop
