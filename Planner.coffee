@@ -53,10 +53,28 @@ heuristicFunction = (state, goalRep) ->
           si2 = i
       # Floor is a special case 
       if e2 is "floor"
+        #dist to nearest empty spot, else 
+        mindist = 10000 #INF
+        for stack,i in state.stacks
+          if si1 == i
+            mindist = Math.min(mindist, 6 + 3*stack.indexOf(e1))
+          else
+            if e1 isnt state.holding
+              mindist = Math.min(mindist, 2 + Math.abs(i-si1) + 3*state.stacks[i].length)
+            else
+              mindist = Math.min(mindist, 1 + Math.abs(i-state.arm) + 3*state.stacks[i].length)
         if e1 isnt state.holding
           stack = state.stacks[si1]
           if stack.indexOf(e1) isnt 0
             sum += 3*(stack.length-stack.indexOf(e1))
+            # cost for items above e1  
+            sum += 3*(stack.length-stack.indexOf(e1) + 1)
+            # cost for lifting e1, and dropping at new location
+            sum += mindist
+        else
+          # cost for dropping e1 at current location
+          # if floor does not have empty space.
+          sum += mindist - 1 - (i+1)
       else
         # Found the stack of both items
         switch goal.rel
