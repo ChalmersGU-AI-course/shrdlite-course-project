@@ -123,7 +123,21 @@ module Planner {
 
         return st;
     }
-    
+
+    // moveLeft
+    function moveLeft (st: State, lastA: string) : State {
+        
+        if (st.arm == 0 || lastA == "r") {
+            return null;
+        }
+
+        var ns : State = copyState(state);
+        ns.arm -= 1;
+
+        return ns;
+    }
+
+
     function makeGoalFunc(intprt : Interpreter.Literal[][]) {
 	return (s : State) => {
 	    var flag : boolean = false;
