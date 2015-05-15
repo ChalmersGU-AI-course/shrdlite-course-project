@@ -129,6 +129,8 @@ module AStar {
 			for (var i = 0 ; i < worldLits.length;  i++) {
 				if(worldLits[i][0].pol == goalLits[j][0].pol && worldLits[i][0].rel == goalLits[j][0].rel && worldLits[i][0].args[0] == goalLits[j][0].args[0] && worldLits[i][0].args[1] == goalLits[j][0].args[1] ){
 					return true;
+				}else if(worldLits[i][0].pol != goalLits[j][0].pol && worldLits[i][0].rel == goalLits[j][0].rel && worldLits[i][0].args[1] == goalLits[j][0].args[0] && worldLits[i][0].args[0] == goalLits[j][0].args[1] ){
+					return true;
 				}
 			}
 		}
@@ -147,7 +149,7 @@ module AStar {
 		var haveSeen = new collections.Set<Nod>(function (a )	{	//frontier as a priority queue, sorted on lowest f score
 					return JSON.stringify(a.getWorldState());}); 	// Set to remember if we have calculated this node before
 		
-		startNode.setf_score(0 +h(startNode.getid()) ); // Set the f score to 0 + the heuristic value (it's cost is 0 from start)
+		startNode.setf_score(0 +h(startNode.getWorldState(), goal) ); // Set the f score to 0 + the heuristic value (it's cost is 0 from start)
 		frontier.add(startNode );
 		Planner.addNearbyNodes(startNode);
 		while ( !frontier.isEmpty()){
@@ -187,7 +189,7 @@ module AStar {
 				if(chooseNearBy){	//if nearby is better then update current cost and previous node and the f score of the node
 					nearBy.setCameFrom (current);
 					nearBy.setCValue(tempCost);
-					nearBy.setf_score (nearBy.getCValue() + h(nearBy.getid()) );
+					nearBy.setf_score (nearBy.getCValue() + h(nearBy.getWorldState(), goal) );
 				}
 			}
 		}

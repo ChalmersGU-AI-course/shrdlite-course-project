@@ -146,7 +146,7 @@ module Interpreter {
     }
 
     // Returns which height the object have in the given stack 
-    function searchStack (stack : string[], obj : string ) : number {
+    export function searchStack (stack : string[], obj : string ) : number {
         for(var i =0; i< stack.length;  i++){
             if(obj == stack[i]){
                 return i;
@@ -278,27 +278,27 @@ export function checkValidPos (over : ObjectDefinition, under : ObjectDefinition
         //Box
         else if(under.form ==="box" )
         {
-            if(checkSizeUG(over.size, under.size))
-            {
-                return true;
-            }
-            else
+            if(over.form =="pyramid" || over.form =="plank" || over.form == "box" && over.size == "large")
             {
                 return false;
             }
+            else
+            {
+                return true;
+            }
         }
         // Pyramid
-        else if (under.form === "pyramids" || under.form === "bricks")
+        else if (under.form === "pyramid" || under.form === "brick")
         {
             if (over.form === "box")
             {
                 // Large Box cant be over large Pyramid
                 // Small Box cant be over small Pyramid or Brick
-                if(checkSizeUG(over.size, under.size) && under.form==="pyramids")
+                if(checkSizeUG(over.size, under.size) && under.form==="pyramid")
                 {
                     return true;
                 }
-                else if(checkSizeUGE(over.size, under.size) && under.form==="bricks")
+                else if(checkSizeUGE(over.size, under.size) && under.form==="brick")
                 {
                     return true;
                 }
@@ -348,7 +348,7 @@ function checkSizeUGE (over : string, under : string): boolean {
 **/
 function checkSizeUG (over : string, under : string): boolean {
 
-        if(under === "large" && (over === "small" || over === "large") || under === "small" && over === "small")
+        if(under == "large" && over == "smal")
         {
             return true;
         }

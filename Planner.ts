@@ -131,6 +131,7 @@ module Planner {
     //coverts worldstate to ppdl
     export function worldToPPDL (state : WorldState) : Interpreter.Literal[][] {
     	var lits : Interpreter.Literal[][] = [];
+    	var leftof : string[] = [];
 		for(var x =0; x<state.stacks.length; x++ ){
 			for(var y =0; y<state.stacks[x].length; y++ ){
 				if(y == 0){
@@ -152,6 +153,23 @@ module Planner {
 				}
 			}
 		}
+		
+		for(var x =0; x<state.stacks.length; x++ ){
+			var tmp : string [] = [];
+			for(var y =0; y<state.stacks[x].length; y++ ){
+				//console.log("before-----------------------", leftof.length);
+				for(var i =0; i<leftof.length; i++ ){
+					//console.log("inside-----------------------");
+					lits.push([{pol : true, rel : "leftof", args : [leftof[i] , state.stacks[x][y]]}]);
+				}
+				tmp.push(state.stacks[x][y]);
+			}
+			//console.log("lists--------------------",tmp , leftof);
+			leftof = leftof.concat(tmp);
+			//console.log("lists--------------------",tmp , leftof);
+		}
+		
+		
 			
 		
 		lits.push([{pol : true, rel : "arm", args : ["" + state.arm, "" + state.stacks.length ]}]);
@@ -164,16 +182,39 @@ module Planner {
     	return lits;
     }
     
-    function heuristicFunc(x : string ) : number{
-    	if(x == ""){
-    		return 0;
-    	}
-    	return 0;
+    function heuristicFunc(state : WorldState , goal : Interpreter.Literal[][] ) : number{
+    	var tar : number = -1;
+    	var tarIndex : number =  -1;
+    	var loc : number = -1;
+    	var locIndex : number =  -1;
+    	var minimum : number = 999999999; 
+    	
+    	for(var i =0; i<goal.length; i++ ){
+    		for(var x =0; x<state.stacks.length; x++ ){
+				var stackTar = Interpreter.searchStack(state.stacks[x], goal[i][0].args[0]);
+				var stackLoc = Interpreter.searchStack(state.stacks[x], goal[i][0].args[1]);
+				if(stackTar != -1){
+					tar = state.stacks.length -1 + stackTar;
+					tarIndex = x;
+				}else if(stackTar != -1){
+					loc = state.stacks.length -1 + stackLoc;
+					locIndex =x;
+				}
+			}
+			var tmpTot = tar + loc + Math.max(tarIndex - locIndex, locIndex - tarIndex);
+			if(minimum > tmpTot){
+				minimum = tmpTot;
+			}
+		}
+		//console.log("min------------------------",minimum);
+    	return minimum;
     }
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
 		var plan : string[] = [];
-		if(!AStar.checkGoal(worldToPPDL(state), intprt )){
+		if(intprt.length == 0){
+			return ["no matching objects"];
+		}else if(!AStar.checkGoal(worldToPPDL(state), intprt )){
 			plan = AStar.runAStar([], new AStar.Nod("",state,""), intprt , heuristicFunc);
 		}else{
 			plan = ["Goal already found"];
