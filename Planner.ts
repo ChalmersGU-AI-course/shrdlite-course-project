@@ -141,6 +141,7 @@ module Planner {
 	    flag = s.holding === lit.args[0];
 	}
 
+
 	if(lit.pol) return flag;
 	else return ! flag;
     }
