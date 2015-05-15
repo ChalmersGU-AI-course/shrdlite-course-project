@@ -127,7 +127,7 @@ module Planner {
     // moveLeft
     function moveLeft (st: State, lastA: string) : State {
         
-        if (st.arm == 0 || lastA == "r") {
+        if (st.armpos == 0 || lastA == "r") {
             return null;
         }
 
@@ -136,6 +136,49 @@ module Planner {
 
         return ns;
     }
+
+    // moveRight        
+    function moveRight (st: State, lastA: string) : State {
+        
+        if (st.armpos == state.stacks.length - 1 || lastA == "l") {
+            return null;
+        }
+
+        var ns : State = copyState(state);
+        ns.arm += 1;
+
+        return ns;
+    } 
+
+    //function pickup
+    function pickup(state: State, lastA: string): State {
+        if(state.holding != null || lastA == "d" || lastA == "p" || state.stacks[state.armpos].length == 0) {
+            return null;
+        } 
+        
+        var ns: State = copyState(state);
+        ns.holding = ns.stacks[ns.armpos].pop();
+
+        return ns;
+
+    }
+
+    //drop function
+    function drop(state: State, lastA: string): State {
+        if(state.holding != null || lastA == "d" || lastA == "p" 
+            || (state.stacks[state.armpos].length != 0 
+            && !Interpreter.checkSize(state.objects[state.holding]
+            ,state.objects[state.stacks[state.armpos][state.stacks[state.armpos].length - 1]]))) {
+            return null;
+        } 
+
+        var ns : State = copyState(state);
+        ns.stacks[ns.armpos].push(ns.holding);
+        ns.holding = null;
+
+        return ns;
+    }
+
 
 
     function makeGoalFunc(intprt : Interpreter.Literal[][]) {
