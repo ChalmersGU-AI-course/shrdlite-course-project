@@ -3,6 +3,8 @@
 
 class ANSIWorld implements World {
 
+    public previousState : WorldState = null;
+
     constructor(
         public currentState : WorldState,
         public worldHeight = 40,

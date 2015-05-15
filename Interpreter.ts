@@ -30,7 +30,7 @@ module Interpreter {
         if (interpretations.length == 1) {
             return interpretations;
         } else if(interpretations.length) {
-	    throw new Interpreter.Error("Ambiguous interpretation. Please clarify");
+	    throw new Interpreter.Clarification("Ambiguous interpretation. Please clarify");
 	}else {
             throw new Interpreter.Error("Found no interpretation");
         }
@@ -55,6 +55,12 @@ module Interpreter {
         public name = "Interpreter.Error";
         constructor(public message? : string) {}
         public toString() {return this.name + ": " + this.message}
+    }
+
+    export class Clarification implements Error {
+        public name = "Interpreter.Clarification";
+        constructor(public message : string) {}
+        public toString() {return this.message;}
     }
 
 

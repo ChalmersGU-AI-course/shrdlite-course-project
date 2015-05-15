@@ -3,6 +3,8 @@
 
 class TextWorld implements World {
 
+    public previousState : WorldState = null;
+
     constructor(public currentState: WorldState) {
         if (!this.currentState.arm) this.currentState.arm = 0;
         if (this.currentState.holding) this.currentState.holding = null;

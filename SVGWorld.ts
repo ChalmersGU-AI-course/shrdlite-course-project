@@ -4,6 +4,8 @@
 
 class SVGWorld implements World {
 
+    public previousState : WorldState = null;
+
     constructor(
         public currentState: WorldState,
         public useSpeech = false

@@ -17,6 +17,7 @@ interface WorldState {
 
 interface World {
     currentState : WorldState;
+    previousState : WorldState;
 
     printWorld(callback? : () => void) : void;
     performPlan(plan: string[], callback? : () => void) : void;
