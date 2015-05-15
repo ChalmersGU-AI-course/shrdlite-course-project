@@ -126,33 +126,15 @@ module AStar {
 	
 	export function checkGoal(worldLits : Interpreter.Literal[][], goalLits : Interpreter.Literal[][]) : boolean{
 		for (var j = 0 ; j < goalLits.length;  j++) {
-			//var goalFound : boolean = false;
 			for (var i = 0 ; i < worldLits.length;  i++) {
 				if(worldLits[i][0].pol == goalLits[j][0].pol && worldLits[i][0].rel == goalLits[j][0].rel && worldLits[i][0].args[0] == goalLits[j][0].args[0] && worldLits[i][0].args[1] == goalLits[j][0].args[1] ){
 					return true;
-					//goalFound = false;
 				}
 			}
-			//if(!goalFound){
-			//	return false;
-			//}
 		}
 		
 		return false;
 	}
-	
-//		function checkGoal(worldLits : Interpreter.Literal[][], goalLits : Interpreter.Literal[][]) : boolean{
-//		for (var i = 0 ; i < worldLits.length;  i++) {
-//			for (var j = 0 ; j < goalLits.length;  j++) {
-//				if(worldLits[i][0].pol == goalLits[j][0].pol && worldLits[i][0].rel == goalLits[j][0].rel && worldLits[i][0].args[0] == goalLits[j][0].args[0] && worldLits[i][0].args[1] == goalLits[j][0].args[1] ){
-//					return true;
-//				}
-//			}
-//		}
-//		
-//		return false;
-//	}
-	
 	
 	/**
 	*	The A* function that take: list of nodes, start node, Goal node and heuristic function
@@ -177,8 +159,8 @@ module AStar {
 				return a;
 			}
 			
-			if(haveSeen.size() == 10000){
-				return ["10000 nodes searched and no solution was found"];
+			if(haveSeen.size() == 20000){
+				return ["20000 nodes searched and no solution was found"];
 			}
 	
 			haveSeen.add(current);

@@ -79,10 +79,19 @@ module Interpreter {
     	}
     }
     
+    function checkHolding(obj : Parser.Object, holding : Parser.Object){
+    	if(obj.form == holding.form || obj.color == holding.color || obj.size == holding.size){
+    		return true
+    	}else{
+    		return false;
+    	}
+    	
+    }
+    
     function goalsToPDDL(ent : Parser.Entity , loc : Parser.Location , state : WorldState) : Literal[][] {
     	var lits : Literal[][] = [];
     	var posList : position[] = [];
-    	if(ent.quant == "holding"){
+    	if(ent.quant == "holding" || state.holding !=null && checkHolding(ent.obj, state.objects[state.holding])){
     		posList =  [new position(0,0,{form: ent.obj.form, color: ent.obj.color, size: ent.obj.size}, state.holding)];
     	}else{
     		posList = checkStm (ent.obj, state);
