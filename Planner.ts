@@ -46,6 +46,7 @@ module Planner {
 	var initState : State = new State(state.stacks, state.holding, state.arm, "");
 
 	var bla = AStar.AStarSearch<State>(copyState(initState), goalFunc, h, costFunc, adjacent);
+	console.log(bla);
 	bla.forEach((elem) => {
 	    x.push(elem.action);
 	});
@@ -113,7 +114,7 @@ module Planner {
             st.push(newState);
         }
         //pickup
-        if(!state.holding) {
+        if(!state.holding && state.stacks[state.armpos].length > 0) {
             var newState = copyState(state);
             newState.holding = state.stacks[state.armpos].pop();
 	    newState.action = "p";

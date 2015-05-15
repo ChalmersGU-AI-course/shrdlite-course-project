@@ -21,7 +21,9 @@ module AStar {
 
 		while(!frontier.isEmpty()) {
 			var cur : T = frontier.dequeue();
+			console.log(cur);
 			if(checkGoal(cur)) {
+				console.log(cameFrom);
 				var finalPath = recons_path<T>(cameFrom, cur);
 				return finalPath;
 			}
@@ -43,7 +45,7 @@ module AStar {
 		var temp_came_from = came_from;
 		total_path.push(current);
 		while( temp_came_from.containsKey(current) ) {
-			var next = temp_came_from.remove(current);
+			var next = temp_came_from.getValue(current);
 			current = next;
 			total_path.push(current);
 		}
