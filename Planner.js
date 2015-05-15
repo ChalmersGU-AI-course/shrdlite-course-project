@@ -14,12 +14,12 @@ Planner.plan = function plan(interpretations, currentState) {
     for (var inter of interpretations) {
         inter.plan = window.plannerCore(currentState, TMP_rules);
         console.log(inter.plan);
-        if (inter.plan == "impossible") {
-            throw new Planner.Error("It is not possible to solve the problem");
-        } else if (inter.plan === undefined) {
+        if (inter.plan === undefined) {
             continue;
-        } else if (inter.plan.length === 1) {
-            plans.push(["Already satisfied"]);
+        } else if (inter.plan.length === 0) {
+            console.log("APA");
+            throw new Planner.Error("It is already satisfied");
+            // plans.push(["Already satisfied"]);
         } else {
             plans.push(inter);
         }

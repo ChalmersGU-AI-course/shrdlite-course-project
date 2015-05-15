@@ -228,6 +228,8 @@ module.exports = Heap;
 /*jslint node: true, esnext: true */
 "use strict";
 
+/// Reinventing a decent standard library /////////////////////////////////////////////////////////
+
 Array.prototype.contains = function(e) {
     return this.indexOf(e) !== -1;
 };
@@ -262,6 +264,8 @@ Array.prototype.flatten = function() {
     }
     return ret;
 };
+
+/// A-star required prototype function  ///////////////////////////////////////////////////////////
 
 var SearchGraph = function (currentState, pddl) {
     this.objects = currentState.objects;
@@ -504,17 +508,24 @@ SearchGraph.prototype.h = function (state) {
                 estimate += least;
                 break;
 
-            // case "beside":
+            // TODO
+            case "beside":
+                estimate += 1;
+                break;
             //     if (j === -1) {
             //         return false;
             //     }
             //     return  (i !== 0 && rule.oneof.intersects(state.stacks[i-1])) ||
             //             (i !== state.stacks.length && rule.oneof.intersects(state.stacks[i+1]));
 
-            // case "left":
+            case "left":
+                estimate += 1;
+                break;
             //     return (j !== -1) && state.stacks.slice(i+1).flatten().intersects(rule.oneof);
 
-            // case "right":
+            case "right":
+                estimate += 1;
+                break;
             //     return (j !== -1) && state.stacks.slice(i-1).flatten().intersects(rule.oneof);
 
             default:
@@ -525,53 +536,34 @@ SearchGraph.prototype.h = function (state) {
     return estimate;
 };
 
-// SearchGraph.prototype.h = function(state) {
-//     var estimate = 0;
-//     return 0;
-//     for (var rule of this.pddl) {
-//         if (object_ok(rule, state)) {
-//             continue;
-//         }
-//         var obj = rule[0];
-//         var constraints = rule[1];
-
-//         // Find and pick up
-//         if (state.holding != obj) {
-//             var i=0, j;
-//             // Find position of object.
-//             for (var stack of state.stacks) {
-//                 j = stack.indexOf(obj);
-//                 if (j !== -1) {
-//                     break;
-//                 }
-//                 i++;
-//             }
-//             estimate += Math.abs(i-state.arm) + 1;
-//             estimate += (stack.length-1-j)*4;
-//             estimate += putdown_dist(i, )
-
-//         }
-
-//         // Put down somewhere
-
-
-//     }
-//     return estimate;
-// };
-
-
-
 SearchGraph.prototype.state_hash = function(state) {
     return JSON.stringify(state.stacks) + state.arm + state.holding;
 };
 
-SearchGraph.prototype.isPossible = function() {
-    // for (var rule of this.pddl) {
-    //     // TODO: check that each object exists.?
-    //     if (!this.valid_substack(rule[0], rule[1])) {
-    //         return false;
-    //     }
-    // }
+//TODO
+SearchGraph.prototype.isPossible = function(state) {
+    var elems = state.stacks.flatten();
+    if (state.holding !== null) {
+        elems.append(state.holding);
+    }
+
+    //Check that each element exists, and that the rule is possible.
+    for (var rule of this.pddl) {
+        if (!elems.contains(rule.item)) {
+            return false;
+        }
+        if (rule.rel == "holding" || rule.rel == "floor") {
+            continue;
+        }
+        for (var sub of rule.oneof) {
+            if (!elems.contains(sub)) {
+                return false;
+            }
+            if (rule.rel == "ontop" && !this.can_place(rule.item, [sub])){
+                return false;
+            }
+        }
+    }
     return true;
 };
 
@@ -599,8 +591,8 @@ var astar = require("./astar.js");
 
 module.exports = function(currentState, pddl) {
     var g = new SearchGraph(currentState, pddl);
-    if (!g.isPossible()) {
-        return "impossible";
+    if (!g.isPossible(g.startNode)) {
+        return undefined;
     }
     var res = astar(g, g.startNode);
     if (res === undefined) {
