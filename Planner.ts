@@ -154,8 +154,62 @@ module Planner {
 	if(lit.rel === "holding") {
 	    flag = s.holding === lit.args[0];
 	}
-
-
+    // ontop
+    if(lit.rel === "ontop") {
+        /* is 
+         if 
+            yes
+         then  
+            checks if  ontopof(a,b), where a = lit.args[0], b = lit.args[1]
+    see http://ai-course-tin172-dit410.github.io/shrdlite-grammar.html#semantic-interpretation
+        */
+        s.stacks.forEach( (stack) => {
+            if(stack.indexOf(lit.args[1]) != -1 && stack.indexOf(lit.args[0]) != -1) {
+                if(stack.indexOf(lit.args[1])-stack.indexOf(lit.args[0]) == 1) 
+                flag = true;    
+            }
+        });
+    }
+    // leftof
+    if(lit.rel === "leftof") {
+        var stackOfa = -1;
+        var stackOfb = -1;
+        /*
+        checks the stacks of objects.
+        when objects are found compare stack index
+        to find if leftof(a,b)
+        */
+        for(var i = 0; i < s.stacks.length; i++){
+            var stack = s.stacks[i];
+            for(var j = 0; j < stack.length; j++) {
+                if(stack[j] === lit.args[0])
+                    stackofa = i;
+                if(stack[j] === lit.args[1])
+                    stackofb = i;
+            }
+        }
+        if(stackofb - stackofa > 0)
+            flag = true;
+    }
+    // rightof
+    // same as for leftof only we change the condition
+    // to stackofb - stackofa < 0
+    if(lit.rel === "rightof") {
+        var stackOfa = -1;
+        var stackOfb = -1;
+        for(var i = 0; i < s.stacks.length; i++){
+            var stack = s.stacks[i];
+            for(var j = 0; j < stack.length; j++) {
+                if(stack[j] === lit.args[0])
+                    stackofa = i;
+                if(stack[j] === lit.args[1])
+                    stackofb = i;
+            }
+        }
+        if(stackofb - stackofa < 0)
+            flag = true;
+    }
+    
 	if(lit.pol) return flag;
 	else return ! flag;
     }
