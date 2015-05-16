@@ -218,7 +218,7 @@ module Planner {
       // find the first argument
       for (var i = 0; i < this.stacks.length; i++) {
         for (var j = 0; j < this.stacks[i].length; j++) {
-          if (this.stacks[i][j].name == lit.args[0]) {
+          if (this.stacks[i][j].name == lit.args[0] || lit.rel == "holding") {
             // evaluate based on the relation
             switch(lit.rel) {
               case "inside": // fall through to ontop since they are the same
@@ -279,7 +279,7 @@ module Planner {
 
               case "holding":
                 if (this.crane)
-                  return this.crane.name == lit.args[0];
+                  return this.crane.name == lit.args[0] == lit.pol;
               break;
             }
           }
