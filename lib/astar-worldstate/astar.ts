@@ -61,31 +61,31 @@ module aStar {
     }
 
     class Path {
-        private distanceSoFar : number;
-        private heuristicDistance : number;
-        private endNode : WorldStateNode;
+        private distanceSoFar:number;
+        private heuristicDistance:number;
+        private endNode:WorldStateNode;
         private pathTo = new collections.LinkedList<WorldStateEdge>();
 
-        constructor(node : WorldStateNode, distance : number, heuristic : number, path : collections.LinkedList<WorldStateEdge>) {
+        constructor(node:WorldStateNode, distance:number, heuristic:number, path:collections.LinkedList<WorldStateEdge>) {
             this.endNode = node;
             this.distanceSoFar = distance;
             this.heuristicDistance = heuristic;
             path.forEach(p => this.pathTo.add(p));
         }
 
-        toString() : string{
+        toString():string {
             return this.endNode.toString() + this.heuristicDistance.toString() + this.distanceSoFar.toString();
         }
 
-        getNode() : WorldStateNode {
+        getNode():WorldStateNode {
             return this.endNode;
         }
 
-        private addEdge(newEdge : WorldStateEdge) {
+        private addEdge(newEdge:WorldStateEdge) {
             this.pathTo.add(newEdge);
         }
 
-        newPath(newEdge : WorldStateEdge, goals : Interpreter.Literal[][]) : Path {
+        newPath(newEdge:WorldStateEdge, goals:Interpreter.Literal[][]):Path {
             var newEndNode = newEdge.getEndNode();
             var newDistance = this.distanceSoFar + newEdge.getCost();
 
@@ -98,13 +98,13 @@ module aStar {
             }
         }
 
-        getPath() : collections.LinkedList<WorldStateEdge> {
-            return this.pathTo;   
+        getPath():collections.LinkedList<WorldStateEdge> {
+            return this.pathTo;
         }
 
-        getEdges() : WorldStateEdge[] {
+        getEdges():WorldStateEdge[] {
             var neighbors = this.endNode.getNeighbors();
-            var edges : WorldStateEdge[] = [];
+            var edges:WorldStateEdge[] = [];
             neighbors.forEach((command, neighbor) => {
                 edges.push(new WorldStateEdge(1, this.endNode, neighbor, command));
             });
@@ -112,25 +112,16 @@ module aStar {
             return edges;
         }
 
-        getDistance() : number {
+        getDistance():number {
             return this.distanceSoFar;
         }
 
-        getHeuristicDistance() : number {
+        getHeuristicDistance():number {
             return this.heuristicDistance;
         }
 
-        getTotalDistance() : number {
-            return this.distanceSoFar+this.heuristicDistance;
-        }
-    }
-
-    export function sleep(milliseconds) {
-        var start = new Date().getTime();
-        for (var i = 0; i < 1e7; i++) {
-            if ((new Date().getTime() - start) > milliseconds) {
-                break;
-            }
+        getTotalDistance():number {
+            return this.distanceSoFar + this.heuristicDistance;
         }
     }
 }
