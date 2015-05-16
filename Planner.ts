@@ -145,7 +145,7 @@ module Planner {
 				}
 			}
 		}
-		
+		//Adds a ppdl for all the objects that is above every object
 		for(var x =0; x<state.stacks.length; x++ ){
 			for(var y =0; y<state.stacks[x].length; y++ ){
 				for(var z = y+1; z<state.stacks[x].length; z++ ){
@@ -153,23 +153,27 @@ module Planner {
 				}
 			}
 		}
-		
+		//Adds a ppdl for all the objects left of the each stack
 		for(var x =0; x<state.stacks.length; x++ ){
 			var tmp : string [] = [];
 			for(var y =0; y<state.stacks[x].length; y++ ){
-				//console.log("before-----------------------", leftof.length);
 				for(var i =0; i<leftof.length; i++ ){
-					//console.log("inside-----------------------");
 					lits.push([{pol : true, rel : "leftof", args : [leftof[i] , state.stacks[x][y]]}]);
 				}
 				tmp.push(state.stacks[x][y]);
 			}
-			//console.log("lists--------------------",tmp , leftof);
 			leftof = leftof.concat(tmp);
-			//console.log("lists--------------------",tmp , leftof);
 		}
-		
-		
+		//Adds a ppdl for all the objects next to each stack 
+		for(var x =0; x<state.stacks.length; x++ ){
+			for(var y =0; y<state.stacks[x].length; y++ ){
+				for(var z = x-1; z<x+2; z++ ){
+					if(z >= 0 && z !=0 && z <= state.stacks.length-1){
+						lits.push([{pol : true, rel : "beside", args : [state.stacks[z][y] , state.stacks[x][y]]}]);
+					}
+				}				
+			}
+		}
 			
 		
 		lits.push([{pol : true, rel : "arm", args : ["" + state.arm, "" + state.stacks.length ]}]);
