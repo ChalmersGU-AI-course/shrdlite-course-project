@@ -17,6 +17,7 @@ module Astar {
     heuristic_approx(n1:Node, n2:Node) : number
     dist_between(n1:Node, n2:Node) : number
     get_children(n1:Node) : [Node]
+    is_goalNode(n1:Node) : boolean
   }
 /*
 Implementation: Strongly inspired by the wikipedia pseduocode
@@ -62,7 +63,7 @@ AStar :: Graph -> Path
         if it is then finds and returns the path.
         */
         current = openset.dequeue(); 
-        if(current === goal){
+        if(functions.is_goalNode(current)){
           var path = new collections.LinkedList<Node>();
           path.add(current)
           while(current.successor){
