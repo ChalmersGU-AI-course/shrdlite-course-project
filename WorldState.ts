@@ -1,6 +1,7 @@
 /// <reference path="lib/typescript-collections/collections.ts" />
 /// <reference path="ObjectDefinition.ts" />
 /// <reference path="Interpreter.ts" />
+/// <reference path="lib/astar-worldstate/astar.ts" />
 
 class WorldState {
     stacks: string[][];
@@ -15,11 +16,23 @@ class WorldState {
         this.arm = arm;
         this.objects = objects;
         this.examples = examples;
+    }
 
+    addObject(stack : number, name : string, object : ObjectDefinition) {
+        this.stacks[stack].push(name);
+        this.objects[name] = object;
     }
 
     toString() : string {
-        return this.stacks.toString() + this.arm.toString() + this.isHolding().toString();
+        return "S: " + this.stacksToString() + ", A: " + this.arm.toString() + ", H: "  + this.holding;
+    }
+
+    nrOfObjectsInWorld() : number {
+        var result = 0;
+        this.stacks.forEach((stack) => {
+            result += stack.length;
+        });
+        return (this.holding === null) ? result : ++result;
     }
 
     equals(otherState : WorldState) : boolean {
@@ -73,13 +86,12 @@ class WorldState {
                 case "right":
                     result = result && this.isRightOf(fstObj,sndObj);
                     break;
+                case "holding":
+                    result = result && this.isHoldingObj(fstObj);
             }
         });
 
-        if (result) {
-            return true;
-        }
-        return false;
+        return result;
     }
 
     // This can perhaps be made smarter. Instead of moving one step at a time, we could reason about how objects can be moved.
@@ -94,7 +106,7 @@ class WorldState {
             newStates.setValue("r",this.newWorldMoveRight());
         }
 
-        if (!this.isHolding()) {
+        if (!this.isHolding() && this.canPick()) {
             newStates.setValue("p",this.newWorldPick());
         } else if (this.canDrop()) {
             newStates.setValue("d",this.newWorldDrop());
@@ -107,26 +119,40 @@ class WorldState {
         if (obj == "floor") {
             return this.stacks[this.getLowestStackNumber()-1].length;
         } else {
+            var objectsOnTop = -1;
+
             this.stacks.forEach((stack) => {
                 var ix = stack.indexOf(obj);
 
                 if (ix >= 0) {
-                    return stack.length - 1 - ix;
+                    objectsOnTop = stack.length - 1 - ix;
                 }
             });
 
-            return -1;
+            return objectsOnTop;
         }
     }
 
     isOnTopOf(fstObj : string, sndObj : string) : boolean {
-        var stackNumber = this.getStackNumber(fstObj);
+        var firstObjStackNumber = this.getStackNumber(fstObj);
 
-        if (stackNumber == this.getStackNumber(sndObj)) {
-            return 1 == this.stacks[stackNumber-1].indexOf(fstObj) - this.stacks[stackNumber-1].indexOf(sndObj);
+        if (firstObjStackNumber === this.getStackNumber(sndObj) && firstObjStackNumber >= 0) {
+            return 1 == this.stacks[firstObjStackNumber-1].indexOf(fstObj) - this.stacks[firstObjStackNumber-1].indexOf(sndObj);
         }
 
         return false;
+    }
+
+    stacksToString() : string {
+        var result = "";
+
+        this.stacks.forEach((stack) => {
+            result += "[";
+            result += stack.toString();
+            result += "]";
+        })
+
+        return result;
     }
 
     isAbove(fstObj : string, sndObj : string) : boolean {
@@ -159,16 +185,17 @@ class WorldState {
         if (obj == "floor") {
             return this.getLowestStackNumber();
         } else {
-            var ix = 1;
+            var stackNumber = 1;
+            var found = false;
 
             this.stacks.forEach((stack) => {
                 if (stack.indexOf(obj) >= 0) {
-                    return ix;
+                    found = true;
                 }
-                ix++;
+                found ? stackNumber : stackNumber++;
             });
 
-            return -1;
+            return found ? stackNumber : -1;
         }
     }
 
@@ -188,31 +215,30 @@ class WorldState {
     }
 
     newWorldMoveLeft() : WorldState {
-        return new WorldState(this.stacks, this.holding, this.arm-1, this.objects, this.examples);
+        var tempState = this.clone(this);
+        return new WorldState(tempState.stacks, tempState.holding, tempState.arm-1, tempState.objects, tempState.examples);
     }
 
     newWorldMoveRight() : WorldState {
-        return new WorldState(this.stacks, this.holding, this.arm+1, this.objects, this.examples);
+        var tempState = this.clone(this)
+        return new WorldState(tempState.stacks, tempState.holding, tempState.arm+1, tempState.objects, tempState.examples);
     }
 
     newWorldDrop() : WorldState {
-        var newStacks : string[][] = this.stacks;
+        var tempState = this.clone(this)
+        var newStacks : string[][] = tempState.stacks;
 
-        console.log("Stack: " + newStacks[this.arm].toString());
-        console.log("Holding: " + this.holding);
+        newStacks[tempState.arm].push(this.holding);
 
-        newStacks[this.arm].push(this.holding);
-
-        return new WorldState(newStacks, null, this.arm, this.objects, this.examples);
+        return new WorldState(newStacks, null, tempState.arm, tempState.objects, tempState.examples);
     }
 
     newWorldPick() : WorldState {
-        var newStacks : string[][] = this.stacks;
-        var newHolding : string = newStacks[this.arm].pop();
+        var tempState = this.clone(this)
+        var newStacks  = tempState.stacks;
+        var newHolding = newStacks[tempState.arm].pop();
 
-        console.log("Picked up: " + newHolding);
-
-        return new WorldState(newStacks, newHolding, this.arm, this.objects, this.examples);
+        return new WorldState(newStacks, newHolding, tempState.arm, tempState.objects, tempState.examples);
     }
 
     canMoveLeft() : boolean {
@@ -223,8 +249,12 @@ class WorldState {
         return this.arm != this.stacks.length-1;
     }
 
+    canPick() : boolean {
+        return this.stackHeight(this.arm) > 0;
+    }
+
     canDrop() : boolean {
-        var stackHeight : number = this.stacks[this.arm].length;
+        var stackHeight = this.stackHeight(this.arm);
 
         if (!this.isHolding()) {
             return false;
@@ -235,21 +265,49 @@ class WorldState {
             var topObj : ObjectDefinition = this.objects[topObjName];
             var currObj : ObjectDefinition = this.objects[this.holding];
 
-            console.log("Stack size: " + stackHeight);
-            console.log("Stack: " + this.stacks[this.arm]);
-            console.log("Top obj: " + topObj);
-            console.log("Holding:" + this.holding);
-/*
-            console.log(this.stacks[this.arm].length);
-            console.log(stackHeight-1);
-            console.log(currObj.toString());
-            console.log(topObj.toString());
-            */
             return currObj.canBePutOn(topObj);
         }
     }
 
+    stackHeight(stackNumber : number) : number {
+        return this.stacks[stackNumber].length;
+    }
+
     isHolding() : boolean {
         return this.holding !== null;
+    }
+
+    isHoldingObj(obj : string) : boolean {
+        return this.holding === obj;
+    }
+
+    clone(obj) : WorldState {
+        var newStacks : string[][] = [];
+
+        for(var i = 0; i < this.stacks.length; i++) {
+            newStacks.push([]);
+            for(var j = 0; j < this.stacks[i].length; j++) {
+                newStacks[i].push(this.stacks[i][j]);
+            }
+        }
+
+        var newHolding = this.holding;
+        var newArm = this.arm;
+
+        var newObjects : { [s:string]: ObjectDefinition } = {};
+
+        for (var key in this.objects) {
+            if (this.objects.hasOwnProperty(key)) {
+                newObjects[key] = this.objects[key];
+            }
+        }
+
+        var newExamples = [];
+
+        for(var i = 0; i < this.examples.length; i++) {
+            newExamples[i] = this.examples[i];
+        }
+
+        return new WorldState(newStacks, newHolding, newArm, newObjects, newExamples);
     }
 }

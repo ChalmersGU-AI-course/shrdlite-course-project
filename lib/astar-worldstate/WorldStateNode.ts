@@ -10,7 +10,7 @@ class WorldStateNode{
     heuristicTo(goal : Interpreter.Literal[][]) {
         var returnValue = 100000;
         goal.forEach((intrprt) => {
-            var intrprtHeuristic = 0;
+            var newHeuristic = 0;
 
             intrprt.forEach((goal) => {
                 var fstObj = goal.args[0];
@@ -19,27 +19,30 @@ class WorldStateNode{
                 switch (goal.rel) {
                     case "ontop":
                     case "inside":
-                        intrprtHeuristic += this.onTopHeuristic(fstObj, sndObj);
+                        newHeuristic += this.onTopHeuristic(fstObj, sndObj);
                         break;
                     case "above":
-                        intrprtHeuristic += this.aboveHeuristic(fstObj, sndObj);
+                        newHeuristic += this.aboveHeuristic(fstObj, sndObj);
                         break;
                     case "under":
-                        intrprtHeuristic += this.aboveHeuristic(sndObj, fstObj);
+                        newHeuristic += this.aboveHeuristic(sndObj, fstObj);
                         break;
                     case "beside":
-                        intrprtHeuristic += this.besideHeuristic(fstObj, sndObj, "either");
+                        newHeuristic += this.besideHeuristic(fstObj, sndObj, "either");
                         break;
                     case "left":
-                        intrprtHeuristic += this.besideHeuristic(fstObj, sndObj, "left");
+                        newHeuristic += this.besideHeuristic(fstObj, sndObj, "left");
                         break;
                     case "right":
-                        intrprtHeuristic += this.besideHeuristic(fstObj, sndObj, "right");
+                        newHeuristic += this.besideHeuristic(fstObj, sndObj, "right");
+                        break;
+                    case "holding":
+                        newHeuristic += this.holdingHeuristic(fstObj);
                         break;
                 }
             });
 
-            returnValue = intrprtHeuristic < returnValue ? intrprtHeuristic : returnValue;
+            returnValue = newHeuristic < returnValue ? newHeuristic : returnValue;
         });
 
         return returnValue;
@@ -85,6 +88,21 @@ class WorldStateNode{
 		return heuristic;
 	}
 
+    private holdingHeuristic(fstObj : string) : number {
+        var heuristic = 0;
+
+        // We need to:
+        // - move to the objects stack.
+        heuristic += Math.abs(this.state.arm - this.state.getStackNumber(fstObj));
+        // - remove each object that is on top of the object (min. 4 moves per obj)
+        heuristic += this.state.objectsOnTop(fstObj);
+        // - pick up the object.
+        heuristic++;
+
+
+        return heuristic;
+    }
+
 	getNeighbors() : collections.Dictionary<string,WorldStateNode> {
 		var neighbors = new collections.Dictionary<string,WorldStateNode>(wsn => wsn.toString());
 		var newStates = this.state.getNewStates();
@@ -101,12 +119,20 @@ class WorldStateNode{
     }
 
     isSatisfied(goals : Interpreter.Literal[][]) : boolean {
+        var result = false;
+
         goals.forEach((intrprt) => {
             if(this.state.satisifiesConditions(intrprt)) {
-                return true;
+                result = true;
+            } else {
+                result = false;
             }
         });
 
-        return false;
+        return result;
+    }
+
+    toString() : string {
+        return this.state.toString();
     }
 }

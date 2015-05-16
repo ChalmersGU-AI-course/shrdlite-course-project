@@ -15,7 +15,7 @@ module Interpreter {
         });
         if (interpretations.length) {
             if(interpretations.length>1){
-                throw new Interpreter.Error("Found ambiguos interpretations");    
+                throw new Interpreter.Error("Found ambiguous interpretations");
             }
             return interpretations;
         } else {
@@ -77,8 +77,7 @@ module Interpreter {
             }
             //check if valid.
             return lit;    
-        }
-        else{
+        } else {
             var objs : string[] = interpretEntity(cmd.ent, state);
             for(var i : number = 0; i < objs.length; i++){
                 lit[i] = [];
@@ -128,7 +127,7 @@ module Interpreter {
     }
 
     function interpretLocation(loc : Parser.Location, state : WorldState) : Sayings {
-        var locs : Sayings = {rel:loc.rel, objs:interpretEntity(loc.ent, state)} 
+        var locs : Sayings = {rel:loc.rel, objs:interpretEntity(loc.ent, state)}
         return locs;
     }
 
@@ -276,7 +275,7 @@ module Interpreter {
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
-    
+
     }
 
     function isOntop(stack: string[], bottom : string, top : string) : boolean{

@@ -13,19 +13,19 @@ class WorldStateEdge {
         this.command = command;
     }
 
-    getFromNode() : WorldStateNode {
+    public getFromNode() : WorldStateNode {
         return this.fromNode;
     }
 
-    getEndNode() : WorldStateNode {
+    public getEndNode() : WorldStateNode {
         return this.endNode;
     }
 
-    getCost() : number {
+    public getCost() : number {
         return this.cost;
     }
 
-    getCommand() : string {
+    public getCommand() : string {
         return this.command;
     }
 

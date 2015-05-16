@@ -3,11 +3,11 @@
 /// <reference path="../../Interpreter.ts" />
 /// <reference path="WorldStateEdge.ts" />
 
-var logging = true;
+var logging = false;
 
 module aStar {
-    export function aStar(start : WorldStateNode, goals : Interpreter.Literal[][]) : WorldStateEdge[] {
-        var evaluatedPaths = new collections.Set<Path>(p => p.toString());
+    export function aStar(start : WorldStateNode, goals : Interpreter.Literal[][]) : Path {
+        var evaluatedPaths = new collections.Set<Path>(p => p.getNode().toString() + p.getNode().state.arm);
         var pathsToEvaluate = new collections.PriorityQueue<Path>(comparePaths);
 
         pathsToEvaluate.add(new Path(start, 0, start.heuristicTo(goals), new collections.LinkedList<WorldStateEdge>()));
@@ -18,6 +18,8 @@ module aStar {
         while(!pathsToEvaluate.isEmpty()) {
             var currentPath : Path = pathsToEvaluate.dequeue();
 
+            //console.log(currentPath.getNode().state.toString());
+            //sleep(2000);
             if(logging) {
                 console.log("evaluating " + currentPath.toString());
                 console.log("Distance is  " + currentPath.getDistance());
@@ -32,7 +34,7 @@ module aStar {
             if(currentPath.getNode().isSatisfied(goals)) {
                 if(logging)
                     console.log("found goal! " + currentPath.toString());
-                return currentPath.getEdges();
+                return currentPath;
             }
 
             if(logging)
@@ -44,7 +46,7 @@ module aStar {
                 if(!evaluatedPaths.contains(newPath)) {
                     pathsToEvaluate.add(newPath);
                     if(logging)
-                        console.log("Adding " + newPath.toString() + " to frontier. Distance+heuristic is: " + newPath.getTotalDistance());
+                        console.log(newPath.getNode().state.toString() + ". Total distance: " + newPath.getTotalDistance());
                 }
             });
 
@@ -52,7 +54,6 @@ module aStar {
                 console.log("======= Evaluating next node ========");
         }
 
-        return null;
     }
 
     function comparePaths(fst : Path , snd : Path){
@@ -78,10 +79,6 @@ module aStar {
 
         getNode() : WorldStateNode {
             return this.endNode;
-        }
-
-        heuristicTo(goals : Interpreter.Literal[][] ) : number {
-            return this.endNode.heuristicTo(goals);
         }
 
         private addEdge(newEdge : WorldStateEdge) {
@@ -125,6 +122,15 @@ module aStar {
 
         getTotalDistance() : number {
             return this.distanceSoFar+this.heuristicDistance;
+        }
+    }
+
+    export function sleep(milliseconds) {
+        var start = new Date().getTime();
+        for (var i = 0; i < 1e7; i++) {
+            if ((new Date().getTime() - start) > milliseconds) {
+                break;
+            }
         }
     }
 }

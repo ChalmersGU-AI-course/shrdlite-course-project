@@ -94,6 +94,7 @@ ExampleWorlds["small"] = new WorldState(
         "m": new ObjectDefinition("box",     "small",  "blue"  )
     },
     [
+        "put the black ball in the yellow box",
         "put the white ball in a box on the floor",
         "put the black ball in a box on the floor",
         "take a blue object",

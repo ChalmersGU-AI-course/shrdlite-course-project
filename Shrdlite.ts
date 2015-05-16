@@ -2,6 +2,7 @@
 ///<reference path="Parser.ts"/>
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Planner.ts"/>
+///<reference path="tests/WorldStateTest.ts"/>
 
 module Shrdlite {
 
@@ -32,6 +33,7 @@ module Shrdlite {
     // - then it creates plan(s) for the interpretation(s)
 
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
+        runTests();
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
             var parses : Parser.Result[] = Parser.parse(utterance);
@@ -52,7 +54,7 @@ module Shrdlite {
             var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
         } catch(err) {
             if (err instanceof Interpreter.Error) {
-                world.printError("Interpretation error", err.message);
+                world.printError("Interpretation error: ", err.message);
                 return;
             } else {
                 throw err;
@@ -73,6 +75,7 @@ module Shrdlite {
                 throw err;
             }
         }
+
         world.printDebugInfo("Found " + plans.length + " plans");
         plans.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
@@ -99,4 +102,9 @@ module Shrdlite {
         return plan;
     }
 
+    function runTests() {
+        var test = new tsUnit.Test(WorldStateTests);
+
+        console.log((test.run().errors.length === 0) ? 'Test Passed' : 'Test Failed')
+    }
 }
