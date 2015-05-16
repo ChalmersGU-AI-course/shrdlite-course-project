@@ -48,40 +48,29 @@ module Planner {
   //////////////////////////////////////////////////////////////////////
   // private functions
 
-  function printLog(log : Object) : void {
-    //document.getElementById('log').innerHTML += JSON.stringify(log) + "<br/>";
-  }
-
   function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
     var plan : string[] = [];
-    printLog(state);
-
     var goal: PDDL = new PDDL(intprt);
-
-    var solution = Astar.search(convert(state), null, goal);
-   
+    var solution: Astar.Solution<WorldDescription>;
     var plan:string[] = new Array<string>();
-    
-    console.log(solution.toString());
+
+    // find a path from the initial state to the final PDDL using A*
+    solution = Astar.search(convert(state), null, goal);
 
     for (var i = 0; i < solution.path.length; i++) {
-      //print out the path
+      // print out the path
       console.log(solution.path[i].toString());
     }
     
     for (var i = 1; i < solution.path.length; i++) {
-      plan = plan.concat(div(solution.path[i-1], solution.path[i]));
+      // concatenate the steps between each state
+      plan = plan.concat(getMoves(solution.path[i-1], solution.path[i]));
     }
-    
-    //print out the solution
-    console.log("plan " + plan);
-
-
 
     return plan;
   }
 
-  function div(state1: WorldDescription, state2: WorldDescription): string[] {
+  function getMoves(state1: WorldDescription, state2: WorldDescription): string[] {
     var ret: string[] = new Array<string>();
     for(var i = 0; i < state1.stacks.length; i++) {
       if(state1.stacks[i].length != state2.stacks[i].length) {
@@ -104,12 +93,7 @@ module Planner {
         }
       }
     }
-    //console.log("div: " + ret);
     return ret;
-  }
-
-  function getRandomInt(max) {
-    return Math.floor(Math.random() * max);
   }
 
 
@@ -117,8 +101,8 @@ module Planner {
   // private classes
 
   class PDDL {
-    //the inner array describes literals connected with an AND,
-    //the outer one connected with an OR
+    // the inner array describes literals connected with an AND,
+    // the outer one connected with an OR
     alternatives : Lit[][];
 
     constructor (input : Lit[][]) {
@@ -148,11 +132,8 @@ module Planner {
     //heuristical value for this state. Useful if you don't want to call
     //the heuristical function each time
     h: number; 
-    //represents an array of stacks 
     stacks: WorldObject[][];
     crane: WorldObject;
-    
-    //returns true if a PDDL matches on the current state
 
     //usage: either both parameter null, then create an empty WorldDescription
     // OR  : stacks not null, then create a WorldDescription with the given
@@ -181,14 +162,13 @@ module Planner {
         } else {
           this.crane = null;
         }
-        //predefive a heuristic value
+        // predefine a heuristic value
         this.h = 0;
       } else {
-        //if crane is given, but stacks is null
+        // if crane is given, but stacks is null
         throw new Error("You are stupid! You cant create a world without a stack but with a crane!");
       }
     }
-
 
     toString() {
       var s : string = "";
@@ -199,10 +179,9 @@ module Planner {
         }
         s += "]";
       }
-      s += "\n" + this.crane + "\n\n";
+      s += "\n" + this.crane + "\n";
       return s; 
     }
-
 
     clone() : WorldDescription {
       var braveNewWorld : WorldDescription = new WorldDescription(null, null);
@@ -236,75 +215,45 @@ module Planner {
 
     eval(lit: Lit): boolean {
       var res: boolean = true;
-      switch(lit.rel) {
-        case "ontop":
-          for (var i = 0; i < this.stacks.length; i++) {
-            for (var j = 0; j < this.stacks[i].length; j++) {
-              if (lit.args[0] == this.stacks[i][j].name && lit.args[1] == "floor"
-                  && j == 0)
-                return true == lit.pol;
+      // find the first argument
+      for (var i = 0; i < this.stacks.length; i++) {
+        for (var j = 0; j < this.stacks[i].length; j++) {
+          if (this.stacks[i][j].name == lit.args[0]) {
+            // evaluate based on the relation
+            switch(lit.rel) {
+              case "inside": // fall through to ontop since they are the same
+              case "ontop":
+                if (this.stacks[i][j-1]
+                       && lit.args[1] == this.stacks[i][j-1].name)
+                  return true == lit.pol;
+                break;
 
-              if (this.stacks[i][j-1]
-                     && lit.args[0] == this.stacks[i][j].name
-                     && lit.args[1] == this.stacks[i][j-1].name)
-                return true == lit.pol;
-            }
-          }
-          break;
-        case "leftof":
-          for (var i = 0; i < this.stacks.length; i++) {
-            for (var j = 0; j < this.stacks[i].length; j++) {
-              if (this.stacks[i][j].name == lit.args[0]) {
+              case "leftof":
                 for (var k = i-1; k < this.stacks.length; k--) {
                   for (var l = 0; l < this.stacks[k].length; l++) {
                     if (this.stacks[k][l].name == lit.args[1])
                       return true == lit.pol;
                   }
                 }
-              }
-            }
-          }
-          break;
-        case "rightof":
-          for (var i = 0; i < this.stacks.length; i++) {
-            for (var j = 0; j < this.stacks[i].length; j++) {
-              if (this.stacks[i][j].name == lit.args[0]) {
+                break;
+
+              case "rightof":
                 for (var k = i+1; k < this.stacks.length; k++) {
                   for (var l = 0; l < this.stacks[k].length; l++) {
                     if (this.stacks[k][l].name == lit.args[1])
                       return true == lit.pol;
                   }
                 }
-              }
-            }
-          }
-          break;
-        case "inside": // the same as ontop
-          for (var i = 0; i < this.stacks.length; i++) {
-            for (var j = 0; j < this.stacks[i].length; j++) {
-              if (lit.args[0] == this.stacks[i][j].name
-                  && this.stacks[i][j-1]
-                  && lit.args[1] == this.stacks[i][j-1].name)
-                return true == lit.pol;
-            }
-          }
-          break;
-        case "under":
-          for (var i = 0; i < this.stacks.length; i++) {
-            for (var j = 0; j < this.stacks[i].length; j++) {
-              if (lit.args[0] == this.stacks[i][j].name) {
+                break;
+
+              case "under":
                 for (var k = 0; k < j; k++) {
                   if (lit.args[1] == this.stacks[i][k].name)
                     return true == lit.pol;
                 }
-              }
-            }
-          }
-          break;
-        case "beside":
-          for (var i = 0; i < this.stacks.length; i++) {
-            for (var j = 0; j < this.stacks[i].length; j++) {
-              if (lit.args[0] == this.stacks[i][j].name) {
+                break;
+
+              case "beside":
                 if (this.stacks[i-1]) {
                   for (var k = 0; k < this.stacks[i-1].length; k++) {
                     if (this.stacks[i-1][k].name == lit.args[1]) {
@@ -319,26 +268,22 @@ module Planner {
                     }
                   }
                 }
-              }
-            }
-          }
-          break;
-        case "above":
-          for (var i = 0; i < this.stacks.length; i++) {
-            for (var j = 0; j < this.stacks[i].length; j++) {
-              if (lit.args[0] == this.stacks[i][j].name) {
+                break;
+
+              case "above":
                 for (var k = j+1; k < this.stacks[i].length; k++) {
                   if (this.stacks[i][k] && this.stacks[i][k].name == lit.args[1])
                     return true == lit.pol;
                 }
-              }
+                break;
+
+              case "holding":
+                if (this.crane)
+                  return this.crane.name == lit.args[0];
+              break;
             }
           }
-          break;
-        case "holding":
-          if (this.crane)
-            return this.crane.name == lit.args[0];
-        break;
+        }
       }
       return false == lit.pol;
     }
@@ -348,7 +293,6 @@ module Planner {
       var curr = 0;
       var min = Number.MAX_VALUE;
       var found = false;
-//      return 0;
      //go through all OR parts
       for(var i = 0; i < goal.alternatives.length; i++) {
         //go through all AND parts
@@ -387,7 +331,6 @@ module Planner {
     }
     
     //returns all possible neigbours of a state
-    //TODO: reduce number of states by checking if they are valid
     expand() {
       var neighbours = new Array();
       if (this.crane == null) {
@@ -411,7 +354,6 @@ module Planner {
             neighbours.push({cost: 1, state: newWorld});
         }
       }
-      //console.log(neighbours);
       return neighbours;
     }
   }
@@ -478,7 +420,8 @@ module Planner {
         if (currentObjectDescription.form == "box"
             && currentObjectDescription.size == "small"
             && belowObjectDescription.size == "small"
-            && (belowObjectDescription.form == "brick" || belowObjectDescription.form == "pyramid"))
+            && (belowObjectDescription.form == "brick"
+            || belowObjectDescription.form == "pyramid"))
           return false;
 
         // large boxes cannot be supported by large pyramids
