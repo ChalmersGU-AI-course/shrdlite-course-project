@@ -195,7 +195,7 @@ module Interpreter {
                refs: string[]): Literal[][] {
         var lits: Literal[][];
 
-        // Check if error occured with objects
+        // Check that not there exist at least one object and one reference
         var error = this.notEmptyHandler(objs, refs);
         if(!error && specialHandler)
           error = specialHandler(objs, refs);
@@ -475,12 +475,12 @@ module Interpreter {
       tooManyObjectsError(objs: string[], rel: string): string {
         var strobjs = objs.map((obj: string) => {
           var o = toObjectDef(this.findObject(obj));
-          return " the" + toString(o, true);
+          return " the" + toString(o);
         });
         strobjs.splice(-1, 0, "or"); // insert "or" before the last object
         var enumeration = strobjs.slice(0, -2);
         var last = strobjs.slice(-2);
-        return "Do you mean" + (rel ? rel : "") + enumeration.join(",") + last.join("") + "?";
+        return "Do you mean" + (rel ? (" " + rel) : "") + enumeration.join(",") + last.join("") + "?";
       }
 
       /*
@@ -494,8 +494,8 @@ module Interpreter {
           var refObj = toObjectDef(obj);
           obj = temp;
         }
-        var objstr = toString(obj, false);
-        var refstr = toString(refObj, false);
+        var objstr = toString(obj);
+        var refstr = toString(refObj);
         if(!obj || !refObj)
           return "no object or reference found";
         if(rel === "ontop" || rel === "inside") {
@@ -737,11 +737,11 @@ module Interpreter {
       return {form: obj.form, size: obj.size, color: obj.color};
     }
 
-    function toString(obj: Parser.Object, color: boolean): string {
+    function toString(obj: Parser.Object): string {
       var str: string = "";
       if(obj.size)
         str += " " + obj.size;
-      if(color && obj.color)
+      if(obj.color)
         str += " " + obj.color;
       if(obj.form)
         str += " " + obj.form;
