@@ -261,7 +261,7 @@ module Interpreter {
                 throw new Interpreter.Error(error);
               }
               // all objects get to be in relation "rel" to unique object
-              lits = permutations(lits, objs)
+              lits = uniqueCombinations(lits, objs)
             }
             break;
         }
@@ -679,11 +679,18 @@ module Interpreter {
       ref: string;
     }
 
-    function permutations(lits: Literal[][], objs: string[]): Literal[][] {
-      return uniqueCombinations(lits, 0, objs, 0);
+    /*
+     * Finds all unique combinations with objects and references not repeated in
+     * a single literal array
+     */
+    function uniqueCombinations(lits: Literal[][], objs: string[]): Literal[][] {
+      return uniqueCombHelper(lits, 0, objs, 0);
     }
 
-    function uniqueCombinations(lits: Literal[][],
+    /*
+     * Helper for uniqueCombinations
+     */
+    function uniqueCombHelper( lits: Literal[][],
                                lind: number,
                                objs: string[],
                                oind: number): Literal[][] {
@@ -699,7 +706,7 @@ module Interpreter {
           throw new Interpreter.Error("uniqueCombination: did not found elements");
         // recursive case: for all candidates get all possible combinations and
         // add them to lits.
-        var temp: Literal[][] = uniqueCombinations(lits, lind+1, objs, oind+1);
+        var temp: Literal[][] = uniqueCombHelper(lits, lind+1, objs, oind+1);
         var newLits: Literal[][] = [];
         candidates.forEach((lit: Literal) => {
           if(temp && temp.length > 0) {
@@ -716,6 +723,9 @@ module Interpreter {
       }
     }
 
+    /*
+     * removes duplicates from array
+     */
     function unique(arr: any[]): any[] {
       var seen = {};
       return arr.filter((item: any) => {
@@ -737,15 +747,6 @@ module Interpreter {
         str += " " + obj.form;
       str += " ";
       return str;
-    }
-
-    function printObject(obj: Parser.Object) {
-      for(var prop in obj) {
-        var val: string = obj[prop];
-        var str: string = "" + prop + ": ";
-        console.log(str);
-        console.log(val);
-      }
     }
 
     function literalsToString(litss: Literal[][]): string {
