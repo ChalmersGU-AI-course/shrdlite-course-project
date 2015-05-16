@@ -16,7 +16,7 @@ module Astar {
   interface Functions{
     heuristic_approx(n1:Node, n2:Node) : number
     dist_between(n1:Node, n2:Node) : number
-    get_children(n1:Node) : [Node]
+    get_children(n1:Node) : Node[]
     is_goalNode(n1:Node) : boolean
   }
 /*
@@ -49,7 +49,7 @@ AStar :: Graph -> Path
     openset.add(start);
     // Variable initiations moved outside reduce redundancy 
     var current : Node
-    var neighbors :[Node]
+    var neighbors : Node[]
     /*
     g_score - is compared with the gscore - where gscore is the traveled distance - 
     of the node to check gscore can be reduced.

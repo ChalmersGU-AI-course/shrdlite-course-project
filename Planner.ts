@@ -50,13 +50,17 @@ module Planner {
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         // This function returns an empty plan involving no random stack
         var plan : string[] = [];
-        
+
         //TODO: Make an appropriate type/struct for action/actions.
-        var actions : string[]  = ["LEFT","RIGHT","GRAB","DROP"]; 
+        var actions : string[]  = ['RIGHT']//,'LEFT','GRAB','DROP']; 
         
         //TODO: calculate a goalstate, or a function evaluation whether a state is a goalstate.
         function is_goalstate(state : ActionState): boolean{
-            return true;
+            if (state.world.arm == 3){
+                return true;
+            }else{
+                return false;
+            }   
         }
         
         //TODO: wrap worldstate in something that inherits from Astar.Node.
@@ -64,11 +68,12 @@ module Planner {
         start.world = state; 
         
         function dynamic_children(state : ActionState){
-            var states : [ActionState]; 
+            console.log("Hello")
+            var states : ActionState[] = []; 
             for (var i in actions){
                 if(works(actions[i],state.world) ){ //TODO: set ids etc  
                     states.push(calculate_state(actions[i],state.world));
-                }
+                } 
             }
             return states;
         }
@@ -92,14 +97,13 @@ module Planner {
                     //Alternative: returns allways false
                     throw new Error("unsupported action");
             }
-            
         }
 
         function calculate_state(action, state : WorldState) : ActionState {
             //TODO: calculates the next state given a action.
             //NOTE: Asuming call by value for state.
-            var astate = new ActionState("state"); 
-            switch(action){
+            var astate = new ActionState("state");
+            switch(action){ //something is wrong with this.
                 case 'LEFT':
                     state.arm = ( state.arm - 1 );
                     //astate.action = "l"
@@ -107,9 +111,9 @@ module Planner {
                     astate.world = state; 
                     return astate;
                 case 'RIGHT':
-                    state.arm = ( state.arm - 1 );
+                    state.arm = ( state.arm + 1 );
                     //astate.action = "r"
-                    astate.id = "l"
+                    astate.id = "r"
                     astate.world = state;
                     return astate; 
                 case 'GRAB':
@@ -154,12 +158,14 @@ module Planner {
         
         //TODO: exctract the plan from the path.
         //ex. plan = ["label1","r","r","l","l"] 
-        // for (var p in path){
-        //     plan.push("id");
-        //     alert((path[p]).id);
-        // }
-        console.log(path)
-        //return plan;
-        return ["label1","r","label2","r","label3","r","label4","l"];
+        for (var p = 1; p < path.length; p++){
+            plan.push(path[p].id);
+            plan.push("id");
+            
+        }
+        //console.log(path)
+        return plan;
+
+        //return ["label1","r","label2","r","label3","r","label4","l"];
     }
 }
