@@ -1,121 +1,15 @@
-///<reference path="World.ts"/>
-///<reference path="Interpreter.ts"/>
-///<reference path="./lib/node.d.ts"/>
-///<reference path="./astar/AStar.ts"/>
-///<reference path="./lib/collections.ts"/>
+///<reference path="../lib/node.d.ts"/>
+///<reference path="../typings/mocha/mocha.d.ts"/>
+///<reference path="../typings/chai/chai.d.ts"/>
+///<reference path="../Interpreter.ts"/>
+///<reference path="../lib/collections.ts"/>
+///<reference path="../astar/AStar.ts"/>
 
-module Planner {
+import chai = require('chai');
 
-  ////////////////////////////////
-  // global variables
-
-  var currentWorldDescription = new collections.Dictionary<String, WorldObject>();
-  var position : number = 0;
-
-
-  //////////////////////////////////////////////////////////////////////
-  // exported functions, classes and interfaces/types
-
-  export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
-    var plans : Result[] = [];
-    interpretations.forEach((intprt) => {
-        var plan : Result = <Result>intprt;
-        plan.plan = planInterpretation(plan.intp, currentState);
-        plans.push(plan);
-    });
-    if (plans.length) {
-      return plans;
-    } else {
-      throw new Planner.Error("Found no plans");
-    }
-  }
-
-
-  export interface Result extends Interpreter.Result {plan:string[];}
-
-
-  export function planToString(res : Result) : string {
-    return res.plan.join(", ");
-  }
-
-
-  export class Error implements Error {
-    public name = "Planner.Error";
-    constructor(public message? : string) {}
-    public toString() {return this.name + ": " + this.message}
-  }
-  
-  //////////////////////////////////////////////////////////////////////
-  // private functions
-
-  function printLog(log : Object) : void {
-    //document.getElementById('log').innerHTML += JSON.stringify(log) + "<br/>";
-  }
-
-  function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-    var plan : string[] = [];
-    printLog(state);
-
-    var goal: PDDL = new PDDL(intprt);
-
-    var solution = Astar.search(convert(state), null, goal);
-   
-    var plan:string[] = new Array<string>();
-    
-    console.log(solution.toString());
-
-    for (var i = 0; i < solution.path.length; i++) {
-      //print out the path
-      console.log(solution.path[i].toString());
-    }
-    
-    for (var i = 1; i < solution.path.length; i++) {
-      plan = plan.concat(div(solution.path[i-1], solution.path[i]));
-    }
-    
-    //print out the solution
-    console.log("plan " + plan);
-
-
-
-    return plan;
-  }
-
-  function div(state1: WorldDescription, state2: WorldDescription): string[] {
-    var ret: string[] = new Array<string>();
-    for(var i = 0; i < state1.stacks.length; i++) {
-      if(state1.stacks[i].length != state2.stacks[i].length) {
-        var tmp = position - i;
-        if(tmp>0) {
-          for(var j = tmp; j > 0; j--) {
-            position--;
-            ret.push("l");
-          }
-        } else if(tmp < 0) {
-          for(var j = tmp; j < 0; j++) {
-            position++;
-            ret.push("r");
-          }
-        }
-        if(state1.stacks[i].length > state2.stacks[i].length) {
-          ret.push("p");
-        } else {
-          ret.push("d");
-        }
-      }
-    }
-    //console.log("div: " + ret);
-    return ret;
-  }
-
-  function getRandomInt(max) {
-    return Math.floor(Math.random() * max);
-  }
-
-
-  ////////////////////////////////////////////////////
-  // private classes
-
+module PlannerTest {
+  var position: number = 0;
+  //a expression in the Planning Domain Definition Language
   class PDDL {
     //the inner array describes literals connected with an AND,
     //the outer one connected with an OR
@@ -153,69 +47,6 @@ module Planner {
     crane: WorldObject;
     
     //returns true if a PDDL matches on the current state
-
-    //usage: either both parameter null, then create an empty WorldDescription
-    // OR  : stacks not null, then create a WorldDescription with the given
-    // stacks. 
-    // WARNING: stacks null, but crane not null will throw an error.
-    constructor(stacks: string[][], crane: string) {
-      //if both parameter null, create an empty WorldDescription
-      if( stacks == null && crane == null){
-        this.crane = null;
-        this.stacks = new Array<Array<WorldObject>>();
-        this.h = 0;
-      } else if (stacks != null){
-        //if stacks are given, use them.
-        this.stacks = new Array<Array<WorldObject>>();
-        for (var i = 0; i < stacks.length; i++) {
-          this.stacks[i] = new Array<WorldObject>();
-        }
-        for (var i = 0; i < stacks.length; i++) {
-          for (var j = 0; j < stacks[i].length; j++) {
-            this.stacks[i].push(currentWorldDescription.getValue(stacks[i][j]));
-          }
-        }
-        if(crane != null){
-          //if stacks are given and crane is given, use also the crane
-          this.crane = currentWorldDescription.getValue(crane);
-        } else {
-          this.crane = null;
-        }
-        //predefive a heuristic value
-        this.h = 0;
-      } else {
-        //if crane is given, but stacks is null
-        throw new Error("You are stupid! You cant create a world without a stack but with a crane!");
-      }
-    }
-
-
-    toString() {
-      var s : string = "";
-      for (var i = 0; i < this.stacks.length; i++) {
-        s += "[";
-        for (var j = 0; j < this.stacks[i].length; j++) {
-          s += this.stacks[i][j] + ", ";
-        }
-        s += "]";
-      }
-      s += "\n" + this.crane + "\n\n";
-      return s; 
-    }
-
-
-    clone() : WorldDescription {
-      var braveNewWorld : WorldDescription = new WorldDescription(null, null);
-      for (var i = 0; i < this.stacks.length; i++) {
-        braveNewWorld.stacks[i] = new Array<WorldObject>();
-        for (var j = 0; j < this.stacks[i].length; j++) {
-          braveNewWorld.stacks[i].push(this.stacks[i][j]);
-        }
-      }
-      braveNewWorld.crane = this.crane;
-      return braveNewWorld;
-    }
-
     match(goal: PDDL) {
       for (var i = 0; i < goal.alternatives.length; i++) {
         if(this.checkAlt(goal.alternatives[i])){
@@ -240,14 +71,10 @@ module Planner {
         case "ontop":
           for (var i = 0; i < this.stacks.length; i++) {
             for (var j = 0; j < this.stacks[i].length; j++) {
-              if (lit.args[0] == this.stacks[i][j].name && lit.args[1] == "floor"
-                  && j == 0)
-                return true == lit.pol;
-
               if (this.stacks[i][j-1]
                      && lit.args[0] == this.stacks[i][j].name
                      && lit.args[1] == this.stacks[i][j-1].name)
-                return true == lit.pol;
+                return true;
             }
           }
           break;
@@ -258,7 +85,7 @@ module Planner {
                 for (var k = i-1; k < this.stacks.length; k--) {
                   for (var l = 0; l < this.stacks[k].length; l++) {
                     if (this.stacks[k][l].name == lit.args[1])
-                      return true == lit.pol;
+                      return true;
                   }
                 }
               }
@@ -272,7 +99,7 @@ module Planner {
                 for (var k = i+1; k < this.stacks.length; k++) {
                   for (var l = 0; l < this.stacks[k].length; l++) {
                     if (this.stacks[k][l].name == lit.args[1])
-                      return true == lit.pol;
+                      return true;
                   }
                 }
               }
@@ -285,7 +112,7 @@ module Planner {
               if (lit.args[0] == this.stacks[i][j].name
                   && this.stacks[i][j-1]
                   && lit.args[1] == this.stacks[i][j-1].name)
-                return true == lit.pol;
+                return true;
             }
           }
           break;
@@ -295,7 +122,7 @@ module Planner {
               if (lit.args[0] == this.stacks[i][j].name) {
                 for (var k = 0; k < j; k++) {
                   if (lit.args[1] == this.stacks[i][k].name)
-                    return true == lit.pol;
+                    return true;
                 }
               }
             }
@@ -308,14 +135,14 @@ module Planner {
                 if (this.stacks[i-1]) {
                   for (var k = 0; k < this.stacks[i-1].length; k++) {
                     if (this.stacks[i-1][k].name == lit.args[1]) {
-                      return true == lit.pol;
+                      return true;
                     }
                   }
                 }
                 if (this.stacks[i+1]) {
                   for (var k = 0; k < this.stacks[i+1].length; k++) {
                     if (this.stacks[i+1][k].name == lit.args[1]) {
-                      return true == lit.pol;
+                      return true;
                     }
                   }
                 }
@@ -329,19 +156,40 @@ module Planner {
               if (lit.args[0] == this.stacks[i][j].name) {
                 for (var k = j+1; k < this.stacks[i].length; k++) {
                   if (this.stacks[i][k] && this.stacks[i][k].name == lit.args[1])
-                    return true == lit.pol;
+                    return true;
                 }
               }
             }
           }
           break;
         case "holding":
-          if (this.crane)
-            return this.crane.name == lit.args[0];
+          return this.crane.name == lit.args[0];
         break;
       }
-      return false == lit.pol;
+      return false;
     }
+    
+
+/*    match(goal: WorldDescription) {
+      for (var i = 0; i < this.stacks.length; i++) {
+        if (this.stacks[i].length == 0 && goal.stacks[i].length == 0) {
+          continue;
+        }
+        if (this.stacks[i].length == 0 || goal.stacks[i].length == 0) {
+          return false;
+        }
+        if (this.stacks[i].length != goal.stacks[i].length) {
+          return false;
+        }
+        for (var j = 0; j < this.stacks[i].length; j++) {
+           if (this.stacks[i][j].form != goal.stacks[i][j].form
+               || this.stacks[i][j].size != goal.stacks[i][j].size
+               || this.stacks[i][j].color != goal.stacks[i][j].color)
+             return false;
+        }
+      }
+      return true;
+    }*/
 
     //guesses a distance from the current state to goals describet in a PDDL
     heuristic(goal: PDDL) {
@@ -414,6 +262,66 @@ module Planner {
       //console.log(neighbours);
       return neighbours;
     }
+
+    toString() {
+      var s : string = "";
+      for (var i = 0; i < this.stacks.length; i++) {
+        s += "[";
+        for (var j = 0; j < this.stacks[i].length; j++) {
+          s += this.stacks[i][j] + ", ";
+        }
+        s += "]";
+      }
+      s += "\n" + this.crane + "\n\n";
+      return s; 
+    }
+
+    //usage: either both parameter null, then create an empty WorldDescription
+    // OR  : stacks not null, then create a WorldDescription with the given
+    // stacks. 
+    // WARNING: stacks null, but crane not null will throw an error.
+    constructor(stacks: string[][], crane: string) {
+      //if both parameter null, create an empty WorldDescription
+      if( stacks == null && crane == null){
+        this.crane = null;
+        this.stacks = new Array<Array<WorldObject>>();
+        this.h = 0;
+      } else if (stacks != null){
+        //if stacks are given, use them.
+        this.stacks = new Array<Array<WorldObject>>();
+        for (var i = 0; i < stacks.length; i++) {
+          this.stacks[i] = new Array<WorldObject>();
+        }
+        for (var i = 0; i < stacks.length; i++) {
+          for (var j = 0; j < stacks[i].length; j++) {
+            this.stacks[i].push(exampleWorldDescription.getValue(stacks[i][j]));
+          }
+        }
+        if(crane != null){
+          //if stacks are given and crane is given, use also the crane
+          this.crane = exampleWorldDescription.getValue(crane);
+        } else {
+          this.crane = null;
+        }
+        //predefive a heuristic value
+        this.h = 0;
+      } else {
+        //if crane is given, but stacks is null
+        throw new Error("You are stupid! You cant create a world without a stack but with a crane!");
+      }
+    }
+
+    clone() : WorldDescription {
+      var braveNewWorld : WorldDescription = new WorldDescription(null, null);
+      for (var i = 0; i < this.stacks.length; i++) {
+        braveNewWorld.stacks[i] = new Array<WorldObject>();
+        for (var j = 0; j < this.stacks[i].length; j++) {
+          braveNewWorld.stacks[i].push(this.stacks[i][j]);
+        }
+      }
+      braveNewWorld.crane = this.crane;
+      return braveNewWorld;
+    }
   }
 
   //describes an object in a world
@@ -435,16 +343,34 @@ module Planner {
     }
   }
 
-  function convert(input: WorldState): WorldDescription {
-    for (var name in input.objects) {
-      currentWorldDescription.setValue(name, new WorldObject(input.objects[name].form, 
-                                                             input.objects[name].size,
-                                                             input.objects[name].color,
-                                                             name));
-    }
+  ////////////////////////////////////////
+  // HERE THE TEST DESCRIPTION BEGINNS  //
+  ///////////////////////////////////////
 
-    return new WorldDescription(input.stacks, input.holding);
-  }
+//[[a,b] [c] [] [d, e] []]
+  var exampleWorldDescription = new collections.Dictionary<String, WorldObject>();
+  exampleWorldDescription.setValue("a", new WorldObject("brick", "large", "green", "a"));
+  exampleWorldDescription.setValue("b", new WorldObject("brick", "small", "white", "b"));
+  exampleWorldDescription.setValue("c", new WorldObject("plank", "large", "red", "c"));
+  exampleWorldDescription.setValue("d", new WorldObject("plank", "small", "green", "d"));
+  exampleWorldDescription.setValue("e", new WorldObject("ball", "large", "white", "e"));
+  exampleWorldDescription.setValue("f", new WorldObject("ball", "small", "black", "f"));
+  exampleWorldDescription.setValue("g", new WorldObject("table", "large", "blue", "g"));
+  exampleWorldDescription.setValue("h", new WorldObject("table", "small", "red", "h"));
+  exampleWorldDescription.setValue("i", new WorldObject("pyramid", "large", "yellow", "i"));
+  exampleWorldDescription.setValue("j", new WorldObject("pyramid", "small", "red", "j"));
+  exampleWorldDescription.setValue("k", new WorldObject("box", "large", "yellow", "k"));
+  exampleWorldDescription.setValue("l", new WorldObject("box", "large", "red", "l"));
+  exampleWorldDescription.setValue("m", new WorldObject("box", "small", "blue", "m"));
+
+  var exampleState = {
+    "stacks": [["e"],["g","l"],[],["k","m","f"],[]],
+    "holding":null,
+    "arm":0
+  };
+
+  var exampleGoal = "inside(f, k)";
+  var expect = chai.expect;
 
   function checkIfValid(state) {
     for (var i = 0; i < state.stacks.length; i++) {
@@ -462,7 +388,7 @@ module Planner {
           return false;
 
         // small objects cannot support large objects
-        if (currentObjectDescription.size == "large"
+	if (currentObjectDescription.size == "large"
             && belowObjectDescription.size == "small")
           return false;
 
@@ -490,5 +416,67 @@ module Planner {
       }
     }
     return true;
+  }
+
+  ////////////////////////////////////
+  // HERE THE TEST SECTION BEGINNS  //
+  ////////////////////////////////////
+
+
+  describe('Planner', () => {
+
+    //test to check if AStar is called
+    describe('AStar in the Planner', () => {
+      it('test if a-star runs', (done) => {
+        var state: WorldDescription = new WorldDescription([["e"],["g","l"],["k", "m", "f"], new Array<string>(), new Array<string>()],
+                                               null);
+        var lit : Lit[][] = new Array( new Array( new Lit(true, "holding",
+                                                          ["m"])));
+        var goal: PDDL = new PDDL(lit);
+        var solution = Astar.search(state, null, goal);
+       
+        var plan:string[] = new Array<string>();
+        for (var i = 0; i < solution.path.length; i++) {
+          //print out the path
+          console.log(solution.path[i].toString());
+          
+        }
+        for (var i = 1; i < solution.path.length; i++) {
+          plan.concat(div(solution.path[i-1], solution.path[i]));
+        }
+        
+        //print out the solution
+        console.log(solution);
+        console.log(plan);
+        done()
+      })
+    });
+  });
+
+
+  function div(state1: WorldDescription, state2: WorldDescription): string[] {
+    var ret: string[] = new Array<string>();
+    for(var i = 0; i < state1.stacks.length; i++) {
+      if(state1.stacks[i].length != state2.stacks[i].length) {
+        var tmp = position - i;
+        if(tmp>0) {
+          for(var j = tmp; j > 0; j--) {
+            position--;
+            ret.push("l");
+          }
+        } else if(tmp < 0) {
+          for(var j = tmp; j < 0; j++) {
+            position++;
+            ret.push("r");
+          }
+        }
+        if(state1.stacks[i].length > state2.stacks[i].length) {
+          ret.push("p");
+        } else {
+          ret.push("d");
+        }
+      }
+    }
+    return ret;
   }
 }

@@ -1,14 +1,12 @@
 ///<reference path="../lib/node.d.ts"/>
 ///<reference path="../typings/mocha/mocha.d.ts"/>
 ///<reference path="../typings/chai/chai.d.ts"/>
-///<reference path="../lib/collections.d.ts"/>
 
 import chai = require('chai');
-import A = require('../astar/AStar');
 
 module AStarEuclidian {
 
-  class PuzzleState implements A.Astar.State {
+  class PuzzleState implements Astar.State {
     puzzle: number[][];
     cache: number;          // cache for heuristic computations
 
@@ -49,19 +47,6 @@ module AStarEuclidian {
         }
       }
       return transitions;
-    }
-
-    // hash is a 9 digit key for each unique puzzle state
-    hash(): number {
-      var hash = 0;
-      var base = 1;
-      for (var i = 0; i < 3; i++) {
-        for (var j = 0; j < 3; j++) {
-          hash += this.puzzle[i][j] * base;
-          base *= 10;
-        }
-      }
-      return hash;
     }
 
     toString() {
@@ -236,7 +221,7 @@ module AStarEuclidian {
         var goal = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
         var start = new PuzzleState(puzzle);
         var end = new PuzzleState(goal);
-        var solution = A.Astar.search(start, null, end);
+        var solution = Astar.search(start, null, end);
         // for(var i=0; i<path.length; i++) // to see the path (26 steps)
         //   console.log(solution.path[i].puzzle);
         var last = solution.path.pop();
