@@ -1,12 +1,11 @@
 ///<reference path="../lib/node.d.ts"/>
 ///<reference path="../typings/mocha/mocha.d.ts"/>
 ///<reference path="../typings/chai/chai.d.ts"/>
-///<reference path="../lib/collections.d.ts"/>
+///<reference path="../Interpreter.ts"/>
+///<reference path="../lib/collections.ts"/>
+///<reference path="../astar/AStar.ts"/>
 
 import chai = require('chai');
-import A = require('../astar/AStar');
-import C = require('../lib/collections'); 
-import I = require('../Interpreter');
 
 module PlannerTest {
   var position: number = 0;
@@ -22,7 +21,7 @@ module PlannerTest {
   }
 
   //one expression describing a property of a goal
-  class Lit implements I.Interpreter.Literal {
+  class Lit implements Interpreter.Literal {
     //true/false: goal must/must not forfill the property
     pol:boolean; 
     //a relationship between objects as describet in the grammar
@@ -39,7 +38,7 @@ module PlannerTest {
     }
   }
 
-  class WorldDescription implements A.Astar.State {
+  class WorldDescription implements Astar.State {
     //heuristical value for this state. Useful if you don't want to call
     //the heuristical function each time
     h: number; 
@@ -163,6 +162,9 @@ module PlannerTest {
             }
           }
           break;
+        case "holding":
+          return this.crane.name == lit.args[0];
+        break;
       }
       return false;
     }
@@ -346,7 +348,7 @@ module PlannerTest {
   ///////////////////////////////////////
 
 //[[a,b] [c] [] [d, e] []]
-  var exampleWorldDescription = new C.collections.Dictionary<String, WorldObject>();
+  var exampleWorldDescription = new collections.Dictionary<String, WorldObject>();
   exampleWorldDescription.setValue("a", new WorldObject("brick", "large", "green", "a"));
   exampleWorldDescription.setValue("b", new WorldObject("brick", "small", "white", "b"));
   exampleWorldDescription.setValue("c", new WorldObject("plank", "large", "red", "c"));
@@ -428,10 +430,10 @@ module PlannerTest {
       it('test if a-star runs', (done) => {
         var state: WorldDescription = new WorldDescription([["e"],["g","l"],["k", "m", "f"], new Array<string>(), new Array<string>()],
                                                null);
-        var lit : Lit[][] = new Array( new Array( new Lit(true, "inside",
-                                                          ["f", "l"])));
+        var lit : Lit[][] = new Array( new Array( new Lit(true, "holding",
+                                                          ["m"])));
         var goal: PDDL = new PDDL(lit);
-        var solution = A.Astar.search(state, null, goal);
+        var solution = Astar.search(state, null, goal);
        
         var plan:string[] = new Array<string>();
         for (var i = 0; i < solution.path.length; i++) {
