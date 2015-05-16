@@ -102,20 +102,22 @@ module Interpreter {
        *    1. Arm should hold spec object
        */
       take(ent : Parser.Entity): Literal[][] {
-        var objQuant = ent.quant;
         var objs = this.references(ent.obj);
+        var objQuant = ent.quant;
         if(objs && objs.length > 0) {
           switch(objQuant) {
             case "the":
-              if(objs.length > 1) // TODO: ask "do you mean the large red pyramid or the small green?"
-                throw new Interpreter.Error("take: semantic ambiguity (too many options to take)");
+              if(objs.length > 1) {
+                var err = this.tooManyObjectsError(objs, null);
+                throw new Interpreter.Error(err);
+              }
               return [[ {pol: true, rel: "holding", args: [objs.pop()]} ]]; // [[lit]]
             case "any":
-              return objs.map((ref: string) => {
-                return [ {pol: true, rel: "holding", args: [ref]} ]; // [[lit] or [lit] or [lit]]
+              return objs.map((obj: string) => {
+                return [ {pol: true, rel: "holding", args: [obj]} ]; // [[lit] or [lit] or [lit]]
               });
             case "all":
-              throw new Interpreter.Error("take: logic error (the robot has only one arm)");
+              throw new Interpreter.Error("The robot has unfortunately only one arm");
           }
         }
       }
@@ -139,7 +141,7 @@ module Interpreter {
         // error handler callback
         function specialHandler(objs: string[], refs: string[]): string {
           if(objs.length > 1)
-            return "put: too many objects are found";
+            return this.tooManyObjectsError(objs, null);
           return null;
         }
         return this.singular(specialHandler, [obj], loc.rel, refQuant, refs);
@@ -165,9 +167,10 @@ module Interpreter {
         switch(objQuant) {
           case "the":
             // special error handler
+            var that = this;
             function specialHandler(objs: string[], refs: string[]): string {
               if(objs.length > 1)
-                return "move: too many objects are found";
+                return that.tooManyObjectsError(objs, null);
               return null;
             }
             return this.singular(specialHandler, objs, loc.rel, refQuant, refs);
@@ -232,8 +235,8 @@ module Interpreter {
         var error = this.notEmptyHandler(objs, refs);
         if(error)
           throw new Interpreter.Error(error);
-        var ontopOrInside = rel === "ontop" || rel === "inside"
 
+        var ontopOrInside = rel === "ontop" || rel === "inside"
         switch(refQuant) {
           case "the":
             if(ontopOrInside) {
@@ -254,7 +257,7 @@ module Interpreter {
             lits = this.literals(refs, objs, rel, swappedArgs);
             if(ontopOrInside) {
               if(refs.length < objs.length) {
-                error = "There are not enough references for the objects to be " + rel;
+                error = "There are not enough references for the objects to be " + rel + " of";
                 throw new Interpreter.Error(error);
               }
               // all objects get to be in relation "rel" to unique object
@@ -302,13 +305,13 @@ module Interpreter {
             if(refs && refs.length > 0) {
               refs.forEach((ref: string) => {
                 target = this.findTarget(obj, loc.rel, ref, onFloor); // findTarget(obj, "leftof", "a")
-                if(target) // found target TODO: throw error if no target is found
+                if(target)
                   matches.push(target);
               });
             }
           }
         }
-        return matches;
+        return unique(matches);
       }
 
       /*
@@ -335,8 +338,10 @@ module Interpreter {
                 case "beside":                    // check that only one case is possible
                   var left = this.findToLeft(stacks, obj, col, row)
                   var right = this.findToRight(stacks, obj, col, row)
-                  if(left && right)
-                    throw new Interpreter.Error("findTarget: semantic error (There are too many targets)");
+                  if(left && right) {
+                    var err = this.tooManyObjectsError([left, right], "beside");
+                    throw new Interpreter.Error(err);
+                  }
                   if(left) target = left;
                   if(right) target = right;
                   break;
@@ -344,23 +349,22 @@ module Interpreter {
                   target = this.findAbove(stacks, obj, col, row)
                   break;
                 case "ontop":
-                  if(onFloor) {  // special: take the x ontop of the floor
+                  if(onFloor) {  // special: take the x ontop of the floor (refers to it self)
                     target = ref
                   } else {
                     var r = this.findObject(ref);
-                    if(r.form === "box")          // objects cannot be "ontop" of boxes (Physical law)
-                      throw new Interpreter.Error("findTarget: logic error (something ontop of a box)");
-                    target = stacks[col][row+1];
+                    if(r.form === "box")  // objects cannot be "ontop" of boxes (Physical law)
+                      throw new Interpreter.Error("objects can only be inside boxes");
+                    target = stacks[col][row+1]; // look directly above
                   }
                   break;
                 case "inside":
                   var r = this.findObject(ref);
-                  if(r.form !== "box")          // objects cannot be "ontop" of boxes (Physical law)
-                    throw new Interpreter.Error("findTarget: logic error (something inside of non-box)");
-                  target = stacks[col][row+1];
+                  if(r.form !== "box")  // objects cannot be "ontop" of boxes (Physical law)
+                    throw new Interpreter.Error("objects can only be inside boxes");
+                  target = stacks[col][row+1]; // look directly above
                   break;
                 case "under":
-                  // target = stacks[col][row-1];
                   target = this.findUnder(stacks, obj, col, row)
                   break;
               }
@@ -465,6 +469,21 @@ module Interpreter {
       // Helper methods
 
       /*
+       * Make error of type:
+       * "Do you mean the large blue pyramid or the small red pyramid?"
+       */
+      tooManyObjectsError(objs: string[], rel: string): string {
+        var strobjs = objs.map((obj: string) => {
+          var o = toObjectDef(this.findObject(obj));
+          return " the" + toString(o, true);
+        });
+        strobjs.splice(-1, 0, "or"); // insert "or" before the last object
+        var enumeration = strobjs.slice(0, -2);
+        var last = strobjs.slice(-2);
+        return "Do you mean" + (rel ? rel : "") + enumeration.join(",") + last.join("") + "?";
+      }
+
+      /*
        * Check if object is allowed at location according to physical laws.
        */
       locationError(obj: Parser.Object, rel: string, ref: string, swapped: boolean): string {
@@ -475,8 +494,8 @@ module Interpreter {
           var refObj = toObjectDef(obj);
           obj = temp;
         }
-        var objstr = toString(obj);
-        var refstr = toString(refObj)
+        var objstr = toString(obj, false);
+        var refstr = toString(refObj, false);
         if(!obj || !refObj)
           return "no object or reference found";
         if(rel === "ontop" || rel === "inside") {
@@ -523,9 +542,9 @@ module Interpreter {
        */
       notEmptyHandler(objs: string[], refs: string[]): string {
         if(!objs || objs.length === 0)
-          return "move: no objects found";
+          return "No objects found";
         if(!refs || refs.length === 0)
-          return "move: no references found";
+          return "No references found";
         return null;
       }
 
@@ -671,7 +690,7 @@ module Interpreter {
       var obj = objs[oind];
       if(obj) {
         var literals: Literal[][] = [];
-        // find what literals in the current literal array contains the object in args
+        // filter out literals in the current literal array contains the object in args
         var candidates: Literal[] = lits[lind].filter((lit: Literal) => {
           return (lit.args[0] === obj);
         });
@@ -697,14 +716,23 @@ module Interpreter {
       }
     }
 
+    function unique(arr: any[]): any[] {
+      var seen = {};
+      return arr.filter((item: any) => {
+        return seen.hasOwnProperty(item) ? false : (seen[item] = true);
+      });
+    }
+
     function toObjectDef(obj: Parser.Object): ObjectDefinition {
       return {form: obj.form, size: obj.size, color: obj.color};
     }
 
-    function toString(obj: Parser.Object): string {
+    function toString(obj: Parser.Object, color: boolean): string {
       var str: string = "";
       if(obj.size)
         str += " " + obj.size;
+      if(color && obj.color)
+        str += " " + obj.color;
       if(obj.form)
         str += " " + obj.form;
       str += " ";
