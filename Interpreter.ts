@@ -185,17 +185,30 @@ module Interpreter {
             return intprt;
         */
     }
+    
+    function getObjectHelper(cmd: Parser.Command, state: WorldState):string[]{
+        var priObj:Parser.Object = cmd.ent.obj;
+        var possibleObjs:string[] = getPossibleObjects(priObj, state);
+        //TODO: Filter out based on location
+        if(priObj.loc !== undefined){
+            var secObj:Parser.Object = priObj.loc.ent.obj;
+            var secundaryObjs:string[] = getPossibleObjects(secObj, state);
+            for(var j = 0; i<secundaryObjs.length; i++){
+                getRelation(possibleObjs,secundaryObjs[j],state.stacks);
+            }
+        }
+        //Anything more?
+        
+        return possibleObjs;
+    }
 
     function getPrimaryObjects(cmd: Parser.Command, state: WorldState):string[] {
-        var visuallyPossibleObjs:string[] = getPossibleObjects(cmd.ent.obj, state);
-        //TODO: Filter out based on location
+        var visuallyPossibleObjs:string[] = getObjectHelper(cmd,state);
         return visuallyPossibleObjs;
     }
 
     function getTargetObjects(cmd: Parser.Command, state: WorldState):string[] {
-        var visuallyPossibleObjs:string[] = getPossibleObjects(cmd.loc.ent.obj, state);
-        //TODO: Filter out based on location
-
+        var visuallyPossibleObjs:string[] = getObjectHelper(cmd,state);
         return visuallyPossibleObjs;
     }
 
@@ -243,8 +256,8 @@ module Interpreter {
     // returns 'none' if there is no relation
     // possible relations: left, right, inside, under, above (beside = left or right)
     function getRelation(o1 : string, o2 : string, stacks : string[][]) : string{
-        var coo1 = getStackIndex(o1,stacks);
-        var coo2 = getStackIndex(o2,stacks);
+        var coo1:number[] = getStackIndex(o1,stacks);
+        var coo2:number[] = getStackIndex(o2,stacks);
         // Check so both elements exist
         if(coo1[0] === -1 || coo1[1] === -1 || coo2[0] === -1 || coo2[1] === -1)
           return 'nonexistent';
@@ -273,7 +286,7 @@ module Interpreter {
 
     // Returns coordinates in the stack for a given object ; returns -1, -1 if element does not exist.
     function getStackIndex(o1 : string, stacks : string[][]) : number[]{
-        var cords = [-1, -1];
+        var cords:number[] = [-1, -1];
         for(var i = 0; i < stacks.length; i++){
             for(var j = 0; j < stacks[i].length; j++){
                 if(stacks[i][j] === o1){
