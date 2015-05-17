@@ -40,6 +40,14 @@ module Planner {
     // private functions
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
+        
+        /*
+            TODO:
+                - Check if the interpretation is valid
+                - Do A* and calculate heuristic values on every interpretation
+                - Choose the interpretation involving least steps
+                - 
+        */
         // This function returns a dummy plan involving a random stack
         do {
             var pickstack = getRandomInt(state.stacks.length);

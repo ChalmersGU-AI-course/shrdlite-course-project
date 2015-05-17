@@ -129,27 +129,6 @@ module Interpreter {
                 -See if such an object exists in the world
                 -Identify the target objects t[] (i.e. "floor")
                 -See if such an object exists in the world
-                
-                -Handle quantifications:
-                    -   any -> the
-                            -If ambiguity for target, ask for clarification
-                    -   any -> any
-                    -   any -> all
-
-                    -   the -> the
-                            -If ambiguity for primary OR target, ask for clarification
-                    -   the -> any
-                            -If ambiguity for primary, ask for clarification
-                    -   the -> all
-                            -If ambiguity for primary, ask for clarification
-
-                    -   all -> the
-                            -If ambiguity for target, ask for clarification
-                    -   all -> any
-                    -   all -> all
-                -Handle relations:
-                    - //NEEDED?
-        
                 -If ambiguity and the quantifier is 'the', ask for clarification
                 -Check if the positioning is valid, ontop(o, t) 
         */
@@ -193,8 +172,7 @@ module Interpreter {
         if(secObj !== null && rel != null){
             //var secObj:Parser.Object = priObj.loc.ent.obj;
             var secondaryObjs:string[] = getPossibleObjects(secObj, state);
-                getRelation(possibleObjs,secondaryObjs,rel,state.stacks);
-            
+            possibleObjs = getRelation(possibleObjs, secondaryObjs, rel, state.stacks);
         }
         //Anything more?
         
@@ -204,24 +182,24 @@ module Interpreter {
     function getPrimaryObjects(cmd: Parser.Command, state: WorldState):string[] {
         var priObj = cmd.ent.obj;
         var secObj = null;
-        if(priObj.loc != undefined)
-            secObj = priObj.loc.ent.obj;
         var rel = null;
-        if(cmd.loc != undefined)
-            rel = cmd.loc.rel;
-        var possibleObjs:string[] = getObjectHelper(priObj,secObj,rel,state);
+        if (priObj.loc != undefined) {
+            secObj = priObj.loc.ent.obj;
+            rel = priObj.loc.rel;
+        }
+        var possibleObjs:string[] = getObjectHelper(priObj, secObj, rel, state);
         return possibleObjs;
     }
 
     function getTargetObjects(cmd: Parser.Command, state: WorldState):string[] {
-        var priObj = cmd.ent.obj;
+        var priObj = cmd.loc.ent.obj;
         var secObj = null;
-        if(cmd.loc != undefined)
-            secObj = cmd.loc.ent.obj;
         var rel = null;
-        if(cmd.loc != undefined)
-            rel = cmd.loc.rel;
-        var possibleObjs:string[] = getObjectHelper(priObj,secObj,rel,state);
+        if (priObj.loc != undefined) {
+            secObj = priObj.loc.ent.obj;
+            rel = priObj.loc.rel;
+        }
+        var possibleObjs:string[] = getObjectHelper(priObj, secObj, rel, state);
         return possibleObjs;
     }
 
