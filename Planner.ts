@@ -8,7 +8,7 @@ module Planner {
     // exported functions, classes and interfaces/types
 
     //TODO should this be moved somewhere? Argument och global parameter?
-    var searchDepth = 5;
+    var searchDepth = 7;
     var NUM_STACKS;
 
     export function plan(interpretation : PddlLiteral[][], currentState : ExtendedWorldState) : string[] {
@@ -371,7 +371,7 @@ module Planner {
         // Error hunting
         // Doesn't catch anything. :(
         var attops = [];
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i < NUM_STACKS; i++) {
             var attops2 = _.filter(newWorld, function(pddl) {
                 return pddl.rel === 'attop' && pddl.args[1] === 'floor-'+i;
             });
