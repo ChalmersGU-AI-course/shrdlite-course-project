@@ -46,6 +46,7 @@ module Planner {
 	var initState : State = new State(state.stacks, state.holding, state.arm, "");
 
 	var plan = AStar.AStarSearch<State>(copyState(initState), goalFunc, h, costFunc, adjacent);
+	console.log(plan);
 	plan.forEach((elem) => {
 	    actions.push(elem.action);
 	});
@@ -92,7 +93,7 @@ module Planner {
             st.push(newState);
         }   
         //right
-        if(state.armpos < state.stacks.length) {
+        if(state.armpos < state.stacks.length-1) {
             var newState = copyState(state);
             newState.armpos += 1;
 	    newState.action = "r";
@@ -108,7 +109,7 @@ module Planner {
             st.push(newState);
         }
         //pickup
-        if(!state.holding && state.stacks[state.armpos].length >= 0) {
+        if(!state.holding && state.stacks[state.armpos].length > 0) {
             var newState = copyState(state);
             newState.holding = state.stacks[state.armpos].pop();
 	    newState.action = "p";
@@ -205,6 +206,7 @@ module Planner {
                 if(stack.indexOf(lit.args[1])-stack.indexOf(lit.args[0]) == 1) 
                 flag = true;    
             }
+	    else if (lit.args[1] === "floor" && stack.indexOf(lit.args[0]) == 0) flag = true;
         });
     }
     // leftof
