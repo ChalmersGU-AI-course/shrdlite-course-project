@@ -42,76 +42,127 @@ module Planner {
 
 
 	// state changing functions
-	function moveRight(world: WorldState) : WorldState
+	function moveRight(world: WorldState) : [WorldState,string]
 	{
-		return {stacks:world.stacks,holding:world.holding, arm:world.arm+1,objects:world.objects,examples:world.examples};
-	}
-	function moveLeft(world: WorldState) : WorldState
-	{
-		return {stacks:world.stacks,holding:world.holding, arm:world.arm-1,objects:world.objects,examples:world.examples};
-	}
-	function pickup(world:WorldState) : WorldState
-	{
-		var arr : string[][] = world.stacks.slice();
-		for (var i = 0 ; i < world.stacks.length; i++)
+        if(world.arm == 0)
 		{
-			arr[i] = world.stacks[i].slice();
-		}
-		var hold = arr[world.arm].pop();
-		
-		return {stacks:arr,holding:hold,arm:world.arm,objects:world.objects,examples:world.examples};
+            return [{stacks:world.stacks,holding:world.holding, arm:world.arm+1,objects:world.objects,examples:world.examples},"r"];
+        }
+        return null;
 	}
-	function putdown(world:WorldState) : WorldState
+	function moveLeft(world: WorldState) : [WorldState,string]
 	{
-		var arr = world.stacks.slice();
-		for (var i = 0 ; i < world.stacks.length; i++)
+        if(world.arm == world.stacks.length-1)
 		{
-			arr[i] = world.stacks[i].slice();
-		}
-		arr[world.arm].push(world.holding);
-		
-		return {stacks:arr, holding:"",arm:world.arm,objects:world.objects,examples:world.examples};
+            return [{stacks:world.stacks,holding:world.holding, arm:world.arm-1,objects:world.objects,examples:world.examples},"l"];
+        }
+        return null;
 	}
+	function pickup(world:WorldState) : [WorldState,string]
+	{
+        if(world.holding == null)
+        {
+            var arr : string[][] = world.stacks.slice();
+            for (var i = 0 ; i < world.stacks.length; i++)
+            {
+                arr[i] = world.stacks[i].slice();
+            }
+            var hold = arr[world.arm].pop();
+            
+            return [{stacks:arr,holding:hold,arm:world.arm,objects:world.objects,examples:world.examples},"p"];
+        }
+        return null;
+	}
+	function putdown(world:WorldState) : [WorldState,string]
+	{
+        if(world.holding != null)
+        {
+            if(putdownRules(world))
+            {
+                var arr = world.stacks.slice();
+                for (var i = 0 ; i < world.stacks.length; i++)
+                {
+                    arr[i] = world.stacks[i].slice();
+                }
+                arr[world.arm].push(world.holding);
+                
+                return [{stacks:arr, holding:"",arm:world.arm,objects:world.objects,examples:world.examples},"d"];
+            }
+            return null;
+        }
+        return null;
+	}
+    
+    function putdownRules(w : WorldState) : boolean
+    {
+        if( w.stacks[w.arm].length !== 0)
+        {
+            var topObj : string = w.stacks[w.arm][w.stacks[w.arm].length-1]; 
+            var topObjDef : ObjectDefinition = w.objects[topObj];
+            
+            var holding : string = w.holding;
+            var holdingDef : ObjectDefinition = w.objects[holding];
+            
+            //Balls must be in boxes or on the floor, otherwise they roll away.
+            if(holdingDef.form === "ball")
+            {
+                if(topObjDef.form !== "box")
+                    return false; 
+            }
+            //Balls cannot support anything.
+            if(topObjDef.form === "ball")
+            {
+                return false;
+            }
+            //Small objects cannot support large objects.
+            if(holdingDef.size === "large")
+            {
+                if(topObjDef.size !== "large")
+                    return false; 
+            }
+            //Boxes cannot contain pyramids, planks or boxes of the same size.
+            if(topObjDef.form === "box")
+            {
+                if(holdingDef.form === "box" || holdingDef.form === "pyramid" || holdingDef.form === "plank" )
+                {
+                    if(topObjDef.size == holdingDef.size)
+                        return false; 
+                }
+            }
+            //Small boxes cannot be supported by small bricks or pyramids.
+            if(holdingDef.form === "box" && holdingDef.size === "small")
+            {
+                if(topObjDef.size === "small"&&(topObjDef.form ==="brick"||topObjDef.form ==="pyramid"))
+                    return false; 
+            }
+            //Large boxes cannot be supported by large pyramids.
+            if(holdingDef.form === "box" && holdingDef.size === "large")
+            {
+                if(topObjDef.size === "large"&& topObjDef.form ==="pyramid")
+                    return false; 
+            }
+        
+        }
+        return true;
+    }
 	
-	function worldItteration(world: WorldState) : [WorldState]
+	function worldItteration(world: WorldState) : [WorldState,string][]
 	{
-		if(world.arm == 0)
-		{
-			if(world.holding != null)
-			{
-				return [moveRight(world),putdown(world)]
-			}
-			else
-			{
-				return [moveRight(world),pickup(world)]
-			}
-		}
-		if(world.arm == world.stacks.length-1)
-		{
-			if(world.holding != null)
-			{
-				return [moveLeft(world),putdown(world)]
-			}
-			else
-			{
-				return [moveLeft(world),pickup(world)]
-			}
-		}
-		if (world.holding != null)
-		{
-			return [moveRight(world),moveLeft(world),putdown(world)]
-		}
-		else
-		{
-			return [moveRight(world),moveLeft(world),pickup(world)]
-		}
-		
+        var res :[WorldState,string][] = [];
+        var test : [WorldState,string][] = [moveRight(world),moveLeft(world),pickup(world),putdown(world)]
+		for (var v in test)
+        {
+            if(test[v] !== null)
+                res.push(test[v]);
+        }
+        
+		return res;
 	}
 	
     function w2N(w : WorldState) : AStar.Node
     {
         var n : [string,number][] = [];
-        var ws : WorldState[] = worldItteration(w);
+        var ws : [WorldState,string][] = worldItteration(w);
         for(var v in ws)
         {
             n[v] = [WorldFunc.world2String(ws[v]),1]
@@ -151,7 +202,7 @@ module Planner {
                 case "leftof":
                     regExp = new RegExp (derp.concat("/"  ,x , "([a-z]*)\d([a-z]|\d)*" ,y ,"/"));
                     break;
-                case 'inside':
+                case "inside":
                     regExp = new RegExp (derp.concat("/"  , y , x , "/"));
                     break;
                 case "ontop":
@@ -178,10 +229,10 @@ module Planner {
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         // This function returns a dummy plan involving a random stack
         		
-		//console.log(worldItteration(state), state);
+		console.log(worldItteration(state));
         //console.log(WorldFunc.compareWorld(state,state));
-        console.log(w2N(state).neighbours);
-        console.log(convertToMap(state));
+        //console.log(w2N(state).neighbours);
+        //console.log(convertToMap(state));
 		do {
             var pickstack = getRandomInt(state.stacks.length);
         } while (state.stacks[pickstack].length == 0);
