@@ -38,6 +38,8 @@ module Planner {
 
         console.log("planInterpretation()", state);
         
+        console.log("goal", intprt);
+        
         NUM_STACKS = state.stacks.length;
 
         // Update world state with 'attop' and 'arm'
@@ -45,22 +47,23 @@ module Planner {
             var obs = state.objStacks[i];
             var obj = state.objStacks[i][obs.length-1];
             if(obs.length > 1) {
-                state.pddlWorld.push({pol:true, rel:"attop", args:[obj.id, "floor-"+i]});
+                state.pddlWorld.rels.push({pol:true, rel:"attop", args:[obj.id, "floor-"+i]});
             }
         }
-        state.pddlWorld.push({pol:true, rel:"at", args:["arm", state.arm+""]});
+        state.pddlWorld.arm = state.arm;
+        state.pddlWorld.holding = state.holding;
 
 
         var secNode;
         if(state.holding) {
             // Update state with 'holding' (if any)
-            state.pddlWorld.push({pol:true, rel:"holding", args:["arm", state.holding]});
+            state.pddlWorld.holding = state.holding;
             // Try to put down what we're holding
-            console.log("sup");
+
             var secNodeState = putDownObject(state.pddlWorld, state.arm, state);
-            console.log("sup2");
+            
             if (secNodeState) {
-                secNode = new AStar.Node<PddlLiteral[]>(secNodeState, [], Infinity, null, "d" + 1);
+                secNode = new AStar.Node<PddlWorld>(secNodeState, [], Infinity, null, "d" + 1);
             } else {
                 console.warn("Second node can't legally drop!");
             }
@@ -68,7 +71,7 @@ module Planner {
             // Try to lift something
             var secNodeState = liftObject(state.pddlWorld, state.arm);
             if (secNodeState) {
-                secNode = new AStar.Node<PddlLiteral[]>(secNodeState, [], Infinity, null,"p"+1);
+                secNode = new AStar.Node<PddlWorld>(secNodeState, [], Infinity, null,"p"+1);
             } else {
                 console.warn("Second node can't legally pick!");
             }
@@ -77,15 +80,15 @@ module Planner {
         //Will hold all the created nodes
         //One of the dimensions is the "layers" of the node generation
         //The other dimension is the nodes within that layer
-        var nodes: AStar.Node<PddlLiteral[]>[][] = [[]];
+        var nodes: AStar.Node<PddlWorld>[][] = [[]];
 
         // Create initial node
-        var startNode:AStar.Node<PddlLiteral[]> = new AStar.Node<PddlLiteral[]>(state.pddlWorld, [], Infinity, null);
+        var startNode:AStar.Node<PddlWorld> = new AStar.Node<PddlWorld>(state.pddlWorld, [], Infinity, null);
         nodes[0].push(startNode);
 
         // If an action was possible in the current position, do it
         if (secNode) {
-            var eSnd = new AStar.Edge<PddlLiteral[]>(startNode, secNode, 1);
+            var eSnd = new AStar.Edge<PddlWorld>(startNode, secNode, 1);
             startNode.neighbours.push(eSnd);
             nodes[0].push(secNode);
         }
@@ -93,9 +96,9 @@ module Planner {
         for(var i = 0; i<searchDepth; i++){
             nodes[i+1] = [];
             for(var n in nodes[i]){
-                var oldNode      = nodes[i][n]
-                  , oldNodeWorld = oldNode.label
-                  , armPos       = Number(getRel(oldNodeWorld, "at").args[1]);
+                var oldNode       = nodes[i][n]
+                  , oldNodeWorld  = oldNode.label
+                  , armPos        = oldNodeWorld.arm;
                 for(var j = 0; j<NUM_STACKS; j++) {
                     if(armPos != j) {
                         var dir  :string = j>armPos ? "r" : "l"
@@ -108,7 +111,7 @@ module Planner {
                             // We can't always lift - not if we lack objects!
                             var newerNodeWorld = liftObject(newNodeWorld, j);
                             if (newerNodeWorld) {
-                                newNode = new AStar.Node<PddlLiteral[]>(newerNodeWorld, [], Infinity, null, dir+cost+"p"+1);
+                                newNode = new AStar.Node<PddlWorld>(newerNodeWorld, [], Infinity, null, dir+cost+"p"+1);
                             } else {
                                 //console.warn("breaking the first commandment");
                             }
@@ -116,7 +119,7 @@ module Planner {
                             // Try to putDown. Will fail if move is illegal
                             var newerNodeWorld = putDownObject(newNodeWorld, j, state);
                             if (newerNodeWorld) {
-                                newNode = new AStar.Node<PddlLiteral[]>(newerNodeWorld, [], Infinity, null, dir+cost+"d"+1);
+                                newNode = new AStar.Node<PddlWorld>(newerNodeWorld, [], Infinity, null, dir+cost+"d"+1);
                             } else {
                                 //console.warn("breakin the laaw");
                             }
@@ -124,7 +127,7 @@ module Planner {
 
                         // Check if performing action at current column was legal
                         if (newNode) {
-                            var edge = new AStar.Edge<PddlLiteral[]>(oldNode, newNode, cost);
+                            var edge = new AStar.Edge<PddlWorld>(oldNode, newNode, cost);
                             oldNode.neighbours.push(edge); // Note: we don't want a return edge
 
                             // TODO: what happens when we do not push here?
@@ -136,7 +139,7 @@ module Planner {
         }
         console.log("nodes",nodes);
 
-
+        
         var searchResult = AStar.astar(startNode, createGoalFunction(intprt), createHeuristicFunction());
         
         console.log("Search result:",searchResult);
@@ -147,11 +150,6 @@ module Planner {
                 pushActions(plan, str[0], Number(str[1]));
                 str = str.slice(2,str.length);
             }
-
-        }
-
-        for (var s in searchResult) {
-            var stacks = window['makeStacks'](searchResult[s].label);
         }
 
         if(searchResult.length === 0) {
@@ -161,12 +159,8 @@ module Planner {
         return plan;
     }
 
-    function isHolding(world:PddlLiteral[]) {
-        var holding = false;
-        for(var i in world) {
-            holding = holding || world[i].rel === "holding";
-        }
-        return holding;
+    function isHolding(world:PddlWorld):boolean {
+        return world.holding !== null;
     }
 
     function pushActions(plan:string[], action:string, times:number) {
@@ -182,12 +176,21 @@ module Planner {
     }
 
     function createGoalFunction(goalWorld:PddlLiteral[][]) {
-        return function(node:AStar.Node<PddlLiteral[]>) {
-            var world = node.label;
+        return function(node:AStar.Node<PddlWorld>) {
+            var pddlWorld = node.label;
+            var world = pddlWorld.rels;
             var done = false;
             for(var n in world) {
                 for(var i in goalWorld) {
                     for(var j in goalWorld[i]) {
+                        if(goalWorld[i][j].rel === 'at' && Number(goalWorld[i][j].args[1]) === pddlWorld.arm) {
+                            goalWorld[i].splice(i, 1);
+                            break;
+                        }
+                        if(goalWorld[i][j].rel === 'holding' && goalWorld[i][j].args[1] === pddlWorld.holding) {
+                            goalWorld[i].splice(i, 1);
+                            break;
+                        }
                         if(world[n].rel === goalWorld[i][j].rel &&
                             world[n].args[0] === goalWorld[i][j].args[0] &&
                             world[n].args[1] === goalWorld[i][j].args[1]) {
@@ -205,6 +208,7 @@ module Planner {
     }
 
     //Returns the first of the given relation in a Pddlworld
+    //DEPRECATED
     function getRel(world:PddlLiteral[], rel:string):PddlLiteral {
         for(var i in world) {
             if(world[i].rel === rel) {
@@ -214,36 +218,32 @@ module Planner {
     }
 
     //TODO put in PddlWorld interface in some way or other?
-    function clonePddlWorld(world:PddlLiteral[]):PddlLiteral[] {
-        var newWorld: PddlLiteral[] = [];
+    function clonePddlWorld(pddlWorld:PddlWorld):PddlWorld {
+        var newWorld: PddlWorld = {rels: [], arm: 0, holding: null}
+         ,  world = pddlWorld.rels;
 
         //TODO move to a clone-method somewhere
         for(var w in world) {
-            newWorld.push({pol: world[w].pol, rel: world[w].rel, args: [world[w].args[0], world[w].args[1]]});
+            newWorld.rels.push({pol: world[w].pol, rel: world[w].rel, args: [world[w].args[0], world[w].args[1]]});
         }
+
+        newWorld.arm = pddlWorld.arm;
+        newWorld.holding = pddlWorld.holding;
 
         return newWorld;
     }
 
     //Moves the arm in the given PddlWorld to the given stack
     //Returns the modified world, does not change the original!
-    function moveArm(state:PddlLiteral[], stack:number):PddlLiteral[]{
+    function moveArm(state:PddlWorld, stack:number):PddlWorld {
         //If you try to move outside the world just ignore it
         if(stack > NUM_STACKS || stack < 0) {
             return state;
         }
 
-        var world:PddlLiteral[] = clonePddlWorld(state);
+        var world:PddlWorld = clonePddlWorld(state);
 
-        for(var i in world) {
-            //TODO should we put the arms current location in pddlworld?
-            if(world[i].rel === "at") {
-                world.splice(i,1);
-                break;
-            }
-        }
-
-        world.push({pol: true, rel: "at", args:["arm", ""+stack]});
+        world.arm = stack;
 
         return world;
     }
@@ -251,24 +251,19 @@ module Planner {
     //Puts the held object down on the top object on the given stack
     //Takes a list of possible boxes to know if it should be "inside" or "ontop"
     //Returns the modified world, does not change the original!
-    function putDownObject(world:PddlLiteral[], floor: number, state : ExtendedWorldState):PddlLiteral[] {
-        var newWorld: PddlLiteral[] = clonePddlWorld(world);
+    function putDownObject(world:PddlWorld, floor: number, state : ExtendedWorldState):PddlWorld {
+        var newWorld: PddlWorld = clonePddlWorld(world);
 
         // Find currently held object
-        var object = null;
-        for(var i in newWorld) {
-            if(newWorld[i].rel === "holding") {
-                object = newWorld[i].args[1];
-            }
-        }
+        var object = world.holding;
         if (!object) return null;
 
         // Find the object on top of the indicated stack. Also remove its 'attop' preicate
         var topObject = "floor-"+floor;
-        for(var i in newWorld) {
-            if(world[i].rel === "attop" && world[i].args[1] === "floor-"+floor) {
-                topObject = world[i].args[0];
-                newWorld.splice(i, 1);
+        for(var i in newWorld.rels) {
+            if(world.rels[i].rel === "attop" && world.rels[i].args[1] === "floor-"+floor) {
+                topObject = world.rels[i].args[0];
+                newWorld.rels.splice(i, 1);
                 break;
             }
         }
@@ -279,7 +274,6 @@ module Planner {
 
         var objectForm    = objectObj.form
           , topObjectForm = topObjectObj.form;
-          
         var objectSize    = objectObj.size
           , topObjectSize = topObjectObj.size;
 
@@ -341,21 +335,24 @@ module Planner {
             var rel = "ontop";
         }
 
-        removeLiteral(newWorld, {pol:true, rel:"holding", args:["arm", object]});
+        newWorld.holding = null;
 
-        newWorld.push({pol:true, rel:rel, args:[object, topObject]});
-        newWorld.push({pol:true, rel:"attop", args:[object, "floor-"+floor]});
+        newWorld.rels.push({pol:true, rel:rel, args:[object, topObject]});
+        newWorld.rels.push({pol:true, rel:"attop", args:[object, "floor-"+floor]});
         return newWorld;
     }
 
     // Lifts the object that is on top of the given stack
     // Assumes that the arm is in the right position to do so
-    function liftObject(world:PddlLiteral[], floor: number):PddlLiteral[] {
-        var newWorld: PddlLiteral[] = clonePddlWorld(world);
+    function liftObject(oldWorld:PddlWorld, floor: number):PddlWorld {
+        var world:PddlWorld = clonePddlWorld(oldWorld);
+        var newWorld: PddlLiteral[] = world.rels; 
         var foundObject : any = false;
 
         // Error hunting
         // Doesn't catch anything. :(
+        // Can be removed?
+        /*
         var attops = [];
         for (var i = 0; i < NUM_STACKS; i++) {
             var attops2 = _.filter(newWorld, function(pddl) {
@@ -368,10 +365,10 @@ module Planner {
         if (attops.length>1) {
             console.warn("several attops!");
         }
-
+        */
+        
         for(var i:number = 0; i<newWorld.length; i++){
             if(newWorld[i].rel === "attop" && newWorld[i].args[1] === "floor-"+floor) {
-
                 if (foundObject) {
                     //console.warn("Found several 'attop' for floor-"+floor+"!");
                     //newWorld.push({pol: true, rel: 'dbg-several-attop', args: [""+foundObject, newWorld[i]['args'][0], JSON.stringify(newWorld)]});
@@ -379,24 +376,23 @@ module Planner {
 
                 var object = newWorld[i].args[0];
                 newWorld.splice(i, 1);
-
                 for(var j in newWorld) {
-                    if((newWorld[j].rel === "ontop" || newWorld[j].rel === "inside") && world[j].args[0] === object) {
+                    if((newWorld[j].rel === "ontop" || newWorld[j].rel === "inside") && world.rels[j].args[0] === object) {
                         var topRel = newWorld.splice(j, 1);
                         if(topRel[0].args[1].indexOf("floor") === -1) {
                             newWorld.push({pol:true, rel:"attop", args:[topRel[0].args[1], "floor-"+floor]});
                         }
                     }
                 }
-
-                newWorld.push({pol: true, rel:"holding", args: ["arm", object]});
+                world.holding = object;
                 foundObject = object;
                 break;
             }
         }
 
 
-
+        //Can be removed?
+        /*
         if (!foundObject) {
             return null;
         } else {
@@ -410,14 +406,18 @@ module Planner {
                 }
             }
             return newWorld;
+        }*/
+        if(!foundObject) {
+            return null;
         }
-        //return newWorld;
+        
+        return world;
     }
-
+/*
     //Takes a PDDL-world and returns an array of all the objects that are on top
     function getObjectsOnTop(world : ExtendedWorldState):string[] {
         var objects: collections.Set<string> = new collections.Set<string>(),
-            pddlWorld: PddlLiteral[] = world.pddlWorld;
+            pddlWorld: PddlLiteral[] = world.pddlWorld.rels;
 
         // Get every object in the world and add it to a set
         for(var id in world.objectsWithId){
@@ -435,8 +435,9 @@ module Planner {
 
         return objects.toArray();
     }
-
-    function removeLiteral(world: PddlLiteral[], literal:PddlLiteral) {
+*/
+    function removeLiteral(pddlWorld: PddlWorld, literal:PddlLiteral) {
+        var world = pddlWorld.rels;
         for(var i in world) {
             if(literal.rel === world[i].rel && literal.pol === world[i].pol
                 && literal.args[0] === world[i].args[0]
@@ -445,7 +446,7 @@ module Planner {
             }
         }
 
-        return world;
+        return pddlWorld;
     }
 
     function findBoxes(world: ExtendedWorldState):string[] {
@@ -475,3 +476,4 @@ module Planner {
         }
     }
 }
+
