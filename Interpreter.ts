@@ -187,17 +187,24 @@ module Interpreter {
             secObj = priObj.loc.ent.obj;
             rel = priObj.loc.rel;
         }
-        var possibleObjs:string[] = getObjectHelper(priObj, secObj, rel, state);
+        if (priObj.loc !== null) {
+            priObj = priObj.obj;
+        }
+        var possibleObjs: string[] = getObjectHelper(priObj, secObj, rel, state);
         return possibleObjs;
     }
 
     function getTargetObjects(cmd: Parser.Command, state: WorldState):string[] {
-        var priObj = cmd.loc.ent.obj;
+        var priObj = null;
         var secObj = null;
         var rel = null;
         if (priObj.loc != undefined) {
+            priObj = cmd.loc.ent.obj;
             secObj = priObj.loc.ent.obj;
             rel = priObj.loc.rel;
+            if (priObj.loc !== null) {
+                priObj = priObj.obj;
+            }
         }
         var possibleObjs:string[] = getObjectHelper(priObj, secObj, rel, state);
         return possibleObjs;
