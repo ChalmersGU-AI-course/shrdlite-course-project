@@ -1,5 +1,6 @@
 ///<reference path='collections.ts'/>
 ///<reference path='World.ts'/>
+///<reference path='Interpreter.ts'/>
 
 
 module AStar {
@@ -7,11 +8,18 @@ module AStar {
 
     export interface Node
     {
-        wState : string;
-        neighbours: [string,string] [];
+        wStateId : string;
+        wState: Object;
+        neighbours: Neighbour [];
         fscore?: number;
         hweight? : number;
         id?: number;
+    }
+    
+    export interface Neighbour
+    {
+        wState: Object;
+        cmd: string;
     }
     
     
@@ -34,12 +42,12 @@ module AStar {
         return 0
     }
     
-    export function astar(startObject,goalFunction,huerFunction,getNode) : string[]
+    export function astar(lit:Interpreter.Literal[],startObject,goalFunction,huerFunction,getNode) : string[]
     {
         var closedSet : Node[] = [];
         var openSet = new collections.PriorityQueue<Node>(compareT);
         
-        var startNode : Node = getNode(startObject)
+        var startNode : Node = getNode(startObject);
         openSet.add(startNode);
         
         var came_from : {[key:string]:[Node,string]} = {};
@@ -48,12 +56,12 @@ module AStar {
         g_score[startObject] = 0;
         
         var f_score : number [] = [];
-        f_score[startObject] = g_score[startObject] + huerFunction(startObject);
+        f_score[startObject] = g_score[startObject] + huerFunction(lit,startNode.wState);
         
         while(!openSet.isEmpty())
         {
             var current = openSet.dequeue();
-            if (goalFunction(current))
+            if (goalFunction(lit,current.wStateId))
             {
                 return reconstruct_path(came_from, current);
             }
@@ -61,20 +69,20 @@ module AStar {
             closedSet.push(current);
             for(var ei in current.neighbours)
             {
-                var e : [string,string] = current.neighbours[ei];
+                var e : Neighbour = current.neighbours[ei];
                 
-                var eNeigh : [Node,string] = [getNode(e[0]),e[1]];
+                var eNeigh : [Node,string] = [getNode(e.wState),e.cmd];
                 
-                if (!arrayIsMember(e[0],closedSet))
+                if (!arrayIsMember(eNeigh[0].wStateId,closedSet))
                 {
-                    var tentative_g_score :number = g_score[current.wState] + 1;
+                    var tentative_g_score :number = g_score[current.wStateId] + 1;
                     
-                    if(!openSet.contains(eNeigh[0]) || tentative_g_score < g_score[e[0]])
+                    if(!openSet.contains(eNeigh[0]) || tentative_g_score < g_score[eNeigh[0].wStateId])
                     {
-                        came_from[e[0]] = [current,eNeigh[1]];
-                        g_score[e[0]] = tentative_g_score;
-                        f_score[e[0]] = g_score[e[0]] + huerFunction(e[0]);
-                        eNeigh[0].fscore = f_score[e[0]];
+                        came_from[eNeigh[0].wStateId] = [current,eNeigh[1]];
+                        g_score[eNeigh[0].wStateId] = tentative_g_score;
+                        f_score[eNeigh[0].wStateId] = g_score[eNeigh[0].wStateId] + huerFunction(lit,eNeigh[0].wState);
+                        eNeigh[0].fscore = f_score[eNeigh[0].wStateId];
                         openSet.enqueue(eNeigh[0]);
                     }
                 }
@@ -87,9 +95,9 @@ module AStar {
     {
         var total_path : string[] = [];
         total_path.push(current[1]);
-        while(came_from[current[0].wState] != null)
+        while(came_from[current[0].wStateId] != null)
         {
-            current = came_from[current[0].wState];
+            current = came_from[current[0].wStateId];
             total_path.push(current[1]);
         }
         return total_path;
@@ -99,7 +107,7 @@ module AStar {
     {
         for(var i in array)
         {
-            var v : string = array[i].wState;
+            var v : string = array[i].wStateId;
             if(e===v) // functionsanropet ska ändras lite
             {
                 return true;
