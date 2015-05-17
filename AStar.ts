@@ -1,13 +1,133 @@
 ///<reference path='collections.ts'/>
 ///<reference path='World.ts'/>
 
+
+getHueristic (ls : Interpreter.Literal[], curr : string)
+{
+	var totHue : number = 0;	
+	
+	var stacks : string[] = [];
+	var x : number = 0;
+	for(var i : number = 0; i < curr.length; i++)
+	{
+		if(!isNaN(curr[i]))
+		{
+			x = curr[i];
+			stacks[x] = "";
+		}
+		else
+		{
+			stacks[x] = stacks[x] + curr[i];
+		}
+	}
+	
+	for(var i in ls)
+	{
+		var l : Interpreter.Literal = ls[i];
+
+		var rel : string = l.rel;
+		var x   : string = l.args[0];
+		var y   : string = l.args[1];
+		var derp : string;
+		
+		var xStack : [number,number]; //[Stacks index,Steps from bottom]
+		var yStack : [number,number]; //[Stacks index,Steps from bottom]
+		
+		for(var i in stacks)
+		{
+			var si : number = stacks[i];
+			
+			iox = si.indexOf(x);
+			ioy = si.indexOf(y);
+			
+			if(iox >= 0)
+			{
+				xStack = [i,iox];
+			}
+			if(ioy >= 0)
+			{
+				yStack = [i,ioy];
+			}
+		}
+		
+		switch(rel)
+		{
+			case "rightof":
+				if(!(xStack[0] > yStack[0])) // checks if the goal isn't already met
+				{
+					if(yStack[0] == (stacks.length -1)) // checks if there isn't a stack to the right of y
+					{
+						totHue += stacks[yStack[0]].length - (yStack[1]+1) + 1; // weight for moving y to the left
+					}
+					totHue += stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]+1) //weight for moving x to the right of y
+				}
+				break;
+			case "leftof":
+				if(!(xStack[0] < yStack[0])) // checks if the goal isn't already met
+				{
+					if(yStack[0] == 0) // checks if there isn't a stack to the left of y
+					{
+						totHue += stacks[yStack[0]].length - (yStack[1]+1) + 1; // weight for moving y to the right
+					}
+					totHue += stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]+1) //weight for moving x to the left of y
+				}
+				break;
+			case "inside":
+			case "ontop":
+				if(xStack[0] == yStack[0])
+				{
+					if(xStack[1]-yStack[1] > 1)
+					{
+						totHue += stacks[yStack[0]].length - (yStack[1]+1) + 2;
+					}
+					else if(xStack[1]-yStack[1] < 1)
+					{
+						totHue += stacks[xStack[0]].length - (xStack[1]+1) + 2;
+					}
+				}
+				else
+				{
+					totHue += stacks[yStack[0]].length - (yStack[1]+1); // weight for clearing the top of y
+					totHue += stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]); //weight for moving x to the top/inside of y
+				}
+				break;
+			case "under":
+				if(xStack[0] != yStack[0])
+				{
+					totHue += stacks[xStack[0]].lenght - (xStack[1]+1) + (yStack[1]-xStack[1]);
+				}
+				else if(xStack[1] > yStack[1])
+				{
+					totHue += stacks[yStack[0]].length - (yStack[1]+1) + 2;
+				}
+				break;    
+			case "beside":
+				if(xStack[0]-1 != yStack[0] && xStack[0]+1 != yStack[0])
+				{
+					totHue += stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]-1); //weight for moving x beside of y
+				}
+				break; 
+			case "above":
+				if(xStack[0] != yStack[0])
+				{
+					totHue += stacks[xStack[0]].lenght - (xStack[1]+1) + (yStack[1]-xStack[1]);
+				}
+				else if(xStack[1] < yStack[1])
+				{
+					totHue += stacks[xStack[0]].length - (xStack[1]+1) + 2;
+				}
+				break;
+		}
+	}
+}
+
 module AStar {
  
 
     export interface Node
     {
         wState : string;
-        neighbours: [string,number] []; //BÖR NOG BYTE FRÅN NODE HÄR OM DET GÅR
+        neighbours: [string,number] [];
         fscore?: number;
         hweight? : number;
         id?: number;
