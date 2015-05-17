@@ -44,14 +44,18 @@ module Planner {
 
         var solution = aStar.aStar(new WorldStateNode(state), intprt);
 
-        var moves = [];
+        if(solution !== null ) {
+            var moves = [];
 
-        solution.getPath().forEach((move) => {
-            moves.push(move.getCommand());
-            return true;
-        });
+            solution.getPath().forEach((move) => {
+                moves.push(move.getCommand());
+                return true;
+            });
 
-        return moves;
+            return moves;
+        } else {
+            throw new Planner.Error("Could not plan a path that fulfills the goals.")
+        }
     }
 
 

@@ -54,6 +54,7 @@ module aStar {
                 console.log("======= Evaluating next node ========");
         }
 
+        return null;
     }
 
     function comparePaths(fst : Path , snd : Path){
