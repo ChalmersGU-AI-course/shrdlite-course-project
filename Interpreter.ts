@@ -69,9 +69,9 @@ module Interpreter {
 
         if (cmd.cmd === 'move') {
                 // Which entity we should move
-            var entitiesIntrprt        = findEntities(cmd.ent, objects, pddlWorld)
+            var entitiesIntrprt        = findEntities(cmd.ent, objects, pddlWorld.rels)
                 // Where we should move it
-              , locationsIntrprt       = findEntities(cmd.loc.ent, objects, pddlWorld)
+              , locationsIntrprt       = findEntities(cmd.loc.ent, objects, pddlWorld.rels)
                 // How entity will be positioned on location (ontop, inside, ...)
               , rel             = cmd.loc.rel;
             if (entitiesIntrprt.length > 1 || locationsIntrprt.length > 1) {

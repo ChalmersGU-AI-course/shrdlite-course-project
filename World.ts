@@ -39,10 +39,14 @@ interface ExtendedWorldState extends WorldState {
     objStacks: ObjectDefinitionWithId[][];
     objectsWithId: { [s:string]: ObjectDefinitionWithId; };
     objectsByForm: { [s:string]: string[]; };
-    pddlWorld: PddlLiteral[];
+    pddlWorld: PddlWorld;
 }
 
-
+interface PddlWorld {
+    rels: PddlLiteral[];
+    arm: number;
+    holding: string;
+}
 // Our extended versions :)
 
 // Extends an ObjectDefinition to an ObjectDefinitionWithId
@@ -122,7 +126,7 @@ function extendWorldState(state: WorldState) : ExtendedWorldState {
         objStacks: objStacks,
         objectsWithId: objectsWithId,
         objectsByForm: objectsByForm,
-        pddlWorld: pddlWorld,
+        pddlWorld: {rels: pddlWorld, arm: 0, holding: null},
         stacks: state.stacks,
         holding: state.holding,
         arm: state.arm,
