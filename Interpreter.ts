@@ -171,6 +171,7 @@ module Interpreter {
         //TODO: Filter out based on location
         if(secObj !== null && rel != null){
             //var secObj:Parser.Object = priObj.loc.ent.obj;
+            console.log("Secondary objects!");
             var secondaryObjs:string[] = getPossibleObjects(secObj, state);
             possibleObjs = getRelation(possibleObjs, secondaryObjs, rel, state.stacks);
         }
@@ -216,14 +217,16 @@ module Interpreter {
         // Edge case for floor object
         if(obj.form === "floor")
           return ["_"];
-
+        console.log("Object obj: ");
+        console.log(obj);
         var objSet:collections.Set<string> = new collections.Set<string>(); // Store the values of the object
         objSet.add(obj.size);
         objSet.add(obj.color);
         objSet.add(obj.form);
         objSet.remove("anyform");
         objSet.remove(null);
-
+        console.log("objSet is: ");
+        console.log(objSet.toArray());
         var possibleObjects:string[] = [];
         // Loop through the world and look for possible items
         var objs: string[] = Array.prototype.concat.apply([], state.stacks);
@@ -235,11 +238,14 @@ module Interpreter {
             stemp.add(otemp.form);
             stemp.add(otemp.size);
             stemp.add(otemp.color);
-
+            console.log("Stemp: ");
+            console.log(stemp.toArray());
             // If the parse object is subset of the current temp object add to "possible objects"-array
             if (objSet.isSubsetOf(stemp))
                 possibleObjects.push(objs[s]);
         }
+        console.log("Possible objects is: ");
+        console.log(possibleObjects)
         return possibleObjects;
     }
 
@@ -308,7 +314,7 @@ module Interpreter {
         var correct = new collections.Set<string>();
         
         // Special case when O2 is the floor. Floor has character "_"
-        if(o2s.length === 0 && o2s[0] === "_"){
+        if(o2s.length === 1 && o2s[0] === "_" && rel === "ontop"){
             for(var i = 0; i < o1s.length; i++){
                 var coo1 = getStackIndex(o1s[i],stacks);
                 if(coo1[1] === 0)
@@ -316,43 +322,36 @@ module Interpreter {
             }
             return correct.toArray();
         }
-
-        // since inside is the same as ontop we change rel to ontop if it is inside (easier computations)
-        if(rel === "inside")
-          rel = "ontop";
-
+        
+        // Define comparator function according to given relation we are looking for
+        var f;
+        if (rel === "leftof")
+            f = function(co1 : number[], co2 : number[]) {return co1[0] < co2[0] };
+        else if(rel === "rightof")
+            f = function(co1 : number[], co2 : number[]) {return co1[0] > co2[0] };
+        else if(rel === "inside" || rel === "ontop")
+            f = function(co1 : number[], co2 : number[]) {return co1[1] === (co2[1]+1) };
+        else if(rel === "under")
+            f = function(co1 : number[], co2 : number[]) {return co1[1] < co2[1] };
+        else if(rel === "beside")
+            f = function(co1 : number[], co2 : number[]) {return (co1[0] === (co2[0]-1)) || (co1[0] === (co2[0]+1)) };
+        else if(rel === "above")
+            f = function(co1 : number[], co2 : number[]) {return co1[1] > co2[1] };
+        
+        // Run through all objects and check if the relation holds, then store.
         for(var i = 0; i < o1s.length; i++){
             var coo1 = getStackIndex(o1s[i],stacks);
             for(var j = 0; j < o2s.length; j++){
                 var coo2 = getStackIndex(o2s[j],stacks);
-                // Check so both elements exist
-                var currel = 'none';
-                // O1 left of O2
-                if(coo1[0] === (coo2[0]-1))
-                    currel = "left";
-                // O1 right of O2
-                else if(coo1[0] === (coo2[0]+1))
-                    currel = "right";
-                // O1 on top (or inside) O2
-                else if(coo1[1] === (coo2[1]+1))
-                    currel = "ontop";
-                // O1 above O2
-                else if(coo1[1] > coo2[1])
-                    currel = "above";
-                // O1 directly under O2
-                else if(coo1[1] === (coo2[1]-1))
-                    currel = "under";
-                // O1 below O2
-                else if(coo1[1] < coo2[1])
-                    currel = "below";
-
-                if(currel === rel){
+                if(f(coo1, coo2))
                     correct.add(o1s[i]);
-                    break;
-                }
-        
             }
         }
+        // TODO: Think of edge cases.
+        console.log("These objects hold");
+        console.log(correct.toArray());
+        console.log("These were those we chose from");
+        console.log(o1s);
         return correct.toArray();
     }
 
