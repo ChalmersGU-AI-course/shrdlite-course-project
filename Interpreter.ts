@@ -82,7 +82,8 @@ module Interpreter {
                 console.log("Please be more specific with the target location");
                 return null;
             }
-            intprt = convertToPDDL(cmd, pobjs, possibleTargets, state);
+            pobjs.push(state.holding);
+            intprt = convertToPDDL(cmd, pobjs, possibleTargets);
             return intprt;
         }
 
@@ -119,7 +120,7 @@ module Interpreter {
                 console.log("Can't hold more than one object");
                 return null;
             }
-            intprt = convertToPDDL(cmd, pobjs, null, state);
+            intprt = convertToPDDL(cmd, pobjs, null);
         }
 
         /*
@@ -162,7 +163,7 @@ module Interpreter {
                 console.log("Please be more specific with the target location");
                 return null;
             }
-            intprt = convertToPDDL(cmd, pobjs, possibleTargets, state);
+            intprt = convertToPDDL(cmd, pobjs, possibleTargets);
             //----------------------------SAME AS "PUT"
         } else {
             console.log("Found no valid command");
@@ -232,7 +233,7 @@ module Interpreter {
 
     //This method will take primary and target objects and check the command to see which relations is wanted and use the world state
     //to see existing sizes and relations
-    function convertToPDDL(cmd: Parser.Command, primobj: string[], targets : string[], state : WorldState) : Literal[][] {
+    function convertToPDDL(cmd: Parser.Command, primobj: string[], targets : string[]) : Literal[][] {
         var interpretations: Literal[][] = [];
 
         //cmd is "take"
@@ -245,7 +246,7 @@ module Interpreter {
         else if (cmd.cmd === "put") {
             //TODO: make sure only valid moves are possible at this stage i.e  where the object held by the arm has valid relations to all targets
             for (var i = 0; i < targets.length; i++) {
-                interpretations.push([{ pol: true, rel: cmd.loc.rel, args: [state.holding, targets[i]] }]);
+                interpretations.push([{ pol: true, rel: cmd.loc.rel, args: [primobj[0], targets[i]] }]);
             }
         }
         //cmd is "move"
