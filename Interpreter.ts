@@ -8,15 +8,32 @@ module Interpreter {
 
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
+        var interpretErrors : string[] = [];
         parses.forEach((parseresult) => {
+          try {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
             interpretations.push(intprt);
+          } catch(err) {
+            interpretErrors.push(err.message);
+          }
         });
-        if (interpretations.length) {
-            return interpretations;
+        if (interpretations.length > 0) {
+          var nonEmpty = interpretations.filter((res: Result) => {
+            return res.intp[0].length > 0;
+          });
+          if(nonEmpty.length > 1)
+            var err = "Ambigous utterance, please specify";
+          if(nonEmpty.length == 0)
+            var err = interpretErrors[0] || "Found no interpretations";
+          if(err)
+            throw new Interpreter.Error(err);
+          return nonEmpty;
+        } else if(interpretations.length == 0) {
+          var err = interpretErrors.pop();
+          throw new Interpreter.Error(err);
         } else {
-            throw new Interpreter.Error("Found no interpretation");
+          throw new Interpreter.Error("Found no interpretation");
         }
     }
 
