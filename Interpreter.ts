@@ -208,6 +208,10 @@ module Interpreter {
         // By using a set we do not have to handle the null parts.
         // We could just check that the parsed object's set is a subset of 
         // the object from the stack
+        
+        // Edge case for floor object
+        if(obj.form === "floor")
+          return ["_"];
 
         var objSet:collections.Set<string> = new collections.Set<string>(); // Store the values of the object
         objSet.add(obj.size);
