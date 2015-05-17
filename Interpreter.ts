@@ -186,40 +186,39 @@ module Interpreter {
         */
     }
 
-    function getPrimaryObjects(cmd: Parser.Command, state: WorldState) {
-        var visuallyPossibleObjs = getPossibleObjects(cmd.ent.obj, state);
+    function getPrimaryObjects(cmd: Parser.Command, state: WorldState):string[] {
+        var visuallyPossibleObjs:string[] = getPossibleObjects(cmd.ent.obj, state);
         //TODO: Filter out based on location
 
         return visuallyPossibleObjs;
     }
 
-    function getTargetObjects(cmd: Parser.Command, state: WorldState) {
-        var visuallyPossibleObjs = getPossibleObjects(cmd.loc.ent.obj, state);
+    function getTargetObjects(cmd: Parser.Command, state: WorldState):string[] {
+        var visuallyPossibleObjs:string[] = getPossibleObjects(cmd.loc.ent.obj, state);
         //TODO: Filter out based on location
 
         return visuallyPossibleObjs;
     }
 
-    function getPossibleObjects(obj: Parser.Object, state: WorldState) {
+    function getPossibleObjects(obj: Parser.Object, state: WorldState):string[] {
         // Extract the descriptive parts of the object
         // By using a set we do not have to handle the null parts.
         // We could just check that the parsed object's set is a subset of 
         // the object from the stack
 
-        var objSet = new collections.Set<string>(); // Store the values of the object
-        var o = obj;
-        objSet.add(o.size);
-        objSet.add(o.color);
-        objSet.add(o.form);
+        var objSet:collections.Set<string> = new collections.Set<string>(); // Store the values of the object
+        objSet.add(obj.size);
+        objSet.add(obj.color);
+        objSet.add(obj.form);
         objSet.remove("anyform");
         objSet.remove(null);
 
-        var possibleObjects = [];
+        var possibleObjects:string[] = [];
         // Loop through the world and look for possible items
         var objs: string[] = Array.prototype.concat.apply([], state.stacks);
-        for (var s = 0; s < objs.length; s++) {
-            var otemp = state.objects[objs[s]];
-            var stemp = new collections.Set<string>();
+        for (var s:number = 0; s < objs.length; s++) {
+            var otemp:ObjectDefinition = state.objects[objs[s]];
+            var stemp:collections.Set<string> = new collections.Set<string>();
 
             // Extract the parts of o into s and check if objSet is subset of s.
             stemp.add(otemp.form);
@@ -241,7 +240,7 @@ module Interpreter {
         return interpretations;
     }
 
-    function getRandomInt(max) {
+    function getRandomInt(max):number {
         return Math.floor(Math.random() * max);
     }
 
