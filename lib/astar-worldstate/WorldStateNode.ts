@@ -124,8 +124,6 @@ class WorldStateNode{
         goals.forEach((intrprt) => {
             if(this.state.satisifiesConditions(intrprt)) {
                 result = true;
-            } else {
-                result = false;
             }
         });
 
