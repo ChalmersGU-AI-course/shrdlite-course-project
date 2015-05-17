@@ -71,20 +71,22 @@ module Interpreter {
         var pobjs = getPossibleObjects(cmd, state);
         var b = pobjs[0];
         if (cmd.cmd === "take") {
-            if (cmd.ent.quant === "all") {
-                //Can't hold more than one object
-                //CHANGE IF ADDING ANOTHER ARM
-                console.log("Can't hold more than one object");
-                return null;
-            }
             /*
             TODO: Do correct stuff with "take"
                 -Identify what obj we want
                 -See if such an object exists in the world
                 -If ambiguity and the quantifier is 'the', ask for clarification //Om samma size, �nd� fr�ga?
             */
+            
+            if (cmd.ent.quant === "all") {
+                //Can't hold more than one object
+                //CHANGE IF ADDING ANOTHER ARM
+                console.log("Can't hold more than one object");
+                return null;
+            }
+            
             if(pobjs.length===0){
-                console.log("Can't pickup something that is not real");
+                console.log("Can't pickup something that do not exists in the world");
                 return null;
             }
             for (var i = 0; i < pobjs.length; i++) {
@@ -133,6 +135,7 @@ module Interpreter {
         objSet.add(o.size);
         objSet.add(o.color);
         objSet.add(o.form);
+        objSet.remove("anyform");
         objSet.remove(null);
 
         var possibleObjects = [];
