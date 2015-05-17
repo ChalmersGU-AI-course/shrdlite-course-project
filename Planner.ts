@@ -54,6 +54,7 @@ module Planner {
         // This function returns an empty plan involving no random stack
         var plan : string[] = [];
         var statenr = 0;
+        console.log(state);
 
         //TODO: Make an appropriate type/struct for action/actions.
         var actions : string[]  = ['RIGHT','GRAB','LEFT','DROP']; 
@@ -65,13 +66,25 @@ module Planner {
         */
         var pddl = {
             ontop: function(a:ActionState, args:string[]) : boolean{
-                return true;
+                var position = find_obj([args[0]],a.stacks);
+                if ((position[1] == 0) && (args[1] == "floor")){
+                    return true;
+                }else if((a.stacks[position[0]][(position[1] - 1)]) == args[1]){
+                    return true;
+                }
+                return false;
+                
             },
             holding: function(a:ActionState, args:string[]) : boolean{
                 return (a.holding == args[0]);
             },
             inside: function(a:ActionState, args:string[]) : boolean{
-                return true;   
+                var position = find_obj([args[0]],a.stacks);
+                if(((a.stacks[position[0]][(position[1] - 1)]) == args[1]) &&  
+                    state.objects[args[1]].form == "box"){
+                    return true;
+                }
+                return false;   
             }
         }
         
@@ -93,7 +106,6 @@ module Planner {
             }
             var result : boolean = and[0];
             and.forEach((a)=> { result = result || a });
-            console.log(result);
             return result;
         } 
 
@@ -185,19 +197,6 @@ module Planner {
         using this two parameter one
         */
         function state_heur(a1 : ActionState, a2 : ActionState){
-            //probably unnecessary
-            function find_obj(objs : string[], stacks : string[][]) {
-                var objects : number[][] = [];
-                for (var i = 0 ; i < stacks.length; i++){
-                    for (var ii = 0 ; ii < stacks[i].length ; ii++){
-                        //objects.push([i,ii])
-                        if (objs[0] == stacks[i][ii]){
-                          return [i]  
-                        }
-                    } 
-                }
-                return [0];
-            }
             var nearest_obj = find_obj(["l"],a2.stacks)[0]
             var arm_dist = Math.abs(a1.arm - nearest_obj);
             return arm_dist; 
@@ -208,6 +207,19 @@ module Planner {
         */
         function get_state_dist(){
             return 1; 
+        }
+        //Probably unnecessary
+        function find_obj(objs : string[], stacks : string[][]) {
+            var objects : number[][] = [];
+            for (var i = 0 ; i < stacks.length; i++){
+                for (var ii = 0 ; ii < stacks[i].length ; ii++){
+                    //objects.push([i,ii])
+                    if (objs[0] == stacks[i][ii]){
+                      return [i,ii]  
+                    }
+                } 
+            }
+            throw new Error("no such object");
         }
         /*
         Conversion from path to plan.
