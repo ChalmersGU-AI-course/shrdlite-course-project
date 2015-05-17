@@ -75,8 +75,7 @@ module Planner {
         }
         var start =  new ActionState("start");
         start.arm = state.arm
-        start.stacks = state.stacks.slice()
-
+        start.stacks = state.stacks.slice();
         start.holding = state.holding;
         
         function dynamic_children(astate : ActionState){
@@ -162,7 +161,7 @@ module Planner {
         using this two parameter one
         */
         function state_heur(a1 : ActionState, a2 : ActionState){
-            
+            //probably unnecessary
             function find_obj(objs : string[], stacks : string[][]) {
                 var objects : number[][] = [];
                 for (var i = 0 ; i < stacks.length; i++){
@@ -171,7 +170,6 @@ module Planner {
                         if (objs[0] == stacks[i][ii]){
                           return [i]  
                         }
-                         
                     } 
                 }
                 return [0];
