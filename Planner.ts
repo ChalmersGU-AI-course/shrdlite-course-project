@@ -46,7 +46,7 @@ module Planner {
             msg: string;
 
     }
-    
+
     //////////////////////////////////////////////////////////////////////
     // private functions
 
@@ -55,11 +55,18 @@ module Planner {
         var plan : string[] = [];
 
         //TODO: Make an appropriate type/struct for action/actions.
-        var actions : string[]  = ['RIGHT','LEFT','GRAB','DROP']; 
+        var actions : string[]  = ['RIGHT','GRAB','LEFT','DROP']; 
         
-        //TODO: calculate a goalstate, or a function evaluation whether a state is a goalstate.       
+        /*
+        Given a PDDL(1) description, this function is supposed to decides if a
+        the given state satiesfies the PDDL which hence makes it a so called 
+        goal-state.
+
+        (1) - http://en.wikipedia.org/wiki/Planning_Domain_Definition_Language 
+        */      
         function is_goalstate(astate : ActionState): boolean{
-            if (astate.arm == 3){
+            
+            if ((astate.arm == astate.stacks.length-1)){
                 return true;
             }else{
                 return false;
@@ -68,7 +75,8 @@ module Planner {
         var start =  new ActionState("start");
         start.arm = state.arm
         start.stacks = state.stacks
-        start.holding = state.holding 
+        start.holding = state.holding;
+        console.log(start) 
         
         function dynamic_children(astate : ActionState){
             var states : ActionState[] = []; 
@@ -77,11 +85,15 @@ module Planner {
                     states.push(calculate_state(actions[i],astate));
                 } 
             }
+            console.log (states)
             return states;
         }
-        
+        /*
+        This function validates whether an action can be applied to a state, without
+        violating the physical conditions given. 
+        TODO: Extend 'Drop', so that it cosiders the shape of the element at the top of the state stack.
+        */
         function works( action : string , astate : ActionState) : boolean {
-            //TODO: evaluates each action and returns a boolean if the action is possible to perform.
                 if (action == 'LEFT'){
                     return (astate.arm > 0) 
                 }else if (action == 'RIGHT'){
@@ -94,13 +106,17 @@ module Planner {
                     //Alternative: returns allways false
                     throw new Error("unsupported action");
         }
-        
+        /*
+        Given a state and an action, action is applied upon the state, the state is modified,
+        it is also given an 'plan action' - l:Left,r:right,d:drop,g:grab - and a corresponding
+        message to go with it. 
+        */ 
         function calculate_state(action, astate : ActionState) : ActionState {
             //TODO: calculates the next state given a action.
             var newstate = new ActionState("state");
             if (action == 'LEFT'){
                     newstate.arm = ( astate.arm - 1 );
-                    newstate.id = "l"
+                    newstate.action = "l"
                     newstate.stacks = astate.stacks;
                     newstate.msg = "Moving left"; 
                     return newstate;
@@ -130,9 +146,21 @@ module Planner {
                     //Alternative: returns always false
                     throw new Error("not yet implemented");
         }
+        /*
+        NOTE: This function is to be viewed as the first version, it has
+        known flaws, so feel free to change the it - if you can come up
+        with something better.
         
-        function state_hier(){
-            //TODO: Hieristics
+        The function considers two factors when aproximating/undestimating
+        the number of steps needed to reach a goal-state, namely :
+        * The distance from the arm the nearest misplaced object.
+        * The number of missplaced objects and the distance between them. 
+        using this two parameter one
+        */
+        function state_heur(){
+            //misplaced arm
+            //misplaced objects
+
             return 1; 
         }
         
