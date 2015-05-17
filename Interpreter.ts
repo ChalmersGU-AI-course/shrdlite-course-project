@@ -186,8 +186,6 @@ module Interpreter {
         if (priObj.loc != undefined) {
             secObj = priObj.loc.ent.obj;
             rel = priObj.loc.rel;
-        }
-        if (priObj.loc !== null) {
             priObj = priObj.obj;
         }
         var possibleObjs: string[] = getObjectHelper(priObj, secObj, rel, state);
@@ -195,14 +193,13 @@ module Interpreter {
     }
 
     function getTargetObjects(cmd: Parser.Command, state: WorldState):string[] {
-        var priObj = null;
+        var priObj = cmd.loc.ent.obj;
         var secObj = null;
         var rel = null;
         if (priObj.loc != undefined) {
-            priObj = cmd.loc.ent.obj;
             secObj = priObj.loc.ent.obj;
             rel = priObj.loc.rel;
-            if (priObj.loc !== null) {
+            if (priObj.loc !== undefined) {
                 priObj = priObj.obj;
             }
         }
