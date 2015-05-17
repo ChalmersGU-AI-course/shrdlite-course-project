@@ -54,25 +54,49 @@ module Planner {
         // This function returns an empty plan involving no random stack
         var plan : string[] = [];
         var statenr = 0;
-        console.log(state)
 
         //TODO: Make an appropriate type/struct for action/actions.
         var actions : string[]  = ['RIGHT','GRAB','LEFT','DROP']; 
         
         /*
+        These PDDL Interpretation function could be lift out to a separate module,
+        but they are not since they take an ActionState as an argument and since they
+        are only to be used inside of  'planInterpretation'.
+        */
+        var pddl = {
+            ontop: function(a:ActionState, args:string[]) : boolean{
+                return true;
+            },
+            holding: function(a:ActionState, args:string[]) : boolean{
+                return (a.holding == args[0]);
+            },
+            inside: function(a:ActionState, args:string[]) : boolean{
+                return true;   
+            }
+        }
+        
+        /*
         Given a PDDL(1) description, this function is supposed to decides if a
         the given state satiesfies the PDDL which hence makes it a so called 
-        goal-state.
+        goal-state. && between colums and || between rows.
 
         (1) - http://en.wikipedia.org/wiki/Planning_Domain_Definition_Language 
         */      
-        function is_goalstate(astate : ActionState): boolean{
-            if ((astate.holding == "l")){
-                return true;
-            }else{
-                return false;
-            }   
-        }
+        function is_goalstate(astate : ActionState){ //Typescript is a shitty thing!!!
+            var and : boolean[] = []; 
+            for(var i = 0 ; i < intprt.length ; i++){
+                var or : boolean =  pddl[(intprt[i][0]).rel](astate,(intprt[i][0]).args)
+                for(var ii = 1; ii < intprt[i].length ; ii++){
+                    or = or && pddl[(intprt[i][ii]).rel](astate,(intprt[i][ii]).args)
+                }
+                and.push(or);
+            }
+            var result : boolean = and[0];
+            and.forEach((a)=> { result = result || a });
+            console.log(result);
+            return result;
+        } 
+
         var start =  new ActionState("start");
         start.arm = state.arm
         start.stacks = state.stacks.slice();
@@ -200,4 +224,13 @@ module Planner {
         }
         return plan;
     }
+
+
+    function pddl_evaluate(){
+
+    }
+    
+
+
+
 }
