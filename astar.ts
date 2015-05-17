@@ -11,43 +11,58 @@ module AStar {
 	
 		var cameFrom = new collections.Dictionary<T, T>();
 		var costSoFar = new collections.Dictionary<T, number>();
-
-		var frontier = new collections.PriorityQueue<T>(function(a,b) {
-			return ((costSoFar.getValue(a)+h(a)) - (costSoFar.getValue(b)+h(b)));
+	
+		var frontier = new collections.PriorityQueue<Node<T>>(function(a,b) {
+			return ((costSoFar.getValue(a.node)+h(a.node)) - (costSoFar.getValue(b.node)+h(b.node)));
 		});
 		cameFrom.setValue(start,start);
 		costSoFar.setValue(start, 0);
-		frontier.enqueue(start);
+		frontier.enqueue(new Node<T>(start));
 
 		while(!frontier.isEmpty()) {
-			var cur : T = frontier.dequeue();
-			console.log(cur);
-			if(checkGoal(cur)) {
-				console.log(cameFrom);
-				var finalPath = recons_path<T>(cameFrom, cur);
+			var cur : Node<T> = frontier.dequeue();
+			if(checkGoal(cur.node)) {
+				var finalPath = recons_path<T>(cur);
 				return finalPath;
 			}
-			var adjacentNodes : T[] = adj(cur);
+			var adjacentNodes : T[] = adj(cur.node);
 			adjacentNodes.forEach((node : T) => {
-				var newCost : number = costSoFar.getValue(cur) + cost(cur, node);
+				var newCost : number = costSoFar.getValue(cur.node) + cost(cur.node, node);
 				if(!costSoFar.containsKey(node) || newCost < costSoFar.getValue(node)) {
 					costSoFar.setValue(node, newCost);
-					frontier.enqueue(node);
-					cameFrom.setValue(node, cur);
+					var next : Node<T> = new Node<T>(node);
+					next.setPrev(cur);
+					frontier.enqueue(next);
+					//cameFrom.setValue(node, cur);
 				}
 			});
 		}
 		return null;
 	}
 
-	function recons_path<T>(came_from, current) {
+	class Node<T> {
+		node : T;
+		prev : Node<T>;
+
+		constructor(node : T){
+			this.node = node;
+		}
+
+		setPrev(prev : Node<T>) {
+			this.prev = prev;
+		}
+
+		toString() {
+			collections.makeString(this);
+		}
+	}
+
+	function recons_path<T>(current : Node<T>) {
 		var total_path : T[] = [];
-		var temp_came_from = came_from;
-		total_path.push(current);
-		while( temp_came_from.containsKey(current) ) {
-			var next = temp_came_from.getValue(current);
+		while( current.prev ) {
+			total_path.push(current.node);
+			var next = current.prev;
 			current = next;
-			total_path.push(current);
 		}
 		return total_path;
 	}
