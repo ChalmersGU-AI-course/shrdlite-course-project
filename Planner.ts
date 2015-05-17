@@ -287,12 +287,12 @@ module Planner {
                 case "rightof":
                 	if(xStack[1] == -1)
                 	{
-                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                		totHue += Math.abs(yStack[0]-xStack[0]) + 1;
                 	}
                 	else if(yStack[1] == -1)
                 	{
                 		totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + 1;
-                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                		totHue += Math.abs(yStack[0]-xStack[0]) + 1;
                 	}
                 	else
                 	{
@@ -300,21 +300,21 @@ module Planner {
 		                {
 		                    if(yStack[0] == (curr.stacks.length -1)) // checks if there isn't a stack to the right of y
 		                    {
-		                        totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 1; // weight for moving y to the left
+		                        totHue += curr.stacks[yStack[0]].length - (yStack[1] + 1) + 1; // weight for moving y to the left
 		                    }
-		                    totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + Math.abs(yStack[0]-xStack[0])+1; //weight for moving x to the right of y
+		                    totHue += curr.stacks[xStack[0]].length - (xStack[1] + 1) + Math.abs(yStack[0]-xStack[0]) + 1; //weight for moving x to the right of y
 		                }
 	                }
 	                break;
                 case "leftof":
                 	if(xStack[1] == -1)
                 	{
-                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                		totHue += Math.abs(yStack[0]-xStack[0]) + 1;
                 	}
                 	else if(yStack[1] == -1)
                 	{
-                		totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + 1;
-                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                		totHue += curr.stacks[xStack[0]].length - (xStack[1] + 1) + 1;
+                		totHue += Math.abs(yStack[0]-xStack[0]) + 1;
                 	}
                 	else
                 	{
@@ -322,43 +322,58 @@ module Planner {
 		                {
 		                    if(yStack[0] == 0) // checks if there isn't a stack to the left of y
 		                    {
-		                        totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 1; // weight for moving y to the right
+		                        totHue += curr.stacks[yStack[0]].length - (yStack[1] + 1) + 1; // weight for moving y to the right
 		                    }
-		                    totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + Math.abs(xStack[0]-yStack[0])+1; //weight for moving x to the left of y
+		                    totHue += curr.stacks[xStack[0]].length - (xStack[1] + 1) + Math.abs(xStack[0]-yStack[0]) + 1; //weight for moving x to the left of y
 		                }
 	                }
                     break;
                 case "inside":
                 case "ontop":
-                	if(xStack[1] == -1)
+                	if(xStack[1] === -1)
                 	{
-                		totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 1;
-                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                		totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1;
+                		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+                        if(totHue < 0)
+                        {
+                            console.log("FAIL!");
+                        }
                 	}
-                	else if(yStack[1] == -1)
+                	else if(yStack[1] === -1)
                 	{
-                		totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + 1;
-                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                		totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +1;
+                		totHue += +Math.abs(+yStack[0] - +xStack[0]) + +1;
+                        if(totHue < 0)
+                        {
+                            console.log("FAIL2!");
+                        }
                 	}
                 	else
                 	{
-		                if(xStack[0] == yStack[0])
+		                if(xStack[0] === yStack[0])
 		                {
 		                    if(xStack[1]-yStack[1] > 1)
-		                    {
+		                    { 
 		                        totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 2;
 		                    }
 		                    else if(xStack[1]-yStack[1] < 1)
 		                    {
 		                        totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + 2;
 		                    }
+                            if(totHue < 0)
+                            {
+                                console.log("FAIL3!");
+                            }
 		                }
 		                else
 		                {
-		                    totHue += curr.stacks[yStack[0]].length - (yStack[1]+1); // weight for clearing the top of y
-		                    totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + (yStack[0]-xStack[0]); //weight for moving x to the top/inside of y
+		                    var c : number = xStack[1]++;
+                            totHue += curr.stacks[yStack[0]].length - c; // weight for clearing the top of y
+		                    totHue += curr.stacks[xStack[0]].length  + Math.abs(yStack[0]-xStack[0]) - c; //weight for moving x to the top/inside of y
+                            
 		                }
 		            }
+                    console.log(totHue);
                     break;
                 case "under":
                 	if(xStack[1] == -1)
@@ -423,7 +438,8 @@ module Planner {
                     break;
             }
         }
-        return totHue;
+        //console.log(totHue);
+        return  totHue;
     }
 
     

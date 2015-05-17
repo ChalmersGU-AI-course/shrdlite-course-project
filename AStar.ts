@@ -30,11 +30,11 @@ module AStar {
         {
             return 1
         }
-        if(a.fscore > b.fscore) // a is greater than b
+        if(a.fscore < b.fscore) // a is greater than b
         {
             return 1
         }
-        if(a.fscore < b.fscore) //a is less than b
+        if(a.fscore > b.fscore) //a is less than b
         {
             return -1
         }
@@ -53,16 +53,17 @@ module AStar {
         var came_from : {[key:string]:[Node,string]} = {};
         
         var g_score : {[key:string]:number} = {};
-        g_score[startObject] = 0;
+        g_score[startNode.wStateId] = 0;
         
         var f_score : number [] = [];
-        f_score[startObject] = g_score[startObject] + huerFunction(lit,startNode.wState);
+        f_score[startNode.wStateId] = g_score[startNode.wStateId] + huerFunction(lit,startNode.wState);
         
         while(!openSet.isEmpty())
         {
             var current = openSet.dequeue();
             if (goalFunction(lit,current.wStateId))
             {
+                //console.log(openSet);
                 console.log("NU ÄR JAG FÄRDIG!")
                 return reconstruct_path(came_from, current);
             }
@@ -85,6 +86,7 @@ module AStar {
                         g_score[eNeigh[0].wStateId] = tentative_g_score;
                         f_score[eNeigh[0].wStateId] = g_score[eNeigh[0].wStateId] + huerFunction(lit,eNeigh[0].wState);
                         eNeigh[0].fscore = f_score[eNeigh[0].wStateId];
+                        //console.log(g_score[eNeigh[0].wStateId]);
                         openSet.enqueue(eNeigh[0]);
                         //console.log(eNeigh[0].wStateId);
                     }
