@@ -8,7 +8,7 @@ module AStar {
     export interface Node
     {
         wState : string;
-        neighbours: [string,number] [];
+        neighbours: [string,string] [];
         fscore?: number;
         hweight? : number;
         id?: number;
@@ -42,7 +42,7 @@ module AStar {
         var startNode : Node = getNode(startObject)
         openSet.add(startNode);
         
-        var came_from : {[key:string]:Node} = {};
+        var came_from : {[key:string]:[Node,string]} = {};
         
         var g_score : {[key:string]:number} = {};
         g_score[startObject] = 0;
@@ -58,20 +58,20 @@ module AStar {
                 return reconstruct_path(came_from, current);
             }
             
-            closedSet.push(current); 
+            closedSet.push(current);
             for(var ei in current.neighbours)
             {
-                var e : [string,number] = current.neighbours[ei];
+                var e : [string,string] = current.neighbours[ei];
                 
-                var eNeigh : [Node,number] = [getNode(e[0]),e[1]];
+                var eNeigh : [Node,string] = [getNode(e[0]),e[1]];
                 
                 if (!arrayIsMember(e[0],closedSet))
                 {
-                    var tentative_g_score :number = g_score[current.wState] + eNeigh[1];
+                    var tentative_g_score :number = g_score[current.wState] + 1;
                     
                     if(!openSet.contains(eNeigh[0]) || tentative_g_score < g_score[e[0]])
                     {
-                        came_from[e[0]] = current;
+                        came_from[e[0]] = [current,eNeigh[1]];
                         g_score[e[0]] = tentative_g_score;
                         f_score[e[0]] = g_score[e[0]] + huerFunction(e[0]);
                         eNeigh[0].fscore = f_score[e[0]];
@@ -86,11 +86,11 @@ module AStar {
     function reconstruct_path (came_from, current) : string[]
     {
         var total_path : string[] = [];
-        total_path.push(current.wState);
-        while(came_from[current] != null)
+        total_path.push(current[1]);
+        while(came_from[current[0].wState] != null)
         {
-            current = came_from[current];
-            total_path.push(current.wState);
+            current = came_from[current[0].wState];
+            total_path.push(current[1]);
         }
         return total_path;
     }
