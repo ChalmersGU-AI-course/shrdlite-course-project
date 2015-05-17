@@ -53,6 +53,8 @@ module Planner {
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         // This function returns an empty plan involving no random stack
         var plan : string[] = [];
+        var statenr = 0;
+        console.log(state)
 
         //TODO: Make an appropriate type/struct for action/actions.
         var actions : string[]  = ['RIGHT','GRAB','LEFT','DROP']; 
@@ -65,8 +67,7 @@ module Planner {
         (1) - http://en.wikipedia.org/wiki/Planning_Domain_Definition_Language 
         */      
         function is_goalstate(astate : ActionState): boolean{
-            
-            if ((astate.arm == astate.stacks.length-1)){
+            if ((astate.holding == "l")){
                 return true;
             }else{
                 return false;
@@ -74,18 +75,17 @@ module Planner {
         }
         var start =  new ActionState("start");
         start.arm = state.arm
-        start.stacks = state.stacks
+        start.stacks = state.stacks.slice()
+
         start.holding = state.holding;
-        console.log(start) 
         
         function dynamic_children(astate : ActionState){
             var states : ActionState[] = []; 
-            for (var i in actions){
-                if(works(actions[i],astate) ){ //TODO: set ids etc  
-                    states.push(calculate_state(actions[i],astate));
+             actions.forEach((action) => { 
+                if(works(action,astate) ){ //TODO: set ids etc  
+                    states.push(calculate_state(action,astate));
                 } 
-            }
-            console.log (states)
+            });
             return states;
         }
         /*
@@ -113,34 +113,38 @@ module Planner {
         */ 
         function calculate_state(action, astate : ActionState) : ActionState {
             //TODO: calculates the next state given a action.
-            var newstate = new ActionState("state");
+            statenr++;
+            var newstate = new ActionState(("state" + statenr));
             if (action == 'LEFT'){
                     newstate.arm = ( astate.arm - 1 );
                     newstate.action = "l"
-                    newstate.stacks = astate.stacks;
+                    newstate.stacks = astate.stacks.slice();
                     newstate.msg = "Moving left"; 
                     return newstate;
             }else if (action == 'RIGHT'){
                     newstate.arm = ( astate.arm + 1 );
                     newstate.action = "r"
-                    newstate.stacks = astate.stacks;
+                    newstate.stacks = astate.stacks.slice();
                     newstate.msg = "Moving right"; 
                     return newstate; 
             }else if (action == 'GRAB'){
-                    var stack = astate.stacks[state.arm];
+                    newstate.arm = astate.arm;
+                    var stack = astate.stacks[astate.arm].slice();
                     var height = (stack.length);
-                    newstate.holding = stack.pop(); //Alt stack[height-1]
-                    newstate.stacks = astate.stacks;
-                    newstate.stacks[astate.arm] = stack;
+                    newstate.holding = stack[height-1]; //Alt stack[height-1]
+                    newstate.stacks = astate.stacks.slice();
+                    newstate.stacks[astate.arm] = stack.slice();
                     newstate.action = "p";
-                    newstate.msg = ("Picking up the ") //+ state.objects[astate.holding].form) ;
+                    newstate.msg = ("Picking up the "); //+ state.objects[astate.holding].form) ;
                     return newstate;
             }else if (action == 'DROP'){
-                    var stack = astate.stacks[astate.arm];
+                    var stack = astate.stacks[astate.arm].slice();
                     stack.push(astate.holding)
+                    newstate.arm = astate.arm;
                     newstate.holding = null;
                     newstate.action = "d";
-                    newstate.msg = ("Dropping the ") //+ state.objects[astate.holding].form) ;
+                    newstate.msg = ("Dropping the "); //+ state.objects[astate.holding].form) ;
+                    newstate.stacks = astate.stacks.slice();
                     return newstate; //&& (state.stacks[state.arm])
             }
                     //Alternative: returns always false
@@ -157,29 +161,45 @@ module Planner {
         * The number of missplaced objects and the distance between them. 
         using this two parameter one
         */
-        function state_heur(){
-            //misplaced arm
-            //misplaced objects
-
-            return 1; 
+        function state_heur(a1 : ActionState, a2 : ActionState){
+            
+            function find_obj(objs : string[], stacks : string[][]) {
+                var objects : number[][] = [];
+                for (var i = 0 ; i < stacks.length; i++){
+                    for (var ii = 0 ; ii < stacks[i].length ; ii++){
+                        //objects.push([i,ii])
+                        if (objs[0] == stacks[i][ii]){
+                          return [i]  
+                        }
+                         
+                    } 
+                }
+                return [0];
+            }
+            var nearest_obj = find_obj(["l"],a2.stacks)[0]
+            var arm_dist = Math.abs(a1.arm - nearest_obj);
+            return arm_dist; 
         }
-        
+        /*
+        Calculates the distance between two states, see astarTest.
+        In this case, the weight of a step is 1. 
+        */
         function get_state_dist(){
-            //TODO: Calculates the distance between two states, see astarTest.
             return 1; 
         }
+        /*
+        Conversion from path to plan.
+        */
         var path = Astar.Astar(start,start,{
-            heuristic_approx: state_hier,
+            heuristic_approx: state_heur,
             dist_between: get_state_dist,
             get_children: dynamic_children,
             is_goalNode: is_goalstate
           });
-        
         for (var p = 1; p < path.length; p++){
             plan.push((<ActionState>path[p]).msg);
             plan.push((<ActionState>path[p]).action);            
         }
         return plan;
-        //return ["label1","r","label2","r","label3","r","label4","l"];
     }
 }
