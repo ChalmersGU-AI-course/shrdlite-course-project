@@ -186,14 +186,14 @@ module Interpreter {
         */
     }
     
-    function getObjectHelper(priObj: Parser.Object, secObj: Parser.Object, state: WorldState):string[]{
+    function getObjectHelper(priObj: Parser.Object, secObj: Parser.Object,rel:string, state: WorldState):string[]{
         //var priObj:Parser.Object = cmd.ent.obj;
         var possibleObjs:string[] = getPossibleObjects(priObj, state);
         //TODO: Filter out based on location
-        if(secObj !== null){
+        if(secObj !== null && rel != null){
             //var secObj:Parser.Object = priObj.loc.ent.obj;
             var secondaryObjs:string[] = getPossibleObjects(secObj, state);
-                getRelation(possibleObjs,secondaryObjs,,state.stacks);
+                getRelation(possibleObjs,secondaryObjs,rel,state.stacks);
             
         }
         //Anything more?
@@ -206,7 +206,10 @@ module Interpreter {
         var secObj = null;
         if(priObj.loc != undefined)
             secObj = priObj.loc.ent.obj;
-        var possibleObjs:string[] = getObjectHelper(priObj,secObj,state);
+        var rel = null;
+        if(cmd.loc != undefined)
+            rel = cmd.loc.rel;
+        var possibleObjs:string[] = getObjectHelper(priObj,secObj,rel,state);
         return possibleObjs;
     }
 
@@ -215,7 +218,10 @@ module Interpreter {
         var secObj = null;
         if(cmd.loc != undefined)
             secObj = cmd.loc.ent.obj;
-        var possibleObjs:string[] = getObjectHelper(priObj,secObj,state);
+        var rel = null;
+        if(cmd.loc != undefined)
+            rel = cmd.loc.rel;
+        var possibleObjs:string[] = getObjectHelper(priObj,secObj,rel,state);
         return possibleObjs;
     }
 
