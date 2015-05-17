@@ -165,7 +165,7 @@ module Planner {
         var ws : [WorldState,string][] = worldItteration(w);
         for(var v in ws)
         {
-            n[v] = [WorldFunc.world2String(ws[v]),1]
+            n[v] = [WorldFunc.world2String(ws[v][0]),1]
         }
         return {wState: WorldFunc.world2String(w),neighbours:n}
     }
@@ -226,6 +226,127 @@ module Planner {
         return true;
     }
 	
+    function getHueristic (ls : Interpreter.Literal[], curr : string) :number
+    {
+        var totHue : number = 0;	
+        
+        var stacks : string[] = [];
+        var z : number = 0;
+        for(var i : number = 0; i < curr.length; i++)
+        {
+            if(!isNaN(+curr[i]))
+            {
+                z = +curr[i];
+                stacks[z] = "";
+            }
+            else
+            {
+                stacks[z] = stacks[z] + curr[i];
+            }
+        }
+        
+        for(var j in ls)
+        {
+            var l : Interpreter.Literal = ls[j];
+
+            var rel : string = l.rel;
+            var x   : string = l.args[0];
+            var y   : string = l.args[1];
+            var derp : string;
+            
+            var xStack : [number,number]; //[Stacks index,Steps from bottom]
+            var yStack : [number,number]; //[Stacks index,Steps from bottom]
+            
+            for(var k in stacks)
+            {
+                var si : string = stacks[k];
+                
+                var iox = si.indexOf(x);
+                var ioy = si.indexOf(y);
+                
+                if(iox >= 0)
+                {
+                    xStack = [k,iox];
+                }
+                if(ioy >= 0)
+                {
+                    yStack = [k,ioy];
+                }
+            }
+            
+            switch(rel)
+            {
+                case "rightof":
+                    if(!(xStack[0] > yStack[0])) // checks if the goal isn't already met
+                    {
+                        if(yStack[0] == (stacks.length -1)) // checks if there isn't a stack to the right of y
+                        {
+                            totHue += stacks[yStack[0]].length - (yStack[1]+1) + 1; // weight for moving y to the left
+                        }
+                        totHue += stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]+1) //weight for moving x to the right of y
+                    }
+                    break;
+                case "leftof":
+                    if(!(xStack[0] < yStack[0])) // checks if the goal isn't already met
+                    {
+                        if(yStack[0] == 0) // checks if there isn't a stack to the left of y
+                        {
+                            totHue += stacks[yStack[0]].length - (yStack[1]+1) + 1; // weight for moving y to the right
+                        }
+                        totHue += stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]+1) //weight for moving x to the left of y
+                    }
+                    break;
+                case "inside":
+                case "ontop":
+                    if(xStack[0] == yStack[0])
+                    {
+                        if(xStack[1]-yStack[1] > 1)
+                        {
+                            totHue += stacks[yStack[0]].length - (yStack[1]+1) + 2;
+                        }
+                        else if(xStack[1]-yStack[1] < 1)
+                        {
+                            totHue += stacks[xStack[0]].length - (xStack[1]+1) + 2;
+                        }
+                    }
+                    else
+                    {
+                        totHue += stacks[yStack[0]].length - (yStack[1]+1); // weight for clearing the top of y
+                        totHue += stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]); //weight for moving x to the top/inside of y
+                    }
+                    break;
+                case "under":
+                    if(xStack[0] != yStack[0])
+                    {
+                        totHue += stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]);
+                    }
+                    else if(xStack[1] > yStack[1])
+                    {
+                        totHue += stacks[yStack[0]].length - (yStack[1]+1) + 2;
+                    }
+                    break;    
+                case "beside":
+                    if(xStack[0]-1 != yStack[0] && xStack[0]+1 != yStack[0])
+                    {
+                        totHue += stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]-1); //weight for moving x beside of y
+                    }
+                    break; 
+                case "above":
+                    if(xStack[0] != yStack[0])
+                    {
+                        totHue += stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]);
+                    }
+                    else if(xStack[1] < yStack[1])
+                    {
+                        totHue += stacks[xStack[0]].length - (xStack[1]+1) + 2;
+                    }
+                    break;
+            }
+        }
+        return totHue;
+    }
+
+    
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         // This function returns a dummy plan involving a random stack
         		
