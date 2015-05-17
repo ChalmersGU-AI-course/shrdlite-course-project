@@ -277,6 +277,9 @@ class SVGWorld implements World {
             throw "Already holding something!";
         }
         this.currentState.holding = this.currentState.stacks[this.currentState.arm].pop();
+        if (!this.currentState.holding) {
+            console.warn("UH OH", this.currentState);
+        }
         this.verticalMove('pick', callback);
     }
 
@@ -291,6 +294,7 @@ class SVGWorld implements World {
         var arm = $('#arm');
         this.animateMotion(arm, path1, 0, duration);
         if (this.currentState.holding) {
+            console.log("horizontalMove",this.currentState.holding);
             var objectHeight = this.getObjectDimensions(this.currentState.holding).heightadd;
             var yArm = -(this.canvasHeight - this.armSize * this.stackWidth() - objectHeight);
             var path2 = ["M", xArm, yArm, "H", xNewArm];
@@ -303,6 +307,8 @@ class SVGWorld implements World {
     }
 
     private verticalMove(action, callback?) {
+        // TODO problem: verticalMove is triggered when holding is null
+        console.log("verticalMove",this.currentState.holding);
         var altitude = this.getAltitude(this.currentState.arm);
         var objectHeight = this.getObjectDimensions(this.currentState.holding).heightadd;
         var yArm = this.canvasHeight - altitude - this.armSize * this.stackWidth() - objectHeight;
@@ -332,6 +338,9 @@ class SVGWorld implements World {
 
     private getObjectDimensions(objectid) {
         var attrs = this.currentState.objects[objectid];
+        if (!attrs)  {
+            console.log("attrs undefined",objectid);
+        }
         var size = this.objectData[attrs.form][attrs.size];
         var width = size.width * (this.stackWidth() - this.boxSpacing());
         var height = size.height * (this.stackWidth() - this.boxSpacing());

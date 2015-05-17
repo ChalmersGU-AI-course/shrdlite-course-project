@@ -89,6 +89,8 @@ module AStar {
 
         frontier.add(s);
 
+        var foundGoal = false;
+
         var done     : Node<T>[]   = [];
         // Start node's cost from start node is 0
         s.cost = 0;
@@ -118,24 +120,26 @@ module AStar {
             // When we remove t from the frontier, we're done
             if (isGoal(v)) {
                 frontier.clear();
+                foundGoal = true;
             } else {
                 done.push(v);
             }
-
         }
 
-        // Retrieve path
+
         var path = [];
 
-        while (v !== s) {
-            console.log(v.label);
-            path.unshift(v);
-            if (!v.previous) {
-                console.log(v);
+        if(foundGoal) {
+            while (v !== s) {
+                console.log(v.label);
+                path.unshift(v);
+                if (!v.previous) {
+                    console.log(v);
+                }
+                v = v.previous;
             }
-            v = v.previous;
+            path.unshift(s);   
         }
-        path.unshift(s);
 
         return path;
     }

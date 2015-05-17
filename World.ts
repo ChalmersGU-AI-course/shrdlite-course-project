@@ -38,6 +38,7 @@ interface PddlLiteral {pol:boolean; rel:string; args:string[];}
 interface ExtendedWorldState extends WorldState {
     objStacks: ObjectDefinitionWithId[][];
     objectsWithId: { [s:string]: ObjectDefinitionWithId; };
+    objectsByForm: { [s:string]: string[]; };
     pddlWorld: PddlLiteral[];
 }
 
@@ -82,18 +83,21 @@ function extendWorldState(state: WorldState) : ExtendedWorldState {
         objectsWithId[id] = obj;
     }
 
+    if(state.holding) {
+        objectsWithId[state.holding] = assignObjectId(state.objects[state.holding], state.holding);  
+    }
+
     // Create PPDL representation
-    // TODO: don't do it here; waste of CPU cycles
     var pddlWorld : PddlLiteral[] = [];
     for (var x in objStacks) {
         // Add constraints
         for (var y = 0; y<objStacks[x].length; y++) {
             // On top / inside
             var obj     = objStacks[x][y]
-                , nextObj =objStacks[x][y+1];
+              , nextObj =objStacks[x][y+1];
             if (nextObj) {
                 var rel        = (obj.form == 'box') ? 'inside' : 'ontop'
-                    , constraint = {pol: true, rel: rel, args: [nextObj.id, obj.id]};
+                  , constraint = {pol: true, rel: rel, args: [nextObj.id, obj.id]};
                 pddlWorld.push(constraint);
             }
         }
@@ -101,9 +105,23 @@ function extendWorldState(state: WorldState) : ExtendedWorldState {
     if (state.holding != null) {
         pddlWorld.push({ pol: true, rel: 'holding', args: [state.holding] });
     }
+
+    // Another convenient representation
+    // objectsByForm['ball'] is the list of all balls
+    var objectsByForm : { [s:string]: string[]; } = {};
+    for (var i in objectsWithIdList) {
+        var obj  = objectsWithIdList[i]
+          , form = obj.form;
+        if (!objectsByForm[form]) objectsByForm[form] = [];
+        objectsByForm[form].push(obj.id);
+    }
+    console.log("objsbytyp", objectsByForm);
+
+
     var newState : ExtendedWorldState = {
         objStacks: objStacks,
         objectsWithId: objectsWithId,
+        objectsByForm: objectsByForm,
         pddlWorld: pddlWorld,
         stacks: state.stacks,
         holding: state.holding,
