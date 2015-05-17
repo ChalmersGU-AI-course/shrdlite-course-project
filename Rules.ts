@@ -1,5 +1,8 @@
 ///<reference path="World.ts"/>
 
+/**
+ * Set of functions use to check the physical laws of the world 
+ */
 module Rules{    
      /**
       * Checks the rules that relate to the floor
