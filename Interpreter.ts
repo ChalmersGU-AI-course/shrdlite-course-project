@@ -186,15 +186,15 @@ module Interpreter {
         */
     }
     
-    function getObjectHelper(cmd: Parser.Command, state: WorldState):string[]{
-        var priObj:Parser.Object = cmd.ent.obj;
+    function getObjectHelper(priObj: Parser.Object, secObj: Parser.Object, state: WorldState):string[]{
+        //var priObj:Parser.Object = cmd.ent.obj;
         var possibleObjs:string[] = getPossibleObjects(priObj, state);
         //TODO: Filter out based on location
-        if(priObj.loc !== undefined){
-            var secObj:Parser.Object = priObj.loc.ent.obj;
+        if(secObj !== null){
+            //var secObj:Parser.Object = priObj.loc.ent.obj;
             var secundaryObjs:string[] = getPossibleObjects(secObj, state);
-            for(var j = 0; i<secundaryObjs.length; i++){
-                getRelation(possibleObjs,secundaryObjs[j],state.stacks);
+            for(var j = 0; j<secundaryObjs.length; j++){
+                getRelation(possibleObjs[0],secundaryObjs[j],state.stacks);
             }
         }
         //Anything more?
@@ -203,13 +203,21 @@ module Interpreter {
     }
 
     function getPrimaryObjects(cmd: Parser.Command, state: WorldState):string[] {
-        var visuallyPossibleObjs:string[] = getObjectHelper(cmd,state);
-        return visuallyPossibleObjs;
+        var priObj = cmd.ent.obj;
+        var secObj = null;
+        if(priObj.loc != undefined)
+            secObj = priObj.loc.ent.obj;
+        var possibleObjs:string[] = getObjectHelper(priObj,secObj,state);
+        return possibleObjs;
     }
 
     function getTargetObjects(cmd: Parser.Command, state: WorldState):string[] {
-        var visuallyPossibleObjs:string[] = getObjectHelper(cmd,state);
-        return visuallyPossibleObjs;
+        var priObj = cmd.ent.obj;
+        var secObj = null;
+        if(cmd.loc != undefined)
+            secObj = cmd.loc.ent.obj;
+        var possibleObjs:string[] = getObjectHelper(priObj,secObj,state);
+        return possibleObjs;
     }
 
     function getPossibleObjects(obj: Parser.Object, state: WorldState):string[] {
