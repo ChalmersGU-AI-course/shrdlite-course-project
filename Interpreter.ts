@@ -173,14 +173,19 @@ module Interpreter {
                         works = futureState || state.stacks.some(e => e.indexOf(objs[i]) >= 0);
                     } else{
                         works = futureState || state.stacks.some(e => isAbove(e, locs.objs[j],objs[i]));
-                        works = works && notAboveBall(locs.objs[i], state);
+			works = works && notAboveBall(locs.objs[j], state);
                         works = works && smallOnTopOfLarge(locs.objs[j],objs[i], state);
                     } 
                 } else if(locs.rel === "under"){
                     if(locs.objs[j] !== "floor"){
-                        works = futureState || state.stacks.some(e => isAbove(e, objs[i], locs.objs[j]));
-                        works = works && notAboveBall(objs[i], state);
-                        works = works && smallOnTopOfLarge(objs[i], locs.objs[j], state);
+		        if(objs[i] === "floor") {
+                            works = futureState || state.stacks.some(e => e.indexOf(locs.objs[j]) >= 0);
+                        } else{
+		 	
+                            works = futureState || state.stacks.some(e => isAbove(e, objs[i], locs.objs[j]));
+                            works = works && notAboveBall(objs[i], state);
+                            works = works && smallOnTopOfLarge(objs[i], locs.objs[j], state);
+			}
                     } 
                 } 
                 if(works){
@@ -264,7 +269,10 @@ module Interpreter {
     function smallOnTopOfLarge(bottomObject : string, topObject : string, state : WorldState) : boolean {
         if(topObject === "floor"){
             return false;
-        }
+	}
+        if(bottomObject === "floor") {
+	    return true;
+	}
         var topSize : string  = state.objects[topObject].size;
         var bottomSize : string = state.objects[bottomObject].size;
         if(bottomSize === "large") {
