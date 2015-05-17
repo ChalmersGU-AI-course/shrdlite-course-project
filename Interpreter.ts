@@ -105,7 +105,7 @@ module Interpreter {
             }
         } else if (cmd.cmd === 'take') {
             // TODO: Should we check (here?) if the arm is already holding something?
-            var entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld);
+            var entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels);
 
             if (entitiesIntrprt.length > 1) {
                 console.warn('Interpreter warning: ambiguous entity or location!' +
