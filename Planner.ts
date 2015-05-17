@@ -44,7 +44,7 @@ module Planner {
 	// state changing functions
 	function moveRight(world: WorldState) : [WorldState,string]
 	{
-        if(world.arm == 0)
+        if(world.arm < world.stacks.length-1)
 		{
             return [{stacks:world.stacks,holding:world.holding, arm:world.arm+1,objects:world.objects,examples:world.examples},"r"];
         }
@@ -52,7 +52,7 @@ module Planner {
 	}
 	function moveLeft(world: WorldState) : [WorldState,string]
 	{
-        if(world.arm == world.stacks.length-1)
+        if(world.arm > 0)
 		{
             return [{stacks:world.stacks,holding:world.holding, arm:world.arm-1,objects:world.objects,examples:world.examples},"l"];
         }
@@ -62,31 +62,38 @@ module Planner {
 	{
         if(world.holding == null)
         {
-            var arr : string[][] = world.stacks.slice();
-            for (var i = 0 ; i < world.stacks.length; i++)
+            if(world.stacks[world.arm].length !== 0)
             {
-                arr[i] = world.stacks[i].slice();
+                var arr : string[][] = world.stacks.slice();
+                for (var i = 0 ; i < world.stacks.length; i++)
+                {
+                    arr[i] = world.stacks[i].slice();
+                }
+                var hold = arr[world.arm].pop();
+                
+                return [{stacks:arr,holding:hold,arm:world.arm,objects:world.objects,examples:world.examples},"p"];
             }
-            var hold = arr[world.arm].pop();
-            
-            return [{stacks:arr,holding:hold,arm:world.arm,objects:world.objects,examples:world.examples},"p"];
         }
         return null;
 	}
 	function putdown(world:WorldState) : [WorldState,string]
 	{
-        if(world.holding != null)
+        if(world.holding !== null)
         {
-            if(putdownRules(world))
+            if(world.holding !== "" )
             {
-                var arr = world.stacks.slice();
-                for (var i = 0 ; i < world.stacks.length; i++)
+                //console.log(world);
+                if(putdownRules(world))
                 {
-                    arr[i] = world.stacks[i].slice();
+                    var arr = world.stacks.slice();
+                    for (var i = 0 ; i < world.stacks.length; i++)
+                    {
+                        arr[i] = world.stacks[i].slice();
+                    }
+                    arr[world.arm].push(world.holding);
+                    
+                    return [{stacks:arr, holding:null,arm:world.arm,objects:world.objects,examples:world.examples},"d"];
                 }
-                arr[world.arm].push(world.holding);
-                
-                return [{stacks:arr, holding:"",arm:world.arm,objects:world.objects,examples:world.examples},"d"];
             }
             return null;
         }
@@ -95,7 +102,7 @@ module Planner {
     
     function putdownRules(w : WorldState) : boolean
     {
-        if( w.stacks[w.arm].length !== 0)
+        if(w.stacks[w.arm].length !== 0)
         {
             var topObj : string = w.stacks[w.arm][w.stacks[w.arm].length-1]; 
             var topObjDef : ObjectDefinition = w.objects[topObj];
@@ -197,29 +204,31 @@ module Planner {
             switch(rel)
             {
                 case "rightof":
-                    regExp = new RegExp (derp.concat("/", y ,"([a-z]*)\d([a-z]|\d)*" ,x ,"/"));
+                    regExp = new RegExp (derp.concat( y ,"([a-z]*)\\d([a-z]|\\d)*" ,x ));
                     break;
                 case "leftof":
-                    regExp = new RegExp (derp.concat("/"  ,x , "([a-z]*)\d([a-z]|\d)*" ,y ,"/"));
+                    regExp = new RegExp (derp.concat(x , "([a-z]*)\\d([a-z]|\\d)*" ,y ));
                     break;
                 case "inside":
-                    regExp = new RegExp (derp.concat("/"  , y , x , "/"));
+                    regExp = new RegExp (derp.concat( y , x ));
                     break;
                 case "ontop":
-                    regExp = new RegExp (derp.concat("/"  , y , x , "/"));
+                    regExp = new RegExp (derp.concat( y , x ));
                     break;
                 case "under":
-                    regExp = new RegExp (derp.concat("/"  , x , "([a-z]*)" , y , "/"));
+                    regExp = new RegExp (derp.concat( x , "([a-z]*)" , y ));
                     break;    
                 case "beside":
-                    regExp = new RegExp (derp.concat("/(" , x , "([a-z]*)\d([a-z]*)" , y , ")|(" , y , "([a-z]*)\d([a-z]*)" , x , ")/"));
+                    regExp = new RegExp (derp.concat("(" , x , "([a-z]*)\\d([a-z]*)" , y , ")|(" , y , "([a-z]*)\\d([a-z]*)" , x , ")"));
                     break; 
                 case "above":
-                    regExp = new RegExp (derp.concat("/"  , y , "([a-z]*)" , x , "/"));
+                    regExp = new RegExp (derp.concat( y , "([a-z]*)" , x ));
                     break;
             }
             if(!regExp.test(curr))
             {
+                //console.log(regExp.toString());
+                //console.log(curr);
                 return false;
             }
         }
@@ -272,7 +281,7 @@ module Planner {
 				  yStack = [k,ioy];
 			  }
 			}
-            console.log(xStack,yStack);
+            //console.log(xStack,yStack);
             switch(rel)
             {
                 case "rightof":
@@ -426,8 +435,14 @@ module Planner {
         //console.log(w2N(state).neighbours);
         //console.log(convertToMap(state));
         console.log("asdasdasd");
+       
+        var tempplan =  AStar.astar(intprt[0],state,goalFunction,getHueristic,w2N);
+        var plan = [];
         
-       var plan =  AStar.astar(intprt[0],state,goalFunction,getHueristic,w2N);
+        while(tempplan.length > 0)
+            plan.push(tempplan.pop());
+       
+        //console.log(plan);
 		/*do {
             var pickstack = getRandomInt(state.stacks.length);
         } while (state.stacks[pickstack].length == 0);

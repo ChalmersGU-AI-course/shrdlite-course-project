@@ -63,8 +63,10 @@ module AStar {
             var current = openSet.dequeue();
             if (goalFunction(lit,current.wStateId))
             {
+                console.log("NU ÄR JAG FÄRDIG!")
                 return reconstruct_path(came_from, current);
             }
+            //console.log(current.neighbours)
             
             closedSet.push(current);
             for(var ei in current.neighbours)
@@ -84,21 +86,24 @@ module AStar {
                         f_score[eNeigh[0].wStateId] = g_score[eNeigh[0].wStateId] + huerFunction(lit,eNeigh[0].wState);
                         eNeigh[0].fscore = f_score[eNeigh[0].wStateId];
                         openSet.enqueue(eNeigh[0]);
+                        //console.log(eNeigh[0].wStateId);
                     }
                 }
             }
+            //console.log(openSet);
         }
         return [];
     }
     
     function reconstruct_path (came_from, current) : string[]
     {
+        //console.log(current);
         var total_path : string[] = [];
-        total_path.push(current[1]);
-        while(came_from[current[0].wStateId] != null)
+        //total_path.push(current);
+        while(came_from[current.wStateId] != null)
         {
-            current = came_from[current[0].wStateId];
-            total_path.push(current[1]);
+            total_path.push(came_from[current.wStateId][1]);
+            current = came_from[current.wStateId][0];
         }
         return total_path;
     }
