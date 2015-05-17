@@ -132,18 +132,6 @@ module Planner {
                         }
                     }
                 }
-/*
-                if(!isHolding(oldNodeWorld)){
-                    var node = new AStar.Node<PddlLiteral[]>(liftObject(oldNodeWorld, armPos), [], Infinity, null, "p"+1);
-                    var edge = new AStar.Edge<PddlLiteral[]>(oldNode, node, 1);
-                    oldNode.neighbours.push(edge);
-                    nodes[i+1].push(node);
-                } else {
-                    var node = new AStar.Node<PddlLiteral[]>(putDownObject(oldNodeWorld,armPos, boxes), [], Infinity, null, "d"+1);
-                    var edge = new AStar.Edge<PddlLiteral[]>(oldNode, node, 1);
-                    oldNode.neighbours.push(edge);
-                    nodes[i+1].push(node);
-                }*/
             }
         }
         console.log("nodes",nodes);
@@ -161,9 +149,7 @@ module Planner {
             }
 
         }
-        //console.log("final state:",searchResult[0].label);
-        //var stacks = window['makeStacks'](searchResult[0].label);
-        //console.log("final stacks:",stacks);
+
         for (var s in searchResult) {
             var stacks = window['makeStacks'](searchResult[s].label);
         }
