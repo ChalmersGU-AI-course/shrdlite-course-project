@@ -134,17 +134,13 @@ module Interpreter {
         var obj = this.state["holding"];           // object
         var refs = this.references(loc.ent.obj);   // references
         var refQuant = loc.ent.quant;              // reference quantity
+        if(!obj)
+          throw new Interpreter.Error("The arm is unfortunately not holding any object");
         // If the command reference the floor make lit immediately
         if(this.isFloor(loc.ent.obj)) {
           return this.floorLiteral([obj]);
         }
-        // error handler callback
-        function specialHandler(objs: string[], refs: string[]): string {
-          if(objs.length > 1)
-            return this.tooManyObjectsError(objs, null);
-          return null;
-        }
-        return this.singular(specialHandler, [obj], loc.rel, refQuant, refs);
+        return this.singular([obj], loc.rel, refQuant, refs);
       }
 
       /*
@@ -166,16 +162,13 @@ module Interpreter {
         }
         switch(objQuant) {
           case "the":
-            // special error handler
-            var that = this;
-            function specialHandler(objs: string[], refs: string[]): string {
-              if(objs.length > 1)
-                return that.tooManyObjectsError(objs, null);
-              return null;
+            if(objs.length > 1) {
+              var err = this.tooManyObjectsError(objs, null);
+              throw new Interpreter.Error(err);
             }
-            return this.singular(specialHandler, objs, loc.rel, refQuant, refs);
+            return this.singular(objs, loc.rel, refQuant, refs);
           case "any":
-            return this.singular(null, objs, loc.rel, refQuant, refs);
+            return this.singular(objs, loc.rel, refQuant, refs);
           case "all":
             return this.plural(objs, loc.rel, refQuant, refs); // (ball, ontop, any, [y1, y2])
         }
@@ -188,8 +181,7 @@ module Interpreter {
       /*
        * Handles singular case when object is quantified by "the" or "any"
        */
-      singular(specialHandler: (objs: string[], refs: string[]) => string,
-               objs: string[],
+      singular(objs: string[],
                rel: string,
                refQuant: string,
                refs: string[]): Literal[][] {
@@ -197,26 +189,28 @@ module Interpreter {
 
         // Check that not there exist at least one object and one reference
         var error = this.notEmptyHandler(objs, refs);
-        if(!error && specialHandler)
-          error = specialHandler(objs, refs);
         if(error)
           throw new Interpreter.Error(error);
 
         switch(refQuant) {
-          case "all":   // "all" and "the" are handled the same way
-            if(rel === "ontop" || rel === "inside") {
-              error = "A single object cannot be " + rel + " many objects";
-              throw new Interpreter.Error(error);
-            }
           case "the":
             lits = this.literals(objs, refs, rel, false);
             break;
           case "any":
-            lits = this.literals(objs, refs, rel, false);
-            var flattened = this.flatten(lits)
+            var swappedArgs = true;
+            lits = this.literals(refs, objs, rel, swappedArgs);
+            var flattened = this.flatten(lits);
             lits = flattened.map((lit: Literal) => {
               return [lit];
             });
+            break;
+          case "all":
+            if(rel === "ontop" || rel === "inside") {
+              // TODO: single object in objs should exist use it in error
+              error = "A single object cannot be " + rel + " many objects";
+              throw new Interpreter.Error(error);
+            }
+            lits = this.literals(objs, refs, rel, false);
             break;
         }
         return lits;
@@ -286,9 +280,8 @@ module Interpreter {
         if(!obj.loc) {                       // base case: find all objects in spec
           var ids = this.worldObjects();
           for(var i=0; i<ids.length; i++) {
-            if(this.match(obj, ids[i])) {
+            if(this.match(obj, ids[i]))
               matches.push(ids[i]);
-            }
           }
         } else {                             // recursive case: filter out by location as well
           var loc = obj.loc;
@@ -297,7 +290,7 @@ module Interpreter {
           if(loc.ent.obj) {
             if(this.isFloor(loc.ent.obj)) {
               refs = this.floorObjects();
-              onFloor = true;
+              onFloor = true;                // tell findTarget that references are on floor
             } else {
               refs = this.references(loc.ent.obj);
             }
@@ -311,7 +304,7 @@ module Interpreter {
             }
           }
         }
-        return unique(matches);
+        return unique(matches);   // disregard duplicates if same reference is found in relation to many objects
       }
 
       /*
@@ -330,42 +323,45 @@ module Interpreter {
               found = true;                       // found: stop searching...
               switch(rel) {
                 case "leftof":
-                  target = this.findToLeft(stacks, obj, col, row)
+                  var pos = this.findToLeftPosition(stacks, obj, col, row);
+                  if(pos.id) target = pos.id
                   break;
                 case "rightof":
-                  target = this.findToRight(stacks, obj, col, row)
+                  var pos = this.findToRightPosition(stacks, obj, col, row);
+                  if(pos.id) target = pos.id
                   break;
                 case "beside":                    // check that only one case is possible
-                  var left = this.findToLeft(stacks, obj, col, row)
-                  var right = this.findToRight(stacks, obj, col, row)
-                  if(left && right) {
-                    var err = this.tooManyObjectsError([left, right], "beside");
-                    throw new Interpreter.Error(err);
+                  var leftPos = this.findToLeftPosition(stacks, obj, col, row)
+                  var rightPos = this.findToRightPosition(stacks, obj, col, row)
+                  if(leftPos && !rightPos) target = leftPos.id;
+                  if(rightPos && !leftPos) target = rightPos.id;
+                  if(leftPos && rightPos) {       // if both are alternatives pick the closest
+                    var ldist = distance(col, row, leftPos.col, leftPos.row);
+                    var rdist = distance(col, row, rightPos.col, rightPos.row);
+                    target = ldist > rdist ? rightPos.id : leftPos.id;
                   }
-                  if(left) target = left;
-                  if(right) target = right;
                   break;
                 case "above":
-                  target = this.findAbove(stacks, obj, col, row)
+                  var pos = this.findAbove(stacks, obj, col, row)
+                  if(pos.id) target = pos.id
                   break;
                 case "ontop":
-                  if(onFloor) {  // special: take the x ontop of the floor (refers to it self)
+                  if(onFloor) {                   // special: take the x ontop of the floor (refers to it self)
                     target = ref
                   } else {
                     var r = this.findObject(ref);
-                    if(r.form === "box")  // objects cannot be "ontop" of boxes (Physical law)
-                      throw new Interpreter.Error("objects can only be inside boxes");
-                    target = stacks[col][row+1]; // look directly above
+                    if(r.form !== "box")           // objects cannot be "ontop" of boxes (Physical law)
+                      target = stacks[col][row+1]; // look directly above
                   }
                   break;
                 case "inside":
                   var r = this.findObject(ref);
-                  if(r.form !== "box")  // objects cannot be "ontop" of boxes (Physical law)
-                    throw new Interpreter.Error("objects can only be inside boxes");
-                  target = stacks[col][row+1]; // look directly above
+                  if(r.form === "box")             // objects cannot be "ontop" of boxes (Physical law)
+                    target = stacks[col][row+1];   // look directly above
                   break;
                 case "under":
-                  target = this.findUnder(stacks, obj, col, row)
+                  var pos = this.findUnder(stacks, obj, col, row)
+                  if(pos.id) target = pos.id
                   break;
               }
             }
@@ -374,19 +370,19 @@ module Interpreter {
         return (this.match(obj, target) ? target : null);
       }
 
-      findToLeft(stacks: string[][], obj: Parser.Object, col: number, row: number): string {
+      findToLeftPosition(stacks: string[][], obj: Parser.Object, col: number, row: number): Position {
         return this.find(stacks, obj, col-1, -1, 0, 1);
       }
 
-      findToRight(stacks: string[][], obj: Parser.Object, col: number, row: number): string {
+      findToRightPosition(stacks: string[][], obj: Parser.Object, col: number, row: number): Position {
         return this.find(stacks, obj, col+1, 1, 0, 1);
       }
 
-      findAbove(stacks: string[][], obj: Parser.Object, col: number, row: number): string {
+      findAbove(stacks: string[][], obj: Parser.Object, col: number, row: number): Position {
         return this.find(stacks, obj, col, 0, row+1, 1);
       }
 
-      findUnder(stacks: string[][], obj: Parser.Object, col: number, row: number): string {
+      findUnder(stacks: string[][], obj: Parser.Object, col: number, row: number): Position {
         return this.find(stacks, obj, col, 0, row-1, -1);
       }
 
@@ -394,8 +390,8 @@ module Interpreter {
        * Move through stacks from col and row position in col direction and row
        * direction, and look for object
        */
-      find(stacks: string[][], obj: Parser.Object, col: number, cdir: number, row: number, rdir: number): string {
-        var ref: string;
+      find(stacks: string[][], obj: Parser.Object, col: number, cdir: number, row: number, rdir: number): Position {
+        var refPos: Position = {col: null, row: null, id: null};
         var found = false;
         var c = col+cdir;
         while((c < stacks.length && c >= 0) && !found) { // columns
@@ -403,13 +399,15 @@ module Interpreter {
           for(var r = row; (r < stacks[c].length && r >= 0) && !found; r += rdir) { // rows
             if(this.match(obj, stacks[c][r])) {
               found = true;
-              ref = stacks[c][r];
+              refPos.id = stacks[c][r];
+              refPos.row = r;
+              refPos.col = c;
             }
           }
           if(c + cdir === c) // only look up or down (no other column)
             break;
         }
-        return ref;
+        return refPos;
       }
 
       //////////////////////////////////////////////////////////////////////
@@ -449,20 +447,47 @@ module Interpreter {
       }
 
       /*
-       * tranform Pair[][] to Literal[][]
+       * tranform Pair[][] to Literal[][]. Returns only those arrays that does
+       * not have error in any of its positions.
        */
       transform(matrix: Pair[][], rel: string, swapped: boolean): Literal[][] {
-        return matrix.map((arr: Pair[]) => {
-          return arr.map((pair: Pair) => {
+        var errHash = []; // used for storing error that occured in an array of literals
+        var arrCounter = 0;
+        // converts by mapping over the matrix
+        var lits = matrix.map((arr: Pair[]) => {
+          var litArr = arr.map((pair: Pair) => {
             var obj = this.state["objects"][pair.obj];
-            var locErr = this.locationError(obj, rel, pair.ref, swapped);
-            if(!locErr) {
-              return {pol: true, rel: rel, args: [pair.obj, pair.ref]};
+            var ref = this.state["objects"][pair.ref];
+            // keep track of error for each array
+            var locErr = this.locationError(obj, rel, ref, swapped);
+            if(locErr) {
+              errHash[arrCounter] = errHash[arrCounter] ? errHash[arrCounter] : locErr; // :-)
+              return;
             } else {
-              throw new Interpreter.Error(locErr);
+              return {pol: true, rel: rel, args: [pair.obj, pair.ref]};
             }
           });
+          arrCounter++;
+          return litArr;
         });
+        lits = this.weedOutBad(lits, errHash);
+        return lits;
+      }
+
+      /*
+       * Weeds out all bad literals according to the index of errHash
+       */
+      weedOutBad(lits: Literal[][], errHash: string[]): Literal[][] {
+        var weeded: Literal[][] = [];
+        // If an error occured any way in the array dont add array to weeded
+        for(var i=0; i<lits.length; i++) {
+          if(!errHash[i]) // no error in array of literals => ok
+            weeded.push(lits[i]);
+        }
+        if(weeded.length >= 1)
+          return weeded;
+        // else get the first error in array
+        throw new Interpreter.Error(errHash[0]);
       }
 
       //////////////////////////////////////////////////////////////////////
@@ -478,7 +503,7 @@ module Interpreter {
           return " the" + toString(o);
         });
         strobjs.splice(-1, 0, "or"); // insert "or" before the last object
-        var enumeration = strobjs.slice(0, -2);
+        var enumeration = strobjs.slice(0, -2); // commaseparated part of sentence
         var last = strobjs.slice(-2);
         return "Do you mean" + (rel ? (" " + rel) : "") + enumeration.join(",") + last.join("") + "?";
       }
@@ -486,12 +511,12 @@ module Interpreter {
       /*
        * Check if object is allowed at location according to physical laws.
        */
-      locationError(obj: Parser.Object, rel: string, ref: string, swapped: boolean): string {
+      locationError(obj: Parser.Object, rel: string, ref: Parser.Object, swapped: boolean): string {
         // 0. Elementary assumptions
-        var refObj = this.findObject(ref);
+        var refObj = ref;
         if(swapped) { // refs are objects and objects refs
           var temp = refObj;
-          var refObj = toObjectDef(obj);
+          refObj = toObjectDef(obj);
           obj = temp;
         }
         var objstr = toString(obj);
@@ -509,7 +534,7 @@ module Interpreter {
             return "A" + refstr + "cannot support anything";
           }
           // 3. Small objects cannot support large objects.
-          if(this.size(obj.size) > this.size(refObj.size)) {
+          if(size(obj.size) > size(refObj.size)) {
             return "The" + objstr + "is to large for the" + refstr;
           }
           // 4. Boxes cannot contain pyramids, planks or boxes of the same size.
@@ -517,7 +542,7 @@ module Interpreter {
           var pyramid = obj.form === "pyramid";
           var box = obj.form === "box";
           var possibleConflict = plank || pyramid || box;
-          var equalSize = this.size(refObj.size) === this.size(obj.size);
+          var equalSize = size(refObj.size) === size(obj.size);
           if((refObj.form === "box") && possibleConflict && equalSize) {
             return "A" + refstr + "cannot contain a" + objstr;
           }
@@ -657,16 +682,6 @@ module Interpreter {
         return this.state["objects"][id];
       }
 
-      /*
-       * Lets us compare Object size numerically
-       */
-      size(s: string): number {
-        if(s === "large")
-          return 2;
-        else if(s === "small")
-          return 0;
-        return 1; // no size specified in object, apply rule of least intervention
-      }
 
     } // class Interpret
 
@@ -677,6 +692,27 @@ module Interpreter {
     interface Pair {
       obj: string;
       ref: string;
+    }
+
+    /*
+     * Interface used to keep record of id of object and its position in the
+     * state
+     */
+    interface Position {
+      col: number;
+      row: number;
+      id: string;
+    }
+
+    /*
+     * Lets us compare Object size numerically
+     */
+    function size(s: string): number {
+      if(s === "large")
+        return 2;
+      else if(s === "small")
+        return 0;
+      return 1; // no size specified in object, apply rule of least intervention
     }
 
     /*
@@ -731,6 +767,13 @@ module Interpreter {
       return arr.filter((item: any) => {
         return seen.hasOwnProperty(item) ? false : (seen[item] = true);
       });
+    }
+
+    /*
+     * calculates the distance between 2 points
+     */
+    function distance(c1: number, r1: number, c2: number, r2: number): number {
+      return Math.sqrt(Math.pow(c1 - c2, 2) + Math.pow(r1 - r2, 2));
     }
 
     function toObjectDef(obj: Parser.Object): ObjectDefinition {
