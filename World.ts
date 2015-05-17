@@ -83,6 +83,10 @@ function extendWorldState(state: WorldState) : ExtendedWorldState {
         objectsWithId[id] = obj;
     }
 
+    if(state.holding) {
+        objectsWithId[state.holding] = assignObjectId(state.objects[state.holding], state.holding);  
+    }
+
     // Create PPDL representation
     var pddlWorld : PddlLiteral[] = [];
     for (var x in objStacks) {

@@ -4,10 +4,12 @@
 ///<reference path="astar/AStar.ts"/>
 
 module Planner {
-    //TODO put somewhere?
-    var NUM_STACKS = 5;
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
+
+    //TODO should this be moved somewhere? Argument och global parameter?
+    var searchDepth = 5;
+    var NUM_STACKS;
 
     export function plan(interpretation : PddlLiteral[][], currentState : ExtendedWorldState) : string[] {
         var plan : string[] = planInterpretation(interpretation, currentState);
@@ -35,9 +37,8 @@ module Planner {
         var plan : string[] = [];
 
         console.log("planInterpretation()", state);
-
-        //TODO should this be moved somewhere? Argument och global parameter?
-        var searchDepth = 7;
+        
+        NUM_STACKS = state.stacks.length;
 
         // Update world state with 'attop' and 'arm'
         for(var i = 0; i<NUM_STACKS; i++) {
@@ -55,7 +56,9 @@ module Planner {
             // Update state with 'holding' (if any)
             state.pddlWorld.push({pol:true, rel:"holding", args:["arm", state.holding]});
             // Try to put down what we're holding
+            console.log("sup");
             var secNodeState = putDownObject(state.pddlWorld, state.arm, state);
+            console.log("sup2");
             if (secNodeState) {
                 secNode = new AStar.Node<PddlLiteral[]>(secNodeState, [], Infinity, null, "d" + 1);
             } else {
@@ -165,6 +168,9 @@ module Planner {
             var stacks = window['makeStacks'](searchResult[s].label);
         }
 
+        if(searchResult.length === 0) {
+            plan.push("What you are asking is simply impossible!");
+        }
 
         return plan;
     }
@@ -237,7 +243,7 @@ module Planner {
     //Returns the modified world, does not change the original!
     function moveArm(state:PddlLiteral[], stack:number):PddlLiteral[]{
         //If you try to move outside the world just ignore it
-        if(stack > 5 || stack < 0) {
+        if(stack > NUM_STACKS || stack < 0) {
             return state;
         }
 
@@ -314,6 +320,8 @@ module Planner {
         if(topObjectSize === 'small' && objectSize === 'large') {
             return null;
         }
+
+
 
         // if topObject is a box, and
         // if object is a pyramid, plank or box, and
