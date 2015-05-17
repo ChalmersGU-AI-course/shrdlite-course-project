@@ -56,6 +56,7 @@ module Interpreter {
         // state should be the current WorldState
 
         var intprt: Literal[][] = [];
+        var pobjs = [];
 
         /*
             TODO: Structure for "put"
@@ -88,12 +89,12 @@ module Interpreter {
         // Get possible objects the parse is referring to
         //  -Identify what objects we want
         //  -See if such an object exists in the world
-        var pobjs = getPrimaryObjects(cmd, state);
+        pobjs = getPrimaryObjects(cmd, state);
 
         //  -If no object found, abort
         //  -If ambiguity and the quantifier is 'the', ask for clarification
         if (pobjs.length === 0) {
-            console.log("Can't pickup something that is not real");
+            console.log("Can't pickup something does not exist in the world");
             return null;
         } else if (cmd.ent.quant === "the" && pobjs.length > 1) {
             console.log("Please be more specific");
@@ -112,25 +113,13 @@ module Interpreter {
                 -Return possible interpretations
         */
         if (cmd.cmd === "take") {
-            /*
-            TODO: Do correct stuff with "take"
-                -Identify what obj we want
-                -See if such an object exists in the world
-                -If ambiguity and the quantifier is 'the', ask for clarification //Om samma size, �nd� fr�ga?
-            */
+            //Can't hold more than one object
             if (cmd.ent.quant === "all") {
-                //Can't hold more than one object
                 //CHANGE IF ADDING ANOTHER ARM
                 console.log("Can't hold more than one object");
                 return null;
             }
-            if(pobjs.length===0){
-                console.log("Can't pickup something that do not exists in the world");
-                return null;
-            }
-            for (var i = 0; i < pobjs.length; i++) {
-                intprt.push([{ pol: true, rel: "holding", args: [pobjs[i]] }]);
-            }
+            intprt = convertToPDDL(cmd, pobjs, null, state);
         }
 
         /*
@@ -164,7 +153,17 @@ module Interpreter {
                 -Check if the positioning is valid, ontop(o, t) 
         */
         else if (cmd.cmd === "move") {
-            //TODO
+            //----------------------------SAME AS "PUT"
+            var possibleTargets = getTargetObjects(cmd, state);
+            if (possibleTargets.length < 1) {
+                console.log("No target found");
+                return null;
+            } else if (possibleTargets.length > 1 && cmd.loc.ent.quant === "the") {
+                console.log("Please be more specific with the target location");
+                return null;
+            }
+            intprt = convertToPDDL(cmd, pobjs, possibleTargets, state);
+            //----------------------------SAME AS "PUT"
         } else {
             console.log("Found no valid command");
             return null;
@@ -235,7 +234,57 @@ module Interpreter {
     //to see existing sizes and relations
     function convertToPDDL(cmd: Parser.Command, primobj: string[], targets : string[], state : WorldState) : Literal[][] {
         var interpretations: Literal[][] = [];
-        //TODO
+
+        //cmd is "take"
+        if (cmd.cmd === "take") {
+            for (var i = 0; i < primobj.length; i++) {
+                interpretations.push([{ pol: true, rel: "holding", args: [primobj[i]] }]);
+            }
+        }
+        //cmd is "put"
+        else if (cmd.cmd === "put") {
+            //TODO: make sure only valid moves are possible at this stage i.e  where the object held by the arm has valid relations to all targets
+            for (var i = 0; i < targets.length; i++) {
+                interpretations.push([{ pol: true, rel: cmd.loc.rel, args: [state.holding, targets[i]] }]);
+            }
+        }
+        //cmd is "move"
+        else {
+            var relation: string = cmd.loc.rel;
+
+            if (cmd.ent.quant === "all" && cmd.loc.ent.quant === "all") { //When all primary objects are related to all target objects
+                var conjunction: Literal[] = [];
+                for (var i = 0; i < primobj.length; i++) {
+                    for (var j = 0; j < primobj.length; j++) {
+                        conjunction.push({ pol: true, rel: relation, args: [primobj[i], targets[j]] });
+                    }
+                }
+                interpretations.push(conjunction);
+            } else if (cmd.ent.quant === "all") {       //When all primary objects are related to a single target object
+                for (var j = 0; j < targets.length; j++) {
+                    var conjunction: Literal[] = [];
+                    for (var i = 0; i < primobj.length; i++) {
+                        conjunction.push({ pol: true, rel: relation, args: [primobj[i], targets[j]] });
+                    }
+                    interpretations.push(conjunction);
+                }
+            } else if (cmd.loc.ent.quant === "all") { //When a single primary object is related to all target objects
+                for (var i = 0; i < primobj.length; i++) {
+                    var conjunction: Literal[] = [];
+                    for (var j = 0; j < targets.length; j++) {
+                        conjunction.push({ pol: true, rel: relation, args: [primobj[i], targets[j]] });
+                    }
+                    interpretations.push(conjunction);
+                }
+            } else { //When a single primary object is related to a single target object
+                for (var i = 0; i < primobj.length; i++) {
+                    for (var j = 0; j < targets.length; j++) {
+                        interpretations.push([{ pol: true, rel: relation, args: [primobj[i], targets[j]] }]);
+                    }
+                }
+            }
+        }
+
         return interpretations;
     }
 
