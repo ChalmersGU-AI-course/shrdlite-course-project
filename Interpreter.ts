@@ -188,8 +188,8 @@ module Interpreter {
 
     function getPrimaryObjects(cmd: Parser.Command, state: WorldState) {
         var visuallyPossibleObjs = getPossibleObjects(cmd.ent.obj, state);
+        
         //TODO: Filter out based on location
-
         return visuallyPossibleObjs;
     }
 
@@ -239,6 +239,52 @@ module Interpreter {
         var interpretations: Literal[][] = [];
         //TODO
         return interpretations;
+    }
+
+    // This function returns how o2 relates to o1. e.g o2 is left of o1; 
+    // returns 'none' if there is no relation
+    // possible relations: left, right, inside, under, above (beside = left or right)
+    function getRelation(o1 : string, o2 : string, stacks : string[][]) : string{
+        var coo1 = getStackIndex(o1,stacks);
+        var coo2 = getStackIndex(o2,stacks);
+        // Check so both elements exist
+        if(coo1[0] === -1 || coo1[1] === -1 || coo2[0] === -1 || coo2[1] === -1)
+          return 'nonexistent';
+
+        // O1 left of O2
+        if(coo1[0] < coo2[0])
+          return "left";
+        // O1 right of O2
+        if(coo1[0] > coo2[0])
+          return "right";
+        // O1 inside (or on top of) O2
+        if(coo1[1] === (coo2[1]+1))
+          return "inside";
+        // O1 above O2
+        if(coo1[1] > coo2[1])
+          return "above";
+        // O1 directly under O2
+        if(coo1[1] === (coo2[1]-1))
+          return "under";
+        // O1 below O2
+        if(coo1[1] < coo2[1])
+          return "below";
+        
+        return 'none';
+    }
+
+    // Returns coordinates in the stack for a given object ; returns -1, -1 if element does not exist.
+    function getStackIndex(o1 : string, stacks : string[][]) : number[]{
+        var cords = [-1, -1];
+        for(var i = 0; i < stacks.length; i++){
+            for(var j = 0; j < stacks[i].length; j++){
+                if(stacks[i][j] === o1){
+                    cords[0] = i;
+                    cords[1] = j;
+                }
+            }
+        }
+        return cords;
     }
 
     function getRandomInt(max) {
