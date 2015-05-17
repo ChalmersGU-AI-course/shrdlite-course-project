@@ -258,10 +258,7 @@ module Interpreter {
               var tolerant = true;
               lits = this.literals(refs, objs, rel, swappedArgs, tolerant);
               // all objects get to be in relation "rel" to unique object
-              console.log(literalsToString(lits));
-              // console.log(objs);
               lits = uniqueCombinations(lits, objs)
-              // lits = uniqueCombinations(lits, refs)
             } else {
               lits = this.literals(refs, objs, rel, swappedArgs);
             }
