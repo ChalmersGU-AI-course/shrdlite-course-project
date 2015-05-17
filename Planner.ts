@@ -42,25 +42,19 @@ module Planner {
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
 	
 	var goalFunc = makeGoalFunc(intprt);
-	var x : string[] = [];
+	var actions : string[] = [];
 	var initState : State = new State(state.stacks, state.holding, state.arm, "");
 
-	var bla = AStar.AStarSearch<State>(copyState(initState), goalFunc, h, costFunc, adjacent);
-	console.log(bla);
-	bla.forEach((elem) => {
-	    x.push(elem.action);
+	var plan = AStar.AStarSearch<State>(copyState(initState), goalFunc, h, costFunc, adjacent);
+	plan.forEach((elem) => {
+	    actions.push(elem.action);
 	});
-	return x;
+	return actions.reverse();
     }
-/*
-    interface State {
-	stacks: string[][];
-	holding: string;
-	armpos : number;
-	action : string;
-	toString(): string; 
-    }
-*/
+
+
+    // state of the world
+    // action: action taken to get to the state
     class State {
 	constructor(public stacks: string[][], public holding: string, public armpos : number, public action : string) {
 	}
@@ -114,7 +108,7 @@ module Planner {
             st.push(newState);
         }
         //pickup
-        if(!state.holding && state.stacks[state.armpos].length > 0) {
+        if(!state.holding && state.stacks[state.armpos].length >= 0) {
             var newState = copyState(state);
             newState.holding = state.stacks[state.armpos].pop();
 	    newState.action = "p";
@@ -131,8 +125,8 @@ module Planner {
             return null;
         }
 
-        var ns : State = copyState(state);
-        ns.arm -= 1;
+        var ns : State = copyState(st);
+        ns.armpos -= 1;
 
         return ns;
     }
@@ -140,12 +134,12 @@ module Planner {
     // moveRight        
     function moveRight (st: State, lastA: string) : State {
         
-        if (st.armpos == state.stacks.length - 1 || lastA == "l") {
+        if (st.armpos == st.stacks.length - 1 || lastA == "l") {
             return null;
         }
 
-        var ns : State = copyState(state);
-        ns.arm += 1;
+        var ns : State = copyState(st);
+        ns.armpos += 1;
 
         return ns;
     } 
@@ -165,13 +159,13 @@ module Planner {
 
     //drop function
     function drop(state: State, lastA: string): State {
-        if(state.holding != null || lastA == "d" || lastA == "p" 
+       /* if(state.holding != null || lastA == "d" || lastA == "p" 
             || (state.stacks[state.armpos].length != 0 
             && !Interpreter.checkSize(state.objects[state.holding]
             ,state.objects[state.stacks[state.armpos][state.stacks[state.armpos].length - 1]]))) {
             return null;
         } 
-
+*/
         var ns : State = copyState(state);
         ns.stacks[ns.armpos].push(ns.holding);
         ns.holding = null;
@@ -215,8 +209,8 @@ module Planner {
     }
     // leftof
     if(lit.rel === "leftof") {
-        var stackOfa = -1;
-        var stackOfb = -1;
+        var stackofa = -1;
+        var stackofb = -1;
         /*
         checks the stacks of objects.
         when objects are found compare stack index
