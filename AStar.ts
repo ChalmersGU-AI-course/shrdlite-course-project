@@ -1,14 +1,18 @@
 ///<reference path='collections.ts'/>
+///<reference path='World.ts'/>
+
 module AStar {
-    
+ 
 
     export interface Node
     {
-        id: number;
-        hweight?: number;
-        neighbours: [number,number][];
+        wState : string;
+        neighbours: [string,number] []; //BÖR NOG BYTE FRÅN NODE HÄR OM DET GÅR
         fscore?: number;
+        hweight? : number;
+        id?: number;
     }
+    
     
     //TBD
     function compareT(a:Node,b:Node)
@@ -29,46 +33,48 @@ module AStar {
         return 0
     }
     
-    export function astar(start,goal,huerFunction,graph:{ [key:number] : Node; }) : number[]
+    export function astar(startObject,goalFunction,huerFunction,getNode) : string[]
     {
-        var closedSet : number[] = [];
+        var closedSet : Node[] = [];
         var openSet = new collections.PriorityQueue<Node>(compareT);
         
-        openSet.add(graph[start]);
+        var startNode : Node = getNode(startObject)
+        openSet.add(startNode);
         
-        var came_from : {[key:number]:number} = {};
+        var came_from : {[key:string]:Node} = {};
         
-        var g_score : number [] = [];
-        g_score[start] = 0;
+        var g_score : {[key:string]:number} = {};
+        g_score[startObject] = 0;
         
         var f_score : number [] = [];
-        f_score[start] = g_score[start] + graph[start].hweight;
+        f_score[startObject] = g_score[startObject] + huerFunction(startObject);
         
-        var indextest : number = 0;
         while(!openSet.isEmpty())
         {
             var current = openSet.dequeue();
-            if (current.id == goal)
+            if (goalFunction(current))
             {
-                return reconstruct_path(came_from, goal);
+                return reconstruct_path(came_from, current);
             }
             
-            closedSet.push(current.id); 
+            closedSet.push(current); 
             for(var ei in current.neighbours)
             {
-                var e : number[] = current.neighbours[ei];
+                var e : [string,number] = current.neighbours[ei];
                 
-                if (!arrayIsMember(e[1],closedSet))
+                var eNeigh : [Node,number] = [getNode(e[0]),e[1]];
+                
+                if (!arrayIsMember(e[0],closedSet))
                 {
-                    var tentative_g_score :number = g_score[current.id] + e[0];
+                    var tentative_g_score :number = g_score[current.wState] + eNeigh[1];
                     
-                    if(!openSet.contains(graph[e[1]]) || tentative_g_score < g_score[e[1]])
+                    if(!openSet.contains(eNeigh[0]) || tentative_g_score < g_score[e[0]])
                     {
-                        came_from[e[1]] = current.id;
-                        g_score[e[1]] = tentative_g_score;
-                        f_score[e[1]] = g_score[e[1]] + huerFunction(graph[e[1]]);
-                        graph[e[1]].fscore = f_score[e[1]];
-                        openSet.enqueue(graph[e[1]]);
+                        came_from[e[0]] = current;
+                        g_score[e[0]] = tentative_g_score;
+                        f_score[e[0]] = g_score[e[0]] + huerFunction(e[0]);
+                        eNeigh[0].fscore = f_score[e[0]];
+                        openSet.enqueue(eNeigh[0]);
                     }
                 }
             }
@@ -76,24 +82,24 @@ module AStar {
         return [];
     }
     
-    function reconstruct_path (came_from, current) : number[]
+    function reconstruct_path (came_from, current) : string[]
     {
-        var total_path : number[] = [];
-        total_path.push(current);
+        var total_path : string[] = [];
+        total_path.push(current.wState);
         while(came_from[current] != null)
         {
             current = came_from[current];
-            total_path.push(current);
+            total_path.push(current.wState);
         }
         return total_path;
     }
 
-    function arrayIsMember (e , array) : boolean
+    function arrayIsMember (e : string, array) : boolean
     {
         for(var i in array)
         {
-            var v : number = array[i];
-            if(e==v)
+            var v : string = array[i].wState;
+            if(e===v) // functionsanropet ska ändras lite
             {
                 return true;
             }
@@ -101,6 +107,3 @@ module AStar {
         return false;
     }
 }
-
-
-

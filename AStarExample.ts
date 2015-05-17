@@ -3,15 +3,16 @@
 module AStarExample 
 {
     export function example1(a : number, b : number)
-    {
+    {  /*
         var graph: { [key:number] : AStar.Node; } = {};
         graph[0] = {id:1,hweight:30,neighbours:[[2,1] ,[4,2],[1,3]]};
         graph[1] = {id:2,hweight:15,neighbours:[[2,0],[1,2],[2,3]]};
         graph[2] = {id:3,hweight:10,neighbours:[[2,0],[2,1],[2,3]]};  
         graph[3] = {id:4,hweight:0,neighbours:[[2,1],[2,2]]};
-        var ret = AStar.astar(a,4,example1HeurFunction,graph);
+        var ret ={};// AStar.astar(a,4,example1HeurFunction,graph);
         console.log(ret)
-        return ret;
+        return ret;*/
+        
     }
     
     function example1HeurFunction(t : AStar.Node) : number
@@ -21,6 +22,7 @@ module AStarExample
     
     export function example2(input:number)
     {
+        /*
         var graph2: { [key:number] : AStar.Node; } = {};
         graph2[0] = {id:0,neighbours:[[75,19],[118,16],[140,15]]};
         graph2[1] = {id:1,neighbours:[[211,5],[85,18],[90,6],[101,13]]};
@@ -43,12 +45,12 @@ module AStarExample
         graph2[18] = {id:18,neighbours:[[92,8],[142,17]]};
         graph2[19] = {id:19,neighbours:[[71,12],[75,0]]};
         
-        var optPath : number[] = AStar.astar(input,City.Bucharest,example2HeurFunction,graph2);
+        var optPath : number[] ={};//= AStar.astar(input,City.Bucharest,example2HeurFunction,graph2);
         for(var i in optPath)
         {
             console.log(i-(-1),City[optPath[(optPath.length-1)-i]]);
         }
-        
+        */
     }
     enum City 
     {

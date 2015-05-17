@@ -108,11 +108,80 @@ module Planner {
 		
 	}
 	
+    function w2N(w : WorldState) : AStar.Node
+    {
+        var n : [string,number][] = [];
+        var ws : WorldState[] = worldItteration(w);
+        for(var v in ws)
+        {
+            n[v] = [WorldFunc.world2String(ws[v]),1]
+        }
+        return {wState: WorldFunc.world2String(w),neighbours:n}
+    }
+    
+    function convertToMap(w : WorldState): {[s:string]: any}
+    {
+        var alphabet :string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        var i :number = 0;
+        var ret : {[s:string]: any} = {}
+        for( var o in w.objects)
+        {
+            ret[alphabet[i]] = {o};
+            i++;
+        }
+        return ret; 
+    }
+    
+    function goalFunction (ls : Interpreter.Literal[], curr : string)
+    {
+        for(var i in ls)
+        {
+            var l : Interpreter.Literal = ls[i];
+            
+            var rel : string = l.rel;
+            var x   : string = l.args[0];
+            var y   : string = l.args[1];
+            var derp : string = ""; 
+            var regExp : RegExp;
+            switch(rel)
+            {
+                case "rightof":
+                    regExp = new RegExp (derp.concat("/", y ,"([a-z]*)\d([a-z]|\d)*" ,x ,"/"));
+                    break;
+                case "leftof":
+                    regExp = new RegExp (derp.concat("/"  ,x , "([a-z]*)\d([a-z]|\d)*" ,y ,"/"));
+                    break;
+                case 'inside':
+                    regExp = new RegExp (derp.concat("/"  , y , x , "/"));
+                    break;
+                case "ontop":
+                    regExp = new RegExp (derp.concat("/"  , y , x , "/"));
+                    break;
+                case "under":
+                    regExp = new RegExp (derp.concat("/"  , x , "([a-z]*)" , y , "/"));
+                    break;    
+                case "beside":
+                    regExp = new RegExp (derp.concat("/(" , x , "([a-z]*)\d([a-z]*)" , y , ")|(" , y , "([a-z]*)\d([a-z]*)" , x , ")/"));
+                    break; 
+                case "above":
+                    regExp = new RegExp (derp.concat("/"  , y , "([a-z]*)" , x , "/"));
+                    break;
+            }
+            if(!regExp.test(curr))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 	
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         // This function returns a dummy plan involving a random stack
         		
-		console.log(worldItteration(state), state);
+		//console.log(worldItteration(state), state);
+        //console.log(WorldFunc.compareWorld(state,state));
+        console.log(w2N(state).neighbours);
+        console.log(convertToMap(state));
 		do {
             var pickstack = getRandomInt(state.stacks.length);
         } while (state.stacks[pickstack].length == 0);
