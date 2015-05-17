@@ -99,28 +99,20 @@ module Planner {
                           , cost :number = Math.abs(armPos-j)
                           , newNodeWorld = moveArm(oldNodeWorld, j);
 
-                        // Clear debug info from nodes
-                        _.remove(newNodeWorld, {rel: 'dbg-lift'});
-                        _.remove(newNodeWorld, {rel: 'dbg-drop'});
-                        _.remove(newNodeWorld, {rel: 'dbg-liftwhat'});
-
                         var newNode = null;
                         // We can either -lift- or -putDown-
                         if(!isHolding(oldNodeWorld)) {
                             // We can't always lift - not if we lack objects!
                             var newerNodeWorld = liftObject(newNodeWorld, j);
                             if (newerNodeWorld) {
-                                newerNodeWorld.push({pol:true, rel:'dbg-lift', args: []});
                                 newNode = new AStar.Node<PddlLiteral[]>(newerNodeWorld, [], Infinity, null, dir+cost+"p"+1);
                             } else {
                                 //console.warn("breaking the first commandment");
                             }
-
                         } else {
                             // Try to putDown. Will fail if move is illegal
                             var newerNodeWorld = putDownObject(newNodeWorld, j, state);
                             if (newerNodeWorld) {
-                                newerNodeWorld.push({pol:true, rel:'dbg-drop', args: []});
                                 newNode = new AStar.Node<PddlLiteral[]>(newerNodeWorld, [], Infinity, null, dir+cost+"d"+1);
                             } else {
                                 //console.warn("breakin the laaw");
@@ -133,7 +125,6 @@ module Planner {
                             oldNode.neighbours.push(edge); // Note: we don't want a return edge
 
                             // TODO: what happens when we do not push here?
-
                             nodes[i+1].push(newNode);
                         }
                     }
@@ -156,14 +147,14 @@ module Planner {
 
 
         var searchResult = AStar.astar(startNode, createGoalFunction(intprt), createHeuristicFunction());
-
-        console.log("Search result:");
-        console.log(searchResult);
+        
+        console.log("Search result:",searchResult);
 
         for(var s in searchResult) {
-            while(searchResult[s].action) {
-                pushActions(plan, searchResult[s].action[0], Number(searchResult[s].action[1]));
-                searchResult[s].action = searchResult[s].action.slice(2,searchResult[s].action.length);
+            var str = searchResult[s].action; 
+            while(str) {
+                pushActions(plan, str[0], Number(str[1]));
+                str = str.slice(2,str.length);
             }
 
         }
@@ -171,9 +162,7 @@ module Planner {
         //var stacks = window['makeStacks'](searchResult[0].label);
         //console.log("final stacks:",stacks);
         for (var s in searchResult) {
-            //console.log("final state:",searchResult[searchResult.length-1].label);
             var stacks = window['makeStacks'](searchResult[s].label);
-            console.log(s+" stacks:",stacks);
         }
 
 
@@ -298,6 +287,9 @@ module Planner {
 
         var objectForm    = objectObj.form
           , topObjectForm = topObjectObj.form;
+          
+        var objectSize    = objectObj.size
+          , topObjectSize = topObjectObj.size;
 
         // TODO check if this placement is legal. If not, return null!
 
@@ -305,9 +297,9 @@ module Planner {
         // if topObject is not floor or box,
         //   return null
         // TODO; this doesn't work!
-        if (objectForm === 'ball' && (topObjectForm !== 'floor' || topObjectForm !== 'box')) {
+        if (objectForm === 'ball' && (topObjectForm !== 'floor' && topObjectForm !== 'box')) {
             //console.log("should return null");
-            //return null;
+            return null;
         }
 
         // if topObject is a ball,
@@ -319,20 +311,33 @@ module Planner {
         // if topObject is small and
         // if object is large,
         //   return null
+        if(topObjectSize === 'small' && objectSize === 'large') {
+            return null;
+        }
 
         // if topObject is a box, and
         // if object is a pyramid, plank or box, and
         // if object and topObject have the same size,
         //   return null
+        if(topObjectForm === 'box' && (objectForm === 'pyramid' || objectForm === 'plank' || objectForm === 'box') && (compareSizes(topObjectSize, objectSize) < 1)) {
+            return null
+        }
 
         // if topObject is a (small brick) or pyramid, and
         // if object is a small box,
         //   return null
+        if((objectForm === 'box' && objectSize === 'small') && (topObjectForm === 'pyramid' || (topObjectForm === 'brick' && topObjectSize === 'small'))) {
+            return null;
+        }
+
 
         // Large boxes cannot be supported by large pyramids.
         // if topObject is a large pyramid, and
         // if object is a large box,
         //   return null
+        if((objectForm === 'box' && objectSize === 'large') && topObjectForm === 'pyramid') {
+            return null;
+        }
 
 
         // Determine 'rel' part of the new predicate
@@ -368,7 +373,6 @@ module Planner {
         }
         if (attops.length>1) {
             console.warn("several attops!");
-            newWorld.push({pol: true, rel: 'dbg-several-attop', args: [JSON.stringify(attops)]});
         }
 
         for(var i:number = 0; i<newWorld.length; i++){
@@ -406,7 +410,7 @@ module Planner {
                 //console.log("lifting from floor-4", object, newWorld);
                 //newWorld.push({pol:true, rel:"itsalie", args: [object]}); // try to find the faulty lift
                 if (object === "m") {
-                    console.log("lifting blue ball from floor-4", object, newWorld);
+                    //console.log("lifting blue ball from floor-4", object, newWorld);
                     newWorld.push({pol:true, rel:"itsalie", args: [object, JSON.stringify(newWorld)]}); // try to find the faulty lift
 
                 }
@@ -462,5 +466,18 @@ module Planner {
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
+    }
+    
+    function compareSizes(size1:string, size2:string) {
+        //The are equal size
+        if(size1 === size2) {
+            return 0;
+        //First must be largest
+        } else if(size1 === 'large') {
+            return 1;
+        //Second must be largest
+        } else {
+            return -1;
+        }
     }
 }
