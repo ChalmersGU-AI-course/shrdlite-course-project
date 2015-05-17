@@ -115,7 +115,7 @@ class SVGWorld implements World {
         var svg = $(this.SVG('svg')).attr({
             viewBox: viewBox.join(' '), 
             width: viewBox[2], 
-            height: viewBox[3],
+            height: viewBox[3]
         }).appendTo(this.containers.world);
 
         // The floor:
@@ -124,7 +124,7 @@ class SVGWorld implements World {
             y: this.canvasHeight,
             width: this.canvasWidth + 2 * this.wallSeparation,
             height: this.canvasHeight + this.floorThickness,
-            fill: 'black',
+            fill: 'hotpink',
         }).appendTo(svg);
 
         // The arm:
@@ -134,8 +134,8 @@ class SVGWorld implements World {
             y1: this.armSize * this.stackWidth() - this.canvasHeight, 
             x2: this.stackWidth() / 2, 
             y2: this.armSize * this.stackWidth(), 
-            stroke: 'black', 
-            'stroke-width': this.armSize * this.stackWidth(),
+            stroke: 'hotpink',
+            'stroke-width': this.armSize * this.stackWidth()
         }).appendTo(svg);
 
         var timeout = 0;
