@@ -192,10 +192,9 @@ module Interpreter {
         //TODO: Filter out based on location
         if(secObj !== null){
             //var secObj:Parser.Object = priObj.loc.ent.obj;
-            var secundaryObjs:string[] = getPossibleObjects(secObj, state);
-            for(var j = 0; j<secundaryObjs.length; j++){
-                getRelation(possibleObjs[0],secundaryObjs[j],state.stacks);
-            }
+            var secondaryObjs:string[] = getPossibleObjects(secObj, state);
+                getRelation(possibleObjs,secondaryObjs,,state.stacks);
+            
         }
         //Anything more?
         
@@ -313,33 +312,56 @@ module Interpreter {
     // This function returns how o2 relates to o1. e.g o2 is left of o1; 
     // returns 'none' if there is no relation
     // possible relations: left, right, inside, under, above (beside = left or right)
-    function getRelation(o1 : string, o2 : string, stacks : string[][]) : string{
-        var coo1:number[] = getStackIndex(o1,stacks);
-        var coo2:number[] = getStackIndex(o2,stacks);
-        // Check so both elements exist
-        if(coo1[0] === -1 || coo1[1] === -1 || coo2[0] === -1 || coo2[1] === -1)
-          return 'nonexistent';
-
-        // O1 left of O2
-        if(coo1[0] < coo2[0])
-          return "left";
-        // O1 right of O2
-        if(coo1[0] > coo2[0])
-          return "right";
-        // O1 inside (or on top of) O2
-        if(coo1[1] === (coo2[1]+1))
-          return "inside";
-        // O1 above O2
-        if(coo1[1] > coo2[1])
-          return "above";
-        // O1 directly under O2
-        if(coo1[1] === (coo2[1]-1))
-          return "under";
-        // O1 below O2
-        if(coo1[1] < coo2[1])
-          return "below";
+    function getRelation(o1s : string[], o2s : string[], rel : string, stacks : string[][]) : string[]{
+        var correct = new collections.Set<string>();
         
-        return 'none';
+        // Special case when O2 is the floor. Floor has character "_"
+        if(o2s.length === 0 && o2s[0] === "_"){
+            for(var i = 0; i < o1s.length; i++){
+                var coo1 = getStackIndex(o1s[i],stacks);
+                if(coo1[1] === 0)
+                  correct.add(o1s[i]);         
+            }
+            return correct.toArray();
+        }
+
+        // since inside is the same as ontop we change rel to ontop if it is inside (easier computations)
+        if(rel === "inside")
+          rel = "ontop";
+
+        for(var i = 0; i < o1s.length; i++){
+            var coo1 = getStackIndex(o1s[i],stacks);
+            for(var j = 0; j < o2s.length; j++){
+                var coo2 = getStackIndex(o2s[j],stacks);
+                // Check so both elements exist
+                var currel = 'none';
+                // O1 left of O2
+                if(coo1[0] === (coo2[0]-1))
+                    currel = "left";
+                // O1 right of O2
+                else if(coo1[0] === (coo2[0]+1))
+                    currel = "right";
+                // O1 on top (or inside) O2
+                else if(coo1[1] === (coo2[1]+1))
+                    currel = "ontop";
+                // O1 above O2
+                else if(coo1[1] > coo2[1])
+                    currel = "above";
+                // O1 directly under O2
+                else if(coo1[1] === (coo2[1]-1))
+                    currel = "under";
+                // O1 below O2
+                else if(coo1[1] < coo2[1])
+                    currel = "below";
+
+                if(currel === rel){
+                    correct.add(o1s[i]);
+                    break;
+                }
+        
+            }
+        }
+        return correct.toArray();
     }
 
     // Returns coordinates in the stack for a given object ; returns -1, -1 if element does not exist.
