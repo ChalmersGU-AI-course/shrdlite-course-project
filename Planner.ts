@@ -243,102 +243,174 @@ module Planner {
             var x   : string = l.args[0];
             var y   : string = l.args[1];
             
-            var xStack : [number,number]; //[Stacks index,Steps from bottom]
-            var yStack : [number,number]; //[Stacks index,Steps from bottom]
+            var xStack : [number,number] = [curr.arm,-1]; //[Stacks index,Steps from bottom]
+            var yStack : [number,number] = [curr.arm,-1]; //[Stacks index,Steps from bottom]
             
-            for(var k in curr.stacks)
-            {
-                var si : string[] = curr.stacks[k];
-                var iox = -1;
-                var ioy = -1;
-                for(var m in si)
-                {
-                    if(si[m] === x)
-                    {
-                        iox = m;
-                    }
-                    if(si[m] === y)
-                    {
-                        ioy = m;
-                    }
-                }
-               
-                if(iox >= 0)
-                {
-                    xStack = [k,iox];
-                }
-                if(ioy >= 0)
-                {
-                    yStack = [k,ioy];
-                }
-            }
+			for(var k in curr.stacks)
+			{
+			  var si : string[] = curr.stacks[k];
+			  var iox = -1;
+			  var ioy = -1;
+			  for(var m in si)
+			  {
+				  if(si[m] === x)
+				  {
+					  iox = m;
+				  }
+				  if(si[m] === y)
+				  {
+					  ioy = m;
+				  }
+			  }
+			 
+			  if(iox >= 0)
+			  {
+				  xStack = [k,iox];
+			  }
+			  if(ioy >= 0)
+			  {
+				  yStack = [k,ioy];
+			  }
+			}
             console.log(xStack,yStack);
             switch(rel)
             {
                 case "rightof":
-                    if(!(xStack[0] > yStack[0])) // checks if the goal isn't already met
-                    {
-                        if(yStack[0] == (curr.stacks.length -1)) // checks if there isn't a stack to the right of y
-                        {
-                            totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 1; // weight for moving y to the left
-                        }
-                        totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]+1) //weight for moving x to the right of y
-                    }
-                    break;
+                	if(xStack[1] == -1)
+                	{
+                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                	}
+                	else if(yStack[1] == -1)
+                	{
+                		totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + 1;
+                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                	}
+                	else
+                	{
+		                if(!(xStack[0] > yStack[0])) // checks if the goal isn't already met
+		                {
+		                    if(yStack[0] == (curr.stacks.length -1)) // checks if there isn't a stack to the right of y
+		                    {
+		                        totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 1; // weight for moving y to the left
+		                    }
+		                    totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + Math.abs(yStack[0]-xStack[0])+1; //weight for moving x to the right of y
+		                }
+	                }
+	                break;
                 case "leftof":
-                    if(!(xStack[0] < yStack[0])) // checks if the goal isn't already met
-                    {
-                        if(yStack[0] == 0) // checks if there isn't a stack to the left of y
-                        {
-                            totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 1; // weight for moving y to the right
-                        }
-                        totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]+1) //weight for moving x to the left of y
-                    }
+                	if(xStack[1] == -1)
+                	{
+                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                	}
+                	else if(yStack[1] == -1)
+                	{
+                		totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + 1;
+                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                	}
+                	else
+                	{
+		                if(!(xStack[0] < yStack[0])) // checks if the goal isn't already met
+		                {
+		                    if(yStack[0] == 0) // checks if there isn't a stack to the left of y
+		                    {
+		                        totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 1; // weight for moving y to the right
+		                    }
+		                    totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + Math.abs(xStack[0]-yStack[0])+1; //weight for moving x to the left of y
+		                }
+	                }
                     break;
                 case "inside":
                 case "ontop":
-                    if(xStack[0] == yStack[0])
-                    {
-                        if(xStack[1]-yStack[1] > 1)
-                        {
-                            totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 2;
-                        }
-                        else if(xStack[1]-yStack[1] < 1)
-                        {
-                            totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + 2;
-                        }
-                    }
-                    else
-                    {
-                        totHue += curr.stacks[yStack[0]].length - (yStack[1]+1); // weight for clearing the top of y
-                        totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]); //weight for moving x to the top/inside of y
-                    }
+                	if(xStack[1] == -1)
+                	{
+                		totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 1;
+                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                	}
+                	else if(yStack[1] == -1)
+                	{
+                		totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + 1;
+                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                	}
+                	else
+                	{
+		                if(xStack[0] == yStack[0])
+		                {
+		                    if(xStack[1]-yStack[1] > 1)
+		                    {
+		                        totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 2;
+		                    }
+		                    else if(xStack[1]-yStack[1] < 1)
+		                    {
+		                        totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + 2;
+		                    }
+		                }
+		                else
+		                {
+		                    totHue += curr.stacks[yStack[0]].length - (yStack[1]+1); // weight for clearing the top of y
+		                    totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + (yStack[0]-xStack[0]); //weight for moving x to the top/inside of y
+		                }
+		            }
                     break;
                 case "under":
-                    if(xStack[0] != yStack[0])
-                    {
-                        totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]);
-                    }
-                    else if(xStack[1] > yStack[1])
-                    {
-                        totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 2;
-                    }
+                	if(xStack[1] == -1)
+                	{
+                		totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 1;
+                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                	}
+                	else if(yStack[1] == -1)
+                	{
+                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                	}
+                	else
+                	{
+		                if(xStack[0] != yStack[0])
+		                {
+		                    totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + (yStack[0]-xStack[0]);
+		                }
+		                else if(xStack[1] > yStack[1])
+		                {
+		                    totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 2;
+		                }
+	                }
                     break;    
                 case "beside":
-                    if(xStack[0]-1 != yStack[0] && xStack[0]+1 != yStack[0])
-                    {
-                        totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]-1); //weight for moving x beside of y
-                    }
+                	if(xStack[1] == -1)
+                	{
+                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                	}
+                	else if(yStack[1] == -1)
+                	{
+                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                	}
+                	else
+                	{
+		                if(xStack[0]-1 != yStack[0] && xStack[0]+1 != yStack[0])
+		                {
+		                    totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + (yStack[0]-xStack[0]-1); //weight for moving x beside of y
+		                }
+	                }
                     break; 
                 case "above":
-                    if(xStack[0] != yStack[0])
-                    {
-                        totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + (yStack[1]-xStack[1]);
-                    }
-                    else if(xStack[1] < yStack[1])
-                    {
-                        totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + 2;
-                    }
+                	if(xStack[1] == -1)
+                	{
+                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                	}
+                	else if(yStack[1] == -1)
+                	{
+                		totHue += curr.stacks[yStack[0]].length - (yStack[1]+1) + 1;
+                		totHue += Math.abs(yStack[0]-xStack[0])+1;
+                	}
+                	else
+                	{
+		                if(xStack[0] != yStack[0])
+		                {
+		                    totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + (yStack[0]-xStack[0]);
+		                }
+		                else if(xStack[1] < yStack[1])
+		                {
+		                    totHue += curr.stacks[xStack[0]].length - (xStack[1]+1) + 2;
+		                }
+	                }
                     break;
             }
         }
