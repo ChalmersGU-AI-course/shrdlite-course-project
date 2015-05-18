@@ -183,11 +183,7 @@ module Planner {
             for(var n in world) {
                 for(var i in goalWorld) {
                     for(var j in goalWorld[i]) {
-                        if(goalWorld[i][j].rel === 'at' && Number(goalWorld[i][j].args[1]) === pddlWorld.arm) {
-                            goalWorld[i].splice(i, 1);
-                            break;
-                        }
-                        if(goalWorld[i][j].rel === 'holding' && goalWorld[i][j].args[1] === pddlWorld.holding) {
+                        if(goalWorld[i][j].rel === 'holding' && goalWorld[i][j].args[0] === pddlWorld.holding) {
                             goalWorld[i].splice(i, 1);
                             break;
                         }
