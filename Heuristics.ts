@@ -121,6 +121,17 @@ module Heuristics {
                 return heuristicDistance(s, target);
 
             case "beside":
+                var target = atom.args[0];
+                var beside = atom.args[1];
+
+                var a = computeObjectPosition(s, target);
+                var b = computeObjectPosition(s, beside);
+                var rightSide = abs(a.stackNo+1 - b.stackNo);
+                var leftSide = abs(a.stackNo-1 - b.stackNo);
+
+                //return min(rightSide, leftSide);
+                return 0;
+
             case "leftof":
             case "rightof":
                 return 0;
