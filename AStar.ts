@@ -102,11 +102,44 @@ module AStar {
         //console.log(current);
         var total_path : string[] = [];
         //total_path.push(current);
+        var obj1 : string; 
+        var obj2 : string; 
+        var result : string = "";
+        var sugar : string;  
+        var i : number = 0; 
         while(came_from[current.wStateId] != null)
         {
+            if(result !== "" && came_from[current.wStateId][1] === "d" )
+            {
+                total_path.push(sugar + result);
+                result = "";
+            }
+            
             total_path.push(came_from[current.wStateId][1]);
+            
+            if (total_path[total_path.length-1] === "d")
+            {
+                if(i == 0)
+                {
+                    sugar = "Finally ";
+                    i++;
+                }
+                else
+                    sugar = "Then ";
+                obj1 = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-1];
+                if(current.wState.stacks[current.wState.arm].length >1)
+                {
+                    obj2 = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-2];
+                    result = ("I move the " + current.wState.objects[obj1].form + " on the " + current.wState.objects[obj2].form);
+                }
+                else
+                {
+                    result = ("I move the " + current.wState.objects[obj1].form + " on the floor");
+                }
+            }
             current = came_from[current.wStateId][0];
         }
+        total_path.push("Firstly " + result);
         return total_path;
     }
 

@@ -204,10 +204,10 @@ module Planner {
             switch(rel)
             {
                 case "rightof":
-                    regExp = new RegExp (derp.concat( y , "([a-z]*)\\d([a-z]|\\d)*" ,x ,"([a-z]*)\\d([a-z]|\\d)+"));
+                    regExp = new RegExp (derp.concat( y , "([a-z]*)\\d([a-z]|\\d)*" ,x ,"([a-z]*)\\d"));
                     break;
                 case "leftof":
-                    regExp = new RegExp (derp.concat( x , "([a-z]*)\\d([a-z]|\\d)*" ,y ,"([a-z]*)\\d([a-z]|\\d)+"));
+                    regExp = new RegExp (derp.concat( x , "([a-z]*)\\d([a-z]|\\d)*" ,y ,"([a-z]*)\\d"));
                     break;
                 case "inside":
                 case "ontop":
@@ -217,7 +217,7 @@ module Planner {
                     regExp = new RegExp (derp.concat( x , "([a-z]*)" , y ));
                     break;    
                 case "beside":
-                    regExp = new RegExp (derp.concat("(" , x , "([a-z]*)\\d([a-z]*)" , y , ")|(" , y , "([a-z]*)\\d([a-z]*)" , x , ")" , "([a-z]*)\\d([a-z]|\\d)+"));
+                    regExp = new RegExp (derp.concat("(" , x , "([a-z]*)\\d([a-z]*)" , y , ")|(" , y , "([a-z]*)\\d([a-z]*)" , x , ")" , "([a-z]*)\\d"));
                     break; 
                 case "above":
                     regExp = new RegExp (derp.concat( y , "([a-z]*)" , x ));
@@ -374,7 +374,7 @@ module Planner {
                             
 		                }
 		            }
-                    console.log(totHue);
+                    //console.log(totHue);
                     break;
                 case "under":
                 	if(xStack[1] == -1)
@@ -462,9 +462,44 @@ module Planner {
         var tempplan =  AStar.astar(intprt[0],state,goalFunction,getHueristic,w2N);
         var plan = [];
         
+        var arm : number = 0; 
+        var obj1: string;
+        var obj2: string;
         while(tempplan.length > 0)
-            plan.push(tempplan.pop());
-       
+        {
+            var s: string = tempplan.pop();
+            /*switch (s)
+            {
+                case "l":
+                    arm--;
+                    //plan.push("Moving left");
+                    break;
+                case "r":
+                    arm++;
+                    //plan.push("Moving Right");
+                    break;
+                case "d":
+                    if(state.stacks[arm].length === 0)
+                    {
+                        plan.push("Dropping the "+state.objects[obj1].form +" on the floor");
+                    }
+                    else
+                    {
+                        obj2 = state.stacks[arm][state.stacks[arm].length-1];
+                        plan.push("Dropping the "+state.objects[obj1].form +" on the " +state.objects[obj2].form);
+                    }
+                    
+                    break;
+                case "p":
+                    obj1 = state.stacks[arm][state.stacks[arm].length-1]
+                    console.log(obj1);
+                    plan.push("Picking up the " + state.objects[obj1].form);
+                    break;
+            }*/
+            
+            plan.push(s);
+        }
+        plan.push("GOBY PLZ!");
         //console.log(plan);
 		/*do {
             var pickstack = getRandomInt(state.stacks.length);
