@@ -87,6 +87,7 @@ module Planner {
         );
         
         intprt = validInt;
+        console.log("Filtered all interpretations, now have " + intprt.length);
         
         //TODO: Meddela VAD som gjorde tolkningen ej giltig
         if(intprt == undefined || intprt.length == 0){

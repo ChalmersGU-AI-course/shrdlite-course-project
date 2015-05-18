@@ -41,7 +41,7 @@ module astar {
         
             var nowTime = new Date().getTime();
             
-            if((nowTime - startTime) > 3000){
+            if((nowTime - startTime) > 30000){
                 //Not allowed to run any longer
                 console.log("A* IS NOT ALLOWED TO RUN ANY LONGER!!");
                 return undefined;

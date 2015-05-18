@@ -32,6 +32,7 @@ function validPlacement(topObject: string, bottomObject: string, objects: {[s:st
         return true;
     }
     
+    
 	
 	//balls should be in boxes or on the floor
 	if(objects[topObject].form == "ball" && objects[bottomObject].form != "box") {
