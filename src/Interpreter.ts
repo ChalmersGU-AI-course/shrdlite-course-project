@@ -59,10 +59,35 @@ module Interpreter {
         //  {pol: true, rel: "ontop", args: [a, "floor"]},
         //  {pol: true, rel: "holding", args: [b]}
         // ]];
-        return [find(cmd.ent, state, worldLit)];
+
+        var literals : Literal[][] = [];
+
+
+
+        switch (cmd.cmd) {
+          case "move":
+            var x = find(cmd.ent, state, worldLit);
+            var target = find(cmd.loc.ent, state, worldLit);
+            literals.push([
+              { pol: true, rel: cmd.loc.rel, args: [x[0], target[0]] }
+            ]);
+          case "take":
+            var x = find(cmd.ent, state, worldLit);
+            literals.push([
+              { pol: true, rel: "holding", args: [x[0]] }
+            ]);
+          case "put":
+            var target = find(cmd.loc.ent, state, worldLit);
+            literals.push([
+              { pol: true, rel: cmd.loc.rel, args: [state.holding, target[0]] }
+            ]);
+          default: throw "Command not found";
+        }
+
+        return literals;
     }
 
-    function find(ent : Parser.Entity, state : WorldState, literals : Literal[]) : Literal[] {
+    function find(ent : Parser.Entity, state : WorldState, literals : Literal[]) : Key[] {
         switch (ent.quant) {
             case "the": return findThe(ent.obj, state, literals);
             case "any": return findThe(ent.obj, state, literals);
@@ -71,12 +96,12 @@ module Interpreter {
         }
     }
 
-    function findThe(obj : Parser.Object, state : WorldState, literals : Literal[]) : Literal[] {
+    function findThe(obj : Parser.Object, state : WorldState, literals : Literal[]) : Key[] {
         var results = findAll(obj, state, literals);
         switch (results.length) {
             case 0: throw "not found";
             case 1: return results;
-            default: throw "found multiple"; // TODO
+            default: debugger; throw "found multiple"; // TODO
         }
     }
 
@@ -86,30 +111,30 @@ module Interpreter {
     //   return results[0]
     // }
 
-    function findAll(obj : Parser.Object, state : WorldState, allLiterals : Literal[]) : Literal[] {
+    function findAll(obj : Parser.Object, state : WorldState, allLiterals : Literal[]) : Key[] {
         if ("obj" in obj) {
-            var relatedLiterals = find(obj.loc.ent, state, allLiterals);
-            var relatedObjKeys = relatedLiterals.map((lit) => lit.args[0]);
+            var relatedObjKeys = find(obj.loc.ent, state, allLiterals);
             if (relatedObjKeys.length == 0) return [];
 
             var targetObjKeys = searchObjects(obj.obj, state);
             if (targetObjKeys.length == 0) return [];
 
-            return allLiterals.filter((lit) => {
+            var matchingLiterals = allLiterals.filter((lit) => {
                 return (
                     lit.rel == obj.loc.rel &&
                     contains(targetObjKeys, lit.args[0]) &&
-                    contains(relatedObjKeys, lit.args[0])
+                    contains(relatedObjKeys, lit.args[1])
                 );
             });
+
+            return matchingLiterals.map((lit) => lit.args[0]);
         } else {
-            var keys = searchObjects(obj, state);
-            return allLiterals.filter((lit) => contains(keys, lit.args[0]));
+            return searchObjects(obj, state);
         }
     }
 
     type Key = string;
-    function searchObjects(query : Parser.Object, state : WorldState) : String[] {
+    function searchObjects(query : Parser.Object, state : WorldState) : Key[] {
         // 1. get all objects with keys
         var flatMap : [Key, ObjectDefinition][] = Object.keys(state.objects)
             .map((key) => <[Key, ObjectDefinition]>[key, state.objects[key]]);
