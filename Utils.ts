@@ -211,9 +211,18 @@ function left(first: string, second: string, stacks: string[][]){
 function right(first: string, second: string, stacks: string[][]){
     return left(second, first, stacks);
 }
+function holding(first: string, stacks: string[][]){
+    for(var i=0; i<stacks.length; i++){
+        for(var j=0; j<stacks[i].length; j++){
+            if(stacks[i][j] == first){
+                return j==stacks[i].length-1;
+            }
+        }
+    }
+    return false;
+}
 
 function check(first: string, rel: string, second: string, stacks: string[][]){
-    console.log("checking " + rel);
     switch(rel){
         case "ontop": 
             return ontop(first, second, stacks);
@@ -229,6 +238,8 @@ function check(first: string, rel: string, second: string, stacks: string[][]){
             return left(first, second, stacks);
         case "rightof":
             return right(first, second, stacks);
+        case "holding":
+            return holding(first, stacks);
         default:
             console.log("check no match");
             return false;
@@ -371,6 +382,16 @@ function heuristicLeft(first: string, second: string, stacks: string[][]){
 function heuristicRight(first: string, second: string, stacks: string[][]){
     return heuristicLeft(second,first,stacks);
 }
+function heuristicHold(first: string, stacks: string[][]){
+    for(var i=0; i<stacks.length; i++){
+        for(var j=0; j<stacks[i].length; j++){
+            if(stacks[i][j] == first){
+                return stacks[i].length-1-j;
+            }
+        }
+    }
+    return 0;
+}
 
 function heuristics(first: string, rel: string, second: string, stacks: string[][]){
     switch(rel){
@@ -388,6 +409,8 @@ function heuristics(first: string, rel: string, second: string, stacks: string[]
             return heuristicLeft(first, second, stacks);
         case "rightof":
             return heuristicRight(first, second, stacks);
+        case "holding":
+            return heuristicHold(first, stacks);
         default:
             console.log("heuristics no match");
             return 0;
