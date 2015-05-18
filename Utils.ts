@@ -182,3 +182,147 @@ function check(first: string, rel: string, second: string, stacks: string[][]){
             return false;
     }
 }
+
+function heuristicOntop(first: string, second: string, stacks: string[][]){
+    var foundF = false;
+    var foundS = false;
+    var h = 0;
+    for(var i=0; i<stacks.length; i++){
+        for(var j=0; j<stacks[i].length; j++){
+            if(stacks[i][j] == second){
+                foundS = true;
+                if(stacks[i].length-1>j && stacks[i][j+1] == first){
+                    return 0
+                }
+                h += stacks[i].length-1-j;
+            }
+            if(stacks[i][j] == first){
+                foundF = true;
+                h += stacks[i].length-1-j;
+            }
+            if(foundF && foundS){
+                return h+1;
+            }
+        }
+    }
+    console.log("heur ontop return");
+    return h+1;
+}
+function heuristicAbove(first: string, second: string, stacks: string[][]){
+    var foundF = false;
+    var foundS = false;
+    var h = 0;
+    for(var i=0; i<stacks.length; i++){
+        for(var j=0; j<stacks[i].length; j++){
+            if(stacks[i][j] == second){
+                foundS = true;
+                for(var k=j; k<stacks[i].length; k++){
+                    if(stacks[i][k] == first){
+                        return 0;
+                    }
+                }
+            }
+            if(stacks[i][j] == first){
+                foundF = true;
+                h = stacks[i].length-1-j;
+            }
+            if(foundF && foundS){
+                return h+1;
+            }
+        }
+    }
+    return h+1;
+}
+function heuristicUnder(first: string, second: string, stacks: string[][]){
+    return heuristicAbove(second,first,stacks);
+}
+function heuristicBeside(first: string, second: string, stacks: string[][]){
+    var foundF = false;
+    var foundS = false;
+    var hF = 0;
+    var hS = 0;
+    for(var i=0; i<stacks.length; i++){
+        for(var j=0; j<stacks[i].length; j++){
+            if(stacks[i][j] == second){
+                foundS = true;
+                if(!foundF && stacks.length-1>i){
+                    for(var k=0; k<stacks[i+1].length; k++){
+                        if(stacks[i+1][k] == first){
+                            return 0;
+                        }
+                    }
+                }
+                hS = stacks[i].length-1-j;
+            }
+            if(stacks[i][j] == first){
+                foundF = true;
+                if(!foundS && stacks.length-1>i){
+                    for(var k=0; k<stacks[i+1].length; k++){
+                        if(stacks[i+1][k] == first){
+                            return 0;
+                        }
+                    }
+                }
+                hF = stacks[i].length-1-j;
+            }
+            if(foundF && foundS){
+                return Math.min(hF,hS)+1;
+            }
+        }
+    }
+    return Math.min(hF,hS)+1;
+}
+function heuristicLeft(first: string, second: string, stacks: string[][]){
+    var foundF = false;
+    var foundS = false;
+    var hF = 0;
+    var hS = 0;
+    for(var i=0; i<stacks.length; i++){
+        for(var j=0; j<stacks[i].length; j++){
+            if(stacks[i][j] == second){
+                foundS = true;
+                hS = stacks[i].length-1-j;
+            }
+            if(stacks[i][j] == first){
+                foundF = true;
+                if(!foundS){
+                    for(var k=0; k<stacks[i+1].length; k++){
+                        if(stacks.length-1>i && stacks[i+1][k] == first){
+                            return 0;
+                        }
+                    }
+                }
+                hF = stacks[i].length-1-j;
+            }
+            if(foundF && foundS){
+                return Math.min(hF,hS)+1;
+            }
+        }
+    }
+    return Math.min(hF,hS)+1;
+}
+function heuristicRight(first: string, second: string, stacks: string[][]){
+    return heuristicLeft(second,first,stacks);
+}
+
+function heuristics(first: string, rel: string, second: string, stacks: string[][]){
+    switch(rel){
+        case "ontop":
+            return heuristicOntop(first,second,stacks);
+        case "inside":
+            return heuristicOntop(first,second,stacks);
+        case "above":
+            return heuristicAbove(first,second,stacks);
+        case "under":
+            return heuristicUnder(first,second,stacks);
+        case "beside":
+            return heuristicBeside(first, second, stacks);
+        case "leftof":
+            return heuristicLeft(first, second, stacks);
+        case "rightof":
+            return heuristicRight(first, second, stacks);
+        default:
+            console.log("heuristics no match");
+            return 0;
+    }
+}

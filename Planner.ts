@@ -3,7 +3,6 @@
 /// <reference path="graph/graph.ts" />
 /// <reference path="graph/astar.ts" />
 /// <reference path="graph/permutate.ts"/>
-/// <reference path="heuristic/Heuristic.ts"/>
 ///<reference path="Utils.ts"/>
 
 module Planner {
@@ -155,7 +154,16 @@ module Planner {
             }
         ,
             (node:  string[][]) => {
-                return heuristics.worldHeuristics(node, endStack);
+                var minH = Number.POSITIVE_INFINITY;
+                for(var i=0; i<intprt.length; i++){
+                    var totalH = 0;
+                    for(var j=0; j<intprt[i].length; j++){
+                        var int = intprt[i][j];
+                        totalH += heuristics(int.args[0], int.rel, int.args[1], node)
+                    }
+                    minH = Math.min(minH,totalH);
+                }
+                return minH;
             }
         ,
             (basedOn: graphmodule.GraphNode<string[][]>) => {
