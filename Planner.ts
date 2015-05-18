@@ -204,14 +204,12 @@ module Planner {
             switch(rel)
             {
                 case "rightof":
-                    regExp = new RegExp (derp.concat( y ,"([a-z]*)\\d([a-z]|\\d)*" ,x ));
+                    regExp = new RegExp (derp.concat( y , "([a-z]*)\\d([a-z]|\\d)*" ,x ,"([a-z]*)\\d([a-z]|\\d)+"));
                     break;
                 case "leftof":
-                    regExp = new RegExp (derp.concat( x , "([a-z]*)\\d([a-z]|\\d)*" ,y ));
+                    regExp = new RegExp (derp.concat( x , "([a-z]*)\\d([a-z]|\\d)*" ,y ,"([a-z]*)\\d([a-z]|\\d)+"));
                     break;
                 case "inside":
-                    regExp = new RegExp (derp.concat( y , x ));
-                    break;
                 case "ontop":
                     regExp = new RegExp (derp.concat( y , x ));
                     break;
@@ -219,13 +217,14 @@ module Planner {
                     regExp = new RegExp (derp.concat( x , "([a-z]*)" , y ));
                     break;    
                 case "beside":
-                    regExp = new RegExp (derp.concat("(" , x , "([a-z]*)\\d([a-z]*)" , y , ")|(" , y , "([a-z]*)\\d([a-z]*)" , x , ")"));
+                    regExp = new RegExp (derp.concat("(" , x , "([a-z]*)\\d([a-z]*)" , y , ")|(" , y , "([a-z]*)\\d([a-z]*)" , x , ")" , "([a-z]*)\\d([a-z]|\\d)+"));
                     break; 
                 case "above":
                     regExp = new RegExp (derp.concat( y , "([a-z]*)" , x ));
                     break;
                 case "holding":
                     regExp = new RegExp (derp.concat( x , "$" ));
+                    break;
             }
             if(!regExp.test(curr))
             {
