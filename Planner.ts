@@ -438,6 +438,12 @@ module Planner {
 		                }
 	                }
                     break;
+                case "holding":
+                    if(xStack[1] != -1)
+                	{
+                		totHue += +curr.stacks[xStack[0]].length-(+xStack[1] + +1);//totHue += 0;
+                	}
+                    
             }
         }
         //console.log(totHue);
