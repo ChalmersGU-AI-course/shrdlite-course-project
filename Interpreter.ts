@@ -278,7 +278,7 @@ export function checkValidPos (over : ObjectDefinition, under : ObjectDefinition
         //Box
         else if(under.form ==="box" )
         {
-            if(over.form =="pyramid" || over.form =="plank" || over.form == "box" && over.size == "large")
+            if(!checkLessEQ(over.size, under.size) )
             {
                 return false;
             }
@@ -298,7 +298,7 @@ export function checkValidPos (over : ObjectDefinition, under : ObjectDefinition
                 {
                     return true;
                 }
-                else if(checkSizeUGE(over.size, under.size) && under.form==="brick")
+                else if(under.size == "large" && under.form==="brick")
                 {
                     return true;
                 }
@@ -306,6 +306,8 @@ export function checkValidPos (over : ObjectDefinition, under : ObjectDefinition
                 {
                     return false;
                 }
+            }else{
+            	return checkLessEQ(over.size, under.size);
             }
             
         }
@@ -358,6 +360,19 @@ function checkSizeUG (over : string, under : string): boolean {
         }
 
 }
+
+function checkLessEQ (over : string, under : string): boolean {
+
+        if(under == "large" || under == "small" && over == "small" )
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+}
+
 
 }
 
