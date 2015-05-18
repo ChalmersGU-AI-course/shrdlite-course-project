@@ -67,40 +67,76 @@ module Interpreter {
 
         var interpretations : PddlLiteral[][][] = [];
 
+        // TODO Maybe we should refactor all the duplicated code for the commands?
+
         if (cmd.cmd === 'move') {
                 // Which entity we should move
-            var entitiesIntrprt        = findEntities(cmd.ent, objects, pddlWorld.rels)
+            if (cmd.ent != null) { // Move specified object.
+                var entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels)
                 // Where we should move it
-              , locationsIntrprt       = findEntities(cmd.loc.ent, objects, pddlWorld.rels)
+                    , locationsIntrprt = findEntities(cmd.loc.ent, objects, pddlWorld.rels)
                 // How entity will be positioned on location (ontop, inside, ...)
-              , rel             = cmd.loc.rel;
-            if (entitiesIntrprt.length > 1 || locationsIntrprt.length > 1) {
-                console.warn('Interpreter warning: ambiguous entity or location!' +
-                'Returning multiple interpretations');
-            }
-            // Add all possible combinations of interpretations
-            for (var i in entitiesIntrprt) {
-                for (var j in locationsIntrprt) {
-                    var entitiesOr                   = entitiesIntrprt[i]
-                      , locationsOr                  = locationsIntrprt[j]
-                      , interpretationOr : PddlLiteral[][] = [];
-                    // Disjunctive
-                    for (var k in entitiesOr) {
-                        for (var l in locationsOr) {
-                            var entitiesAnd                       = entitiesOr[k]
-                              , locationsAnd                      = locationsOr[l]
-                              , interpretationAnd : PddlLiteral[] = [];
-                            // Conjunctive
-                            for (var m in entitiesAnd) {
-                                for (var n in locationsAnd) {
-                                    var pddlGoal = {pol: true, rel: rel, args: [entitiesAnd[m].id, locationsAnd[n].id]};
-                                    interpretationAnd.push(pddlGoal);
+                    , rel = cmd.loc.rel;
+                if (entitiesIntrprt.length > 1 || locationsIntrprt.length > 1) {
+                    console.warn('Interpreter warning: ambiguous entity or location!' +
+                        'Returning multiple interpretations');
+                }
+                // Add all possible combinations of interpretations
+                for (var i in entitiesIntrprt) {
+                    for (var j in locationsIntrprt) {
+                        var entitiesOr = entitiesIntrprt[i]
+                            , locationsOr = locationsIntrprt[j]
+                            , interpretationOr: PddlLiteral[][] = [];
+                        // Disjunctive
+                        for (var k in entitiesOr) {
+                            for (var l in locationsOr) {
+                                var entitiesAnd = entitiesOr[k]
+                                    , locationsAnd = locationsOr[l]
+                                    , interpretationAnd: PddlLiteral[] = [];
+                                // Conjunctive
+                                for (var m in entitiesAnd) {
+                                    for (var n in locationsAnd) {
+                                        var pddlGoal = { pol: true, rel: rel, args: [entitiesAnd[m].id, locationsAnd[n].id] };
+                                        interpretationAnd.push(pddlGoal);
+                                    }
                                 }
+                                interpretationOr.push(interpretationAnd);
+                            }
+                        }
+                        interpretations.push(interpretationOr);
+                    }
+                }
+            } else { // Move "it", that is, the object the arm is holding.
+                var // Where we should move it
+                    locationsIntrprt = findEntities(cmd.loc.ent, objects, pddlWorld.rels)
+                // How entity will be positioned on location (ontop, inside, ...)
+                    , rel = cmd.loc.rel
+                    , it = pddlWorld.holding;
+                if (it != null) { // Is there an object to move?
+                    if (locationsIntrprt.length > 1) {
+                    console.warn('Interpreter warning: ambiguous entity or location!' +
+                        'Returning multiple interpretations');
+                    }
+                    // Add all possible combinations of interpretations
+                    for (var i in locationsIntrprt) {
+                        var locationsOr = locationsIntrprt[i]
+                            , interpretationOr: PddlLiteral[][] = [];
+                        // Disjunctive
+                        for (var j in locationsOr) {
+                            var locationsAnd = locationsOr[j]
+                                , interpretationAnd: PddlLiteral[] = [];
+                            // Conjunctive
+                            for (var k in locationsAnd) {
+                                var pddlGoal = { pol: true, rel: rel, args: [it, locationsAnd[k].id] };
+                                interpretationAnd.push(pddlGoal);
                             }
                             interpretationOr.push(interpretationAnd);
                         }
+                        interpretations.push(interpretationOr);
                     }
-                    interpretations.push(interpretationOr);
+                } else {
+                    console.warn('Interpreter warning: no entity in arm to move!' +
+                        'Returning no interpretation');
                 }
             }
         } else if (cmd.cmd === 'take') {
