@@ -47,52 +47,85 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
+        var stateL = worldToLiteral(state);
+        var worldLit=worldToLiteral(state);
+
         // This returns a dummy interpretation involving two random objects in the world
-
-        // check if object exits
-        if (!recusiveCheckExistance(cmd.ent.obj, state)) return null;
-
-
         // var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         // var a = objs[getRandomInt(objs.length)];
         // var b = objs[getRandomInt(objs.length)];
 
-		var worldLit=worldToLiteral(state);
-		debugger;
-
-        var intprt : Literal[][] = [[
-            // {pol: true, rel: "ontop", args: [a, "floor"]},
-            // {pol: true, rel: "holding", args: [b]}
-        ]];
-        return intprt;
+        // var intprt : Literal[][] = [[
+        //  {pol: true, rel: "ontop", args: [a, "floor"]},
+        //  {pol: true, rel: "holding", args: [b]}
+        // ]];
+        return [find(cmd.ent, state, worldLit)];
     }
 
-    function recusiveCheckExistance(obj : Parser.Object, state : WorldState) : Parser.Object[] {
-      debugger
-      if ("obj" in obj) {
-        // TODO
-        // rel: "inside",
-        // var matches = objectExists(obj, state)
-        return []; // recusiveCheckExistance(obj.loc.ent.obj, state);
-      } else {
-        return objectExists(obj, state);
-      }
+    function find(ent : Parser.Entity, state : WorldState, literals : Literal[]) : Literal[] {
+        switch (ent.quant) {
+            case "the": return findThe(ent.obj, state, literals);
+            case "any": return findThe(ent.obj, state, literals);
+            // case "all": return findAll(ent.obj);
+            default:    throw "Entity unknown";
+        }
     }
 
-    function objectExists(objA : Parser.Object, state : WorldState) : Parser.Object[] {
-      var matches = [];
-      for (var o in state.objects) {
-        var objB = state.objects[o];
-        if (
-          (!objA.size  || objB.size  == objA.size) &&
-          (!objA.color || objB.color == objA.color) &&
-          (objA.form == "anyform"  || objB.form  == objA.form)
-        ) matches.push(objB);
-      }
-      return matches;
+    function findThe(obj : Parser.Object, state : WorldState, literals : Literal[]) : Literal[] {
+        var results = findAll(obj, state, literals);
+        switch (results.length) {
+            case 0: throw "not found";
+            case 1: return results;
+            default: throw "found multiple"; // TODO
+        }
     }
-    
-    
+
+    // function findAny(obj : Parser.Object, state : WorldState, literals : Literal[]) : Literal {
+    //   var results = findAll(obj, state, literals);
+    //   if (results.length == 0) throw "not found";
+    //   return results[0]
+    // }
+
+    function findAll(obj : Parser.Object, state : WorldState, allLiterals : Literal[]) : Literal[] {
+        if ("obj" in obj) {
+            var relatedLiterals = find(obj.loc.ent, state, allLiterals);
+            var relatedObjKeys = relatedLiterals.map((lit) => lit.args[0]);
+            if (relatedObjKeys.length == 0) return [];
+
+            var targetObjKeys = searchObjects(obj.obj, state);
+            if (targetObjKeys.length == 0) return [];
+
+            return allLiterals.filter((lit) => {
+                return (
+                    lit.rel == obj.loc.rel &&
+                    contains(targetObjKeys, lit.args[0]) &&
+                    contains(relatedObjKeys, lit.args[0])
+                );
+            });
+        } else {
+            var keys = searchObjects(obj, state);
+            return allLiterals.filter((lit) => contains(keys, lit.args[0]));
+        }
+    }
+
+    type Key = string;
+    function searchObjects(query : Parser.Object, state : WorldState) : String[] {
+        // 1. get all objects with keys
+        var flatMap : [Key, ObjectDefinition][] = Object.keys(state.objects)
+            .map((key) => <[Key, ObjectDefinition]>[key, state.objects[key]]);
+        // 2. filter with query
+        var filteredFlatMap = flatMap.filter((pair) => {
+            var obj = pair[1];
+            return (
+                (!query.size  || obj.size  == query.size) &&
+                (!query.color || obj.color == query.color) &&
+                (!query.form || query.form == "anyform"  || obj.form  == query.form)
+            );
+        });
+        // 3. return keys
+        return filteredFlatMap.map((pair) => pair[0]);
+    }
+
     // Returns list of literals that represent a PDDL Representation of the world
     // portrait in state variable
     //
@@ -179,6 +212,10 @@ module Interpreter {
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
+    }
+
+    function contains(array, item) {
+        return array.indexOf(item) >= 0;
     }
 
 }

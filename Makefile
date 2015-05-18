@@ -21,7 +21,7 @@ clean:
 all: $(TARGETS)
 
 start: all
-	python -m SimpleHTTPServer 8000
+	python -m SimpleHTTPServer 8001
 
 run_example: $(DIST)/astar_example.js FORCE
 	node --harmony dist/astar_example.js
