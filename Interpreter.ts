@@ -262,43 +262,60 @@ export function checkValidPos (over : ObjectDefinition, under : ObjectDefinition
 	//console.log(over);
 	//console.log(under);
         
-        if (under.form === "floor"){
+        if (under.form == "floor"){
             return true;
         }
         //Ball
-        else if(under.form === "ball"){ return false; }
-        else if(over.form === "ball" )
-            {
-            if (under.form === "box" && checkSizeUGE(over.size, under.size) ){
+        else if(under.form == "ball"){ return false; }
+        else if(over.form == "ball" )
+        {
+            if (under.form == "box" && checkSizeUGE(over.size, under.size) ){
                 return true;
             }else{
                 return false;
             }
         }
         //Box
-        else if(under.form ==="box" )
+        else if(under.form =="box" )
         {
-            if(!checkLessEQ(over.size, under.size) )
-            {
-                return false;
+            if(over.form == "table"){
+                if(checkSizeUGE(over.size, under.size)){
+                    return true;
+                }
+                else{
+                    return false;
+                }               
             }
-            else
+            else if(over.form == "plank"){
+                if(checkSizeUG(over.size, under.size)){
+                    return true;
+                }
+                else{
+                    return false;
+                }
+            }
+            else if(checkLessEQ(over.size, under.size) )
             {
                 return true;
             }
+            else
+            {
+                return false;
+            }
+
         }
         // Pyramid
-        else if (under.form === "pyramid" || under.form === "brick")
+        else if (under.form == "pyramid" || under.form == "brick")
         {
-            if (over.form === "box")
+            if (over.form == "box")
             {
                 // Large Box cant be over large Pyramid
                 // Small Box cant be over small Pyramid or Brick
-                if(checkSizeUG(over.size, under.size) && under.form==="pyramid")
+                if(checkSizeUG(over.size, under.size) && under.form =="pyramid")
                 {
                     return true;
                 }
-                else if(under.size == "large" && under.form==="brick")
+                else if(under.size == "large" && under.form=="brick")
                 {
                     return true;
                 }
@@ -306,21 +323,35 @@ export function checkValidPos (over : ObjectDefinition, under : ObjectDefinition
                 {
                     return false;
                 }
-            }else{
-            	return checkLessEQ(over.size, under.size);
+            }
+
+            else{
+            	return checkSizeUGE(over.size, under.size);
             }
             
         }
-        //Check that under is larger or of same size
-            else if(checkSizeUGE(over.size, under.size))
-            {
+        //table
+        else if (under.form == "table"){
+            if(checkSizeUGE(over.size, under.size)){
                 return true;
             }
             else
             {
-                return false;
+                return false
             }
-        
+        }
+        //plank
+        else if (under.form == "plank"){
+            if(checkSizeUGE(over.size, under.size)){
+                return true;
+            }
+            else
+            {
+                return false
+            }
+        }
+
+
         return false;
     }
 
@@ -330,11 +361,11 @@ export function checkValidPos (over : ObjectDefinition, under : ObjectDefinition
 **/
 function checkSizeUGE (over : string, under : string): boolean {
 
-        if(under === "large" )
+        if(under == "large" )
         {
             return true;
         }
-        else if(over ==="small")
+        else if(over =="small")
         {
             return true;
         }
@@ -350,7 +381,7 @@ function checkSizeUGE (over : string, under : string): boolean {
 **/
 function checkSizeUG (over : string, under : string): boolean {
 
-        if(under == "large" && over == "smal")
+        if(under == "large" && over == "small")
         {
             return true;
         }
@@ -363,7 +394,7 @@ function checkSizeUG (over : string, under : string): boolean {
 
 function checkLessEQ (over : string, under : string): boolean {
 
-        if(under == "large" || under == "small" && over == "small" )
+        if(under == "large" && over == "small" || under == "small" && over == "small" )
         {
             return true;
         }
