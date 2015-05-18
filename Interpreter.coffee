@@ -8,14 +8,15 @@ class Interpreter
                 matchingLocEntities = getMatchingEntities(parse.prs.loc.ent, currentState)
                 for obj in matchingObjEntities
                     for locObj in matchingLocEntities
-                        intrp = {
-                            input: parse.input,
-                            prs: parse.prs,
-                            # TODO: placeholder for [[obj]], [[locObj]] lists of objects
-                            #       quantifers set to "all"
-                            intp: [{ pol: true, rel: parse.prs.loc.rel, args: [[obj], [locObj]], quantifier1: "all", quantifier2: "all"}]
-                        }
-                        parseInterpList.push(intrp)
+                        if obj isnt locObj
+                            intrp = {
+                                input: parse.input,
+                                prs: parse.prs,
+                                # TODO: placeholder for [[obj]], [[locObj]] lists of objects
+                                #       quantifers set to "all"
+                                intp: [{ pol: true, rel: parse.prs.loc.rel, args: [[obj], [locObj]], quantifier1: "all", quantifier2: "all"}]
+                            }
+                            parseInterpList.push(intrp)
             else
                 for obj in matchingObjEntities
                     intrp = {
@@ -23,8 +24,11 @@ class Interpreter
                             prs: parse.prs,
                             intp: [{ pol: true, rel: "holding", args: [obj]}]
                         }
-                    parseInterpList.push(intrp)    
-        parseInterpList
+                    parseInterpList.push(intrp)
+        if parseInterpList.length is 0
+            throw new Interpreter.Error 'Could not find any interpretations.'
+        else    
+            parseInterpList
 
     getMatchingEntities = (entity, currentState) ->
         if entity.obj.loc?
@@ -69,7 +73,8 @@ class Interpreter
     literalToString = (lit) ->
         (if lit.pol then '' else '-') + lit.rel + '(' + lit.args.join(',') + ')'
 
-    Interpreter.Error = () ->
+    Interpreter.Error = do ->
+        `var Error`
         Error = (message) ->
             @message = message
             @name = 'Interpreter.Error'
