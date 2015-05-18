@@ -210,6 +210,59 @@ module Interpreter {
         return worldLiterals;
     }
 
+    // Checks if a given literal is valid
+    // This implements some of the physics laws (not all, since some are not aplicable to only one literal)
+
+  function checkLiteral(world : WorldState, lit: Literal) : any {
+      // var relations = ["ontop", "above", "under", "right", "left", "beside", "inside", "holding"];
+      var rel=lit.rel;
+      var objs=world.objects;
+      // var rIndex =relations.indexOf(rel);
+
+      switch (rel) {
+          case "ontop": //ontop
+              var objA = objs[ lit.args[0] ];
+              var objB = objs[ lit.args[1] ];
+              if (objB.form=="ball")
+                  return { val: false , str:"Balls can not support anything" };
+              else if (objA.form=="ball" && objB.form!="floor")
+                  return { val: false , str:"Balls can only be inside boxes or on top of the floor" };
+              else if (objA.size=="large" && objB.size =="small")
+                  return { val: false , str:"Small objects can not support large objects" };
+              else if (objA.form=="box" && objA.size=="small" && objB.size=="small" && (objB.form=="pyramid" || objB.form=="brick") )
+                return { val: false , str:"Small boxes can not be supported by small bricks or pyramids" };
+              else   if (objA.form=="box" && objA.size=="large" && objB.size=="large" && objB.form=="pyramid" )
+                return { val: false , str:"Large boxes can not be supported by large pyramids" };
+              else return { val:true , str: "" };
+
+          case "above": return { val:true , str: "" };
+
+          case "under": //under
+              var objA = objs[ lit.args[0] ];
+              var objB = objs[ lit.args[1] ];
+              if (objA.form=="ball") return { val: false , str:"Balls can not support anything" };
+              else return { val:true , str: "" };
+
+          case "right": return { val:true , str: "" };
+          case "left": return { val:true , str: "" };
+          case "beside": return { val:true , str: "" };
+
+          case "inside": //inside
+              var objA = objs[ lit.args[0] ];
+              var objB = objs[ lit.args[1] ];
+              if (objA.form!="box")
+                  return { val: false , str:"Only boxes can contain other objects" };
+              else if (objA.size==objB.size && ( objB.form=="pyramid" || objB.form=="planks" ||objB.form=="box") )
+                  return { val: false , str:"Boxes can not contain pyramids, planks or boxes of the same size" };
+              else return { val:true , str: "" };
+
+          case "holding": return { val:true , str: "" };
+          default: return { val:true , str: "" };
+      } // end switch-case
+
+      return { val:true , str: "" };
+    }
+
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
