@@ -41,7 +41,6 @@ module Planner {
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
 	
 	worldObjs = state.objects;
-	console.log(worldObjs["floor"]);
 
 	var goalFunc = makeGoalFunc(intprt);
 	var actions : string[] = [];
@@ -200,66 +199,84 @@ module Planner {
     // TODO Finish for all cases, only holding is working now.
     function compareState(s : State, lit : Interpreter.Literal) : boolean {
 	var flag : boolean = false;
+
+	//holding
 	if(lit.rel === "holding") {
 	    flag = s.holding === lit.args[0];
 	}
-    // ontop
-    if(lit.rel === "ontop") {
-        /* is 
-         if 
-            yes
-         then  
-            checks if  ontopof(a,b), where a = lit.args[0], b = lit.args[1]
-    see http://ai-course-tin172-dit410.github.io/shrdlite-grammar.html#semantic-interpretation
-        */
-        s.stacks.forEach( (stack) => {
-            if(stack.indexOf(lit.args[1]) != -1 && stack.indexOf(lit.args[0]) != -1) {
-                if(stack.indexOf(lit.args[1])-stack.indexOf(lit.args[0]) == 1) 
-                flag = true;    
-            }
-	    else if (lit.args[1] === "floor" && stack.indexOf(lit.args[0]) == 0) flag = true;
-        });
-    }
-    // leftof
-    if(lit.rel === "leftof") {
-        var stackofa = -1;
-        var stackofb = -1;
-        /*
-        checks the stacks of objects.
-        when objects are found compare stack index
-        to find if leftof(a,b)
-        */
-        for(var i = 0; i < s.stacks.length; i++){
-            var stack = s.stacks[i];
-            for(var j = 0; j < stack.length; j++) {
-                if(stack[j] === lit.args[0])
-                    stackofa = i;
-                if(stack[j] === lit.args[1])
-                    stackofb = i;
-            }
-        }
-        if(stackofb - stackofa > 0)
-            flag = true;
-    }
-    // rightof
-    // same as for leftof only we change the condition
-    // to stackofb - stackofa < 0
-    if(lit.rel === "rightof") {
-        var stackOfa = -1;
-        var stackOfb = -1;
-        for(var i = 0; i < s.stacks.length; i++){
-            var stack = s.stacks[i];
-            for(var j = 0; j < stack.length; j++) {
-                if(stack[j] === lit.args[0])
-                    stackofa = i;
-                if(stack[j] === lit.args[1])
-                    stackofb = i;
-            }
-        }
-        if(stackofb - stackofa < 0)
-            flag = true;
-    }
-    
+	// leftof
+	if(lit.rel === "leftof") {
+	    var stackIndex : number;
+	    s.stacks.forEach( (stack) => {
+		if(stack.indexOf(lit.args[1]) >= 0)
+		    stackIndex = s.stacks.indexOf(stack);
+	    });
+
+	    for(var i = 0; i < stackIndex; i++) {
+		if(s.stacks[i].indexOf(lit.args[0]) >= 0)
+		    flag = true;
+	    }
+	}
+	// rightof
+	if(lit.rel === "rightof") {
+	    var stackIndex : number;
+	    s.stacks.forEach( (stack) => {
+		if(stack.indexOf(lit.args[1]) >= 0)
+  		    stackIndex = s.stacks.indexOf(stack);
+	    });
+
+	    for(var i = stackIndex+1; i < s.stacks.length; i++) {
+		if(s.stacks[i].indexOf(lit.args[0]) >= 0)
+		    flag = true;
+	    } 
+	}
+	// inside
+	if(lit.rel === "inside") {
+	    s.stacks.forEach( (stack) => {
+	    	if(stack.indexOf(lit.args[1]) >= 0 && stack.indexOf(lit.args[0]) >= 0 &&
+		    stack.indexOf(lit.args[0]) > stack.indexOf(lit.args[1]) && stack.indexOf(lit.args[0]) - stack.indexOf(lit.args[1]) == 1)
+			flag = true;
+	    });
+	}
+	// ontop
+	if(lit.rel === "ontop") {
+            s.stacks.forEach( (stack) => {
+		if(lit.args[1] === "floor" && stack.indexOf(lit.args[0]) == 0) flag = true;
+	   	else if(stack.indexOf(lit.args[0]) >= 0 && stack.indexOf(lit.args[1]) >= 0 && 
+			stack.indexOf(lit.args[0]) - stack.indexOf(lit.args[1]) == 1) flag = true;
+            });
+    	}
+	//under
+	if(lit.rel === "under") {
+	    s.stacks.forEach( (stack) => {
+	    	if(stack.indexOf(lit.args[1]) >= 0 && stack.indexOf(lit.args[0]) >= 0 && 
+		   stack.indexOf(lit.args[0]) < stack.indexOf(lit.args[1]))
+		    flag = true;
+	    });
+	}
+	//beside
+	if(lit.rel === "beside") {
+	    var stackIndex : number;
+	    s.stacks.forEach((stack) => {
+	    	if(stack.indexOf(lit.args[1]) >= 0)
+		    stackIndex = s.stacks.indexOf(stack);
+	    });
+
+	    if(s.stacks[stackIndex+1].indexOf(lit.args[0]) >= 0)
+	    	flag = true;
+	    if(s.stacks[stackIndex-1].indexOf(lit.args[0]) >= 0)
+	    	flag = true;
+	}
+	//above
+	if(lit.rel === "above") {
+	    s.stacks.forEach( (stack) => {
+	    	if(stack.indexOf(lit.args[1]) >= 0 && stack.indexOf(lit.args[0]) >= 0 && 
+		   stack.indexOf(lit.args[0]) > stack.indexOf(lit.args[1]))
+		    flag = true;
+	    });
+	}
+	
+        console.log(flag);
 	if(lit.pol) return flag;
 	else return ! flag;
     }
