@@ -1,4 +1,4 @@
-/// <reference path="collections.ts" />
+/// <reference path="lib/collections.ts" />
 module Astar {      
     //n.state:,
     //n.parent:,
@@ -16,6 +16,7 @@ module Astar {
   interface Functions{
     heuristic_approx(n1:Node, n2:Node) : number
     dist_between(n1:Node, n2:Node) : number
+    get_children(n1:Node) : [Node]
   }
 /*
 Implementation: Strongly inspired by the wikipedia pseduocode
@@ -77,7 +78,7 @@ AStar :: Graph -> Path
         TODO : make the queue sort its element by f(x).   
         */
         closedset.add(current)
-        neighbors = current.children // expand the node that is first in the queue.
+        neighbors = functions.get_children(current) // expand the node that is first in the queue.
          /*
         All the neigbors are checked, in several ways    
         */ 

@@ -16,7 +16,7 @@ clean:
 
 all: $(TARGETS)
 
-$(TARGETS): %: shrdlite-%.js
+$(TARGETS): %: shrdlite-%.js 
 
 %.js: %.ts $(TSFILES)
 	tsc --out $@ $<
