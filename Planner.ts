@@ -164,12 +164,12 @@ module Planner {
 			}
 			leftof = leftof.concat(tmp);
 		}
-		//Adds a ppdl for all the objects next to each stack 
+		//Adds a ppdl for all the objects next to each stack
 		for(var x =0; x<state.stacks.length; x++ ){
 			for(var y =0; y<state.stacks[x].length; y++ ){
 				for(var z = x-1; z<x+2; z++ ){
-					if(z >= 0 && z !=0 && z <= state.stacks.length-1){
-						lits.push([{pol : true, rel : "beside", args : [state.stacks[z][y] , state.stacks[x][y]]}]);
+					if(z >= 0 && z <= state.stacks.length-1){
+						lits = lits.concat(addBesideStack(state.stacks[z] , state.stacks[x][y]));
 					}
 				}				
 			}
@@ -184,6 +184,14 @@ module Planner {
 		}
 
     	return lits;
+    }
+    //adds beside on every element in a specific stack
+    function addBesideStack (stackToAdd : string[], currObjstr : string){
+    	var tmpLits : Interpreter.Literal[][] = [];
+    	for(var y =0; y<stackToAdd.length; y++ ){
+    		tmpLits.push([{pol : true, rel : "beside", args : [stackToAdd[y] ,currObjstr ]}]);
+    	}
+    	return tmpLits;
     }
     
     function heuristicFunc(state : WorldState , goal : Interpreter.Literal[][] ) : number{
