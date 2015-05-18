@@ -35,12 +35,14 @@ module Planner {
         public toString() {return this.name + ": " + this.message}
     }
 
-
     //////////////////////////////////////////////////////////////////////
     // private functions
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
 	
+	worldObjs = state.objects;
+	console.log(worldObjs["floor"]);
+
 	var goalFunc = makeGoalFunc(intprt);
 	var actions : string[] = [];
 	var initState : State = new State(state.stacks, state.holding, state.arm, "");
@@ -52,6 +54,8 @@ module Planner {
 	return actions.reverse();
     }
 
+    //objectDefinitions of the world.
+    var worldObjs;
 
     // state of the world
     // action: action taken to get to the state
@@ -96,11 +100,24 @@ module Planner {
 
         //drop
         if(state.holding) {
+	    if(state.stacks[state.armpos].length > 0) {
+		if(validatePhysics(state.holding, state.stacks[state.armpos][state.stacks[state.armpos].length-1])) {
+		    // here we can drop
 	    var newState = state.copy();
             newState.stacks[newState.armpos].push(newState.holding);
             newState.holding = null;
 	    newState.action = "d";
             st.push(newState);
+		}
+	    }
+	    else {
+		   // here we can also drop since the supporting object is the floor
+	    var newState = state.copy();
+            newState.stacks[newState.armpos].push(newState.holding);
+            newState.holding = null;
+	    newState.action = "d";
+            st.push(newState);
+	    }
         }
         //pickup
         if(!state.holding && state.stacks[state.armpos].length > 0) {
@@ -245,5 +262,25 @@ module Planner {
     
 	if(lit.pol) return flag;
 	else return ! flag;
+    }
+
+    function validatePhysics(holding: string, support: string) : boolean {
+	var objHolding : ObjectDefinition = worldObjs[holding];
+	var objSupport : ObjectDefinition = worldObjs[support];
+	
+	if(objHolding.form === "ball" && objSupport.form !== "box") return false;
+	if(objSupport.form === "ball") return false;
+	if(objHolding.size === "large" && objSupport.size === "small") return false;
+	if(objSupport.form === "box") {
+		if(objHolding.size == objSupport.size && (objHolding.form === "pyramid" || 
+							  objHolding.form === "plank" || 
+							  objHolding.form === "box"))
+			return false;
+	}
+	if(objSupport.form === "pyramid" && objHolding.form === "box") return false;
+	if(objHolding.form === "box" && objHolding.size === "small" && objSupport.form === "brick") return false;
+
+	return true;
+
     }
 }
