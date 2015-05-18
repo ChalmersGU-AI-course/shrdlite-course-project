@@ -50,7 +50,7 @@ module Interpreter {
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
     
-        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        var objs : string[] = Array.prototype.concat.apply([], state.stacks,state.holding );
         
         //Draft
         var interp : Literal [][];
