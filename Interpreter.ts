@@ -780,7 +780,9 @@ module Interpreter {
                               usedObjs: string[],
                               usedRefs: string[]): Literal[][] {
       // if no more objects can be used or there are no more litarrays return
-      if(usedObjs.length === objs.length || lind === lits.length) {
+      var enoughObjs = usedObjs && objs && usedObjs.length === objs.length;
+      var enoughLits = lits && lind !== lits.length;
+      if(enoughObjs && enoughLits) {
         return;
       } else {
         for(var i = 0; i < objs.length; i++) {
@@ -788,7 +790,7 @@ module Interpreter {
           var used = usedObjs.indexOf(obj) > -1
           if(obj && !used) {
             var literals: Literal[][] = [];
-            var newUsedRefs = usedRefs;
+            var newUsedRefs = usedRefs.slice(0); // clone
             // filter out literals that contains obj in args and unused ref
             var candidates: Literal[] = lits[lind].filter((lit: Literal) => {
               var hasObject = lit.args[0] === obj;
@@ -802,7 +804,7 @@ module Interpreter {
             });
             // array should only contain at least one element
             if(candidates && candidates.length > 0) {
-              var newUsedObjs = usedObjs;
+              var newUsedObjs = usedObjs.slice(0); // clone
               newUsedObjs.push(obj);
               // recursive case: for all candidates get all possible combinations
               var temp: Literal[][] = uniqueCombHelper(lits, lind+1, objs, newUsedObjs, newUsedRefs);
