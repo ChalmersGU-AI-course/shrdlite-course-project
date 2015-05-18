@@ -64,18 +64,6 @@ module Planner {
         
         //console.log("Stacks1: " + prettyMat(state.stacks));
         
-        if(intprt != undefined && intprt.length > 0){
-            var intList1 = intprt[0];
-            //console.log("Planner INT1: " + intList1.toString());
-            if(intList1.length > 0){
-                var intList2 = intList1[0];
-                //console.log("Planner INT2: " + intList2.toString());
-                //console.log("Planner INT21: " + intList2.pol.toString());
-                //console.log("Planner INT22: " + intList2.rel.toString());
-                //console.log("Planner INT23: " + intList2.args.toString());
-            }
-        }
-        
         var plan : string[] = [];
         
         var startStack = state.stacks;
@@ -139,7 +127,11 @@ module Planner {
                 for(var i=0; i<intprt.length; i++){
                     for(var j=0; j<intprt[i].length; j++){
                         var int = intprt[i][j];
-                        if(check(int.args[0], int.rel, int.args[1], node.data)){
+                        var n = 1;
+                        if(int.rel == "holding"){
+                            n = 0;
+                        }
+                        if(check(int.args[0], int.rel, int.args[n], node.data)){
                             ret = true;
                         }else{
                             ret = false;
@@ -159,7 +151,10 @@ module Planner {
                     var totalH = 0;
                     for(var j=0; j<intprt[i].length; j++){
                         var int = intprt[i][j];
-                        totalH += heuristics(int.args[0], int.rel, int.args[1], node)
+                        if(int.rel == "holding"){
+                            totalH += heuristics(int.args[0], int.rel, int.args[0], node);
+                        }
+                        totalH += heuristics(int.args[0], int.rel, int.args[1], node);
                     }
                     minH = Math.min(minH,totalH);
                 }
