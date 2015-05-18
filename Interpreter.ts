@@ -91,7 +91,6 @@ module Interpreter {
                         );
                     }
                     
-                    
                     break;
                 case "move":
                     
@@ -152,6 +151,8 @@ module Interpreter {
         return intprt;
     }
     
+    /** Goes through all the available objects (availableObjects), using the object definitions, to check if the wanted object (object)
+    *    is inside the current world. If so, the key (character) for that object is added to the returnList and then returned */
     function getObjectKeysWithoutObject(object: Parser.Object, availableObjects: string[], objects: {[s:string]: ObjectDefinition}): string[]{
         //Array to return in the end
         var returnList: string[] = [];
