@@ -81,31 +81,7 @@ module Interpreter {
                     console.warn('Interpreter warning: ambiguous entity or location!' +
                         'Returning multiple interpretations');
                 }
-                // Add all possible combinations of interpretations
-                /*for (var i in entitiesIntrprt) {
-                    for (var j in locationsIntrprt) {
-                        var entitiesOr = entitiesIntrprt[i]
-                            , locationsOr = locationsIntrprt[j]
-                            , interpretationOr: PddlLiteral[][] = [];
-                        // Disjunctive
-                        for (var k in entitiesOr) {
-                            for (var l in locationsOr) {
-                                var entitiesAnd = entitiesOr[k]
-                                    , locationsAnd = locationsOr[l]
-                                    , interpretationAnd: PddlLiteral[] = [];
-                                // Conjunctive
-                                for (var m in entitiesAnd) {
-                                    for (var n in locationsAnd) {
-                                        var pddlGoal = { pol: true, rel: rel, args: [entitiesAnd[m].id, locationsAnd[n].id] };
-                                        interpretationAnd.push(pddlGoal);
-                                    }
-                                }
-                                interpretationOr.push(interpretationAnd);
-                            }
-                        }
-                        interpretations.push(interpretationOr);
-                    }
-                }*/ 
+                // Add all possible combinations of interpretations 
                 interpretations = combineStuff(toIds(entitiesIntrprt), toIds(locationsIntrprt), rel);
             } else { // Move "it", that is, the object the arm is holding.
                 var // Where we should move it
@@ -119,22 +95,6 @@ module Interpreter {
                         'Returning multiple interpretations');
                     }
                     // Add all possible combinations of interpretations
-                    /*for (var i in locationsIntrprt) {
-                        var locationsOr = locationsIntrprt[i]
-                            , interpretationOr: PddlLiteral[][] = [];
-                        // Disjunctive
-                        for (var j in locationsOr) {
-                            var locationsAnd = locationsOr[j]
-                                , interpretationAnd: PddlLiteral[] = [];
-                            // Conjunctive
-                            for (var k in locationsAnd) {
-                                var pddlGoal = { pol: true, rel: rel, args: [it, locationsAnd[k].id] };
-                                interpretationAnd.push(pddlGoal);
-                            }
-                            interpretationOr.push(interpretationAnd);
-                        }
-                        interpretations.push(interpretationOr);
-                    }*/
                     interpretations = combineStuff([[[it]]], toIds(locationsIntrprt), rel);
                 } else {
                     console.warn('Interpreter warning: no entity in arm to move!' +
@@ -149,20 +109,6 @@ module Interpreter {
                 console.warn('Interpreter warning: ambiguous entity or location!' +
                 'Returning multiple interpretations');
             }
-            /*for (var i in entitiesIntrprt) {
-                var entitiesOr                 = entitiesIntrprt[i]
-                  , interpretationOr : PddlLiteral[][] = [];
-                for (var j in entitiesOr) {
-                    var interpretationAnd : PddlLiteral[] = []
-                      , entitiesAnd = entitiesOr[j];
-                    for (var k in entitiesAnd) {
-                        var possiblePddlGoal = { pol: true, rel: 'holding', args: [entitiesAnd[k].id] };
-                        interpretationAnd.push(possiblePddlGoal);
-                    }
-                    interpretationOr.push(interpretationAnd);
-                }
-                interpretations.push(interpretationOr);
-            }*/
             interpretations = combineStuff(toIds(entitiesIntrprt), null, 'holding');
         }
 
