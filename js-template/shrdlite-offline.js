@@ -209,15 +209,15 @@ ExampleWorlds["medium"] = {
         "m": { "form": "box", "size": "small", "color": "blue" }
     },
     "examples": [
-        "put the small box on the plank on the floor",
+        "put the small box on the plank on the floor", //X
         "put the brick that is to the left of a pyramid in a box",
         "put the white ball in a box on the floor",
         "move the large ball inside a yellow box on the floor",
-        "move the large ball inside a red box on the floor",
-        "take a red object",
-        "take the white ball",
+        "move the large ball inside a red box on the floor", //X
+        "take a red object", //X
+        "take the white ball", //X
         "put all boxes on the floor",
-        "put the large plank under the blue brick",
+        "put the large plank under the blue brick", //X
         "move all bricks on a table",
         "move all balls inside a large box"
     ]
