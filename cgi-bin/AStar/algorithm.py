@@ -57,7 +57,7 @@ def getPlan(goal,came_from,actions_so_far,objects):
                                     + obj.get('form')
                                     ]
         elif command is 'd':
-            plan += ['d','Drop it like its hot']
+            plan += ['d','Drop it like it\'s hot']
         else:
             plan += [command]
         current = next
