@@ -102,20 +102,20 @@ module Planner {
 	    if(state.stacks[state.armpos].length > 0) {
 		if(validatePhysics(state.holding, state.stacks[state.armpos][state.stacks[state.armpos].length-1])) {
 		    // here we can drop
-	    var newState = state.copy();
-            newState.stacks[newState.armpos].push(newState.holding);
-            newState.holding = null;
-	    newState.action = "d";
-            st.push(newState);
+	    	    var newState = state.copy();
+	            newState.stacks[newState.armpos].push(newState.holding);
+        	    newState.holding = null;
+		    newState.action = "d";
+        	    st.push(newState);
 		}
 	    }
 	    else {
 		   // here we can also drop since the supporting object is the floor
-	    var newState = state.copy();
-            newState.stacks[newState.armpos].push(newState.holding);
-            newState.holding = null;
-	    newState.action = "d";
-            st.push(newState);
+		    var newState = state.copy();
+        	    newState.stacks[newState.armpos].push(newState.holding);
+        	    newState.holding = null;
+		    newState.action = "d";
+        	    st.push(newState);
 	    }
         }
         //pickup
@@ -129,63 +129,7 @@ module Planner {
         return st;
     }
 
-    /*// moveLeft
-    function moveLeft (st: State, lastA: string) : State {
-        
-        if (st.armpos == 0 || lastA == "r") {
-            return null;
-        }
 
-        var ns : State = copyState(st);
-        ns.armpos -= 1;
-
-        return ns;
-    }
-
-    // moveRight        
-    function moveRight (st: State, lastA: string) : State {
-        
-        if (st.armpos == st.stacks.length - 1 || lastA == "l") {
-            return null;
-        }
-
-        var ns : State = copyState(st);
-        ns.armpos += 1;
-
-        return ns;
-    } 
-
-    //function pickup
-    function pickup(state: State, lastA: string): State {
-        if(state.holding != null || lastA == "d" || lastA == "p" || state.stacks[state.armpos].length == 0) {
-            return null;
-        } 
-        
-        var ns: State = copyState(state);
-        ns.holding = ns.stacks[ns.armpos].pop();
-
-        return ns;
-
-    }
-
-    //drop function
-    function drop(state: State, lastA: string): State {
-       /* if(state.holding != null || lastA == "d" || lastA == "p" 
-            || (state.stacks[state.armpos].length != 0 
-            && !Interpreter.checkSize(state.objects[state.holding]
-            ,state.objects[state.stacks[state.armpos][state.stacks[state.armpos].length - 1]]))) {
-            return null;
-        } 
-
-        var ns : State = copyState(state);
-        ns.stacks[ns.armpos].push(ns.holding);
-        ns.holding = null;
-
-        return ns;
-    }
-
-
-*/
     function makeGoalFunc(intprt : Interpreter.Literal[][]) {
 	return (s : State) => {
 	    var flag : boolean = false;
