@@ -50,11 +50,10 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd: Parser.Command, state: WorldState): Literal[][] {
-
         // This function is called once for each parse found.
         // cmd is the command found for this particular parse
         // state should be the current WorldState
-
+    
         var intprt: Literal[][] = [];
         var pobjs = [];
 
@@ -90,8 +89,7 @@ module Interpreter {
         // Get possible objects the parse is referring to
         //  -Identify what objects we want
         //  -See if such an object exists in the world
-        pobjs = getPrimaryObjects(cmd, state);
-
+        pobjs = getPrimaryObjects(cmd, state); 
         //  -If no object found, abort
         //  -If ambiguity and the quantifier is 'the', ask for clarification
         if (pobjs.length === 0) {
@@ -168,10 +166,8 @@ module Interpreter {
     function getObjectHelper(priObj: Parser.Object, secObj: Parser.Object,rel:string, state: WorldState):string[]{
         //var priObj:Parser.Object = cmd.ent.obj;
         var possibleObjs:string[] = getPossibleObjects(priObj, state);
-        //TODO: Filter out based on location
         if(secObj !== null && rel != null){
             //var secObj:Parser.Object = priObj.loc.ent.obj;
-            console.log("Secondary objects!");
             var secondaryObjs:string[] = getPossibleObjects(secObj, state);
             possibleObjs = getRelation(possibleObjs, secondaryObjs, rel, state.stacks);
         }
@@ -217,16 +213,12 @@ module Interpreter {
         // Edge case for floor object
         if(obj.form === "floor")
           return ["_"];
-        console.log("Object obj: ");
-        console.log(obj);
         var objSet:collections.Set<string> = new collections.Set<string>(); // Store the values of the object
         objSet.add(obj.size);
         objSet.add(obj.color);
         objSet.add(obj.form);
         objSet.remove("anyform");
         objSet.remove(null);
-        console.log("objSet is: ");
-        console.log(objSet.toArray());
         var possibleObjects:string[] = [];
         // Loop through the world and look for possible items
         var objs: string[] = Array.prototype.concat.apply([], state.stacks);
@@ -238,14 +230,10 @@ module Interpreter {
             stemp.add(otemp.form);
             stemp.add(otemp.size);
             stemp.add(otemp.color);
-            console.log("Stemp: ");
-            console.log(stemp.toArray());
             // If the parse object is subset of the current temp object add to "possible objects"-array
             if (objSet.isSubsetOf(stemp))
                 possibleObjects.push(objs[s]);
         }
-        console.log("Possible objects is: ");
-        console.log(possibleObjects)
         return possibleObjects;
     }
 
@@ -272,6 +260,7 @@ module Interpreter {
             var relation: string = cmd.loc.rel;
 
             if (cmd.ent.quant === "all" && cmd.loc.ent.quant === "all") { //When all primary objects are related to all target objects
+                console.log("We end up in all & all");
                 var conjunction: Literal[] = [];
                 for (var i = 0; i < primobj.length; i++) {
                     for (var j = 0; j < primobj.length; j++) {
@@ -280,6 +269,7 @@ module Interpreter {
                 }
                 interpretations.push(conjunction);
             } else if (cmd.ent.quant === "all") {       //When all primary objects are related to a single target object
+                console.log("We end up in all & single");
                 for (var j = 0; j < targets.length; j++) {
                     var conjunction: Literal[] = [];
                     for (var i = 0; i < primobj.length; i++) {
@@ -288,6 +278,7 @@ module Interpreter {
                     interpretations.push(conjunction);
                 }
             } else if (cmd.loc.ent.quant === "all") { //When a single primary object is related to all target objects
+                console.log("We end up in single & all");
                 for (var i = 0; i < primobj.length; i++) {
                     var conjunction: Literal[] = [];
                     for (var j = 0; j < targets.length; j++) {
@@ -348,10 +339,6 @@ module Interpreter {
             }
         }
         // TODO: Think of edge cases.
-        console.log("These objects hold");
-        console.log(correct.toArray());
-        console.log("These were those we chose from");
-        console.log(o1s);
         return correct.toArray();
     }
 
