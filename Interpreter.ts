@@ -121,8 +121,12 @@ module Interpreter {
                 break;
             case "take":
                     var result : string[] = interpretEnt(cmd.ent,world,wObjs);
+                    if(result.length <= 0)
+                    {
+                        return [];
+                    }
                     
-                    //res[0].push({pol:true,rel:"holding",args:res});
+                    res.push([{pol:true,rel:"holding",args:[result[0]]}])
                 break;
         }
         //console.log("End of travCoom ", res);
