@@ -44,8 +44,7 @@ module Planner {
 	var goalFunc = makeGoalFunc(intprt);
 	var actions : string[] = [];
 	var initState : State = new State(state.stacks, state.holding, state.arm, "");
-
-	var plan = AStar.AStarSearch<State>(copyState(initState), goalFunc, h, costFunc, adjacent);
+	var plan : State[] = AStar.AStarSearch<State>(copyState(initState), goalFunc, h, costFunc, adjacent);
 	console.log(plan);
 	plan.forEach((elem) => {
 	    actions.push(elem.action);
@@ -62,12 +61,16 @@ module Planner {
 	toString() {
 	    return collections.makeString(this);
 	}
+
+	copy() : State {
+	    return new State(this.stacks.map((stack) => {return stack.slice();}).slice(), this.holding, this.armpos, this.action);
+	}
     }
 
     function copyState(st : State) : State {
       var newStacks = [];
       st.stacks.forEach((stack) => {
-        newStacks.push(stack.slice(0));
+        newStacks.push(stack.concat());
       });
 
       return new State(newStacks, st.holding, st.armpos, st.action );
@@ -84,17 +87,17 @@ module Planner {
     function adjacent(state : State) : State[] {
         
         var st : State[] = [];
-        // left
 
+        // left
         if(state.armpos > 0) {
-            var newState = copyState(state);
+	    var newState = state.copy();
             newState.armpos -= 1;
 	    newState.action = "l";
             st.push(newState);
         }   
         //right
         if(state.armpos < state.stacks.length-1) {
-            var newState = copyState(state);
+	    var newState = state.copy();
             newState.armpos += 1;
 	    newState.action = "r";
             st.push(newState);
@@ -102,16 +105,16 @@ module Planner {
 
         //drop
         if(state.holding) {
-            var newState = copyState(state);
-            state.stacks[state.armpos].push(state.holding)
+	    var newState = state.copy();
+            newState.stacks[newState.armpos].push(newState.holding);
             newState.holding = null;
 	    newState.action = "d";
             st.push(newState);
         }
         //pickup
         if(!state.holding && state.stacks[state.armpos].length > 0) {
-            var newState = copyState(state);
-            newState.holding = state.stacks[state.armpos].pop();
+	    var newState = state.copy();
+            newState.holding = newState.stacks[newState.armpos].pop();
 	    newState.action = "p";
             st.push(newState);
         }
