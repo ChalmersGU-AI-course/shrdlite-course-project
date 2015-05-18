@@ -1,3 +1,4 @@
+///<reference path="Interpreter.ts"/>
 
 /** Generate new ID given a state */
 function generateID(state: string[][]):string{
@@ -69,6 +70,56 @@ function validPlacement(topObject: string, bottomObject: string, objects: {[s:st
     
 	return true;
 	
+}
+
+/** Checks if first is allowed to be placed on top of second */
+function validPlacementAbove(first: string, second: string, objects: {[s:string]: ObjectDefinition}) : boolean {
+    //If second is a ball, then no
+    if(objects[second].form == "ball"){
+        return false;
+    }
+    
+    //second är small, så måste first vara small
+    if(objects[second].size == "small" && objects[first].size != "small"){
+        return false;
+    }
+    
+    
+    //om first är en ball, så måste det finnas en motsvarande box i rätt storlek
+    if(objects[first].form == "ball"){
+        if(objects[first].size == "large"){
+            //Nånstans i världen måste finnas en stor box
+        } else {
+            //Nånstans i världen måste det finnas en box (valfri storlek)
+            //boxElement
+            var foundElement = null;
+            for(var element in objects){
+                if(objects[element].form == "box"){
+                    foundElement = element;
+                    break;
+                }
+            }
+            if(foundElement == null){
+                return false;
+            }
+            
+            if(objects[second].size == "small"){
+                //boxElement måste vara litet
+                if(objects[foundElement].size != "small"){
+                    return false;
+                }
+                    
+            } else {
+                //Boxelement kan vara valfri storlek
+            }
+        }
+    }
+    
+    //Om stor boll, så stor boxes
+    //Om liten boll så måste det finnas en box. NEJ, är det undre elementet nått litet, så måste det vara en liten box
+    
+    
+    return true;
 }
 
 function copyStack(original: string[][]):string[][]{
@@ -191,6 +242,21 @@ function check(first: string, rel: string, second: string, stacks: string[][]){
         default:
             console.log("check no match");
             return false;
+    }
+}
+
+function validInterpretation(int: Interpreter.Literal, objectDef: {[s:string]: ObjectDefinition}){
+    switch(int.rel){
+        case "ontop":
+        case "inside":
+            return validPlacement(int.args[0], int.args[1], objectDef);
+        case "above":
+            return validPlacementAbove(int.args[0], int.args[1], objectDef);
+        case "under":
+            //Same as above, just flipped order on the arguments
+            return validPlacementAbove(int.args[1], int.args[0], objectDef);
+        default:
+            return true;
     }
 }
 

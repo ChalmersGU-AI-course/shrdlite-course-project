@@ -5,7 +5,7 @@ module astar {
 
     /** Compute the a path from the given start node to the given end node and the given graph */
     export function compute<T>(graph: graphmodule.Graph<T>, startID: string, isEndState: graphmodule.ValidStateFunction<T>, hFun: graphmodule.HeuristicFunction<T>, generateNeighbours: graphmodule.GenerateNodes<T>) {
-
+    
         //var goalNodeAd = graph.adjacencyMap.getValue(endID);
         var currentAd = graph.adjacencyMap.getValue(startID);
 
@@ -34,7 +34,18 @@ module astar {
         var currentNode = currentAd.node;
 
         visited.add(currentNode);
+        
+        var startTime = new Date().getTime();
+        
 		while (!isEndState(currentNode)) {
+        
+            var nowTime = new Date().getTime();
+            
+            if((nowTime - startTime) > 3000){
+                //Not allowed to run any longer
+                console.log("A* IS NOT ALLOWED TO RUN ANY LONGER!!");
+                return undefined;
+            }
         
             //Create next states
             var neighbours = generateNeighbours(currentNode);

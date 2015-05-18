@@ -62,7 +62,37 @@ module Planner {
     
         console.log("------------planInterpretation start------------");
         
-        //console.log("Stacks1: " + prettyMat(state.stacks));
+        var validInt = [];
+        //First go over all the interpretations and filter out non-valid interpretations
+        intprt.forEach(
+            (ints: Interpreter.Literal[]) => {
+                var wasValid = true;
+                ints.forEach(
+                    (int: Interpreter.Literal) => {
+                        if(!validInterpretation(int, state.objects)){
+                            wasValid = false;
+                            return false;
+                        } else {
+                            return true;
+                        }
+                    }
+                );
+                
+                if(wasValid){
+                    validInt.push(ints);
+                }
+                
+                return true;
+            }
+        );
+        
+        intprt = validInt;
+        
+        //TODO: Meddela VAD som gjorde tolkningen ej giltig
+        if(intprt == undefined || intprt.length == 0){
+            //No interpretation was found
+            return ["No valid interpretation was found. Please try again"];
+        }
         
         var plan : string[] = [];
         
