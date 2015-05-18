@@ -44,7 +44,7 @@ module Planner {
 	var goalFunc = makeGoalFunc(intprt);
 	var actions : string[] = [];
 	var initState : State = new State(state.stacks, state.holding, state.arm, "");
-	var plan : State[] = AStar.AStarSearch<State>(copyState(initState), goalFunc, h, costFunc, adjacent);
+	var plan : State[] = AStar.AStarSearch<State>(initState.copy(), goalFunc, h, costFunc, adjacent);
 	console.log(plan);
 	plan.forEach((elem) => {
 	    actions.push(elem.action);
@@ -65,15 +65,6 @@ module Planner {
 	copy() : State {
 	    return new State(this.stacks.map((stack) => {return stack.slice();}).slice(), this.holding, this.armpos, this.action);
 	}
-    }
-
-    function copyState(st : State) : State {
-      var newStacks = [];
-      st.stacks.forEach((stack) => {
-        newStacks.push(stack.concat());
-      });
-
-      return new State(newStacks, st.holding, st.armpos, st.action );
     }
 
     function costFunc(a : State, b : State) : number {
@@ -122,7 +113,7 @@ module Planner {
         return st;
     }
 
-    // moveLeft
+    /*// moveLeft
     function moveLeft (st: State, lastA: string) : State {
         
         if (st.armpos == 0 || lastA == "r") {
@@ -169,7 +160,7 @@ module Planner {
             ,state.objects[state.stacks[state.armpos][state.stacks[state.armpos].length - 1]]))) {
             return null;
         } 
-*/
+
         var ns : State = copyState(state);
         ns.stacks[ns.armpos].push(ns.holding);
         ns.holding = null;
@@ -178,7 +169,7 @@ module Planner {
     }
 
 
-
+*/
     function makeGoalFunc(intprt : Interpreter.Literal[][]) {
 	return (s : State) => {
 	    var flag : boolean = false;
