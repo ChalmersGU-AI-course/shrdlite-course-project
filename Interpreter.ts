@@ -260,7 +260,6 @@ module Interpreter {
             var relation: string = cmd.loc.rel;
 
             if (cmd.ent.quant === "all" && cmd.loc.ent.quant === "all") { //When all primary objects are related to all target objects
-                console.log("We end up in all & all");
                 var conjunction: Literal[] = [];
                 for (var i = 0; i < primobj.length; i++) {
                     for (var j = 0; j < primobj.length; j++) {
@@ -269,7 +268,6 @@ module Interpreter {
                 }
                 interpretations.push(conjunction);
             } else if (cmd.ent.quant === "all") {       //When all primary objects are related to a single target object
-                console.log("We end up in all & single");
                 for (var j = 0; j < targets.length; j++) {
                     var conjunction: Literal[] = [];
                     for (var i = 0; i < primobj.length; i++) {
@@ -278,7 +276,6 @@ module Interpreter {
                     interpretations.push(conjunction);
                 }
             } else if (cmd.loc.ent.quant === "all") { //When a single primary object is related to all target objects
-                console.log("We end up in single & all");
                 for (var i = 0; i < primobj.length; i++) {
                     var conjunction: Literal[] = [];
                     for (var j = 0; j < targets.length; j++) {
