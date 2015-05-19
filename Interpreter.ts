@@ -20,7 +20,14 @@ module Interpreter {
 	else if (interpretations.length > 1) {
 	    console.log(interpretationToString(interpretations[0]));
 	    console.log(interpretationToString(interpretations[1]));
-	    throw new Interpreter.Error("Ambigous interpretation");
+	    //throw new Interpreter.Error("Ambigous interpretation");
+		world.printSystemOutput("What did you mean?");
+		for(int i = 0; i<interpretations.length;i++)
+		{
+			world.printSystemOutput(i.toString + ": " + interpretationToString(interpretations[i]));
+		}
+		
+		return interpretations[clarification(interpretations)];
 	} 
 	else {
             throw new Interpreter.Error("Found no interpretation");
@@ -54,8 +61,62 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+	function clarification(utterance : string = "") : int {
+		var inputPrompt = "Choose the corresponding number.";
+        var nextInput = () => world.readUserInput(inputPrompt, clarification);
+		return parseInt(utterance.trim())-1;
+	}
+	/*function clarification(utterance : string = "", cmd : Parser.Command) : int {
+            var inputPrompt = "What did you mean?";
+			world.printSystemOutput(inputPrompt);
+			for(int i = 0; i<cmd.size;i++){
+				inputs[i] = cmd.cmd + " " + cmd.ent.quant + " ";
+				if(cmd.ent.obj.obj.size != null)
+					inputs[i] += cmd.ent.obj.obj.size + " ";
+				if(cmd.ent.obj.obj.color != null)
+					inputs[i] += cmd.ent.obj.obj.color + " ";
+				if(cmd.ent.obj.obj.form != null)
+					inputs[i] += cmd.ent.obj.obj.form + " ";
+				if(cmd.ent.obj.loc != null)
+				{
+					inputs[i] += "that is " cmd.ent.obj.loc.rel + " " + cmd.ent.obj.loc.ent.quant + " ";
+					if(cmd.ent.obj.loc.ent.obj.size != null)
+						inputs[i] += cmd.ent.obj.loc.ent.obj.size + " ";
+					if(cmd.ent.obj.loc.ent.obj.color != null)
+						inputs[i] += cmd.ent.obj.loc.ent.obj.color + " ";
+					if(cmd.ent.obj.loc.ent.obj.form != null)
+						inputs[i] += cmd.ent.obj.loc.ent.obj.form + " ";
+				}
+				if(cmd.loc != null)
+				{
+					inputs[i] += cmd.loc.rel + " ";
+					inputs[i] += cmd.loc.ent.quant + " ";
+					if(cmd.loc.ent.obj.obj.size != null)
+						inputs[i] += cmd.loc.ent.obj.obj.size + " ";
+					if(cmd.loc.ent.obj.obj.color != null)
+						inputs[i] += cmd.loc.ent.obj.obj.color + " ";
+					if(cmd.loc.ent.obj.obj.form != null)
+						inputs[i] += cmd.loc.ent.obj.obj.form + " ";
+					if(cmd.loc.ent.obj.loc != null)
+					{
+						inputs[i] += "that is " cmd.loc.ent.obj.loc.rel + " " + cmd.loc.ent.obj.loc.ent.quant + " ";
+						if(cmd.loc.ent.obj.loc.ent.obj.size != null)
+							inputs[i] += cmd.loc.ent.obj.loc.ent.obj.size;
+						if(cmd.loc.ent.obj.loc.ent.obj.color != null)
+							inputs[i] += cmd.loc.ent.obj.loc.ent.obj.color;
+						if(cmd.loc.ent.obj.loc.ent.obj.form != null)
+							inputs[i] += cmd.loc.ent.obj.loc.ent.obj.form;
+					}
+				}
+				world.printSystemOutput((i+1) + ": " + inputs[i]);
+			}
+			inputPrompt = "Choose a number corresponding to what you meant.";
+            var nextInput = () => world.readUserInput(inputPrompt, clarificationDecision);
+			return parseInt(utterance.trim())-1;
+        }*/
+	
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-
+	
 	var intprt : Literal[][] = [];
 	if(cmd.cmd === "take") {
 	    var entities : string[] = interpretEntity(cmd.ent, state);
@@ -66,6 +127,7 @@ module Interpreter {
 	    });
 	}
 	else if(cmd.cmd === "move") {
+	
 	    var entity : string[] = interpretEntity(cmd.ent, state);
 	    var locati : string[] = interpretLocation(cmd.loc, state);
             var tmp : string[][] = [];
@@ -83,6 +145,7 @@ module Interpreter {
 	}
 	// We assume the arm is already holding something
 	else if(cmd.cmd === "put") {
+		i
 	    var locati : string[] = interpretLocation(cmd.loc, state);
 	    if (state.holding) {
 		locati.forEach( (locElem) => {
@@ -96,6 +159,8 @@ module Interpreter {
 
     function interpretEntity(ent : Parser.Entity, state : WorldState) : string[] {
 	var objs : string[] = interpretObject(ent.obj, state);
+	if(objs.size < 1)
+		throw new Error("No object exists of that specification.");
 	var intprt : string[] = [];
 	console.log(objs);
 	if(ent.quant === "any")	{
@@ -108,6 +173,8 @@ module Interpreter {
 	else if(ent.quant === "the") {
 		if(objs.length == 1)
     		    intprt.push(objs[0]);
+		else
+			throw new Error("Ambiguous, more than 1 of the object exists.");
 	}
 	else if(ent.quant == "all") {
 		throw new Error("Not Implemented Yet: all quantifier");
