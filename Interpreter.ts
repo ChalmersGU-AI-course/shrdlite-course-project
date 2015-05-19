@@ -182,32 +182,26 @@ module Interpreter {
         var locs : Sayings = {rel:loc.rel, objs:interpretEntity(loc.ent, state)}
         return locs;
     }
-   
+   	
     function buildRules(futureState: boolean, objs : string[][], locs : Sayings, state : WorldState) : objLocPair[][] {
         var grid : objLocPair[][] = [];
-        objs.forEach(objList => { //or obj
-                var row : objLocPair[] = [];
-                objList.forEach(obj => { //and obj 
-                locs.objs.forEach(locList => {  //or locs
-                    locList.forEach(loc => {    //and locs
-                        if(validatePhysics(futureState, obj,loc,locs.rel, state)){
-                            if(row.every(p => p.obj !== obj &&(loc === "floor" || p.loc !== loc))) {
-                                row.push({"obj":obj, "loc":loc});
-                            }
-                        }   
-                        return true;
-                    });
-                    return true;
-                });
-                return true;
-            });
-            if(row.length>0 && row.length == objList.length ){
-                grid.push(row);
-            }
-            return true;
+        var newObjs : string[][] = [];
+        var newLocs : string[][] = [];
+        objs.forEach(and => {
+        	var perms : string[][] = permute(and, [],[]); 	
+        	perms.forEach(r => newObjs.push(r));
+        	return true;
         });
+        objs = newObjs;
+        locs.objs.forEach(and => {
+        	var perms : string[][] = permute(and, [],[]); 	
+        	perms.forEach(r => newLocs.push(r));
+        	return true;
+        });
+        locs.objs = newLocs;
         objs.forEach(objList => { //or obj
             locs.objs.forEach(locList => {  //or locs
+            	console.log(" locs " +locList.length + " objs " +objList.length);
                 var row : objLocPair[] = [];
                 objList.forEach(obj => { //and obj 
                     locList.forEach(loc => {    //and locs
@@ -220,13 +214,19 @@ module Interpreter {
                     });
                     return true;
                 });
-                if(row.length>0 && row.length == objList.length ){
-                    grid.push(row);
-                }
+	            if(row.length>0 && row.length === locList.length*objList.length ){
+	                var contains : boolean = grid.some(r => { var b : boolean =  row.every(p => 
+	                	((locs.rel==="below" && p.obj === "floor")|| r.some(o => o.obj === p.obj)) &&
+	                	((locs.rel!=="below" && p.loc === "floor")|| r.some(o => o.loc === p.loc))); console.log("lower: "+b);return b;})
+	                if(!contains){
+	                	grid.push(row);
+	                }
+	            }
                 return true;
             });
             return true;
         });
+        
 
 
         return grid;
@@ -384,5 +384,20 @@ module Interpreter {
         throw("if this happens... everything is broken. :(");
         return 0;
     }
+
+	function permute(input : string[], usedChars : string[], permArr : string[][]) {
+		var i : number, ch : string;
+		for (i = 0; i < input.length; i++) {
+	   		ch = input.splice(i, 1)[0];
+	    	usedChars.push(ch);
+	    	if (input.length == 0) {
+	      		permArr.push(usedChars.slice());
+	    	}
+	    	permute(input, usedChars, permArr);
+	    	input.splice(i, 0, ch);
+	    	usedChars.pop();
+	  	}
+	  	return permArr;
+	}
 }
 
