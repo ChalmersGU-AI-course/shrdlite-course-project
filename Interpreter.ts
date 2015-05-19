@@ -66,14 +66,11 @@ module Interpreter {
         var objects   = state.objectsWithId
           , pddlWorld = state.pddlWorld;
 
-
         // cmd.cmd: what to do ("move")
         // cmd.ent: what object to do this with (may be undefined, if e.g. "drop")
         // cmd.loc: where to put it (may be undefined, if cmd is e.g. "take")
 
         var interpretations : PddlLiteral[][][] = [];
-
-        // TODO Maybe we should refactor all the duplicated code for the commands?
 
         var entitiesIntrprt;
         var resolveAmb = function(intrprt, str1, str2){
@@ -109,13 +106,13 @@ module Interpreter {
             interpretations = combineStuff(toIds(entitiesIntrprt), toIds(locationsIntrprt), rel);
             
         } else if (cmd.cmd === 'take') {
-            // TODO: Should we check (here?) if the arm is already holding something?
             entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels);
             entitiesIntrprt = resolveAmb(entitiesIntrprt, 'objects', 'pick up');
             interpretations = combineStuff(toIds(entitiesIntrprt), null, 'holding');
         }
 
         else {
+            /*
             var objectKeys : string[] = concat(state.stacks);
             // Below: old code
             var a = objectKeys[getRandomInt(objectKeys.length)];
@@ -125,6 +122,7 @@ module Interpreter {
                 {pol: true, rel: "ontop", args: [a, "floor"]},
                 {pol: true, rel: "holding", args: [b]}
             ]];
+            */
         }
 
         console.log("returning",interpretations);
