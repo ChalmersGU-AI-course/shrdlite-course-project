@@ -7,15 +7,14 @@ module AStar {
 	// cost: function calculating the cost from a to b
 	// adj: function for finding adjacent nodes.
 	export function AStarSearch<T>(start: T, checkGoal: (_n:T) => boolean, h: (_h:T) => number,
-				       cost: (a:T,b:T) => number, adj: (n:T) => T[]) {
-	
-		var cameFrom = new collections.Dictionary<T, T>();
+				       cost: (a:T,b:T) => number, adj: (n:T) => T[]) : T[] {
+
 		var costSoFar = new collections.Dictionary<T, number>();
 	
 		var frontier = new collections.PriorityQueue<Node<T>>(function(a,b) {
 			return ((costSoFar.getValue(a.node)+h(a.node)) - (costSoFar.getValue(b.node)+h(b.node)));
 		});
-		cameFrom.setValue(start,start);
+
 		costSoFar.setValue(start, 0);
 		frontier.enqueue(new Node<T>(start));
 
@@ -33,9 +32,9 @@ module AStar {
 					var next : Node<T> = new Node<T>(node);
 					next.setPrev(cur);
 					frontier.enqueue(next);
-					//cameFrom.setValue(node, cur);
 				}
 			});
+
 		}
 		return null;
 	}
@@ -57,7 +56,7 @@ module AStar {
 		}
 	}
 
-	function recons_path<T>(current : Node<T>) {
+	function recons_path<T>(current : Node<T>) : T[] {
 		var total_path : T[] = [];
 		while( current.prev ) {
 			total_path.push(current.node);
