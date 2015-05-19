@@ -228,7 +228,7 @@ module Interpreter {
         var grid : objLocPair[][] = [];
         
 
-        var ruleLength : number = objs[0].length*locs.objs[0].length;  
+        var ruleLength : number = objs.length>0  && locs.objs.length>0 ? objs[0].length*locs.objs[0].length : 0;  
 
 
         objs.forEach(objList => { //or obj
@@ -249,7 +249,7 @@ module Interpreter {
             });
             if(row.length>0 && row.length == objList.length ){
                 grid.push(row);
-            }
+            }   
             return true;
         });
         objs.forEach(objList => { //or obj
@@ -280,11 +280,11 @@ module Interpreter {
 
     function buildRules(futureState: boolean, objs : string[][], locs : Sayings, state : WorldState) : objLocPair[][] {
         var grid : objLocPair[][] = [];
-        var ruleLength : number = objs[0].length*locs.objs[0].length;  
+        var ruleLength : number = objs.length>0  && locs.objs.length>0 ? objs[0].length*locs.objs[0].length : 0;
         locs.objs.map(locList => {
             var row : objLocPair[] = buildAndRowForLoc(futureState, objs, locList, locs.rel, state);
             if(row.length === ruleLength){
-                var contains : boolean = grid.some(r => row.every(p => rowContainsPair(r, p.obj, p.loc, locs.rel, true)));
+                var contains : boolean = grid.some(r => row.every(p => rowContainsPair(r, p.obj, p.loc, locs.rel, false)));
                 if(!contains){
                     grid.push(row);
                 }
@@ -294,7 +294,7 @@ module Interpreter {
         objs.map(objList => {
             var row : objLocPair[] = buildAndRowForObj(futureState, objList, locs.objs, locs.rel, state);
             if(row.length === ruleLength){
-                var contains : boolean = grid.some(r => row.every(p => rowContainsPair(r, p.obj, p.loc, locs.rel, true)));
+                var contains : boolean = grid.some(r => row.every(p => rowContainsPair(r, p.obj, p.loc, locs.rel, false)));
                 if(!contains){
                     grid.push(row);
                 }
