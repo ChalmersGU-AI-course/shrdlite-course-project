@@ -49,9 +49,9 @@ module SearchAlgo{
     }    
     
     /**
-     * Heuristic for the A* algorithm, works for my case where the inside arrays are actually in each just a lonely literal.
-     * This heuristic is based on the distance between objects in the literal and the minimal number of pick and drop necessary
-     * for reach the final goal.
+     * Heuristic for the A* algorithm, works for my case where the inside arrays of "goal" are for each just a lonely literal.
+     * This heuristic is based on the distance between objects (distance between the stacks they are in) and the minimal number of pick and drop necessary
+     * to reach the final goal.
      * After few trys I estimated that the number of steps needed to go through A-star were decreased by 25% to 40% 
      * (Compared to a heuristic that returns 0)     
      */
