@@ -17,6 +17,12 @@ module Interpreter {
         if (interpretations.length > 0 && interpretations[0].intp.length > 0) {
             return interpretations;
         } else {
+            console.log("Interpreter: interpretations = ");
+            console.log(interpretations);
+            console.log("Interpreter: interpretations.length = " + interpretations.length);
+            if (interpretations.length > 0) {
+                console.log("Interpreter: interpretations[0].intp.length = " + interpretations[0].intp.length);
+            }
             throw new Interpreter.Error("Found no interpretation");
         }
     }
@@ -162,11 +168,13 @@ module Interpreter {
                 if( above == below){
                     continue;
                 }
+                console.log("Interpreter.moveObj: Reaches this...");
                 // Found the bug!
                 if(! canSupport( findObjDef(state, above), findObjDef(state, below))){
                     // state.objects[above], state.objects[below])){
                     continue;
                 }
+                console.log("Interpreter.moveObj: ...but not this");
 
                 intprt.push( [
                     {pol: true, rel: locationRel, args: [above, below] }
