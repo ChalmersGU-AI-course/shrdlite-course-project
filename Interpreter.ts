@@ -313,10 +313,6 @@ module Interpreter {
             lits = this.literals(objs, refs, rel);
             lits = [flatten(lits)]
             break;
-          case "all":
-            lits = this.literals(objs, refs, rel);
-            lits = [flatten(lits)]
-            break;
           case "any":
             var swappedArgs = true;
             if(ontopOrInside) {
@@ -324,12 +320,16 @@ module Interpreter {
                 error = "There are not enough " + refStr + "s for the " + objStr + "s to be " + rel + " of";
                 throw new Interpreter.Error(error);
               }
-              lits = this.literals(refs, objs, rel, swappedArgs);
-              // all objects get to be in relation "rel" to unique object
+              var tolerant = true;
+              lits = this.literals(refs, objs, rel, swappedArgs, tolerant);
               lits = uniqueCombinations(lits, objs, refs);
             } else {
               lits = this.literals(refs, objs, rel, swappedArgs);
             }
+            break;
+          case "all":
+            lits = this.literals(objs, refs, rel);
+            lits = [flatten(lits)]
             break;
         }
         return lits;
