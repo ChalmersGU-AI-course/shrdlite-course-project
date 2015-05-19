@@ -77,21 +77,25 @@ module Interpreter {
 
         var entitiesIntrprt;
         if (cmd.cmd === 'move') {
-                // Which entity we should move
+            // Which entity we should move
             if (cmd.ent) { // Move specified object.
                 entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels);
             }else{ // Move 'it', i.e. the currently held object
                 entitiesIntrprt = [[state.objectsWithId[state.holding]]];
-            }   
-               // Where we should move it
+            }
+
+            var objDefToStr = function(obj){
+                return 'The ' + obj.size + ' ' + obj.color + ' ' + obj.form + '.';
+            };
+
+            // Where we should move it
             var locationsIntrprt = findEntities(cmd.loc.ent, objects, pddlWorld.rels)
-               // How entity will be positioned on location (ontop, inside, ...)
+            // How entity will be positioned on location (ontop, inside, ...)
                     , rel = cmd.loc.rel;
             if (entitiesIntrprt.length > 1) {
                 var promptStr = 'Multiple objects to move found:\n'
                 for(var i in entitiesIntrprt){
-                    promptStr += i + '. The ' + entitiesIntrprt[i][0][0].size + ' ' 
-                        + entitiesIntrprt[i][0][0].color + ' ' + entitiesIntrprt[i][0][0].form + '.\n';
+                    promptStr += i + '. ' + objDefToStr(entitiesIntrprt[i][0][0]) + '\n';
                 }
                 promptStr += 'Which one did you mean?';
                 var selected = Number(prompt(promptStr));
@@ -101,8 +105,7 @@ module Interpreter {
             if(locationsIntrprt.length > 1){
                 var promptStr = 'Multiple locations to move to found:\n'
                 for(var i in locationsIntrprt){
-                    promptStr += i + '. The ' + locationsIntrprt[i][0][0].size + ' ' 
-                    + locationsIntrprt[i][0][0].color + ' ' + locationsIntrprt[i][0][0].form + '.\n';
+                    promptStr += i + '. ' + objDefToStr(locationsIntrprt[i][0][0]) + '\n';
                 }
                 promptStr += 'Which one did you mean?';
                 var selected = Number(prompt(promptStr));
