@@ -32,7 +32,6 @@ function validPlacement(topObject: string, bottomObject: string, objects: {[s:st
         return true;
     }
     
-    
 	
 	//balls should be in boxes or on the floor
 	if(objects[topObject].form == "ball" && objects[bottomObject].form != "box") {
@@ -75,8 +74,14 @@ function validPlacement(topObject: string, bottomObject: string, objects: {[s:st
 
 /** Checks if first is allowed to be placed on top of second */
 function validPlacementAbove(first: string, second: string, objects: {[s:string]: ObjectDefinition}) : boolean {
+    if(second == "floor"){
+        return true;
+    }
+
     //If second is a ball, then no
+    console.log("Utils.validPlacementAbove objects[second].form=" + objects[second].form);
     if(objects[second].form == "ball"){
+        console.log("Utils.validPlacementAbove THE SECOND OBJECT IS OF FORM BALL! Return false");
         return false;
     }
     
@@ -241,24 +246,47 @@ function check(first: string, rel: string, second: string, stacks: string[][]){
         case "holding":
             return holding(first, stacks);
         default:
-            console.log("check no match");
+            //console.log("check no match");
             return false;
     }
 }
 
+class ValidInterpretationError implements Error {
+    public name = "Utils.ValidInterpretationError";
+    constructor(public message : string) {}
+    public toString() {return this.name + ": " + this.message}
+}
+
+function getObject(objectDef: {[s:string]: ObjectDefinition}, id: string){
+    var object =  objectDef[id];
+    return object.size + " " + object.color + " " + object.form;
+}
+
 function validInterpretation(int: Interpreter.Literal, objectDef: {[s:string]: ObjectDefinition}){
+    var ret = false;
+    var extra = " ";
     switch(int.rel){
         case "ontop":
         case "inside":
-            return validPlacement(int.args[0], int.args[1], objectDef);
+            ret = validPlacement(int.args[0], int.args[1], objectDef);
+            extra = " of ";
+            break;
         case "above":
-            return validPlacementAbove(int.args[0], int.args[1], objectDef);
+            ret = validPlacementAbove(int.args[0], int.args[1], objectDef);
+            break;
         case "under":
             //Same as above, just flipped order on the arguments
-            return validPlacementAbove(int.args[1], int.args[0], objectDef);
+            ret =  validPlacementAbove(int.args[1], int.args[0], objectDef);
+            break;
         default:
-            return true;
+            ret = true;
+            break;
     }
+    console.log("Utils.validInterpretation ret: " + ret + ". first: " + int.args[0] + " sec: " + int.args[1]);
+    if(!ret){
+        throw new ValidInterpretationError("It is not possible to put the " + getObject(objectDef, int.args[0]) + " " + int.rel + extra + "the " + getObject(objectDef, int.args[1]));
+    }
+    return ret;
 }
 
 function heuristicOntop(first: string, second: string, stacks: string[][]){
@@ -283,7 +311,7 @@ function heuristicOntop(first: string, second: string, stacks: string[][]){
             }
         }
     }
-    console.log("heur ontop return");
+    //console.log("heur ontop return");
     return h+1;
 }
 function heuristicAbove(first: string, second: string, stacks: string[][]){
@@ -412,7 +440,7 @@ function heuristics(first: string, rel: string, second: string, stacks: string[]
         case "holding":
             return heuristicHold(first, stacks);
         default:
-            console.log("heuristics no match");
+            //console.log("heuristics no match");
             return 0;
     }
 }

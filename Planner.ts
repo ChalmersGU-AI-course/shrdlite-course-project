@@ -127,7 +127,7 @@ module Planner {
                 
                 if(validPlacement(holding, bottomElement, state.objects)){
                     console.log("drop plan to stack " + i);
-                    dropPlan.push("dropping " + getObject(state,holding));
+                    dropPlan.push("dropping " + getObject(state.objects,holding));
                     moveArmTo(dropPlan, arm, i);
                     arm = i;
                     dropPlan.push("d");
@@ -231,7 +231,7 @@ module Planner {
                 //ID for the object that was moved
                 var objectID = fromState[from][fromState[from].length-1];
                 
-                var message: string = "Moving the " + getObject(state, objectID) + " to stack " + to
+                var message: string = "Moving the " + getObject(state.objects, objectID) + " to stack " + to
                 plan.push(message);
                     
                 if(first){
@@ -278,7 +278,7 @@ module Planner {
                 console.log("first top object " + endStacks[j][endStacks[j].length-1]);
                 while(++j<endStacks.length && endStacks[j-1][endStacks[j-1].length-1] != usedIntprt[i].args[0]);
                 j--;
-                plan.push("picking up " + getObject(state, usedIntprt[i].args[0]));
+                plan.push("picking up " + getObject(state.objects, usedIntprt[i].args[0]));
                 moveArmTo(plan, arm, j);
                 arm = j;
                 plan.push("p");
@@ -325,11 +325,6 @@ module Planner {
         }
         prettyString+="]";
         return prettyString;
-    }
-    
-    function getObject(world: WorldState, id: string){
-        var object =  world.objects[id];
-        return object.size + " " + object.color + " " + object.form;
     }
     
     /** Finds from which stack (index) an object was moved */

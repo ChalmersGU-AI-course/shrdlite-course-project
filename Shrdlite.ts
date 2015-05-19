@@ -2,6 +2,7 @@
 ///<reference path="Parser.ts"/>
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Planner.ts"/>
+///<reference path="Utils.ts"/>
 
 module Shrdlite {
 
@@ -84,6 +85,9 @@ module Shrdlite {
         } catch(err) {
             if (err instanceof Planner.Error) {
                 world.printError("Planning error", err.message);
+                return;
+            } else if(err instanceof ValidInterpretationError){
+                world.printError(err.message);
                 return;
             } else {
                 throw err;
