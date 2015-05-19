@@ -364,11 +364,6 @@ module Interpreter {
         return topSize === "small";
     }
 
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
-
-    }
-
     function isOntop(stack: string[], bottom : string, top : string) : boolean{
         var bottomIndex = stack.indexOf(bottom);
         var topIndex = stack.indexOf(top);

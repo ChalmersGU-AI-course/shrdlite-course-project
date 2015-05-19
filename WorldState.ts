@@ -69,6 +69,7 @@ class WorldState {
             switch (goal.rel) {
                 case "ontop":
                 case "inside":
+                    // TODO: Does not handle the floor well.
                     result = result && this.isOnTopOf(fstObj,sndObj);
                     break;
                 case "above":
@@ -134,12 +135,17 @@ class WorldState {
     }
 
     isOnTopOf(fstObj : string, sndObj : string) : boolean {
-        var firstObjStackNumber = this.getStackNumber(fstObj);
+        if(!this.isHoldingObj(fstObj)) {
+            var firstObjStackNumber = this.getStackNumber(fstObj);
 
-        if (firstObjStackNumber === this.getStackNumber(sndObj) && firstObjStackNumber >= 0) {
-            return 1 == this.stacks[firstObjStackNumber-1].indexOf(fstObj) - this.stacks[firstObjStackNumber-1].indexOf(sndObj);
+            if(sndObj === "floor") {
+                return this.stackHeight(firstObjStackNumber-1) === 1;
+            } else {
+                if (firstObjStackNumber === this.getStackNumber(sndObj)) {
+                    return 1 == this.stacks[firstObjStackNumber - 1].indexOf(fstObj) - this.stacks[firstObjStackNumber - 1].indexOf(sndObj);
+                }
+            }
         }
-
         return false;
     }
 
@@ -270,6 +276,7 @@ class WorldState {
     }
 
     stackHeight(stackNumber : number) : number {
+        // TODO: Should this be stackNumber-1 instead since were dealing with stacks and not indexes?
         return this.stacks[stackNumber].length;
     }
 

@@ -50,7 +50,10 @@ class WorldStateNode{
 
 	private onTopHeuristic(fstObj : string, sndObj : string) : number {
 		var heuristic = 0;
+
+
 		var distance = this.state.getDistance(fstObj,sndObj);
+
 
 		heuristic += this.state.objectsOnTop(sndObj);
 
@@ -91,11 +94,10 @@ class WorldStateNode{
     private holdingHeuristic(fstObj : string) : number {
         var heuristic = 0;
 
-        // We need to:
         // - move to the objects stack.
         heuristic += Math.abs(this.state.arm - this.state.getStackNumber(fstObj));
         // - remove each object that is on top of the object (min. 4 moves per obj)
-        heuristic += this.state.objectsOnTop(fstObj);
+        heuristic += this.state.objectsOnTop(fstObj) * 4;
         // - pick up the object.
         heuristic++;
 

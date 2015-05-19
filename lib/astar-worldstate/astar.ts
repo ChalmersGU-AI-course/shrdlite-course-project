@@ -2,6 +2,7 @@
 /// <reference path="WorldStateNode.ts" />
 /// <reference path="../../Interpreter.ts" />
 /// <reference path="WorldStateEdge.ts" />
+/// <reference path="../utils.ts" />
 
 var logging = false;
 
@@ -19,7 +20,7 @@ module aStar {
             var currentPath : Path = pathsToEvaluate.dequeue();
 
             //console.log(currentPath.getNode().state.toString());
-            //sleep(2000);
+            //utils.sleep(200);
             if(logging) {
                 console.log("evaluating " + currentPath.toString());
                 console.log("Distance is  " + currentPath.getDistance());
