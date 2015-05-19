@@ -77,10 +77,28 @@ module Interpreter {
                     , locationsIntrprt = findEntities(cmd.loc.ent, objects, pddlWorld.rels)
                 // How entity will be positioned on location (ontop, inside, ...)
                     , rel = cmd.loc.rel;
-                if (entitiesIntrprt.length > 1 || locationsIntrprt.length > 1) {
-                    console.warn('Interpreter warning: ambiguous entity or location!' +
-                        'Returning multiple interpretations');
+                if (entitiesIntrprt.length > 1) {
+                    var promptStr = 'Multiple objects to move found:\n'
+                    for(var i in entitiesIntrprt){
+                        promptStr += i + '. The ' + entitiesIntrprt[i][0][0].size + ' ' 
+                        + entitiesIntrprt[i][0][0].color + ' ' + entitiesIntrprt[i][0][0].form + '.\n';
+                    }
+                    promptStr += 'Which one did you mean?';
+                    var selected = Number(prompt(promptStr));
+                    entitiesIntrprt = [entitiesIntrprt[selected]];
                 }
+
+                if(locationsIntrprt.length > 1){
+                    var promptStr = 'Multiple locations to move to found:\n'
+                    for(var i in locationsIntrprt){
+                        promptStr += i + '. The ' + locationsIntrprt[i][0][0].size + ' ' 
+                        + locationsIntrprt[i][0][0].color + ' ' + locationsIntrprt[i][0][0].form + '.\n';
+                    }
+                    promptStr += 'Which one did you mean?';
+                    var selected = Number(prompt(promptStr));
+                    locationsIntrprt = [locationsIntrprt[selected]];
+                }
+                
                 // Add all possible combinations of interpretations 
                 interpretations = combineStuff(toIds(entitiesIntrprt), toIds(locationsIntrprt), rel);
             } else { // Move "it", that is, the object the arm is holding.
