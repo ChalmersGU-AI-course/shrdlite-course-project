@@ -265,6 +265,15 @@ function heuristicOntop(first: string, second: string, stacks: string[][]){
     var foundF = -1;
     var foundS = -1;
     var h = 0;
+    if(second == "floor"){
+        h = Number.POSITIVE_INFINITY;
+        for(var i=0; i<stacks.length; i++){
+            if(stacks[i].length<h){
+                foundS=i;
+                h = stacks[i].length;
+            }
+        }
+    }
     for(var i=0; i<stacks.length; i++){
         for(var j=0; j<stacks[i].length; j++){
             if(stacks[i][j] == second){
