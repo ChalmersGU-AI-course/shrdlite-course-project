@@ -731,7 +731,11 @@ module Interpreter {
        */
       private worldObjects(): string[] {
         var stacks = this.state["stacks"];
-        return [].concat.apply([], stacks);
+        var worldObjs = [].concat.apply([], stacks);
+        var obj = this.state["holding"];
+        if(obj)
+          worldObjs.push(obj);
+        return worldObjs;
       }
 
       /*
