@@ -214,6 +214,9 @@ module Interpreter {
         
         //All objects in the world
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        if(state.holding != null){
+            objs.push(state.holding);
+        }
         
         //The wanted object(s)
         var object = cmd.ent.obj;
