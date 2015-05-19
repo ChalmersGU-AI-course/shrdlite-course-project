@@ -95,7 +95,7 @@ class WorldStateNode{
         var heuristic = 0;
 
         // - move to the objects stack.
-        heuristic += Math.abs(this.state.arm - this.state.getStackNumber(fstObj));
+        heuristic += Math.abs(this.state.arm - this.state.getStackIndex(fstObj));
         // - remove each object that is on top of the object (min. 4 moves per obj)
         heuristic += this.state.objectsOnTop(fstObj) * 4;
         // - pick up the object.

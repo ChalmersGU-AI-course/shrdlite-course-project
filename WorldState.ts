@@ -59,6 +59,8 @@ class WorldState {
         return true;
     }
 
+    
+
     satisifiesConditions(conditions : Interpreter.Literal[]) : boolean {
         var result = true;
 
@@ -118,7 +120,7 @@ class WorldState {
 
     objectsOnTop(obj : string) : number {
         if (obj == "floor") {
-            return this.stacks[this.getLowestStackNumber()-1].length;
+            return this.stacks[this.getLowestStackIndex()-1].length;
         } else {
             var objectsOnTop = -1;
 
@@ -136,13 +138,13 @@ class WorldState {
 
     isOnTopOf(fstObj : string, sndObj : string) : boolean {
         if(!this.isHoldingObj(fstObj)) {
-            var firstObjStackNumber = this.getStackNumber(fstObj);
+            var firstObjStackIndex = this.getStackIndex(fstObj);
 
             if(sndObj === "floor") {
-                return this.stackHeight(firstObjStackNumber-1) === 1;
+                return this.stackHeight(firstObjStackIndex) === 1;
             } else {
-                if (firstObjStackNumber === this.getStackNumber(sndObj)) {
-                    return 1 == this.stacks[firstObjStackNumber - 1].indexOf(fstObj) - this.stacks[firstObjStackNumber - 1].indexOf(sndObj);
+                if (firstObjStackIndex === this.getStackIndex(sndObj)) {
+                    return 1 == this.stacks[firstObjStackIndex].indexOf(fstObj) - this.stacks[firstObjStackIndex].indexOf(sndObj);
                 }
             }
         }
@@ -162,10 +164,10 @@ class WorldState {
     }
 
     isAbove(fstObj : string, sndObj : string) : boolean {
-        var stackNumber = this.getStackNumber(fstObj);
+        var stackIndex = this.getStackIndex(fstObj);
 
-        if (stackNumber == this.getStackNumber(sndObj)) {
-            return this.stacks[stackNumber-1].indexOf(fstObj) > this.stacks[stackNumber-1].indexOf(sndObj);
+        if (stackIndex == this.getStackIndex(sndObj)) {
+            return this.stacks[stackIndex].indexOf(fstObj) > this.stacks[stackIndex].indexOf(sndObj);
         }
 
         return false;
@@ -176,7 +178,7 @@ class WorldState {
     }
 
     isLeftOf(fstObj : string, sndObj : string) : boolean {
-        return this.getStackNumber(fstObj) < this.getStackNumber(sndObj);
+        return this.getStackIndex(fstObj) < this.getStackIndex(sndObj);
     }
 
     isRightOf(fstObj : string, sndObj : string) : boolean {
@@ -184,28 +186,29 @@ class WorldState {
     }
 
     getDistance(fstObj : string, sndObj : string) : number {
-        return Math.abs(this.getStackNumber(fstObj) - this.getStackNumber(sndObj));
+        return Math.abs(this.getStackIndex(fstObj) - this.getStackIndex(sndObj));
     }
 
-    getStackNumber(obj : string) : number {
+    getStackIndex(obj : string) : number {
         if (obj == "floor") {
-            return this.getLowestStackNumber();
+            return this.getLowestStackIndex();
         } else {
-            var stackNumber = 1;
+            var stackIndex = 0;
             var found = false;
 
             this.stacks.forEach((stack) => {
                 if (stack.indexOf(obj) >= 0) {
                     found = true;
+                } else {
+                    stackIndex++;
                 }
-                found ? stackNumber : stackNumber++;
             });
 
-            return found ? stackNumber : -1;
+            return found ? stackIndex : -1;
         }
     }
 
-    getLowestStackNumber() : number {
+    getLowestStackIndex() : number {
         var min = 10000;
         var ix = 1;
         var minStack = ix;
@@ -275,9 +278,8 @@ class WorldState {
         }
     }
 
-    stackHeight(stackNumber : number) : number {
-        // TODO: Should this be stackNumber-1 instead since were dealing with stacks and not indexes?
-        return this.stacks[stackNumber].length;
+    stackHeight(stackIndex : number) : number {
+        return this.stacks[stackIndex].length;
     }
 
     isHolding() : boolean {

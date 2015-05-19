@@ -12,7 +12,7 @@ class ObjectDefinition {
 
     // The floor is not an object, so this function does not care about it.
     canBePutOn(otherObj : ObjectDefinition) : boolean {
-        if (!this.largerThan(otherObj) || otherObj.form == "ball") { // smaller objects cannot support larger objects
+        if (!this.largerThan(otherObj) || otherObj.form !== "ball") { // smaller objects cannot support larger objects
             // and balls cannot support anything
 
             if (this.form == "ball") { // balls must be in boxes
