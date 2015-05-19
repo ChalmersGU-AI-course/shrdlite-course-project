@@ -66,19 +66,34 @@ module Planner {
         
         var validInt = [];
         //First go over all the interpretations and filter out non-valid interpretations
+        var numberOfOrs: number = intprt.length;
         intprt.forEach(
             (ints: Interpreter.Literal[]) => {
                 var wasValid = true;
+                numberOfOrs--;
+                
                 ints.forEach(
                     (int: Interpreter.Literal) => {
-                        if(!validInterpretation(int, state.objects)){
-                            wasValid = false;
-                            return false;
-                        } else {
-                            return true;
+                        try{
+                            var validIntFlag = validInterpretation(int, state.objects);
+                        } catch(err){
+                            console.log("PLANNER CHECK VALID numberOfOrs: " + numberOfOrs);
+                            console.log("PLANNER CHECK VALID amount: " + validInt.length);
+                            //err instanceof ValidInterpretationError
+                            if(err instanceof ValidInterpretationError && numberOfOrs==0 && validInt.length == 0){
+                                throw err;
+                            }
                         }
+                        
+                        
+                        
+                        if(!validIntFlag){
+                            wasValid = false;
+                        }
+                        return true;
                     }
                 );
+                
                 
                 if(wasValid){
                     validInt.push(ints);
