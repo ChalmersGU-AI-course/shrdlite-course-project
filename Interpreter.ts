@@ -261,9 +261,75 @@ module Interpreter {
                     if(rightNumberOfResults(cmd.loc.ent.quant, foundLocationKey.length)){
                         
                         if(cmd.ent.quant == "all"){
+                        
+                            /*
+                            var amountOfLocations = foundLocationKey.length;
+                            
+                            for(var i = 0; i < amountOfLocations; i++){
+                                
+                            }
+                        
                             var temp: Literal[] = [];
+                            temp.push(
+                                {pol: true, rel: cmd.loc.rel, args: [objectKeys[0], foundLocationKey[0]]}
+                            );
+                            temp.push(
+                                {pol: true, rel: cmd.loc.rel, args: [objectKeys[1], foundLocationKey[1]]}
+                            );
+                            intprt.push(temp);
+                            
+                            var temp: Literal[] = [];
+                            temp.push(
+                                {pol: true, rel: cmd.loc.rel, args: [objectKeys[0], foundLocationKey[1]]}
+                            );
+                            temp.push(
+                                {pol: true, rel: cmd.loc.rel, args: [objectKeys[1], foundLocationKey[0]]}
+                            );
+                            intprt.push(temp);
+                            */
+                        
+                            
+                            var locationLength = foundLocationKey.length;
+                            for(var objectIndex = 0; objectIndex < objectKeys.length; objectIndex++){
+                                for(var locationIndex = 0; locationIndex < locationLength; locationIndex++){
+                                    
+                                    var locationIndex2 = (locationIndex + objectIndex)%locationLength;
+                                    
+                                    var row = intprt[locationIndex];
+                                    
+                                    var lit: Literal = {pol: true, rel: cmd.loc.rel, args: [objectKeys[objectIndex], foundLocationKey[locationIndex2]]};
+                                    
+                                    if(row == undefined){
+                                        row = [lit];
+                                    } else {
+                                        row.push(lit);
+                                    }
+                                     
+                                    intprt[locationIndex] = row;
+                                }
+                            }
+                            
+                        
+                            /*
+                            foundLocationKey.forEach(
+                                (locationKey: string) => {
+                                    var temp: Literal[] = [];
+                                    objectKeys.forEach(
+                                        (key: string) => {
+                                            temp.push(
+                                                {pol: true, rel: cmd.loc.rel, args: [key, locationKey]}
+                                            );
+                                        }
+                                    );
+                                    intprt.push(temp);
+                                }
+                            );
+                            */
+                        
+                            /*
                             objectKeys.forEach(
                                 (key: string) => {
+                                    var temp: Literal[] = [];
                                     foundLocationKey.forEach(
                                         (locationKey: string) => {
                                             temp.push(
@@ -271,10 +337,10 @@ module Interpreter {
                                             );
                                         }
                                     );
-                                    
+                                    intprt.push(temp);
                                 }
                             );
-                            intprt.push(temp);
+                            */
                         } else {
                             
                             objectKeys.forEach(
@@ -332,9 +398,9 @@ module Interpreter {
             (availableObject: string) => {
                 
                 //Get the properties of the current available object
-                var availableObjectDef = objects[availableObject];;
+                var availableObjectDef = objects[availableObject];
                 
-                if(object.form == availableObjectDef.form){
+                if(object.form == availableObjectDef.form || object.form == "anyform"){
                     
                     if(hasSize && object.size == availableObjectDef.size){
                         checked++;
