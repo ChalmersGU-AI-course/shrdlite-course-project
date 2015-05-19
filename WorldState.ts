@@ -2,6 +2,7 @@
 /// <reference path="ObjectDefinition.ts" />
 /// <reference path="Interpreter.ts" />
 /// <reference path="lib/astar-worldstate/astar.ts" />
+/// <reference path="lib/utils.ts" />
 
 class WorldState {
     stacks: string[][];
@@ -27,6 +28,10 @@ class WorldState {
         return "S: " + this.stacksToString() + ", A: " + this.arm.toString() + ", H: "  + this.holding;
     }
 
+    /**
+     * Returns the amount in objects in this state.
+     * @returns {number} Number of objects in the state.
+     */
     nrOfObjectsInWorld() : number {
         var result = 0;
         this.stacks.forEach((stack) => {
@@ -71,7 +76,6 @@ class WorldState {
             switch (goal.rel) {
                 case "ontop":
                 case "inside":
-                    // TODO: Does not handle the floor well.
                     result = result && this.isOnTopOf(fstObj,sndObj);
                     break;
                 case "above":
@@ -141,7 +145,7 @@ class WorldState {
             var firstObjStackIndex = this.getStackIndex(fstObj);
 
             if(sndObj === "floor") {
-                return this.stackHeight(firstObjStackIndex) === 1;
+                return this.stacks[firstObjStackIndex][0] === fstObj;
             } else {
                 if (firstObjStackIndex === this.getStackIndex(sndObj)) {
                     return 1 == this.stacks[firstObjStackIndex].indexOf(fstObj) - this.stacks[firstObjStackIndex].indexOf(sndObj);
@@ -152,15 +156,12 @@ class WorldState {
     }
 
     stacksToString() : string {
-        var result = "";
-
+        var strBuilder = [];
         this.stacks.forEach((stack) => {
-            result += "[";
-            result += stack.toString();
-            result += "]";
+            strBuilder.push("[" + stack.toString() + "]");
         })
 
-        return result;
+        return strBuilder.toString();
     }
 
     isAbove(fstObj : string, sndObj : string) : boolean {
@@ -186,6 +187,7 @@ class WorldState {
     }
 
     getDistance(fstObj : string, sndObj : string) : number {
+        // TODO: Needs to handle floor.
         return Math.abs(this.getStackIndex(fstObj) - this.getStackIndex(sndObj));
     }
 
@@ -267,7 +269,7 @@ class WorldState {
 
         if (!this.isHolding()) {
             return false;
-        } else if (stackHeight == 0) {
+        } else if (stackHeight === 0) {
             return true;
         } else {
             var topObjName : string = this.stacks[this.arm][stackHeight-1];
@@ -289,6 +291,7 @@ class WorldState {
     isHoldingObj(obj : string) : boolean {
         return this.holding === obj;
     }
+
 
     clone(obj) : WorldState {
         var newStacks : string[][] = [];

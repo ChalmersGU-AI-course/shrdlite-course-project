@@ -68,7 +68,7 @@ module Interpreter {
             }
             var locs : Sayings = interpretLocation(cmd.loc, state);
             var physics : objLocPair[][] = buildRules(true, objs, locs, state);
-            
+
             //objs = physics.keys;
             physics.forEach(or => {
                 var andList : Literal[] = [];
@@ -83,7 +83,7 @@ module Interpreter {
                 return true;
             });
             //Only place we know which object to put where
-           
+
             return lit;
         } else {
             var objs : string[][] = interpretEntity(cmd.ent, state);
@@ -123,7 +123,7 @@ module Interpreter {
                 o1.forEach(o2 => {
                     l.push(o2);
                     return true;
-                    });
+                });
                 return true;
             });
             newObjs.push(l);
@@ -136,7 +136,7 @@ module Interpreter {
     function interpretObject(obj : Parser.Object, state : WorldState) : string[][] {
         if(obj.obj != null){
             var objs : string[][] = interpretObject(obj.obj, state);
-            
+
             var locs : Sayings = interpretLocation(obj.loc, state);
             var physics : objLocPair[][] = buildRules(false, objs, locs, state);
 
@@ -150,7 +150,7 @@ module Interpreter {
                 objs.push(r);
                 return true;
             });
-                //e = physics.keys;
+            //e = physics.keys;
             return objs;
         }else{
             var objsindexes : string[] = Array.prototype.concat.apply([], state.stacks);
@@ -182,26 +182,26 @@ module Interpreter {
         var locs : Sayings = {rel:loc.rel, objs:interpretEntity(loc.ent, state)}
         return locs;
     }
-   	
+
     function buildRules(futureState: boolean, objs : string[][], locs : Sayings, state : WorldState) : objLocPair[][] {
         var grid : objLocPair[][] = [];
         var newObjs : string[][] = [];
         var newLocs : string[][] = [];
         objs.forEach(and => {
-        	var perms : string[][] = permute(and, [],[]); 	
-        	perms.forEach(r => newObjs.push(r));
-        	return true;
+            var perms : string[][] = permute(and, [],[]);
+            perms.forEach(r => newObjs.push(r));
+            return true;
         });
         objs = newObjs;
         locs.objs.forEach(and => {
-        	var perms : string[][] = permute(and, [],[]); 	
-        	perms.forEach(r => newLocs.push(r));
-        	return true;
+            var perms : string[][] = permute(and, [],[]);
+            perms.forEach(r => newLocs.push(r));
+            return true;
         });
         locs.objs = newLocs;
         objs.forEach(objList => { //or obj
             locs.objs.forEach(locList => {  //or locs
-            	console.log(" locs " +locList.length + " objs " +objList.length);
+                console.log(" locs " +locList.length + " objs " +objList.length);
                 var row : objLocPair[] = [];
                 objList.forEach(obj => { //and obj 
                     locList.forEach(loc => {    //and locs
@@ -209,25 +209,23 @@ module Interpreter {
                             if(row.every(p => p.obj !== obj &&(loc === "floor" || p.loc !== loc))) {
                                 row.push({"obj":obj, "loc":loc});
                             }
-                        }   
+                        }
                         return true;
                     });
                     return true;
                 });
-	            if(row.length>0 && row.length === locList.length*objList.length ){
-	                var contains : boolean = grid.some(r => { var b : boolean =  row.every(p => 
-	                	((locs.rel==="below" && p.obj === "floor")|| r.some(o => o.obj === p.obj)) &&
-	                	((locs.rel!=="below" && p.loc === "floor")|| r.some(o => o.loc === p.loc))); console.log("lower: "+b);return b;})
-	                if(!contains){
-	                	grid.push(row);
-	                }
-	            }
+                if(row.length>0 && row.length === locList.length*objList.length ){
+                    var contains : boolean = grid.some(r => { var b : boolean =  row.every(p =>
+                    ((locs.rel==="below" && p.obj === "floor")|| r.some(o => o.obj === p.obj)) &&
+                    ((locs.rel!=="below" && p.loc === "floor")|| r.some(o => o.loc === p.loc))); console.log("lower: "+b);return b;})
+                    if(!contains){
+                        grid.push(row);
+                    }
+                }
                 return true;
             });
             return true;
         });
-        
-
 
         return grid;
     }
@@ -238,7 +236,7 @@ module Interpreter {
             switch(rel) {
                 case "ontop":
                     if(loc === "floor"){
-                        return futureState || state.stacks.some(e => e.indexOf(obj) === 0);
+                        return futureState || state.isOnTopOf(obj, loc);
                     } else{
                         works = futureState || state.isOnTopOf(loc ,obj);
                         works = works && formCorrectlyOnTop(loc, obj, state);
@@ -253,17 +251,17 @@ module Interpreter {
                     break;
                 case "beside":
                     if(loc !== "floor"){
-                        return futureState || Math.abs(checkHorizontalDistance(state.stacks, obj, loc)) == 1
+                        return futureState || state.isBeside(obj, loc);
                     }
                     break;
                 case "rightof":
                     if(loc !== "floor"){
-                        return futureState || checkHorizontalDistance(state.stacks, obj, loc) >= 1
+                        return futureState || state.isRightOf(obj, loc);
                     }
                     break;
                 case "leftof":
                     if(loc !== "floor"){
-                        return futureState || checkHorizontalDistance(state.stacks , obj, loc) <= -1
+                        return futureState || state.isLeftOf(obj, loc);
                     }
                     break;
                 case "above":
@@ -289,16 +287,6 @@ module Interpreter {
         }
         return false;
     }
-    
-    function getindexOfObject(stacks : string[][], obj : string) : number[] {
-        for(var i = 0; i<stacks.length; i++){
-            var index = stacks[i].indexOf(obj);
-            if(index > -1){
-                return [i,index];
-            }
-        }
-        return [-1,-1];
-    }
 
     //Keep this or change inside and ontop to depenid on context?
     function formCorrectlyInside(locationObject : string, object : string, state : WorldState) : boolean {
@@ -316,10 +304,10 @@ module Interpreter {
             }
             if(locSize === "small"){
                 return false;
-            } 
+            }
             return objSize === "small";
         }
-        return false;   
+        return false;
     }
 
     function formCorrectlyOnTop(locationObject : string, object : string, state : WorldState) : boolean {
@@ -333,6 +321,7 @@ module Interpreter {
         var objSize : string = state.objects[object].form;
         var locForm : string = state.objects[locationObject].form;
         var locSize : string = state.objects[locationObject].form;
+
         if(locForm === "box"){
             return false;
         }
@@ -340,8 +329,8 @@ module Interpreter {
             return false;
         }
         if(objForm === "box"){
-        //Small boxes cannot be supported by small bricks or pyramids
-        //Large boxes cannot be supported by large pyramids
+            //Small boxes cannot be supported by small bricks or pyramids
+            //Large boxes cannot be supported by large pyramids
             if(objSize === "small"){
                 return !((locForm === "brick" || locForm === "pyramid") && locSize === "small");
             }
@@ -352,17 +341,17 @@ module Interpreter {
     }
 
     function notAboveBall(bottomObject : string, state : WorldState) :boolean {
-       return bottomObject === "floor" || state.objects[bottomObject].form !== "ball";
+        return bottomObject === "floor" || state.objects[bottomObject].form !== "ball";
     }
 
 
     function smallOnTopOfLarge(bottomObject : string, topObject : string, state : WorldState) : boolean {
         if(topObject === "floor"){
             return false;
-	}
+        }
         if(bottomObject === "floor") {
-	    return true;
-	}
+            return true;
+        }
         var topSize : string  = state.objects[topObject].size;
         var bottomSize : string = state.objects[bottomObject].size;
         if(bottomSize === "large") {
@@ -371,29 +360,19 @@ module Interpreter {
         return topSize === "small";
     }
 
-    function checkHorizontalDistance(stacks: string[][], obj : string, locObj : string) : number{
-        var indexLoc : number = getindexOfObject(stacks, locObj)[0];
-        var indexobj : number = getindexOfObject(stacks, obj)[0];
-        if(indexLoc>=0 && indexobj>=0 ){
-            return indexobj - indexLoc;
-        } 
-        throw("if this happens... everything is broken. :(");
-        return 0;
+    function permute(input : string[], usedChars : string[], permArr : string[][]) {
+        var i : number, ch : string;
+        for (i = 0; i < input.length; i++) {
+            ch = input.splice(i, 1)[0];
+            usedChars.push(ch);
+            if (input.length == 0) {
+                permArr.push(usedChars.slice());
+            }
+            permute(input, usedChars, permArr);
+            input.splice(i, 0, ch);
+            usedChars.pop();
+        }
+        return permArr;
     }
-
-	function permute(input : string[], usedChars : string[], permArr : string[][]) {
-		var i : number, ch : string;
-		for (i = 0; i < input.length; i++) {
-	   		ch = input.splice(i, 1)[0];
-	    	usedChars.push(ch);
-	    	if (input.length == 0) {
-	      		permArr.push(usedChars.slice());
-	    	}
-	    	permute(input, usedChars, permArr);
-	    	input.splice(i, 0, ch);
-	    	usedChars.pop();
-	  	}
-	  	return permArr;
-	}
 }
 

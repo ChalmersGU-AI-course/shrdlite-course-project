@@ -51,17 +51,30 @@ class WorldStateNode{
 	private onTopHeuristic(fstObj : string, sndObj : string) : number {
 		var heuristic = 0;
 
+        if(sndObj === "floor") {
+            // TODO: Not completed, needs to be thought through.
 
-		var distance = this.state.getDistance(fstObj,sndObj);
+            // Remove each object on top of the first object.
+            heuristic += this.state.objectsOnTop(fstObj) * 4;
 
+            // Move to lowest stack.
+            heuristic += Math.abs(this.state.arm - this.state.getLowestStackNumber());
 
-		heuristic += this.state.objectsOnTop(sndObj);
+            // Remove each object from lowest stack.
+            heuristic += this.state.stackHeight(this.state.getLowestStackNumber()) * 4;
+        } else {
+            var distance = this.state.getDistance(fstObj,sndObj);
 
-		if (distance != 0) {
-			heuristic += this.state.objectsOnTop(fstObj);
-		}
+            // If they arent in the same stack, remove each object on top of fstObj (min 4 moves per).
+            if (distance != 0) {
+                heuristic += this.state.objectsOnTop(fstObj) * 4;
+            }
 
-		heuristic += 2 + distance;
+            // Remove each object on top of sndObj (min 4 moves per).
+            heuristic += this.state.objectsOnTop(sndObj) * 4;
+
+            heuristic += 2 + distance;
+        }
 
 		return heuristic;
 	}
@@ -69,7 +82,9 @@ class WorldStateNode{
     private aboveHeuristic(fstObj : string, sndObj : string) : number {
 		var heuristic = 0;
 
-		heuristic += this.state.objectsOnTop(fstObj);
+        // Move each object on top of fstObj;
+		heuristic += this.state.objectsOnTop(fstObj) * 4;
+
 		heuristic += 2 + this.state.getDistance(fstObj,sndObj);
 
 		return heuristic;
@@ -79,7 +94,8 @@ class WorldStateNode{
 		var heuristic = 0;
 		var chosenObj = this.state.objectsOnTop(fstObj) < this.state.objectsOnTop(sndObj) ? fstObj : sndObj;
 
-		heuristic += this.state.objectsOnTop(chosenObj);
+        // Move each object on top of the choosen object.
+		heuristic += this.state.objectsOnTop(chosenObj) * 4;
 		heuristic += 2;
 
 		if (side === "either") {
