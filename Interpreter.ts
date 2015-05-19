@@ -435,9 +435,7 @@ module Interpreter {
 			}
 		}
         return objs.toArray();
-    }
-    
-    
+    }   
     
     function identifyEnt(ent : Parser.Entity, rel : string , 
     		obj : string ,state : WorldState):Literal[][]{
@@ -505,65 +503,7 @@ module Interpreter {
         var intprt : Literal[][] = [];
         var n : number = 0; 
     	var temp : Literal [][] = [];
-    /*	for(var i = 0; i < result.length; i++){
-    		
-    		var tint : Literal[][] = [];
-    		if(ent.obj.loc){
-    		//	var lstlits : string[] = findendliterals(result[i]);
-	    		for(var l = 0; l < result.length; l++){
-	    			if(ent.quant == "all"){
-	    				n = 0;
-	    			}
-	    			var ob = state.objects[result[l]];
-	    			var object : Parser.Object = {obj: {
-	    						obj:null, loc :null,size:ob.size, color: ob.color, form:ob.form}, 
-	    						loc : ent.obj.loc , size:ob.size, color: ob.color, form:ob.form};
-	    			var tempent : Parser.Entity = {quant:"any", obj: object};
-	    			temp = identifyEnt(tempent, null, null, state);
-	    		//	tint = append(tint, temp);
-	    			if(ent.quant == "all"){
-	    				tint = merge(tint, temp);
-	    			}else{
-	    				tint = append(tint, temp);
-	    			}
-	    		}
-	    		var ks : number[] = [0];
-	    		var maxL = 0;
-	    		if(tint[0]){
-	    			if(tint[0].length > result[i].length){
-	    				maxL = tint[0].length;
-	    			}else{
-	    				maxL = result[i].length;
-	    			}
-	    		}
-	    		
-	    		for(var j = 0; j < maxL; j++){
-	    			ks.push(0);
-	    		}
-	    		var test = combineLiterals([],tint, locresults[i], ks, ent.obj.loc.rel);
-	    		var clearedlits : Literal[][]= [];
-				for(var m = 0; m < test.length; m++){
-					var lits = clearIlligal(clone<Literal[]>(test[m]), state);
-					if(lits.length > 0){
-						clearedlits.push(lits); 
-					}
-					
-				}
-				intprt = append(intprt,clearedlits);
-			}else{
-				if(ent.quant != "all"){
-					n = i;
-				}
-				
-				var lit = {pol : true, rel : rel, args : [result[i]]};
-				if(!intprt[n]){
-					intprt[n] = [];
-				}
-				intprt[n].push(lit);
-			}
-    	}*/
         
-    	
     	// combine with possible locations
     	
     	var intrpt : Literal[][] = [];
