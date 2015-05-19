@@ -7,17 +7,16 @@ Planner.plan = function plan(interpretations, currentState) {
     window.debugstate = currentState.objects;
     // var TMP_rules = [{rel: "ontop", args: ["e", "k"]},
     //                 {rel: "ontop", args: ["l", "floor"]}];
-    var TMP_rules = [{rel: 'ontop', item:'e', oneof:['k']},
-                     {rel: 'floor', item:'l'}
-                    ];
+    // var TMP_rules = [{rel: 'ontop', item:'e', oneof:['k']},
+    //                  {rel: 'floor', item:'l'}
+    //                 ];
     var plans = [];
     for (var inter of interpretations) {
-        inter.plan = window.plannerCore(currentState, TMP_rules);
+        inter.plan = window.plannerCore(currentState, inter);
         console.log(inter.plan);
         if (inter.plan === undefined) {
             continue;
         } else if (inter.plan.length === 0) {
-            console.log("APA");
             throw new Planner.Error("It is already satisfied");
             // plans.push(["Already satisfied"]);
         } else {
