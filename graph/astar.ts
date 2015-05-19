@@ -48,21 +48,7 @@ module astar {
             }
         
             //Create next states
-            var neighbours = generateNeighbours(currentNode);
-            
-            //Add next states to the graph
-            neighbours.forEach(
-                function addNode(neighbour: graphmodule.GraphNode<T>){
-                    
-                    //Add the neighbour to the graph
-                    graph.addNode(neighbour);
-                    
-                    //Add edge between current node and neighbour
-                    graph.addEdge(currentNode.id, neighbour.id, 1, true);
-                    
-                    return true;
-                }
-            );
+            generateNeighbours(currentNode);
         
             currentAd.neighbours.forEach(
                 function addEdge(edge: graphmodule.Edge<T>) {

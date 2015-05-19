@@ -209,7 +209,7 @@ module Planner {
             }
         ,
             (basedOn: graphmodule.GraphNode<string[][]>) => {
-                return permutateBasedOn(basedOn, state.objects);
+                return permutateBasedOn(basedOn, state.objects, graph);
             }
         );
         
