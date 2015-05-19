@@ -90,7 +90,7 @@ module Interpreter {
                     sources.forEach((source) => {
                         targets.forEach((target) => {
                             new_lit= { pol: true, rel: cmd.loc.rel, args: [source, target] };
-                            if(checkLiteral(state,new_lit))literals.push(new_lit);
+                            if(checkLiteral(state,new_lit).val)literals.push(new_lit);
                         });
                     });
                     if (literals.length) intprt.push(literals);
