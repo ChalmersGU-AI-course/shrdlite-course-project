@@ -96,12 +96,12 @@ module Planner {
         
         var plan : string[] = [];
         
-        var startStack = state.stacks;
+        var startStacks = state.stacks;
         var arm = state.arm;
         
         var holding = state.holding;
         
-        var dropPlan: string[] = []
+        var dropPlan: string[] = [];
        
         //console.log("holding: " + holding);
        
@@ -113,42 +113,40 @@ module Planner {
             //The arm holds something. "Drop" it at the first available place
             //TODO: kanske är dumt att bara lägga ner den, kan förvärra slutresultatet
             //console.log("starting to loop...");
-            for(var i = 0; i < startStack.length; i++){
+            for(var i = 0; i < startStacks.length; i++){
                 //console.log("Looping: " + i);
                 var bottomElement: string = undefined;
                 
-                if(startStack[i].length > 0){
-                    bottomElement = startStack[i][startStack[i].length-1];
+                if(startStacks[i].length > 0){
+                    bottomElement = startStacks[i][startStacks[i].length-1];
                 }
                 //console.log("bottomElement: " + bottomElement);
                 
                 if(validPlacement(holding, bottomElement, state.objects)){
-                    //console.log("found valid placement! at index=" + i);
+                    console.log("drop plan to stack " + i);
+                    dropPlan.push("dropping " + getObject(state,holding));
                     moveArmTo(dropPlan, arm, i);
                     arm = i;
                     dropPlan.push("d");
-                    startStack[i].push(holding);
+                    startStacks[i].push(holding);
                     objectDropIndex = i;
                     break;
                 }
             }
-        } 
-        //console.log("Stacks2.1: " + prettyMat(state.stacks));
-        //console.log("Stacks2.2: " + prettyMat(startStack));
-        
-        var endStack = [[],["g","l", "e"],[],["k","m","f"],[]];
+        }
         
         //Create the graph
         var graph = new graphmodule.Graph<string[][]>();
         
-        //Convert the startStack and starId to a node
-        var startId = generateID(startStack);
-        var startNode = new graphmodule.GraphNode<string[][]>(startId, startStack);
+        //Convert the startStacks and starId to a node
+        var startId = generateID(startStacks);
+        var startNode = new graphmodule.GraphNode<string[][]>(startId, startStacks);
         
         //Add start node to the graph
         graph.addNode(startNode);
         
-        //console.log("graph before A*: " + graph.toString());
+        var usedIntprt;
+        
         
         //Compute the shortest path!
         var path = astar.compute(graph, startId, 
@@ -169,6 +167,7 @@ module Planner {
                         }
                     }
                     if(ret){
+                        usedIntprt = intprt[i];
                         break;
                     }
                 }
@@ -209,10 +208,11 @@ module Planner {
             // there while doing the A* search.
             if(objectDropIndex != undefined){
                 //The object is now at column objectDropIndex
-                startStack[objectDropIndex].pop();
+                startStacks[objectDropIndex].pop();
             }
+            console.log("path is empty adding drop plan");
             //Now only do the dropPlan
-            return dropPlan;
+            plan = plan.concat(dropPlan);
         }
         
         var first = true;
@@ -239,10 +239,11 @@ module Planner {
                     // there while doing the A* search.
                     if(objectDropIndex != undefined){
                         //The object is now at column objectDropIndex
-                        startStack[objectDropIndex].pop();
+                        startStacks[objectDropIndex].pop();
                     }
                     
                     if(objectID == holding){
+                        console.log("fancy drop plan");
                         //The dropPlan was not executed, so reset the arm position
                         arm = armPositionWithoutDropPlan;
                         
@@ -250,7 +251,8 @@ module Planner {
                         arm = to;
                         plan.push("d");
                     } else {
-                        plan.concat(dropPlan);
+                        console.log("regular drop plan");
+                        plan = plan.concat(dropPlan);
                         arm = moveObject(plan, arm, from, to);
                     }
                 }else{
@@ -261,6 +263,25 @@ module Planner {
             }
         );
         
+        var endStacks = startStacks;
+        if(!path.isEmpty()){
+            endStacks = path.path.last().to.data;
+        }
+        //Add pick up to plan if needed
+        for(var i=0; i<usedIntprt.length; i++){
+            if(usedIntprt[i].rel == "holding"){
+                console.log("needs to do a pick up");
+                var j=0;
+                console.log("first top object " + endStacks[j][endStacks[j].length-1]);
+                while(++j<endStacks.length && endStacks[j-1][endStacks[j-1].length-1] != usedIntprt[i].args[0]);
+                j--;
+                plan.push("picking up " + getObject(state, usedIntprt[i].args[0]));
+                moveArmTo(plan, arm, j);
+                arm = j;
+                plan.push("p");
+                break;
+            }
+        }
         //console.log("------------planInterpretation returns 3------------");
         return plan;
         
@@ -324,10 +345,6 @@ module Planner {
     }
     
     function moveArmTo(plan: string[], arm: number, to: number){
-        //console.log("Planner.moveArmTo: ______________________");
-        //console.log("Planner.moveArmTo: arm=" + arm);
-        //console.log("Planner.moveArmTo: to=" + to);
-        //console.log("Planner.moveArmTo: ----------------------");
         if(arm == undefined || to == undefined){
             throw new Planner.Error("moveArmTo: arm or to is undefined!");
         }
