@@ -104,8 +104,6 @@ module Interpreter {
             return this.put(cmd.loc);
           case "move":
             return this.move(cmd.ent, cmd.loc);
-          default:
-            throw new Interpreter.Error("derive: unrecognized verb");
         }
       }
 
@@ -158,7 +156,9 @@ module Interpreter {
         if(this.isFloor(loc.ent.obj))
           return this.floorLiteral([obj]);
 
-        return this.the([obj], loc.rel, refQuant, refs);
+        // specification of object for throwing undestandable errors
+        var refspec = this.rootObject(loc.ent.obj);
+        return this.the([obj], loc.rel, refQuant, refs, refspec);
       }
 
       /*
@@ -179,13 +179,17 @@ module Interpreter {
         if(this.isFloor(loc.ent.obj))
           return this.floorLiteral(objs);
 
+        // specification of object for throwing undestandable errors
+        var objspec = this.rootObject(ent.obj);
+        var refspec = this.rootObject(loc.ent.obj);
+
         switch(objQuant) {
           case "the":
-            return this.the(objs, loc.rel, refQuant, refs);
+            return this.the(objs, loc.rel, refQuant, refs, refspec);
           case "any":
-            return this.any(objs, loc.rel, refQuant, refs);
+            return this.any(objs, loc.rel, refQuant, refs, objspec, refspec);
           case "all":
-            return this.all(objs, loc.rel, refQuant, refs);
+            return this.all(objs, loc.rel, refQuant, refs, objspec, refspec);
         }
       }
 
@@ -199,7 +203,8 @@ module Interpreter {
       private the(objs: string[],
                   rel: string,
                   refQuant: string,
-                  refs: string[]): Literal[][] {
+                  refs: string[],
+                  refspec: Parser.Object): Literal[][] {
         var lits: Literal[][];
 
         // Check that not there exist at least one object and one reference
@@ -223,8 +228,9 @@ module Interpreter {
             break;
           case "all":
             if(rel === "ontop" || rel === "inside") {
-              // TODO: single object in objs should exist use it in error
-              error = "A single object cannot be " + rel + " many objects";
+              var objStr = toString(this.findObject(objs[0]));
+              var refStr = toString(refspec);
+              error = "A " + objStr + " cannot be " + rel + " of many " + refStr + "s";
               throw new Interpreter.Error(error);
             }
             lits = this.literals(objs, refs, rel);
@@ -235,11 +241,14 @@ module Interpreter {
 
       /*
        * Handles alternative case when object is quantified by "any"
+       * (The specObj is only used for throwing a correctly understood error)
        */
       private any(objs: string[],
                   rel: string,
                   refQuant: string,
-                  refs: string[]): Literal[][] {
+                  refs: string[],
+                  objspec: Parser.Object,
+                  refspec: Parser.Object): Literal[][] {
         var lits: Literal[][];
 
         // Check that not there exist at least one object and one reference
@@ -264,8 +273,9 @@ module Interpreter {
             break;
           case "all":
             if(rel === "ontop" || rel === "inside") {
-              // TODO: single object in objs should exist use it in error
-              error = "A single object cannot be " + rel + " many objects";
+              var objStr = toString(objspec);
+              var refStr = toString(refspec);
+              error = "A " + objStr + " cannot be " + rel + " of many " + refStr + "s";
               throw new Interpreter.Error(error);
             }
             lits = this.literals(objs, refs, rel);
@@ -276,11 +286,14 @@ module Interpreter {
 
       /*
        * Handles plural case when object is quantified by "all"
+       * (The specObj is only used for throwing a correctly understood error)
        */
       private all(objs: string[],
                   rel: string,
                   refQuant: string,
-                  refs: string[]): Literal[][] {
+                  refs: string[],
+                  objspec: Parser.Object,
+                  refspec: Parser.Object): Literal[][] {
         var lits: Literal[][];
 
         // Check if error occured with objects
@@ -289,11 +302,12 @@ module Interpreter {
           throw new Interpreter.Error(error);
 
         var ontopOrInside = rel === "ontop" || rel === "inside"
+        var objStr = toString(objspec);
+        var refStr = toString(refspec);
         switch(refQuant) {
           case "the":
             if(ontopOrInside) {
-              // TODO: you know what refs and what objects
-              error = "Multiple objects cannot be " + rel + " a single object";
+              error = "Multiple " + objStr + " cannot be " + rel + " a single " + refStr;
               throw new Interpreter.Error(error);
             }
             lits = this.literals(objs, refs, rel);
@@ -307,8 +321,7 @@ module Interpreter {
             var swappedArgs = true;
             if(ontopOrInside) {
               if(refs.length < objs.length) {
-                // TODO: you know what refs and what objects
-                error = "There are not enough references for the objects to be " + rel + " of";
+                error = "There are not enough " + refStr + "s for the " + objStr + "s to be " + rel + " of";
                 throw new Interpreter.Error(error);
               }
               lits = this.literals(refs, objs, rel, swappedArgs);
@@ -339,7 +352,7 @@ module Interpreter {
         var matches: string[] = [];
         if(!obj.loc) {                       // base case: find all objects in spec
           var ids = this.worldObjects();
-          for(var i=0; i<ids.length; i++) {
+          for(var i = 0; i < ids.length; i++) {
             if(this.match(obj, ids[i]))
               matches.push(ids[i]);
           }
@@ -377,8 +390,8 @@ module Interpreter {
         var stacks = this.state["stacks"];
         var target: string;
         var found = false;
-        for(var col=0; col<stacks.length && !found; col++) {
-          for(var row=0; row<stacks[col].length && !found; row++) {
+        for(var col = 0; col < stacks.length && !found; col++) {
+          for(var row = 0; row < stacks[col].length && !found; row++) {
             if(ref === stacks[col][row]) {
               found = true;                       // found: stop searching...
               switch(rel) {
@@ -608,7 +621,7 @@ module Interpreter {
         strobjs.splice(-1, 0, "or");            // insert "or" before the last object
         var enumeration = strobjs.slice(0, -2); // commaseparated part of sentence
         var last = strobjs.slice(-2);           // last part of sentence
-        return "Do you mean" + (rel ? (" " + rel) : "") + enumeration.join(",") + last.join("") + "?";
+        return "Did you mean" + (rel ? (" " + rel) : "") + enumeration.join(",") + last.join("") + "?";
       }
 
       /*
@@ -818,7 +831,7 @@ module Interpreter {
     function uniqueCombinations(lits: Literal[][],
                                 objs: string[],
                                 refs: string[]): Literal[][] {
-      // sorted literals according to ascending length
+      // sort literals according to ascending length
       var sortedLits = lits.sort((a: Literal[], b: Literal[]) => {
         return a.length - b.length;
       });
