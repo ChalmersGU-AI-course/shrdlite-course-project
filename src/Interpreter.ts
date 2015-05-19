@@ -13,7 +13,7 @@ module Interpreter {
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
-            if (intprt.intp) interpretations.push(intprt);
+            if (intprt.intp.length) interpretations.push(intprt);
         });
         if (interpretations.length) {
             return interpretations;
@@ -86,7 +86,7 @@ module Interpreter {
                         );
                     });
                 });
-                intprt.push(literals);
+                if (literals.length) intprt.push(literals);
                 break;
 
           case "grasp":
@@ -122,7 +122,7 @@ module Interpreter {
     function findThe(obj : Parser.Object, state : WorldState, literals : Literal[]) : Key[] {
         var results = findAll(obj, state, literals);
         switch (results.length) {
-            case 0: throw "not found";
+            case 0:
             case 1: return results;
             default: debugger; throw "found multiple"; // TODO
         }
@@ -130,8 +130,7 @@ module Interpreter {
 
     function findAny(obj : Parser.Object, state : WorldState, literals : Literal[]) : Key[] {
       var results = findAll(obj, state, literals);
-      if (results.length == 0) throw "not found";
-      return [results[0]];
+      return results.slice(1);
     }
 
     function findAll(obj : Parser.Object, state : WorldState, allLiterals : Literal[]) : Key[] {
