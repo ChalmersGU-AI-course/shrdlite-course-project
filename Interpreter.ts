@@ -76,6 +76,20 @@ module Interpreter {
         // TODO Maybe we should refactor all the duplicated code for the commands?
 
         var entitiesIntrprt;
+        var resolveAmb = function(intrprt, str1, str2){
+            if (intrprt.length > 1) {
+                var promptStr = 'Multiple ' + str1 + ' to ' + str2 + ' found:\n'
+                for(var i in intrprt){
+                    var obj = intrprt[i][0][0];
+                    promptStr += i + '. The ' + obj.size + ' ' + obj.color + ' ' + obj.form + '.\n';
+                }
+                promptStr += 'Which one did you mean?';
+                var selected = Number(prompt(promptStr));
+                intrprt = [intrprt[selected]];
+            }
+            return intrprt;
+        };
+
         if (cmd.cmd === 'move') {
             // Which entity we should move
             if (cmd.ent) { // Move specified object.
@@ -84,45 +98,20 @@ module Interpreter {
                 entitiesIntrprt = [[state.objectsWithId[state.holding]]];
             }
 
-            var objDefToStr = function(obj){
-                return 'The ' + obj.size + ' ' + obj.color + ' ' + obj.form + '.';
-            };
-
             // Where we should move it
             var locationsIntrprt = findEntities(cmd.loc.ent, objects, pddlWorld.rels)
             // How entity will be positioned on location (ontop, inside, ...)
                     , rel = cmd.loc.rel;
-            if (entitiesIntrprt.length > 1) {
-                var promptStr = 'Multiple objects to move found:\n'
-                for(var i in entitiesIntrprt){
-                    promptStr += i + '. ' + objDefToStr(entitiesIntrprt[i][0][0]) + '\n';
-                }
-                promptStr += 'Which one did you mean?';
-                var selected = Number(prompt(promptStr));
-                entitiesIntrprt = [entitiesIntrprt[selected]];
-            }
-
-            if(locationsIntrprt.length > 1){
-                var promptStr = 'Multiple locations to move to found:\n'
-                for(var i in locationsIntrprt){
-                    promptStr += i + '. ' + objDefToStr(locationsIntrprt[i][0][0]) + '\n';
-                }
-                promptStr += 'Which one did you mean?';
-                var selected = Number(prompt(promptStr));
-                locationsIntrprt = [locationsIntrprt[selected]];
-            }
+            entitiesIntrprt = resolveAmb(entitiesIntrprt, 'objects', 'move');
+            locationsIntrprt = resolveAmb(locationsIntrprt, 'locations', 'move to');
                 
-                // Add all possible combinations of interpretations 
-                interpretations = combineStuff(toIds(entitiesIntrprt), toIds(locationsIntrprt), rel);
+            // Add all possible combinations of interpretations 
+            interpretations = combineStuff(toIds(entitiesIntrprt), toIds(locationsIntrprt), rel);
             
         } else if (cmd.cmd === 'take') {
             // TODO: Should we check (here?) if the arm is already holding something?
             entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels);
-
-            if (entitiesIntrprt.length > 1) {
-                console.warn('Interpreter warning: ambiguous entity or location!' +
-                'Returning multiple interpretations');
-            }
+            entitiesIntrprt = resolveAmb(entitiesIntrprt, 'objects', 'take');
             interpretations = combineStuff(toIds(entitiesIntrprt), null, 'holding');
         }
 
