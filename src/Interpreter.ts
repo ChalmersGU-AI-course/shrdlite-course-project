@@ -312,7 +312,7 @@ module Interpreter {
               var objB = objs[ lit.args[1] ];
               if (objB.form!="box")
                   return { val: false , str:"Only boxes can contain other objects" };
-              else if (objA.size==objB.size && ( objB.form=="pyramid" || objB.form=="plank" ||objB.form=="box") )
+              else if (objA.size==objB.size && ( objA.form=="pyramid" || objA.form=="plank" ||objA.form=="box") )
                   return { val: false , str:"Boxes can not contain pyramids, planks or boxes of the same size" };
               else if (objB.size=="small" && objA.size=="large")
                   return { val: false , str:"Small boxes cannot contain any large object" };
