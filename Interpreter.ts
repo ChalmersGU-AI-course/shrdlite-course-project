@@ -17,12 +17,6 @@ module Interpreter {
         if (interpretations.length > 0 && interpretations[0].intp.length > 0) {
             return interpretations;
         } else {
-            console.log("Interpreter: interpretations = ");
-            console.log(interpretations);
-            console.log("Interpreter: interpretations.length = " + interpretations.length);
-            if (interpretations.length > 0) {
-                console.log("Interpreter: interpretations[0].intp.length = " + interpretations[0].intp.length);
-            }
             throw new Interpreter.Error("Found no interpretation");
         }
     }
@@ -146,10 +140,12 @@ module Interpreter {
 
                 console.log("Target: "+locationTargets[0]);
 
-                if(location.rel === "under"){
-                    moveObj(state, intprt, "above", locationTargets, targets);
+                if(location.rel === "beside" || location.rel === "rightof" || location.rel === "leftof"){
+                    moveObjBeside(state, intprt, location.rel, targets, locationTargets);
+                } else if(location.rel === "under"){
+                    moveObjAbove(state, intprt, "above", locationTargets, targets);
                 } else {
-                    moveObj(state, intprt, location.rel, targets, locationTargets);
+                    moveObjAbove(state, intprt, location.rel, targets, locationTargets);
                 }
                 break;
             default:
@@ -159,7 +155,25 @@ module Interpreter {
         return intprt;
     }
 
-    function moveObj(state : WorldState, intprt, locationRel, fromList, toList){
+    function moveObjBeside(state : WorldState, intprt, locationRel, fromList, toList){
+        for (var ix in fromList){
+            for(var jx in toList){
+                var object1 = fromList[ix];
+                var object2 = toList[jx];
+
+                if( object1 == object2){
+                    // make sure not itself
+                    continue;
+                }
+
+                intprt.push( [
+                    {pol: true, rel: locationRel, args: [object1, object2] }
+                ] );
+            }
+        }
+    }
+
+    function moveObjAbove(state : WorldState, intprt, locationRel, fromList, toList){
         for (var ix in fromList){
             for(var jx in toList){
                 var above = fromList[ix];
@@ -168,13 +182,11 @@ module Interpreter {
                 if( above == below){
                     continue;
                 }
-                console.log("Interpreter.moveObj: Reaches this...");
-                // Found the bug!
+
                 if(! canSupport( findObjDef(state, above), findObjDef(state, below))){
                     // state.objects[above], state.objects[below])){
                     continue;
                 }
-                console.log("Interpreter.moveObj: ...but not this");
 
                 intprt.push( [
                     {pol: true, rel: locationRel, args: [above, below] }
