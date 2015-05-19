@@ -86,11 +86,11 @@ module Interpreter {
                 product(sourcesBranches, targetBraches).forEach((param) => {
                     var sources = param[0], targets = param[1];
                     var literals : Literal[] = [];
+                    var new_lit: Literal;
                     sources.forEach((source) => {
                         targets.forEach((target) => {
-                            literals.push(
-                                { pol: true, rel: cmd.loc.rel, args: [source, target] }
-                            );
+                            new_lit= { pol: true, rel: cmd.loc.rel, args: [source, target] };
+                            if(checkLiteral(state,new_lit))literals.push(new_lit);
                         });
                     });
                     if (literals.length) intprt.push(literals);
