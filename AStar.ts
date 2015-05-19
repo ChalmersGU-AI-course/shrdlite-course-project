@@ -119,7 +119,7 @@ module AStar {
 			i++;
 		}
 	//	pathList[pathList.length] = "<br> The Path: " + startNod.getid();
-		pathList[pathList.length] = "The cost of the total path: " + cost;
+		pathList[pathList.length] = "The cost of the total path: " + cost +",";
 	//	pathList[pathList.length] ="";
 		return pathList.reverse();
 	}

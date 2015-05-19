@@ -199,21 +199,25 @@ module Planner {
     	var tarIndex : number =  -1;
     	var loc : number = -1;
     	var locIndex : number =  -1;
-    	var minimum : number = 999999999; 
+    	var minimum : number = Number.MAX_VALUE; // 999999999; 
     	
     	for(var i =0; i<goal.length; i++ ){
     		for(var x =0; x<state.stacks.length; x++ ){
 				var stackTar = Interpreter.searchStack(state.stacks[x], goal[i][0].args[0]);
 				var stackLoc = Interpreter.searchStack(state.stacks[x], goal[i][0].args[1]);
 				if(stackTar != -1){
-					tar = state.stacks.length -1 + stackTar;
+					//tar = state.stacks.length -1 + stackTar;
+					tar = state.stacks[x].length - stackTar;
 					tarIndex = x;
-				}else if(stackTar != -1){
-					loc = state.stacks.length -1 + stackLoc;
+				}if(stackTar != -1){
+					//loc = state.stacks.length -1 + stackLoc;
+					loc = state.stacks[x].length - stackLoc;
 					locIndex =x;
 				}
 			}
-			var tmpTot = tar + loc + Math.max(tarIndex - locIndex, locIndex - tarIndex);
+
+			//var tmpTot = tar + loc + Math.max(tarIndex - locIndex, locIndex - tarIndex);
+			var tmpTot = tar + loc +  Math.max(tarIndex - locIndex, locIndex - tarIndex);
 			if(minimum > tmpTot){
 				minimum = tmpTot;
 			}
