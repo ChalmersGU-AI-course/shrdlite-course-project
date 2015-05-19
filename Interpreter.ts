@@ -234,51 +234,58 @@ module Interpreter {
 
     function validatePhysics(futureState: boolean, obj : string, loc : string, rel : string, state : WorldState) : boolean{
         var works : boolean  = false;
-        if(loc!==obj){
-            if(rel === "ontop"){
-               if(loc === "floor"){
-                    return futureState || state.stacks.some(e => e.indexOf(obj) === 0);
-                } else{
-                    works = futureState ||state.stacks.some(e => isOntop(e, loc, obj));
-                    works = works && formCorrectlyOnTop(loc, obj, state);
-                    return works && smallOnTopOfLarge(loc, obj, state);
-                }   
-            } else if(rel === "inside"){
-                if(loc !== "floor"){
-                    works = futureState ||state.stacks.some(e => isOntop(e, loc ,obj));
-                    return works && formCorrectlyInside(loc, obj, state);
-                }  
-            } else if(rel === "beside"){
-                if(loc !== "floor"){
-                    return futureState || Math.abs(checkHorizontalDistance(state.stacks, obj, loc)) == 1
-                }
-            } else if(rel === "rightof"){
-                if(loc !== "floor"){
-                    return futureState || checkHorizontalDistance(state.stacks, obj, loc) >= 1
-                }
-            } else if(rel === "leftof"){
-                if(loc !== "floor"){
-                    return futureState || checkHorizontalDistance(state.stacks , obj, loc) <= -1
-                }
-            } else if(rel === "above"){
-                if(loc === "floor"){
-                    return futureState || state.stacks.some(e => e.indexOf(obj) >= 0);
-                } else{
-                    works = futureState || state.stacks.some(e => isAbove(e, loc, obj));
-                    works = works && notAboveBall(loc, state);
-                    return works && smallOnTopOfLarge(loc ,obj , state);
-                } 
-            } else if(rel === "under"){
-                if(loc !== "floor"){
-                    if(obj === "floor") {
-                        return futureState || state.stacks.some(e => e.indexOf(loc) >= 0);
+        if(loc !== obj) {
+            switch(rel) {
+                case "ontop":
+                    if(loc === "floor"){
+                        return futureState || state.stacks.some(e => e.indexOf(obj) === 0);
                     } else{
-                        works = futureState || state.stacks.some(e => isAbove(e, obj, loc));
-                        works = works && notAboveBall(obj, state);
-                        return works && smallOnTopOfLarge(obj, loc, state);
-                    }   
-                } 
-            } 
+                        works = futureState || state.isOnTopOf(loc ,obj);
+                        works = works && formCorrectlyOnTop(loc, obj, state);
+                        return works && smallOnTopOfLarge(loc, obj, state);
+                    }
+                    break;
+                case "inside":
+                    if(loc !== "floor"){
+                        works = futureState || state.isOnTopOf(loc ,obj);
+                        return works && formCorrectlyInside(loc, obj, state);
+                    }
+                    break;
+                case "beside":
+                    if(loc !== "floor"){
+                        return futureState || Math.abs(checkHorizontalDistance(state.stacks, obj, loc)) == 1
+                    }
+                    break;
+                case "rightof":
+                    if(loc !== "floor"){
+                        return futureState || checkHorizontalDistance(state.stacks, obj, loc) >= 1
+                    }
+                    break;
+                case "leftof":
+                    if(loc !== "floor"){
+                        return futureState || checkHorizontalDistance(state.stacks , obj, loc) <= -1
+                    }
+                    break;
+                case "above":
+                    if(loc === "floor"){
+                        return futureState || state.stacks.some(e => e.indexOf(obj) >= 0);
+                    } else{
+                        works = futureState || state.isAbove(loc,obj);
+                        works = works && notAboveBall(loc, state);
+                        return works && smallOnTopOfLarge(loc ,obj , state);
+                    }
+                    break;
+                case "under":
+                    if(loc !== "floor"){
+                        if(obj === "floor") {
+                            return futureState || state.stacks.some(e => e.indexOf(loc) >= 0);
+                        } else{
+                            works = futureState || state.isAbove(obj, loc);
+                            works = works && notAboveBall(obj, state);
+                            return works && smallOnTopOfLarge(obj, loc, state);
+                        }
+                    }
+            };
         }
         return false;
     }
@@ -333,7 +340,7 @@ module Interpreter {
             return false;
         }
         if(objForm === "box"){
-        //Small boxes cannot be supportet by small bricks or pyramids
+        //Small boxes cannot be supported by small bricks or pyramids
         //Large boxes cannot be supported by large pyramids
             if(objSize === "small"){
                 return !((locForm === "brick" || locForm === "pyramid") && locSize === "small");
@@ -362,17 +369,6 @@ module Interpreter {
             return true;
         }
         return topSize === "small";
-    }
-
-    function isOntop(stack: string[], bottom : string, top : string) : boolean{
-        var bottomIndex = stack.indexOf(bottom);
-        var topIndex = stack.indexOf(top);
-        return bottomIndex >=0 && topIndex >=0 && topIndex - bottomIndex === 1;
-    }
-    function isAbove(stack: string[], bottom : string, top : string) : boolean{
-        var bottomIndex = stack.indexOf(bottom);
-        var topIndex = stack.indexOf(top);
-        return bottomIndex >=0 && topIndex >=0 && topIndex - bottomIndex > 0;
     }
 
     function checkHorizontalDistance(stacks: string[][], obj : string, locObj : string) : number{
