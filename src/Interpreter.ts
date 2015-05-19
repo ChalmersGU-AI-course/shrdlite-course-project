@@ -86,11 +86,10 @@ module Interpreter {
                 product(sourcesBranches, targetBraches).forEach((param) => {
                     var sources = param[0], targets = param[1];
                     var literals : Literal[] = [];
-                    var new_lit: Literal;
                     sources.forEach((source) => {
                         targets.forEach((target) => {
-                            new_lit= { pol: true, rel: cmd.loc.rel, args: [source, target] };
-                            if(checkLiteral(state,new_lit).val)literals.push(new_lit);
+                            var newLit = { pol: true, rel: cmd.loc.rel, args: [source, target] };
+                            if (checkLiteral(state,newLit).val) literals.push(newLit);
                         });
                     });
                     if (literals.length) intprt.push(literals);
@@ -265,7 +264,8 @@ module Interpreter {
     // Checks if a given literal is valid
     // This implements some of the physics laws (not all, since some are not aplicable to only one literal)
 
-  function checkLiteral(world : WorldState, lit: Literal) : any {
+  interface Check {val: boolean; str: string;};
+  function checkLiteral(world : WorldState, lit: Literal) : Check {
       // var relations = ["ontop", "above", "under", "right", "left", "beside", "inside", "holding"];
       var rel=lit.rel;
       var objs=world.objects;
