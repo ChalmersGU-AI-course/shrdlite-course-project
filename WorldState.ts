@@ -201,7 +201,7 @@ class WorldState {
         var strBuilder = [];
         this.stacks.forEach((stack) => {
             strBuilder.push("[" + stack.toString() + "]");
-        })
+        });
 
         return strBuilder.toString();
     }
@@ -252,7 +252,7 @@ class WorldState {
                 if (stack.indexOf(obj) >= 0) {
                     found = true;
                 }
-                found ? stackIndex : stackIndex++;
+                stackIndex = found ? stackIndex : stackIndex+1;
             });
 
             return found ? stackIndex : -1;
@@ -275,17 +275,17 @@ class WorldState {
     }
 
     newWorldMoveLeft() : WorldState {
-        var tempState = this.clone(this);
+        var tempState = this.clone();
         return new WorldState(tempState.stacks, tempState.holding, tempState.arm-1, tempState.objects, tempState.examples);
     }
 
     newWorldMoveRight() : WorldState {
-        var tempState = this.clone(this)
+        var tempState = this.clone();
         return new WorldState(tempState.stacks, tempState.holding, tempState.arm+1, tempState.objects, tempState.examples);
     }
 
     newWorldDrop() : WorldState {
-        var tempState = this.clone(this)
+        var tempState = this.clone();
         var newStacks : string[][] = tempState.stacks;
 
         newStacks[tempState.arm].push(this.holding);
@@ -294,7 +294,7 @@ class WorldState {
     }
 
     newWorldPick() : WorldState {
-        var tempState = this.clone(this)
+        var tempState = this.clone();
         var newStacks  = tempState.stacks;
         var newHolding = newStacks[tempState.arm].pop();
 
@@ -342,7 +342,7 @@ class WorldState {
     }
 
 
-    clone(obj) : WorldState {
+    clone() : WorldState {
         var newStacks : string[][] = [];
 
         for(var i = 0; i < this.stacks.length; i++) {

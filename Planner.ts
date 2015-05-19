@@ -57,10 +57,4 @@ module Planner {
             throw new Planner.Error("Could not plan a path that fulfills the goals.")
         }
     }
-
-
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
-    }
-
 }
