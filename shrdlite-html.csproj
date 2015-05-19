@@ -25,6 +25,7 @@
     <Content Include="lib\gl-matrix-min.js" />
     <Content Include="lib\jquery-1.11.0.min.js" />
     <Content Include="lib\nearley.js" />
+    <Content Include="shrdlite.css" />
     <Content Include="shrdlite.html" />
     <Content Include="web.config" />
   </ItemGroup>
