@@ -1,0 +1,11 @@
+World               Number          Comment
+small               *               Works fine.
+medium              1               Works, but does strange moves.
+medium              3               Does not work.
+medium              6               Works, takes time.
+medium              8               Crashes.
+complex             0               No path, should find path.
+complex             1               Puts things on balls. :(
+complex             2               No path, should find path.
+complex             4               Works but should not work.
+complex             6               No path, not sure if it should find path.
