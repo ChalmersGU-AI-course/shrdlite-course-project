@@ -73,35 +73,36 @@ module Interpreter {
             case "put":
             case "drop":
             case "move":
-                var sources : Key[];
-                if (cmd.ent) sources = find(cmd.ent, state, worldLit)
-                else sources = [getHolding()]
-
-                var targets = find(cmd.loc.ent, state, worldLit);
+                var sourcesBranches : Key[][];
+                if (cmd.ent) sourcesBranches = find(cmd.ent, state, worldLit)
+                else sourcesBranches = [[getHolding()]]
+                var targetBraches = find(cmd.loc.ent, state, worldLit);
                 var literals : Literal[] = [];
-                sources.forEach((source) => {
-                    targets.forEach((target) => {
-                        literals.push(
-                            { pol: true, rel: cmd.loc.rel, args: [source, target] }
-                        );
+                product(sourcesBranches, targetBraches).forEach((param) => {
+                    var sources = param[0], targets = param[1];
+                    var literals : Literal[] = [];
+                    sources.forEach((source) => {
+                        targets.forEach((target) => {
+                            literals.push(
+                                { pol: true, rel: cmd.loc.rel, args: [source, target] }
+                            );
+                        });
                     });
+                    if (literals.length) intprt.push(literals);
                 });
-                if (literals.length) intprt.push(literals);
                 break;
 
-          case "grasp":
-          case "pick up":
-          case "take":
-                var x = find(cmd.ent, state, worldLit);
-                intprt.push([
-                    { pol: true, rel: "holding", args: [x[0]] }
-                ]);
-                // TODO “move/put/drop” “it” at a Location
-                // case "put":
-                //   var target = find(cmd.loc.ent, state, worldLit);
-                //   intprt.push([
-                //     { pol: true, rel: cmd.loc.rel, args: [state.holding, target[0]] }
-                //   ]);
+            case "grasp":
+            case "pick up":
+            case "take":
+                var branches = find(cmd.ent, state, worldLit);
+                branches.forEach((keys) => {
+                    keys.forEach((key) => {
+                        intprt.push([
+                            { pol: true, rel: "holding", args: [key] }
+                        ]);
+                    });
+                });
                 break;
             default: throw "Command not found: " + cmd.cmd;
         };
@@ -110,11 +111,11 @@ module Interpreter {
         return intprt;
     }
 
-    function find(ent : Parser.Entity, state : WorldState, literals : Literal[]) : Key[] {
+    function find(ent : Parser.Entity, state : WorldState, literals : Literal[]) : Key[][] {
         switch (ent.quant) {
-            case "the": return findThe(ent.obj, state, literals);
+            case "the": return [findThe(ent.obj, state, literals)];
             case "any": return findAny(ent.obj, state, literals);
-            // case "all": return findAll(ent.obj);
+            case "all": return [findAll(ent.obj, state, literals)];
             default:    throw "Entity unknown";
         }
     }
@@ -128,9 +129,9 @@ module Interpreter {
         }
     }
 
-    function findAny(obj : Parser.Object, state : WorldState, literals : Literal[]) : Key[] {
-      var results = findAll(obj, state, literals);
-      return results.slice(1);
+    function findAny(obj : Parser.Object, state : WorldState, literals : Literal[]) : Key[][] {
+        var results = findAll(obj, state, literals);
+        return results.map((k) => [k]);
     }
 
     function findAll(obj : Parser.Object, state : WorldState, allLiterals : Literal[]) : Key[] {
@@ -317,6 +318,16 @@ module Interpreter {
 
     function contains(array, item) {
         return array.indexOf(item) >= 0;
+    }
+
+    function product(arrayA, arrayB) {
+        var result : [Key[], Key[]][] = [];
+        arrayA.forEach((a) => {
+            return arrayB.forEach((b) => {
+                result.push([a, b]);
+            });
+        });
+        return result;
     }
 
 }
