@@ -40,7 +40,9 @@ module Shrdlite {
                 world.printError("Parsing error", err.message);
                 return;
             } else {
-                throw err;
+                world.printError("Exception", err.message);
+                return;
+                // throw err;
             }
         }
         world.printDebugInfo("Found " + parses.length + " parses");
