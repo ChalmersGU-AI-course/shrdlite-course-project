@@ -58,8 +58,14 @@ module Interpreter {
         console.log('stacks:', state.stacks);
         console.log('cmd:',cmd);
 
+        //workaround for incorrect command strings
+        if(cmd.cmd === 'put'){
+            cmd.cmd = 'move';
+        }
+
         var objects   = state.objectsWithId
           , pddlWorld = state.pddlWorld;
+
 
         // cmd.cmd: what to do ("move")
         // cmd.ent: what object to do this with (may be undefined, if e.g. "drop")
