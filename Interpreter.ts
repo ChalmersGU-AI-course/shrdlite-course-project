@@ -187,6 +187,7 @@ module Interpreter {
         var grid : objLocPair[][] = [];
         var newObjs : string[][] = [];
         var newLocs : string[][] = [];
+
         objs.forEach(and => {
             var perms : string[][] = permute(and, [],[]);
             perms.forEach(r => newObjs.push(r));
@@ -201,14 +202,16 @@ module Interpreter {
         locs.objs = newLocs;
         objs.forEach(objList => { //or obj
             locs.objs.forEach(locList => {  //or locs
-                console.log(" locs " +locList.length + " objs " +objList.length);
+                //console.log(" locs " +locList.length + " objs " +objList.length);
                 var row : objLocPair[] = [];
                 objList.forEach(obj => { //and obj 
                     locList.forEach(loc => {    //and locs
-                        if(validatePhysics(futureState, obj,loc,locs.rel, state)){
-                            if(row.every(p => p.obj !== obj &&(loc === "floor" || p.loc !== loc))) {
-                                row.push({"obj":obj, "loc":loc});
-                            }
+                        var valid = futureState
+                                    ? state.validPlacement(obj,loc,locs.rel)
+                                    : state.relationExists(obj,loc,locs.rel);
+
+                        if(valid && row.every(p => p.obj !== obj &&(loc === "floor" || p.loc !== loc))) {
+                            row.push({"obj":obj, "loc":loc});
                         }
                         return true;
                     });

@@ -58,10 +58,10 @@ class WorldStateNode{
             heuristic += this.state.objectsOnTop(fstObj) * 4;
 
             // Move to lowest stack.
-            heuristic += Math.abs(this.state.arm - this.state.getLowestStackNumber());
+            heuristic += Math.abs(this.state.arm - this.state.getLowestStackIndex());
 
             // Remove each object from lowest stack.
-            heuristic += this.state.stackHeight(this.state.getLowestStackNumber()) * 4;
+            heuristic += this.state.stackHeight(this.state.getLowestStackIndex()) * 4;
         } else {
             var distance = this.state.getDistance(fstObj,sndObj);
 
@@ -140,7 +140,7 @@ class WorldStateNode{
         var result = false;
 
         goals.forEach((intrprt) => {
-            if(this.state.satisifiesConditions(intrprt)) {
+            if(this.state.satisfiesConditions(intrprt)) {
                 result = true;
             }
         });

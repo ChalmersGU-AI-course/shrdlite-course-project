@@ -64,9 +64,53 @@ class WorldState {
         return true;
     }
 
-    
+    relationExists(obj : string, loc : string, rel : string) : boolean {
+        console.log("RELATIONEXISTS");
+        if(loc !== obj) {
+            switch(rel) {
+                case "ontop":
+                case "inside":
+                    console.log(obj + " " + rel + " " + loc + ": " + this.isOnTopOf(obj,loc));
+                    return this.isOnTopOf(obj,loc);
+                case "beside":
+                    return loc !== "floor" && this.isBeside(obj,loc);
+                case "rightof":
+                    return loc !== "floor" && this.isRightOf(obj,loc);
+                case "leftof":
+                    return loc !== "floor" && this.isLeftOf(obj,loc);
+                case "above":
+                    return this.isAbove(obj,loc);
+                case "under":
+                    return loc !== "floor" && this.isUnder(obj,loc);
+            }
+        }
 
-    satisifiesConditions(conditions : Interpreter.Literal[]) : boolean {
+        return false;
+    }
+
+    validPlacement(fst : string, snd : string, rel : string) : boolean {
+        if(fst !== "floor") {
+             var fstObj = this.objects[fst];
+             var sndObj = this.objects[snd];
+
+             switch (rel) {
+                 case "ontop":
+                 case "inside":
+                     return snd === "floor" || fstObj.canBePutOn(sndObj);
+                 case "above":
+                     return snd === "floor" || (sndObj.form !== "ball" && !fstObj.largerThan(sndObj));
+                 case "under":
+                     return snd !== "floor" || (fstObj.form !== "ball" && !sndObj.largerThan(fstObj)); //TODO second operand of || will crash sometimes
+                 case "beside":
+                 case "leftof":
+                 case "rightof":
+                     return snd !== "floor";
+             }
+        }
+        return false;
+    }
+
+    satisfiesConditions(conditions : Interpreter.Literal[]) : boolean {
         var result = true;
 
         conditions.forEach((goal) => {
@@ -82,7 +126,7 @@ class WorldState {
                     result = result && this.isAbove(fstObj,sndObj);
                     break;
                 case "under":
-                    result = result && this.isAbove(sndObj,fstObj);
+                    result = result && this.isUnder(fstObj,sndObj);
                     break;
                 case "beside":
                     result = result && this.isBeside(fstObj,sndObj);
@@ -165,13 +209,21 @@ class WorldState {
     }
 
     isAbove(fstObj : string, sndObj : string) : boolean {
-        var stackIndex = this.getStackIndex(fstObj);
+        if(sndObj === "floor") {
+            return true;
+        } else {
+            var stackIndex = this.getStackIndex(fstObj);
 
-        if (stackIndex == this.getStackIndex(sndObj)) {
-            return this.stacks[stackIndex].indexOf(fstObj) > this.stacks[stackIndex].indexOf(sndObj);
+            if (stackIndex == this.getStackIndex(sndObj)) {
+                return this.stacks[stackIndex].indexOf(fstObj) > this.stacks[stackIndex].indexOf(sndObj);
+            }
+
+            return false;
         }
+    }
 
-        return false;
+    isUnder(fstObj : string, sndObj : string) : boolean {
+        return this.isAbove(sndObj,fstObj);
     }
 
     isBeside(fstObj : string, sndObj : string) : boolean {
@@ -201,9 +253,8 @@ class WorldState {
             this.stacks.forEach((stack) => {
                 if (stack.indexOf(obj) >= 0) {
                     found = true;
-                } else {
-                    stackIndex++;
                 }
+                found ? stackIndex : stackIndex++;
             });
 
             return found ? stackIndex : -1;
