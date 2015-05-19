@@ -54,8 +54,8 @@ var Interpreter;
         var cmdType = cmd.cmd;
         console.log("cmd type: " + cmdType);
         if (cmdType == "take") {
-            objects = isInState(cmd['ent']['obj'],state);            
-            var intprt = {rel: "holding",item: objects};
+            var object = isInState(cmd['ent']['obj'],state);            
+            var intprt = {rel: "holding", item:object};
             console.log(intprt);
             return intprt;
             
@@ -88,28 +88,30 @@ var Interpreter;
         var color = obj.color;
         var form = obj.form;
         console.log("Is object " + size + " " + color + " " + form + " in state");
-        var objarray = []
+        var objinstate;
         state.stacks.forEach(function (column) {
-            column.forEach(function (object) {
-                console.log("object in state " + object);
-                var object = state.objects[object];
+            column.forEach(function (thing) {
+                //console.log("object in state " + object);
+                var object = state.objects[thing];
                 var string1 = "size " + object.size;
                 var string2 = " color " + object.color;
                 var string3 = " form " + object.form;
 
-                console.log(string1 + string2 + string3);
+                //console.log(string1 + string2 + string3);
                 var isSize = object.size == size || size == null;
                 var isColor = object.color == color || color == null;
                 var isForm = object.form == form || form == 'anyform';
-                console.log(isSize + " " + isColor + " " + isForm);
+                //console.log(isSize + " " + isColor + " " + isForm);
                 if (isSize && isColor && isForm) 
-                {
-                    objarray.push(object);
-                    console.log("Object in world");
+                {   
+
+                    objinstate = thing;
+                    //console.log("Pushed " + object);
+                    console.log(objinstate);
                 }                
             });
         });
-        return objarray;                
+        return objinstate;                
     }
 })(Interpreter || (Interpreter = {}));
 //put the white ball that is in a box on the floor:
