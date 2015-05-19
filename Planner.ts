@@ -205,7 +205,6 @@ module Planner {
             //console.log("------------planInterpretation returns 2------------");
             return plan;
         } else if(path.isEmpty()) {
-            //console.log("The path is empty, meaning we're already in the final state.");
             //First we need to remove the object with ID objectID
             // from the worldstate, since we've cheated by putting it 
             // there while doing the A* search.
@@ -230,10 +229,8 @@ module Planner {
                 
                 //ID for the object that was moved
                 var objectID = fromState[from][fromState[from].length-1];
+                var objectStr = getObject(state.objects, objectID);
                 
-                var message: string = "Moving the " + getObject(state.objects, objectID) + " to stack " + to
-                plan.push(message);
-                    
                 if(first){
                     first = false;
                     
@@ -252,14 +249,15 @@ module Planner {
                         
                         moveArmTo(plan, arm, to);
                         arm = to;
+                        plan.push("Dropping the " + objectStr);
                         plan.push("d");
                     } else {
                         console.log("regular drop plan");
                         plan = plan.concat(dropPlan);
-                        arm = moveObject(plan, arm, from, to);
+                        arm = moveObject(plan, arm, from, to, objectStr);
                     }
-                }else{
-                    arm = moveObject(plan, arm, from, to);
+                } else {
+                    arm = moveObject(plan, arm, from, to, objectStr);
                 }
                     
                 return true;
@@ -278,7 +276,7 @@ module Planner {
                 console.log("first top object " + endStacks[j][endStacks[j].length-1]);
                 while(++j<endStacks.length && endStacks[j-1][endStacks[j-1].length-1] != usedIntprt[i].args[0]);
                 j--;
-                plan.push("picking up " + getObject(state.objects, usedIntprt[i].args[0]));
+                plan.push("Picking up the " + getObject(state.objects, usedIntprt[i].args[0]));
                 moveArmTo(plan, arm, j);
                 arm = j;
                 plan.push("p");
@@ -292,18 +290,21 @@ module Planner {
     
     /** Move an object from the 'from' column index to the 'to' column index.
      *  Returns the updated arm location */
-    function moveObject(plan: string[], arm: number, from: number, to: number){
+    function moveObject(plan: string[], arm: number, from: number, to: number, objectStr: string){
         //Move the arm to the pick-up point
         moveArmTo(plan, arm, from);
         //Say that the arm is now there
         arm = from;
         //Pick up the object
+        plan.push("Picking up the " + objectStr);
         plan.push("p");
         //Move the arm to the drop-off point
+        plan.push("Moving the " + objectStr + " to the " + (to-from > 0 ? "right" : "left"));
         moveArmTo(plan, arm, to);
         //Say that the arm is now there
         arm = to;
         //Drop the object
+        plan.push("Dropping the " + objectStr);
         plan.push("d");
         return to;
     }
@@ -346,6 +347,7 @@ module Planner {
         if(arm == undefined || to == undefined){
             throw new Planner.Error("moveArmTo: arm or to is undefined!");
         }
+        
         while(arm!=to){
             if(arm < to){
                 arm++;
@@ -355,9 +357,6 @@ module Planner {
                 plan.push("l")
             }
         }
-        //console.log("Planner.moveArmTo: arm=" + arm);
-        //console.log("Planner.moveArmTo: to=" + to);
-        //console.log("Planner.moveArmTo: ______________________");
     }
     
     function matrixEquality(first: string[][], second: string[][]):boolean{
