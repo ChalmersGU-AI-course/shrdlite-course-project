@@ -1,14 +1,9 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+﻿<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html> 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <title>Shrdlite</title>
   <link rel="stylesheet" href="shrdlite.css" type="text/css" />
-  <script type="text/javascript" src="lib/jquery-1.11.0.min.js"></script>
-  <script type="text/javascript" src="lib/nearley.js"></script>
-  <script type="text/javascript" src="grammar.js"></script>
-  <script type="text/javascript" src="shrdlite-html.js"></script>
-  <!-- <script type="text/javascript" src="shrdlite-ajax.js"></script> -->
 </head>
 <body>
 <table id="maincontent">
@@ -30,6 +25,11 @@
       </div>
     </td>
   </tr>
+    <tr>
+        <td>
+            <canvas id="glcanvas"  width="800" height="500">Your browser doesn't appear to support the HTML5 <code>&lt;canvas&gt;</code> element.</canvas>
+        </td>
+    </tr>
 </table>
 
 <div id="footer">
@@ -42,5 +42,12 @@
     read <a href="http://www.gnu.org/licenses/gpl.html" target="__blank"><em>the license</em></a> for details.
   </div>
 </div>
+
+    <!-- scripts here for speed -->
+    <script type="text/javascript" src="lib/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="lib/nearley.js"></script>
+    <script type="text/javascript" src="grammar.js"></script>
+    <script type="text/javascript" src="shrdlite-html.js"></script>
+    <script type="text/javascript" src="lib/gl-matrix-min.js"></script>
 </body> 
 </html>
