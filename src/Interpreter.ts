@@ -1,6 +1,8 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
 
+interface Window { state: any; }
+
 module Interpreter {
 
     //////////////////////////////////////////////////////////////////////
@@ -60,37 +62,58 @@ module Interpreter {
         //  {pol: true, rel: "holding", args: [b]}
         // ]];
 
-        var literals : Literal[][] = [];
-
-
-
-        switch (cmd.cmd) {
-          case "move":
-            var x = find(cmd.ent, state, worldLit);
-            var target = find(cmd.loc.ent, state, worldLit);
-            literals.push([
-              { pol: true, rel: cmd.loc.rel, args: [x[0], target[0]] }
-            ]);
-          case "take":
-            var x = find(cmd.ent, state, worldLit);
-            literals.push([
-              { pol: true, rel: "holding", args: [x[0]] }
-            ]);
-          case "put":
-            var target = find(cmd.loc.ent, state, worldLit);
-            literals.push([
-              { pol: true, rel: cmd.loc.rel, args: [state.holding, target[0]] }
-            ]);
-          default: throw "Command not found";
+        var getHolding = () => {
+          if (!state.holding) throw "Not holding anything.";
+          return state.holding;
         }
 
-        return literals;
+        var intprt : Literal[][] = [];
+        window.state = state;
+        switch (cmd.cmd) {
+            case "put":
+            case "drop":
+            case "move":
+                var sources : Key[];
+                if (cmd.ent) sources = find(cmd.ent, state, worldLit)
+                else sources = [getHolding()]
+
+                var targets = find(cmd.loc.ent, state, worldLit);
+                var literals : Literal[] = [];
+                sources.forEach((source) => {
+                    targets.forEach((target) => {
+                        literals.push(
+                            { pol: true, rel: cmd.loc.rel, args: [source, target] }
+                        );
+                    });
+                });
+                intprt.push(literals);
+                break;
+
+          case "grasp":
+          case "pick up":
+          case "take":
+                var x = find(cmd.ent, state, worldLit);
+                intprt.push([
+                    { pol: true, rel: "holding", args: [x[0]] }
+                ]);
+                // TODO “move/put/drop” “it” at a Location
+                // case "put":
+                //   var target = find(cmd.loc.ent, state, worldLit);
+                //   intprt.push([
+                //     { pol: true, rel: cmd.loc.rel, args: [state.holding, target[0]] }
+                //   ]);
+                break;
+            default: throw "Command not found: " + cmd.cmd;
+        };
+
+        console.log("Interpretation:", intprt);
+        return intprt;
     }
 
     function find(ent : Parser.Entity, state : WorldState, literals : Literal[]) : Key[] {
         switch (ent.quant) {
             case "the": return findThe(ent.obj, state, literals);
-            case "any": return findThe(ent.obj, state, literals);
+            case "any": return findAny(ent.obj, state, literals);
             // case "all": return findAll(ent.obj);
             default:    throw "Entity unknown";
         }
@@ -105,11 +128,11 @@ module Interpreter {
         }
     }
 
-    // function findAny(obj : Parser.Object, state : WorldState, literals : Literal[]) : Literal {
-    //   var results = findAll(obj, state, literals);
-    //   if (results.length == 0) throw "not found";
-    //   return results[0]
-    // }
+    function findAny(obj : Parser.Object, state : WorldState, literals : Literal[]) : Key[] {
+      var results = findAll(obj, state, literals);
+      if (results.length == 0) throw "not found";
+      return [results[0]];
+    }
 
     function findAll(obj : Parser.Object, state : WorldState, allLiterals : Literal[]) : Key[] {
         if ("obj" in obj) {
@@ -135,6 +158,7 @@ module Interpreter {
 
     type Key = string;
     function searchObjects(query : Parser.Object, state : WorldState) : Key[] {
+        if (query.form == "floor") return ["floor"];
         // 1. get all objects with keys
         var flatMap : [Key, ObjectDefinition][] = Object.keys(state.objects)
             .map((key) => <[Key, ObjectDefinition]>[key, state.objects[key]]);
