@@ -75,59 +75,46 @@ module Interpreter {
 
         // TODO Maybe we should refactor all the duplicated code for the commands?
 
+        var entitiesIntrprt;
         if (cmd.cmd === 'move') {
                 // Which entity we should move
-            if (cmd.ent != null) { // Move specified object.
-                var entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels)
-                // Where we should move it
-                    , locationsIntrprt = findEntities(cmd.loc.ent, objects, pddlWorld.rels)
-                // How entity will be positioned on location (ontop, inside, ...)
+            if (cmd.ent) { // Move specified object.
+                entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels);
+            }else{ // Move 'it', i.e. the currently held object
+                entitiesIntrprt = [[state.objectsWithId[state.holding]]];
+            }   
+               // Where we should move it
+            var locationsIntrprt = findEntities(cmd.loc.ent, objects, pddlWorld.rels)
+               // How entity will be positioned on location (ontop, inside, ...)
                     , rel = cmd.loc.rel;
-                if (entitiesIntrprt.length > 1) {
-                    var promptStr = 'Multiple objects to move found:\n'
-                    for(var i in entitiesIntrprt){
-                        promptStr += i + '. The ' + entitiesIntrprt[i][0][0].size + ' ' 
+            if (entitiesIntrprt.length > 1) {
+                var promptStr = 'Multiple objects to move found:\n'
+                for(var i in entitiesIntrprt){
+                    promptStr += i + '. The ' + entitiesIntrprt[i][0][0].size + ' ' 
                         + entitiesIntrprt[i][0][0].color + ' ' + entitiesIntrprt[i][0][0].form + '.\n';
-                    }
-                    promptStr += 'Which one did you mean?';
-                    var selected = Number(prompt(promptStr));
-                    entitiesIntrprt = [entitiesIntrprt[selected]];
                 }
+                promptStr += 'Which one did you mean?';
+                var selected = Number(prompt(promptStr));
+                entitiesIntrprt = [entitiesIntrprt[selected]];
+            }
 
-                if(locationsIntrprt.length > 1){
-                    var promptStr = 'Multiple locations to move to found:\n'
-                    for(var i in locationsIntrprt){
-                        promptStr += i + '. The ' + locationsIntrprt[i][0][0].size + ' ' 
-                        + locationsIntrprt[i][0][0].color + ' ' + locationsIntrprt[i][0][0].form + '.\n';
-                    }
-                    promptStr += 'Which one did you mean?';
-                    var selected = Number(prompt(promptStr));
-                    locationsIntrprt = [locationsIntrprt[selected]];
+            if(locationsIntrprt.length > 1){
+                var promptStr = 'Multiple locations to move to found:\n'
+                for(var i in locationsIntrprt){
+                    promptStr += i + '. The ' + locationsIntrprt[i][0][0].size + ' ' 
+                    + locationsIntrprt[i][0][0].color + ' ' + locationsIntrprt[i][0][0].form + '.\n';
                 }
+                promptStr += 'Which one did you mean?';
+                var selected = Number(prompt(promptStr));
+                locationsIntrprt = [locationsIntrprt[selected]];
+            }
                 
                 // Add all possible combinations of interpretations 
                 interpretations = combineStuff(toIds(entitiesIntrprt), toIds(locationsIntrprt), rel);
-            } else { // Move "it", that is, the object the arm is holding.
-                var // Where we should move it
-                    locationsIntrprt = findEntities(cmd.loc.ent, objects, pddlWorld.rels)
-                // How entity will be positioned on location (ontop, inside, ...)
-                    , rel = cmd.loc.rel
-                    , it = pddlWorld.holding;
-                if (it != null) { // Is there an object to move?
-                    if (locationsIntrprt.length > 1) {
-                    console.warn('Interpreter warning: ambiguous entity or location!' +
-                        'Returning multiple interpretations');
-                    }
-                    // Add all possible combinations of interpretations
-                    interpretations = combineStuff([[[it]]], toIds(locationsIntrprt), rel);
-                } else {
-                    console.warn('Interpreter warning: no entity in arm to move!' +
-                        'Returning no interpretation');
-                }
-            }
+            
         } else if (cmd.cmd === 'take') {
             // TODO: Should we check (here?) if the arm is already holding something?
-            var entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels);
+            entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels);
 
             if (entitiesIntrprt.length > 1) {
                 console.warn('Interpreter warning: ambiguous entity or location!' +
