@@ -544,7 +544,7 @@ SearchGraph.prototype.state_hash = function(state) {
 SearchGraph.prototype.isPossible = function(state) {
     var elems = state.stacks.flatten();
     if (state.holding !== null) {
-        elems.append(state.holding);
+        elems.push(state.holding);
     }
 
     //Check that each element exists, and that the rule is possible.
