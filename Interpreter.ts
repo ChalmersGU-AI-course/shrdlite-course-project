@@ -23,6 +23,7 @@ module Interpreter {
             }
         });
         if (interpretations.length) {
+        	interpretations = filterEquality(interpretations);
             return interpretations;
         } else {
             throw new Interpreter.Error("Found no interpretation");
@@ -150,293 +151,6 @@ module Interpreter {
         return intprt;
     }
     
-    function combine(loclitss : Literal[][], objlitss : Literal[][], 
-    		state: WorldState):Literal[][]{
-    	var result : Literal[][]= [];	
-    	
-    	for(var i = 0; i < objlitss.length; i ++){
-    		var ks : number[] = [0];
-			var maxL = objlitss[i].length;
-			if(loclitss[0]){
-				if(loclitss[0].length > objlitss[i].length){
-					maxL = loclitss[0].length;
-				}
-			}
-			
-			for(var jj = 0; jj < maxL; jj++){
-				ks.push(0);
-			}
-    		append(result,combineLiterals([], loclitss, objlitss[i], ks, "", state));
-    	}		
-    	
-    	return result;
-    }
-    
-    function combineLiterals(litss : Literal[][], loclitss : Literal[][]
-    			, objlits : Literal[], ks : number[], rel : string, 
-    			state : WorldState):Literal[][]{
-    	var k = ks[0];
-    	if(k == Math.pow(loclitss.length,  objlits.length)){
-    		return litss;
-    	}
-		if(!checkequal(ks,rel)){
-			litss[k] = append(litss[k], objlits);
-			var j = 0;
-			for(var i = 1; i < ks.length; i ++){
-				litss[k] = append(litss[k], [loclitss[ks[i]%loclitss.length][j]]);
-				j++;
-			}
-		}
-		var inced = false;
-		for(var i = ks.length-1; i > 0 ; i--){
-			if(ks[i]== loclitss.length-1){
-				ks[i] = 0;
-				if(i > 1){
-					ks[i-1] = ks[i-1] +1;
-				}
-			}else if(i == ks.length-1){
-				ks[i] = ks[i] +1;
-			}
-		}
-			
-		ks[0] = k+1;
-		return combineLiterals(litss, loclitss, objlits, ks, rel, state);
-    }
-    
-    function checkequal(ks : number[], rel : string):boolean{
-    	if(ks.length == 1){
-    		return false;
-    	}
-    	for(var i = 1; i < ks.length; i++){
-    		for(var j = i+1; j < ks.length ; j++){
-    			if(ks[i]==ks[j] && i != j && (rel == "ontop" || rel == "inside")){
-    				return true;
-    			}
-    		}
-    	}
-    	return false;
-    }
-    
-    function checkillegalcombi(lits : Literal[]):boolean{
-    	for(var i = 0; i < lits.length; i ++){
-    		var templit = lits[i];
-    		for(var j = 0; j < lits.length; j++){
-	    		var templit2 = lits[j];
-	    		if(templit2.rel == templit.rel && i != j){
-	    			if((templit2.rel == "ontop" || templit2.rel == "inside") && 
-	    					(templit2.args[0] == templit.args[0] || 
-	    					 templit2.args[1] == templit.args[1] ||
-	    					 templit2.args[0] == templit.args[1] ||
-	    					 templit2.args[1] == templit.args[0])){
-	    				return true;
-	    			}
-	    		}
-    		}
-    	}
-    	
-    	return false;
-    }
-    
-    function clearIlligal(lits : Literal[], state): Literal[]{
-    	var cleared : Literal[] = [];
-    	if(!lits){
-    		return cleared;
-    	}
-    	for(var i = 0; i < lits.length;i++){
-    		if(checkIllegal(lits[i], state)){
-    			cleared.push(lits[i]);
-    		}
-    	}
-    	
-    	if(!checkillegalcombi(lits)){
-    		return cleared;
-    	}else{
-    		return [];
-    	}
-    }
-    
-    function findendliterals(lits : Literal []): string[]{
-    	var temp : Literal [] = [];
-    	var end : string[] = [];
-    	var found : boolean = true;
-    	for(var i = 0; i < lits.length; i++){
-    		var lit : Literal = lits[i];
-    		found = true;
-    		for(var j = 0; j < lits.length; j++){
-    			var lit2 : Literal = lits[j];
-    			if(lit2.args[0] == lit.args[1]){
-    				found = false;
-    			}
-    		}
-    		if(found){
-    			end.push(lit.args[lit.args.length-1]);
-    		}
-    	}
-    	return end;
-    }
-    
-    
-    function checkQuantifyer(lits : Literal[], ent : Parser.Entity, 
-    		loc : Parser.Location, state : WorldState):boolean{
-    	if(ent.quant == "the"){
-    		if(lits.length > 1){
-    			return false;
-    		}
-    	}else if(ent.quant == "all" && loc.ent.quant != "all" ||
-    				ent.quant != "all" && loc.ent.quant == "all"){
-    		var totalUnqObjs = findAllObjsWith(ent.obj.form, ent.obj.color, ent.obj.size, state);
-    		if( (loc.rel != "beside")){
-	    		if(lits.length != totalUnqObjs.length){
-	    			return false;
-	    		}
-    		}else if(loc.rel == "beside"){
-    			if((loc.ent.obj.form != ent.obj.form && lits.length != totalUnqObjs.length) || 
-    				(loc.ent.obj.form == ent.obj.form && lits.length != totalUnqObjs.length-1)){
-	    			return false;
-	    		}
-    		}
-    	}else if(ent.quant == "all" && loc.ent.quant == "all"){
-    		
-    	}
-    	
-    	return true;
-    }
-    
-    
-    function checkIllegal(lit : Literal, state : WorldState):boolean{
-    	var a = state.objects[lit.args[0]];
-    	var b = state.objects[lit.args[1]];
-    	
-    	if(!lit.rel || lit.rel == null){
-    		return false;
-    	}
-    	if(lit.args[0] == lit.args[1]){
-    		return false;
-    	}
-    	if(b.form == "floor" && a.form != b.form){
-    		if(lit.rel == "under"){
-    			return false;
-    		}
-    		return true;
-    	}
-    	if(a.form == "ball" && ((lit.rel == "ontop" && b.form != "floor") || (lit.rel == "inside" && 
-    			(a.size == "large" && b.size == "small")))){
-    		return false;
-    	}
-    	if(b.form == "ball" && (lit.rel == "ontop" || lit.rel == "above" )){
-    		return false;
-    	}
-    	if(lit.rel == "inside" && (b.form != "box")){
-    		return false;
-    	}
-    	if(lit.rel == "inside" && ((a.form == "pyramid" || a.form == "plank" || 
-    			a.form == "floor" || a.form == "box")&&
-    			(a.size == b.size || (a.size == "large" && b.size == "small")))){
-    		return false;
-    	}
-    	if((lit.rel == "ontop" || lit.rel == "above" || lit.rel == "inside") && 
-    			((a.size == "large" && b.size == "small")|| a.form == "floor")){
-    		return false;
-    	}
-    	if(lit.rel == "under" && ((b.size == "large" && a.size == "small") || a.form == "ball")){
-    		return false;
-    	}
-    	if(b.form == "box" && lit.rel == "ontop"){
-    		return false;
-    	}
-    	
-    	return true;
-    }
-    
-    function identifyLocation(loc : Parser.Location, state : WorldState):Literal[][]{
-    	try {
-        	var result : Literal[][] = identifyEnt(loc.ent, null, null,state);
-		} catch (err) {
-			if(err instanceof Interpreter.ErrorInput){
-				err.message = err.message.substring(0, err.message.length-1) + " to?";
-				throw err;
-				//TODO write a better error message !! 
-			}else{
-				throw err;
-			}
-		     
-		}
-    	return result;
-    }
-    
-    function solveAmbiguity(obj : Parser.Object, objs : string[], state : WorldState):string[]{
-    	var parseresult = clairifyingparse[clairifyingparse.length-1].prs.obj;
-    	if(parseresult.form){
-    		if(obj.form && obj.form != parseresult.form){
-    			throw new Interpreter.ErrorInput("Are we talking in terms of " + obj.form + 
-    				" or " + parseresult.form +"? I would say " + obj.form + ".");
-    		}
-    		obj.form = parseresult.form;
-    	}
-    	if(parseresult.color){
-    		if(obj.color && obj.color != parseresult.color){
-    			throw new Interpreter.ErrorInput("You have already told me that the " + 
-    				obj.form + " is " + obj.color +".");
-    		}
-    		obj.color = parseresult.color;
-    	}
-    	if(parseresult.size){
-    		if(obj.size && obj.size != parseresult.size){
-    			throw new Interpreter.ErrorInput("You have already told me that the " + 
-    				obj.form + " is " + obj.size+".");
-    		}
-    		obj.size = parseresult.size;
-    	}
-    	
-    	objs = identifyObj(obj.form, obj.color, obj.size, state);
-    	return objs;
-    }
-    
-    function identifyObj(form :string, color :string, size :string, state : WorldState):string[]{
-    	var objs : collections.Set<string> = new collections.Set<string>(function (x){return x});
-        if(!form){
-        	return [];
-        }
-        var pddls = state.pddl.toArray();
-        if(form == "floor" ){	// special case for floor
-        	for (var index = 0; index < pddls.length; index++) {
-        		var pddl = pddls[index];
-        		
-        		if((pddl.rel == "leftof" || pddl.rel == "rightof") && pddl.args){
-        			var a = state.objects[pddl.args[0]];
-        			objs.add(pddl.args[0]);	
-        		}
-        	}
-        }else{
-	        for (var index = 0; index < pddls.length; index++) {
-	        	var pddl = pddls[index];
-	        	//check the first arg for form, color and size if it matches, add it to possibel objs
-	        	var a = state.objects[pddl.args[0]];
-	        	if(a.form != form && form != "anyform"){
-	        		continue;
-	        	}
-	        	if(a.form == "floor" && form == "anyform"){
-	        		continue;
-	        	}
-	        	if(!a){
-	        		continue;
-	        	}
-	        	if(!(color == null || color.length == 0 )){
-	        		if(a.color != color){
-	        			continue;
-	        		}
-	        	}
-	        	if(!(size == null || size.length == 0)){
-	        		if(a.size != size){
-	        			continue;
-	        		}
-	        	}
-	        	objs.add(pddl.args[0]);
-			}
-		}
-        return objs.toArray();
-    }   
-    
     function identifyEnt(ent : Parser.Entity, rel : string , 
     		obj : string ,state : WorldState):Literal[][]{
     	var result : string[];
@@ -543,6 +257,303 @@ module Interpreter {
     	return intrpt;
     }
     
+    function identifyLocation(loc : Parser.Location, state : WorldState):Literal[][]{
+    	try {
+        	var result : Literal[][] = identifyEnt(loc.ent, null, null,state);
+		} catch (err) {
+			if(err instanceof Interpreter.ErrorInput){
+				err.message = err.message.substring(0, err.message.length-1) + " to?";
+				throw err;
+				//TODO write a better error message !! 
+			}else{
+				throw err;
+			}
+		     
+		}
+    	return result;
+    }
+    
+    function identifyObj(form :string, color :string, size :string, state : WorldState):string[]{
+    	var objs : collections.Set<string> = new collections.Set<string>(function (x){return x});
+        if(!form){
+        	return [];
+        }
+        var pddls = state.pddl.toArray();
+        if(form == "floor" ){	// special case for floor
+        	for (var index = 0; index < pddls.length; index++) {
+        		var pddl = pddls[index];
+        		
+        		if((pddl.rel == "leftof" || pddl.rel == "rightof") && pddl.args){
+        			var a = state.objects[pddl.args[0]];
+        			objs.add(pddl.args[0]);	
+        		}
+        	}
+        }else{
+	        for (var index = 0; index < pddls.length; index++) {
+	        	var pddl = pddls[index];
+	        	//check the first arg for form, color and size if it matches, add it to possibel objs
+	        	var a = state.objects[pddl.args[0]];
+	        	if(a.form != form && form != "anyform"){
+	        		continue;
+	        	}
+	        	if(a.form == "floor" && form == "anyform"){
+	        		continue;
+	        	}
+	        	if(!a){
+	        		continue;
+	        	}
+	        	if(!(color == null || color.length == 0 )){
+	        		if(a.color != color){
+	        			continue;
+	        		}
+	        	}
+	        	if(!(size == null || size.length == 0)){
+	        		if(a.size != size){
+	        			continue;
+	        		}
+	        	}
+	        	objs.add(pddl.args[0]);
+			}
+		}
+        return objs.toArray();
+    }
+    
+    //////////////////////////////////////////////////////////////////////
+    // util functions
+    
+    function combine(loclitss : Literal[][], objlitss : Literal[][], 
+    		state: WorldState):Literal[][]{
+    	var result : Literal[][]= [];	
+    	
+    	for(var i = 0; i < objlitss.length; i ++){
+    		var ks : number[] = [0];
+			var maxL = objlitss[i].length;
+			if(loclitss[0]){
+				if(loclitss[0].length > objlitss[i].length){
+					maxL = loclitss[0].length;
+				}
+			}
+			
+			for(var jj = 0; jj < maxL; jj++){
+				ks.push(0);
+			}
+    		append(result,combineLiterals([], loclitss, objlitss[i], ks, "", state));
+    	}		
+    	
+    	return result;
+    }
+    
+    function combineLiterals(litss : Literal[][], loclitss : Literal[][]
+    			, objlits : Literal[], ks : number[], rel : string, 
+    			state : WorldState):Literal[][]{
+    	var k = ks[0];
+    	if(k == Math.pow(loclitss.length,  objlits.length)){
+    		return litss;
+    	}
+		if(!checkequal(ks,rel)){
+			litss[k] = append(litss[k], objlits);
+			var j = 0;
+			for(var i = 1; i < ks.length; i ++){
+				litss[k] = append(litss[k], [loclitss[ks[i]%loclitss.length][j]]);
+				j++;
+			}
+		}
+		var inced = false;
+		for(var i = ks.length-1; i > 0 ; i--){
+			if(ks[i]== loclitss.length-1){
+				ks[i] = 0;
+				if(i > 1){
+					ks[i-1] = ks[i-1] +1;
+				}
+			}else if(i == ks.length-1){
+				ks[i] = ks[i] +1;
+			}
+		}
+			
+		ks[0] = k+1;
+		return combineLiterals(litss, loclitss, objlits, ks, rel, state);
+    }
+    
+    function checkequal(ks : number[], rel : string):boolean{
+    	if(ks.length == 1){
+    		return false;
+    	}
+    	for(var i = 1; i < ks.length; i++){
+    		for(var j = i+1; j < ks.length ; j++){
+    			if(ks[i]==ks[j] && i != j && (rel == "ontop" || rel == "inside")){
+    				return true;
+    			}
+    		}
+    	}
+    	return false;
+    }
+    
+    function checkillegalcombi(lits : Literal[]):boolean{
+    	for(var i = 0; i < lits.length; i ++){
+    		var templit = lits[i];
+    		for(var j = 0; j < lits.length; j++){
+	    		var templit2 = lits[j];
+	    		if(templit2.rel == templit.rel && i != j){
+	    			if((templit2.rel == "ontop" || templit2.rel == "inside") && 
+	    					(templit2.args[0] == templit.args[0] || 
+	    					 templit2.args[1] == templit.args[1] ||
+	    					 templit2.args[0] == templit.args[1] ||
+	    					 templit2.args[1] == templit.args[0])){
+	    				return true;
+	    			}
+	    		}
+    		}
+    	}
+    	
+    	return false;
+    }
+    
+    function filterEquality(intrps : Result []):Result []{
+    	//TODO
+    	return intrps;
+    }
+    
+    function clearIlligal(lits : Literal[], state): Literal[]{
+    	var cleared : Literal[] = [];
+    	if(!lits){
+    		return cleared;
+    	}
+    	for(var i = 0; i < lits.length;i++){
+    		if(checkIllegal(lits[i], state)){
+    			cleared.push(lits[i]);
+    		}
+    	}
+    	
+    	if(!checkillegalcombi(lits)){
+    		return cleared;
+    	}else{
+    		return [];
+    	}
+    }
+    
+    
+    function checkQuantifyer(lits : Literal[], ent : Parser.Entity, 
+    		loc : Parser.Location, state : WorldState):boolean{
+    	if(ent.quant == "the"){
+    		if(lits.length > 1){
+    			return false;
+    		}
+    	}else if(ent.quant == "all" && loc.ent.quant != "all" ||
+    				ent.quant != "all" && loc.ent.quant == "all"){
+    		var totalUnqObjs = findAllObjsWith(ent.obj.form, ent.obj.color, ent.obj.size, state);
+    		if( (loc.rel != "beside")){
+	    		if(lits.length != totalUnqObjs.length){
+	    			return false;
+	    		}
+    		}else if(loc.rel == "beside"){
+    			if((loc.ent.obj.form != ent.obj.form && lits.length != totalUnqObjs.length) || 
+    				(loc.ent.obj.form == ent.obj.form && lits.length != totalUnqObjs.length-1)){
+	    			return false;
+	    		}
+    		}
+    	}else if(ent.quant == "all" && loc.ent.quant == "all"){
+    		
+    	}
+    	
+    	return true;
+    }
+    
+    
+    function checkIllegal(lit : Literal, state : WorldState):boolean{
+    	var a = state.objects[lit.args[0]];
+    	var b = state.objects[lit.args[1]];
+    	
+    	if(!lit.rel || lit.rel == null){
+    		return false;
+    	}
+    	if(lit.args[0] == lit.args[1]){
+    		return false;
+    	}
+    	if(b.form == "floor" && a.form != b.form){
+    		if(lit.rel == "under"){
+    			return false;
+    		}
+    		return true;
+    	}
+    	if(a.form == "ball" && ((lit.rel == "ontop" && b.form != "floor") || (lit.rel == "inside" && 
+    			(a.size == "large" && b.size == "small")))){
+    		return false;
+    	}
+    	if(b.form == "ball" && (lit.rel == "ontop" || lit.rel == "above" )){
+    		return false;
+    	}
+    	if(lit.rel == "inside" && (b.form != "box")){
+    		return false;
+    	}
+    	if(lit.rel == "inside" && ((a.form == "pyramid" || a.form == "plank" || 
+    			a.form == "floor" || a.form == "box")&&
+    			(a.size == b.size || (a.size == "large" && b.size == "small")))){
+    		return false;
+    	}
+    	if((lit.rel == "ontop" || lit.rel == "above" || lit.rel == "inside") && 
+    			((a.size == "large" && b.size == "small")|| a.form == "floor")){
+    		return false;
+    	}
+    	if(lit.rel == "under" && ((b.size == "large" && a.size == "small") || a.form == "ball")){
+    		return false;
+    	}
+    	if(b.form == "box" && lit.rel == "ontop"){
+    		return false;
+    	}
+    	
+    	return true;
+    }
+    
+    function findendliterals(lits : Literal []): string[]{
+    	var temp : Literal [] = [];
+    	var end : string[] = [];
+    	var found : boolean = true;
+    	for(var i = 0; i < lits.length; i++){
+    		var lit : Literal = lits[i];
+    		found = true;
+    		for(var j = 0; j < lits.length; j++){
+    			var lit2 : Literal = lits[j];
+    			if(lit2.args[0] == lit.args[1]){
+    				found = false;
+    			}
+    		}
+    		if(found){
+    			end.push(lit.args[lit.args.length-1]);
+    		}
+    	}
+    	return end;
+    }
+    
+    function solveAmbiguity(obj : Parser.Object, objs : string[], state : WorldState):string[]{
+    	var parseresult = clairifyingparse[clairifyingparse.length-1].prs.obj;
+    	if(parseresult.form){
+    		if(obj.form && obj.form != parseresult.form){
+    			throw new Interpreter.ErrorInput("Are we talking in terms of " + obj.form + 
+    				" or " + parseresult.form +"? I would say " + obj.form + ".");
+    		}
+    		obj.form = parseresult.form;
+    	}
+    	if(parseresult.color){
+    		if(obj.color && obj.color != parseresult.color){
+    			throw new Interpreter.ErrorInput("You have already told me that the " + 
+    				obj.form + " is " + obj.color +".");
+    		}
+    		obj.color = parseresult.color;
+    	}
+    	if(parseresult.size){
+    		if(obj.size && obj.size != parseresult.size){
+    			throw new Interpreter.ErrorInput("You have already told me that the " + 
+    				obj.form + " is " + obj.size+".");
+    		}
+    		obj.size = parseresult.size;
+    	}
+    	
+    	objs = identifyObj(obj.form, obj.color, obj.size, state);
+    	return objs;
+    }
+    
+       
+        
     function findAllObjsWith(form : string, color : string, size : string, state : WorldState):string[]{
     	var objs = identifyObj(form, color, size, state);
     	return uniqeObjects(objs);
@@ -587,10 +598,6 @@ module Interpreter {
     		a.push(b[i]);
     	}
     	return a;
-    }
-
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
     }
     
 	function clone<T>(obj: T): T {
