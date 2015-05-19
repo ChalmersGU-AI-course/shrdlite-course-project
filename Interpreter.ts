@@ -70,9 +70,9 @@ module Interpreter {
         var hasColor = object.color != null;
         var hasForm = object.form != null;
         
-        console.log("INTERPRETER findObject: size " + object.size + "| null? " + hasSize);
-        console.log("INTERPRETER findObject: color " + object.color + "| null? " + hasColor);
-        console.log("INTERPRETER findObject: form " + object.form + "| null? " + hasForm);
+        //console.log("INTERPRETER findObject: size " + object.size + "| null? " + hasSize);
+        //console.log("INTERPRETER findObject: color " + object.color + "| null? " + hasColor);
+        //console.log("INTERPRETER findObject: form " + object.form + "| null? " + hasForm);
         
         return (hasSize ? object.size + " ": "") + (hasColor ? object.color + " " : "") + (hasForm ? object.form : "");
     }
@@ -91,7 +91,7 @@ module Interpreter {
     }
 
     function interpretCommandAmbiguous(cmd : Parser.Command, state : WorldState): string {
-        console.log("--------------------- START INTERPRETER AMBIGUOUS ---------------------");
+        //console.log("--------------------- START INTERPRETER AMBIGUOUS ---------------------");
     
         var sentence: string[] = [];
     
@@ -113,9 +113,9 @@ module Interpreter {
         sentence.push(quant);
         sentence.push(objectStr);
         
-        console.log("INTERPRETER AMBIGUOUS: " + command);
-        console.log("INTERPRETER AMBIGUOUS: " + quant);
-        console.log("INTERPRETER AMBIGUOUS: " + objectStr);
+        //console.log("INTERPRETER AMBIGUOUS: " + command);
+        //console.log("INTERPRETER AMBIGUOUS: " + quant);
+        //console.log("INTERPRETER AMBIGUOUS: " + objectStr);
         if(objectHasLocation){
             
             sentence.push("that is");
@@ -123,10 +123,10 @@ module Interpreter {
             sentence.push(objectLocationQuant);
             sentence.push(objectLocationStr);
         
-            console.log("INTERPRETER AMBIGUOUS: that is");
-            console.log("INTERPRETER AMBIGUOUS: " + objectLocationRelation);
-            console.log("INTERPRETER AMBIGUOUS: " + objectLocationQuant);
-            console.log("INTERPRETER AMBIGUOUS: " + objectLocationStr);
+            //console.log("INTERPRETER AMBIGUOUS: that is");
+            //console.log("INTERPRETER AMBIGUOUS: " + objectLocationRelation);
+            //console.log("INTERPRETER AMBIGUOUS: " + objectLocationQuant);
+            //console.log("INTERPRETER AMBIGUOUS: " + objectLocationStr);
         }
         
         var location = cmd.loc;
@@ -148,9 +148,9 @@ module Interpreter {
         sentence.push(locationQuant);
         sentence.push(locationStr);
         
-        console.log("INTERPRETER AMBIGUOUS: " + locationRelation);
-        console.log("INTERPRETER AMBIGUOUS: " + locationQuant);
-        console.log("INTERPRETER AMBIGUOUS: " + locationStr);
+        //console.log("INTERPRETER AMBIGUOUS: " + locationRelation);
+        //console.log("INTERPRETER AMBIGUOUS: " + locationQuant);
+        //console.log("INTERPRETER AMBIGUOUS: " + locationStr);
         if(locationHasLocation){
             
             sentence.push("that is");
@@ -158,10 +158,10 @@ module Interpreter {
             sentence.push(locationLocationQuant);
             sentence.push(locationLocationStr);
         
-            console.log("INTERPRETER AMBIGUOUS: that is");
-            console.log("INTERPRETER AMBIGUOUS: " + locationLocationRelation);
-            console.log("INTERPRETER AMBIGUOUS: " + locationLocationQuant);
-            console.log("INTERPRETER AMBIGUOUS: " + locationLocationStr);
+            //console.log("INTERPRETER AMBIGUOUS: that is");
+            //console.log("INTERPRETER AMBIGUOUS: " + locationLocationRelation);
+            //console.log("INTERPRETER AMBIGUOUS: " + locationLocationQuant);
+            //console.log("INTERPRETER AMBIGUOUS: " + locationLocationStr);
         }
         
         var sentenceStr = "";
@@ -172,9 +172,9 @@ module Interpreter {
             }
         );
         
-        console.log("--------------------- Sentence: " + sentenceStr + " ---------------------");
+        //console.log("--------------------- Sentence: " + sentenceStr + " ---------------------");
     
-        console.log("--------------------- END INTERPRETER AMBIGUOUS ---------------------");
+        //console.log("--------------------- END INTERPRETER AMBIGUOUS ---------------------");
         return sentenceStr;
     
         /*
@@ -187,12 +187,12 @@ module Interpreter {
         //First check if the object is inside the world
         var objectKeys = getObjectKey(object, objs, state.objects, state.stacks, false);
         
-        console.log("INTERPRETER AMBIGUOUS: objectKeys " + objectKeys.toString());
+        //console.log("INTERPRETER AMBIGUOUS: objectKeys " + objectKeys.toString());
         
         objectKeys.forEach(
             (objectKey: string) => {
                 var locationObjects = getObjectKeysWithoutObject(cmd.ent.obj.loc.ent.obj, objs, state.objects);
-                console.log("INTERPRETER AMBIGUOUS: The object " + objectKey + " should have a location: " + locationObjects.toString());
+                //console.log("INTERPRETER AMBIGUOUS: The object " + objectKey + " should have a location: " + locationObjects.toString());
             }
         );
         
@@ -200,16 +200,16 @@ module Interpreter {
         
         var foundLocationKey = getObjectKey(cmd.loc.ent.obj, objs, state.objects, state.stacks, false);
         
-        console.log("INTERPRETER AMBIGUOUS foundLocationKey: " + foundLocationKey.toString());
+        //console.log("INTERPRETER AMBIGUOUS foundLocationKey: " + foundLocationKey.toString());
         
-        console.log("--------------------- END INTERPRETER AMBIGUOUS ---------------------");
+        //console.log("--------------------- END INTERPRETER AMBIGUOUS ---------------------");
         */
     }
 
     //////////////////////////////////////////////////////////////////////
     // private functions
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        console.log("--------------------- START INTERPRETER ---------------------");
+        //console.log("--------------------- START INTERPRETER ---------------------");
         var intprt : Literal[][] = [];
         
         //All objects in the world
@@ -221,7 +221,7 @@ module Interpreter {
         //First check if the object is inside the world
         var objectKeys = getObjectKey(object, objs, state.objects, state.stacks, true);
         
-        console.log("INTERPRETER: objectKeys " + objectKeys.toString());
+        //console.log("INTERPRETER: objectKeys " + objectKeys.toString());
 
         //If this is not true, we did not find an object that matched
         if(rightNumberOfResults(cmd.ent.quant, objectKeys.length)){
@@ -256,7 +256,7 @@ module Interpreter {
                     //Check the location
                     var foundLocationKey = getObjectKey(cmd.loc.ent.obj, objs, state.objects, state.stacks, true);
                     
-                    console.log("INTERPRETER foundLocationKey: " + foundLocationKey.toString());
+                    //console.log("INTERPRETER foundLocationKey: " + foundLocationKey.toString());
                     
                     if(rightNumberOfResults(cmd.loc.ent.quant, foundLocationKey.length)){
                         
@@ -299,13 +299,13 @@ module Interpreter {
             }
             
         } else {
-            console.log("INTERPRETER: Found object was not in right place or not in the world");
+            //console.log("INTERPRETER: Found object was not in right place or not in the world");
         }
         
         
-        console.log("--------------------- END INTERPRETER ---------------------");
-        console.log("intPrt #" + intprt.length);
-        console.log("--------------------- END INTERPRETER ---------------------");
+        //console.log("--------------------- END INTERPRETER ---------------------");
+        //console.log("intPrt #" + intprt.length);
+        //console.log("--------------------- END INTERPRETER ---------------------");
         return intprt;
     }
     
@@ -352,22 +352,22 @@ module Interpreter {
                         return false;
                     } else {
                         if(hasColor && hasSize){
-                            console.log("INTERPRETER: Object did not have both properties!!");
+                            //console.log("INTERPRETER: Object did not have both properties!!");
                         } else if(hasColor && currentHasColor && !currentHasSize){
-                            console.log("INTERPRETER: hasColor, currentHasColor, !currentHasSize");
+                            //console.log("INTERPRETER: hasColor, currentHasColor, !currentHasSize");
                             returnList.push(availableObject);
                         } else if(hasSize && currentHasSize && !currentHasColor){
-                            console.log("INTERPRETER: hasSize, currentHasSize, !currentHasColor");
+                            //console.log("INTERPRETER: hasSize, currentHasSize, !currentHasColor");
                             returnList.push(availableObject);
                         } else if(!hasColor && !hasSize){
-                            console.log("INTERPRETER: !hasColor, !hasSize");
+                            //console.log("INTERPRETER: !hasColor, !hasSize");
                             returnList.push(availableObject);
                         }
                     }
                     
                 } else if(object.form == "floor"){
                     //Check if the location is the floor
-                    console.log("Interpreter ****** LOCATION IS FLOOR");
+                    //console.log("Interpreter ****** LOCATION IS FLOOR");
                     returnList = [];
                     returnList.push("floor");
                     return false;
@@ -380,7 +380,7 @@ module Interpreter {
             }
         );
         
-        console.log("INTERPRETER return at getObjectKeysWithoutObject: " + returnList.toString());
+        //console.log("INTERPRETER return at getObjectKeysWithoutObject: " + returnList.toString());
         return returnList;
     }
     
@@ -388,7 +388,7 @@ module Interpreter {
         
         //First check if the object contains any object
         if(object.obj){
-            console.log("Interpreter ---- Object has object!!!!!!");
+            //console.log("Interpreter ---- Object has object!!!!!!");
             
             var foundKeys = getObjectKeysWithoutObject(object.obj, availableObjects, objects);
             
@@ -411,9 +411,9 @@ module Interpreter {
         //Get the object associated with the location
         var locationObjects = getObjectKeysWithoutObject(loc.ent.obj, availableObjects, objects);
         
-        console.log("Interpreter ****** LOCATIONS: " + locationObjects.toString());
+        //console.log("Interpreter ****** LOCATIONS: " + locationObjects.toString());
         
-        console.log("Interpreter filterOnLocation: Will filter out " + foundKeys.toString() + " that is not " + locationObjects.toString());
+        //console.log("Interpreter filterOnLocation: Will filter out " + foundKeys.toString() + " that is not " + locationObjects.toString());
         
         if(rightNumberOfResults(loc.ent.quant, locationObjects.length)){
             var breakTheLoops = false;

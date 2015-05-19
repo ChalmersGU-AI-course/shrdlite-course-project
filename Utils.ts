@@ -28,7 +28,7 @@ function prettyMat(mat: string[][]){
 function validPlacement(topObject: string, bottomObject: string, objects: {[s:string]: ObjectDefinition}) : boolean {
     
     //Everything can be placed on the floor
-    if(bottomObject == undefined){
+    if(bottomObject == undefined || bottomObject == "floor"){
         return true;
     }
     
