@@ -228,11 +228,16 @@ module Planner {
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
 		var plan : string[] = [];
+		var plan2 : string[] = [];
 		if(intprt.length == 0){
 			return ["no matching objects"];
 		}else if(!AStar.checkGoal(worldToPPDL(state), intprt )){
+			plan2 = AStar.runAStar([], new AStar.Nod("",state,""), intprt , function ret(){return true;} );
+			//var n = plan2.search(",");
+			var s = plan2[0].slice(23,plan2[0].length-1);	
+
 			plan = AStar.runAStar([], new AStar.Nod("",state,""), intprt , heuristicFunc);
-		}else{
+			plan[0]="Number of node without Heuristics " + s + " , \n" + plan[0];		}else{
 			plan = ["Goal already found"];
 			console.log("error-------------------------------------");
 		}

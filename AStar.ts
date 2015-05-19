@@ -161,9 +161,9 @@ module AStar {
 				return a;
 			}
 			
-			if(haveSeen.size() == 20000){
-				return ["20000 nodes searched and no solution was found"];
-			}
+	//		if(haveSeen.size() == 20000){
+	//			return ["20000 nodes searched and no solution was found"];
+	//		}
 	
 			haveSeen.add(current);
 			
