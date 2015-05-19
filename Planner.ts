@@ -60,13 +60,18 @@ module Planner {
         var actions : string[]  = ['RIGHT','GRAB','LEFT','DROP']; 
         
         /*
-        These PDDL Interpretation function could be lift out to a separate module,
+        These PDDL Interpretation function could be lifted out to a separate module,
         but they are not since they take an ActionState as an argument and since they
         are only to be used inside of  'planInterpretation'.
         */
         var pddl = {
             ontop: function(a:ActionState, args:string[]) : boolean{
-                var position = find_obj([args[0]],a.stacks);
+                var position;
+                try{
+                    position = find_obj([args[0]],a.stacks);
+                }catch(err){
+                    return false 
+                }
                 if ((position[1] == 0) && (args[1] == "floor")){
                     return true;
                 }else if((a.stacks[position[0]][(position[1] - 1)]) == args[1]){
@@ -79,7 +84,12 @@ module Planner {
                 return (a.holding == args[0]);
             },
             inside: function(a:ActionState, args:string[]) : boolean{
-                var position = find_obj([args[0]],a.stacks);
+                var position;
+                try{
+                    position = find_obj([args[0]],a.stacks);
+                }catch(err){
+                    return false 
+                }
                 if(((a.stacks[position[0]][(position[1] - 1)]) == args[1]) &&  
                     state.objects[args[1]].form == "box"){
                     return true;
@@ -112,14 +122,14 @@ module Planner {
         var start =  new ActionState("start");
         start.arm = state.arm
         start.stacks = state.stacks.slice();
-        start.holding = state.holding;
         
         function dynamic_children(astate : ActionState){
             var states : ActionState[] = []; 
              actions.forEach((action) => { 
                 if(works(action,astate) ){ //TODO: set ids etc  
-                    states.push(calculate_state(action,astate));
-                } 
+                    var s = calculate_state(action,astate);
+                    states.push(s);
+                }
             });
             return states;
         }
@@ -152,13 +162,15 @@ module Planner {
             var newstate = new ActionState(("state" + statenr));
             if (action == 'LEFT'){
                     newstate.arm = ( astate.arm - 1 );
-                    newstate.action = "l"
+                    newstate.action = "l";
+                    newstate.holding = astate.holding
                     newstate.stacks = astate.stacks.slice();
                     newstate.msg = "Moving left"; 
                     return newstate;
             }else if (action == 'RIGHT'){
                     newstate.arm = ( astate.arm + 1 );
                     newstate.action = "r"
+                    newstate.holding = astate.holding
                     newstate.stacks = astate.stacks.slice();
                     newstate.msg = "Moving right"; 
                     return newstate; 
@@ -166,7 +178,9 @@ module Planner {
                     newstate.arm = astate.arm;
                     var stack = astate.stacks[astate.arm].slice();
                     var height = (stack.length);
-                    newstate.holding = stack[height-1]; //Alt stack[height-1]
+                    var hold = stack[height-1];
+                    stack.pop();
+                    newstate.holding = hold;//Alt stack[height-1]
                     newstate.stacks = astate.stacks.slice();
                     newstate.stacks[astate.arm] = stack.slice();
                     newstate.action = "p";
@@ -174,12 +188,13 @@ module Planner {
                     return newstate;
             }else if (action == 'DROP'){
                     var stack = astate.stacks[astate.arm].slice();
-                    stack.push(astate.holding)
-                    newstate.arm = astate.arm;
+                    stack.push(astate.holding);
                     newstate.holding = null;
+                    newstate.stacks = astate.stacks.slice();
+                    newstate.stacks[astate.arm] = stack;
+                    newstate.arm = astate.arm;
                     newstate.action = "d";
                     newstate.msg = ("Dropping the "); //+ state.objects[astate.holding].form) ;
-                    newstate.stacks = astate.stacks.slice();
                     return newstate; //&& (state.stacks[state.arm])
             }
                     //Alternative: returns always false
@@ -195,11 +210,18 @@ module Planner {
         * The distance from the arm the nearest misplaced object.
         * The number of missplaced objects and the distance between them. 
         using this two parameter one
+
+        NOTE: That the current heuristics is apperently making it slower!
+        That is why it is commented out. Now it is basicly a breath first
+        search.
         */
         function state_heur(a1 : ActionState, a2 : ActionState){
-            var nearest_obj = find_obj(["l"],a2.stacks)[0]
-            var arm_dist = Math.abs(a1.arm - nearest_obj);
-            return arm_dist; 
+
+            // var nearest_obj = find_obj(["g"],a2.stacks)[0] //g
+            // var arm_dist = Math.abs(a1.arm - nearest_obj);
+            // console.log("\n");
+            // return arm_dist; 
+            return 0;
         }
         /*
         Calculates the distance between two states, see astarTest.
@@ -236,13 +258,4 @@ module Planner {
         }
         return plan;
     }
-
-
-    function pddl_evaluate(){
-
-    }
-    
-
-
-
 }
