@@ -40,9 +40,7 @@ module Shrdlite {
                 world.printError("Parsing error", err.message);
                 return;
             } else {
-                world.printError("Exception", err.message);
-                return;
-                // throw err;
+                throw err;
             }
         }
         world.printDebugInfo("Found " + parses.length + " parses");
@@ -57,12 +55,13 @@ module Shrdlite {
                 world.printError("Interpretation error", err.message);
                 return;
             } else {
-                throw err;
+                world.printError("Exception error", err.message);
+                return;
             }
         }
         world.printDebugInfo("Found " + interpretations.length + " interpretations");
         interpretations.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
+            world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res, world.currentState));
         });
 
         try {

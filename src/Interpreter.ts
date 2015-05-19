@@ -27,14 +27,19 @@ module Interpreter {
     export interface Literal {pol:boolean; rel:string; args:string[];}
 
 
-    export function interpretationToString(res : Result) : string {
+    export function interpretationToString(res : Result, state : WorldState) : string {
         return res.intp.map((lits) => {
-            return lits.map((lit) => literalToString(lit)).join(" & ");
+            return lits.map((lit) => literalToString(lit, state)).join(" & ");
         }).join(" | ");
     }
 
-    export function literalToString(lit : Literal) : string {
-        return (lit.pol ? "" : "-") + lit.rel + "(" + lit.args.join(",") + ")";
+    export function literalToString(lit : Literal, state : WorldState) : string {
+        var argObjs = lit.args.map((key) => {
+          var obj = state.objects[key]
+          return "<"+key+":"+obj.size+","+obj.color+","+obj.form+">";
+        });
+        // return (lit.pol ? "" : "-") + lit.rel + "(" + lit.args.join(",") + ")";
+        return (lit.pol ? "" : "-") + lit.rel + "(" + argObjs.join(",") + ")";
     }
 
 
@@ -106,8 +111,6 @@ module Interpreter {
                 break;
             default: throw "Command not found: " + cmd.cmd;
         };
-
-        console.log("Interpretation:", intprt);
         return intprt;
     }
 
