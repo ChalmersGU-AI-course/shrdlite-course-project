@@ -314,7 +314,7 @@ module Interpreter {
                   return { val: false , str:"Only boxes can contain other objects" };
               else if (objA.size==objB.size && ( objB.form=="pyramid" || objB.form=="plank" ||objB.form=="box") )
                   return { val: false , str:"Boxes can not contain pyramids, planks or boxes of the same size" };
-              else if (objB.size=="small" && objB.size=="large")
+              else if (objB.size=="small" && objA.size=="large")
                   return { val: false , str:"Small boxes cannot contain any large object" };
               else return { val:true , str: "" };
 
