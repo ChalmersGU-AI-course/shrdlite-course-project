@@ -8,8 +8,10 @@ var Interpreter;
         var interpretations = [];
         parses.forEach(function (parseresult) {
             var intprt = parseresult;
-            intprt.intp = interpretCommand(intprt.prs, currentState);
-            interpretations.push(intprt);
+            var result = interpretCommand(intprt.prs, currentState);
+            interpretations.push(result);
+            console.log(result);
+            console.log(interpretations);
         });
         if (interpretations.length) {
             return interpretations;
@@ -55,7 +57,7 @@ var Interpreter;
         console.log("cmd type: " + cmdType);
         if (cmdType == "take") {
             var object = isInState(cmd['ent']['obj'],state);            
-            var intprt = {rel: "holding", item:object};
+            var intprt = [{rel: "holding", item:object}];
             console.log(intprt);
             return intprt;
             
