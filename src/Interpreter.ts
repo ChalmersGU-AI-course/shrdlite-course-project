@@ -300,12 +300,14 @@ module Interpreter {
           case "beside": return { val:true , str: "" };
 
           case "inside": //inside
-              var objA = objs[ lit.args[0] ];
-              var objB = objs[ lit.args[1] ];
+              var objA = objs[ lit.args[1] ]; // box
+              var objB = objs[ lit.args[0] ];
               if (objA.form!="box")
                   return { val: false , str:"Only boxes can contain other objects" };
               else if (objA.size==objB.size && ( objB.form=="pyramid" || objB.form=="planks" ||objB.form=="box") )
                   return { val: false , str:"Boxes can not contain pyramids, planks or boxes of the same size" };
+              else if (objB.size=="large" && objA.size =="small")
+                  return { val: false , str:"Small objects can not support large objects" };
               else return { val:true , str: "" };
 
           case "holding": return { val:true , str: "" };
