@@ -35,6 +35,9 @@ module Interpreter {
 
     export function literalToString(lit : Literal, state : WorldState) : string {
         var argObjs = lit.args.map((key) => {
+          if(key=="floor") {
+              return "<"+key+">";
+          }
           var obj = state.objects[key]
           return "<"+key+":"+obj.size+","+obj.color+","+obj.form+">";
         });
@@ -58,14 +61,19 @@ module Interpreter {
         var worldLit=worldToLiteral(state);
 
         // This returns a dummy interpretation involving two random objects in the world
-        // var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        // var a = objs[getRandomInt(objs.length)];
-        // var b = objs[getRandomInt(objs.length)];
+        /*
+        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        var a = objs[getRandomInt(objs.length)];
+        var b = objs[getRandomInt(objs.length)];
 
-        // var intprt : Literal[][] = [[
-        //  {pol: true, rel: "ontop", args: [a, "floor"]},
-        //  {pol: true, rel: "holding", args: [b]}
-        // ]];
+        var intprt : Literal[][] = [[
+         {pol: true, rel: "ontop", args: [a, "floor"]},
+         {pol: true, rel: "holding", args: [b]}
+        ],[
+         {pol: true, rel: "ontop", args: [b, "floor"]},
+         {pol: true, rel: "holding", args: [a]}
+        ]];
+        */
 
         var getHolding = () => {
           if (!state.holding) throw "Not holding anything.";
@@ -302,10 +310,12 @@ module Interpreter {
           case "inside": //inside
               var objA = objs[ lit.args[0] ];
               var objB = objs[ lit.args[1] ];
-              if (objA.form!="box")
+              if (objB.form!="box")
                   return { val: false , str:"Only boxes can contain other objects" };
-              else if (objA.size==objB.size && ( objB.form=="pyramid" || objB.form=="planks" ||objB.form=="box") )
+              else if (objA.size==objB.size && ( objB.form=="pyramid" || objB.form=="plank" ||objB.form=="box") )
                   return { val: false , str:"Boxes can not contain pyramids, planks or boxes of the same size" };
+              else if (objB.size=="small" && objB.size=="large")
+                  return { val: false , str:"Small boxes cannot contain any large object" };
               else return { val:true , str: "" };
 
           case "holding": return { val:true , str: "" };
