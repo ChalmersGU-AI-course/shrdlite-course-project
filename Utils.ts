@@ -262,38 +262,37 @@ function validInterpretation(int: Interpreter.Literal, objectDef: {[s:string]: O
 }
 
 function heuristicOntop(first: string, second: string, stacks: string[][]){
-    var foundF = false;
-    var foundS = false;
+    var foundF = -1;
+    var foundS = -1;
     var h = 0;
     for(var i=0; i<stacks.length; i++){
         for(var j=0; j<stacks[i].length; j++){
             if(stacks[i][j] == second){
-                foundS = true;
+                foundS = i;
                 if(stacks[i].length-1>j && stacks[i][j+1] == first){
                     return 0
                 }
                 h += stacks[i].length-1-j;
             }
             if(stacks[i][j] == first){
-                foundF = true;
+                foundF = i;
                 h += stacks[i].length-1-j;
             }
-            if(foundF && foundS){
-                return h+1;
+            if(foundF!=-1 && foundS!=-1){
+                return h+Math.abs(foundS-foundF);
             }
         }
     }
-    console.log("heur ontop return");
-    return h+1;
+    return h+Math.abs(foundS-foundF);
 }
 function heuristicAbove(first: string, second: string, stacks: string[][]){
-    var foundF = false;
-    var foundS = false;
+    var foundF = -1;
+    var foundS = -1;
     var h = 0;
     for(var i=0; i<stacks.length; i++){
         for(var j=0; j<stacks[i].length; j++){
             if(stacks[i][j] == second){
-                foundS = true;
+                foundS = i;
                 for(var k=j; k<stacks[i].length; k++){
                     if(stacks[i][k] == first){
                         return 0;
@@ -301,28 +300,28 @@ function heuristicAbove(first: string, second: string, stacks: string[][]){
                 }
             }
             if(stacks[i][j] == first){
-                foundF = true;
+                foundF = i;
                 h = stacks[i].length-1-j;
             }
-            if(foundF && foundS){
-                return h+1;
+            if(foundF!=-1 && foundS!=-1){
+                return h+Math.abs(foundS-foundF);
             }
         }
     }
-    return h+1;
+    return h+Math.abs(foundS-foundF);
 }
 function heuristicUnder(first: string, second: string, stacks: string[][]){
     return heuristicAbove(second,first,stacks);
 }
 function heuristicBeside(first: string, second: string, stacks: string[][]){
-    var foundF = false;
-    var foundS = false;
+    var foundF = -1;
+    var foundS = -1;
     var hF = 0;
     var hS = 0;
     for(var i=0; i<stacks.length; i++){
         for(var j=0; j<stacks[i].length; j++){
             if(stacks[i][j] == second){
-                foundS = true;
+                foundS = i;
                 if(!foundF && stacks.length-1>i){
                     for(var k=0; k<stacks[i+1].length; k++){
                         if(stacks[i+1][k] == first){
@@ -333,7 +332,7 @@ function heuristicBeside(first: string, second: string, stacks: string[][]){
                 hS = stacks[i].length-1-j;
             }
             if(stacks[i][j] == first){
-                foundF = true;
+                foundF = i;
                 if(!foundS && stacks.length-1>i){
                     for(var k=0; k<stacks[i+1].length; k++){
                         if(stacks[i+1][k] == first){
@@ -344,25 +343,25 @@ function heuristicBeside(first: string, second: string, stacks: string[][]){
                 hF = stacks[i].length-1-j;
             }
             if(foundF && foundS){
-                return Math.min(hF,hS)+1;
+                return Math.min(hF,hS)+Math.abs(foundS-foundF);
             }
         }
     }
-    return Math.min(hF,hS)+1;
+    return Math.min(hF,hS)+Math.abs(foundS-foundF);
 }
 function heuristicLeft(first: string, second: string, stacks: string[][]){
-    var foundF = false;
-    var foundS = false;
+    var foundF = -1;
+    var foundS = -1;
     var hF = 0;
     var hS = 0;
     for(var i=0; i<stacks.length; i++){
         for(var j=0; j<stacks[i].length; j++){
             if(stacks[i][j] == second){
-                foundS = true;
+                foundS = i;
                 hS = stacks[i].length-1-j;
             }
             if(stacks[i][j] == first){
-                foundF = true;
+                foundF = i;
                 if(!foundS){
                     for(var k=0; k<stacks[i+1].length; k++){
                         if(stacks.length-1>i && stacks[i+1][k] == first){
@@ -373,11 +372,11 @@ function heuristicLeft(first: string, second: string, stacks: string[][]){
                 hF = stacks[i].length-1-j;
             }
             if(foundF && foundS){
-                return Math.min(hF,hS)+1;
+                return Math.min(hF,hS)+Math.abs(foundS-foundF);
             }
         }
     }
-    return Math.min(hF,hS)+1;
+    return Math.min(hF,hS)+Math.abs(foundS-foundF);
 }
 function heuristicRight(first: string, second: string, stacks: string[][]){
     return heuristicLeft(second,first,stacks);
