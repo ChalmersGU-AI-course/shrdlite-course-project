@@ -37,7 +37,7 @@ function permutate(initWorld: WorldState):graphmodule.Graph<string[][]>{
                                 stack.push(newState2);
                             }
                             //Add an edge between the initState and the newState2
-                            graph.addEdge(initStateID, id, Math.abs(j-i), true);
+                            graph.addEdge(initStateID, id, 1, true);
 
                                 
                         }
@@ -54,15 +54,12 @@ function permutate(initWorld: WorldState):graphmodule.Graph<string[][]>{
 }
 */
 
-function permutateBasedOn(baseOn: graphmodule.GraphNode<string[][]>, objects: { [s:string]: ObjectDefinition; }):graphmodule.GraphNode<string[][]>[]{
+function permutateBasedOn(baseOn: graphmodule.GraphNode<string[][]>, objects: { [s:string]: ObjectDefinition; }, graph: graphmodule.Graph<string[][]>){
     //Get the data that the given node contains
     var baseOnState = baseOn.data;
     
     //Get the number of columns within this world
     var columns = baseOnState.length;
-    
-    //Initialize a return list
-    var returnList: graphmodule.GraphNode<string[][]>[] = [];
     
     console.log("permutate.permutateBasedOn starting permutation----------------------------");
     //console.log("permutate.permutateBasedOn startState: " + prettyMat(baseOnState));
@@ -115,7 +112,12 @@ function permutateBasedOn(baseOn: graphmodule.GraphNode<string[][]>, objects: { 
                         var newId = generateID(newState2);
                         var newNode = new graphmodule.GraphNode(newId, newState2)
                         
-                        returnList.push(newNode);
+                        //Add the neighbour to the graph
+                        graph.addNode(newNode);
+                        
+                        //Add edge between current node and neighbour
+                        graph.addEdge(baseOn.id, newNode.id, Math.abs(j-i), true);
+                        
                         //console.log("permutate.permutateBasedOn added State: " + prettyMat(newState2));
                     }
                     
@@ -124,8 +126,6 @@ function permutateBasedOn(baseOn: graphmodule.GraphNode<string[][]>, objects: { 
         }
         
     }
-    
-    return returnList;
 }
 
 

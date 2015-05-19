@@ -126,8 +126,7 @@ module Planner {
                 //console.log("bottomElement: " + bottomElement);
                 
                 if(validPlacement(holding, bottomElement, state.objects)){
-                    console.log("drop plan to stack " + i);
-                    dropPlan.push("dropping " + getObject(state,holding));
+                    dropPlan.push("dropping the " + getObject(state,holding));
                     moveArmTo(dropPlan, arm, i);
                     arm = i;
                     dropPlan.push("d");
@@ -194,7 +193,7 @@ module Planner {
             }
         ,
             (basedOn: graphmodule.GraphNode<string[][]>) => {
-                return permutateBasedOn(basedOn, state.objects);
+                return permutateBasedOn(basedOn, state.objects, graph);
             }
         );
         
