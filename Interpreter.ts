@@ -11,7 +11,9 @@ module Interpreter {
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
-            interpretations.push(intprt);
+            if(intprt.intp.length>0){
+                interpretations.push(intprt);
+            }
         });
         if (interpretations.length) {
             if(interpretations.length>1){
@@ -26,7 +28,8 @@ module Interpreter {
 
     export interface Result extends Parser.Result {intp:Literal[][];}
     export interface Literal {pol:boolean; rel:string; args:string[];}
-    interface Sayings {rel:string; objs:string[]};
+    interface Sayings {rel:string; objs:string[][]};
+    interface objLocPair {obj:string; loc:string};
 
     export function interpretationToString(res : Result) : string {
         return res.intp.map((lits) => {
@@ -50,66 +53,109 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        var lit : Literal[][] = [[]];
+        console.log(":::::::::::::New Interpretation:::::::::::::");
+        var lit : Literal[][] = [];
         if(cmd.cmd === "move" || cmd.cmd === "put"){
-            var objs : string[];
+            var objs : string[][];
             if(cmd.cmd === "put"){
                 if(state.holding === null){
                     return lit;
                     //TODO: Throw error?
                 }
-                objs = [state.holding];
+                objs = [[state.holding]];
             } else{
                 objs = interpretEntity(cmd.ent, state);
             }
             var locs : Sayings = interpretLocation(cmd.loc, state);
-            var physics : {keys:string[] ;locs: {[s:string]: string[]}} = checkPhysics(true, objs, locs, state);
-            objs = physics.keys;
-
-            //Only place we know which object to put where
-            var it : number = 0;
-            for(var i : number = 0; i < objs.length; i++){
-                for(var j : number= 0; j< physics.locs[objs[i]].length; j++){
-                    lit[it] = [];
-                    //TODO:: AND between interpretations
-                    lit[it++][0] = {pol: true, rel : locs.rel, args : [objs[i],physics.locs[objs[i]][j]]};    
+            var physics : objLocPair[][] = buildRules(true, objs, locs, state);
+            
+            //objs = physics.keys;
+            physics.forEach(or => {
+                var andList : Literal[] = [];
+                or.forEach(and => {
+                    var order : Literal = {pol: true, rel : locs.rel, args : [and.obj,and.loc]};
+                    andList.push(order);
+                    return true;
+                });
+                if(andList.length>0){
+                    lit.push(andList);
                 }
-            }
-            //check if valid.
-            return lit;    
+                return true;
+            });
+            //Only place we know which object to put where
+           
+            return lit;
         } else {
-            var objs : string[] = interpretEntity(cmd.ent, state);
-            for(var i : number = 0; i < objs.length; i++){
-                lit[i] = [];
-                lit[i][0] = {pol: true, rel : "holding", args : [objs[i]]};   
-            }
+            var objs : string[][] = interpretEntity(cmd.ent, state);
+            objs.forEach(objList => {   // obj or 
+                var andList : Literal[] = [];
+                objList.forEach(obj => {    //obj and
+                    var order : Literal = {pol: true, rel : "holding", args : [obj]};
+                    andList.push(order);
+                    return true;
+                });
+                if(andList.length>0){
+                    lit.push(andList);
+                }
+                return true;
+            });
             return lit;
         }
     }
 
-    function interpretEntity(ent : Parser.Entity, state : WorldState) : string[] {
-        //Assuming only single objects. 
-        //TODO: quant == all, any.
-        var objs : string[] = interpretObject(ent.obj, state);
-        //TODO Check quantifier
+    function interpretEntity(ent : Parser.Entity, state : WorldState) : string[][] {
+        var objs : string[][] = interpretObject(ent.obj, state);
+        if(ent.quant === "the"){
+            if(objs.length>1){
+                console.log("problems. 'the' entity..."+objs.length)
+                return objs;
+            } else{
+                return objs;
+            }
+        }
+        if(ent.quant === "any"){
+            return objs;
+        }
+        if(ent.quant === "all"){
+            var newObjs : string[][] = [];
+            var l : string[] = [];
+            objs.forEach(o1 => {
+                o1.forEach(o2 => {
+                    l.push(o2);
+                    return true;
+                    });
+                return true;
+            });
+            newObjs.push(l);
+            return newObjs;
+        }
+        //TODO Throw error
         return objs;
     }
 
-
-
-
-    function interpretObject(obj : Parser.Object, state : WorldState) : string[] {
-        
+    function interpretObject(obj : Parser.Object, state : WorldState) : string[][] {
         if(obj.obj != null){
-            var objs : string[] = interpretObject(obj.obj, state);
+            var objs : string[][] = interpretObject(obj.obj, state);
+            
             var locs : Sayings = interpretLocation(obj.loc, state);
-            var physics : {keys:string[] ;locs: {[s:string]: string[]}} = checkPhysics(false,objs, locs, state);
-            objs = physics.keys;
+            var physics : objLocPair[][] = buildRules(false, objs, locs, state);
+
+            objs = [];
+            physics.forEach(l => {
+                var r : string[] = [];
+                l.forEach(p => {
+                    r.push(p.obj);
+                    return true;
+                });
+                objs.push(r);
+                return true;
+            });
+                //e = physics.keys;
             return objs;
         }else{
             var objsindexes : string[] = Array.prototype.concat.apply([], state.stacks);
             if(obj.form === "floor"){
-                return ["floor"];
+                return [["floor"]];
             }
             if(obj.size !== null ){
                 objsindexes = objsindexes.filter(e=> state.objects[e].size === obj.size);
@@ -122,7 +168,13 @@ module Interpreter {
             } else if (obj.size === null && obj.color === null) {
                 objsindexes.push("floor");
             }
-            return objsindexes;
+            var newObjs : string[][] = [];
+            objsindexes.forEach(o => {
+                var l : string[] = [];
+                l.push(o);
+                newObjs.push(l);
+            });
+            return newObjs;
         }
     }
 
@@ -130,76 +182,107 @@ module Interpreter {
         var locs : Sayings = {rel:loc.rel, objs:interpretEntity(loc.ent, state)}
         return locs;
     }
+   
+    function buildRules(futureState: boolean, objs : string[][], locs : Sayings, state : WorldState) : objLocPair[][] {
+        var grid : objLocPair[][] = [];
+        objs.forEach(objList => { //or obj
+                var row : objLocPair[] = [];
+                objList.forEach(obj => { //and obj 
+                locs.objs.forEach(locList => {  //or locs
+                    locList.forEach(loc => {    //and locs
+                        if(validatePhysics(futureState, obj,loc,locs.rel, state)){
+                            if(row.every(p => p.obj !== obj &&(loc === "floor" || p.loc !== loc))) {
+                                row.push({"obj":obj, "loc":loc});
+                            }
+                        }   
+                        return true;
+                    });
+                    return true;
+                });
+                return true;
+            });
+            if(row.length>0 && row.length == objList.length ){
+                grid.push(row);
+            }
+            return true;
+        });
+        objs.forEach(objList => { //or obj
+            locs.objs.forEach(locList => {  //or locs
+                var row : objLocPair[] = [];
+                objList.forEach(obj => { //and obj 
+                    locList.forEach(loc => {    //and locs
+                        if(validatePhysics(futureState, obj,loc,locs.rel, state)){
+                            if(row.every(p => p.obj !== obj &&(loc === "floor" || p.loc !== loc))) {
+                                row.push({"obj":obj, "loc":loc});
+                            }
+                        }   
+                        return true;
+                    });
+                    return true;
+                });
+                if(row.length>0 && row.length == objList.length ){
+                    grid.push(row);
+                }
+                return true;
+            });
+            return true;
+        });
 
 
-    function checkPhysics(futureState: boolean, objs : string[], locs : Sayings, state : WorldState) : {keys:string[] ;locs: {[s:string]: string[]}} {
-        var result : {keys:string[] ;locs: {[s:string]: string[]}} = {"keys" : [] , "locs": {}}; 
-        for(var i : number = 0; i < objs.length;i++){
-            var sayingsI : string[] = [];
-            for(var j : number = 0; j < locs.objs.length; j++){
-                var works : boolean = false;
-                //can't place the same object on itself
-                if(locs.objs[j]===objs[i]){
-                    continue;
-                }
-                if(locs.rel === "ontop"){
-                   if(locs.objs[j] === "floor"){
-                        works = futureState || state.stacks.some(e => e.indexOf(objs[i]) === 0);
-                        
-                    } else{
-                        works = futureState ||state.stacks.some(e => isOntop(e, locs.objs[j],objs[i]));
-                        works = works && formCorrectlyOnTop(locs.objs[j],objs[i], state);
-                        works = works && smallOnTopOfLarge(locs.objs[j],objs[i], state);
-                    }   
-                } else if(locs.rel === "inside"){
-                    if(locs.objs[j] !== "floor"){
-                        works = futureState ||state.stacks.some(e => isOntop(e, locs.objs[j],objs[i]));
-                        works = works && formCorrectlyInside(locs.objs[j],objs[i], state);
-                    }  
-                } else if(locs.rel === "beside"){
-                    if(locs.objs[j] !== "floor"){
-                        works = futureState || Math.abs(checkHorizontalDistance(state.stacks ,objs[i], locs.objs[j])) == 1
-                    }
-                } else if(locs.rel === "rightof"){
-                    if(locs.objs[j] !== "floor"){
-                        works = futureState || checkHorizontalDistance(state.stacks ,objs[i], locs.objs[j]) >= 1
-                    }
-                } else if(locs.rel === "leftof"){
-                    if(locs.objs[j] !== "floor"){
-                        works = futureState || checkHorizontalDistance(state.stacks ,objs[i], locs.objs[j]) <= -1
-                    }
-                } else if(locs.rel === "above"){
-                    if(locs.objs[j] === "floor"){
-                        works = futureState || state.stacks.some(e => e.indexOf(objs[i]) >= 0);
-                    } else{
-                        works = futureState || state.stacks.some(e => isAbove(e, locs.objs[j],objs[i]));
-			works = works && notAboveBall(locs.objs[j], state);
-                        works = works && smallOnTopOfLarge(locs.objs[j],objs[i], state);
-                    } 
-                } else if(locs.rel === "under"){
-                    if(locs.objs[j] !== "floor"){
-		        if(objs[i] === "floor") {
-                            works = futureState || state.stacks.some(e => e.indexOf(locs.objs[j]) >= 0);
-                        } else{
-		 	
-                            works = futureState || state.stacks.some(e => isAbove(e, objs[i], locs.objs[j]));
-                            works = works && notAboveBall(objs[i], state);
-                            works = works && smallOnTopOfLarge(objs[i], locs.objs[j], state);
-			}
-                    } 
-                } 
-                if(works){
-                    sayingsI.push(locs.objs[j]);
-                }
-            }
-            if(sayingsI.length>0){
-                result.keys.push(objs[i]);
-                result.locs[objs[i]] = sayingsI;
-            }
-        }
-        return result;
+        return grid;
     }
 
+    function validatePhysics(futureState: boolean, obj : string, loc : string, rel : string, state : WorldState) : boolean{
+        var works : boolean  = false;
+        if(loc!==obj){
+            if(rel === "ontop"){
+               if(loc === "floor"){
+                    return futureState || state.stacks.some(e => e.indexOf(obj) === 0);
+                } else{
+                    works = futureState ||state.stacks.some(e => isOntop(e, loc, obj));
+                    works = works && formCorrectlyOnTop(loc, obj, state);
+                    return works && smallOnTopOfLarge(loc, obj, state);
+                }   
+            } else if(rel === "inside"){
+                if(loc !== "floor"){
+                    works = futureState ||state.stacks.some(e => isOntop(e, loc ,obj));
+                    return works && formCorrectlyInside(loc, obj, state);
+                }  
+            } else if(rel === "beside"){
+                if(loc !== "floor"){
+                    return futureState || Math.abs(checkHorizontalDistance(state.stacks, obj, loc)) == 1
+                }
+            } else if(rel === "rightof"){
+                if(loc !== "floor"){
+                    return futureState || checkHorizontalDistance(state.stacks, obj, loc) >= 1
+                }
+            } else if(rel === "leftof"){
+                if(loc !== "floor"){
+                    return futureState || checkHorizontalDistance(state.stacks , obj, loc) <= -1
+                }
+            } else if(rel === "above"){
+                if(loc === "floor"){
+                    return futureState || state.stacks.some(e => e.indexOf(obj) >= 0);
+                } else{
+                    works = futureState || state.stacks.some(e => isAbove(e, loc, obj));
+                    works = works && notAboveBall(loc, state);
+                    return works && smallOnTopOfLarge(loc ,obj , state);
+                } 
+            } else if(rel === "under"){
+                if(loc !== "floor"){
+                    if(obj === "floor") {
+                        return futureState || state.stacks.some(e => e.indexOf(loc) >= 0);
+                    } else{
+                        works = futureState || state.stacks.some(e => isAbove(e, obj, loc));
+                        works = works && notAboveBall(obj, state);
+                        return works && smallOnTopOfLarge(obj, loc, state);
+                    }   
+                } 
+            } 
+        }
+        return false;
+    }
+    
     function getindexOfObject(stacks : string[][], obj : string) : number[] {
         for(var i = 0; i<stacks.length; i++){
             var index = stacks[i].indexOf(obj);
