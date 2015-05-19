@@ -54,6 +54,22 @@ module Shrdlite {
             if (err instanceof Interpreter.Error) {
                 world.printError("Interpretation error", err.message);
                 return;
+            } else if(err instanceof Interpreter.AmbiguousError){
+                console.log("SHRDLITE: " + err);
+                console.log("SHRDLITE: " + err.sentences);
+                var msg: string = "";
+                for(var i = 0; i < err.sentences.length; i++){
+                    if(i+1 == err.sentences.length){
+                        msg += err.sentences[i];
+                    } else {
+                        msg += err.sentences[i] + " or ";
+                    }
+                }
+                
+                world.printError("The interpretation was ambiguous! Please choose between one of the following interpretations:\n" + msg);
+                
+                
+                return;
             } else {
                 throw err;
             }
@@ -83,6 +99,8 @@ module Shrdlite {
         return plan;
     }
 
+    //Helper function which extracts key to object string
+    
 
     // This is a convenience function that recognizes strings
     // of the form "p r r d l p r d"

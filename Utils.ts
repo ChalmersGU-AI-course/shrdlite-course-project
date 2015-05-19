@@ -416,3 +416,4 @@ function heuristics(first: string, rel: string, second: string, stacks: string[]
             return 0;
     }
 }
+

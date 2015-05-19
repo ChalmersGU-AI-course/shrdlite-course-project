@@ -15,7 +15,9 @@ module Planner {
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
             plan.plan = planInterpretation(plan.intp, currentState);
-            plans.push(plan);
+            if(plan.plan != undefined && plan.plan != null && plan.plan.length > 0 && plan.plan[0].indexOf("!") !== 0){
+                plans.push(plan);
+            }
         });
         if (plans.length) {
             return plans;
@@ -92,7 +94,7 @@ module Planner {
         //TODO: Meddela VAD som gjorde tolkningen ej giltig
         if(intprt == undefined || intprt.length == 0){
             //No interpretation was found
-            return ["No valid interpretation was found. Please try again"];
+            return ["! - No valid interpretation was found. Please try again"];
         }
         
         var plan : string[] = [];
