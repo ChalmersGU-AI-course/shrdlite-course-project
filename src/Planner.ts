@@ -234,7 +234,7 @@ module Planner {
         var score = 0;
         for (var goal=0; goal<goalConditions.length; goal++) {
             var g = goalConditions[goal];
-            if (g.rel == "ontop" ) {
+            if (g.rel == "ontop" || g.rel == "inside") {
                 var top : number[] = Planner.getLocation(g.args[0], state.stacks);
                 if(!(top[1]==0 && g.args[1]=="floor")) {
                     var bottom : number[] = Planner.getLocation(g.args[1], state.stacks);
