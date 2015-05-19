@@ -95,7 +95,7 @@ module Interpreter {
             if (cmd.ent) { // Move specified object.
                 entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels);
             }else{ // Move 'it', i.e. the currently held object
-                entitiesIntrprt = [[state.objectsWithId[state.holding]]];
+                entitiesIntrprt = [[[state.objectsWithId[state.holding]]]];
             }
 
             // Where we should move it
