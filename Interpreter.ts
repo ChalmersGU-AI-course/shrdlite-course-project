@@ -28,8 +28,8 @@ module Interpreter {
 
     export interface Result extends Parser.Result {intp:Literal[][];}
     export interface Literal {pol:boolean; rel:string; args:string[];}
-    interface Sayings {rel:string; objs:string[][]};
-    interface objLocPair {obj:string; loc:string};
+    interface Sayings {rel:string; objs:string[][]}
+    interface objLocPair {obj:string; loc:string}
 
     export function interpretationToString(res : Result) : string {
         return res.intp.map((lits) => {
@@ -53,7 +53,6 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        console.log(":::::::::::::New Interpretation:::::::::::::");
         var lit : Literal[][] = [];
         if(cmd.cmd === "move" || cmd.cmd === "put"){
             var objs : string[][];
@@ -107,7 +106,6 @@ module Interpreter {
         var objs : string[][] = interpretObject(ent.obj, state);
         if(ent.quant === "the"){
             if(objs.length>1){
-                console.log("problems. 'the' entity..."+objs.length)
                 return objs;
             } else{
                 return objs;
@@ -179,8 +177,7 @@ module Interpreter {
     }
 
     function interpretLocation(loc : Parser.Location, state : WorldState) : Sayings {
-        var locs : Sayings = {rel:loc.rel, objs:interpretEntity(loc.ent, state)}
-        return locs;
+        return {rel:loc.rel, objs:interpretEntity(loc.ent, state)};
     }
 
     function buildRules(futureState: boolean, objs : string[][], locs : Sayings, state : WorldState) : objLocPair[][] {
@@ -202,7 +199,6 @@ module Interpreter {
         locs.objs = newLocs;
         objs.forEach(objList => { //or obj
             locs.objs.forEach(locList => {  //or locs
-                //console.log(" locs " +locList.length + " objs " +objList.length);
                 var row : objLocPair[] = [];
                 objList.forEach(obj => { //and obj 
                     locList.forEach(loc => {    //and locs
@@ -218,9 +214,13 @@ module Interpreter {
                     return true;
                 });
                 if(row.length>0 && row.length === locList.length*objList.length ){
-                    var contains : boolean = grid.some(r => { var b : boolean =  row.every(p =>
-                    ((locs.rel==="below" && p.obj === "floor")|| r.some(o => o.obj === p.obj)) &&
-                    ((locs.rel!=="below" && p.loc === "floor")|| r.some(o => o.loc === p.loc))); console.log("lower: "+b);return b;})
+                    var contains : boolean = grid.some(r => {
+                        var b : boolean =  row.every(p =>
+                            ((locs.rel==="below" && p.obj === "floor")|| r.some(o => o.obj === p.obj)) &&
+                            ((locs.rel!=="below" && p.loc === "floor")|| r.some(o => o.loc === p.loc)));
+                                console.log("lower: "+b);
+                                return b;
+                    });
                     if(!contains){
                         grid.push(row);
                     }
@@ -231,136 +231,6 @@ module Interpreter {
         });
 
         return grid;
-    }
-
-    function validatePhysics(futureState: boolean, obj : string, loc : string, rel : string, state : WorldState) : boolean{
-        var works : boolean  = false;
-        if(loc !== obj) {
-            switch(rel) {
-                case "ontop":
-                    if(loc === "floor"){
-                        return futureState || state.isOnTopOf(obj, loc);
-                    } else{
-                        works = futureState || state.isOnTopOf(loc ,obj);
-                        works = works && formCorrectlyOnTop(loc, obj, state);
-                        return works && smallOnTopOfLarge(loc, obj, state);
-                    }
-                    break;
-                case "inside":
-                    if(loc !== "floor"){
-                        works = futureState || state.isOnTopOf(loc ,obj);
-                        return works && formCorrectlyInside(loc, obj, state);
-                    }
-                    break;
-                case "beside":
-                    if(loc !== "floor"){
-                        return futureState || state.isBeside(obj, loc);
-                    }
-                    break;
-                case "rightof":
-                    if(loc !== "floor"){
-                        return futureState || state.isRightOf(obj, loc);
-                    }
-                    break;
-                case "leftof":
-                    if(loc !== "floor"){
-                        return futureState || state.isLeftOf(obj, loc);
-                    }
-                    break;
-                case "above":
-                    if(loc === "floor"){
-                        return futureState || state.stacks.some(e => e.indexOf(obj) >= 0);
-                    } else{
-                        works = futureState || state.isAbove(loc,obj);
-                        works = works && notAboveBall(loc, state);
-                        return works && smallOnTopOfLarge(loc ,obj , state);
-                    }
-                    break;
-                case "under":
-                    if(loc !== "floor"){
-                        if(obj === "floor") {
-                            return futureState || state.stacks.some(e => e.indexOf(loc) >= 0);
-                        } else{
-                            works = futureState || state.isAbove(obj, loc);
-                            works = works && notAboveBall(obj, state);
-                            return works && smallOnTopOfLarge(obj, loc, state);
-                        }
-                    }
-            };
-        }
-        return false;
-    }
-
-    //Keep this or change inside and ontop to depenid on context?
-    function formCorrectlyInside(locationObject : string, object : string, state : WorldState) : boolean {
-        if(object === "floor"){
-            return false;
-        }
-        //boxes cannot contain pyramids, planks, or boxes of same size
-        var locForm : string = state.objects[locationObject].form;
-        var locSize : string = state.objects[locationObject].size;
-        var objForm : string = state.objects[object].form;
-        var objSize : string = state.objects[object].size;
-        if(locationObject !== "floor" && locForm === "box"){
-            if(objForm === "ball"){
-                return true;
-            }
-            if(locSize === "small"){
-                return false;
-            }
-            return objSize === "small";
-        }
-        return false;
-    }
-
-    function formCorrectlyOnTop(locationObject : string, object : string, state : WorldState) : boolean {
-        if(object === "floor"){
-            return false;
-        }
-        if(locationObject === "floor"){
-            return true;
-        }
-        var objForm : string = state.objects[object].form;
-        var objSize : string = state.objects[object].form;
-        var locForm : string = state.objects[locationObject].form;
-        var locSize : string = state.objects[locationObject].form;
-
-        if(locForm === "box"){
-            return false;
-        }
-        if(objForm === "ball"){
-            return false;
-        }
-        if(objForm === "box"){
-            //Small boxes cannot be supported by small bricks or pyramids
-            //Large boxes cannot be supported by large pyramids
-            if(objSize === "small"){
-                return !((locForm === "brick" || locForm === "pyramid") && locSize === "small");
-            }
-            return !(locForm === "pyramid");
-        }
-        return notAboveBall(locationObject,state);
-
-    }
-
-    function notAboveBall(bottomObject : string, state : WorldState) :boolean {
-        return bottomObject === "floor" || state.objects[bottomObject].form !== "ball";
-    }
-
-
-    function smallOnTopOfLarge(bottomObject : string, topObject : string, state : WorldState) : boolean {
-        if(topObject === "floor"){
-            return false;
-        }
-        if(bottomObject === "floor") {
-            return true;
-        }
-        var topSize : string  = state.objects[topObject].size;
-        var bottomSize : string = state.objects[bottomObject].size;
-        if(bottomSize === "large") {
-            return true;
-        }
-        return topSize === "small";
     }
 
     function permute(input : string[], usedChars : string[], permArr : string[][]) {

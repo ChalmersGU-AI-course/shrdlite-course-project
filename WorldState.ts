@@ -65,12 +65,10 @@ class WorldState {
     }
 
     relationExists(obj : string, loc : string, rel : string) : boolean {
-        console.log("RELATIONEXISTS");
         if(loc !== obj) {
             switch(rel) {
                 case "ontop":
                 case "inside":
-                    console.log(obj + " " + rel + " " + loc + ": " + this.isOnTopOf(obj,loc));
                     return this.isOnTopOf(obj,loc);
                 case "beside":
                     return loc !== "floor" && this.isBeside(obj,loc);
