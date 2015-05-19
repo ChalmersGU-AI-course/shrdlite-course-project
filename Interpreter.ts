@@ -294,6 +294,9 @@ export function checkValidPos (over : ObjectDefinition, under : ObjectDefinition
                     return false;
                 }
             }
+            else if(over.form == "brick"){
+                return (checkSizeUGE(over.size, under.size))
+            }
             else if(checkLessEQ(over.size, under.size) )
             {
                 return true;
