@@ -111,7 +111,7 @@ module Interpreter {
         } else if (cmd.cmd === 'take') {
             // TODO: Should we check (here?) if the arm is already holding something?
             entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels);
-            entitiesIntrprt = resolveAmb(entitiesIntrprt, 'objects', 'take');
+            entitiesIntrprt = resolveAmb(entitiesIntrprt, 'objects', 'pick up');
             interpretations = combineStuff(toIds(entitiesIntrprt), null, 'holding');
         }
 
