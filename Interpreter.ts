@@ -124,6 +124,7 @@ module Interpreter {
             ]];
         }
 
+        //console.log("returning",interpretations[0][0].slice(), interpretations[0][0]);
         console.log("returning",interpretations);
         return interpretations;
     }
@@ -157,6 +158,7 @@ module Interpreter {
         if (locationsIntrprt == null) {
             locationsIntrprt = [[[null]]];
         }
+        // For all interpretations...
         var interpretations : PddlLiteral[][][] = [];
         for (var i in entitiesIntrprt) {
             for (var j in locationsIntrprt) {
@@ -164,6 +166,50 @@ module Interpreter {
                     , locationsOr = locationsIntrprt[j]
                     , interpretationOr: PddlLiteral[][] = [];
                 // Disjunctive
+                if (entitiesOr.length > 1) {
+                    for (var k in entitiesOr) {
+                        for (var l in locationsOr) {
+                            // TODO Should check that we don't say "Put a ball in all boxes".
+                            // Right now only takes the first element in 'and' if that's the case.
+                            var arg1 = ((entitiesOr[k][0] == null) ? [] : [entitiesOr[k][1]]);
+                            var arg2 = ((locationsOr[l][0] == null) ? [] : [locationsOr[l][1]]);
+                            var pddlGoal = { pol: true, rel: rel, args: arg1.concat(arg2) };
+                            interpretationOr.push([pddlGoal]);
+                        }
+                    }
+                } else { // Conjunctive
+                    var entitiesAnd = entitiesOr[0]
+                      , locs = squishList(locationsOr);
+                    // Put all balls in all boxes is the same as put all balls in a box, except 
+                    // that the first one requires that the number of balls is the same as the 
+                    // number of boxes.
+                    if (locationsOr[0].length > 1 && entitiesAnd.length != locs.length) {
+                        console.warn("Impossible command, returning empty list");
+                        return [];
+                    }
+                    var locPerms = waysToTake(locs, entitiesAnd.length);
+                    console.log("entitiesAnd.length", entitiesAnd.length);
+                    var entPerms = permutator(entitiesAnd);
+                    console.log("locs", locs, "locPerms", locPerms);
+                    console.log("zipping now", locPerms, entPerms);
+                    function zipEntLoc(entities, locations) : PddlLiteral[] {
+                        var interpretationsAnd: PddlLiteral[] = [];
+                        for (var idx in entities) {
+                            var arg1 = ((entities[idx] == null) ? [] : [entities[idx]]);
+                            var arg2 = ((locations[idx] == null) ? [] : [locations[idx]]);
+                            var pddlGoal = { pol: true, rel: rel, args: arg1.concat(arg2) };
+                            interpretationsAnd.push(pddlGoal);
+                        }
+                        return interpretationsAnd;
+                    }
+                    for (var k in locPerms) {
+                        for (var l in entPerms) {
+                            interpretationOr.push(zipEntLoc(entPerms[l], locPerms[k]));
+                        }
+                    }
+                }
+
+                /* // Old code...
                 for (var k in entitiesOr) {
                     for (var l in locationsOr) {
                         var entitiesAnd = entitiesOr[k]
@@ -181,10 +227,67 @@ module Interpreter {
                         interpretationOr.push(interpretationAnd);
                     }
                 }
+                */
                 interpretations.push(interpretationOr);
             }
         }
         return interpretations;
+    }
+
+    // Helper function for permuting an array.
+    // Source: http://stackoverflow.com/questions/9960908/permutations-in-javascript
+    function permutator(inputArr) {
+        var results = [];
+        function permute(arr, memo) {
+            var cur, memo = memo || [];
+            for (var i = 0; i < arr.length; i++) {
+                cur = arr.splice(i, 1);
+                if (arr.length === 0) {
+                    results.push(memo.concat(cur));
+                }
+                permute(arr.slice(), memo.concat(cur));
+                arr.splice(i, 0, cur[0]);
+            }
+            return results;
+        }
+        return permute(inputArr, null);
+    }
+
+    // Returns a list of all unordered permutatios with n elements taken from list.
+    function waysToTake(list : string[], n : number) : string[][] {
+        list = list.slice();
+        if (n > list.length) {
+            return [];
+        } else if (n == 0) {
+            return [[]];
+        } else {
+            var poppedElem = list.pop();
+            // Chose this element
+            var tookOne = waysToTake(list, n-1);
+            for (var i in tookOne) {
+                tookOne[i].push(poppedElem);
+            }
+            var tookZero = waysToTake(list, n);
+            return tookOne.concat(tookZero);
+        }
+
+    }
+
+    // TODO Use lodash helper instead? Flatten or something like that...
+    // Takes a 2-dim list where one of the dimensions only has one element and returns a 1-dim list.
+    function squishList(list : string[][]) : string[] { 
+        var newList : string[] = [];
+        if (list.length == 1) {
+            var innerList = list[0];
+            for (var i in innerList) {
+                newList[i] = innerList[i];
+            }
+        } else {
+            for (var i in list) {
+                newList[i] = list[i][0];
+            }
+        }
+        return newList;
     }
 
     // Finds one/many entities matching the description 'ent' from the parser
