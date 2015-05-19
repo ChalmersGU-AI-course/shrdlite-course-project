@@ -182,20 +182,74 @@ module Interpreter {
         var locs : Sayings = {rel:loc.rel, objs:interpretEntity(loc.ent, state)}
         return locs;
     }
+   
+    function addRule(checkState : boolean, andRow : objLocPair[], obj : string, loc : string, rel : string, state : WorldState) : objLocPair[]{
+        var b : boolean =validatePhysics(checkState, obj,loc, rel, state); 
+        if(b){
+            var contains : boolean = rowContainsPair(andRow, obj, loc, rel, false);
+            if(!contains) {
+                andRow.push({"obj":obj, "loc":loc});
+            }
+        }
+        return andRow;   
+    }
 
-    function buildRules(futureState: boolean, objs : string[][], locs : Sayings, state : WorldState) : objLocPair[][] {
-        var grid : objLocPair[][] = [];
-        var newObjs : string[][] = [];
-        var newLocs : string[][] = [];
-        objs.forEach(and => {
-            var perms : string[][] = permute(and, [],[]);
-            perms.forEach(r => newObjs.push(r));
-            return true;
+    function buildAndRowForObj(checkState : boolean, objs : string[], locs : string[][], rel : string, state : WorldState) : objLocPair[] {
+        var row : objLocPair[] = [];
+        //console.log("new obj row");
+        objs.map(obj => { //and obj
+            locs = locs.reverse(); 
+            locs.map(locList => { //or loc
+                locList.map(loc => {    //and locs
+                    addRule(checkState, row, obj, loc, rel, state);
+                });
+            });
         });
-        objs = newObjs;
-        locs.objs.forEach(and => {
-            var perms : string[][] = permute(and, [],[]);
-            perms.forEach(r => newLocs.push(r));
+        return row;
+    }
+
+    function buildAndRowForLoc(checkState : boolean, objs : string[][], locs : string[], rel : string, state : WorldState) : objLocPair[] {
+        var row : objLocPair[] = [];
+        //console.log("new loc row");
+        locs.map(loc => {    //and locs
+            objs = objs.reverse();
+            objs.map(objList => { //or obj
+                objList.map(obj => { //and obj      
+                    addRule(checkState, row, obj, loc, rel, state);
+                });
+            });
+        });
+        return row;
+    }
+
+
+    function OLDbuildRules(futureState: boolean, objs : string[][], locs : Sayings, state : WorldState) : objLocPair[][] {
+        
+        var grid : objLocPair[][] = [];
+        
+
+        var ruleLength : number = objs[0].length*locs.objs[0].length;  
+
+
+        objs.forEach(objList => { //or obj
+                var row : objLocPair[] = [];
+                objList.forEach(obj => { //and obj 
+                locs.objs.forEach(locList => {  //or locs
+                    locList.forEach(loc => {    //and locs
+                        if(validatePhysics(futureState, obj,loc,locs.rel, state)){
+                            if(row.every(p => p.obj !== obj &&(loc === "floor" || p.loc !== loc))) {
+                                row.push({"obj":obj, "loc":loc});
+                            }
+                        }   
+                        return true;
+                    });
+                    return true;
+                });
+                return true;
+            });
+            if(row.length>0 && row.length == objList.length ){
+                grid.push(row);
+            }
             return true;
         });
         locs.objs = newLocs;
@@ -229,6 +283,39 @@ module Interpreter {
 
         return grid;
     }
+
+    function buildRules(futureState: boolean, objs : string[][], locs : Sayings, state : WorldState) : objLocPair[][] {
+        var grid : objLocPair[][] = [];
+        var ruleLength : number = objs[0].length*locs.objs[0].length;  
+        locs.objs.map(locList => {
+            var row : objLocPair[] = buildAndRowForLoc(futureState, objs, locList, locs.rel, state);
+            if(row.length === ruleLength){
+                var contains : boolean = grid.some(r => row.every(p => rowContainsPair(r, p.obj, p.loc, locs.rel, true)));
+                if(!contains){
+                    grid.push(row);
+                }
+            }
+        });
+
+        objs.map(objList => {
+            var row : objLocPair[] = buildAndRowForObj(futureState, objList, locs.objs, locs.rel, state);
+            if(row.length === ruleLength){
+                var contains : boolean = grid.some(r => row.every(p => rowContainsPair(r, p.obj, p.loc, locs.rel, true)));
+                if(!contains){
+                    grid.push(row);
+                }
+            }
+        });
+        return grid;
+
+    }
+
+    function rowContainsPair(row : objLocPair[], obj : string, loc : string, rel : string, andRelation : boolean) : boolean {
+        var a : boolean = row.some(o => o.obj === obj);//((rel==="below" && obj === "floor")|| row.some(o => o.obj === obj)); 
+        var b : boolean = (loc !== "floor" && row.some(o => o.loc === loc));
+        return andRelation ? a&&b : a||b; 
+    }
+
 
     function validatePhysics(futureState: boolean, obj : string, loc : string, rel : string, state : WorldState) : boolean{
         var works : boolean  = false;
