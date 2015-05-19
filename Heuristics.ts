@@ -129,12 +129,30 @@ module Heuristics {
                 var rightSide = abs(a.stackNo+1 - b.stackNo);
                 var leftSide = abs(a.stackNo-1 - b.stackNo);
 
-                //return min(rightSide, leftSide);
-                return 0;
+                return min(rightSide, leftSide);
+                //return 0;
 
             case "leftof":
+                var target = atom.args[0];
+                var leftof = atom.args[1];
+
+                var a = computeObjectPosition(s, target);
+                var b = computeObjectPosition(s, leftof);
+                var leftSide = a.stackNo - b.stackNo;
+
+                return max(0, leftSide);
+                //return 0;
+
             case "rightof":
-                return 0;
+                var target = atom.args[0];
+                var rightof = atom.args[1];
+
+                var a = computeObjectPosition(s, target);
+                var b = computeObjectPosition(s, rightof);
+                var rightSide = b.stackNo - a.stackNo;
+
+                return max(0, rightSide);
+                //return 0;
 
             default:
                 throw new Planner.Error("!!! Unimplemented relation in heuristicAtom: "+atom.rel);
