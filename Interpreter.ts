@@ -568,12 +568,9 @@ module Interpreter {
        */
       private weedOutBadArrays(lits: Literal[][], error: string): Literal[][] {
         var weeded: Literal[][] = [];
-        function isNotNull(val: Literal): boolean {
-          return val ? true : false;
-        }
         // If an error occured any way in the array dont add array to weeded
         for(var i = 0; i < lits.length; i++) {
-          if(lits[i].every(isNotNull)) // no literal is null in array => ok
+          if(lits[i].every(Boolean)) // no literal is null in array => ok
             weeded.push(lits[i]);
         }
         if(weeded.length > 0)
