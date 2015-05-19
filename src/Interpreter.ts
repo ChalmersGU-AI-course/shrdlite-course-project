@@ -75,6 +75,11 @@ module Interpreter {
         ]];
         */
 
+       var test = checkList( [ {pol:true , rel:"ontop", args:['a','b']} , {pol:true, rel:"ontop", args:['a','c']}] );
+       var test2 = checkList( [ {pol:true , rel:"ontop", args:['a','b']} , {pol:true, rel:"ontop", args:['c','d']}] );
+       
+       debugger;
+
         var getHolding = () => {
           if (!state.holding) throw "Not holding anything.";
           return state.holding;
@@ -295,12 +300,19 @@ module Interpreter {
                 return { val: false , str:"Large boxes can not be supported by large pyramids" };
               else return { val:true , str: "" };
 
-          case "above": return { val:true , str: "" };
+          case "above": 
+              var objA = objs[ lit.args[0] ];
+              var objB = objs[ lit.args[1] ];
+          	  if (objA.size=="large" && objB.size =="small")
+          	    return { val: false , str:"Small objects can not support large objects" };
+              else return { val:true , str: "" };
 
           case "under": //under
               var objA = objs[ lit.args[0] ];
               var objB = objs[ lit.args[1] ];
               if (objA.form=="ball") return { val: false , str:"Balls can not support anything" };
+              else if(objA.size=="small" && objB.size =="large")
+          	    return { val: false , str:"Small objects can not support large objects" };
               else return { val:true , str: "" };
 
           case "right": return { val:true , str: "" };
@@ -314,7 +326,7 @@ module Interpreter {
                   return { val: false , str:"Only boxes can contain other objects" };
               else if (objA.size==objB.size && ( objA.form=="pyramid" || objA.form=="plank" ||objA.form=="box") )
                   return { val: false , str:"Boxes can not contain pyramids, planks or boxes of the same size" };
-              else if (objB.size=="small" && objA.size=="large")
+              else if (objA.size=="large" && objB.size=="small")
                   return { val: false , str:"Small boxes cannot contain any large object" };
               else return { val:true , str: "" };
 
@@ -324,6 +336,111 @@ module Interpreter {
 
       return { val:true , str: "" };
     }
+    
+    
+    function checkList(list: Literal[]) : Check {
+    
+    var flag=true;
+    var checked=[];
+    
+    list.forEach((lit) => { 
+                var objA=lit.args[0]; // for each literal take out
+                var objB=lit.args[1]; // the pair of objects and analyze them
+                
+                var pairList = [];      //list with all literals concerning  A->B
+                var pairListInv = []; //list with all literals concerning  B->A
+                var objA0List = [];   //list with all literals concerning  A->x   ,where x is any object
+                var objA1List = [];   //list with all literals concerning  x->A   ,where x is any object
+                var objB0List = [];   //list with all literals concerning  B->x   ,where x is any object
+                var objB1List = [];   //list with all literals concerning  x->B   ,where x is any object
+                
+                
+                if(!contains(checked,objA))  //A not analyzed
+                  {
+                    objA0List=list.filter((lit) => {  return (lit.args[0] == objA );  });    
+                    objA1List=list.filter((lit) => {  return (lit.args[1] == objA );  });                      
+                    pairList=list.filter((lit) => { return ( lit.args[0]== objA && lit.args[1]== objB ); } );
+                    pairListInv=list.filter((lit) => { return ( lit.args[1]== objA && lit.args[0]== objB ); } );
+                    
+                    if(!contains(checked,objB)) //A and B not analyzed
+                      {
+                         objB0List=list.filter((lit) => {  return (lit.args[0] == objB );  });    
+                         objB1List=list.filter((lit) => {  return (lit.args[1] == objB );  });    
+                      }
+                    
+                  }
+                else if(!contains(checked,objB)) //B not analyzed
+                  {
+                    objB0List=list.filter((lit) => {  return (lit.args[0] == objB );  });    
+                    objB1List=list.filter((lit) => {  return (lit.args[1] == objB );  });    
+                    pairList=list.filter((lit) => { return ( lit.args[0]== objA && lit.args[1]== objB ); } );
+                    pairListInv=list.filter((lit) => { return ( lit.args[1]== objA && lit.args[0]== objB ); } );
+                  }
+                else
+                  {
+                    pairList=list.filter((lit) => { return ( lit.args[0]== objA && lit.args[1]== objB ); } );
+                    pairListInv=list.filter((lit) => { return ( lit.args[1]== objA && lit.args[0]== objB ); } );
+                  }
+                  
+                  
+                  // Check that for a pair a,b (or b,a) of objects, we don't have conflict relations 
+
+                  if( !checkRelationsPairs(pairList.map((lit) => lit.rel) ) ) { flag=false; return;}
+                  if( !checkRelationsPairs(pairListInv.map((lit) => lit.rel) ) ) { flag=false; return;}
+                       
+                  
+                  // Check that an object (A or B) doesn't have conflict relations
+                  if( ! checkRelationsObj( objA0List.map((lit) => lit.rel) ) ){ flag=false; return;}
+                  if( ! checkRelationsObj( objA1List.map((lit) => lit.rel) ) ) { flag=false; return;}
+                  if( ! checkRelationsObj( objB0List.map((lit) => lit.rel) ) ) { flag=false; return;}
+                  if( ! checkRelationsObj( objB1List.map((lit) => lit.rel) ) ) { flag=false; return;}
+                  
+                checked.push(objA);
+                checked.push(objB);
+                
+            });
+    
+      if(!flag) return {val:false , str: "" };
+      else return { val:true , str: "" };
+    
+    }
+    
+
+   function checkRelationsPairs(rel: String[]): Boolean {
+
+     if( 
+             contains(rel, "under") && ( contains(rel,"inside") || contains(rel,"above") || contains(rel,"ontop") ) ||
+           ( contains (rel, "left") || contains (rel, "right") || contains (rel, "beside") ) && ( contains(rel,"inside") || contains(rel,"above") || contains(rel,"ontop") || contains(rel,"under") ) ||
+             contains(rel, "left")     &&   contains(rel,"right")   
+      ) return false;
+      
+      return true;
+      
+    }
+    
+    
+   function checkRelationsObj(rel: String[]): Boolean {
+
+    var filtList=[];
+     if( contains(rel, "ontop") )  // an object cannot be ontop of two (different) objects or have two objects ontop
+      {
+      
+           filtList=rel.filter((obj) => { return ( obj == "ontop" ); } );
+           if (filtList.length>1) return false ;
+       }
+     if( contains(rel, "inside") )  // an object cannot be inside two (different) objects or have two objects inside
+       {
+            filtList=rel.filter((obj) => { return ( obj == "inside" ); } );
+            if (filtList.length>1) return false ;
+        }
+        
+        //TODO add restriction ontop+inside 
+        
+      return true;
+      
+    }
+    
+
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
