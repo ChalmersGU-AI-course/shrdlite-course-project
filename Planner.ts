@@ -190,56 +190,66 @@ module Planner {
         return ret; 
     }
     
-    function goalFunction (ls : Interpreter.Literal[], curr : string)
-    {
-        for(var i in ls)
-        {
-            var l : Interpreter.Literal = ls[i];
-            
-            var rel : string = l.rel;
-            var x   : string = l.args[0];
-            var y   : string = l.args[1];
-            if(y === "floor")
-            {
-                x = x.concat("([a-z]|\\d)+");
-                y = "\\d";
-                console.log(x,y);
-            }
-            var derp : string = ""; 
-            var regExp : RegExp;
-            switch(rel)
-            {
-                case "rightof":
-                    regExp = new RegExp (derp.concat( y , "([a-z]*)\\d([a-z]|\\d)*" ,x ,"([a-z]*)\\d"));
-                    break;
-                case "leftof":
-                    regExp = new RegExp (derp.concat( x , "([a-z]*)\\d([a-z]|\\d)*" ,y ,"([a-z]*)\\d"));
-                    break;
-                case "inside":
-                case "ontop":
-                    regExp = new RegExp (derp.concat( y , x ));
-                    break;
-                case "under":
-                    regExp = new RegExp (derp.concat( x , "([a-z]*)" , y ));
-                    break;    
-                case "beside":
-                    regExp = new RegExp (derp.concat("(" , x , "([a-z]*)\\d([a-z]*)" , y , ")|(" , y , "([a-z]*)\\d([a-z]*)" , x , ")" , "([a-z]*)\\d"));
-                    break; 
-                case "above":
-                    regExp = new RegExp (derp.concat( y , "([a-z]*)" , x ));
-                    break;
-                case "holding":
-                    regExp = new RegExp (derp.concat( x , "$" ));
-                    break;
-            }
-            if(!regExp.test(curr))
-            {
-                //console.log(regExp.toString());
-                //console.log(curr);
-                return false;
-            }
+    function goalFunction (lss : Interpreter.Literal[][], curr : string)
+    {	
+    	for(var j in lss)
+    	{
+    		var ls : Interpreter.Literal[] = lss[j];
+    		
+    		var ret : boolean = true;
+		    for(var i in ls)
+		    {
+		        var l : Interpreter.Literal = ls[i];
+		        
+		        var rel : string = l.rel;
+		        var x   : string = l.args[0];
+		        var y   : string = l.args[1];
+		        if(y === "floor")
+		        {
+		            x = x.concat("([a-z]|\\d)+");
+		            y = "\\d";
+		            console.log(x,y);
+		        }
+		        var derp : string = ""; 
+		        var regExp : RegExp;
+		        switch(rel)
+		        {
+		            case "rightof":
+		                regExp = new RegExp (derp.concat( y , "([a-z]*)\\d([a-z]|\\d)*" ,x ,"([a-z]*)\\d"));
+		                break;
+		            case "leftof":
+		                regExp = new RegExp (derp.concat( x , "([a-z]*)\\d([a-z]|\\d)*" ,y ,"([a-z]*)\\d"));
+		                break;
+		            case "inside":
+		            case "ontop":
+		                regExp = new RegExp (derp.concat( y , x ));
+		                break;
+		            case "under":
+		                regExp = new RegExp (derp.concat( x , "([a-z]*)" , y ));
+		                break;    
+		            case "beside":
+		                regExp = new RegExp (derp.concat("(" , x , "([a-z]*)\\d([a-z]*)" , y , ")|(" , y , "([a-z]*)\\d([a-z]*)" , x , ")" , "([a-z]*)\\d"));
+		                break; 
+		            case "above":
+		                regExp = new RegExp (derp.concat( y , "([a-z]*)" , x ));
+		                break;
+		            case "holding":
+		                regExp = new RegExp (derp.concat( x , "$" ));
+		                break;
+		        }
+		        if(!regExp.test(curr))
+		        {
+		            //console.log(regExp.toString());
+		            //console.log(curr);
+		            ret = false;
+		        }
+		    }
+		    if(ret)
+		    {
+		    	return true;
+		    }
         }
-        return true;
+        return false;
     }
 	
     function getHueristic (ls : Interpreter.Literal[], curr : WorldState) :number
