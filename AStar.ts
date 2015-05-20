@@ -130,12 +130,15 @@ module AStar {
                 obj1 = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-1];
                 if(current.wState.stacks[current.wState.arm].length >1)
                 {
+                    temp1 : string [] = uniqueAttr[obj1];
+                    temp2 : string [] = uniqueAttr[obj2];
                     obj2 = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-2];
-                    result = ("I move the " + uniqueAttr[obj1].reverse().join(" ") + " on the " + uniqueAttr[obj2].reverse().join(" "));
+                    result = ("I move the " + temp1.reverse().join(" ") + " on the " + temp2.reverse().join(" "));
                 }
                 else
                 {
-                    result = ("I move the " + uniqueAttr[obj1].reverse().join(" ") + " on the floor");
+                    temp3 : string [] = uniqueAttr[obj1];
+                    result = ("I move the " + temp3.reverse().join(" ") + " on the floor");
                 }
             }
             current = came_from[current.wStateId][0];
