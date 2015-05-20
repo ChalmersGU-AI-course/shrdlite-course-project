@@ -147,7 +147,6 @@ module Planner {
                 - Do A* to reach the goalstate                               []
                 - List all possible moves                                    []
                 - Sort the plans with the one involving least steps first    []
-                - Convert to basic actions                                   []
         */
 
       // Remove invalid interpretations
@@ -273,6 +272,116 @@ module Planner {
             }
             return true;
             }
+    }
+    
+
+    // Current thoughts of implementations.
+    // We accept the interpretations we have left as possible valid solutions
+    // we send them to the goalFuncHandle to receive a function to check if our current world
+    // is correct.
+    // We need to get a function to get a heuristic (this could be a return 0 function for now)
+    // 
+    // The neighbours to each node in the graph needs to be computed by checking
+    //  _ the possible basic moves the arm can do _ that is r,l,p,d and check how the world
+    //  changes when putting down or picking up an object.
+    //
+    //  When this is implemented we should just give these parts to the A-star algorithm and be
+    //  thankful for the solution.
+    //  The first solution achieved should be the best (not totally convinced of this yet)
+
+
+    // Function to return a function to check if we fulfilled the goal state
+    function goalFuncHandle(intrps : Interpreter.Literal[][]){
+        
+        // Store a set of all interpretations expressed as strings to make subset checks with current world.
+        var intrpsSet : collections.Set<string>[] = [];
+        for(var i = 0; i < intrps.length; i++){
+            intrpsSet[i] = new collections.Set<string>();
+            var intpArr = intprToArr(intrps[i]);
+            for(var k = 0; k < intpArr.length; k++){
+                intrpsSet[i].add(intpArr[k]);
+            }
+
+        }
+
+        return (function foundGoal(currentWorld : WorldState) : boolean{
+          var cWorldArr : string[] = worldToStrings(currentWorld);
+          var worldSet : collections.Set<string> = new collections.Set<string>();
+          for(var i = 0; i < cWorldArr.length; i++){
+              worldSet.add(cWorldArr[i]);    
+          }
+
+          for( var i = 0; i < intrpsSet.length; i++){
+              if(intrpsSet[i].isSubsetOf(worldSet))
+                return true;
+          }
+          return false;
+        });
+    }
+    
+    // Convert an interpretation PDDL to string array
+    function intprToArr(intp : Interpreter.Literal[]) : string[]{
+        var result : string[] = [];
+        for(var i = 0; i < intp.length; i++){
+            var rel = intp[i].rel;
+            var o1 = intp[i].args[0];
+            var o2 = intp[i].args[1];
+            result.push(o1+o2+rel);
+        }
+        return result;
+    }
+
+    //Convert world to String array - with this string result we can build a set of all the relations in the world and see if our 
+    // goal state is a subset of this current world. if it is, we are done.
+    function worldToStrings(state : WorldState) : string[]{
+      // TODO: Handle the floor!
+      var result : string[] = [];
+      var stacks = state.stacks;
+      var objects = Array.prototype.concat.apply([], state.stacks);
+      for(var i = 0; i < objects.length; i++){
+          var theObj   = objects[i];
+          var theObjCo = getStackIndex(theObj, stacks);
+          var theObjX  = theObjCo[0];
+          var theObjY  = theObjCo[1];
+
+          for(var a = 0; a < stacks.length; a++){ // Stacks x-coordinate
+              for(var b = 0; b < stacks[a].length; b++){ // Stacks y-coordinate
+                  var tempId = stacks[a][b];
+                  if(a < theObjX){ // [a,b] is left of theObj & maybe beside
+                      result.push(tempId+theObj+"left");
+                      if(a+1 === theObjX) // They are beside each other
+                          result.push(tempId+theObj+"beside");
+                  }else if(a > theObjX){  // [a,b] is right of theObj & maybe beside
+                      result.push(tempId+theObj+"right");
+                      if(a-1 === theObjX)
+                          result.push(tempId+theObj+"beside");
+                  }else if(b < theObjY){ // [a,b] is below theObj
+                      result.push(tempId+theObj+"below");
+                  }else if(b > theObjY){ // [a,b] is above theObj & maybe ontop / inside the object.
+                      result.push(tempId+theObj+"above");
+                      if(b-1 === theObjY)
+                        if(state.objects[theObj].form === 'box')
+                          result.push(tempId+theObj+"inside");
+                        else
+                          result.push(tempId+theObj+"ontop");
+                  }
+              }
+          }
+      }
+      return result;
+    }
+
+function getStackIndex(o1 : string, stacks : string[][]) : number[]{
+        var cords:number[] = [-1, -1];
+        for(var i = 0; i < stacks.length; i++){
+            for(var j = 0; j < stacks[i].length; j++){
+                if(stacks[i][j] === o1){
+                    cords[0] = i;
+                    cords[1] = j;
+                }
+            }
+        }
+        return cords;
     }
 
     function getRandomInt(max) {
