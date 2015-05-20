@@ -259,10 +259,6 @@ module Planner {
 //////////////////////////////////////////////////////////////////////
 // Basic helper functions
 
-    function isUndefined(a){
-        return typeof a === 'undefined' ;
-    }
-
     function cloneState(s : Heuristics.State) : Heuristics.State{
         var rs = [];
         for(var i in s.stacks){

@@ -101,6 +101,10 @@ module Interpreter {
         return true;
     }
 
+    export function isUndefined(a){
+        return typeof a === 'undefined' ;
+    }
+
 
     //////////////////////////////////////////////////////////////////////
     // private functions
@@ -208,8 +212,12 @@ module Interpreter {
     * @return list of targets in the world that complies with the specified entity.
     */
     function findTargetEntities(en : Parser.Entity, state : WorldState) : string[] {
-        var goalObj = en.obj;
+        var goalObj : Parser.Object = en.obj;
         var result : string[] = [];
+
+        while(! isUndefined( goalObj.obj)){
+            goalObj = goalObj.obj;
+        }
 
         if(en.obj.form === "floor"){
             result.push("floor");
@@ -222,17 +230,17 @@ module Interpreter {
                 var objName = currentStack[heightNo];
                 var obj : ObjectDefinition = state.objects[objName];
 
-                if(goalObj.size){
+                if(goalObj.size != null){
                     if(goalObj.size != obj.size){
                         continue;
                     }
                 }
-                if(goalObj.color){
+                if(goalObj.color != null){
                     if(goalObj.color != obj.color){
                         continue;
                     }
                 }
-                if(goalObj.form){
+                if(goalObj.form != null){
                     if(goalObj.form != obj.form){
                         continue;
                     }
