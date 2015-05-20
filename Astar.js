@@ -36,6 +36,11 @@ var AstarResult = (function () {
     };
     return AstarResult;
 })();
+var TimeoutException = (function () {
+    function TimeoutException() {
+    }
+    return TimeoutException;
+})();
 function PathCompare(p0, p1) {
     var p0Cost = p0.Cost + p0.HeuristicCost;
     var p1Cost = p1.Cost + p1.HeuristicCost;
@@ -47,9 +52,10 @@ function PathCompare(p0, p1) {
     }
     return -1;
 }
-function Astar(start, isGoal, heuristic) {
+function Astar(start, isGoal, heuristic, timeout) {
     var frontier = new collections.PriorityQueue(PathCompare);
     var visited = new collections.Dictionary();
+    var startTime = Date.now();
     var numExpandedNodes = 0;
     var startPath = new Path([start], [], 0, 0);
     frontier.enqueue(startPath);
@@ -70,6 +76,9 @@ function Astar(start, isGoal, heuristic) {
                 frontier.enqueue(newPath);
                 ++numExpandedNodes;
             }
+        }
+        if (timeout && (Date.now() - startTime) > timeout) {
+            throw new TimeoutException();
         }
     }
     return new AstarResult(null, numExpandedNodes);
