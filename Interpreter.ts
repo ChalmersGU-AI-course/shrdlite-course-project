@@ -58,7 +58,7 @@ module Interpreter {
         var pobjs:string[] = [];
 
         /*
-            TODO: Structure for "put"
+              Structure for "put"
                 -See if we hold an object o
                 -Identify the target objects t[] (i.e. "floor")
                 -See if such an object exists in the world
@@ -90,8 +90,7 @@ module Interpreter {
         //  -Identify what objects we want
         //  -See if such an object exists in the world
         pobjs = getPrimaryObjects(cmd, state); 
-        //  -If no object found, abort
-        //  -If ambiguity and the quantifier is 'the', ask for clarification
+        //  Abort if no object found, if ambiguity and the quantifier is 'the', ask for clarification
         if (pobjs.length === 0) {
             console.log("Can't pickup something does not exist in the world");
             return null;
@@ -105,7 +104,7 @@ module Interpreter {
         }
 
         /*
-            TODO: Structure for "take"
+            Structure for "take"
                 -Identify what objects we want
                 -See if such an object exists in the world
                 -If no object found, abort
@@ -125,7 +124,7 @@ module Interpreter {
         }
 
         /*
-            TODO: Do correct stuff with "move"
+            Do correct stuff with "move"
                 -Identify the primary objects o[]
                 -See if such an object exists in the world
                 -Identify the target objects t[] (i.e. "floor")
@@ -150,11 +149,7 @@ module Interpreter {
             return null;
         }
         return intprt;
-
-        /*
-            WONT REACH FURTHER DOWN, JUST KEEPING AS EXAMPLE
-
-            // Dummy stuff
+            /* Dummy stuff
             var objs : string[] = Array.prototype.concat.apply([], state.stacks);
             var a = objs[2];
             var b = objs[getRandomInt(objs.length)];
@@ -238,8 +233,8 @@ module Interpreter {
         return possibleObjects;
     }
     /**
-     *This method will take primary and target objects and check the command to see which relations is wanted and use the world state
-     *to see existing sizes and relations
+     *  This method will take primary and target objects and check the command to see which relations is wanted and use the world state
+     *  to see existing sizes and relations
      */
     function convertToPDDL(cmd: Parser.Command, primobj: string[], targets : string[]) : Literal[][] {
         var interpretations: Literal[][] = [];
@@ -360,6 +355,7 @@ module Interpreter {
         // TODO: Think of edge cases.
         return correct.toArray();
     }
+
     /**
      * Returns coordinates in the stack for a given object.
      * returns -1, -1 if element does not exist.

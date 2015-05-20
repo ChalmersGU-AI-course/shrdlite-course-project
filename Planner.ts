@@ -15,6 +15,7 @@ module Planner {
             plans.push(plan);
         });
         if (plans.length) {
+            //TODO: sort for shortest plan
             return plans;
         } else {
             throw new Planner.Error("Found no plans");
@@ -39,6 +40,76 @@ module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
+
+    /*
+        Physical laws
+
+        The world is ruled by physical laws that constrain the placement and movement of the objects:
+
+        -The floor can support at most N objects (beside each other).           [ ]
+        -All objects must be supported by something.                            [ ]
+        -The arm can only hold one object at the time.                          [X]
+        -The arm can only pick up free objects.                                 [X]
+        -Objects are “inside” boxes, but “ontop” of other objects.              [ ]
+        -Balls must be in boxes or on the floor, otherwise they roll away.      [X]
+        -Balls cannot support anything.                                         [X]
+        -Small objects cannot support large objects.                            [X]
+        -Boxes cannot contain pyramids, planks or boxes of the same size.       [X]
+        -Small boxes cannot be supported by small bricks or pyramids.           [X]
+        -Large boxes cannot be supported by large pyramids.                     [X]
+    */
+
+    module checkPhysicalLaws {
+
+        //Check the validity for arm pickups
+        function possibleArmPickup (obj : string, state : WorldState) : boolean {
+            var bool = false;
+
+            if (state.holding !== null) {
+            } else {
+                //Check if the object is free
+                for (i = 0; i < state.stacks.length; i++) {
+                    var topObjIndex = state.stacks[i].length - 1;
+                    if (topObjIndex >= 0) {
+                        if (state.stacks[i][topObjIndex] == obj) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return bool;
+        }
+
+        //Check if an intended move is valid
+        function validPosition(topObj: ObjectDefinition, bottomObj: ObjectDefinition, state: WorldState): boolean {
+
+            if (bottomObj.form === "ball")
+                return false;
+            if (topObj.size === "large" && bottomObj.size === "small")
+                return false;
+            if (topObj.form === "ball") {
+                if (!(bottomObj.form === "box" || bottomObj.form === "floor"))
+                    return false;
+            }
+            if (bottomObj.form === "box") {
+                if (topObj.form === "pyramid" || topObj.form === "plank" || topObj.form === "box") {
+                    if (bottomObj.size === "small" || topObj.size === "large")
+                        return false;
+                }
+            }
+            if (topObj.form === "box") {
+                if (topObj.size === "small" && bottomObj.size === "small") {
+                    if (bottomObj.form === "brick" || bottomObj.form === "pyramid")
+                        return false;
+                }
+                if (topObj.size === "large" && bottomObj.form === "pyramid" && bottomObj.size === "large")
+                    return false;
+            }
+
+            return true;
+        }
+
+    }
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         
