@@ -269,41 +269,31 @@ module Interpreter {
                     }
                 }
                 interpretations.push(conjunction);
-            } else if(cmd.ent.quant === "all" && cmd.loc.ent.quant === "any"){
-                var conjunction : Literal[] = [];
-                var psolSet = new collections.Set<string>();
-                var temp : string[] = [];
-                for (var i = 0; i < primobj.length; i++){
-                    for(var j = 0; j < targets.length; j++){
-                        var currPrim = primobj[i];
-                        var currTar  = targets[j];
-                        for(var k = 0; k < primobj.length; k++){
-                            for(var l = 0; l < targets.length; l++){
-                                conjunction = [];
-                                if(primobj[k] !== currPrim && targets[l] !== currTar){
-                                    var t = [currPrim+currTar, primobj[k]+targets[l]];
-                                    var t2 = t.sort().toString();
-                                    if(psolSet.contains(t2) !== true){
-                                        psolSet.add(t2);
-                                        conjunction.push({ pol: true, rel: relation, args: [currPrim, currTar] });
-                                        conjunction.push({ pol: true, rel: relation, args: [primobj[k], targets[l]] });
-                                        interpretations.push(conjunction);
-                                    }
-                                }                                       
+            } else if (cmd.ent.quant === "all") {               //When all primary objects are related to a single target objects
+                var permutations = Math.pow(targets.length, primobj.length);
+                var dnf: Literal[][] = [];
+
+                   for (i = 0; i < permutations; i++) {
+                       dnf.push([]);
+                   }
+
+                var offset = permutations / targets.length;
+
+                for (i = 0; i < primobj.length; i++) {
+                    for (j = 0; j < targets.length; j++) {
+                        var li = 0 + j * offset;
+                        var limit = li + offset;
+                        for (; limit < permutations + 1; limit = li + offset) {
+                            for (; li < limit; li++) {
+                                dnf[li].push({ pol: true, rel: relation, args: [primobj[i], targets[j]] });
                             }
+                            li = li - offset + offset * targets.length;
                         }
                     }
+                    offset = offset / targets.length;
                 }
-            
-                console.log(temp);
-            
-            } else if (cmd.ent.quant === "all") {       //When all primary objects are related to a single target object
-                for (var j = 0; j < targets.length; j++) {
-                    var conjunction: Literal[] = [];
-                    for (var i = 0; i < primobj.length; i++) {
-                        conjunction.push({ pol: true, rel: relation, args: [primobj[i], targets[j]] });
-                    }
-                    interpretations.push(conjunction);
+                for (i = 0; i < dnf.length;i++) {
+                    interpretations.push(dnf[i]);
                 }
             } else if (cmd.loc.ent.quant === "all") { //When a single primary object is related to all target objects
                 for (var i = 0; i < primobj.length; i++) {
