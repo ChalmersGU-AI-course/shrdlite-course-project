@@ -126,15 +126,21 @@ module Interpreter {
                             grej = i;
                             for(var o in result)
                             {
-                                temp.push({pol:true,rel:moveTo[0],args:[result[o],moveTo[grej]]});
+                                var l : Literal = {pol:true,rel:moveTo[0],args:[result[o],moveTo[grej]]};
+                                if(result[o] !== moveTo[grej] && validateL(l,world))
+                                    temp.push(l);
                                 grej = j; 
                             }
-                            
+                            if(result.length <= temp.length)
+                                res.push(temp);
+                            temp = [];
                         }
+                        
                     }
                     console.log("el done");
-                    for(var t in temp)
-                        console.log(temp[t].args);
+                    /*for(var t in res)
+                        for(var p in res[t])
+                            console.log(res[t][p].args);
                     for(var i = 1; i < moveTo.length; i++)
                     {
                         for(var r in result)
@@ -145,7 +151,7 @@ module Interpreter {
                         }
                         res.push(ls);
                         ls = [];
-                    }
+                    }*/
                     
                 }
                 else
