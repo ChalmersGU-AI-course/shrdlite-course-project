@@ -151,7 +151,7 @@ module Planner {
       // Remove invalid interpretations
       var validInterps : Interpreter.Literal[][] = [];
       for(var i = 0; i < intprt.length; i++){
-          if(checkSpatialRelations(intprt[i], state.objects) && checkPhysicalLaws.checkInterp(intprt[i], state)){
+          if(checkSpatialRelations(intprt[i], state.objects) && physicalLaws.checkInterp(intprt[i], state)){
               console.log("Added!");
               validInterps.push(intprt[i]);
               console.log(validInterps.length);
