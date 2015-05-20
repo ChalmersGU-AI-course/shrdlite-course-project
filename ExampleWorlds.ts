@@ -1,9 +1,10 @@
 ///<reference path="World.ts"/>
+///<reference path="Interpreter.ts"/>
 
 var ExampleWorlds : {[s:string]: WorldState} = {};
 	
 function stacksToPDDL(stacks:string[][]):collections.Set<predicate>{
-	var pddl = new collections.Set<predicate>(
+	var pddl = new collections.Set<Interpreter.Literal>(
 					function (p){		// ToString
 						var res:string;
 						res = p.rel + "(";
@@ -16,14 +17,14 @@ function stacksToPDDL(stacks:string[][]):collections.Set<predicate>{
 				    });
 	for(var i = 0; i < stacks.length; i++){
 		if(i < stacks.length-1){
-			pddl.add({rel:"leftof", args:["f"+i,"f"+(i+1)]})
-			pddl.add({rel:"rightof", args:["f"+(i+1),"f"+i]})
+			pddl.add({pol: true, rel:"leftof", args:["f"+i,"f"+(i+1)]})
+			pddl.add({pol: true,rel:"rightof", args:["f"+(i+1),"f"+i]})
 		}
 		for(var j = 0; j < stacks[i].length; j++){
 			if(j == 0){
-				pddl.add({rel:"ontop", args:[stacks[i][j],"f"+i]})
+				pddl.add({pol: true,rel:"ontop", args:[stacks[i][j],"f"+i]})
 			}else{
-				pddl.add({rel:"ontop", args:[stacks[i][j],stacks[i][j-1]]})
+				pddl.add({pol: true,rel:"ontop", args:[stacks[i][j],stacks[i][j-1]]})
 			}
 		}
 	}			    
