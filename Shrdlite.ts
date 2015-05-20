@@ -110,7 +110,7 @@ module Shrdlite {
 	function clarification(world : World) {
 		var inputPrompt = "Choose the corresponding number.";
         var nextInput = () => world.readUserInput(inputPrompt, clarification);
-		return parseInt(nextInput.trim())-1;
+		return Integer.parseInt(nextInput[0].trim())-1;
 	}
 
 }
