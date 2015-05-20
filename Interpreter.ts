@@ -9,18 +9,30 @@ module Interpreter {
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
         parses.forEach((parseresult) => {
-            var intprt : Result = <Result>parseresult;
+          var intprt : Result = <Result>parseresult;
+          try {
             intprt.intp = interpretCommand(intprt.prs, currentState);
             interpretations.push(intprt);
+          } catch (err) {
+            if (err instanceof Ambiguity) {
+              var msg : string = "Ambiguous command. Please try again, while being more specific about the ";
+              msg = msg + err.message + ".";
+              throw new Interpreter.Error(msg);
+            }
+          }
         });
-        if (interpretations.length) {
-            return interpretations;
+        if (interpretations.length == 0) {
+          throw new Interpreter.Error("No valid interpretation found.");
+        } else if (interpretations.length > 1) {
+          // Scenario: the user used too many relative descriptors. We can't say
+          // what they were ambiguous about
+          var msg : string = "Ambiguous command. Please use fewer relative descriptions.";
+          throw new Interpreter.Error(msg);
         } else {
-            throw new Interpreter.Error("Found no interpretation");
+          console.log(interpretations[0]);
+          return interpretations;
         }
     } 
-
-
 
 
     export interface Result extends Parser.Result {intp:Literal[][];}
@@ -44,10 +56,18 @@ module Interpreter {
         constructor(public message? : string) {}
         public toString() {return this.name + ": " + this.message}
     }
+    
+    export class Ambiguity implements Error {
+        public name = "Interpreter.Error";
+        constructor(public message? : string) {}
+        public toString() {return this.name + ": " + this.message}
+    }
 
+    
 
     //////////////////////////////////////////////////////////////////////
     // private functions
+    
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
@@ -56,10 +76,10 @@ module Interpreter {
         var loc : Parser.Location;
         var ent : Parser.Entity;
         
-        var relation;
-        var object1;
-        var object2;
-        var objects;
+        var relation : string;
+        var object1 : string;
+        var object2 : string;
+        var objects : string[];
         
         if (verb == "take") {
         // we shall pick up something and hold it;
@@ -70,9 +90,11 @@ module Interpreter {
        } else if (verb == "put") {
        // we are holding something, and shall place it somewhere
             object1 = whatAreWeHolding(state);
-            // TODO: error handling if we are not actually holding anything
+            if (object1 == null) {
+              throw new Error("The arm is not holding anything.");
+            }
             loc = cmd.loc;
-            relation = findRelFromLoc(state, loc);
+            relation = loc.rel;
             object2 = findObjectFromLoc(state, loc);
             objects = [object1, object2]
        } else if (verb == "move") { 
@@ -80,7 +102,7 @@ module Interpreter {
             ent = cmd.ent;
             object1 = findObjectFromEnt(state, ent);
             loc = cmd.loc;
-            relation = findRelFromLoc(state, loc);
+            relation = loc.rel;
             object2 = findObjectFromLoc(state, loc);
             objects = [object1, object2]
         }
@@ -99,18 +121,25 @@ module Interpreter {
       var quant : string = ent.quant;
       
       if ((quant != "any") && (quant != "the")) {
-        return "fail";
-        //TODO: treat failure better. Exception?
+        throw new Error("Quantifier not implemented yet; use \"the\" or \"any\"");
         //TODO: handle "any" differently from "the"
       }
       
       var candidates : string[];
       
       candidates = findObjectsFromObject(state, obj);
+      console.log(candidates);
       
-      return candidates[0];
-   
-      //TODO: error handling if object can't be found
+      if (candidates.length == 0) {
+        console.log("length=0");
+        throw new Interpreter.Error("Object cannot be found");
+      } else if (candidates.length > 1) {
+        var form : string = state.objects[candidates[0]].form;
+        throw new Ambiguity(form);
+      } else {
+        return candidates[0];
+      }
+      
     }
    
       // Takes a Parser.Object, return a list of all objects it could refer to
@@ -222,12 +251,8 @@ module Interpreter {
         stack.forEach((objectInStack) => {
           var objDef : ObjectDefinition = state.objects[objectInStack];
           if (objDef.form == form) {
-            console.log(form);
             if (color == null || objDef.color == color) {
-              console.log(color);
               if (size == null || objDef.size == size) {
-                console.log(size);
-                console.log(objectInStack);
                 candidates.push(objectInStack);
               }
             }
