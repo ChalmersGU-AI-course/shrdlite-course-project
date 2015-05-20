@@ -116,11 +116,16 @@ module Planner {
         /*
             TODO:
                 - Check if the interpretation is valid
+                -- Check object physics 
+                -- Check spatial relations
                 - Do A* and calculate heuristic values on every interpretation
-                - Choose the interpretation involving least steps
-                - 
+                - Choose the interpretation involving least steps (
+                - Convert to basic actions
+
         */
-        // This function returns a dummy plan involving a random stack
+       
+      
+      // This function returns a dummy plan involving a random stac
         do {
             var pickstack = getRandomInt(state.stacks.length);
         } while (state.stacks[pickstack].length == 0);
@@ -166,6 +171,57 @@ module Planner {
     }
 
 
+
+    function checkSpatialRelations(intp : Interpreter.Literal[], objects : ObjectDefinition) : boolean{
+        // Check so that each spatial relation holds between the elements
+        // Inside
+        // Ontop
+        var rel = intp[0].rel;
+        if(rel === "inside"){
+            // * Several things cannot be in one box
+            // * Target is a box 
+            var stateSet = new collections.Set<string>(); // To know that one box contain one thing
+            for(var i = 0; i < intp.length; i++){
+                var target = intp[i].args[1];
+                var obj    = intp[i].args[0];
+
+                // Check that target is a box.
+                if(objects[target].form !== 'box'){
+                    console.log("Removed interpretation: ");
+                    console.log(intp[i]);
+                    console.log("Due to target is not a box.");
+                    return false;
+                }
+
+                if(stateSet.contains(target)){
+                    console.log("Removed interpretation: ");
+                    console.log(intp[i]);
+                    console.log("Due to bad spatial inside relation");
+                    return false; // Two things cannot be inside the same box
+                }else{
+                    stateSet.add(target); // Add the target so we know that it is occupied.
+                }
+            }
+            return true;
+
+        }else if(rel === "ontop"){ 
+            var stateSet = new collections.Set<string>();
+            for(var i = 0; i < intp.length; i++){
+                var target = intp[i].args[1];
+                var obj    = intp[i].args[0];
+                if(objects[target].form === 'box'){
+                    return false; // Things are inside a box, not ontop. Or is this too harsh?
+                }
+                if(stateSet.contains(target)){
+                    return false;
+                }else{
+                    stateSet.add(target);
+                }
+
+            }
+            return true;
+            }
+        }
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
