@@ -606,7 +606,7 @@ function uniqueAttributes1 ( oA : ObjectDefinition , os : ObjectDefinition[] ) :
 	
 	var unqOs : ObjectDefinition[] = uniqueAttributes2 ("form", oA.form, os);
 	
-	if(unqOs.length > 0)
+	if(unqOs.length > 1)
 	{
 		var temp0 : ObjectDefinition[] = uniqueAttributes2 ("size", oA.size, unqOs);
 		var temp1 : ObjectDefinition[] = uniqueAttributes2 ("color", oA.color, unqOs);
@@ -614,7 +614,7 @@ function uniqueAttributes1 ( oA : ObjectDefinition , os : ObjectDefinition[] ) :
 		if(temp0.length < temp1.length)
 		{
 			unqOs = temp0;
-			if(unqOs.length <= 0)
+			if(unqOs.length <= 1)
 			{
 				unqAttr.push(oA.size);
 			}
@@ -622,7 +622,7 @@ function uniqueAttributes1 ( oA : ObjectDefinition , os : ObjectDefinition[] ) :
 			{
 				unqAttr.push(oA.color);
 				unqAttr.push(oA.size);
-				if((uniqueAttributes2 ("color", oA.color, unqOs)).length > 0)
+				if((uniqueAttributes2 ("color", oA.color, unqOs)).length > 1)
 				{
 					unqAttr.push("notUnique");
 				}
@@ -631,7 +631,7 @@ function uniqueAttributes1 ( oA : ObjectDefinition , os : ObjectDefinition[] ) :
 		else
 		{
 			unqOs = temp1;
-			if(unqOs.length <= 0)
+			if(unqOs.length <= 1)
 			{
 				unqAttr.push(oA.color);
 			}
@@ -639,7 +639,7 @@ function uniqueAttributes1 ( oA : ObjectDefinition , os : ObjectDefinition[] ) :
 			{
 				unqAttr.push(oA.color);
 				unqAttr.push(oA.size);
-				if((uniqueAttributes2 ("size", oA.size, unqOs)).length > 0)
+				if((uniqueAttributes2 ("size", oA.size, unqOs)).length > 1)
 				{
 					unqAttr.push("notUnique");
 				}
