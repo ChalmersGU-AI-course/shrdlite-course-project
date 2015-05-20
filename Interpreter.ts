@@ -109,16 +109,20 @@ module Interpreter {
                     return [];
                 }
                 var moveTo: string[] = interpretLoc(cmd.loc,world,wObjs);
-                console.log("after interloc" , moveTo);
+                //console.log("after interloc" , moveTo);
                 if(moveTo.length <= 1)
                 {
                    return [];
                 }
-				for(var i = 1; i < moveTo.length; i++)
-				{
-					res.push([{pol:true,rel:moveTo[0],args:[result[0],moveTo[i]]}]);
-				}
-                
+                for(var r in result)
+                {
+                    for(var i = 1; i < moveTo.length; i++)
+                    {
+                        var l : Literal = {pol:true,rel:moveTo[0],args:[result[r],moveTo[i]]};
+                        if(result[r] !== moveTo[i] && validateL(l,world))
+                            res.push([l]);
+                    }
+                }
                 break;
             case "take":
                     var result : string[] = interpretEnt(cmd.ent,world,wObjs);
@@ -208,7 +212,7 @@ module Interpreter {
         var obj : Parser.Object;
         var res : string[] =[];
         var otherObjs : string[];
-        
+        //console.log("in cwW", inobj)
         if(inobj.form == 'floor')
         {
 			for(var i in state.stacks)
@@ -225,7 +229,7 @@ module Interpreter {
             otherObjs = interpretLoc(inobj.loc, state,wObjs);
             obj= inobj.obj;
             
-            //console.log("loc returned", otherObjs, "   ", obj);
+            console.log("loc returned", otherObjs, "   ", obj);
             
         }
         else
@@ -317,12 +321,12 @@ module Interpreter {
                                                     res.push(object);
                                                 });
                                                 otherObjs.forEach((obj2) =>{
-                                                    if(state.stacks[i][j+1] == obj2)
+                                                    if(state.stacks[i][+j+ +1] == obj2)
                                                     res.push(object);
                                                 });
                                                 break; 
                                             case "above":
-                                                for(var m : number = j+1; m < state.stacks[i].length; m++)
+                                                for(var m : number = +j + +1; m < state.stacks[i].length; m++)
                                                 {
                                                     otherObjs.forEach((obj2) =>{
                                                         if(state.stacks[i][m] == obj2)
@@ -347,7 +351,7 @@ module Interpreter {
                 }
             }
         });
-        console.log("from func " +res);
+        //console.log("from func " +res);
         return res
     }
     function isInColumn(obj: string[], col: number, state:WorldState) : boolean
@@ -368,6 +372,54 @@ module Interpreter {
         return result; 
     }
     
+    
+    function validateL(l : Literal, w: WorldState ) : boolean
+    {
+        var obj1 = w.objects[l.args[0]];
+        var obj2 = w.objects[l.args[1]];
+        if(l.rel == "ontop" || l.rel == "inside")
+        {
+            //Balls must be in boxes or on the floor, otherwise they roll away.
+            if(obj1.form === "ball")
+            {
+                if(obj2.form !== "box")
+                    return false; 
+            }
+            //Balls cannot support anything.
+            if(obj2.form === "ball")
+            {
+                return false;
+            }
+            //Small objects cannot support large objects.
+            if(obj1.size === "large")
+            {
+                if(obj2.size !== "large")
+                    return false; 
+            }
+            //Boxes cannot contain pyramids, planks or boxes of the same size.
+            if(obj2.form === "box")
+            {
+                if(obj1.form === "box" || obj1.form === "pyramid" || obj1.form === "plank" )
+                {
+                    if(obj2.size == obj1.size)
+                        return false; 
+                }
+            }
+            //Small boxes cannot be supported by small bricks or pyramids.
+            if(obj1.form === "box" && obj1.size === "small")
+            {
+                if(obj2.size === "small"&&(obj2.form ==="brick"||obj2.form ==="pyramid"))
+                    return false; 
+            }
+            //Large boxes cannot be supported by large pyramids.
+            if(obj1.form === "box" && obj1.size === "large")
+            {
+                if(obj2.size === "large"&& obj2.form ==="pyramid")
+                    return false; 
+            }
+        }
+        return true;
+    }
     
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);

@@ -454,7 +454,6 @@ module Planner {
         //console.log(totHue);
         return  totHue;
     }
-
     
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         // This function returns a dummy plan involving a random stack
