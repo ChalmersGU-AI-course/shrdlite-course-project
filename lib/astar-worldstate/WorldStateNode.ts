@@ -3,10 +3,25 @@
 class WorldStateNode{
     state : WorldState;
 
+    /**
+     * This class represents a single WorldState in a searching algorithm, it handles functions such as:
+     *  - Calculating the heuristic of a move depending on a goal.
+     *  - Verifying if a goal is satisfied in the state.
+     *  - Generating possible new states that can be reached from this state.
+     *
+     * @param state Current state.
+     */
     constructor(state : WorldState) {
         this.state = state;
     }
 
+    /**
+     * Calculates the heuristic from this state to a particular goal, if there are several goals
+     * it returns the smallest possible heuristic.
+     *
+     * @param goal Goal to base heuristic on.
+     * @returns {number} Smallest heuristic possible based on the goals.
+     */
     heuristicTo(goal : Interpreter.Literal[][]) {
         var returnValue = 100000;
         goal.forEach((intrprt) => {
@@ -121,6 +136,12 @@ class WorldStateNode{
         return heuristic;
     }
 
+    /**
+     * Returns a collection of possible new states we can reach from this state. Will not return states are not
+     * illegal in the world with regards to physics.
+     *
+     * @returns {collections.Dictionary<string, WorldStateNode>} Possible new states reachable from this state.
+     */
 	getNeighbors() : collections.Dictionary<string,WorldStateNode> {
 		var neighbors = new collections.Dictionary<string,WorldStateNode>(wsn => wsn.toString());
 		var newStates = this.state.getNewStates();
@@ -136,6 +157,12 @@ class WorldStateNode{
         return this.state.equals(otherNode.state);
     }
 
+    /**
+     * Verifies if this state fulfils any of the possible goals provided.
+     *
+     * @param goals         Different goals in disjunctive normal form.
+     * @returns {boolean}   True if this state satisfies at least one of the goals provided.
+     */
     isSatisfied(goals : Interpreter.Literal[][]) : boolean {
         var result = false;
 

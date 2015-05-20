@@ -19,6 +19,14 @@ class WorldState {
         this.examples = examples;
     }
 
+    /**
+     * Adds the specified object to WorldState at the provided stack index, does not verify that the stack exists
+     * or that the object is valid.
+     *
+     * @param stack     Index of the stack which we add the object to.
+     * @param name      Identifier of the object.
+     * @param object    Object to add.
+     */
     addObject(stack : number, name : string, object : ObjectDefinition) {
         this.stacks[stack].push(name);
         this.objects[name] = object;
@@ -30,7 +38,7 @@ class WorldState {
 
     /**
      * Returns the amount in objects in this state.
-     * @returns {number} Number of objects in the state.
+     * @returns {number} Total amount of objects in this state.
      */
     nrOfObjectsInWorld() : number {
         var result = 0;
@@ -40,8 +48,16 @@ class WorldState {
         return (this.holding === null) ? result : ++result;
     }
 
+    /**
+     * Does a deep compare between this state and the provided other state.
+     *
+     * @param otherState    State to compare this state with.
+     * @returns {boolean}   True if all of the components in the states are exactly the same, false otherwise.
+     */
     equals(otherState : WorldState) : boolean {
-        if (this.stacks.length != otherState.stacks.length) {
+        if (this.stacks.length != otherState.stacks.length ||
+            this.holding !== otherState.holding ||
+            this.arm !== otherState.arm) {
             return false;
         }
 
@@ -53,17 +69,17 @@ class WorldState {
             }
         }
 
-        if (this.holding !== otherState.holding) {
-            return false;
-        }
-
-        if (this.arm !== otherState.arm) {
-            return false;
-        }
-
         return true;
     }
 
+    /**
+     * Verifies whether the provided relation exists in this state.
+     *
+     * @param obj           Object of the relation.
+     * @param loc           Location of the object.
+     * @param rel           Relation between the object and the relation.
+     * @returns {boolean}   True if the specified relation of the object exists in this state.
+     */
     relationExists(obj : string, loc : string, rel : string) : boolean {
         if(loc !== obj) {
             switch(rel) {
@@ -86,6 +102,13 @@ class WorldState {
         return false;
     }
 
+    /**
+     * Verifies whether the provided relation is valid with regards to the physical rules defined for the world.
+     * @param fst           First object of the relation.
+     * @param snd           Second object of the relation.
+     * @param rel           The relation between the first and the second object.
+     * @returns {boolean}   True if the relation between the first and second object is valid, false otherwise.
+     */
     validPlacement(fst : string, snd : string, rel : string) : boolean {
         if(fst !== "floor") {
              var fstObj = this.objects[fst];
@@ -108,6 +131,11 @@ class WorldState {
         return false;
     }
 
+    /**
+     * Verifies whether a provided condition is satisfied in this world.
+     * @param conditions    Conditions to be verified, seperated by "AND"s.
+     * @returns {boolean}   True if the condition is satisifed in this state, false otherwise.
+     */
     satisfiesConditions(conditions : Interpreter.Literal[]) : boolean {
         var result = true;
 
@@ -143,7 +171,12 @@ class WorldState {
         return result;
     }
 
-    // This can perhaps be made smarter. Instead of moving one step at a time, we could reason about how objects can be moved.
+    /**
+     * Generates a collection of reachable states from this state.
+     * TODO: Instead of moving one step at a time, we could reason about how objects can be moved.
+     *
+     * @returns {collections.Dictionary<string, WorldState>} Collection of reachable states from this state, where the key represents the move performed.
+     */
     getNewStates() : collections.Dictionary<string,WorldState> {
         var newStates = new collections.Dictionary<string,WorldState>(ws => ws.toString());
 
@@ -164,6 +197,14 @@ class WorldState {
         return newStates;
     }
 
+    /**
+     * Returns the number objects on top of the provided object in it's stack.
+     * If the objected provided is the floor, the function returns the height of the lowest stack.
+     * Does not verify that the provided object exists in this state.
+     *
+     * @param obj           The object provided.
+     * @returns {number}    The number of objects on top the provided object.
+     */
     objectsOnTop(obj : string) : number {
         if (obj == "floor") {
             return this.stacks[this.getLowestStackIndex()-1].length;
@@ -182,6 +223,13 @@ class WorldState {
         }
     }
 
+    /**
+     * Checks whether the first object is on top of the second object.
+     *
+     * @param fstObj        The first object.
+     * @param sndObj        This second object.
+     * @returns {boolean}   True if the first objet is directly on top of the second object.
+     */
     isOnTopOf(fstObj : string, sndObj : string) : boolean {
         if(!this.isHoldingObj(fstObj)) {
             var firstObjStackIndex = this.getStackIndex(fstObj);
@@ -206,6 +254,13 @@ class WorldState {
         return strBuilder.toString();
     }
 
+    /**
+     * Checks whether the first object is somewhere above the second object in the same stack.
+     * If the second object is the floor, it always return true.
+     * @param fstObj        The first object.
+     * @param sndObj        The second object.
+     * @returns {boolean}   True if the first object is somewhere above the second object in the same stack, false otherwise.
+     */
     isAbove(fstObj : string, sndObj : string) : boolean {
         if(sndObj === "floor") {
             return true;
@@ -220,27 +275,64 @@ class WorldState {
         }
     }
 
+    /**
+     * Checks whether the first object is somewhere below the second object in the same stack.
+     * @param fstObj        The first object.
+     * @param sndObj        The second object.
+     * @returns {boolean}   True if the first object is somewhere below the second object in the same stack, false otherwise.
+     */
     isUnder(fstObj : string, sndObj : string) : boolean {
         return this.isAbove(sndObj,fstObj);
     }
 
+    /**
+     * Checks wether the first object is in an adjacent stack of the second object.
+     * @param fstObj        The first object.
+     * @param sndObj        The second object.
+     * @returns {boolean}   True if the first object is in an adjacent stack of the second, false otherwise.
+     */
     isBeside(fstObj : string, sndObj : string) : boolean {
         return 1 == this.getDistance(fstObj,sndObj);
     }
 
+    /**
+     * Checks wether the first object is in an stack somewhere to the left of the second object.
+     * @param fstObj        The first object.
+     * @param sndObj        The second object.
+     * @returns {boolean}   True if the first object is in an stack somewhere to the left of the second, false otherwise.
+     */
     isLeftOf(fstObj : string, sndObj : string) : boolean {
         return this.getStackIndex(fstObj) < this.getStackIndex(sndObj);
     }
 
+    /**
+     * Checks wether the first object is in an stack somewhere to the right of the second object.
+     * @param fstObj        The first object.
+     * @param sndObj        The second object.
+     * @returns {boolean}   True if the first object is in an stack somewhere to the right of the second, false otherwise.
+     */
     isRightOf(fstObj : string, sndObj : string) : boolean {
         return this.isLeftOf(sndObj,fstObj);
     }
 
+    /**
+     * Gets the horizontal distance between the stacks of the first and second object.
+     * TODO: Does not handle the floor in a well defined manner.
+     *
+     * @param fstObj        The first object.
+     * @param sndObj        The second object.
+     * @returns {number}    The horizontal distance between the stacks of the first and second object.
+     */
     getDistance(fstObj : string, sndObj : string) : number {
-        // TODO: Needs to handle floor.
         return Math.abs(this.getStackIndex(fstObj) - this.getStackIndex(sndObj));
     }
 
+    /**
+     * Returns the index of the stack that the object is in.
+     * If the object is the floor, it returns the index of the lowest stack.
+     * @param obj           The object.
+     * @returns {number}    The index of the stack that the object resides in, -1 if the object cant be found (is picked up for example).
+     */
     getStackIndex(obj : string) : number {
         if (obj == "floor") {
             return this.getLowestStackIndex();
@@ -259,6 +351,10 @@ class WorldState {
         }
     }
 
+    /**
+     * Returns the index of the stack with the lowest height.
+     * @returns {number} Index of the stack with the lowest height.
+     */
     getLowestStackIndex() : number {
         var min = 10000;
         var ix = 1;
@@ -274,17 +370,17 @@ class WorldState {
         return minStack;
     }
 
-    newWorldMoveLeft() : WorldState {
+    private newWorldMoveLeft() : WorldState {
         var tempState = this.clone();
         return new WorldState(tempState.stacks, tempState.holding, tempState.arm-1, tempState.objects, tempState.examples);
     }
 
-    newWorldMoveRight() : WorldState {
+    private newWorldMoveRight() : WorldState {
         var tempState = this.clone();
         return new WorldState(tempState.stacks, tempState.holding, tempState.arm+1, tempState.objects, tempState.examples);
     }
 
-    newWorldDrop() : WorldState {
+    private newWorldDrop() : WorldState {
         var tempState = this.clone();
         var newStacks : string[][] = tempState.stacks;
 
@@ -293,7 +389,7 @@ class WorldState {
         return new WorldState(newStacks, null, tempState.arm, tempState.objects, tempState.examples);
     }
 
-    newWorldPick() : WorldState {
+    private newWorldPick() : WorldState {
         var tempState = this.clone();
         var newStacks  = tempState.stacks;
         var newHolding = newStacks[tempState.arm].pop();
@@ -301,19 +397,19 @@ class WorldState {
         return new WorldState(newStacks, newHolding, tempState.arm, tempState.objects, tempState.examples);
     }
 
-    canMoveLeft() : boolean {
+    private canMoveLeft() : boolean {
         return this.arm != 0;
     }
 
-    canMoveRight() : boolean {
+    private canMoveRight() : boolean {
         return this.arm != this.stacks.length-1;
     }
 
-    canPick() : boolean {
+    private canPick() : boolean {
         return this.stackHeight(this.arm) > 0;
     }
 
-    canDrop() : boolean {
+    private canDrop() : boolean {
         var stackHeight = this.stackHeight(this.arm);
 
         if (!this.isHolding()) {
@@ -329,19 +425,30 @@ class WorldState {
         }
     }
 
+    /**
+     * Returns the height of the stack with the provided index.
+     * Does not validate the input.
+     *
+     * @param stackIndex    Index of the stack.
+     * @returns {number}    Height of the stack with the provided index.
+     */
     stackHeight(stackIndex : number) : number {
         return this.stacks[stackIndex].length;
     }
 
-    isHolding() : boolean {
+    private isHolding() : boolean {
         return this.holding !== null;
     }
 
-    isHoldingObj(obj : string) : boolean {
+    private isHoldingObj(obj : string) : boolean {
         return this.holding === obj;
     }
 
 
+    /**
+     * Performs a deep copy of the current state.
+     * @returns {WorldState} A exact copy of this state.
+     */
     clone() : WorldState {
         var newStacks : string[][] = [];
 
