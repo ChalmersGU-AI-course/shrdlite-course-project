@@ -135,24 +135,12 @@ module Heuristics {
             case "leftof":
                 var target = atom.args[0];
                 var leftof = atom.args[1];
-
-                var a = computeObjectPosition(s, target);
-                var b = computeObjectPosition(s, leftof);
-                var leftSide = a.stackNo - b.stackNo;
-
-                return max(0, leftSide);
-                //return 0;
+                return heuristicLeftOf(s, target, leftof);
 
             case "rightof":
                 var target = atom.args[0];
                 var rightof = atom.args[1];
-
-                var a = computeObjectPosition(s, target);
-                var b = computeObjectPosition(s, rightof);
-                var rightSide = b.stackNo - a.stackNo;
-
-                return max(0, rightSide);
-                //return 0;
+                return heuristicLeftOf(s, rightof, target);
 
             default:
                 throw new Planner.Error("!!! Unimplemented relation in heuristicAtom: "+atom.rel);
@@ -160,6 +148,50 @@ module Heuristics {
         }
 
         return 0;
+    }
+
+    // a should be leftof b.
+    function heuristicLeftOf(s : State, target, leftof) : number {
+
+        var a = computeObjectPosition(s, target);
+        var b = computeObjectPosition(s, leftof);
+        // var leftSide = a.stackNo - b.stackNo;
+
+        // var costMoveA = abs(a.stackNo - b.stackNo)
+
+        var moveA = heuristicMoveToStack(s, a, b.stackNo-1);
+        var moveB = heuristicMoveToStack(s, b, a.stackNo+1);
+        // var moveB
+
+        // Move one of the the other.
+        return min(moveA, moveB);
+
+        // return max(0, leftSide);
+        return 0;
+    }
+
+    function heuristicMoveToStack(s : State, a : ObjectPosition, stack : number) : number {
+        if(stack < 0 || stack >= s.stacks.length){
+            return Infinity;
+        }
+        if(a.stackNo === stack){
+            return 0;
+        }
+
+        var aboveCost = a.objectsAbove * 4; // clear the way so can grab the object.
+
+        var armCost = abs(a.stackNo - s.arm); // move the arm
+        if(! a.isHeld){
+            armCost = armCost + 1; // to pick up the object
+        }
+        // TODO also +1 for dropping the object?
+
+        var stackObj : ObjectPosition = {stackNo : stack, heightNo : -1,
+                       objectsAbove : 0, isHeld : false, isFloor : false};
+        var dropC = dropCost(s, a, stackObj, false);
+        // if holding something else, drop that.
+
+        return aboveCost + armCost + dropC;
     }
 
     export function heuristicDifference(s : State, above : String, below : String, exactlyOntop : boolean) : number {
