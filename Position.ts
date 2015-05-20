@@ -1,4 +1,10 @@
 
+class PositionErrorX implements Error{
+    public name = "PositionErrorX";
+    constructor(public message? : string) {}
+    public toString() {return this.name + ": " + this.message}
+}
+
 // Ducktyping subtype of WorldState :)
 // should be sufficient.
 class State{
@@ -39,7 +45,7 @@ function isObjectInLocation(s : State, a : string, b : string, rel : string) : b
             return stackDifference(s, a, b) === 1;
 
         default:
-            throw new Planner.Error("!!! Unimplemented relation in testAtom: "+rel);
+            throw new PositionErrorX("!!! Unimplemented relation in isObjectInLocation: "+rel);
     }
 }
 
@@ -93,7 +99,7 @@ function heightDifference(s : State, above : String, below : String) : number {
     }
 
     if(a.isFloor){
-        throw new Planner.Error("heightDiff: Floor cannot be above anything... "+
+        throw new PositionErrorX("heightDiff: Floor cannot be above anything... "+
                                 "Should never happen.");
     }
 
@@ -123,7 +129,7 @@ function stackDifference(s : State, o1 : String, o2 : String) : number {
 
     if(b.isFloor || a.isFloor){
         // TODO Make sure that this never happens...
-        throw new Planner.Error("Floor should not be tested as beside anything?, at least not in this manner...");
+        throw new PositionErrorX("Floor should not be tested as beside anything?, at least not in this manner...");
         return 0;
     }
 
