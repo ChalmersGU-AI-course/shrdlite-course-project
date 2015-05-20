@@ -68,7 +68,7 @@ module Planner {
             if (state.holding !== null) {
             } else {
                 //Check if the object is free
-                for (i = 0; i < state.stacks.length; i++) {
+                for (var i = 0; i < state.stacks.length; i++) {
                     var topObjIndex = state.stacks[i].length - 1;
                     if (topObjIndex >= 0) {
                         if (state.stacks[i][topObjIndex] == obj) {
