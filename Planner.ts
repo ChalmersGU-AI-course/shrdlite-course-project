@@ -118,15 +118,15 @@ module Planner {
                 var targetObject  = state.objects[target];
                 var primaryObject = state.objects[primary];
 
-                if(rel === 'ontop' || rel === 'above'){
+                if(rel === 'ontop' || rel === 'above' || rel === 'inside'){
                     if(validPosition(primaryObject, targetObject) === false){
-                        return false;
                         console.log("Removed interpretation in physical check");
+                        return false;
                     }
                 }else if(rel === 'under'){
                     if(validPosition(targetObject, primaryObject) === false){
-                        return false;
                         console.log("Removed interpretation in physical check");
+                        return false;
                     }   
                 }
             }
