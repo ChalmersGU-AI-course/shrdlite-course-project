@@ -32,7 +32,7 @@ module Shrdlite {
     // - then it creates plan(s) for the interpretation(s)
 
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
-		var inputChoice : int;
+		var inputChoice : number;
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
             var parses : Parser.Result[] = Parser.parse(utterance);
@@ -57,7 +57,8 @@ module Shrdlite {
 				interpretations.forEach((res, i) => {
 					world.printSystemOutput(i.toString() + ": " + Interpreter.interpretationToString(res));
 				});
-				interpretations = interpretations.splice(clarification(world),1);
+				clarification();
+				interpretations = interpretations.splice(inputChoice,1);
 			}
         } catch(err) {
             if (err instanceof Interpreter.Error) {
