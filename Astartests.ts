@@ -69,7 +69,7 @@ function generator(cell : Cell) : Cell[]
 	return cells;
 }
 
-function nullheuristic(cell : Cell, goal : Cell) : number
+function nullheuristic(cell : Cell) : number
 {
 	return 0;
 }
@@ -122,9 +122,19 @@ function testHeuristic(numTests : number, heur : (a : Cell, b : Cell) => number,
 	{
 		var start = new Cell(rand(10), rand(10));
 		var end   = new Cell(rand(10), rand(10));
-
-		var apath = Astar.findPath(start, end, generator, heur, cellEquals, cellString);
-		var dpath = Astar.findPath(start, end, generator, nullheuristic, cellEquals, cellString);
+		
+		var goal = function(c : Cell)
+		{
+			return cellEquals(c, end);
+		}
+		
+		var wrappedHeur = function(c : Cell)
+		{
+			return heur(c, end);
+		}
+		
+		var apath = Astar.findPath(start, generator, wrappedHeur, cellEquals, goal, cellString);
+		var dpath = Astar.findPath(start, generator, nullheuristic, cellEquals, goal, cellString);
 
 		enforceAstarResult(start, end, apath);
 		enforceAstarResult(start, end, dpath);

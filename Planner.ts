@@ -72,11 +72,61 @@ var endState : WorldState = {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
-
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-    
-         var result = Astar.findPath(state, endState, Neighbour.listNeighbours, Heuristics.simple, worldEq, worldStr);
-        
+    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {    
+        var pddl = intprt[0][0];
+        console.log("here i am!", pddl);
+        if(pddl.rel == null)
+            return ["Nothing needs to change!"];
+                    
+        console.log("here i am!", pddl);
+        var heur = function(a : WorldState)
+        {
+            return 0;
+        }
+            
+        var goal;
+        if(pddl.rel === "holding")
+        {
+            goal = holdingGoal(intprt[0][0].args[0]);
+        }           
+        else if(pddl.rel === "ontop" || 
+                pddl.rel == "inside" || 
+                pddl.rel == "under"  ||
+                pddl.rel == "over")
+        {
+            if(pddl.rel == "under")
+            {
+                var tmp = pddl.args[0];
+                pddl.args[0] = pddl.args[1];
+                pddl.args[1] = tmp;
+            }
+            
+            //Some things cannot be placed ontop of other things.
+            //But everything can be placed on the floor.
+            if(pddl.args[1] !== "floor")
+            {
+                var a = state.objects[pddl.args[0]];
+                var b =  state.objects[pddl.args[1]];            
+                if(!Spatial.canBeOntop(a, b) )
+                    return [Spatial.ontopError(a, b)];
+            }
+            
+            goal = ontopGoal(pddl.args[0], pddl.args[1]);
+        }
+        else if(pddl.rel === "rightof")
+        {
+            goal = sideOfGoal(pddl.args[1], pddl.args[0]);
+        }
+        else if(pddl.rel === "leftof")
+        {
+            goal = sideOfGoal(pddl.args[0], pddl.args[1]);
+        }
+        else 
+        {
+            goal = goalFn;
+        }
+            
+        var result = Astar.findPath(state, Neighbour.listNeighbours, heur, worldEq, goal, worldStr);
         var path = [];
         for (var i = 1; i < result.nodes.length; i++)
         {
@@ -101,11 +151,83 @@ var endState : WorldState = {
             }
             else 
             {
-                throw "Error in planner!";
+                //No action.
+                path.push("No action required.");
             }
         }
 
         return path;
+    }
+    
+    function holdingGoal(obj : string) : (a : WorldState) => boolean
+    {
+        return function(a : WorldState) : boolean
+        {
+            return a.holding === obj;
+        }
+    }
+    
+    function ontopGoal(over : string, under : string) : (a : WorldState) => boolean
+    {
+        if(under == "floor")
+        {
+            return function(a : WorldState) : boolean
+            {
+                for (var i = 0; i < a.stacks.length; i++)
+                {
+                    if(a.stacks[i].length > 0 &&
+                       a.stacks[i][0] === over)
+                       return true;
+                }
+                return false;
+            }
+        }
+        else 
+        {        
+            return function(a : WorldState) : boolean
+            {
+                for (var i = 0; i < a.stacks.length; i++)
+                {
+                    for (var j = 0; j < a.stacks[i].length - 1; j++)
+                    {
+                        if(a.stacks[i][j] == under &&
+                           a.stacks[i][j + 1] == over)
+                           return true;
+                    }
+                }
+                
+                return false;
+            }
+        }
+    }
+
+    function sideOfGoal(left: string, right : string) : (a : WorldState) => boolean
+    {
+        return function(a : WorldState) : boolean
+        {
+            var le = a.stacks.length, ri = 0;
+            for (var i = 0; i < a.stacks.length; i++)
+            {
+                for (var j = 0; j < a.stacks[i].length; j++)
+                {
+                    if(a.stacks[i][j] == left)
+                    {
+                        le = i;
+                    }
+                    else if(a.stacks[i][j] == right)
+                    {
+                        ri = i;
+                    }
+                }
+            }
+            
+            return le < ri;
+        }
+    }
+    
+    function goalFn(a : WorldState) : boolean
+    {
+        return worldEq(a, endState);
     }
 
     function worldStr(a: WorldState): string 
@@ -128,17 +250,16 @@ var endState : WorldState = {
 
     function worldEq(a: WorldState, b: WorldState): boolean 
     {
-        return worldStr(a) === worldStr(b);
+        if(a.stacks.length !== b.stacks.length) return false;
+        for (var i = 0; i < a.stacks.length; i++)
+        {
+            if(a.stacks[i].length !== b.stacks[i].length) return false;
+            for (var j = 0; j < a.stacks[i].length; j++)
+            {
+                if(a.stacks[i][j] !== b.stacks[i][j]) return false;
+            }
+        }
+
+        return true;
     }
-
-    function nullheur(a : WorldState, b: WorldState) : number
-    {
-        return 0;
-    }
-
-
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
-    }
-
 }

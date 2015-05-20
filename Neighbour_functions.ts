@@ -1,10 +1,9 @@
 ///<reference path="World.ts"/>
+///<reference path="SpatialConstraints.ts"/>
 
 module Neighbour { 
 
-    /*
-    *	Lists possible next states for a given state
-    */
+    //Lists possible next states for a given state
 	export function listNeighbours(currentState : WorldState) : WorldState[] {
 		var nlist : WorldState[]=[];
 
@@ -13,7 +12,7 @@ module Neighbour {
 			n.holding = n.stacks[n.arm].pop();
 			nlist.push(n);
 		}
-        else if(currentState.holding){ //TODO: Check if the object can be dropped
+        else if(currentState.holding && canDropHolding(currentState)){ //TODO: Check if the object can be dropped
 			var n : WorldState = copyState(currentState);
 			n.stacks[n.arm].push(n.holding);
 			n.holding=null;
@@ -55,22 +54,16 @@ module Neighbour {
 
         return obj;
     }
-
-	/*
-	*	Returns a deep copy of an object.
-	*/
-	function copyObject<T>(object:T): T {
-    var objectCopy = <T>{};
-
-    for (var key in object)
+    
+    function canDropHolding(s : WorldState) : boolean
     {
-        if (object.hasOwnProperty(key))
-        {
-            objectCopy[key] = object[key];
-        }
+        //Can always drop on floor.
+        if(s.stacks[s.arm].length == 0)
+            return true;
+       
+        var held  = s.objects[s.holding];
+        var under = s.objects[s.stacks[s.arm][s.stacks[s.arm].length - 1]];  
+        return Spatial.canBeOntop(held, under);
     }
-
-    return objectCopy;
-	}
-
+    
 }

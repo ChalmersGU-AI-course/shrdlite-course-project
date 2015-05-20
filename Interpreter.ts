@@ -53,9 +53,7 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    /**
-        Finds the interpretation of a given parse tree.
-    */
+    //    Finds the interpretation of a given parse tree.
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
 
         // If the command is to pick something up, we find every object that fits the description
@@ -102,10 +100,8 @@ module Interpreter {
         return intprt;
     }
 
-    /**
-        Searches through the stacks to find every object that conforms to the given specifications and returns
-        the IDs.
-    */
+    //    Searches through the stacks to find every object that conforms to the given specifications and returns
+    //    the IDs.
     function identifyObj(object : Parser.Object, state : WorldState){
         var ids = [];
         // If object does not contain any further constraints (objects and locations), it contains the description
@@ -121,6 +117,11 @@ module Interpreter {
             // Since we do not care where the object is, only if it exists, we can concat all stacks
             // and iterate through that instead of iterating through every stack. 
             var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+            
+            //Objects can also be held.            
+            if(state.holding) {
+                objs.push(state.holding);
+            }
 
             for(var i = 0; i < objs.length; i++){
                 var currentObj = state.objects[objs[i]];
@@ -144,9 +145,7 @@ module Interpreter {
         return ids;
     }
 
-    /**
-        Checks if an object with the given Object ID conforms to a location (a relation to another object)
-    */
+    //Checks if an object with the given Object ID conforms to a location (a relation to another object)
     function checkLoc(objectId, loc : Parser.Location, state : WorldState) : boolean{
 
         // The relation to the object
@@ -198,15 +197,16 @@ module Interpreter {
         });
         return res;
     }
-    /**
-        Returns the postion of an object with the given object ID as [stack number, stack altitude].
-    */
+    
+    //  Returns the postion of an object with the given object ID as [stack number, stack altitude].
     function findObjPos(objectId, state : WorldState) : [number, number]{
 
         // The floor "object" is handled separately
-        if(objectId == "floor")
+        // Also the object might be held by the arm.
+        if(objectId === "floor" || 
+           objectId === state.holding)
             return [-1,-1];
-
+        
         // Iterates through the stacks until the given Object ID is found.
         for (var stacknr = 0; stacknr < state.stacks.length; stacknr++) {
             for (var objectnr=0; objectnr < state.stacks[stacknr].length; objectnr++) {
@@ -216,6 +216,7 @@ module Interpreter {
 
             }
         }
+        
         // If no object matches the given Object ID, null is returned.
         return null;
     }
@@ -226,11 +227,11 @@ module Interpreter {
 
 }
 
-        // This returns a dummy interpretation involving two random objects in the world
-      /*  var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        var a = objs[getRandomInt(objs.length)];
-        var b = objs[getRandomInt(objs.length)];
-        var intprt : Literal[][] = [[
-            {pol: true, rel: "ontop", args: [a, "floor"]},
-            {pol: true, rel: "holding", args: [b]}
-        ]]; */
+// This returns a dummy interpretation involving two random objects in the world
+// var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+// var a = objs[getRandomInt(objs.length)];
+// var b = objs[getRandomInt(objs.length)];
+//var intprt : Literal[][] = [[
+//     {pol: true, rel: "ontop", args: [a, "floor"]},
+//     {pol: true, rel: "holding", args: [b]}
+// ]]; 

@@ -16,6 +16,7 @@ module Astar
 			else  this.success = false;
 		}
 	}
+	
 
 	/**
 	 * Finds the shortest path between start and end if such a path exists.
@@ -26,16 +27,16 @@ module Astar
 	 * @param heuristic - a guess for how close a node is to the end node.
 	 */
 	export function findPath<T>(start : T, 
-								end : T, 
 								gen : (t : T) => T[],
-								heuristic : (t : T, e : T) => number,
+								heuristic : (t : T) => number,
                                 equals : (t: T, t0 : T) => boolean,
+								goal : (t : T) => boolean,
                                 strFun : (t : T) => string)  : SearchResult<T>
 	{
 		//Simple case:
-		if(equals(start, end)) 
+		if(goal(start)) 
 		{
-			return new SearchResult<T>([start, end], 0);
+			return new SearchResult<T>([start, start], 0);
 		}
 
 		var known  = new collections.Dictionary<T, number>(strFun);
@@ -62,14 +63,14 @@ module Astar
 
 		var pQueue = new collections.PriorityQueue<T>(comparer);
 		
-		dist.push(heuristic(start, end));
+		dist.push(heuristic(start));
 		prev.push(-1);
 		nodes.push(start);
 		known.setValue(start, count++);
 		var adj = gen(start);
 		for(var i = 0; i < adj.length; i++)
 		{
-			dist.push(1 + heuristic(adj[i], end));
+			dist.push(1 + heuristic(adj[i]));
 			prev.push(0);
 			nodes.push(adj[i]);
 			known.setValue(adj[i], count++);
@@ -83,14 +84,14 @@ module Astar
 
 		var iterations: number    = 1;
 		var node : T = pQueue.dequeue();
-		while(!equals(node,end))
+		while(!goal(node))
 		{
 			var previous = known.getValue(node);
 			var adjacent = gen(node);
 			for(var i = 0; i < adjacent.length; i++)
 			{
 				var n 		 = adjacent[i];
-				var distance = dist[previous] + 1 + heuristic(n, end) - heuristic(node, end);
+				var distance = dist[previous] + 1 + heuristic(n) - heuristic(node);
 				if(!known.containsKey(n))
 				{
 					dist.push(distance);
@@ -101,7 +102,6 @@ module Astar
 				}
 				else 
 				{
-
 					var current = known.getValue(n);
 					if(dist[current] > distance)
 					{
@@ -118,9 +118,9 @@ module Astar
 			iterations++;
 		}
 
-		if(known.containsKey(end))
+		if(goal(node))
 		{
-			var current = known.getValue(end);
+			var current = known.getValue(node);
 			var path:T[] = [];
 			while(current != -1)
 			{
