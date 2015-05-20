@@ -464,7 +464,7 @@ module Planner {
         //console.log(convertToMap(state));
         console.log("asdasdasd");
        
-        var unqAttr : {[s:string], [string]} = uniqueAttributes(state);
+        var unqAttr : {[s:string]: string[];} = uniqueAttributes(state);
         var tempplan =  AStar.astar(intprt[0],state,goalFunction,getHueristic,w2N,unqAttr);
         var plan = [];
         
@@ -561,23 +561,23 @@ module Planner {
 
 
 
-function uniqueAttributes ( w : WorldState  ) : { [s:string]: [string]}
+function uniqueAttributes ( w : WorldState  ) : { [s:string]: string[]}
 {
 	var objs : string[] = [];
 	
 	for(var oi in w.stacks)
 	{
-		var o : string[] = w.stacks[o];
+		var o : string[] = w.stacks[oi];
 		
-		for(var oi' in o)
+		for(var oi1 in o)
 		{
-			var o' : string = o[oi'];
-			objs.push(o');
+			var o1 : string = o[oi1];
+			objs.push(o1);
 		}
 	}
 	
 	
-	var objsDef : [ObjectDefinition] = [];
+	var objsDef : ObjectDefinition[] = [];
 	
 	for(var obji in objs)
 	{
@@ -586,35 +586,35 @@ function uniqueAttributes ( w : WorldState  ) : { [s:string]: [string]}
 	}
 	
 	
-	var objsAttr : { [s:string]: [string]} = {} //Map of the least needed attributes.
+	var objsAttr : { [s:string]: string[]} = {} //Map of the least needed attributes.
 	
 	for(var obi in objs)
 	{
-		var obStr : string = objs[obi];
-		var obDef : ObjectDefinition = w.objects[objStr];
-		var obAttr : [string] = uniqueAttributes'(obDef, objsDef);
+		var objStr : string = objs[obi];
+		var objDef : ObjectDefinition = w.objects[objStr];
+		var obAttr : string[] = uniqueAttributes1(objDef, objsDef);
 		
-		objsAttr[obStr] = obAttr;
+		objsAttr[objStr] = obAttr;
 	}
 	
 	return objsAttr;
 }
 
-function uniqueAttributes' ( o : ObjectDefinition , os : [ObjectDefinition] ) : [string]
+function uniqueAttributes1 ( oA : ObjectDefinition , os : ObjectDefinition[] ) : string[]
 {
-	var unqAttr : [string] = {oA.form};
+	var unqAttr : string[] = [oA.form];
 	
-	var unqOs : [ObjectDefinition] = uniqueAttributes'' ("form", oA.form, os);
+	var unqOs : ObjectDefinition[] = uniqueAttributes2 ("form", oA.form, os);
 	
 	if(unqOs.length > 0)
 	{
-		var temp0 : [ObjectDefinition] = uniqueAttributes'' ("size", oA.size, unqOs);
-		var temp1 : [ObjectDefinition] = uniqueAttributes'' ("color", oA.color, unqOs);
+		var temp0 : ObjectDefinition[] = uniqueAttributes2 ("size", oA.size, unqOs);
+		var temp1 : ObjectDefinition[] = uniqueAttributes2 ("color", oA.color, unqOs);
 		
 		if(temp0.length < temp1.length)
 		{
 			unqOs = temp0;
-			if(unqOs <= 0)
+			if(unqOs.length <= 0)
 			{
 				unqAttr.push(oA.size);
 			}
@@ -622,7 +622,7 @@ function uniqueAttributes' ( o : ObjectDefinition , os : [ObjectDefinition] ) : 
 			{
 				unqAttr.push(oA.color);
 				unqAttr.push(oA.size);
-				if((uniqueAttributes'' ("color", oA.color, unqOs)).length > 0)
+				if((uniqueAttributes2 ("color", oA.color, unqOs)).length > 0)
 				{
 					unqAttr.push("notUnique");
 				}
@@ -631,7 +631,7 @@ function uniqueAttributes' ( o : ObjectDefinition , os : [ObjectDefinition] ) : 
 		else
 		{
 			unqOs = temp1;
-			if(unqOs <= 0)
+			if(unqOs.length <= 0)
 			{
 				unqAttr.push(oA.color);
 			}
@@ -639,7 +639,7 @@ function uniqueAttributes' ( o : ObjectDefinition , os : [ObjectDefinition] ) : 
 			{
 				unqAttr.push(oA.color);
 				unqAttr.push(oA.size);
-				if((uniqueAttributes'' ("size", oA.size, unqOs)).length > 0)
+				if((uniqueAttributes2 ("size", oA.size, unqOs)).length > 0)
 				{
 					unqAttr.push("notUnique");
 				}
@@ -650,9 +650,9 @@ function uniqueAttributes' ( o : ObjectDefinition , os : [ObjectDefinition] ) : 
 	return unqAttr;
 }
 
-function uniqueAttributes'' ( type : string , oA : string , os : [ObjectDefinition] ) : [ObjectDefinition]
+function uniqueAttributes2 ( type : string , oA : string , os : ObjectDefinition[] ) : ObjectDefinition[]
 {
-	var notUnique : [ObjectDefinition];
+	var notUnique : ObjectDefinition[] = [];
 	
 	for(var i in os)
 	{

@@ -131,15 +131,16 @@ module AStar {
                 if(current.wState.stacks[current.wState.arm].length >1)
                 {
                     obj2 = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-2];
-                    result = ("I move the " + derp.concat(uniqueAttr[obj1].reverse()) + " on the " + derp.concat(uniqueAttr[obj2].reverse()));
+                    result = ("I move the " + uniqueAttr[obj1].reverse().join(" ") + " on the " + uniqueAttr[obj2].reverse().join(" "));
                 }
                 else
                 {
-                    result = ("I move the " + derp.concat(uniqueAttr[obj1].reverse()) + " on the floor");
+                    result = ("I move the " + uniqueAttr[obj1].reverse().join(" ") + " on the floor");
                 }
             }
             current = came_from[current.wStateId][0];
         }
+        if(result.length > 1)
         total_path.push("Firstly " + result);
         return total_path;
     }
