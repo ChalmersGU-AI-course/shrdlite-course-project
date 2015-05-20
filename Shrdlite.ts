@@ -100,6 +100,7 @@ module Shrdlite {
 				inputChoice = parseInt(utterance);
                 return;
             }
+			nextInput();
 		}
     }
 
