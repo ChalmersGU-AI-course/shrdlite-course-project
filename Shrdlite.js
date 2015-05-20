@@ -3349,6 +3349,7 @@ var Shrdlite;
     // - then it interprets the parse(s)
     // - then it creates plan(s) for the interpretation(s)
     function parseUtteranceIntoPlan(world, utterance) {
+        var inputChoice;
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try  {
             var parses = Parser.parse(utterance);
@@ -3370,9 +3371,10 @@ var Shrdlite;
             if (interpretations.length > 1) {
                 world.printSystemOutput("What did you mean?");
                 interpretations.forEach(function (res, i) {
-                    world.printSystemOutput(i.toString + ": " + Interpreter.interpretationToString(res));
+                    world.printSystemOutput(i.toString() + ": " + Interpreter.interpretationToString(res));
                 });
-                interpretations = interpretations.splice(clarification(world), 1);
+                clarification();
+                interpretations = interpretations.splice(inputChoice, 1);
             }
         } catch (err) {
             if (err instanceof Interpreter.Error) {
@@ -3405,6 +3407,21 @@ var Shrdlite;
         var plan = plans[0].plan;
         world.printDebugInfo("Final plan: " + plan.join(", "));
         return plan;
+
+        function clarification(utterance) {
+            if (typeof utterance === "undefined") { utterance = "-1"; }
+            var inputPrompt = "Choose the corresponding number.";
+            var nextInput = function () {
+                return world.readUserInput(inputPrompt, clarification);
+            };
+
+            if (utterance.trim()) {
+                inputChoice = parseInt(utterance);
+                if (inputChoice >= 0)
+                    return;
+            }
+            nextInput();
+        }
     }
     Shrdlite.parseUtteranceIntoPlan = parseUtteranceIntoPlan;
 
@@ -3422,13 +3439,4 @@ var Shrdlite;
         return plan;
     }
     Shrdlite.splitStringIntoPlan = splitStringIntoPlan;
-
-    function clarification(world, utterance) {
-        if (typeof utterance === "undefined") { utterance = ""; }
-        var inputPrompt = "Choose the corresponding number.";
-        var nextInput = function () {
-            return world.readUserInput(inputPrompt, clarification);
-        };
-        return parseInt(utterance.trim()) - 1;
-    }
 })(Shrdlite || (Shrdlite = {}));

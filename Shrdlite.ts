@@ -55,7 +55,7 @@ module Shrdlite {
 			{
 				world.printSystemOutput("What did you mean?");
 				interpretations.forEach((res, i) => {
-					world.printSystemOutput(i.toString() + ": " + Interpreter.interpretationToString(res));
+					world.printSystemOutput((i+1).toString() + ": " + Interpreter.interpretationToString(res));
 				});
 				clarification();
 				interpretations = interpretations.splice(inputChoice,1);
@@ -92,12 +92,12 @@ module Shrdlite {
         world.printDebugInfo("Final plan: " + plan.join(", "));
         return plan;
 		
-		function clarification(utterance : string = "-1") : void {
+		function clarification(utterance : string = "") : void {
 			var inputPrompt = "Choose the corresponding number.";
 			var nextInput = () => world.readUserInput(inputPrompt, clarification);
 			
             if (utterance.trim()) {
-				inputChoice = parseInt(utterance);
+				inputChoice = parseInt(utterance)-1;
 				if(inputChoice >= 0)
 					return;
             }
