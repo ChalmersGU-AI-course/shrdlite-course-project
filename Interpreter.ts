@@ -99,6 +99,9 @@ module Interpreter {
             console.log("Please be more specific");
             //Possible extension to save the current data and ask a clarification question      <---TODO?
             return null;
+        } else if(pobjs[0] === "_"){
+            console.log("the floor cannot be a primary object");
+            return null;
         }
 
         /*
@@ -234,9 +237,10 @@ module Interpreter {
         }
         return possibleObjects;
     }
-
-    //This method will take primary and target objects and check the command to see which relations is wanted and use the world state
-    //to see existing sizes and relations
+    /**
+     *This method will take primary and target objects and check the command to see which relations is wanted and use the world state
+     *to see existing sizes and relations
+     */
     function convertToPDDL(cmd: Parser.Command, primobj: string[], targets : string[]) : Literal[][] {
         var interpretations: Literal[][] = [];
 
@@ -321,9 +325,11 @@ module Interpreter {
         return interpretations;
     }
 
-    // This function returns how o2 relates to o1. e.g o2 is left of o1; 
-    // returns 'none' if there is no relation
-    // possible relations: left, right, inside, under, above (beside = left or right)
+    /** 
+     * This function returns how o2 relates to o1. e.g o2 is left of o1; 
+     * returns 'none' if there is no relation
+     * possible relations: left, right, inside, under, above (beside = left or right)
+     */
     function getRelation(o1s : string[], o2s : string[], rel : string, stacks : string[][]) : string[]{
         var correct = new collections.Set<string>();
         
@@ -364,8 +370,10 @@ module Interpreter {
         // TODO: Think of edge cases.
         return correct.toArray();
     }
-
-    // Returns coordinates in the stack for a given object ; returns -1, -1 if element does not exist.
+    /**
+     * Returns coordinates in the stack for a given object.
+     * returns -1, -1 if element does not exist.
+     */
     function getStackIndex(o1 : string, stacks : string[][]) : number[]{
         var cords:number[] = [-1, -1];
         for(var i = 0; i < stacks.length; i++){
