@@ -1,41 +1,100 @@
 class Interpreter
 
     Interpreter.interpret = (parses, currentState) ->
+        if parses.length > 1
+            parse = getParseClarification(parses)
+        else
+            parse = parses[0]
+
         parseInterpList = []
-        for parse in parses
-            matchingObjEntities = getMatchingEntities(parse.prs.ent, currentState)
-            if parse.prs.loc?
-                matchingLocEntities = getMatchingEntities(parse.prs.loc.ent, currentState)
-                for obj in matchingObjEntities
-                    for locObj in matchingLocEntities
-                        if obj isnt locObj
-                            intrp = {
-                                input: parse.input,
-                                prs: parse.prs,
-                                # TODO: placeholder for [[obj]], [[locObj]] lists of objects
-                                #       quantifers set to "all"
-                                intp: [{ pol: true, rel: parse.prs.loc.rel, args: [[obj], [locObj]], quantifier1: "all", quantifier2: "all"}]
-                            }
-                            parseInterpList.push(intrp)
-            else
-                for obj in matchingObjEntities
-                    intrp = {
+        console.log parse
+        matchingObjEntities = getMatchingEntities(parse.prs.ent, currentState)
+        if parse.prs.loc?
+            matchingLocEntities = getMatchingEntities(parse.prs.loc.ent, currentState)
+            for obj in matchingObjEntities
+                for locObj in matchingLocEntities
+                    if obj isnt locObj
+                        intrp = {
                             input: parse.input,
                             prs: parse.prs,
-                            intp: [{ pol: true, rel: "holding", args: [obj]}]
+                            # TODO: placeholder for [[obj]], [[locObj]] lists of objects
+                            #       quantifers set to "all"
+                            intp: [{ pol: true, rel: parse.prs.loc.rel, args: [[obj], [locObj]], quantifier1: "all", quantifier2: "all"}]
                         }
-                    parseInterpList.push(intrp)
+                        parseInterpList.push(intrp)
+        else
+            for obj in matchingObjEntities
+                intrp = {
+                    input: parse.input,
+                    prs: parse.prs,
+                    intp: [{ pol: true, rel: "holding", args: [obj]}]
+                }
+                parseInterpList.push(intrp)
         if parseInterpList.length is 0
             throw new Interpreter.Error 'Could not find any interpretations.'
-        else    
+        else
             parseInterpList
 
-    getMatchingEntities = (entity, currentState) ->
+    getObjClarification = (objs, currentState) ->
+        console.log "Did you mean: "
+        for obj, i in objs
+            objString = ""
+            for k,currObj of currentState.objects
+                if obj is k 
+                    console.log i + ") The " + currObj.size + " " + currObj.color + " " + currObj.form
+        objs[getClarificationAnswer(objs.length)]
+
+    getParseClarification = (parses) ->
+        console.log "Did you mean: "
+        for parse, i in parses
+            prs = parse.prs
+            entString = getEntString(prs.ent)
+            locString = getLocString(prs.loc)
+            locEntString = getEntString(prs.loc.ent)
+            console.log i + ") " + entString + locString + locEntString
+        parses[getClarificationAnswer(parses.length)]
+        
+    getClarificationAnswer = (listLength) ->
+        questionAnswer = -1
+        fs = require 'fs'
+        fd = fs.openSync("/dev/stdin", "rs")
+        buf = new Buffer( 256 )
+        questionAnswer = fs.readSync(fd, buf, 0, 256)
+        parseInt(buf.toString(null, 0, questionAnswer), 10)
+
+    getEntString = (entity) ->
+        entString = entity.quant + " "
         if entity.obj.loc?
-            retObjs = []
+            entString = entString + getObjString(entity.obj.obj) + "that is "
+            entString = entString + getLocString(entity.obj.loc)
+            entString = entString + getEntString(entity.obj.loc.ent)
+        else
+            entString = entString + getObjString(entity.obj)
+
+    getObjString = (obj) ->
+        objString = ""
+        if obj.size?
+            objString = objString + obj.size + " "
+        if obj.color?
+            objString = objString + obj.color + " "
+        objString = objString + obj.form + " "
+        objString
+
+    getLocString = (loc) ->
+        switch loc.rel
+            when "inside" then "in "
+            when "ontop" then "on "
+            when "leftof" then "left of "
+            when "rightof" then "right of "
+            else " " + loc.rel + " "
+
+    getMatchingEntities = (entity, currentState) ->
+        retObjs = []  
+
+        if entity.obj.loc?
             objs = getMatchingObjects(entity.obj.obj, currentState)
             if objs.length is 0
-                Error "No interpretation found."
+                Error "No matching entity found."
             else
                 objsOnLoc = getMatchingEntities(entity.obj.loc.ent, currentState)
                 switch entity.obj.loc.rel
@@ -51,7 +110,11 @@ class Interpreter
                             retObjs.push(obj)
             retObjs
         else
-            getMatchingObjects(entity.obj, currentState) 
+            retObjs = getMatchingObjects(entity.obj, currentState)
+        if entity.quant is "the" and retObjs.length > 1
+            [getObjClarification(retObjs, currentState)]
+        else
+            retObjs
 
     getMatchingObjects = (object, currentState) ->    
         objs = []

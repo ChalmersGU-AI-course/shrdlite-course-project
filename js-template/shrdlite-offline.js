@@ -210,6 +210,7 @@ ExampleWorlds["medium"] = {
     },
     "examples": [
         "put the small box on the plank on the floor", //X
+        "take the large box",
         "put the brick that is to the left of a pyramid in a box",
         "put the white ball in a box on the floor",
         "move the large ball inside a yellow box on the floor",
