@@ -21,39 +21,26 @@ class ObjectPosition {
 function isObjectInLocation(s : State, a : string, b : string, rel : string) : boolean{
     switch(rel){
         case "holding":
-            return (s.holding === a);
+            return s.holding === a;
         case "inside": // Same as ontop.
         case "ontop":
-            var above = a;
-            var below = b;
-            return ( heightDifference(s, above, below) === 1 );
+            return heightDifference(s, a, b) === 1;
 
         case "above":   // Also incorporates "under"
-            var above = a;
-            var below = b;
-            return ( heightDifference(s, above, below) > 0 );
+            return heightDifference(s, a, b) > 0;
 
         case "beside": // In the stack directly to left or right
-            var o1 = a;
-            var o2 = b;
-            return ( Math.abs(stackDifference(s, o1, o2)) === 1 );
+            return Math.abs(stackDifference(s, a, b)) === 1;
 
         case "leftof": // In the stack directly to left or right
-            var o1 = a;
-            var o2 = b;
-            return ( stackDifference(s, o1, o2) === -1 );
+            return stackDifference(s, a, b) === -1;
 
         case "rightof": // In the stack directly to left or right
-            var o1 = a;
-            var o2 = b;
-            return ( stackDifference(s, o1, o2) === 1 );
+            return stackDifference(s, a, b) === 1;
 
         default:
             throw new Planner.Error("!!! Unimplemented relation in testAtom: "+rel);
-            return true;
     }
-
-    return true;
 }
 
 
