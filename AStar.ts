@@ -42,7 +42,7 @@ module AStar {
         return 0
     }
     
-    export function astar(lit:Interpreter.Literal[],startObject,goalFunction,huerFunction,getNode,uniqueAttr) : string[]
+    export function astar(lit:Interpreter.Literal[][],startObject,goalFunction,huerFunction,getNode,uniqueAttr) : string[]
     {
         var closedSet : Node[] = [];
         var openSet = new collections.PriorityQueue<Node>(compareT);
