@@ -252,217 +252,224 @@ module Planner {
         return false;
     }
 	
-    function getHueristic (ls : Interpreter.Literal[], curr : WorldState) :number
+    function getHueristic (lss : Interpreter.Literal[][], curr : WorldState) :number
     {
-        var totHue : number = 0;	
+        var totHue : number = 0;
+        var biggestTot : number = 1000000;
         
         var stacks : string[] = [];
         var z : number = 0;
         
         //console.log(curr);
         
-        for(var j in ls)
+        for(var u in lss)
         {
-            var l : Interpreter.Literal = ls[j];
+        	var ls : Interpreter.Literal[] = lss[u];
+        	
+		    for(var j in ls)
+		    {
+		        var l : Interpreter.Literal = ls[j];
 
-            var rel : string = l.rel;
-            var x   : string = l.args[0];
-            var y   : string = l.args[1];
-            
-            var xStack : [number,number] = [curr.arm,-1]; //[Stacks index,Steps from bottom]
-            var yStack : [number,number] = [curr.arm,-1]; //[Stacks index,Steps from bottom]
-            
-			for(var k in curr.stacks)
-			{
-			  var si : string[] = curr.stacks[k];
-			  var iox = -1;
-			  var ioy = -1;
-			  for(var m in si)
-			  {
-				  if(si[m] === x)
+		        var rel : string = l.rel;
+		        var x   : string = l.args[0];
+		        var y   : string = l.args[1];
+		        
+		        var xStack : [number,number] = [curr.arm,-1]; //[Stacks index,Steps from bottom]
+		        var yStack : [number,number] = [curr.arm,-1]; //[Stacks index,Steps from bottom]
+		        
+				for(var k in curr.stacks)
+				{
+				  var si : string[] = curr.stacks[k];
+				  var iox = -1;
+				  var ioy = -1;
+				  for(var m in si)
 				  {
-					  iox = m;
+					  if(si[m] === x)
+					  {
+						  iox = m;
+					  }
+					  if(si[m] === y)
+					  {
+						  ioy = m;
+					  }
 				  }
-				  if(si[m] === y)
+				 
+				  if(iox >= 0)
 				  {
-					  ioy = m;
+					  xStack = [k,iox];
 				  }
-			  }
-			 
-			  if(iox >= 0)
-			  {
-				  xStack = [k,iox];
-			  }
-			  if(ioy >= 0)
-			  {
-				  yStack = [k,ioy];
-			  }
-			}
-            //console.log(xStack,yStack);
-            switch(rel)
-            {
-                case "rightof":
-                	if(xStack[1] == -1)
-                	{
-                		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
-                	}
-                	else if(yStack[1] == -1)
-                	{
-                		totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + 1;
-                		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
-                	}
-                	else
-                	{
-		                if(!(xStack[0] > yStack[0])) // checks if the goal isn't already met
-		                {
-		                    if(yStack[0] == (+curr.stacks.length - +1)) // checks if there isn't a stack to the right of y
+				  if(ioy >= 0)
+				  {
+					  yStack = [k,ioy];
+				  }
+				}
+		        //console.log(xStack,yStack);
+		        switch(rel)
+		        {
+		            case "rightof":
+		            	if(xStack[1] == -1)
+		            	{
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            	}
+		            	else if(yStack[1] == -1)
+		            	{
+		            		totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + 1;
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            	}
+		            	else
+		            	{
+				            if(!(xStack[0] > yStack[0])) // checks if the goal isn't already met
+				            {
+				                if(yStack[0] == (+curr.stacks.length - +1)) // checks if there isn't a stack to the right of y
+				                {
+				                    totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1; // weight for moving y to the left
+				                }
+				                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + Math.abs(+yStack[0] - +xStack[0]) + +1; //weight for moving x to the right of y
+				            }
+			            }
+			            break;
+		            case "leftof":
+		            	if(xStack[1] == -1)
+		            	{
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            	}
+		            	else if(yStack[1] == -1)
+		            	{
+		            		totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +1;
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            	}
+		            	else
+		            	{
+				            if(!(xStack[0] < yStack[0])) // checks if the goal isn't already met
+				            {
+				                if(yStack[0] == 0) // checks if there isn't a stack to the left of y
+				                {
+				                    totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1; // weight for moving y to the right
+				                }
+				                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + Math.abs(+xStack[0] - +yStack[0]) + +1; //weight for moving x to the left of y
+				            }
+			            }
+		                break;
+		            case "inside":
+		            case "ontop":
+		            	if(xStack[1] === -1)
+		            	{
+		            		totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1;
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		                    if(totHue < 0)
 		                    {
-		                        totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1; // weight for moving y to the left
+		                        console.log("FAIL!");
 		                    }
-		                    totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + Math.abs(+yStack[0] - +xStack[0]) + +1; //weight for moving x to the right of y
-		                }
-	                }
-	                break;
-                case "leftof":
-                	if(xStack[1] == -1)
-                	{
-                		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
-                	}
-                	else if(yStack[1] == -1)
-                	{
-                		totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +1;
-                		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
-                	}
-                	else
-                	{
-		                if(!(xStack[0] < yStack[0])) // checks if the goal isn't already met
-		                {
-		                    if(yStack[0] == 0) // checks if there isn't a stack to the left of y
+		            	}
+		            	else if(yStack[1] === -1)
+		            	{
+		            		totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +1;
+		            		totHue += +Math.abs(+yStack[0] - +xStack[0]) + +1;
+		                    if(totHue < 0)
 		                    {
-		                        totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1; // weight for moving y to the right
+		                        console.log("FAIL2!");
 		                    }
-		                    totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + Math.abs(+xStack[0] - +yStack[0]) + +1; //weight for moving x to the left of y
-		                }
-	                }
-                    break;
-                case "inside":
-                case "ontop":
-                	if(xStack[1] === -1)
-                	{
-                		totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1;
-                		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
-                        if(totHue < 0)
-                        {
-                            console.log("FAIL!");
-                        }
-                	}
-                	else if(yStack[1] === -1)
-                	{
-                		totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +1;
-                		totHue += +Math.abs(+yStack[0] - +xStack[0]) + +1;
-                        if(totHue < 0)
-                        {
-                            console.log("FAIL2!");
-                        }
-                	}
-                	else
-                	{
-		                if(xStack[0] === yStack[0])
-		                {
-		                    if(xStack[1]-yStack[1] > 1)
-		                    { 
-		                        totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +2;
-		                    }
-		                    else if(xStack[1]-yStack[1] < 1)
-		                    {
-		                        totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +2;
-		                    }
-                            if(totHue < 0)
-                            {
-                                console.log("FAIL3!");
-                            }
-		                }
-		                else
-		                {
-		                    var c : number = xStack[1]++;
-                            totHue += +curr.stacks[yStack[0]].length - +c; // weight for clearing the top of y
-		                    totHue += +curr.stacks[xStack[0]].length + Math.abs(+yStack[0] - +xStack[0]) - +c; //weight for moving x to the top/inside of y
-                            
-		                }
-		            }
-                    //console.log(totHue);
-                    break;
-                case "under":
-                	if(xStack[1] == -1)
-                	{
-                		totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1;
-                		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
-                	}
-                	else if(yStack[1] == -1)
-                	{
-                		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
-                	}
-                	else
-                	{
-		                if(xStack[0] != yStack[0])
-		                {
-		                    totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + (+yStack[0] - +xStack[0]);
-		                }
-		                else if(xStack[1] > yStack[1])
-		                {
-		                    totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +2;
-		                }
-	                }
-                    break;    
-                case "beside":
-                	if(xStack[1] == -1)
-                	{
-                		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
-                	}
-                	else if(yStack[1] == -1)
-                	{
-                		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
-                	}
-                	else
-                	{
-		                if((+xStack[0] - +1) != yStack[0] && (+xStack[0] + +1) != yStack[0])
-		                {
-		                    totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + (+yStack[0] - +xStack[0] - +1); //weight for moving x beside of y
-		                }
-	                }
-                    break; 
-                case "above":
-                	if(xStack[1] == -1)
-                	{
-                		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
-                	}
-                	else if(yStack[1] == -1)
-                	{
-                		totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1;
-                		totHue += Math.abs(yStack[0]-xStack[0])+1;
-                	}
-                	else
-                	{
-		                if(xStack[0] != yStack[0])
-		                {
-		                    totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + (+yStack[0] - +xStack[0]);
-		                }
-		                else if(xStack[1] < yStack[1])
-		                {
-		                    totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +2;
-		                }
-	                }
-                    break;
-                case "holding":
-                    if(xStack[1] != -1)
-                	{
-                		totHue += +curr.stacks[xStack[0]].length-(+xStack[1] + +1);//totHue += 0;
-                	}
-                    
-            }
-        }
+		            	}
+		            	else
+		            	{
+				            if(xStack[0] === yStack[0])
+				            {
+				                if(xStack[1]-yStack[1] > 1)
+				                { 
+				                    totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +2;
+				                }
+				                else if(xStack[1]-yStack[1] < 1)
+				                {
+				                    totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +2;
+				                }
+		                        if(totHue < 0)
+		                        {
+		                            console.log("FAIL3!");
+		                        }
+				            }
+				            else
+				            {
+				                var c : number = xStack[1]++;
+		                        totHue += +curr.stacks[yStack[0]].length - +c; // weight for clearing the top of y
+				                totHue += +curr.stacks[xStack[0]].length + Math.abs(+yStack[0] - +xStack[0]) - +c; //weight for moving x to the top/inside of y
+		                        
+				            }
+				        }
+		                //console.log(totHue);
+		                break;
+		            case "under":
+		            	if(xStack[1] == -1)
+		            	{
+		            		totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1;
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            	}
+		            	else if(yStack[1] == -1)
+		            	{
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            	}
+		            	else
+		            	{
+				            if(xStack[0] != yStack[0])
+				            {
+				                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + (+yStack[0] - +xStack[0]);
+				            }
+				            else if(xStack[1] > yStack[1])
+				            {
+				                totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +2;
+				            }
+			            }
+		                break;    
+		            case "beside":
+		            	if(xStack[1] == -1)
+		            	{
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            	}
+		            	else if(yStack[1] == -1)
+		            	{
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            	}
+		            	else
+		            	{
+				            if((+xStack[0] - +1) != yStack[0] && (+xStack[0] + +1) != yStack[0])
+				            {
+				                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + (+yStack[0] - +xStack[0] - +1); //weight for moving x beside of y
+				            }
+			            }
+		                break; 
+		            case "above":
+		            	if(xStack[1] == -1)
+		            	{
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            	}
+		            	else if(yStack[1] == -1)
+		            	{
+		            		totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1;
+		            		totHue += Math.abs(yStack[0]-xStack[0])+1;
+		            	}
+		            	else
+		            	{
+				            if(xStack[0] != yStack[0])
+				            {
+				                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + (+yStack[0] - +xStack[0]);
+				            }
+				            else if(xStack[1] < yStack[1])
+				            {
+				                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +2;
+				            }
+			            }
+		                break;
+		            case "holding":
+		                if(xStack[1] != -1)
+		            	{
+		            		totHue += +curr.stacks[xStack[0]].length-(+xStack[1] + +1);//totHue += 0;
+		            	}
+		                
+		        }
+		        biggestTot = min(biggestTot,totHue);
+		    }
+	    }
         //console.log(totHue);
-        return  totHue;
+        return biggestTot;
     }
     
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
@@ -475,7 +482,7 @@ module Planner {
         console.log("asdasdasd");
        
         var unqAttr : {[s:string]: string[];} = uniqueAttributes(state);
-        var tempplan =  AStar.astar(intprt[0],state,goalFunction,getHueristic,w2N,unqAttr);
+        var tempplan =  AStar.astar(intprt,state,goalFunction,getHueristic,w2N,unqAttr);
         var plan = [];
         
         var arm : number = 0; 
