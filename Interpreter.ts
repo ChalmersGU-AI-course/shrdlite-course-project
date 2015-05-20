@@ -226,23 +226,6 @@ module Interpreter {
         return result;
     }
 
-    // Perhaps reuse in goal function???
-    function isObjectInLocation(state : WorldState, a : string, b : string, rel : string) : boolean{
-        var ap = computeObjectPosition(state, a);
-        var bp = computeObjectPosition(state, b);
-        switch (rel){
-            case "ontop":
-                if(bp.isFloor){
-                    return ap.heightNo == 0;
-                }
-                return ap.stackNo == bp.stackNo && ap.heightNo == bp.heightNo+1;
-            default:
-                throw new Interpreter.Error("isObjectInLocation: UKNOWN rel " + rel);
-        }
-
-        return true;
-    }
-
     // Returns a list of Object names that fits the goal Object.
     function findTargetObjects(state : WorldState, goalObj : Parser.Object) : string[]{
         var result : string[] = [];
