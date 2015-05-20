@@ -565,6 +565,11 @@ function uniqueAttributes ( w : WorldState  ) : { [s:string]: string[]}
 {
 	var objs : string[] = [];
 	
+    if(w.holding !== null)
+    {
+        objs.push(w.holding);
+    }
+    
 	for(var oi in w.stacks)
 	{
 		var o : string[] = w.stacks[oi];

@@ -104,10 +104,12 @@ module AStar {
         //total_path.push(current);
         var obj1 : string; 
         var obj2 : string; 
-        var result : string = "";
+        var result : string ="";
         var sugar : string;  
         var derp : string;
         var i : number = 0; 
+        var curr2 = current;
+        
         while(came_from[current.wStateId] != null)
         {
             if(result !== "" && came_from[current.wStateId][1] === "d" )
@@ -129,6 +131,13 @@ module AStar {
                     sugar = "Then ";
                 var obj = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-1];
                 obj1 = uniqueAttr[obj].slice().reverse().join(" ");
+                
+                if( curr2.wState.holding !== null && (typeof (curr2.wState.holding) !== "undefined") )
+                {
+                    result = uniqueAttr[curr2.wState.holding].slice().reverse().join(" ");
+                    total_path.push("Picking up the " + result);
+                }
+                
                 if(current.wState.stacks[current.wState.arm].length >1)
                 {
                     var objs = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-2];
@@ -142,8 +151,10 @@ module AStar {
             }
             current = came_from[current.wStateId][0];
         }
+        
         if(result.length > 1)
-        total_path.push("Firstly " + result);
+            total_path.push("Firstly " + result);
+            
         return total_path;
     }
 
