@@ -104,18 +104,56 @@ module Planner {
             }
 
 
-
-            var moveLeftState = this.moveArm(-1);
-            if (moveLeftState) {
+            // right arm
+            var moveArm1rState = this.moveArms(this.state, 1, 0);
+            if (moveArm1rState) {
                 n.push(
-                    new astar.Neighbor(moveLeftState, 1));
+                    new astar.Neighbor(moveArm1rState, 1));
+            }
+            var moveArm1lState = this.moveArms(this.state, -1, 0);
+            if (moveArm1lState) {
+                n.push(
+                    new astar.Neighbor(moveArm1lState, 1));
             }
 
-            var moveRightState = this.moveArm(1);
-            if (moveRightState) {
+            // left arm
+            var moveArm2rState = this.moveArms(this.state, 0, 1);
+            if (moveArm2rState) {
                 n.push(
-                    new astar.Neighbor(moveRightState, 1));
+                    new astar.Neighbor(moveArm2rState, 1));
             }
+            var moveArm2lState = this.moveArms(this.state, 0, -1);
+            if (moveArm2lState) {
+                n.push(
+                    new astar.Neighbor(moveArm2lState, 1));
+            }
+
+            //both arms, same direction
+            var moveArmsRState = this.moveArms(this.state, 1, 1);
+            if (moveArmsRState) {
+                n.push(
+                    new astar.Neighbor(moveArmsRState, 1.5));
+            }
+            var moveArmsLState = this.moveArms(this.state, -1, -1);
+            if (moveArmsLState) {
+                n.push(
+                    new astar.Neighbor(moveArmsLState, 1.5));
+            }
+
+            // both arm, opposite direction
+            var moveArmsOutState = this.moveArms(this.state, -1, 1);
+            if (moveArmsOutState) {
+                n.push(
+                    new astar.Neighbor(moveArmsOutState, 1.5));
+            }
+            var moveArmsInState = this.moveArms(this.state, +1, -1);
+            if (moveArmsInState) {
+                n.push(
+                    new astar.Neighbor(moveArmsInState, 1.5));
+            }
+
+            //TODO: missing combined states here
+
             return n;
         }
 
@@ -127,7 +165,7 @@ module Planner {
 
             var newState = getWorldCloneDeep(state, state.arm1, state.arm2);
             var actions = ['n', 'n']; //by default don't do anything,change if needed
-            var message = ["",""];
+            var messages = ["", ""];
 
             // use arm 1
             if (use1) {
@@ -138,7 +176,7 @@ module Planner {
                         newState.stacks[state.arm1].splice(topItemIndexArm1, 1);
 
                         actions[0] = 'p';
-                        message[0] = "Picking up the " + newState.objects[newState.holding1].form + ". ";
+                        messages[0] = "Picking up the " + newState.objects[newState.holding1].form + ". ";
                     } else {
                         invalidActionFlag = true;
                     }
@@ -154,7 +192,7 @@ module Planner {
                         newState.holding1 = null;
 
                         actions[0] = 'd';
-                        message[0] = "Dropping the " + holdingObj.form + ". ";
+                        messages[0] = "Dropping the " + holdingObj.form + ". ";
                     } else {
                         invalidActionFlag = true;
                     }
@@ -172,7 +210,7 @@ module Planner {
                         newState.stacks[state.arm2].splice(topItemIndexArm2, 1);
 
                         actions[1] = 'p';
-                        message[1] = "Picking up the " + newState.objects[newState.holding2].form + ". ";
+                        messages[1] = "Picking up the " + newState.objects[newState.holding2].form + ". ";
                     } else {
                         invalidActionFlag = true;
                     }
@@ -187,7 +225,7 @@ module Planner {
                         newState.holding2 = null;
 
                         actions[1] = 'd';
-                        message[1] = "Dropping the " + holdingObj.form + ". ";
+                        messages[1] = "Dropping the " + holdingObj.form + ". ";
                     } else {
                         invalidActionFlag = true;
                     }
@@ -198,27 +236,49 @@ module Planner {
             if (use1 && use2 && invalidActionFlag) {
                 return null;
             } else if (use1 || use2) {
-                return new PlannerNode(newState, actions, message);
+                return new PlannerNode(newState, actions, messages);
             } else {
                 return null;
             }
         }
 
-        moveArm(direction: number): PlannerNode {
-            var numberOfStacks = this.state.stacks.length;
-            var targetPos = this.state.arm1 + direction;
+        moveArms(state: WorldState, direction1: number, direction2: number): PlannerNode {
+            var numberOfStacks = state.stacks.length;
+            var targetPos1 = state.arm1 + direction1;
+            var targetPos2 = state.arm1 + direction1;
+            // var bothArmsUsed = (direction1 != 0) && (direction2 != 0);
 
-            if (targetPos >= 0 && targetPos < numberOfStacks) {
-                // We can use copy here since we don't need a deep copy
-                var newState = getWorldCloneShallow(this.state);
+            // We can use a shallow copy here since we don't need a deep copy
+            var newState = getWorldCloneShallow(state);
+            // it's an invalid action if the targets are the same
+            var invalidActionFlag = (targetPos1 == targetPos2);
 
-                newState.arm1 = targetPos;
+            var actions = ['n', 'n']; //by default don't do anything,change if needed
+            var messages = ["", ""];
 
-                var msg = "Moving " + (direction > 0 ? "right" : "left");
-                return new PlannerNode(newState, direction > 0 ? "r" : "l", msg);
+            if (targetPos1 >= 0 && targetPos1 < numberOfStacks) {
+                newState.arm1 = targetPos1;
+
+                actions[0] = direction1 > 0 ? "r" : "l";
+                messages[0] = "Moving " + (direction1 > 0 ? "right" : "left") + ". ";
+            } else {
+                invalidActionFlag = true;
             }
 
-            return null;
+            if (targetPos2 >= 0 && targetPos2 < numberOfStacks) {
+                newState.arm2 = targetPos2;
+
+                actions[1] = direction2 > 0 ? "r" : "l";
+                messages[1] = "Moving " + (direction2 > 0 ? "right" : "left") + ". ";
+            } else {
+                invalidActionFlag = true;
+            }
+
+            if (invalidActionFlag) {
+                return null;
+            } else {
+                return new PlannerNode(newState, actions, messages);
+            }
         }
     }
 
