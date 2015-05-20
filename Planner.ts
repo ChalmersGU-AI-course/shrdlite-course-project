@@ -92,52 +92,14 @@ module Planner {
     }
 
     function testAtom(s : State, atom : Interpreter.Literal) : boolean {
-        var ret = (result => {
-            if(atom.pol){
-                return result;
-            }
+        var a = atom.args[0];
+        var b = atom.args[1]; // Doesnt matter if b is undefined here...
+        var result : boolean = isObjectInLocation(s, a, b, atom.rel);
+        if(atom.pol){
+            return result;
+        } else {
             return ! result;
-        })
-
-        var result : boolean;
-
-        switch(atom.rel){
-            case "holding":
-                return ret(s.holding === atom.args[0]);
-            case "inside": // Same as ontop.
-            case "ontop":
-                var above = atom.args[0];
-                var below = atom.args[1];
-                return ret( heightDifference(s, above, below) === 1 );
-
-            case "above":   // Also incorporates "under"
-                var above = atom.args[0];
-                var below = atom.args[1];
-                return ret( heightDifference(s, above, below) > 0 );
-
-            case "beside": // In the stack directly to left or right
-                var o1 = atom.args[0];
-                var o2 = atom.args[1];
-                return ret( Math.abs(stackDifference(s, o1, o2)) === 1 );
-
-            case "leftof": // In the stack directly to left or right
-                var o1 = atom.args[0];
-                var o2 = atom.args[1];
-                // return ret( stackDifference(s, o1, o2) < 0 );
-                return ret( stackDifference(s, o1, o2) === -1 );
-
-            case "rightof": // In the stack directly to left or right
-                var o1 = atom.args[0];
-                var o2 = atom.args[1];
-                return ret( stackDifference(s, o1, o2) === 1 );
-                // return ret( stackDifference(s, o1, o2) > 0 );
-
-            default:
-                throw new Planner.Error("!!! Unimplemented relation in testAtom: "+atom.rel);
-                return true;
         }
-        console.log("OOPS? testAtom: Default return for relation "+atom.rel);
-        return ret(false);
     }
 
     function neighbours(s : State) : Astar.Neighb<State>[]{

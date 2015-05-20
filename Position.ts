@@ -19,18 +19,6 @@ class ObjectPosition {
 }
 
 function isObjectInLocation(s : State, a : string, b : string, rel : string) : boolean{
-    // var ap = computeObjectPosition(s, a);
-    // var bp = computeObjectPosition(s, b);
-    // switch (rel){
-    //     case "ontop":
-    //         if(bp.isFloor){
-    //             return ap.heightNo == 0;
-    //         }
-    //         return ap.stackNo == bp.stackNo && ap.heightNo == bp.heightNo+1;
-    //     default:
-    //         throw new Interpreter.Error("isObjectInLocation: UKNOWN rel " + rel);
-    // }
-
     switch(rel){
         case "holding":
             return (s.holding === a);
@@ -53,14 +41,12 @@ function isObjectInLocation(s : State, a : string, b : string, rel : string) : b
         case "leftof": // In the stack directly to left or right
             var o1 = a;
             var o2 = b;
-            // return ret( stackDifference(s, o1, o2) < 0 );
             return ( stackDifference(s, o1, o2) === -1 );
 
         case "rightof": // In the stack directly to left or right
             var o1 = a;
             var o2 = b;
             return ( stackDifference(s, o1, o2) === 1 );
-            // return ret( stackDifference(s, o1, o2) > 0 );
 
         default:
             throw new Planner.Error("!!! Unimplemented relation in testAtom: "+rel);
