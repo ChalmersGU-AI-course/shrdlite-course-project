@@ -9,8 +9,10 @@ interface ObjectDefinition {
 
 interface WorldState {
     stacks: string[][];
-    holding: string;
-    arm: number;
+    leftHolding: string;
+    rightArm: number;
+    rightHolding: string;
+    leftArm: number;
     objects: { [s:string]: ObjectDefinition; };
     examples: string[];
 }
