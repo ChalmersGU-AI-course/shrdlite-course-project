@@ -59,7 +59,7 @@ module Interpreter {
         var intprt = [];
 
         if (cmd.cmd == "take") {
-            if (!state.holding) {
+            if (!state.holding1) {
                 // "Take" an object if we know that the request only
                 // considers at most one object in each OR-part
                 var entities = interpretEntity(cmd.ent, state);
@@ -70,12 +70,12 @@ module Interpreter {
             }
         }
         else if (cmd.cmd == "put") {
-            if (state.holding) {
+            if (state.holding1) {
                 // "Put" the currently held object in relation to the locations
                 // specified
                 var locEntities = interpretEntity(cmd.loc.ent, state);
 
-                var lits = createBiLiteralsSpecifyFirstAND(locEntities, cmd.loc.rel, state.holding);
+                var lits = createBiLiteralsSpecifyFirstAND(locEntities, cmd.loc.rel, state.holding1);
 
                 // TODO: Check if lits are allowed!
                 intprt = lits;

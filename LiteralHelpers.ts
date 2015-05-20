@@ -68,7 +68,7 @@ module LiteralHelpers {
     }
 
     export function checkHoldingLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
-        return state.holding == lit.args[0];
+        return state.holding1 == lit.args[0];
     }
 
     export function checkUnderLiteral(lit: Interpreter.Literal, state: WorldState): boolean {

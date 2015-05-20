@@ -210,13 +210,13 @@ module Planner {
 
         moveArm(direction: number): PlannerNode {
             var numberOfStacks = this.state.stacks.length;
-            var targetPos = this.state.arm + direction;
+            var targetPos = this.state.arm1 + direction;
 
             if (targetPos >= 0 && targetPos < numberOfStacks) {
                 // We can use copy here since we don't need a deep copy
                 var newState = getWorldCloneShallow(this.state);
 
-                newState.arm = targetPos;
+                newState.arm1 = targetPos;
 
                 var msg = "Moving " + (direction > 0 ? "right" : "left");
                 return new PlannerNode(newState, direction > 0 ? "r" : "l", msg);
@@ -309,7 +309,7 @@ module Planner {
             var position = LiteralHelpers.getPositionOfObject(lit.args[0], state);
             if (position) {
                 var depth = state.stacks[position[0]].length - position[1] - 1;
-                var distance = Math.abs(position[0] - state.arm);
+                var distance = Math.abs(position[0] - state.arm1);
                 // to get away an object on top requires four actions
                 // we need to move to the according stack
                 // we need to pick up the desired object
@@ -324,7 +324,7 @@ module Planner {
 
             if (position) {
                 var depth = state.stacks[position[0]].length - position[1] - 1;
-                var distance = Math.abs(position[0] - state.arm);
+                var distance = Math.abs(position[0] - state.arm1);
                 // to get away an object on top requires four actions
                 // we need to move to the according stack
                 // we need to pick up the desired object, move it, drop it
@@ -339,7 +339,7 @@ module Planner {
 
             if (position) {
                 var depth = state.stacks[position[0]].length - position[1] - 1;
-                var distance = Math.abs(position[0] - state.arm);
+                var distance = Math.abs(position[0] - state.arm1);
                 // to get away an object on top requires four actions
                 // we need to move to the according stack
                 // we need to pick up the desired object, move it, drop it

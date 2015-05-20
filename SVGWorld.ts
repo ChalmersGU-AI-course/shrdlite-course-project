@@ -8,8 +8,8 @@ class SVGWorld implements World {
         public currentState: WorldState,
         public useSpeech = false
     ) {
-        if (!this.currentState.arm) this.currentState.arm = 0;
-        if (this.currentState.holding) this.currentState.holding = null;
+        if (!this.currentState.arm1) this.currentState.arm1 = 0;
+        if (this.currentState.holding1) this.currentState.holding1 = null;
         this.canvasWidth = this.containers.world.width() - 2 * this.wallSeparation;
         this.canvasHeight = this.containers.world.height() - this.floorThickness;
 
@@ -326,36 +326,36 @@ class SVGWorld implements World {
     // Moving around
 
     private horizontalMove(newArm, callback?) {
-        var xArm = this.currentState.arm * this.stackWidth() + this.wallSeparation;
+        var xArm = this.currentState.arm1 * this.stackWidth() + this.wallSeparation;
         var xNewArm = newArm * this.stackWidth() + this.wallSeparation;
         var path1 = ["M", xArm, 0, "H", xNewArm];
         var duration = Math.abs(xNewArm - xArm) / this.armSpeed;
         var arm = $('#arm');
         this.animateMotion(arm, path1, 0, duration);
-        if (this.currentState.holding) {
-            var objectHeight = this.getObjectDimensions(this.currentState.holding).heightadd;
+        if (this.currentState.holding1) {
+            var objectHeight = this.getObjectDimensions(this.currentState.holding1).heightadd;
             var yArm = -(this.canvasHeight - this.armSize * this.stackWidth() - objectHeight);
             var path2 = ["M", xArm, yArm, "H", xNewArm];
-            var object = $("#" + this.currentState.holding)
+            var object = $("#" + this.currentState.holding1)
             this.animateMotion(object, path2, 0, duration);
         }
-        this.currentState.arm = newArm;
+        this.currentState.arm1 = newArm;
         if (callback) setTimeout(callback, (duration + this.animationPause) * 1000);
         return 
     }
 
     private verticalMove(action, callback?) {
-        var altitude = this.getAltitude(this.currentState.arm);
-        var objectHeight = this.getObjectDimensions(this.currentState.holding).heightadd;
+        var altitude = this.getAltitude(this.currentState.arm1);
+        var objectHeight = this.getObjectDimensions(this.currentState.holding1).heightadd;
         var yArm = this.canvasHeight - altitude - this.armSize * this.stackWidth() - objectHeight;
         var yStack = -altitude;
-        var xArm = this.currentState.arm * this.stackWidth() + this.wallSeparation;
+        var xArm = this.currentState.arm1 * this.stackWidth() + this.wallSeparation;
 
         var path1 = ["M", xArm, 0, "V", yArm];
         var path2 = ["M", xArm, yArm, "V", 0];
         var duration = (Math.abs(yArm)) / this.armSpeed;
         var arm = $('#arm');
-        var object = $("#" + this.currentState.holding)
+        var object = $("#" + this.currentState.holding1)
 
         this.animateMotion(arm, path1, 0, duration);
         this.animateMotion(arm, path2, duration + this.animationPause, duration);
@@ -376,11 +376,11 @@ private horizontalMove2(newArm, callback?) {
         var duration = Math.abs(xNewArm - xArm) / this.armSpeed;
         var arm = $('#arm2');
         this.animateMotion(arm, path1, 0, duration);
-        if (this.currentState.holding) {
-            var objectHeight = this.getObjectDimensions(this.currentState.holding).heightadd;
+        if (this.currentState.holding1) {
+            var objectHeight = this.getObjectDimensions(this.currentState.holding1).heightadd;
             var yArm = -(this.canvasHeight - this.armSize * this.stackWidth() - objectHeight);
             var path2 = ["M", xArm, yArm, "H", xNewArm];
-            var object = $("#" + this.currentState.holding)
+            var object = $("#" + this.currentState.holding1)
             this.animateMotion(object, path2, 0, duration);
         }
         this.currentState.arm2 = newArm;
@@ -390,7 +390,7 @@ private horizontalMove2(newArm, callback?) {
 
     private verticalMove2(action, callback?) {
         var altitude = this.getAltitude(this.currentState.arm2);
-        var objectHeight = this.getObjectDimensions(this.currentState.holding).heightadd;
+        var objectHeight = this.getObjectDimensions(this.currentState.holding1).heightadd;
         var yArm = this.canvasHeight - altitude - this.armSize * this.stackWidth() - objectHeight;
         var yStack = -altitude;
         var xArm = this.currentState.arm2 * this.stackWidth() + this.wallSeparation;
@@ -399,7 +399,7 @@ private horizontalMove2(newArm, callback?) {
         var path2 = ["M", xArm, yArm, "V", 0];
         var duration = (Math.abs(yArm)) / this.armSpeed;
         var arm = $('#arm2');
-        var object = $("#" + this.currentState.holding)
+        var object = $("#" + this.currentState.holding1)
 
         this.animateMotion(arm, path1, 0, duration);
         this.animateMotion(arm, path2, duration + this.animationPause, duration);
