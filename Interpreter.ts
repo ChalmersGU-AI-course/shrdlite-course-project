@@ -139,7 +139,6 @@ module Interpreter {
                     {
                         for(var r in result)
                         {
-                        
                             var l : Literal = {pol:true,rel:moveTo[0],args:[result[r],moveTo[i]]};
                             if(result[r] !== moveTo[i] && validateL(l,world))
                                 ls.push(l);
@@ -176,6 +175,20 @@ module Interpreter {
         //console.log("End of travCoom ", res);
         //console.log(res);
         return res;
+    }
+    
+    
+    function isValidConfig(lits : Literal []) : boolean
+    {
+        var temp : boolean = true;
+        for(var r in lits)
+        {
+            for(var r2 in lits)
+            {
+                temp = temp && (!(lits[r] == lits[r2] || lits[r] ==lits[r2]) || r==r2);
+            }
+        }
+        return temp;
     }
     
     function interpretEnt(ent : Parser.Entity, world : WorldState, wObjs : string[]) : string[]
@@ -457,6 +470,44 @@ module Interpreter {
                     return false; 
             }
         }
+        else if(l.rel === "above" && l.args[1] !== "floor")
+        {
+        	//Small objects cannot support large objects.
+        	if(obj1.size === "large")
+        	{
+        		if(obj2.size === "small")
+        		{
+        			return false;
+    			}
+        	}
+        	//No object can be above a ball.
+        	if(obj2.form === "ball")
+        	{
+        		return false;
+        	}
+        }
+        else if(l.rel === "under")
+        {
+        	//Objects cannot be under the ground.
+        	if(l.args[1] === "floor")
+        	{
+        		return false;
+        	}
+        	//Small objects cannot support large objects.
+        	if(obj1.size === "small")
+        	{
+        		if(obj2.size === "large")
+        		{
+        			return false;
+        		}
+        	}
+        	//No object can be above a ball.
+        	if(obj1.form === "ball")
+        	{
+        		return false;
+        	}
+        }
+        
         return true;
     }
     
