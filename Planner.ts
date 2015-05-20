@@ -172,12 +172,14 @@ module Planner {
             case "leftof": // In the stack directly to left or right
                 var o1 = atom.args[0];
                 var o2 = atom.args[1];
-                return ret( stackDifference(s, o1, o2) < 0 );
+                // return ret( stackDifference(s, o1, o2) < 0 );
+                return ret( stackDifference(s, o1, o2) === -1 );
 
             case "rightof": // In the stack directly to left or right
                 var o1 = atom.args[0];
                 var o2 = atom.args[1];
-                return ret( stackDifference(s, o1, o2) > 0 );
+                return ret( stackDifference(s, o1, o2) === 1 );
+                // return ret( stackDifference(s, o1, o2) > 0 );
 
             default:
                 throw new Planner.Error("!!! Unimplemented relation in testAtom: "+atom.rel);
