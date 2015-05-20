@@ -228,8 +228,8 @@ module Planner {
                   return true == lit.pol;
                 break;
 
-              case "leftof":
-                for (var k = i-1; k < this.stacks.length; k--) {
+              case "rightof":
+                for (var k = i-1; k > 0; k--) {
                   for (var l = 0; l < this.stacks[k].length; l++) {
                     if (this.stacks[k][l].name == lit.args[1])
                       return true == lit.pol;
@@ -237,7 +237,7 @@ module Planner {
                 }
                 break;
 
-              case "rightof":
+              case "leftof":
                 for (var k = i+1; k < this.stacks.length; k++) {
                   for (var l = 0; l < this.stacks[k].length; l++) {
                     if (this.stacks[k][l].name == lit.args[1])
@@ -246,7 +246,7 @@ module Planner {
                 }
                 break;
 
-              case "under":
+              case "above":
                 for (var k = 0; k < j; k++) {
                   if (lit.args[1] == this.stacks[i][k].name)
                     return true == lit.pol;
@@ -270,7 +270,7 @@ module Planner {
                 }
                 break;
 
-              case "above":
+              case "under":
                 for (var k = j+1; k < this.stacks[i].length; k++) {
                   if (this.stacks[i][k] && this.stacks[i][k].name == lit.args[1])
                     return true == lit.pol;
@@ -303,22 +303,78 @@ module Planner {
               //increase the heuristic
               break;
             }
-          for(var k = 0; k < goal.alternatives[i][j].args.length; k++) {
-//            console.log("check argument " + k);
+          switch(goal.alternatives[i][j].rel){
+          case "inside":
+          case "ontop":
+            for(var k = 0; k < goal.alternatives[i][j].args.length; k++) {
+              found = false;
+              //go through all stacks to find it
+              for(var l = 0; l < this.stacks.length && !found; l++) {
+                for(var m = 0; m < this.stacks[l].length && !found; m++) {
+                  //add the number of things above the currend element to
+                  //the heuristic value
+                  //                console.log(this.stacks[l][m].name + " vs. " + goal.alternatives[i][j].args[k]);                
+                  if(this.stacks[l][m] 
+                     && this.stacks[l][m].name == goal.alternatives[i][j].args[k]) {
+                    curr += (this.stacks[l].length - m);
+                    found = true;
+                  }
+                }
+              }
+            }
+            break;
+          case "above":
+          case "leftof":
+          case "rightof":
+          case "holding":
             found = false;
             //go through all stacks to find it
             for(var l = 0; l < this.stacks.length && !found; l++) {
               for(var m = 0; m < this.stacks[l].length && !found; m++) {
-                //add the number of things above the currend element to
-                //the heuristic value
-//                console.log(this.stacks[l][m].name + " vs. " + goal.alternatives[i][j].args[k]);                
                 if(this.stacks[l][m] 
-                   && this.stacks[l][m].name == goal.alternatives[i][j].args[k]) {
+                   && this.stacks[l][m].name == goal.alternatives[i][j].args[0]) {
                   curr += (this.stacks[l].length - m);
                   found = true;
                 }
               }
             }
+            break;
+          case "under":
+                        found = false;
+            //go through all stacks to find it
+            for(var l = 0; l < this.stacks.length && !found; l++) {
+              for(var m = 0; m < this.stacks[l].length && !found; m++) {
+                //difference to the previous one is the "1" in the if statement
+                if(this.stacks[l][m] 
+                   && this.stacks[l][m].name == goal.alternatives[i][j].args[1]) {
+                  curr += (this.stacks[l].length - m);
+                  found = true;
+                }
+              }
+            }
+            break;
+          case "beside":
+            for(var k = 0; k < goal.alternatives[i][j].args.length; k++) {
+              found = false;
+              var var1 = Number.MAX_VALUE;
+              var var2 = Number.MAX_VALUE;
+              //go through all stacks to find it
+              for(var l = 0; l < this.stacks.length; l++) {
+                for(var m = 0; m < this.stacks[l].length; m++) {
+                  //add the number of things above the currend element to
+                  //the heuristic value
+                  if(this.stacks[l][m] 
+                     && this.stacks[l][m].name == goal.alternatives[i][j].args[0]) {
+                    var1 = (this.stacks[l].length - m);
+                  } else if (this.stacks[l][m] 
+                     && this.stacks[l][m].name == goal.alternatives[i][j].args[1]) {
+                    var1 = (this.stacks[l].length - m);
+                  }
+                }
+              }
+            }
+            curr = Math.min(var1, var2);
+            break;
           }
         }
         if( curr < min) {
@@ -326,7 +382,6 @@ module Planner {
         }
         curr = 0;
       }
-//      console.log("heuristic = " + min);
       return min;
     }
     
@@ -409,11 +464,11 @@ module Planner {
           return false;
 
         // boxes cannot contain pyramids, planks or boxes of the same size
-        if ((currentObjectDescription.form == "pyramid"
-             || currentObjectDescription.form == "plank"
-             || currentObjectDescription.form == "boxes")
-            && belowObjectDescription.form == "box"
-            && belowObjectDescription.size == currentObjectDescription.size)
+        if (belowObjectDescription.form == "box"
+            && (currentObjectDescription.form == "pyramid"
+                || currentObjectDescription.form == "plank"
+                || (currentObjectDescription.form == "box"
+                    && belowObjectDescription.size == currentObjectDescription.size)))
           return false;
 
         // small boxes cannot be supported by small bricks or pyramids
