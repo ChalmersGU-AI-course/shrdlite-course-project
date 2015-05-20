@@ -55,7 +55,7 @@ module Interpreter {
         // state should be the current WorldState
     
         var intprt: Literal[][] = [];
-        var pobjs:string[] = [];
+        var pobjs: string[] = [];
 
         /*
               Structure for "put"
@@ -149,16 +149,6 @@ module Interpreter {
             return null;
         }
         return intprt;
-            /* Dummy stuff
-            var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-            var a = objs[2];
-            var b = objs[getRandomInt(objs.length)];
-            var intprt : Literal[][] = [[
-                {pol: true, rel: "ontop", args: [a, "floor"]},
-                {pol: true, rel: "holding", args: [b]}
-            ]];
-            return intprt;
-        */
     }
     
     function getObjectHelper(priObj: Parser.Object, secObj: Parser.Object,rel:string, state: WorldState):string[]{
@@ -268,14 +258,14 @@ module Interpreter {
                 var permutations = Math.pow(targets.length, primobj.length);
                 var dnf: Literal[][] = [];
 
-                   for (i = 0; i < permutations; i++) {
+                   for (var i = 0; i < permutations; i++) {
                        dnf.push([]);
                    }
 
                 var offset = permutations / targets.length;
 
                 for (i = 0; i < primobj.length; i++) {
-                    for (j = 0; j < targets.length; j++) {
+                    for (var j = 0; j < targets.length; j++) {
                         var li = 0 + j * offset;
                         var limit = li + offset;
                         for (; limit < permutations + 1; limit = li + offset) {

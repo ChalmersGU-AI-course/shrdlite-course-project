@@ -15,7 +15,7 @@ module Planner {
             plans.push(plan);
         });
         if (plans.length) {
-            //TODO: sort for shortest plan
+            //TODO: sort for shortest plan, error handling(null)?
             return plans;
         } else {
             throw new Planner.Error("Found no plans");
@@ -59,7 +59,7 @@ module Planner {
         -Large boxes cannot be supported by large pyramids.                     [X]
     */
 
-    module checkPhysicalLaws {
+    module physicalLaws {
 
         //Check the validity for arm pickups
         function possibleArmPickup (obj : string, state : WorldState) : boolean {
@@ -114,14 +114,14 @@ module Planner {
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         
         /*
-            TODO:
-                - Check if the interpretation is valid
-                -- Check object physics 
+            TODO: Structure for planning
+                - Filter out obviously invalid interpretations
+                -- Check object physics
                 -- Check spatial relations
-                - Do A* and calculate heuristic values on every interpretation
-                - Choose the interpretation involving least steps (
+                - Calculate heuristic values on every interpretation
+                - Do A*
+                - Sort the interpretations with the one involving least steps first
                 - Convert to basic actions
-
         */
        
       
