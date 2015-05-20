@@ -34,7 +34,9 @@ run: shrdlite-offline.js
 	# node shrdlite-offline.js small "put the table below the blue box"
 	# node shrdlite-offline.js small "move the blue table beside the yellow box" # tests 'beside'
 	# node shrdlite-offline.js small "put the blue table right of the blue box" # tests 'right of'
-	node shrdlite-offline.js small "put the yellow box left of the blue box" # tests 'left of'
+	# node shrdlite-offline.js small "put the yellow box left of the blue box" # tests 'left of'
+	# node shrdlite-offline.js small "put the blue table below the blue box"
+	node shrdlite-offline.js small "put a table below the blue box"
 
 medium: shrdlite-offline.js
 	# node shrdlite-offline.js medium "put the blue box above the red box"

@@ -215,26 +215,31 @@ module Interpreter {
             result.push("floor");
         }
 
-        for(var objName in state.objects){
-            var obj : ObjectDefinition = state.objects[objName];
+        // for(var objName in state.objects){
+        for(var stackNo in state.stacks){
+            var currentStack = state.stacks[stackNo];
+            for(var heightNo in currentStack){
+                var objName = currentStack[heightNo];
+                var obj : ObjectDefinition = state.objects[objName];
 
-            if(goalObj.size){
-                if(goalObj.size != obj.size){
-                    continue;
+                if(goalObj.size){
+                    if(goalObj.size != obj.size){
+                        continue;
+                    }
                 }
-            }
-            if(goalObj.color){
-                if(goalObj.color != obj.color){
-                    continue;
+                if(goalObj.color){
+                    if(goalObj.color != obj.color){
+                        continue;
+                    }
                 }
-            }
-            if(goalObj.form){
-                if(goalObj.form != obj.form){
-                    continue;
+                if(goalObj.form){
+                    if(goalObj.form != obj.form){
+                        continue;
+                    }
                 }
+                // TODO consider location for filtering as well!
+                result.push(objName);
             }
-            // TODO consider location for filtering as well!
-            result.push(objName);
         }
         switch(en.quant){
             case "any":
