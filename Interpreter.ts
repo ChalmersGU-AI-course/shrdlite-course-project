@@ -55,7 +55,7 @@ module Interpreter {
         // state should be the current WorldState
     
         var intprt: Literal[][] = [];
-        var pobjs = [];
+        var pobjs:string[] = [];
 
         /*
             TODO: Structure for "put"
@@ -164,10 +164,8 @@ module Interpreter {
     }
     
     function getObjectHelper(priObj: Parser.Object, secObj: Parser.Object,rel:string, state: WorldState):string[]{
-        //var priObj:Parser.Object = cmd.ent.obj;
         var possibleObjs:string[] = getPossibleObjects(priObj, state);
         if(secObj !== null && rel != null){
-            //var secObj:Parser.Object = priObj.loc.ent.obj;
             var secondaryObjs:string[] = getPossibleObjects(secObj, state);
             possibleObjs = getRelation(possibleObjs, secondaryObjs, rel, state.stacks);
         }
@@ -346,13 +344,13 @@ module Interpreter {
         else if(rel === "rightof")
             f = function(co1 : number[], co2 : number[]) {return co1[0] > co2[0] };
         else if(rel === "inside" || rel === "ontop")
-            f = function(co1 : number[], co2 : number[]) {return co1[1] === (co2[1]+1) };
+            f = function(co1 : number[], co2 : number[]) {return co1[1] === (co2[1]+1) && co1[0] === co2[0] };
         else if(rel === "under")
-            f = function(co1 : number[], co2 : number[]) {return co1[1] < co2[1] };
+            f = function(co1 : number[], co2 : number[]) {return co1[1] < co2[1] && co1[0] === co2[0]};
         else if(rel === "beside")
             f = function(co1 : number[], co2 : number[]) {return (co1[0] === (co2[0]-1)) || (co1[0] === (co2[0]+1)) };
         else if(rel === "above")
-            f = function(co1 : number[], co2 : number[]) {return co1[1] > co2[1] };
+            f = function(co1 : number[], co2 : number[]) {return co1[1] > co2[1] && co1[0] === co2[0]};
         
         // Run through all objects and check if the relation holds, then store.
         for(var i = 0; i < o1s.length; i++){
