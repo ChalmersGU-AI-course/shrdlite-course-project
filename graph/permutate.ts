@@ -116,7 +116,7 @@ function permutateBasedOn(baseOn: graphmodule.GraphNode<string[][]>, objects: { 
                         graph.addNode(newNode);
                         
                         //Add edge between current node and neighbour
-                        graph.addEdge(baseOn.id, newNode.id, Math.abs(j-i), true);
+                        graph.addEdge(baseOn.id, newNode.id, Math.abs(j-i)+pickDropCost, true);
                         
                         //console.log("permutate.permutateBasedOn added State: " + prettyMat(newState2));
                     }

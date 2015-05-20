@@ -1,5 +1,7 @@
 ///<reference path="Interpreter.ts"/>
 
+var pickDropCost=2;
+
 /** Generate new ID given a state */
 function generateID(state: string[][]):string{
     return prettyMat(state);
@@ -325,11 +327,11 @@ function heuristicOntop(first: string, second: string, stacks: string[][]){
                 h += stacks[i].length-1-j;
             }
             if(foundF!=-1 && foundS!=-1){
-                return h+Math.abs(foundS-foundF);
+                return h+Math.abs(foundS-foundF)+pickDropCost;
             }
         }
     }
-    return h+Math.abs(foundS-foundF);
+    return h+Math.abs(foundS-foundF)+pickDropCost;
 }
 function heuristicAbove(first: string, second: string, stacks: string[][]){
     var foundF = -1;
@@ -350,11 +352,11 @@ function heuristicAbove(first: string, second: string, stacks: string[][]){
                 h = stacks[i].length-1-j;
             }
             if(foundF!=-1 && foundS!=-1){
-                return h+Math.abs(foundS-foundF);
+                return h+Math.abs(foundS-foundF)+pickDropCost;
             }
         }
     }
-    return h+Math.abs(foundS-foundF);
+    return h+Math.abs(foundS-foundF)+pickDropCost;
 }
 function heuristicUnder(first: string, second: string, stacks: string[][]){
     return heuristicAbove(second,first,stacks);
@@ -389,11 +391,11 @@ function heuristicBeside(first: string, second: string, stacks: string[][]){
                 hF = stacks[i].length-1-j;
             }
             if(foundF && foundS){
-                return Math.min(hF,hS)+Math.abs(foundS-foundF);
+                return Math.min(hF,hS)+Math.abs(foundS-foundF)+pickDropCost;
             }
         }
     }
-    return Math.min(hF,hS)+Math.abs(foundS-foundF);
+    return Math.min(hF,hS)+Math.abs(foundS-foundF)+pickDropCost;
 }
 function heuristicLeft(first: string, second: string, stacks: string[][]){
     var foundF = -1;
@@ -418,11 +420,11 @@ function heuristicLeft(first: string, second: string, stacks: string[][]){
                 hF = stacks[i].length-1-j;
             }
             if(foundF && foundS){
-                return Math.min(hF,hS)+Math.abs(foundS-foundF);
+                return Math.min(hF,hS)+Math.abs(foundS-foundF)+pickDropCost;
             }
         }
     }
-    return Math.min(hF,hS)+Math.abs(foundS-foundF);
+    return Math.min(hF,hS)+Math.abs(foundS-foundF)+pickDropCost;
 }
 function heuristicRight(first: string, second: string, stacks: string[][]){
     return heuristicLeft(second,first,stacks);
