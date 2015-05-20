@@ -32,6 +32,7 @@ module Shrdlite {
     // - then it creates plan(s) for the interpretation(s)
 
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
+		var inputChoice : int;
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
             var parses : Parser.Result[] = Parser.parse(utterance);
@@ -89,6 +90,18 @@ module Shrdlite {
         var plan : string[] = plans[0].plan;
         world.printDebugInfo("Final plan: " + plan.join(", "));
         return plan;
+		
+		function clarification(utterance : string = "") : void {
+			var inputPrompt = "Choose the corresponding number.";
+			var nextInput = () => world.readUserInput(inputPrompt, clarification);
+			
+			var inputPrompt = "What can I do for you today? ";
+            var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
+            if (utterance.trim()) {
+				inputChoice = parseInt(utterance);
+                return;
+            }
+		}
     }
 
 
@@ -107,10 +120,6 @@ module Shrdlite {
         return plan;
     }
 	
-	function clarification(world : World) {
-		var inputPrompt = "Choose the corresponding number.";
-        var nextInput = () => world.readUserInput(inputPrompt, clarification);
-		return Integer.parseInt(nextInput[0].trim())-1;
-	}
+	
 
 }
