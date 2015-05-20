@@ -42,7 +42,7 @@ module AStar {
         return 0
     }
     
-    export function astar(lit:Interpreter.Literal[],startObject,goalFunction,huerFunction,getNode) : string[]
+    export function astar(lit:Interpreter.Literal[],startObject,goalFunction,huerFunction,getNode,uniqueAttr) : string[]
     {
         var closedSet : Node[] = [];
         var openSet = new collections.PriorityQueue<Node>(compareT);
@@ -65,7 +65,7 @@ module AStar {
             {
                 //console.log(openSet);
                 console.log("NU ÄR JAG FÄRDIG!")
-                return reconstruct_path(came_from, current);
+                return reconstruct_path(came_from, current, uniqueAttr);
             }
             //console.log(current.neighbours)
             
@@ -97,7 +97,7 @@ module AStar {
         return [];
     }
     
-    function reconstruct_path (came_from, current) : string[]
+    function reconstruct_path (came_from, current, uniqueAttr) : string[]
     {
         //console.log(current);
         var total_path : string[] = [];
@@ -106,6 +106,7 @@ module AStar {
         var obj2 : string; 
         var result : string = "";
         var sugar : string;  
+        var derp : string;
         var i : number = 0; 
         while(came_from[current.wStateId] != null)
         {
@@ -130,11 +131,11 @@ module AStar {
                 if(current.wState.stacks[current.wState.arm].length >1)
                 {
                     obj2 = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-2];
-                    result = ("I move the " + current.wState.objects[obj1].form + " on the " + current.wState.objects[obj2].form);
+                    result = ("I move the " + derp.concat(uniqueAttr[obj1].reverse()) + " on the " + derp.concat(uniqueAttr[obj2].reverse()));
                 }
                 else
                 {
-                    result = ("I move the " + current.wState.objects[obj1].form + " on the floor");
+                    result = ("I move the " + derp.concat(uniqueAttr[obj1].reverse()) + " on the floor");
                 }
             }
             current = came_from[current.wStateId][0];
