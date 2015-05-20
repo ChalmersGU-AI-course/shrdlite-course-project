@@ -372,7 +372,7 @@ module Planner {
                 return false;
             }
             //Small objects cannot support large objects.
-            if(baseObject.size == "small" && object.size =="big"){
+            if(baseObject.size == "small" && object.size =="large"){
                 return false;
             }
             //Balls must be in boxes or on the floor, otherwise they roll away.
@@ -395,6 +395,7 @@ module Planner {
             //Large boxes cannot be supported by large pyramids.
             if(baseObject.form == "pyramid" && baseObject.size == "large" &&
                object.form == "box" && object.size == "large"){
+                return false;
             }
             return true;
         }

@@ -184,6 +184,10 @@ module Interpreter {
 
     //TODO: refactor into world.ts or something
     export function isRelativeMatch(firstObject: string, relation: string, secondObject: string, world: WorldState): boolean {
+        if (firstObject === "floor" && relation !== "under") {
+            return false;
+        }
+
         var firstPosition = getObjectPosition(firstObject, world);
         if (!firstPosition){
             return false;
