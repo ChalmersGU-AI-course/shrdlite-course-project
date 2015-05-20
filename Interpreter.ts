@@ -13,8 +13,13 @@ module Interpreter {
         var interpretations : Result[] = [];
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
-            intprt.intp = interpretCommand(intprt.prs, currentState);
-            interpretations.push(intprt);
+            var result = interpretCommand(intprt.prs, currentState);
+
+            if(result !== null){
+                intprt.intp = result;
+                interpretations.push(intprt);
+            }
+
         });
         if (interpretations.length) {
             return interpretations;
@@ -123,10 +128,10 @@ module Interpreter {
 
         //add new rule according to parsed array
         var newRules = genRule(tokens,state);
-        if(newRules != null){
+        if(newRules !== null){
             intprt.push(newRules);
         }
-        else return [];
+        else return null;
 
 
         return intprt;
