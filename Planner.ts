@@ -109,6 +109,30 @@ module Planner {
             return true;
         }
 
+        export function checkInterp(intp : Interpreter.Literal[], state : WorldState) : boolean{
+            var rel = intp[0].rel;
+          
+            for(var i = 0; i < intp.length; i++){
+                var target        = intp[i].args[1];
+                var primary       = intp[i].args[0];
+                var targetObject  = state.objects[target];
+                var primaryObject = state.objects[primary];
+
+                if(rel === 'ontop' || rel === 'above'){
+                    if(validPosition(primaryObject, targetObject, state) === false){
+                        return false;
+                        console.log("Removed interpretation in physcical check");
+                    }
+                }else if(rel === 'under'){
+                    if(validPosition(targetObject, primaryObject, state) === false){
+                        return false;
+                        console.log("Removed interpretation in physcical check");
+                    }   
+                }
+            }
+            console.log("Interpretation passed physcical check");
+            return true;
+        }
     }
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
@@ -123,7 +147,16 @@ module Planner {
                 - Sort the interpretations with the one involving least steps first
                 - Convert to basic actions
         */
-       
+
+      // Remove invalid interpretations
+      var validInterps : Interpreter.Literal[][] = [];
+      for(var i = 0; i < intprt.length; i++){
+          if(checkSpatialRelations(intprt[i], state.objects) && checkPhysicalLaws.checkInterp(intprt[i], state)){
+              console.log("Added!");
+              validInterps.push(intprt[i]);
+              console.log(validInterps.length);
+          }
+      }
       
       // This function returns a dummy plan involving a random stac
         do {
@@ -172,7 +205,7 @@ module Planner {
 
 
 
-    function checkSpatialRelations(intp : Interpreter.Literal[], objects : ObjectDefinition) : boolean{
+    function checkSpatialRelations(intp : Interpreter.Literal[], objects : {[s:string]: ObjectDefinition}) : boolean{
         // Check so that each spatial relation holds between the elements
         // Inside
         // Ontop
@@ -202,6 +235,8 @@ module Planner {
                     stateSet.add(target); // Add the target so we know that it is occupied.
                 }
             }
+            console.log("PASSED: ");
+            console.log(intp);
             return true;
 
         }else if(rel === "ontop"){ 
