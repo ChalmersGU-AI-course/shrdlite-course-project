@@ -5,8 +5,8 @@ interface Graph<T>{
     getcost(from: number,to:number):number;
     heuristic_cost_estimate(current : number, goal : number) : number;
     specialIndexOf(obj:T):number;
-    reachedGoal(cond: Literal[], state : WorldState):boolean;
-    checkGoal(cond: Literal, state : WorldState):boolean;
+    reachedGoal(current:number, conditions:number[]):boolean;
+    checkGoal(current:number, condition:number):boolean;
 }
 
 class NodeScore {

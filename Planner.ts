@@ -91,15 +91,310 @@ module Planner {
     }
 
 
-         private reachedGoal(cond: Literal[], state : WorldState):boolean{
-        for(var i = 0; cond.lenght; i++ ){
+
+
+    function heuristic_cost_estimate(current:number, goal:number):number{//some parts can be improved
+        var cond = this._nodeValues[goal];
+        var state = this._nodeValues[current];
+        var a = state.objects[cond.args[0]];
+        var b = state.objects[cond.args[1]];
+        var pddls = state.pddl.toArray();
+        var count = 0;
+        var samePile:boolean = false;
+
+        if(cond.rel == "ontop" || cond.rel == "inside"){
+            //if a above b, take #objects on b * 4 + (ifnotinsamepile)#objects on a*4 + distancefromcrane to a + distancefromatob
+            if(state.holding == a && countOnTop(b,pddls) == 0){//check if a's stack is full
+                return 1 + Math.abs(findPosition(b,state,pddls) - state.arm);
+            }
+            else if(state.holding == b){
+                return 1+ countOnTop(a,pddls)*4 + Math.abs(findPosition(a,state,pddls)-state.arm)*2;
+            }
+            
+            var z = b;
+            //traverse up through b;
+            for(var index = 0; index < pddls.length; index++){
+                var pddl = pddls[index];
+                var x = pddl.args[1];
+                if(x == z){
+                    if(pddl.args[0]== a){
+                        if(pddl.args[1]==b)
+                            return 0;
+                        samePile = true;
+
+                    }
+                    else{
+                        z = pddl.args[0];
+                        index = -1;
+                        count++;
+                    }
+                }
+
+            }
+            //if a is not in the same pile as b, check how many objects on top of a
+            if(!samePile){
+                z=a;
+                for(var index = 0; index < pddls.length; index++){
+                    var pddl = pddls[index];
+                    var x = pddl.args[1];
+                    if(x == z){
+                       
+                        z = pddl.args[0];
+                        index = -1;
+                        count++;
+                    
+                    }
+
+                }
+                //check distance from crane to a + distance from a to b, also multiply count by 4(number of moves for each object)
+                count = count * 4 + Math.abs(findPosition(a,state,pddls)-state.arm) + Math.abs(findPosition(a,state,pddls)
+                 - findPosition(b,state,pddls));
+                
+
+            }
+            else{
+               count = count*4 + Math.abs(findPosition(a,state,pddls) - state.arm) + 3;//if they are in the same pile but not finished, a will require 3 more moves to get back
+            }
+            return count; 
+
+        }
+        else if(cond.rel == "above"){
+            if(state.holding == a){//check if a's stack is full
+                return 1 + Math.abs(findPosition(b,state,pddls) - state.arm);
+            }
+            else if(state.holding == b){
+                return 1+ countOnTop(a,pddls)*4 + Math.abs(findPosition(a,state,pddls)-state.arm)*2;
+            }
+            if(findPosition(a,state,pddls) == findPosition(b,state,pddls) && countOnTop(b,pddls) > countOnTop(a,pddls))//check if completed
+                return 0;
+            var z = a;
+            //traverse up through a;
+             for(var index = 0; index < pddls.length; index++){
+                var pddl = pddls[index];
+                var x = pddl.args[1];
+                if(x == z){
+                    if(pddl.args[0]== b)
+                        samePile = true;
+                    else{
+                        z = pddl.args[0];
+                        index = -1;
+                        count++;
+                    }
+                }
+
+            }
+            count = count*4;
+            if(findPosition(a,state,pddls) == findPosition(b,state,pddls))
+                   count += 3 + Math.abs(findPosition(b,state,pddls) - state.arm);
+            else{
+                count += Math.abs(findPosition(a,state,pddls)-state.arm) + Math.abs(findPosition(a,state,pddls)-findPosition(b,state,pddls));
+            }
+
+            return count;
+        }
+        else if(cond.rel == "under"){
+            if(state.holding == b){//check if a's stack is full
+                return 1 + Math.abs(findPosition(a,state,pddls) - state.arm);
+            }
+            else if(state.holding == a){
+                return 1+ countOnTop(b,pddls)*4 + Math.abs(findPosition(b,state,pddls)-state.arm)*2;
+            }
+            if(findPosition(a,state,pddls) == findPosition(b,state,pddls) && countOnTop(b,pddls) < countOnTop(a,pddls))
+                return 0;
+            var z = b;
+            //traverse up through b;
+             for(var index = 0; index < pddls.length; index++){
+                var pddl = pddls[index];
+                var x = pddl.args[1];
+                if(x == z){
+                    if(pddl.args[0]== a)
+                        samePile = true;
+                    else{
+                        z = pddl.args[0];
+                        index = -1;
+                        count++;
+                    }
+                }
+
+            }
+            count = count*4;
+            if(findPosition(a,state,pddls) == findPosition(b,state,pddls))
+                count += 3 + Math.abs(findPosition(b,state,pddls) - state.arm);
+            else{
+                count += Math.abs(findPosition(b,state,pddls)-state.arm) + Math.abs(findPosition(a,state,pddls)-findPosition(b,state,pddls));
+            }
+
+            return count;
+        }
+        else if(cond.rel == "rightof"){//currently not handling if B is in holding
+
+            if(state.holding == a && findPosition(b,state,pddls) != amountOfTiles(b,state,pddls)){
+                return Math.abs(findPosition(b,state,pddls)-state.arm+1); // currently not checking if stack next to b is full
+
+            }
+            else if(state.holding == b){
+                return 1+ countOnTop(a,pddls)*4 + Math.abs(findPosition(a,state,pddls)-state.arm)*2;
+            }
+
+            if(findPosition(b,state,pddls) == amountOfTiles(b,state,pddls)){//not perfect
+                count = countOnTop(a,pddls)*4 + countOnTop(b,pddls) + Math.abs(findPosition(b,state,pddls)-state.arm) 
+                + (Math.abs(findPosition(a,state,pddls)-findPosition(b,state,pddls)-1))+2;//not working if both in the last stack?
+            }
+
+            if(countOnTop(b,pddls)>countOnTop(a,pddls)){
+
+                count = countOnTop(b,pddls)*4 + Math.abs(findPosition(b,state,pddls)-state.arm) + (Math.abs(findPosition(a,state,pddls)
+                -findPosition(b,state,pddls)+1))+2;//+2 is for picking up and dropping b 
+            }
+            else{
+                //move A
+                count = countOnTop(a,pddls)*4 + Math.abs(findPosition(a,state,pddls)-state.arm) + (Math.abs(findPosition(a,state,pddls)
+                    -findPosition(b,state,pddls)+1))+2;
+            }
+
+        }
+        else if(cond.rel == "leftof"){
+            if(state.holding == a && findPosition(b,state,pddls) != 0){
+                return Math.abs(findPosition(b,state,pddls)-state.arm-1); // currently not checking if stack next to b is full
+
+            }
+            else if(state.holding == b){
+                if(amountOfTiles(a,state,pddls) == state.arm)
+                    return 2+ countOnTop(a,pddls)*4 + Math.abs(findPosition(a,state,pddls)-state.arm)*2;
+                return 1+ countOnTop(a,pddls)*4 + Math.abs(findPosition(a,state,pddls)-state.arm)*2;
+            }
+
+            if(findPosition(b,state,pddls) == 0){//not perfect
+                count = countOnTop(a,pddls)*4 + countOnTop(b,pddls) + Math.abs(findPosition(b,state,pddls)-state.arm) 
+                + (Math.abs(findPosition(a,state,pddls)-findPosition(b,state,pddls)-1))+2;
+            }
+
+            else if(countOnTop(b,pddls)>countOnTop(a,pddls)){
+
+                count = countOnTop(a,pddls)*4 + Math.abs(findPosition(a,state,pddls)-state.arm) 
+                + (Math.abs(findPosition(a,state,pddls)-findPosition(b,state,pddls)-1))+2;//+2 is for picking up and dropping b 
+            }
+            else{
+                //move B
+                count = countOnTop(b,pddls)*4 + Math.abs(findPosition(b,state,pddls)-state.arm) 
+                + (Math.abs(findPosition(a,state,pddls)-findPosition(b,state,pddls)-1))+2;
+            }
+
+        }
+        else if(cond.rel == "beside"){
+            if(state.holding == a){
+                return Math.abs(findPosition(b,state,pddls)-state.arm)-1; // currently not checking if stack next to b is full
+            }
+             else if(state.holding == b){
+                return 1 + Math.abs(findPosition(a,state,pddls)-state.arm)-1;
+            }
+            if(countOnTop(b,pddls)>countOnTop(a,pddls)){
+
+                count = countOnTop(b,pddls)*4 + Math.abs(findPosition(b,state,pddls)-state.arm) 
+                + (Math.abs(findPosition(a,state,pddls)-findPosition(b,state,pddls))-1)+2;//+2 is for picking up and dropping b 
+            }
+            else{
+                //move A
+                count = countOnTop(a,pddls)*4 + Math.abs(findPosition(a,state,pddls)-state.arm)
+                 + (Math.abs(findPosition(a,state,pddls)-findPosition(b,state,pddls))-1)+2;
+            }
+            // a on floor? #objects on top of b + #objects leftofA < rightofA
+
+        }
+        console.log("Path length: " + count);
+        return count;
+
+    }
+    //counts objects on top of given object
+    function countOnTop(a:string, pddls:predicate[]):number{
+        var counter = 0;
+        var z = a;
+         for(var index = 0; index < pddls.length; index++){
+            var pddl = pddls[index];
+            var x = pddl.args[1];
+            if(x == z){
+                z = pddl.args[0];
+                index = -1;
+                counter++;
+            }
+        }
+        return counter;
+    }
+
+    function amountOfTiles(a:string, state:WorldState, pddls:predicate[]){
+        var counter = 0;
+        counter += findPosition(a,state, pddls);
+        
+        var floor;
+        var x = a;
+        for(var index = 0; index < pddls.length; index++){
+            var pddl = pddls[index];
+            if(pddl.args[0] == x){
+                if(state.objects[pddl.args[1]].form == "floor") {
+                    //found floor
+                    floor = state.objects[pddl.args[1]];//----------------------------------
+                }
+                else{
+                    x = pddl.args[1];
+                    index = -1;
+                }
+            }
+        }
+        //time to move rightwards along the floors
+        for(var index = 0; index < pddls.length; index++){
+            var pddl = pddls[index];
+            if(pddl.rel == "righttof" &&  pddl.args[1] == floor){
+                floor = pddl.args[0];
+                index = -1;
+                counter ++;
+            }
+        }
+        return counter;
+    }
+
+
+    //returns x-pos (0->x) for object a
+    function findPosition(a:string, state:WorldState, pddls:predicate[]):number{
+       var x = a;
+       var position = 0;
+       var floor;
+        for(var index = 0; index < pddls.length; index++){
+            var pddl = pddls[index];
+            if(pddl.args[0] == x){
+                if(state.objects[pddl.args[1]].form == "floor") {
+                    //found floor
+                    floor = state.objects[pddl.args[1]];
+                }
+                else{
+                    x = pddl.args[1];
+                    index = -1;
+                }
+            }
+        }
+        //time to move leftwards along the floors
+        for(var index = 0; index < pddls.length; index++){
+            var pddl = pddls[index];
+            if(pddl.rel == "leftof" &&  pddl.args[1] == floor){
+                floor = pddl.args[0];
+                index = -1;
+                position ++;
+            }
+        }
+        return position;
+    }
+    
+    function reachedGoal(current: number, cond : number[]):boolean{
+       var state = this._nodeValues[current];
+        for(var i = 0; cond.length; i++ ){
             if(!checkGoal(cond[i], state))
                 return false;
         }
         return true;
     }
 
-    private checkGoal(cond: Literal, state : Worldstate):boolean {
+    function checkGoal(current:number, goal:number):boolean {
+        var cond = this._nodeValues[goal];
+        var state = this._nodeValues[current];
         var a = state.objects[cond.args[0]];
         var b = state.objects[cond.args[1]];
         var pddls = state.pddl.toArray();
