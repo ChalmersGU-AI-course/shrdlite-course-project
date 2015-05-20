@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
+///<reference path="lib/collections.ts"/>
 
 module Interpreter {
 
@@ -14,9 +15,16 @@ module Interpreter {
             intprt.intp = interpretCommand(intprt.prs, currentState);
             interpretations.push(intprt);
         });
-        if (interpretations.length > 0 && interpretations[0].intp.length > 0) {
-            return interpretations;
+        if (interpretations.length > 0) { //&& interpretations[0].intp.length > 0
+            //return interpretations; //Aha found the place for disolving HARD ambiguity!
+	    var validInterprets : Result [] = [];
+	    interpretations.forEach((inter) => {
+		if (inter.intp.length > 0)
+		    validInterprets.push(inter);
+	    });
+	    return validInterprets;
         } else {
+	    console.log(interpretations);
             throw new Interpreter.Error("Found no interpretation");
         }
     }
@@ -127,10 +135,9 @@ module Interpreter {
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
 
         var intprt : Literal[][] = [];
-
+	var targets = findTargetEntities(cmd.ent, state).targets;
         switch(cmd.cmd){
             case "take":
-                var targets = findTargetEntities(cmd.ent, state);
                 for (var ix in targets){
                     intprt.push( [
                         {pol: true, rel: "holding", args: [targets[ix]] }
@@ -138,9 +145,8 @@ module Interpreter {
                 }
                 break;
             case "move":
-                var targets = findTargetEntities(cmd.ent, state);
                 var location = cmd.loc;
-                var locationTargets = findTargetEntities(location.ent, state);
+                var locationTargets = findTargetEntities(location.ent, state).targets;
 
                 console.log("Target: "+locationTargets[0]);
 
@@ -152,6 +158,7 @@ module Interpreter {
                     moveObjAbove(state, intprt, location.rel, targets, locationTargets);
                 }
                 break;
+	    // Still no put yet
             default:
                 throw new Interpreter.Error("Interpreter: UNKNOWN cmd: " + cmd.cmd);
         }
@@ -210,8 +217,8 @@ module Interpreter {
     function resolveObject(state : WorldState, goalObj : Parser.Object, loc : Parser.Location) : string[]{
         var result : string[] = [];
 
-        var possibleObjects : string[] = findTargetObjects(state, goalObj);
-        var possibleLocations : string[] = findTargetEntities(loc.ent, state);
+        var possibleObjects : string[] = findTargetObjects(state, goalObj).targets;
+        var possibleLocations : string[] = findTargetEntities(loc.ent, state).targets;
 
         for(var ox in possibleObjects){
             var obj = possibleObjects[ox];
@@ -227,13 +234,16 @@ module Interpreter {
     }
 
     // Returns a list of Object names that fits the goal Object.
-    function findTargetObjects(state : WorldState, goalObj : Parser.Object) : string[]{
+    function findTargetObjects(state : WorldState, goalObj : Parser.Object) : SearchingResult{
         var result : string[] = [];
-
+	var com = new collections.Set<string>();
+	var searchResult : SearchingResult = {status : "", targets : result, common : com};
         if(goalObj.obj != null){
             // Ie form, size etc are null.
             // Filter on location instead...
-            return resolveObject(state, goalObj.obj, goalObj.loc);
+            //return resolveObject(state, goalObj.obj, goalObj.loc);
+	    searchResult.targets = resolveObject(state, goalObj.obj, goalObj.loc);
+	    return searchResult;
         }
 
         if(goalObj.form === "floor"){
@@ -251,43 +261,49 @@ module Interpreter {
                     if(goalObj.size != obj.size){
                         continue;
                     }
+		    else {com.add("Size");}
                 }
                 if(goalObj.color != null){
                     if(goalObj.color != obj.color){
                         continue;
                     }
+    		    else {com.add("Color");}
                 }
                 if(goalObj.form != null){
                     if(goalObj.form != obj.form){
                         continue;
                     }
+		    else {com.add("Form");}
                 }
                 result.push(objName);
             }
         }
-
-        return result;
+        return searchResult;
     }
 
     /**
     * @return list of targets in the world that complies with the specified entity.
     */
-    function findTargetEntities(en : Parser.Entity, state : WorldState) : string[] {
-        var result : string[] = findTargetObjects(state, en.obj);
-
+    function findTargetEntities(en : Parser.Entity, state : WorldState) : SearchingResult {
+        //var result : string[] = findTargetObjects(state, en.obj);
+	var searchResult = findTargetObjects(state, en.obj);
         switch(en.quant){
             case "any":
                 break;
             case "the":
-                if(result.length > 1){
-                    throw new Interpreter.Error("There are several objects that fit the description");
+                if(searchResult.targets.length > 1){
+		    searchResult.status = "SoftAmbiguity";
+		    console.log("found multiple objects fits description");
+		    console.log(searchResult);
+		    // not nessecary to stop whole program for this!
+                    //throw new Interpreter.Error("There are several objects that fit the description");
                 }
                 break;
         }
 
-        return result;
+        return searchResult;
     }
-
+    
     // function checkLocation() : boolean {
     //     return true;
     // }
@@ -295,5 +311,25 @@ module Interpreter {
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
-
+    ////////// disambiguity //////////
+    /// Ambiguity thrown as Special Error (will be catched in Shrdlite)
+    export class Ambiguity implements Error {
+	public name = "Interpreter.Ambiguity";
+	public cmd : Parser.Command;
+	public searchingResult : SearchingResult;
+	constructor(c: Parser.Command
+		    , previousSearch : SearchingResult
+		    , public message? : string) 
+	{
+	    this.cmd = c;
+	    this.searchingResult = previousSearch; 
+	}
+	public toString() {return this.name + ": " + this.message +" -> "+ this.cmd}
+    }
+    /// SearchingResult holds possible extra information from findTargetObjects
+    export interface SearchingResult {
+	status: string; 
+	targets: string[]; 
+	common: collections.Set<string>;
+    }
 }
