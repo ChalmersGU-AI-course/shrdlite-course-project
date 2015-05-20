@@ -262,13 +262,12 @@ module Interpreter {
             if (cmd.ent.quant === "all" && cmd.loc.ent.quant === "all") { //When all primary objects are related to all target objects
                 var conjunction: Literal[] = [];
                 for (var i = 0; i < primobj.length; i++) {
-                    for (var j = 0; j < primobj.length; j++) {
+                    for (var j = 0; j < targets.length; j++) {
                         conjunction.push({ pol: true, rel: relation, args: [primobj[i], targets[j]] });
                     }
                 }
                 interpretations.push(conjunction);
             } else if(cmd.ent.quant === "all" && cmd.loc.ent.quant === "any"){
-              // This function only work with 2 available items and 2 target objects.
                 var conjunction : Literal[] = [];
                 var psolSet = new collections.Set<string>();
                 var temp : string[] = [];
@@ -296,7 +295,7 @@ module Interpreter {
             
                 console.log(temp);
             
-            }else if (cmd.ent.quant === "all") {       //When all primary objects are related to a single target object
+            } else if (cmd.ent.quant === "all") {       //When all primary objects are related to a single target object
                 for (var j = 0; j < targets.length; j++) {
                     var conjunction: Literal[] = [];
                     for (var i = 0; i < primobj.length; i++) {
