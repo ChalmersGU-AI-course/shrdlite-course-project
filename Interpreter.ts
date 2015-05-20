@@ -267,7 +267,36 @@ module Interpreter {
                     }
                 }
                 interpretations.push(conjunction);
-            } else if (cmd.ent.quant === "all") {       //When all primary objects are related to a single target object
+            } else if(cmd.ent.quant === "all" && cmd.loc.ent.quant === "any"){
+              // This function only work with 2 available items and 2 target objects.
+                var conjunction : Literal[] = [];
+                var psolSet = new collections.Set<string>();
+                var temp : string[] = [];
+                for (var i = 0; i < primobj.length; i++){
+                    for(var j = 0; j < targets.length; j++){
+                        var currPrim = primobj[i];
+                        var currTar  = targets[j];
+                        for(var k = 0; k < primobj.length; k++){
+                            for(var l = 0; l < targets.length; l++){
+                                conjunction = [];
+                                if(primobj[k] !== currPrim && targets[l] !== currTar){
+                                    var t = [currPrim+currTar, primobj[k]+targets[l]];
+                                    var t2 = t.sort().toString();
+                                    if(psolSet.contains(t2) !== true){
+                                        psolSet.add(t2);
+                                        conjunction.push({ pol: true, rel: relation, args: [currPrim, currTar] });
+                                        conjunction.push({ pol: true, rel: relation, args: [primobj[k], targets[l]] });
+                                        interpretations.push(conjunction);
+                                    }
+                                }                                       
+                            }
+                        }
+                    }
+                }
+            
+                console.log(temp);
+            
+            }else if (cmd.ent.quant === "all") {       //When all primary objects are related to a single target object
                 for (var j = 0; j < targets.length; j++) {
                     var conjunction: Literal[] = [];
                     for (var i = 0; i < primobj.length; i++) {
