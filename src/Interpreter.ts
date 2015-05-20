@@ -95,6 +95,7 @@ module Interpreter {
                 else sourcesBranches = [[getHolding()]]
                 var targetBraches = find(cmd.loc.ent, state, worldLit);
                 var literals : Literal[] = [];
+                debugger;
                 product(sourcesBranches, targetBraches).forEach((param) => {
                     var sources = param[0], targets = param[1];
                     var literals : Literal[] = [];
@@ -104,7 +105,7 @@ module Interpreter {
                             if (checkLiteral(state,newLit).val) literals.push(newLit);
                         });
                     });
-                    if (literals.length) intprt.push(literals);
+                    if (literals.length && checkList(literals).val) intprt.push(literals);
                 });
                 break;
 
