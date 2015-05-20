@@ -96,7 +96,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     
 
     //counts objects on top of given object
-    countOnTop(a:string, pddls:predicate[]):number{
+    countOnTop(a:ObjectDefinition, pddls:predicate[]):number{
         var counter = 0;
         var z = a;
          for(var index = 0; index < pddls.length; index++){
@@ -111,7 +111,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         return counter;
     }
 
-    amountOfTiles(a:string, state:WorldState, pddls:predicate[]){
+    amountOfTiles(a:ObjectDefinition, state:WorldState, pddls:predicate[]){
         var counter = 0;
         counter += this.findPosition(a,state, pddls);
         
@@ -144,7 +144,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
 
     //returns x-pos (0->x) for object a
-    this.findPosition(a:string, state:WorldState, pddls:predicate[]):number{
+    findPosition(a:ObjectDefinition, state:WorldState, pddls:predicate[]):number{
        var x = a;
        var position = 0;
        var floor;
@@ -184,11 +184,11 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
         if(cond.rel == "ontop" || cond.rel == "inside"){
             //if a above b, take #objects on b * 4 + (ifnotinsamepile)#objects on a*4 + distancefromcrane to a + distancefromatob
-            if(state.holding == a && countOnTop(b,pddls) == 0){//check if a's stack is full
+            if(state.holding == a && this.countOnTop(b,pddls) == 0){//check if a's stack is full
                 return 1 + Math.abs(this.findPosition(b,state,pddls) - state.arm);
             }
             else if(state.holding == b){
-                return 1+ countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
+                return 1+ this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
             }
             
             var z = b;
@@ -243,9 +243,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 return 1 + Math.abs(this.findPosition(b,state,pddls) - state.arm);
             }
             else if(state.holding == b){
-                return 1+ countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
+                return 1+ this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
             }
-            if(this.findPosition(a,state,pddls) == this.findPosition(b,state,pddls) && countOnTop(b,pddls) > countOnTop(a,pddls))//check if completed
+            if(this.findPosition(a,state,pddls) == this.findPosition(b,state,pddls) && this.countOnTop(b,pddls) > this.countOnTop(a,pddls))//check if completed
                 return 0;
             var z = a;
             //traverse up through a;
@@ -277,9 +277,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 return 1 + Math.abs(this.findPosition(a,state,pddls) - state.arm);
             }
             else if(state.holding == a){
-                return 1+ countOnTop(b,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm)*2;
+                return 1+ this.countOnTop(b,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm)*2;
             }
-            if(this.findPosition(a,state,pddls) == this.findPosition(b,state,pddls) && countOnTop(b,pddls) < countOnTop(a,pddls))
+            if(this.findPosition(a,state,pddls) == this.findPosition(b,state,pddls) && this.countOnTop(b,pddls) < this.countOnTop(a,pddls))
                 return 0;
             var z = b;
             //traverse up through b;
@@ -308,27 +308,27 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         }
         else if(cond.rel == "rightof"){//currently not handling if B is in holding
 
-            if(state.holding == a && this.findPosition(b,state,pddls) != amountOfTiles(b,state,pddls)){
+            if(state.holding == a && this.findPosition(b,state,pddls) != this.amountOfTiles(b,state,pddls)){
                 return Math.abs(this.findPosition(b,state,pddls)-state.arm+1); // currently not checking if stack next to b is full
 
             }
             else if(state.holding == b){
-                return 1+ countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
+                return 1+ this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
             }
 
-            if(this.findPosition(b,state,pddls) == amountOfTiles(b,state,pddls)){//not perfect
-                count = countOnTop(a,pddls)*4 + countOnTop(b,pddls) + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
+            if(this.findPosition(b,state,pddls) == this.amountOfTiles(b,state,pddls)){//not perfect
+                count = this.countOnTop(a,pddls)*4 + this.countOnTop(b,pddls) + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
                 + (Math.abs(this.findPosition(a,state,pddls)-this.findPosition(b,state,pddls)-1))+2;//not working if both in the last stack?
             }
 
-            if(countOnTop(b,pddls)>countOnTop(a,pddls)){
+            if(this.countOnTop(b,pddls)>this.countOnTop(a,pddls)){
 
-                count = countOnTop(b,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm) + (Math.abs(this.findPosition(a,state,pddls)
+                count = this.countOnTop(b,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm) + (Math.abs(this.findPosition(a,state,pddls)
                 -this.findPosition(b,state,pddls)+1))+2;//+2 is for picking up and dropping b 
             }
             else{
                 //move A
-                count = countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm) + (Math.abs(this.findPosition(a,state,pddls)
+                count = this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm) + (Math.abs(this.findPosition(a,state,pddls)
                     -this.findPosition(b,state,pddls)+1))+2;
             }
 
@@ -339,24 +339,24 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
             }
             else if(state.holding == b){
-                if(amountOfTiles(a,state,pddls) == state.arm)
-                    return 2+ countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
-                return 1+ countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
+                if(this.amountOfTiles(a,state,pddls) == state.arm)
+                    return 2+ this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
+                return 1+ this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
             }
 
             if(this.findPosition(b,state,pddls) == 0){//not perfect
-                count = countOnTop(a,pddls)*4 + countOnTop(b,pddls) + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
+                count = this.countOnTop(a,pddls)*4 + this.countOnTop(b,pddls) + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
                 + (Math.abs(this.findPosition(a,state,pddls)-this.findPosition(b,state,pddls)-1))+2;
             }
 
-            else if(countOnTop(b,pddls)>countOnTop(a,pddls)){
+            else if(this.countOnTop(b,pddls)>this.countOnTop(a,pddls)){
 
-                count = countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm) 
+                count = this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm) 
                 + (Math.abs(this.findPosition(a,state,pddls)-this.findPosition(b,state,pddls)-1))+2;//+2 is for picking up and dropping b 
             }
             else{
                 //move B
-                count = countOnTop(b,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
+                count = this.countOnTop(b,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
                 + (Math.abs(this.findPosition(a,state,pddls)-this.findPosition(b,state,pddls)-1))+2;
             }
 
@@ -368,14 +368,14 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
              else if(state.holding == b){
                 return 1 + Math.abs(this.findPosition(a,state,pddls)-state.arm)-1;
             }
-            if(countOnTop(b,pddls)>countOnTop(a,pddls)){
+            if(this.countOnTop(b,pddls)>this.countOnTop(a,pddls)){
 
-                count = countOnTop(b,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
+                count = this.countOnTop(b,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
                 + (Math.abs(this.findPosition(a,state,pddls)-this.findPosition(b,state,pddls))-1)+2;//+2 is for picking up and dropping b 
             }
             else{
                 //move A
-                count = countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)
+                count = this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)
                  + (Math.abs(this.findPosition(a,state,pddls)-this.findPosition(b,state,pddls))-1)+2;
             }
             // a on floor? #objects on top of b + #objects leftofA < rightofA
