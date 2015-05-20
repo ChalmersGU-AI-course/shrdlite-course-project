@@ -11,11 +11,15 @@ module Interpreter {
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
-            interpretations.push(intprt);
+            if (intprt.intp) {
+                interpretations.push(intprt);
+            }
         });
-        if (interpretations.length) {
+        if (interpretations.length == 1) {
             return interpretations;
-        } else {
+        } else if (interpretations.length > 1) {
+            throw new Interpreter.Error("Ambiguous statement");
+        } else  {
             throw new Interpreter.Error("Found no interpretation");
         }
     }
