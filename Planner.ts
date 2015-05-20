@@ -54,7 +54,6 @@ module Planner {
         // This function returns an empty plan involving no random stack
         var plan : string[] = [];
         var statenr = 0;
-        console.log(state);
 
         //TODO: Make an appropriate type/struct for action/actions.
         var actions : string[]  = ['RIGHT','GRAB','LEFT','DROP']; 
@@ -121,6 +120,7 @@ module Planner {
 
         var start =  new ActionState("start");
         start.arm = state.arm
+        start.holding = state.holding;
         start.stacks = state.stacks.slice();
         
         function dynamic_children(astate : ActionState){
@@ -133,6 +133,7 @@ module Planner {
             });
             return states;
         }
+        
         /*
         This function validates whether an action can be applied to a state, without
         violating the physical conditions given. 
@@ -151,6 +152,7 @@ module Planner {
                     //Alternative: returns allways false
                     throw new Error("unsupported action");
         }
+        
         /*
         Given a state and an action, action is applied upon the state, the state is modified,
         it is also given an 'plan action' - l:Left,r:right,d:drop,g:grab - and a corresponding
@@ -184,7 +186,8 @@ module Planner {
                     newstate.stacks = astate.stacks.slice();
                     newstate.stacks[astate.arm] = stack.slice();
                     newstate.action = "p";
-                    newstate.msg = ("Picking up the "); //+ state.objects[astate.holding].form) ;
+                    console.log(state);
+                    newstate.msg = ("Picking up the "); //+ state.objects[newstate.holding].form);
                     return newstate;
             }else if (action == 'DROP'){
                     var stack = astate.stacks[astate.arm].slice();
@@ -194,12 +197,13 @@ module Planner {
                     newstate.stacks[astate.arm] = stack;
                     newstate.arm = astate.arm;
                     newstate.action = "d";
-                    newstate.msg = ("Dropping the "); //+ state.objects[astate.holding].form) ;
+                    newstate.msg = ("Dropping the "); //+ state.objects[newstate.holding].form) ;
                     return newstate; //&& (state.stacks[state.arm])
             }
                     //Alternative: returns always false
                     throw new Error("not yet implemented");
         }
+        
         /*
         NOTE: This function is to be viewed as the first version, it has
         known flaws, so feel free to change the it - if you can come up
@@ -223,6 +227,7 @@ module Planner {
             // return arm_dist; 
             return 0;
         }
+        
         /*
         Calculates the distance between two states, see astarTest.
         In this case, the weight of a step is 1. 
@@ -230,6 +235,7 @@ module Planner {
         function get_state_dist(){
             return 1; 
         }
+        
         //Probably unnecessary
         function find_obj(objs : string[], stacks : string[][]) {
             var objects : number[][] = [];
@@ -243,6 +249,7 @@ module Planner {
             }
             throw new Error("no such object");
         }
+        
         /*
         Conversion from path to plan.
         */

@@ -63,6 +63,7 @@ AStar :: Graph -> Path
         if it is then finds and returns the path.
         */
         current = openset.dequeue(); 
+        console.log(current);
         if(functions.is_goalNode(current)){
           var path = new collections.LinkedList<Node>();
           path.add(current)
@@ -76,7 +77,6 @@ AStar :: Graph -> Path
         /*
         All modifying actions performed on the set will also have to be performed
         on the queue.
-        TODO : make the queue sort its element by f(x).   
         */
         closedset.add(current)
         neighbors = functions.get_children(current) // expand the node that is first in the queue.
