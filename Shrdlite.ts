@@ -95,9 +95,9 @@ module Shrdlite {
 		function clarification(utterance : string = "") : void {
 			var inputPrompt = "Choose the corresponding number.";
 			var nextInput = () => world.readUserInput(inputPrompt, clarification);
-			
             if (utterance.trim()) {
 				inputChoice = parseInt(utterance)-1;
+				world.printDebugInfo("utterance: " + utterance + ", inputChoice: " + nputChoice);
 				if(inputChoice >= 0)
 					return;
             }
