@@ -102,6 +102,7 @@ module Interpreter {
         switch(cmd.cmd)
         {
             case "move":
+                
                 result = interpretEnt(cmd.ent,world,wObjs);
                 //console.log("after interpret ent ",result);
                 if(result.length <= 0)
@@ -114,15 +115,32 @@ module Interpreter {
                 {
                    return [];
                 }
-                for(var r in result)
-                {
-                    for(var i = 1; i < moveTo.length; i++)
+                if( cmd.ent.quant !== "all"){
+                    for(var r in result)
                     {
-                        var l : Literal = {pol:true,rel:moveTo[0],args:[result[r],moveTo[i]]};
-                        if(result[r] !== moveTo[i] && validateL(l,world))
-                            res.push([l]);
+                        for(var i = 1; i < moveTo.length; i++)
+                        {
+                            var l : Literal = {pol:true,rel:moveTo[0],args:[result[r],moveTo[i]]};
+                            if(result[r] !== moveTo[i] && validateL(l,world))
+                                res.push([l]);
+                                
+                        }
                     }
-                }
+                    }
+                    else
+                    {
+                        var ls : Literal [] = [];
+                        for(var r in result)
+                        {
+                            for(var i = 1; i < moveTo.length; i++)
+                            {
+                                var l : Literal = {pol:true,rel:moveTo[0],args:[result[r],moveTo[i]]};
+                                if(result[r] !== moveTo[i] && validateL(l,world))
+                                    ls.push(l);
+                            }
+                        }
+                        res.push(ls);
+                    }
                 break;
             case "take":
                     var result : string[] = interpretEnt(cmd.ent,world,wObjs);
