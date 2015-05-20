@@ -213,10 +213,12 @@ SearchGraph.prototype.neighbours = function* (state) {
         var new_stacks = state.stacks.slice();
         new_stacks[state.leftArm] = new_stacks[state.leftArm].slice();
 
+        var item = new_stacks[state.leftArm].pop();
+
         // Move right arm left
         if(state.rightArm > state.leftArm+2) {
             yield {
-                leftArm: state.leftArm, leftHolding: new_stacks[state.leftArm].pop(),
+                leftArm: state.leftArm, leftHolding: item,
                 rightArm: state.rightArm-1, rightHolding: state.rightHolding,
                 stacks: new_stacks
             };
@@ -224,7 +226,7 @@ SearchGraph.prototype.neighbours = function* (state) {
         // Move right arm right
         if(state.rightArm !== state.stacks.length-1) {
             yield {
-                leftArm: state.leftArm, leftHolding: new_stacks[state.leftArm].pop(),
+                leftArm: state.leftArm, leftHolding: item,
                 rightArm: state.rightArm+1, rightHolding: state.rightHolding,
                 stacks: new_stacks
             };
@@ -236,7 +238,7 @@ SearchGraph.prototype.neighbours = function* (state) {
             new_stacks[state.rightArm] = new_stacks[state.rightArm].slice();
             new_stacks[state.rightArm].push(state.rightHolding);
             yield {
-                leftArm: state.leftArm, leftHolding: new_stacks[state.leftArm].pop(),
+                leftArm: state.leftArm, leftHolding: item,
                 rightArm: state.rightArm, rightHolding: null,
                 stacks: new_stacks
             };
@@ -246,7 +248,7 @@ SearchGraph.prototype.neighbours = function* (state) {
             var new_stacks = new_stacks.slice();
             new_stacks[state.rightArm] = new_stacks[state.rightArm].slice();
             yield {
-                leftArm: state.leftArm, leftHolding: new_stacks[state.leftArm].pop(),
+                leftArm: state.leftArm, leftHolding: item,
                 rightArm: state.rightArm, rightHolding: new_stacks[state.rightArm].pop(),
                 stacks: new_stacks
             };
