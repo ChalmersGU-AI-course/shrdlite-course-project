@@ -179,145 +179,97 @@ module Interpreter {
     function interpretLocation(loc : Parser.Location, state : WorldState) : Sayings {
         return {rel:loc.rel, objs:interpretEntity(loc.ent, state)};
     }
-   
-    function addRule(checkState : boolean, andRow : objLocPair[], obj : string, loc : string, rel : string, state : WorldState) : objLocPair[]{
-        var b : boolean =validatePhysics(checkState, obj,loc, rel, state); 
-        if(b){
-            var contains : boolean = rowContainsPair(andRow, obj, loc, rel, false);
-            if(!contains) {
-                andRow.push({"obj":obj, "loc":loc});
-            }
+
+
+    function transpose(arrays) {
+        return arrays[0].map(function(_,i){
+            return arrays.map(function(array){return array[i]})
+        });
+    }
+
+    function buildStates(checkState : boolean, rel : string, objs : string[][], locs : string[][], state : WorldState) : objLocPair[][]{
+        var toomanydims : objLocPair[][][] = [];
+        if(objs.length > locs.length){
+            objs = transpose(objs); 
+        } else{
+            locs = transpose(locs);
         }
-        return andRow;   
+        objs.map(x => locs.map(y => 
+        {
+            var fx : string[] = x.filter(o => y.some(l => validatePhysics(checkState, o, l, rel,state)));
+            console.log("x: "+ x + " fx "+fx);
+            var fy : string[] = y.filter(l => x.some(o => validatePhysics(checkState, o, l, rel,state)));
+            console.log("y: "+ y + " fy "+fy);
+            var disjs : objLocPair[][] = combineConj(fx,fy);
+            toomanydims.push(disjs);
+        }));
+
+        var result : objLocPair[][] = [];
+        result =result.concat.apply(result, toomanydims);
+        return result;
     }
 
-    function buildAndRowForObj(checkState : boolean, objs : string[], locs : string[][], rel : string, state : WorldState) : objLocPair[] {
-        var row : objLocPair[] = [];
-        //console.log("new obj row");
-        objs.map(obj => { //and obj
-            locs = locs.reverse(); 
-            locs.map(locList => { //or loc
-                locList.map(loc => {    //and locs
-                    addRule(checkState, row, obj, loc, rel, state);
-                });
-            });
-        });
-        return row;
-    }
-
-    function buildAndRowForLoc(checkState : boolean, objs : string[][], locs : string[], rel : string, state : WorldState) : objLocPair[] {
-        var row : objLocPair[] = [];
-        //console.log("new loc row");
-        locs.map(loc => {    //and locs
-            objs = objs.reverse();
-            objs.map(objList => { //or obj
-                objList.map(obj => { //and obj      
-                    addRule(checkState, row, obj, loc, rel, state);
-                });
-            });
-        });
-        return row;
-    }
-
-
-    function OLDbuildRules(futureState: boolean, objs : string[][], locs : Sayings, state : WorldState) : objLocPair[][] {
-        
-        var grid : objLocPair[][] = [];
-        var newObjs : string[][] = [];
-        var newLocs : string[][] = [];
-
-        var ruleLength : number = objs[0].length*locs.objs[0].length;  
-
-
-        objs.forEach(objList => { //or obj
+    function combineConj(objs : string[], locs : string[]) :  objLocPair[][]{
+        if(objs.length > locs.length){
+            var p1 : string[][] = permute(objs, [],[]);
+            var allRules : objLocPair[][] = [];
+            p1.forEach(obj => {
                 var row : objLocPair[] = [];
-                objList.forEach(obj => { //and obj 
-                locs.objs.forEach(locList => {  //or locs
-                    locList.forEach(loc => {    //and locs
-                        if(validatePhysics(futureState, obj,loc,locs.rel, state)){
-                            if(row.every(p => p.obj !== obj &&(loc === "floor" || p.loc !== loc))) {
-                                row.push({"obj":obj, "loc":loc});
-                            }
-                        }   
-                        return true;
-                    });
-                    return true;
-                });
-                return true;
-            });
-            if(row.length>0 && row.length == objList.length ){
-                grid.push(row);
-            }
-            return true;
-        });
-        locs.objs = newLocs;
-        objs.forEach(objList => { //or obj
-            locs.objs.forEach(locList => {  //or locs
-                var row : objLocPair[] = [];
-                objList.forEach(obj => { //and obj 
-                    locList.forEach(loc => {    //and locs
-                        var valid = futureState
-                                    ? state.validPlacement(obj,loc,locs.rel)
-                                    : state.relationExists(obj,loc,locs.rel);
-
-                        if(valid && row.every(p => p.obj !== obj &&(loc === "floor" || p.loc !== loc))) {
-                            row.push({"obj":obj, "loc":loc});
-                        }
-                        return true;
-                    });
-                    return true;
-                });
-                if(row.length>0 && row.length === locList.length*objList.length ){
-                    var contains : boolean = grid.some(r => {
-                        var b : boolean =  row.every(p =>
-                            ((locs.rel==="below" && p.obj === "floor")|| r.some(o => o.obj === p.obj)) &&
-                            ((locs.rel!=="below" && p.loc === "floor")|| r.some(o => o.loc === p.loc)));
-                                console.log("lower: "+b);
-                                return b;
-                    });
-                    if(!contains){
-                        grid.push(row);
-                    }
+                for(var i = 0; i< locs.length; i++){
+                    row.push({"obj":obj[i], "loc":locs[i]});
                 }
-                return true;
+                allRules.push(row);
             });
-            return true;
-        });
+        }else {
+            var p1 : string[][] = permute(locs, [],[]);
+            var allRules : objLocPair[][] = [];
+            p1.forEach(loc => {
+                var row : objLocPair[] = [];
+                for(var i = 0; i< objs.length; i++){
+                    row.push({"obj":objs[i], "loc":loc[i]});
+                }
+                allRules.push(row);
+            });
+        }
+        console.log("all rules: "+allRules[0].length);
+        return allRules;
+    }
 
-        return grid;
+    function controlRuleSet(checkState : boolean, rules : objLocPair[], rel : string, state : WorldState) : boolean{    
+        return rules.every(r => validatePhysics(checkState, r.obj,r.loc, rel, state));   
     }
 
 
     function buildRules(futureState: boolean, objs : string[][], locs : Sayings, state : WorldState) : objLocPair[][] {
         var grid : objLocPair[][] = [];
-        var ruleLength : number = objs[0].length*locs.objs[0].length;  
-        locs.objs.map(locList => {
-            var row : objLocPair[] = buildAndRowForLoc(futureState, objs, locList, locs.rel, state);
-            if(row.length === ruleLength){
-                var contains : boolean = grid.some(r => row.every(p => rowContainsPair(r, p.obj, p.loc, locs.rel, true)));
-                if(!contains){
-                    grid.push(row);
-                }
-            }
-        });
+        var ruleLength : number = objs.length>0  && locs.objs.length>0 ? objs[0].length*locs.objs[0].length : 0;
+        //var zippedLocs:string[][] = zip(locs.objs);
+        console.log("objs :"+objs);
+        console.log("locs :"+locs.objs);
+        
+        //all pair
+        var rules : objLocPair[][] = buildStates(futureState, locs.rel, objs, locs.objs, state);
+        console.log(rules.length);
+        console.log("andlenght "+rules[0].length);
+        // filter physical
+        var filtered : objLocPair[][] = rules.filter(row => controlRuleSet(futureState, row, locs.rel, state));
+        console.log(filtered.length);
+        
 
-        objs.map(objList => {
-            var row : objLocPair[] = buildAndRowForObj(futureState, objList, locs.objs, locs.rel, state);
-            if(row.length === ruleLength){
-                var contains : boolean = grid.some(r => row.every(p => rowContainsPair(r, p.obj, p.loc, locs.rel, true)));
-                if(!contains){
-                    grid.push(row);
-                }
+        filtered.map(row => {
+            var contains : boolean = grid.some(r => row.every(p => rowContainsPair(r, p.obj, p.loc, locs.rel)));
+            if(!contains){
+                grid.push(row);
             }
         });
+        console.log(grid.length);
+
         return grid;
 
     }
 
-    function rowContainsPair(row : objLocPair[], obj : string, loc : string, rel : string, andRelation : boolean) : boolean {
-        var a : boolean = row.some(o => o.obj === obj);//((rel==="below" && obj === "floor")|| row.some(o => o.obj === obj)); 
-        var b : boolean = (loc !== "floor" && row.some(o => o.loc === loc));
-        return andRelation ? a&&b : a||b; 
+    function rowContainsPair(row : objLocPair[], obj : string, loc : string, rel : string) : boolean {
+        return row.some(o => o.obj === obj && (loc !== "floor" && o.loc === loc));
     }
 
 
