@@ -77,8 +77,6 @@ module Interpreter {
         */
        var test = checkList( [ {pol:true , rel:"ontop", args:['a','b']} , {pol:true, rel:"ontop", args:['a','c']}] );
        var test2 = checkList( [ {pol:true , rel:"ontop", args:['a','b']} , {pol:true, rel:"under", args:['a','b']}] );
-       
-       debugger;
 
         var getHolding = () => {
           if (!state.holding) throw "Not holding anything.";
@@ -291,7 +289,7 @@ module Interpreter {
 
       if (objA.form == "floor" && rel != "under")
         return { val: false , str:"The floor can't be ontop, above, left, right, beside, inside or be hold"};
-      if (objB.form == "floor" && (rel != "above" || rel != "ontop"))
+      if (objB.form == "floor" && !(rel == "above" || rel == "ontop"))
         return { val: false , str:"An Object can only be above or on top of the floor"};
 
       switch (rel) {
