@@ -55,7 +55,8 @@ module Shrdlite {
                 world.printError("Interpretation error", err.message);
                 return;
             } else {
-                world.printError("Exception error", err.message);
+                world.printError("Exception");
+                throw err;
                 return;
             }
         }
