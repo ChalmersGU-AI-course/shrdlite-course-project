@@ -261,33 +261,33 @@ class SVGWorld implements World {
     }
 
     private left(callback?) {
-        if (this.currentState.arm <= 0) {
+        if (this.currentState.arm1 <= 0) {
             throw "Already at left edge!";
         }
-        this.horizontalMove(this.currentState.arm - 1, callback);
+        this.horizontalMove(this.currentState.arm1 - 1, callback);
     }
 
     private right(callback?) {
-        if (this.currentState.arm >= this.currentState.stacks.length - 1) {
+        if (this.currentState.arm1 >= this.currentState.stacks.length - 1) {
             throw "Already at right edge!";
         }
-        this.horizontalMove(this.currentState.arm + 1, callback);
+        this.horizontalMove(this.currentState.arm1 + 1, callback);
     }
 
     private drop(callback?) {
-        if (!this.currentState.holding) {
+        if (!this.currentState.holding1) {
             throw "Not holding anything!";
         }
         this.verticalMove('drop', callback);
-        this.currentState.stacks[this.currentState.arm].push(this.currentState.holding);
-        this.currentState.holding = null;
+        this.currentState.stacks[this.currentState.arm1].push(this.currentState.holding1);
+        this.currentState.holding1 = null;
     }
 
     private pick(callback?) {
-        if (this.currentState.holding) {
+        if (this.currentState.holding1) {
             throw "Already holding something!";
         }
-        this.currentState.holding = this.currentState.stacks[this.currentState.arm].pop();
+        this.currentState.holding1 = this.currentState.stacks[this.currentState.arm1].pop();
         this.verticalMove('pick', callback);
     }
 
