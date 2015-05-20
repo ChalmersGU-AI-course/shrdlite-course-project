@@ -9,11 +9,13 @@ var Interpreter;
         parses.forEach(function (parseresult) {
             var intprt = parseresult;
             var result = interpretCommand(intprt.prs, currentState);
-            interpretations.push(result);
-            console.log(result);
-            console.log(interpretations);
+            if(result != null){
+                interpretations.push(result);
+            }
+            
         });
         if (interpretations.length) {
+            console.log("INTERPRETER Found interpretations: ", interpretations)
             return interpretations;
         }
         else {
@@ -53,25 +55,37 @@ var Interpreter;
         “move/put/drop” “it” at a Location
         “move/put/drop” an Entity to a Location
         */
+        var intprt = null;
         var cmdType = cmd.cmd;
         console.log("cmd type: " + cmdType);
         if (cmdType == "take") {
             var object = isInState(cmd['ent']['obj'],state);            
             var intprt = [{rel: "holding", item:object}];
-            console.log(intprt);
             return intprt;
             
         }if (cmdType == "move") {
-            /*Check if start object is in the world
-            if (!isInState(cmd['ent']['obj'], state)) {
-                console.log("Start object not in the world");
-                return;
+            var itemEnt = cmd['ent'];
+            var endLoc = cmd['loc'];
+            console.log("Goal is to put", itemEnt, " on ", endLoc);
+            
+            //Goal is to put the itemEnt relative to 
+            //something relative to something else
+            // Example2
+            if(cmd['ent']['obj']['loc'] == undefined){
+                console.log("example2")
+                return intprt;
             }
-            //Check if goal is in the world
-            if (!isInState(cdm['loc']['ent']['obj'], state)) {
-                console.log("Goal not in the world");
-                return;
-            }*/
+            else{
+                obj = isAtLocation(cmd, state);
+            }
+            
+            /*if()
+            var intprt = [];
+            var startObject = cmd['ent']['obj'];
+            startObjectName = isInState(startObject);
+            endObjectName = isInState(toLoc['ent']['obj']['obj'])
+            intprt = [{rel: "inside", item:startObject, oneof: [endObjectName]}];*/
+            return intprt;
 
         }else{
             throw new Interpreter.Error("Not a valid grammar" + cmd);
@@ -93,27 +107,72 @@ var Interpreter;
         var objinstate;
         state.stacks.forEach(function (column) {
             column.forEach(function (thing) {
-                //console.log("object in state " + object);
                 var object = state.objects[thing];
-                var string1 = "size " + object.size;
-                var string2 = " color " + object.color;
-                var string3 = " form " + object.form;
-
-                //console.log(string1 + string2 + string3);
-                var isSize = object.size == size || size == null;
-                var isColor = object.color == color || color == null;
-                var isForm = object.form == form || form == 'anyform';
-                //console.log(isSize + " " + isColor + " " + isForm);
-                if (isSize && isColor && isForm) 
-                {   
-
+                if (isEqualObject(obj,object)) {  
                     objinstate = thing;
                     //console.log("Pushed " + object);
-                    console.log(objinstate);
+                    console.log("INTERPRETER New object " + objinstate);
                 }                
             });
         });
         return objinstate;                
+    }
+    function isAtLocation(obj, state, relative) {
+        //var objquant = obj['quant'];
+        var startObject = obj['ent']['obj']['obj'];
+        var loc = obj['ent']['obj']['loc'];
+        var locObject = obj['ent']['obj']['loc']['ent']['obj'];
+
+        // Get starObject
+        var startObjectName = isInState(startObject, state);
+        console.log(startObjectName);
+        var locObjectName = isInState(locObject, state);
+        console.log(locObjectName);
+
+
+
+        state.stacks.forEach(function (column) {
+            column.filter(function (thing) {
+                //target = 
+                //isobject()
+            });
+        });
+
+ /*       //find location
+        var c = 0;
+        var index;
+        state.stacks.forEach(function (column) {
+            var s = 0;
+            c++;
+            column.forEach(function (thing) {
+                s++;
+                console.log(thing);
+                var object = state.objects[thing];
+                var isSize = object.size == size || size == null;
+                var isColor = object.color == color || color == null;
+                var isForm = object.form == form || form == 'anyform';
+                if (isSize && isColor && isForm) {  
+                    objinstate = thing;
+                    //console.log("Pushed " + object);
+                    console.log("INTERPRETER Location New object " + objinstate);
+                    console.log(c, s);
+                    index = [c,s];
+                }                
+            });
+        });*/
+
+
+
+    }
+    function isEqualObject(goal, object) {
+        var isSize = object.size == goal.size || goal.size == null;
+        var isColor = object.color == goal.color || goal.color == null;
+        var isForm = object.form == goal.form || goal.form == 'anyform';
+        if (isSize && isColor && isForm) {  
+            return true;
+        }else{
+            return false;
+        }
     }
 })(Interpreter || (Interpreter = {}));
 //put the white ball that is in a box on the floor:
