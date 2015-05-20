@@ -285,10 +285,16 @@ module Interpreter {
       // var rIndex =relations.indexOf(rel);
       var floor : ObjectDefinition = {form: "floor", size: null, color: null};
 
+      var objA = lit.args[0] == "floor" ? floor : objs[ lit.args[0] ];
+      var objB = lit.args[1] == "floor" ? floor : objs[ lit.args[1] ];
+
+      if (objA.form == "floor" && rel != "under")
+        return { val: false , str:"The floor can't be ontop, above, left, right, beside, inside or be hold"};
+      if (objB.form == "floor" && (rel != "above" || rel != "ontop"))
+        return { val: false , str:"An Object can only be above or on top of the floor"};
+
       switch (rel) {
           case "ontop": //ontop
-              var objA = objs[ lit.args[0] ];
-              var objB = lit.args[1] == "floor" ? floor : objs[ lit.args[1] ];
               if (objB.form=="ball")
                   return { val: false , str:"Balls can not support anything" };
               else if (objA.form=="ball" && objB.form!="floor")
@@ -301,16 +307,12 @@ module Interpreter {
                 return { val: false , str:"Large boxes can not be supported by large pyramids" };
               else return { val:true , str: "" };
 
-          case "above": 
-              var objA = objs[ lit.args[0] ];
-              var objB = objs[ lit.args[1] ];
+          case "above":
           	  if (objA.size=="large" && objB.size =="small")
           	    return { val: false , str:"Small objects can not support large objects" };
               else return { val:true , str: "" };
 
           case "under": //under
-              var objA = objs[ lit.args[0] ];
-              var objB = objs[ lit.args[1] ];
               if (objA.form=="ball") return { val: false , str:"Balls can not support anything" };
               else if(objA.size=="small" && objB.size =="large")
           	    return { val: false , str:"Small objects can not support large objects" };
@@ -321,8 +323,6 @@ module Interpreter {
           case "beside": return { val:true , str: "" };
 
           case "inside": //inside
-              var objA = objs[ lit.args[0] ];
-              var objB = objs[ lit.args[1] ];
               if (objB.form!="box")
                   return { val: false , str:"Only boxes can contain other objects" };
               else if (objA.size==objB.size && ( objA.form=="pyramid" || objA.form=="plank" ||objA.form=="box") )
