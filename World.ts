@@ -28,3 +28,27 @@ interface World {
     printDebugInfo(info : string) : void;
     printError(error : string, message? : string) : void;
 }
+
+function getWorldCloneShallow(world: WorldState): WorldState {
+    var clone = {
+        stacks: world.stacks,
+        holding1: world.holding1,
+        arm1: world.arm1,
+        holding2: world.holding2,
+        arm2: world.arm2,
+        objects: world.objects,
+        examples: world.examples
+    };
+
+    return clone;
+}
+
+function getWorldCloneDeep(world: WorldState, stack1ToDeepCopy: number, stack2ToDeepCopy: number): WorldState {
+    var clone = this.getWorldCloneShallow(world);
+
+    clone.stacks = clone.stacks.slice(0);
+    clone.stacks[stack1ToDeepCopy] = clone.stacks[stack1ToDeepCopy].slice(0);
+    clone.stacks[stack2ToDeepCopy] = clone.stacks[stack2ToDeepCopy].slice(0);
+
+    return clone;
+}

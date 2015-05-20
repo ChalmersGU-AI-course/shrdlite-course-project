@@ -68,7 +68,7 @@ module Planner {
 
     export class PlannerNode implements astar.INode {
         state: WorldState;
-        lastAction: string; //l, r , d or p
+        lastAction: string[]; // l, r , d, p, n
         actionMessage: string;
 
         constructor(state, lastAction, actionMessage) {
@@ -84,11 +84,26 @@ module Planner {
         getNeighbors(): astar.Neighbor[] {
             var n: astar.Neighbor[] = [];
 
-            var useArmState = this.useArm();
-            if (useArmState) {
+
+            // pure arm use
+            var useArm1State = this.useArms(this.state, true, false);
+            if (useArm1State) {
                 n.push(
-                    new astar.Neighbor(useArmState, 1));
+                    new astar.Neighbor(useArm1State, 1));
             }
+
+            var useArm2State = this.useArms(this.state, false, true);
+            if (useArm2State) {
+                n.push(
+                    new astar.Neighbor(useArm2State, 1));
+            }
+            var useArmsState = this.useArms(this.state, true, true);
+            if (useArmsState) {
+                n.push(
+                    new astar.Neighbor(useArmsState, 1.5));
+            }
+
+
 
             var moveLeftState = this.moveArm(-1);
             if (moveLeftState) {
@@ -104,60 +119,93 @@ module Planner {
             return n;
         }
 
-        // TODO: Move this function to a more appropriate location!
-        getWorldCloneShallow(world: WorldState): WorldState {
-            var clone = {
-                stacks: world.stacks,
-                holding: world.holding,
-                arm: world.arm,
-                objects: world.objects,
-                examples: world.examples
-            };
+        useArms(state: WorldState, use1: boolean, use2: boolean): PlannerNode {
+            var currentStackArm1 = state.stacks[state.arm1];
+            var topItemIndexArm1 = currentStackArm1.length - 1;
 
-            return clone;
-        }
+            var invalidActionFlag = false;
 
-        getWorldCloneDeep(world: WorldState, stackToDeepCopy: number): WorldState {
-            var clone = this.getWorldCloneShallow(world);
+            var newState = getWorldCloneDeep(state, state.arm1, state.arm2);
+            var actions = ['n', 'n']; //by default don't do anything,change if needed
+            var message = "";
 
-            clone.stacks = clone.stacks.slice(0);
-            clone.stacks[stackToDeepCopy] = clone.stacks[stackToDeepCopy].slice(0);
+            // use arm 1
+            if (use1) {
+                // picking with arm 1
+                if (state.holding1 === null) {
+                    if (currentStackArm1.length > 0) {
+                        newState.holding1 = currentStackArm1[topItemIndexArm1];
+                        newState.stacks[state.arm1].splice(topItemIndexArm1, 1);
 
-            return clone;
-        }
-
-        useArm(): PlannerNode {
-            var currentStack = this.state.stacks[this.state.arm];
-            var topItemIndex = currentStack.length - 1;
-            
-            if (this.state.holding === null) {
-                if (currentStack.length > 0) {
-                    var newState = this.getWorldCloneDeep(this.state, this.state.arm);
-
-                    newState.holding = currentStack[topItemIndex];
-                    newState.stacks[this.state.arm].splice(topItemIndex, 1);
-
-                    var msg = "Picking up the " + newState.objects[newState.holding].form;
-                    return new PlannerNode(newState, "p", msg);
+                        actions[0] = 'p';
+                        message = message +
+                            "Picking up the " + newState.objects[newState.holding1].form + ". ";
+                    } else {
+                        invalidActionFlag = true;
+                    }
                 }
-            }
-            else {
-                // Always legal if on top of floor, else check world rules
-                var holdingObj = this.state.objects[this.state.holding];
-                var topObj = this.state.objects[currentStack[topItemIndex]];
+                // dropping item from arm 1
+                else {
+                    // Always legal if on top of floor, else check world rules
+                    var holdingObj = state.objects[state.holding1];
+                    var topObj = state.objects[currentStackArm1[topItemIndexArm1]];
 
-                if (currentStack.length == 0 || WorldRules.canBeOntop(holdingObj, topObj)) {
-                    var newState = this.getWorldCloneDeep(this.state, this.state.arm);
+                    if (currentStackArm1.length == 0 || WorldRules.canBeOntop(holdingObj, topObj)) {
+                        newState.stacks[newState.arm1].push(newState.holding1);
+                        newState.holding1 = null;
 
-                    newState.stacks[newState.arm].push(newState.holding);
-                    newState.holding = null;
-
-                    var msg = "Dropping the " + holdingObj.form;
-                    return new PlannerNode(newState, "d", msg);
+                        actions[0] = 'd';
+                        message = message +
+                        "Dropping the " + holdingObj.form + ". ";
+                    } else {
+                        invalidActionFlag = true;
+                    }
                 }
             }
 
-            return null;
+            var currentStackArm2 = state.stacks[state.arm2];
+            var topItemIndexArm2 = currentStackArm2.length - 1;
+
+            // use arm 2
+            if (use2) {
+                if (state.holding2 === null) {
+                    if (currentStackArm2.length > 0) {
+                        newState.holding2 = currentStackArm2[topItemIndexArm2];
+                        newState.stacks[state.arm2].splice(topItemIndexArm2, 1);
+
+                        actions[1] = 'p';
+                        message = message +
+                            "Picking up the " + newState.objects[newState.holding2].form + ". ";
+                    } else {
+                        invalidActionFlag = true;
+                    }
+                }
+                else {
+                    // Always legal if on top of floor, else check world rules
+                    var holdingObj = state.objects[state.holding2];
+                    var topObj = state.objects[currentStackArm2[topItemIndexArm2]];
+
+                    if (currentStackArm2.length == 0 || WorldRules.canBeOntop(holdingObj, topObj)) {
+                        newState.stacks[newState.arm2].push(newState.holding2);
+                        newState.holding2 = null;
+
+                        actions[1] = 'd';
+                        message = message +
+                            "Dropping the " + holdingObj.form + ". ";
+                    } else {
+                        invalidActionFlag = true;
+                    }
+                }
+            }
+
+            // only return if either use1 or use2
+            if (use1 && use2 && invalidActionFlag) {
+                return null;
+            } else if (use1 || use2) {
+                return new PlannerNode(newState, actions, message);
+            } else {
+                return null;
+            }
         }
 
         moveArm(direction: number): PlannerNode {
@@ -166,7 +214,7 @@ module Planner {
 
             if (targetPos >= 0 && targetPos < numberOfStacks) {
                 // We can use copy here since we don't need a deep copy
-                var newState = this.getWorldCloneShallow(this.state);
+                var newState = getWorldCloneShallow(this.state);
 
                 newState.arm = targetPos;
 
