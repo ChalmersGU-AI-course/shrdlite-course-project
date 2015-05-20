@@ -117,8 +117,26 @@ module Interpreter {
                 }
                 if( cmd.ent.quant === "all"){
                     var ls : Literal [] = [];
+                    var temp : Literal [] = [];
+                    var grej : number = 0;
                     for(var i = 1; i < moveTo.length; i++)
+                    {
+                        for(var j = 1; j < moveTo.length; j++)
                         {
+                            grej = i;
+                            for(var o in result)
+                            {
+                                temp.push({pol:true,rel:moveTo[0],args:[result[o],moveTo[grej]]});
+                                grej = j; 
+                            }
+                            
+                        }
+                    }
+                    console.log("el done");
+                    for(var t in temp)
+                        console.log(temp[t].args);
+                    for(var i = 1; i < moveTo.length; i++)
+                    {
                         for(var r in result)
                         {
                         

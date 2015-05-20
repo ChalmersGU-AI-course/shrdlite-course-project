@@ -465,7 +465,7 @@ module Planner {
 		            	}
 		                
 		        }
-		        biggestTot = min(biggestTot,totHue);
+		        biggestTot = Math.min(biggestTot,totHue);
 		    }
 	    }
         //console.log(totHue);
