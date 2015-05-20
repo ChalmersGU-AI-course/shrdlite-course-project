@@ -132,6 +132,8 @@ module Planner {
         }
 
         if(b.isFloor || a.isFloor){
+            // TODO Make sure that this never happens...
+            throw new Planner.Error("Floor should not be tested as beside anything?, at least not in this manner...");
             return 0;
         }
 
