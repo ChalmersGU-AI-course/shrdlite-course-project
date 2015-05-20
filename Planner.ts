@@ -199,6 +199,12 @@ module Planner {
             var rel : string = l.rel;
             var x   : string = l.args[0];
             var y   : string = l.args[1];
+            if(y === "floor")
+            {
+                x = x.concat("([a-z]|\\d)+");
+                y = "\\d";
+                console.log(x,y);
+            }
             var derp : string = ""; 
             var regExp : RegExp;
             switch(rel)
