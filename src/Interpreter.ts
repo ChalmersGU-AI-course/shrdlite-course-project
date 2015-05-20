@@ -57,8 +57,8 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        var stateL = worldToLiteral(state);
-        var worldLit=worldToLiteral(state);
+        // var stateL = worldToLiteral(state);
+        var worldLit = worldToLiteral(state);
 
         // This returns a dummy interpretation involving two random objects in the world
         /*
