@@ -207,19 +207,24 @@ module Interpreter {
         }
     }
 
-
-    /**
-    * @return list of targets in the world that complies with the specified entity.
-    */
-    function findTargetEntities(en : Parser.Entity, state : WorldState) : string[] {
-        var goalObj : Parser.Object = en.obj;
-        var result : string[] = [];
-
-        while(! isUndefined( goalObj.obj)){
-            goalObj = goalObj.obj;
+    function resolveObject(state : WorldState, goalObj : Parser.Object, loc : Parser.Location) : string[]{
+        if(goalObj.obj != null){
+            // TODO recurse down...
         }
 
-        if(en.obj.form === "floor"){
+        return null;
+    }
+
+    function findTargetObjects(state : WorldState, goalObj : Parser.Object) : string[]{
+        var result : string[] = [];
+
+        var result : string[] = [];
+
+        if(goalObj.obj != null){
+            return resolveObject(state, goalObj.obj, goalObj.loc);
+        }
+
+        if(goalObj.form === "floor"){
             result.push("floor");
         }
 
@@ -245,10 +250,20 @@ module Interpreter {
                         continue;
                     }
                 }
-                // TODO consider location for filtering as well!
                 result.push(objName);
             }
         }
+
+        return result;
+    }
+
+    /**
+    * @return list of targets in the world that complies with the specified entity.
+    */
+    function findTargetEntities(en : Parser.Entity, state : WorldState) : string[] {
+        var goalObj : Parser.Object = en.obj;
+        var result : string[] = findTargetObjects(state, goalObj);
+
         switch(en.quant){
             case "any":
                 break;
@@ -261,6 +276,10 @@ module Interpreter {
 
         return result;
     }
+
+    // function checkLocation() : boolean {
+    //     return true;
+    // }
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
