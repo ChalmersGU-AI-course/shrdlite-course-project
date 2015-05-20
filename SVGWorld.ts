@@ -127,12 +127,23 @@ class SVGWorld implements World {
             fill: 'black',
         }).appendTo(svg);
 
-        // The arm:
+        // The arm1:
         $(this.SVG('line')).attr({
             id:'arm',
             x1: this.stackWidth() / 2,
             y1: this.armSize * this.stackWidth() - this.canvasHeight, 
             x2: this.stackWidth() / 2, 
+            y2: this.armSize * this.stackWidth(), 
+            stroke: 'black', 
+            'stroke-width': this.armSize * this.stackWidth(),
+        }).appendTo(svg);
+
+        // The arm2:
+        $(this.SVG('line')).attr({
+            id:'arm2',
+            x1: this.canvasWidth - this.stackWidth() / 2,
+            y1: this.armSize * this.stackWidth() - this.canvasHeight, 
+            x2: this.canvasWidth - this.stackWidth() / 2, 
             y2: this.armSize * this.stackWidth(), 
             stroke: 'black', 
             'stroke-width': this.armSize * this.stackWidth(),
@@ -242,10 +253,10 @@ class SVGWorld implements World {
     }
 
     //////////////////////////////////////////////////////////////////////
-    // The basic actions: left, right, pick, drop
+    // The basic actions: left, right, pick, drop for both arms
 
     private getAction(act) {
-        var actions = {p:this.pick, d:this.drop, l:this.left, r:this.right};
+        var actions = {p:this.pick, d:this.drop, l:this.left, r:this.right, p2:this.pick2, d2:this.drop2, l2:this.left2, r2:this.right2};
         return actions[act.toLowerCase()];
     }
 
@@ -278,6 +289,37 @@ class SVGWorld implements World {
         }
         this.currentState.holding = this.currentState.stacks[this.currentState.arm].pop();
         this.verticalMove('pick', callback);
+    }
+
+    private left2(callback?) {
+        if (this.currentState.arm2 <= 0) {
+            throw "Already at left edge!";
+        }
+        this.horizontalMove2(this.currentState.arm2 - 1, callback);
+    }
+
+    private right2(callback?) {
+        if (this.currentState.arm2 >= this.currentState.stacks.length - 1) {
+            throw "Already at right edge!";
+        }
+        this.horizontalMove2(this.currentState.arm2 + 1, callback);
+    }
+
+    private drop2(callback?) {
+        if (!this.currentState.holding2) {
+            throw "Not holding anything!";
+        }
+        this.verticalMove2('drop', callback);
+        this.currentState.stacks[this.currentState.arm2].push(this.currentState.holding2);
+        this.currentState.holding2 = null;
+    }
+
+    private pick2(callback?) {
+        if (this.currentState.holding2) {
+            throw "Already holding something!";
+        }
+        this.currentState.holding2 = this.currentState.stacks[this.currentState.arm2].pop();
+        this.verticalMove2('pick', callback);
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -313,6 +355,50 @@ class SVGWorld implements World {
         var path2 = ["M", xArm, yArm, "V", 0];
         var duration = (Math.abs(yArm)) / this.armSpeed;
         var arm = $('#arm');
+        var object = $("#" + this.currentState.holding)
+
+        this.animateMotion(arm, path1, 0, duration);
+        this.animateMotion(arm, path2, duration + this.animationPause, duration);
+        if (action == 'pick') {
+            var path3 = ["M", xArm, yStack, "V", yStack-yArm];
+            this.animateMotion(object, path3, duration + this.animationPause, duration)
+        } else {
+            var path3 = ["M", xArm, yStack-yArm, "V", yStack];
+            this.animateMotion(object, path3, 0, duration)
+        }
+        if (callback) setTimeout(callback, 2*(duration + this.animationPause) * 1000);
+    }
+
+private horizontalMove2(newArm, callback?) {
+        var xArm = this.currentState.arm2 * this.stackWidth() + this.wallSeparation;
+        var xNewArm = newArm * this.stackWidth() + this.wallSeparation;
+        var path1 = ["M", xArm, 0, "H", xNewArm];
+        var duration = Math.abs(xNewArm - xArm) / this.armSpeed;
+        var arm = $('#arm2');
+        this.animateMotion(arm, path1, 0, duration);
+        if (this.currentState.holding) {
+            var objectHeight = this.getObjectDimensions(this.currentState.holding).heightadd;
+            var yArm = -(this.canvasHeight - this.armSize * this.stackWidth() - objectHeight);
+            var path2 = ["M", xArm, yArm, "H", xNewArm];
+            var object = $("#" + this.currentState.holding)
+            this.animateMotion(object, path2, 0, duration);
+        }
+        this.currentState.arm2 = newArm;
+        if (callback) setTimeout(callback, (duration + this.animationPause) * 1000);
+        return 
+    }
+
+    private verticalMove2(action, callback?) {
+        var altitude = this.getAltitude(this.currentState.arm2);
+        var objectHeight = this.getObjectDimensions(this.currentState.holding).heightadd;
+        var yArm = this.canvasHeight - altitude - this.armSize * this.stackWidth() - objectHeight;
+        var yStack = -altitude;
+        var xArm = this.currentState.arm2 * this.stackWidth() + this.wallSeparation;
+
+        var path1 = ["M", xArm, 0, "V", yArm];
+        var path2 = ["M", xArm, yArm, "V", 0];
+        var duration = (Math.abs(yArm)) / this.armSpeed;
+        var arm = $('#arm2');
         var object = $("#" + this.currentState.holding)
 
         this.animateMotion(arm, path1, 0, duration);
