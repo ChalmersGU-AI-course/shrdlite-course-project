@@ -1,4 +1,5 @@
 /// <reference path="collections.ts" />
+/// <reference path="Interpreter.ts"/>
 // Interface definitions for worlds
 
 interface ObjectDefinition {
@@ -7,14 +8,15 @@ interface ObjectDefinition {
     color: string;
 }
 
-interface predicate{
+/*interface Litteral{
+    pol: boolean;
 	rel: string; //ontopof
 	args: string[];
-}
+}*/
 
 interface WorldState {
     stacks: string[][];
-    pddl: collections.Set<predicate>;
+    pddl: collections.Set<Interpreter.Literal>;
     holding: string;
     arm: number;
     objects: { [s:string]: ObjectDefinition; };

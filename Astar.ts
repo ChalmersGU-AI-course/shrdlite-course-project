@@ -1,12 +1,13 @@
 /// <reference path="collections.ts" />
+/// <reference path="Interpreter.ts"/>
 
 interface Graph<T>{
     getneighbors(node: number):Array<number>;
     getcost(from: number,to:number):number;
-    heuristic_cost_estimate(current : number, goal : number) : number;
+    heuristic_cost_estimate(current : number, goal : Interpreter.Literal ) : number;
     specialIndexOf(obj:T):number;
-    reachedGoal(current:number, conditions:number[]):boolean;
-    checkGoal(current:number, condition:number):boolean;
+    reachedGoal(current:number, conditions:Interpreter.Literal[]):boolean;
+    checkGoal(current:number, condition:Interpreter.Literal):boolean;
 }
 
 class NodeScore {
@@ -61,7 +62,7 @@ class Astar <T>{
         return result;
     }
     
-    public star (start: number, goal : number): number[]{
+    public star (start: number, goal : Interpreter.Literal): number[]{
         // The set of tentative nodes to be evaluated, initially containing the start node
         var openset = new collections.PriorityQueue<NodeScore>(
         					function (a:NodeScore,b:NodeScore){
@@ -82,10 +83,10 @@ class Astar <T>{
             var current = openset.dequeue().getIndex();
             openset_ids.remove(current);
             counter ++;
-            if(current == goal){
+            /*if(current == goal){
                 console.info("Number of nodes visited " + counter);
-                return this.reconstruct_path(came_from, goal);
-            }
+                return this.reconstruct_path(came_from, current);//changed to current, since goal will be literals
+            }*/ //needs to be adjusted
             closedset.push(current);
             var currentNeighbors = this.neighbor_nodes(current);
             

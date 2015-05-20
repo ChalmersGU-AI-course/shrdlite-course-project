@@ -50,7 +50,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             //Already holding, drop at position
              /* find object on top at positon, set as index, add relation on top between holding
              item and the current on top */ 
-            var newobj : predicate;
+            var newobj : Interpreter.Literal;
              newobj.rel = "ontop";
              newobj.args = [neig[2].holding, state.pddl[index].args[0]];
              //neig[neig.length].holding = state.pddl.push(newobj)
@@ -96,7 +96,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     
 
     //counts objects on top of given object
-    countOnTop(a:string,state:WorldState, pddls:predicate[]):number{
+    countOnTop(a:string,state:WorldState, pddls:Interpreter.Literal[]):number{
         var counter = 0;
         var z = a;
          for(var index = 0; index < pddls.length; index++){
@@ -111,7 +111,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         return counter;
     }
 
-    amountOfTiles(a:string, state:WorldState, pddls:predicate[]){
+    amountOfTiles(a:string, state:WorldState, pddls:Interpreter.Literal[]){
         var counter = 0;
         counter += this.findPosition(a,state, pddls);
         
@@ -144,7 +144,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
 
     //returns x-pos (0->x) for object a
-    findPosition(a:string, state:WorldState, pddls:predicate[]):number{
+    findPosition(a:string, state:WorldState, pddls:Interpreter.Literal[]):number{
        var x = a;
        var position = 0;
        var floor;
@@ -178,8 +178,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         return false;
     }
 
-    heuristic_cost_estimate(current:number, goal:number):number{//some parts can be improved
-        var cond = this._nodeValues[goal].
+    heuristic_cost_estimate(current:number, goal:Interpreter.Literal):number{//some parts can be improved
+        var cond = goal;
         var state = this._nodeValues[current];
         var ao = state.objects[cond.args[0]];
         var bo = state.objects[cond.args[1]];
@@ -400,17 +400,17 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         }
         return -1;
     }
-    reachedGoal(current: number, cond : number[]):boolean{
-       var state = this._nodeValues[current];
+    reachedGoal(current: number, cond :  Interpreter.Literal[]):boolean{
+      // var state = this._nodeValues[current];
         for(var i = 0; cond.length; i++ ){
-            if(!checkGoal(cond[i], state))
+            if(!this.checkGoal( current, cond[i]))
                 return false;
         }
         return true;
     }
 
-    checkGoal(current:number, goal:number):boolean {
-        var cond = this._nodeValues[goal];
+    checkGoal(current:number, goal:Interpreter.Literal):boolean {
+        var cond = goal;
         var state = this._nodeValues[current];
         var a = cond.args[0];
         var b = cond.args[1];
@@ -470,7 +470,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                     var x = pddl.args[0];
                     if(x == a){
                         if(state.objects[pddl.args[1]].form == "floor")
-                            var floor = pddl.args[1];//found floor
+                            floor = pddl.args[1];//found floor
                         else{
                            a=x;
                            index =-1;
@@ -547,19 +547,19 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
 
 function GetFloorSize(state : WorldState):number{
-    var nFloors : number = 0;
+  /*  var nFloors : number = 0;
     do{
         nFloors++;
         for(var i = 0; i < state.pddl.length; i++){
-            var temp : collections.Set<predicate> = state.pddl[i];
+            var temp : collections.Set<Interpreter.Literal> = state.pddl[i];
             var found : boolean = (temp.args[0]=="f" + nFloors);
             if(found){
                 break;
             }
         }
         
-     }while(!found)           
-    return nFloors;
+     }while(!found)*/           
+    return 0;//return nFloors;
 }
 
 
