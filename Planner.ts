@@ -42,9 +42,10 @@ module Planner {
 	worldObjs = state.objects;
 
 	var goalFunc = makeGoalFunc(intprt);
+	var heurFunc = makeHeurFunc(intprt);
 	var actions : string[] = [];
 	var initState : State = new State(state.stacks, state.holding, state.arm, "");
-	var plan : State[] = AStar.AStarSearch<State>(initState.copy(), goalFunc, h, costFunc, adjacent);
+	var plan : State[] = AStar.AStarSearch<State>(initState.copy(), goalFunc, heurFunc, costFunc, adjacent);
 	console.log(plan);
 	plan.forEach((elem) => {
 	    actions.push(elem.action);
@@ -73,8 +74,46 @@ module Planner {
 	return 1;
     }
 
-    function h(s : State) : number {
+    function makeHeurFunc(intprt : Interpreter.Literal[][]) {
+	return (s : State) => {
+/*	    var hVals : number[] = [];
+	    intprt.forEach((i) => {
+		hVals.push(h(s, i[0]));
+//		hVals.push(dummyH(s, i[0]));
+	    });
+	    // pick the minimum h-value
+	    return hVals.reduce( (a, b) => {return a < b ? a : b});
+*/
+	    return h(s, intprt[0][0]);
+	};
+    }
+
+    function h(s : State, lit : Interpreter.Literal) : number {	
+
+	if(lit.rel === "holding") {
+		var goalObj = lit.args[0];
+		var stackIndex;
+		var hval = 1231231230;
+		//findObjinStacks(goalObj);
+		// best case for picking up object is 'p l|r d r|l', 4 actions per object ontop of goal object
+		// assuming arm is on correct stackpos.
+		// s.stacks[goalObjstack].length - s.stacks[goalObjstack].indexOf(goalObj) * 4
+		s.stacks.forEach((stack) => {
+			if(stack.indexOf(lit.args[0]) >= 0){
+				stackIndex = s.stacks.indexOf(stack);
+				hval = (s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(goalObj) );
+				hval += Math.abs(s.armpos - stackIndex) +1 ;
+			}
+		});
+		
+	//	return (s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(goalObj) )* 4;
+		return hval;
+	}
+    }
+
+    function dummyH(s : State, lit : Interpreter.Literal) : number {
 	return 0;
+
     }
 
     function adjacent(state : State) : State[] {
