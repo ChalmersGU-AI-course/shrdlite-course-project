@@ -150,19 +150,12 @@ module Heuristics {
 
         var a = computeObjectPosition(s, target);
         var b = computeObjectPosition(s, leftof);
-        // var leftSide = a.stackNo - b.stackNo;
-
-        // var costMoveA = abs(a.stackNo - b.stackNo)
 
         var moveA = heuristicMoveToStack(s, a, b.stackNo-1);
         var moveB = heuristicMoveToStack(s, b, a.stackNo+1);
-        // var moveB
 
         // Move one of the the other.
         return min(moveA, moveB);
-
-        // return max(0, leftSide);
-        return 0;
     }
 
     function heuristicMoveToStack(s : State, a : ObjectPosition, stack : number) : number {
