@@ -57,7 +57,7 @@ module Shrdlite {
 				interpretations.forEach((res, i) => {
 					world.printSystemOutput((i+1).toString() + ": " + Interpreter.interpretationToString(res));
 				});
-				clarification();
+				while(!clarification()){};
 				interpretations = interpretations.splice(inputChoice,1);
 			}
         } catch(err) {
@@ -68,7 +68,7 @@ module Shrdlite {
                 throw err;
             }
         }
-		function clarification(utterance : string = "") : void {
+		function clarification(utterance : string = "") : Boolean {
 			world.printDebugInfo("clarification");
 			var inputPrompt = "Choose the corresponding number.";
 			var nextInput = () => world.readUserInput(inputPrompt, clarification);
@@ -76,9 +76,10 @@ module Shrdlite {
 				inputChoice = parseInt(utterance)-1;
 				world.printDebugInfo("utterance: " + utterance + ", inputChoice: " + inputChoice);
 				if(inputChoice >= 0)
-					return;
+					return true;
             }
 			nextInput();
+			return false;
 		}
         world.printDebugInfo("Found " + interpretations.length + " interpretations");
         interpretations.forEach((res, n) => {
