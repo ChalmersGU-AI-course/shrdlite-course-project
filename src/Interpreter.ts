@@ -59,6 +59,7 @@ module Interpreter {
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         // var stateL = worldToLiteral(state);
         var worldLit = worldToLiteral(state);
+        var objectMap = getWorldObjectsMap(state);
 
         // This returns a dummy interpretation involving two random objects in the world
         /*
@@ -91,9 +92,9 @@ module Interpreter {
             case "drop":
             case "move":
                 var sourcesBranches : Key[][];
-                if (cmd.ent) sourcesBranches = find(cmd.ent, state, worldLit)
+                if (cmd.ent) sourcesBranches = find(cmd.ent, worldLit, objectMap)
                 else sourcesBranches = [[getHolding()]]
-                var targetBraches = find(cmd.loc.ent, state, worldLit);
+                var targetBraches = find(cmd.loc.ent, worldLit, objectMap);
                 var literals : Literal[] = [];
                 product(sourcesBranches, targetBraches).forEach((param) => {
                     var sources = param[0], targets = param[1];
@@ -101,7 +102,7 @@ module Interpreter {
                     sources.forEach((source) => {
                         targets.forEach((target) => {
                             var newLit = { pol: true, rel: cmd.loc.rel, args: [source, target] };
-                            if (checkLiteral(state,newLit).val) literals.push(newLit);
+                            if (checkLiteral(objectMap, newLit).val) literals.push(newLit);
                         });
                     });
                     if (literals.length) intprt.push(literals);
@@ -111,7 +112,7 @@ module Interpreter {
             case "grasp":
             case "pick up":
             case "take":
-                var branches = find(cmd.ent, state, worldLit);
+                var branches = find(cmd.ent, worldLit, objectMap);
                 branches.forEach((keys) => {
                     keys.forEach((key) => {
                         intprt.push([
@@ -125,17 +126,17 @@ module Interpreter {
         return intprt;
     }
 
-    function find(ent : Parser.Entity, state : WorldState, literals : Literal[]) : Key[][] {
+    function find(ent : Parser.Entity, literals : Literal[], objects : ObjectMap) : Key[][] {
         switch (ent.quant) {
-            case "the": return [findThe(ent.obj, state, literals)];
-            case "any": return findAny(ent.obj, state, literals);
-            case "all": return [findAll(ent.obj, state, literals)];
+            case "the": return [findThe(ent.obj, literals, objects)];
+            case "any": return findAny(ent.obj, literals, objects);
+            case "all": return [findAll(ent.obj, literals, objects)];
             default:    throw "Entity unknown";
         }
     }
 
-    function findThe(obj : Parser.Object, state : WorldState, literals : Literal[]) : Key[] {
-        var results = findAll(obj, state, literals);
+    function findThe(obj : Parser.Object, literals : Literal[], objects : ObjectMap) : Key[] {
+        var results = findAll(obj, literals, objects);
         switch (results.length) {
             case 0:
             case 1: return results;
@@ -143,17 +144,17 @@ module Interpreter {
         }
     }
 
-    function findAny(obj : Parser.Object, state : WorldState, literals : Literal[]) : Key[][] {
-        var results = findAll(obj, state, literals);
+    function findAny(obj : Parser.Object, literals : Literal[], objects : ObjectMap) : Key[][] {
+        var results = findAll(obj, literals, objects);
         return results.map((k) => [k]);
     }
 
-    function findAll(obj : Parser.Object, state : WorldState, allLiterals : Literal[]) : Key[] {
+    function findAll(obj : Parser.Object, allLiterals : Literal[], objects : ObjectMap) : Key[] {
         if ("obj" in obj) {
-            var relatedObjKeys = find(obj.loc.ent, state, allLiterals);
+            var relatedObjKeys = find(obj.loc.ent, allLiterals, objects);
             if (relatedObjKeys.length == 0) return [];
 
-            var targetObjKeys = searchObjects(obj.obj, state);
+            var targetObjKeys = searchObjects(obj.obj, objects);
             if (targetObjKeys.length == 0) return [];
 
             var matchingLiterals = allLiterals.filter((lit) => {
@@ -166,16 +167,16 @@ module Interpreter {
 
             return matchingLiterals.map((lit) => lit.args[0]);
         } else {
-            return searchObjects(obj, state);
+            return searchObjects(obj, objects);
         }
     }
 
     type Key = string;
-    function searchObjects(query : Parser.Object, state : WorldState) : Key[] {
+    function searchObjects(query : Parser.Object, objects : ObjectMap) : Key[] {
         if (query.form == "floor") return ["floor"];
         // 1. get all objects with keys
-        var flatMap : [Key, ObjectDefinition][] = Object.keys(state.objects)
-            .map((key) => <[Key, ObjectDefinition]>[key, state.objects[key]]);
+        var flatMap : [Key, ObjectDefinition][] = Object.keys(objects)
+            .map((key) => <[Key, ObjectDefinition]>[key, objects[key]]);
         // 2. filter with query
         var filteredFlatMap = flatMap.filter((pair) => {
             var obj = pair[1];
@@ -199,7 +200,7 @@ module Interpreter {
     //
 
     function worldToLiteral(state : WorldState) : Literal[] {
-        var worldLiterals = [];
+        var worldLiterals : Literal[] = [];
         var stcks= state.stacks;
         var leftObjs = [];
         var besideObjs = [];
@@ -277,10 +278,10 @@ module Interpreter {
     // This implements some of the physics laws (not all, since some are not aplicable to only one literal)
 
   interface Check {val: boolean; str: string;};
-  function checkLiteral(world : WorldState, lit: Literal) : Check {
+  function checkLiteral(objects : ObjectMap, lit: Literal) : Check {
       // var relations = ["ontop", "above", "under", "right", "left", "beside", "inside", "holding"];
-      var rel=lit.rel;
-      var objs=world.objects;
+      var rel = lit.rel;
+      var objs = objects;
       // var rIndex =relations.indexOf(rel);
 
       switch (rel) {
@@ -449,6 +450,14 @@ module Interpreter {
             });
         });
         return result;
+    }
+
+    interface ObjectMap {[s:string]: ObjectDefinition;};
+    function getWorldObjectsMap(state : WorldState) : ObjectMap {
+      return state.stacks.reduce((akk, stack) => {
+        stack.forEach((key) => akk[key] = state.objects[key]);
+        return akk;
+      }, <{[s:string]: ObjectDefinition;}>{});
     }
 
 }
