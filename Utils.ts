@@ -26,39 +26,40 @@ function prettyMat(mat: string[][]){
 
 /** Checks if the world (worldstate) is valid, given the top object, bottom object and the list of different objects */
 function validPlacement(topObject: string, bottomObject: string, objects: {[s:string]: ObjectDefinition}) : boolean {
+
     
     //Everything can be placed on the floor
     if(bottomObject == undefined || bottomObject == "floor"){
         return true;
     }
     
-	
-	//balls should be in boxes or on the floor
-	if(objects[topObject].form == "ball" && objects[bottomObject].form != "box") {
-		return false;
-	}
+    console.log("Utils.validPlacement topObject: " + topObject);
+    console.log("Utils.validPlacement bottomObject: " + bottomObject);
     
-	
-	//Balls can't support anything
+    //Balls can't support anything
 	if (objects[bottomObject].form == "ball") {
 		return false
 	}
     
-	
 	//Small objects can't support large objects
 	if(objects[bottomObject].size == "small" && objects[topObject].size == "large") {
 		return false;
 	}
     
-	
-	// Boxes cannot contain pyramids, planks or boxes of the same size.
+    // Boxes cannot contain pyramids, planks or boxes of the same size.
 	if(objects[bottomObject].form == "box" && (objects[topObject].form == "pyramid" || objects[topObject].form == "plank" || objects[topObject].form == "box") && objects[bottomObject].size == objects[topObject].size) {
 		return false;
 	}
     
+	//balls should be in boxes or on the floor
+	if(objects[topObject].form == "ball" && objects[bottomObject].form != "box") {
+		return false;
+	}
+    
+    
 	
 	//Small boxes cannot be supported by small bricks or pyramids.
-	if(objects[bottomObject].form == "brick" || objects[bottomObject].form == "pyramid" && objects[topObject].form == "box" && objects[topObject].size == "small"){
+	if((objects[bottomObject].form == "brick" || objects[bottomObject].form == "pyramid") && objects[topObject].form == "box" && objects[topObject].size == "small"){
 		return false;
 	}
     
@@ -265,23 +266,31 @@ function getObject(objectDef: {[s:string]: ObjectDefinition}, id: string){
 function validInterpretation(int: Interpreter.Literal, objectDef: {[s:string]: ObjectDefinition}){
     var ret = false;
     var extra = " ";
-    switch(int.rel){
-        case "ontop":
-        case "inside":
-            ret = validPlacement(int.args[0], int.args[1], objectDef);
-            extra = " of ";
-            break;
-        case "above":
-            ret = validPlacementAbove(int.args[0], int.args[1], objectDef);
-            break;
-        case "under":
-            //Same as above, just flipped order on the arguments
-            ret =  validPlacementAbove(int.args[1], int.args[0], objectDef);
-            break;
-        default:
-            ret = true;
-            break;
+    
+    if(int.args[0] != int.args[1]){
+        switch(int.rel){
+            case "ontop":
+            case "inside":
+                ret = validPlacement(int.args[0], int.args[1], objectDef);
+                console.log("Utils.validInterpretation ONTOP OR INSIDE RET:" + ret);
+                extra = " of ";
+                break;
+            case "above":
+                ret = validPlacementAbove(int.args[0], int.args[1], objectDef);
+                console.log("Utils.validInterpretation ABOVE RET:" + ret);
+                break;
+            case "under":
+                //Same as above, just flipped order on the arguments
+                ret =  validPlacementAbove(int.args[1], int.args[0], objectDef);
+                console.log("Utils.validInterpretation UNDER RET:" + ret);
+                break;
+            default:
+                ret = true;
+                console.log("Utils.validInterpretation DEFAULT RET:" + ret);
+                break;
+        }
     }
+    
     console.log("Utils.validInterpretation ret: " + ret + ". first: " + int.args[0] + " sec: " + int.args[1]);
     if(!ret){
         throw new ValidInterpretationError("It is not possible to put the " + getObject(objectDef, int.args[0]) + " " + int.rel + extra + "the " + getObject(objectDef, int.args[1]));
