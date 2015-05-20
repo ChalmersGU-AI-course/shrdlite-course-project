@@ -225,7 +225,8 @@ module Interpreter {
             otherObjs = interpretLoc(inobj.loc, state,wObjs);
             obj= inobj.obj;
             
-            //console.log("loc is undefined", obj);
+            //console.log("loc returned", otherObjs, "   ", obj);
+            
         }
         else
         {
@@ -246,34 +247,37 @@ module Interpreter {
                         }
                         else
                         {
-                            //console.log("inside the loop ", object, "otherObjs are", otherObjs);
+                            console.log("inside the loop ", object, "otherObjs are", otherObjs);
                             for(var i in state.stacks)
                             {
                                 for(var j in state.stacks[i])
                                 {
                                     if(state.stacks[i][j] == object)
                                     {
+                                        
                                         switch(otherObjs[0])
                                         {
                                             case "rightof":
                                                 for(var m : number = 0; m < i; m++)
                                                 {
-                                                    if(isInColumn(object,m,state))
+                                                    if(isInColumn(otherObjs,m,state))
                                                     {
                                                         res.push(object);
                                                     }
                                                 }
                                                 break;
                                             case "leftof":
-                                                for(var m : number = i+1; m < state.stacks.length; m++)
+                                                console.log("asdasdasdasdasd",m, i,state.stacks.length);
+                                                for(var m : number = +i+ +1; m < state.stacks.length; m++)
                                                 {
-                                                    if(isInColumn(object,i+1,state))
+                                                    console.log("suff")
+                                                    if(isInColumn(otherObjs,m,state))
                                                     {
                                                         res.push(object);
                                                     }
                                                 }
                                                 break;
-                                            case 'inside':
+                                            case "inside":
                                                 otherObjs.forEach((obj2) =>{
                                                     if(state.stacks[i][j-1] == obj2)
                                                     res.push(object);
@@ -329,6 +333,7 @@ module Interpreter {
                                         }
                                     }
                                 }
+                                //console.log(res);
                             }
                             if(i != 0)
                             {
@@ -342,17 +347,22 @@ module Interpreter {
                 }
             }
         });
-        //console.log("from func " +res);
+        console.log("from func " +res);
         return res
     }
-    function isInColumn(obj: string, col: number, state:WorldState) : boolean
+    function isInColumn(obj: string[], col: number, state:WorldState) : boolean
     {
         var result : boolean = false;
-        for (var i in  state.stacks[col]) 
+        for(var j: number = 1; j < obj.length ; j++)
         {
-            if(obj == state.stacks[col][i])
+            for (var i in  state.stacks[col]) 
             {
-                result = true;
+                console.log("in is column",state.stacks[col][i], "object is", obj[j])
+                if(obj[j] === state.stacks[col][i])
+                {
+                    console.log("in is column",state.stacks[col][i])
+                    result = true;
+                }
             }
         }
         return result; 
