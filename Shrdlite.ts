@@ -10,15 +10,15 @@ module Shrdlite {
             var inputPrompt = "What can I do for you today? ";
             var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
             if (utterance.trim()) {
-                var plan : string[] = splitStringIntoPlan(utterance);
-                if (!plan) {
-                    plan = parseUtteranceIntoPlan(world, utterance);
-                }
-                if (plan) {
-                    world.printDebugInfo("Plan: " + plan.join(", "));
-                    world.performPlan(plan, nextInput);
-                    return;
-                }
+              var plan : string[] = splitStringIntoPlan(utterance);
+              if (!plan) {
+                plan = parseUtteranceIntoPlan(world, utterance);
+              }
+              if (plan) {
+                world.printDebugInfo("Plan: " + plan.join(", "));
+                world.performPlan(plan, nextInput);
+                return;
+              }
             }
             nextInput();
         }
@@ -47,22 +47,23 @@ module Shrdlite {
         parses.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
         });
-
+        
         try {
             var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
         } catch(err) {
             if (err instanceof Interpreter.Error) {
-                world.printError("Interpretation error", err.message);
+                world.printError(err.message);
                 return;
             } else {
                 throw err;
             }
         }
+        
         world.printDebugInfo("Found " + interpretations.length + " interpretations");
         interpretations.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
         });
-
+        
         try {
             var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
         } catch(err) {
@@ -77,7 +78,7 @@ module Shrdlite {
         plans.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
         });
-
+        
         var plan : string[] = plans[0].plan;
         world.printDebugInfo("Final plan: " + plan.join(", "));
         return plan;
