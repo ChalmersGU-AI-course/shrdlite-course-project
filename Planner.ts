@@ -143,8 +143,9 @@ module Planner {
                 -- Check object physics
                 -- Check spatial relations
                 - Convert world to PDDL
-                - Calculate heuristic values on every interpretation
+                - Calculate heuristic values on every valid interpretation
                 - Do A* to reach the goalstate
+                - List all possible moves
                 - Sort the plans with the one involving least steps first
                 - Convert to basic actions
         */
