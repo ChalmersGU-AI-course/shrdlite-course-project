@@ -256,9 +256,9 @@ module Planner {
                 if(!(top[0]==bottom[0] && bottom[1]<top[1])) {
                     score+=top[2]+1;
                 }
-            } else if(g.rel == "right" || g.rel == "left") {
-                var right : number[] = Planner.getLocation(g.args[(g.rel=="right") ? 0 : 1], state.stacks);
-                var left : number[] = Planner.getLocation(g.args[(g.rel=="right") ? 1 : 0], state.stacks);
+            } else if(g.rel == "rightof" || g.rel == "leftof") {
+                var right : number[] = Planner.getLocation(g.args[(g.rel=="rightof") ? 0 : 1], state.stacks);
+                var left : number[] = Planner.getLocation(g.args[(g.rel=="rightof") ? 1 : 0], state.stacks);
                 if(!(right[0]>left[0])) {
                     if(right[0]==0) {
                         score+=right[2]+1;

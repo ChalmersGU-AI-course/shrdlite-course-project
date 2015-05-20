@@ -283,7 +283,9 @@ module Interpreter {
       var objs = objects;
       // var rIndex =relations.indexOf(rel);
       var floor : ObjectDefinition = {form: "floor", size: null, color: null};
-
+      
+      if(lit.args[0]==lit.args[1])
+        return { val: false , str:"Same object used twice in a relation."};
       var objA = lit.args[0] == "floor" ? floor : objs[ lit.args[0] ];
       var objB = lit.args[1] == "floor" ? floor : objs[ lit.args[1] ];
 
@@ -307,9 +309,9 @@ module Interpreter {
               else return { val:true , str: "" };
 
           case "above":
-          	  if (objA.size=="large" && objB.size =="small")
-          	    return { val: false , str:"Small objects can not support large objects" };
-              else return { val:true , str: "" };
+          	  var o = objA;
+              objA = objB;
+              objB = o;
 
           case "under": //under
               if (objA.form=="ball") return { val: false , str:"Balls can not support anything" };
