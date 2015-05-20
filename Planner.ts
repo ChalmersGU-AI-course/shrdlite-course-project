@@ -44,8 +44,8 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(intprt : Interpreter.Literal[][], state: WorldState) : string[] {
-        var plan: string[] = [];
+    function planInterpretation(intprt : Interpreter.Literal[][], state: WorldState) : string[][] {
+        var plan: string[][] = [];
 
         var graphGoal = new MultipleGoals(intprt);
         var graph = new astar.Graph(new SimpleHeuristic(intprt), graphGoal);
@@ -58,9 +58,9 @@ module Planner {
                 plan.push(current.actionMessage);
                 plan.push(current.lastAction);
             }
-            plan.push("Taddaaa!");
+            plan.push(["Taddaaa!"]);
         } else {
-            plan.push("Could not find a way to do that. Timed out.");
+            plan.push(["Could not find a way to do that. Timed out."]);
         }
 
         return plan;
@@ -69,7 +69,7 @@ module Planner {
     export class PlannerNode implements astar.INode {
         state: WorldState;
         lastAction: string[]; // l, r , d, p, n
-        actionMessage: string;
+        actionMessage: string[];
 
         constructor(state, lastAction, actionMessage) {
             this.state = state;
@@ -127,7 +127,7 @@ module Planner {
 
             var newState = getWorldCloneDeep(state, state.arm1, state.arm2);
             var actions = ['n', 'n']; //by default don't do anything,change if needed
-            var message = "";
+            var message = ["",""];
 
             // use arm 1
             if (use1) {
@@ -138,8 +138,7 @@ module Planner {
                         newState.stacks[state.arm1].splice(topItemIndexArm1, 1);
 
                         actions[0] = 'p';
-                        message = message +
-                            "Picking up the " + newState.objects[newState.holding1].form + ". ";
+                        message[0] = "Picking up the " + newState.objects[newState.holding1].form + ". ";
                     } else {
                         invalidActionFlag = true;
                     }
@@ -155,8 +154,7 @@ module Planner {
                         newState.holding1 = null;
 
                         actions[0] = 'd';
-                        message = message +
-                        "Dropping the " + holdingObj.form + ". ";
+                        message[0] = "Dropping the " + holdingObj.form + ". ";
                     } else {
                         invalidActionFlag = true;
                     }
@@ -174,8 +172,7 @@ module Planner {
                         newState.stacks[state.arm2].splice(topItemIndexArm2, 1);
 
                         actions[1] = 'p';
-                        message = message +
-                            "Picking up the " + newState.objects[newState.holding2].form + ". ";
+                        message[1] = "Picking up the " + newState.objects[newState.holding2].form + ". ";
                     } else {
                         invalidActionFlag = true;
                     }
@@ -190,8 +187,7 @@ module Planner {
                         newState.holding2 = null;
 
                         actions[1] = 'd';
-                        message = message +
-                            "Dropping the " + holdingObj.form + ". ";
+                        message[1] = "Dropping the " + holdingObj.form + ". ";
                     } else {
                         invalidActionFlag = true;
                     }
