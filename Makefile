@@ -40,8 +40,11 @@ medium: shrdlite-offline.js
 	# node shrdlite-offline.js medium "put the blue box above the red box"
 	# node shrdlite-offline.js medium "put the red box below the blue box"
 	# node shrdlite-offline.js medium "put the green brick below the yellow pyramid"
+
+bug: shrdlite-offline.js
 	# node shrdlite-offline.js medium "put the yellow box left of the green plank"
-	node shrdlite-offline.js medium "put the yellow box beside the green plank"
+	# node shrdlite-offline.js medium "put the yellow box beside the green plank"
+	node shrdlite-offline.js medium "put the white ball left of the green plank"
 
 floor: shrdlite-offline.js
 	node shrdlite-offline.js medium "put the red table on the floor"
