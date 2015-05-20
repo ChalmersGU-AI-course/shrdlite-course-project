@@ -377,7 +377,7 @@ module Interpreter {
     {
         var obj1 = w.objects[l.args[0]];
         var obj2 = w.objects[l.args[1]];
-        if(l.rel == "ontop" || l.rel == "inside")
+        if((l.rel == "ontop" || l.rel == "inside") && l.args[1] !== "floor")
         {
             //Balls must be in boxes or on the floor, otherwise they roll away.
             if(obj1.form === "ball")

@@ -127,15 +127,18 @@ module AStar {
                 }
                 else
                     sugar = "Then ";
-                obj1 = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-1];
+                var obj = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-1];
+                obj1 = uniqueAttr[obj].slice().reverse().join(" ");
                 if(current.wState.stacks[current.wState.arm].length >1)
                 {
-                    obj2 = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-2];
-                    result = ("I move the " + uniqueAttr[obj1].reverse().join(" ") + " on the " + uniqueAttr[obj2].reverse().join(" "));
+                    
+                    var objs = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-2];
+                    obj2 = uniqueAttr[obj].slice().reverse().join(" ");
+                    result = ("I move the " + obj1 + " on the " + obj2);
                 }
                 else
                 {
-                    result = ("I move the " + uniqueAttr[obj1].reverse().join(" ") + " on the floor");
+                    result = ("I move the " + obj1 + " on the floor");
                 }
             }
             current = came_from[current.wStateId][0];
