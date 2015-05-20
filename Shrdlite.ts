@@ -95,8 +95,6 @@ module Shrdlite {
 			var inputPrompt = "Choose the corresponding number.";
 			var nextInput = () => world.readUserInput(inputPrompt, clarification);
 			
-			var inputPrompt = "What can I do for you today? ";
-            var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
             if (utterance.trim()) {
 				inputChoice = parseInt(utterance);
                 return;
