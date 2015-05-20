@@ -53,7 +53,7 @@ module Planner {
         var heur = Heuristics.computeHeuristicFunction(intprt);
         var start = new Heuristics.State(state.arm, state.holding, state.stacks);
 
-        var plan : string[] = Astar.astar(neighbours, cost, heur, start, goal, true, 50000);
+        var plan : string[] = Astar.astar(neighbours, cost, heur, start, goal, true, 20000);
         plan.shift();
 
         console.log("This plan has " + plan.length + " elements...");
