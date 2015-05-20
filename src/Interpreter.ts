@@ -193,7 +193,7 @@ module Interpreter {
     // portrait in state variable
     //
     // Relations considered:
-    //    ontop  above  under  right    left  beside
+    //    ontop  above  under  rightof    leftof  beside
     //
     // TODO - decide if we wish to use all of them
     //
@@ -247,8 +247,8 @@ module Interpreter {
               // add horizontal position relations
               for(var lObj in leftObjs) { //#4
                   var leftO=leftObjs[lObj];
-                  var leftRelation={pol: true, rel: "left", args: [leftO , o]};
-                  var rightRelation={pol: true, rel: "right", args: [o, leftO]};  // TODO ??? decide if both are necessary
+                  var leftRelation={pol: true, rel: "leftof", args: [leftO , o]};
+                  var rightRelation={pol: true, rel: "rightof", args: [o, leftO]};  // TODO ??? decide if both are necessary
                   worldLiterals.push(leftRelation);
                   worldLiterals.push(rightRelation);
               } //end for #4
@@ -278,7 +278,7 @@ module Interpreter {
 
   interface Check {val: boolean; str: string;};
   function checkLiteral(objects : ObjectMap, lit: Literal) : Check {
-      // var relations = ["ontop", "above", "under", "right", "left", "beside", "inside", "holding"];
+      // var relations = ["ontop", "above", "under", "rightof", "leftof", "beside", "inside", "holding"];
       var rel = lit.rel;
       var objs = objects;
       // var rIndex =relations.indexOf(rel);
@@ -288,7 +288,7 @@ module Interpreter {
       var objB = lit.args[1] == "floor" ? floor : objs[ lit.args[1] ];
 
       if (objA.form == "floor" && rel != "under")
-        return { val: false , str:"The floor can't be ontop, above, left, right, beside, inside or be hold"};
+        return { val: false , str:"The floor can't be ontop, above, leftof, rightof, beside, inside or be hold"};
       if (objB.form == "floor" && !(rel == "above" || rel == "ontop"))
         return { val: false , str:"An Object can only be above or on top of the floor"};
 
@@ -317,8 +317,8 @@ module Interpreter {
           	    return { val: false , str:"Small objects can not support large objects" };
               else return { val:true , str: "" };
 
-          case "right": return { val:true , str: "" };
-          case "left": return { val:true , str: "" };
+          case "rightof": return { val:true , str: "" };
+          case "leftof": return { val:true , str: "" };
           case "beside": return { val:true , str: "" };
 
           case "inside": //inside
@@ -402,8 +402,8 @@ module Interpreter {
 
      if( 
              contains(rel, "under") && ( contains(rel,"inside") || contains(rel,"above") || contains(rel,"ontop") ) ||
-           ( contains (rel, "left") || contains (rel, "right") || contains (rel, "beside") ) && ( contains(rel,"inside") || contains(rel,"above") || contains(rel,"ontop") || contains(rel,"under") ) ||
-             contains(rel, "left")     &&   contains(rel,"right")   
+           ( contains (rel, "leftof") || contains (rel, "rightof") || contains (rel, "beside") ) && ( contains(rel,"inside") || contains(rel,"above") || contains(rel,"ontop") || contains(rel,"under") ) ||
+             contains(rel, "leftof")     &&   contains(rel,"rightof")   
       ) return false;
       
       return true;
