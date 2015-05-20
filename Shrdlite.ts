@@ -78,6 +78,11 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
         });
 
+        //sort the plans ascending
+        plans.sort(function(a, b) {
+            return a.plan.length - b.plan.length;
+        });
+
         var plan : string[] = plans[0].plan;
         world.printDebugInfo("Final plan: " + plan.join(", "));
         return plan;

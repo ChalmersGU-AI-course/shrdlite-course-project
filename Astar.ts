@@ -49,6 +49,9 @@ class AstarResult<T> {
 	}
 }
 
+class TimeoutException {
+}
+
 function PathCompare<T>(p0: Path<T>, p1: Path<T>): number {
 	var p0Cost = p0.Cost + p0.HeuristicCost;
 	var p1Cost = p1.Cost + p1.HeuristicCost;
@@ -60,9 +63,10 @@ function PathCompare<T>(p0: Path<T>, p1: Path<T>): number {
 	return -1;
 }
 
-function Astar<T>(start: INode<T>, isGoal: GoalFunction<INode<T>>, heuristic: HeuristicFunction<INode<T>>): AstarResult<INode<T>> {
+function Astar<T>(start: INode<T>, isGoal: GoalFunction<INode<T>>, heuristic: HeuristicFunction<INode<T>>, timeout?: number): AstarResult<INode<T>> {
 	var frontier = new collections.PriorityQueue<Path<INode<T>>>(PathCompare);
 	var visited = new collections.Dictionary<INode<T>, number>();
+	var startTime = Date.now();
 
 	var numExpandedNodes = 0;
 	var startPath : Path<INode<T>> = new Path<INode<T>>([start], [], 0, 0);
@@ -87,6 +91,10 @@ function Astar<T>(start: INode<T>, isGoal: GoalFunction<INode<T>>, heuristic: He
 				++numExpandedNodes;
 			}
 		}
+		if (timeout && (Date.now() - startTime) > timeout) {
+			throw new TimeoutException();
+		}
+
 	}
 	return new AstarResult<INode<T>>(null, numExpandedNodes);
 }

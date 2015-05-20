@@ -405,19 +405,27 @@ module Planner {
     }
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        if (intprt.length == 0) {
-            return null;
-        }
+        try {
+            if (intprt.length == 0) {
+                return null;
+            }
 
-        var goalFunc = getGoalFunc(intprt);
-        var heuristicFunc = getHeuristicFunction2(intprt);
-        var world = new WorldNode(state)
-        var astarResult = Astar(world, goalFunc, heuristicFunc);
+            var goalFunc = getGoalFunc(intprt);
+            var heuristicFunc = getHeuristicFunction2(intprt);
+            var world = new WorldNode(state)
+            var astarResult = Astar(world, goalFunc, heuristicFunc, 5000);
 
-        if (!astarResult || !astarResult.Path){
-            return null;
+            if (!astarResult || !astarResult.Path){
+                return null;
+            }
+            return astarResult.Path.Steps;
+        } catch (err) {
+            if (err instanceof TimeoutException) {
+                throw new Error("timeout");
+            } else {
+                throw err;
+            }
         }
-        return astarResult.Path.Steps;
     }
 
 
