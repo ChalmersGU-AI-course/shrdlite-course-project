@@ -4,6 +4,12 @@
 module Astar{
     //-- Interfaces -------------------------------------------
 
+    export class Error implements Error {
+        public name = "Astar.Error";
+        constructor(public message? : string) {}
+        public toString() {return this.name + ": " + this.message}
+    }
+
     /**
     * returns the neighbouring states from the current state.
     */
@@ -191,7 +197,7 @@ module Astar{
         for( var x = 0; ! queue.isEmpty(); ++x){
 
             if(x > maxIter){
-                console.log("Stopping early after " + x + " iterations. Size of queue: " + queue.size() + " current cost: " + current.cost);
+                throw new Astar.Error("Stopping early after " + x + " iterations. Size of queue: " + queue.size() + " current cost: " + current.cost);
                 return postProcess<T>(order, x-1);
                 // return showVisited<T>(order);
             }
@@ -229,7 +235,8 @@ module Astar{
             }
         }
 
-        console.log("No solution found!");
+        // console.log("No solution found!");
+        throw new Astar.Error("No solution found!");
 
         return ["init"];
     }
