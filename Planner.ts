@@ -59,10 +59,10 @@ module Planner {
         -Large boxes cannot be supported by large pyramids.                     [X]
     */
 
-    module physicalLaws {
+    module PhysicalLaws {
 
         //Check the validity for arm pickups
-        function possibleArmPickup (obj : string, state : WorldState) : boolean {
+        export function possibleArmPickup (obj : string, state : WorldState) : boolean {
             var bool = false;
 
             if (state.holding !== null) {
@@ -81,7 +81,7 @@ module Planner {
         }
 
         //Check if an intended move is valid
-        function validPosition(topObj: ObjectDefinition, bottomObj: ObjectDefinition, state: WorldState): boolean {
+        export function validPosition(topObj: ObjectDefinition, bottomObj: ObjectDefinition): boolean {
 
             if (bottomObj.form === "ball")
                 return false;
@@ -119,18 +119,18 @@ module Planner {
                 var primaryObject = state.objects[primary];
 
                 if(rel === 'ontop' || rel === 'above'){
-                    if(validPosition(primaryObject, targetObject, state) === false){
+                    if(validPosition(primaryObject, targetObject) === false){
                         return false;
-                        console.log("Removed interpretation in physcical check");
+                        console.log("Removed interpretation in physical check");
                     }
                 }else if(rel === 'under'){
-                    if(validPosition(targetObject, primaryObject, state) === false){
+                    if(validPosition(targetObject, primaryObject) === false){
                         return false;
-                        console.log("Removed interpretation in physcical check");
+                        console.log("Removed interpretation in physical check");
                     }   
                 }
             }
-            console.log("Interpretation passed physcical check");
+            console.log("Interpretation passed physical check");
             return true;
         }
     }
@@ -142,22 +142,24 @@ module Planner {
                 - Filter out obviously invalid interpretations
                 -- Check object physics
                 -- Check spatial relations
+                - Convert world to PDDL
                 - Calculate heuristic values on every interpretation
-                - Do A*
-                - Sort the interpretations with the one involving least steps first
+                - Do A* to reach the goalstate
+                - Sort the plans with the one involving least steps first
                 - Convert to basic actions
         */
 
       // Remove invalid interpretations
       var validInterps : Interpreter.Literal[][] = [];
       for(var i = 0; i < intprt.length; i++){
-          if(checkSpatialRelations(intprt[i], state.objects) && physicalLaws.checkInterp(intprt[i], state)){
+          if(checkSpatialRelations(intprt[i], state.objects) && PhysicalLaws.checkInterp(intprt[i], state)){
               console.log("Added!");
               validInterps.push(intprt[i]);
               console.log(validInterps.length);
           }
       }
       
+        
       // This function returns a dummy plan involving a random stac
         do {
             var pickstack = getRandomInt(state.stacks.length);
@@ -201,6 +203,7 @@ module Planner {
                   "d");
 
         return plan;
+        
     }
 
 
@@ -256,7 +259,8 @@ module Planner {
             }
             return true;
             }
-        }
+    }
+
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
