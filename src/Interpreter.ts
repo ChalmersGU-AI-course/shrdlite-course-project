@@ -283,11 +283,12 @@ module Interpreter {
       var rel = lit.rel;
       var objs = objects;
       // var rIndex =relations.indexOf(rel);
+      var floor : ObjectDefinition = {form: "floor", size: null, color: null};
 
       switch (rel) {
           case "ontop": //ontop
               var objA = objs[ lit.args[0] ];
-              var objB = objs[ lit.args[1] ];
+              var objB = lit.args[1] == "floor" ? floor : objs[ lit.args[1] ];
               if (objB.form=="ball")
                   return { val: false , str:"Balls can not support anything" };
               else if (objA.form=="ball" && objB.form!="floor")
