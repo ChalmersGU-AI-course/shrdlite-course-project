@@ -131,6 +131,7 @@ module AStar {
                 obj1 = uniqueAttr[obj].slice().reverse().join(" ");
                 if(current.wState.stacks[current.wState.arm].length >1)
                 {
+<<<<<<< HEAD
                     
                     var objs = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-2];
                     obj2 = uniqueAttr[obj].slice().reverse().join(" ");
@@ -139,6 +140,17 @@ module AStar {
                 else
                 {
                     result = ("I move the " + obj1 + " on the floor");
+=======
+                    temp1 : string [] = uniqueAttr[obj1];
+                    temp2 : string [] = uniqueAttr[obj2];
+                    obj2 = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-2];
+                    result = ("I move the " + temp1.reverse().join(" ") + " on the " + temp2.reverse().join(" "));
+                }
+                else
+                {
+                    temp3 : string [] = uniqueAttr[obj1];
+                    result = ("I move the " + temp3.reverse().join(" ") + " on the floor");
+>>>>>>> f3316848c043fa202fa96baece54f95fcec3a387
                 }
             }
             current = came_from[current.wStateId][0];
