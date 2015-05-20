@@ -132,7 +132,7 @@ module AStar {
                 if(current.wState.stacks[current.wState.arm].length >1)
                 {
                     var objs = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-2];
-                    obj2 = uniqueAttr[obj].slice().reverse().join(" ");
+                    obj2 = uniqueAttr[objs].slice().reverse().join(" ");
                     result = ("I move the " + obj1 + " on the " + obj2);
                 }
                 else
