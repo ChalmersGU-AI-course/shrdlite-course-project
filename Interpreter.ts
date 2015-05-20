@@ -15,7 +15,7 @@ module Interpreter {
             var intprt : Result = <Result>parseresult;
             var result = interpretCommand(intprt.prs, currentState);
 
-            if(result !== null){
+            if(result !== null && interpretations.length == 0){
                 intprt.intp = result;
                 interpretations.push(intprt);
             }
@@ -192,10 +192,10 @@ module Interpreter {
             }
 
             var goalObj = findObject(objs,rels,state);
-            if(goalObj == "")
+            if(goalObj.length == 0)
                 return null;
             else 
-                return [{pol:true, rel:"holding", args:[goalObj]}];
+                return [{pol:true, rel:"holding", args:[goalObj[0]]}];
 
         }
         //case put cmd
@@ -206,7 +206,7 @@ module Interpreter {
             var splitIndex = 1;
             var foundX = false;
             var objA = state.holding;
-            var objB = "";
+            var objB : string[] = [];
 
             for(var i = 2;i< tokens.length ;i++){
 
@@ -244,14 +244,28 @@ module Interpreter {
             }
 
             objB = findObject(objs,rels,state);
-            if(objB == "z")
-                objB = "floor";
 
-            if(objA == "" || objB == ""){
+
+            if(objA === null || objA == ""){
+                throw new Interpreter.Error("There is no item to drop.");
+            }
+
+            if(objB.length == 0){
                 return null;
             }
-            else
-                return [{pol:true, rel:sRel, args:[objA,objB]}];
+
+            //check physical laws
+            for(var i = 0 ;i < objB.length; i++){
+
+                if(checkLaws(objA,objB[i],sRel,state)){
+                    if(objB[i] == "z"){
+                        return [{pol:true, rel:sRel, args:[objA,"floor"]}];
+                    }
+                    return [{pol:true, rel:sRel, args:[objA,objB[i]]}];
+                }
+            }
+
+            throw new Interpreter.Error("Physical Laws error.");
 
         }
 
@@ -262,8 +276,8 @@ module Interpreter {
             var sRel = "";
             var splitIndex = 1;
             var foundX = false;
-            var objA = "";
-            var objB = "";
+            var objA_move : string[] = [];
+            var objB_move : string[] = [];
 
             for(var i =1;i< tokens.length ;i++){
 
@@ -310,56 +324,78 @@ module Interpreter {
                 }
 
                 if(foundX){
-                    objA = findObject(objs,rels,state);
+                    objA_move = findObject(objs,rels,state);
                     rels = [];
                     objs = [];
                 }
             }
 
-            objB = findObject(objs,rels,state);
-            if(objB == "z")
-                objB = "floor";
+            objB_move = findObject(objs,rels,state);
 
-            if(objA == "" || objB == ""){
+            if(objA_move.length == 0 || objB_move.length == 0){
                 return null;
             }
-            else
-                return [{pol:true, rel:sRel, args:[objA,objB]}];
+
+            //check physical laws
+            var objsLaw : string[][] = [];
+            objsLaw.push(objA_move);
+            objsLaw.push(objB_move);
+            var combs = allCombinations(objsLaw);
+            console.log(combs);
+
+            for(var i = 0 ;i < combs.length; i++){
+
+                var combArray = combs[i].split("");
+
+                if(checkLaws(combArray[0],combArray[1],sRel,state)){
+                    if(combArray[1] == "z"){
+                        return [{pol:true, rel:sRel, args:[combArray[0],"floor"]}];
+
+                    }
+                    return [{pol:true, rel:sRel, args:[combArray[0],combArray[1]]}];
+                }
+            }
+
+            throw new Interpreter.Error("Physical Laws error.");
+
 
 
         }
 
     }
 
-    function findObject(objs : string[][], rels : string[], state : WorldState) : string {
-        console.log(objs);
+    function findObject(objs : string[][], rels : string[], state : WorldState) : string[] {
+        // console.log(objs);
+
+        var result : string[] = [];
 
         //case simple object, no relation
         if(rels.length == 0){
             //no object found
             if(objs.length == 0){
-                return "";
+                return [];
             }
             else{
-                return objs[0][0];
+                return objs[0];
             }
         }
         else{
             var combinations = allCombinations(objs);
-            console.log(combinations);
+            // console.log(combinations);
 
             for(var i = 0 ;i < combinations.length; i++){
 
                 var combArray = combinations[i].split("");
 
                 if(checkValidObject(combArray,rels,state)){
-                    return combArray[0];
+                    // return combArray[0];
+                    result.push(combArray[0]);
                 }
             }
 
         }
 
-        return "";
+        return result;
 
     }
 
@@ -439,7 +475,11 @@ module Interpreter {
         var detail1 = state.objects[obj1];
         var detail2 = state.objects[obj2];
 
-        var result = false;
+        var result = true;
+
+        if(obj2 == "z"){
+            detail2 = {form:"floor", size:"", color:""};
+        }
 
         switch(rel){
             case "inside":
@@ -451,12 +491,23 @@ module Interpreter {
                         result = detail1.size == "small" || detail1.form == "brick" || detail1.form == "ball" || detail1.form == "table";
                     }
                 }
+                else{
+                    result = false;
+                }
+
                 break;
-            default:
-            result = true;   
+            case "ontop":
+                if(detail1.form == "ball"){
+                    result = (detail2.form == "floor");
+                }
+                else{
+
+                }
+                break; 
 
         }
 
+        console.log(obj1 + " " + obj2 + " " + rel + " " + result);
 
         return result;
     }
