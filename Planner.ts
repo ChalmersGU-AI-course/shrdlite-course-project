@@ -208,7 +208,7 @@ module Planner {
 		        {
 		            x = x.concat("([a-z]|\\d)+");
 		            y = "\\d";
-		            console.log(x,y);
+		            //console.log(x,y);
 		        }
 		        var derp : string = ""; 
 		        var regExp : RegExp;
