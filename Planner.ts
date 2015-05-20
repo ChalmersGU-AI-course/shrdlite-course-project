@@ -228,8 +228,8 @@ module Planner {
                   return true == lit.pol;
                 break;
 
-              case "leftof":
-                for (var k = i-1; k < this.stacks.length; k--) {
+              case "rightof":
+                for (var k = i-1; k > 0; k--) {
                   for (var l = 0; l < this.stacks[k].length; l++) {
                     if (this.stacks[k][l].name == lit.args[1])
                       return true == lit.pol;
@@ -237,7 +237,7 @@ module Planner {
                 }
                 break;
 
-              case "rightof":
+              case "leftof":
                 for (var k = i+1; k < this.stacks.length; k++) {
                   for (var l = 0; l < this.stacks[k].length; l++) {
                     if (this.stacks[k][l].name == lit.args[1])
