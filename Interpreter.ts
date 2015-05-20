@@ -88,15 +88,15 @@ module Interpreter {
       }
 
       //////////////////////////////////////////////////////////////////////
-      // Entry Point
+      // Entry Point (only public function)
 
       /*
        * Top-level interpreter method:
        * Defines the following interpretation depending on the verb action.
-       * The verb actions: take, put and move only check preconditions, the real
-       * work is done by entities and locations
+       * The verb actions: "take", "put" and "move" only check preconditions, the real
+       * work is done by "singular"/"plural" and "literals" that these functions call
        */
-      derive(cmd: Parser.Command): Literal[][] {
+      public derive(cmd: Parser.Command): Literal[][] {
         switch(cmd.cmd) {
           case "take":
             return this.take(cmd.ent);
@@ -104,8 +104,6 @@ module Interpreter {
             return this.put(cmd.loc);
           case "move":
             return this.move(cmd.ent, cmd.loc);
-          default:
-            throw new Interpreter.Error("derive: unrecognized verb");
         }
       }
 
@@ -118,14 +116,14 @@ module Interpreter {
        * effects:
        *    1. Arm should hold spec object
        */
-      take(ent : Parser.Entity): Literal[][] {
+      private take(ent : Parser.Entity): Literal[][] {
         var objs = this.references(ent.obj);
         var objQuant = ent.quant;
         if(objs && objs.length > 0) {
           switch(objQuant) {
             case "the":
               if(objs.length > 1) {
-                var err = this.tooManyObjectsError(objs, null);
+                var err = this.tooManyObjectsError(objs);
                 throw new Interpreter.Error(err);
               }
               return [[ {pol: true, rel: "holding", args: [objs.pop()]} ]]; // [[lit]]
@@ -147,7 +145,7 @@ module Interpreter {
        *    1. Arm should not move the reference object (Cheating otherwise)
        *    2. Held object should be located at spec location/s (s: "a", "an", "any")
        */
-      put(loc : Parser.Location): Literal[][] {
+      private put(loc : Parser.Location): Literal[][] {
         var obj = this.state["holding"];           // object
         var refs = this.references(loc.ent.obj);   // references
         var refQuant = loc.ent.quant;              // reference quantity
@@ -158,7 +156,9 @@ module Interpreter {
         if(this.isFloor(loc.ent.obj))
           return this.floorLiteral([obj]);
 
-        return this.singular([obj], loc.rel, refQuant, refs);
+        // specification of object for throwing undestandable errors
+        var refspec = this.rootObject(loc.ent.obj);
+        return this.the([obj], loc.rel, refQuant, refs, refspec);
       }
 
       /*
@@ -169,7 +169,7 @@ module Interpreter {
        *    1. Arm should not hold a object
        *    2. Spec object/s should be located at spec location/s
        */
-      move(ent : Parser.Entity, loc : Parser.Location): Literal[][] {
+      private move(ent : Parser.Entity, loc : Parser.Location): Literal[][] {
         var objs = this.references(ent.obj);       // objects
         var refs = this.references(loc.ent.obj);   // references
         var objQuant = ent.quant;                  // object quantity
@@ -179,17 +179,17 @@ module Interpreter {
         if(this.isFloor(loc.ent.obj))
           return this.floorLiteral(objs);
 
+        // specification of object for throwing undestandable errors
+        var objspec = this.rootObject(ent.obj);
+        var refspec = this.rootObject(loc.ent.obj);
+
         switch(objQuant) {
           case "the":
-            if(objs.length > 1) {
-              var err = this.tooManyObjectsError(objs, null);
-              throw new Interpreter.Error(err);
-            }
-            return this.singular(objs, loc.rel, refQuant, refs);
+            return this.the(objs, loc.rel, refQuant, refs, refspec);
           case "any":
-            return this.singular(objs, loc.rel, refQuant, refs);
+            return this.any(objs, loc.rel, refQuant, refs, objspec, refspec);
           case "all":
-            return this.plural(objs, loc.rel, refQuant, refs);
+            return this.all(objs, loc.rel, refQuant, refs, objspec, refspec);
         }
       }
 
@@ -198,16 +198,19 @@ module Interpreter {
       // Singular or Plural object
 
       /*
-       * Handles singular case when object is quantified by "the" or "any"
+       * Handles singular case when object is quantified by "the"
        */
-      singular(objs: string[],
-               rel: string,
-               refQuant: string,
-               refs: string[]): Literal[][] {
+      private the(objs: string[],
+                  rel: string,
+                  refQuant: string,
+                  refs: string[],
+                  refspec: Parser.Object): Literal[][] {
         var lits: Literal[][];
 
         // Check that not there exist at least one object and one reference
         var error = this.notEmptyHandler(objs, refs);
+        if(!error && objs.length > 1)
+          error = this.tooManyObjectsError(objs);
         if(error)
           throw new Interpreter.Error(error);
 
@@ -218,15 +221,61 @@ module Interpreter {
           case "any":
             var swappedArgs = true;
             lits = this.literals(refs, objs, rel, swappedArgs);
-            var flattened = this.flatten(lits);
+            var flattened = flatten(lits);
             lits = flattened.map((lit: Literal) => {
               return [lit];
             });
             break;
           case "all":
             if(rel === "ontop" || rel === "inside") {
-              // TODO: single object in objs should exist use it in error
-              error = "A single object cannot be " + rel + " many objects";
+              var objStr = toString(this.findObject(objs[0]));
+              var refStr = toString(refspec);
+              error = "A " + objStr + " cannot be " + rel + " of many " + refStr + "s";
+              throw new Interpreter.Error(error);
+            }
+            lits = this.literals(objs, refs, rel);
+            break;
+        }
+        return lits;
+      }
+
+      /*
+       * Handles alternative case when object is quantified by "any"
+       * (The specObj is only used for throwing a correctly understood error)
+       */
+      private any(objs: string[],
+                  rel: string,
+                  refQuant: string,
+                  refs: string[],
+                  objspec: Parser.Object,
+                  refspec: Parser.Object): Literal[][] {
+        var lits: Literal[][];
+
+        // Check that not there exist at least one object and one reference
+        var error = this.notEmptyHandler(objs, refs);
+        if(error)
+          throw new Interpreter.Error(error);
+
+        switch(refQuant) {
+          case "the":
+            var swappedArgs = true;
+            var tolerant = true;
+            lits = this.literals(refs, objs, rel, swappedArgs, tolerant);
+            var flattened = flatten(lits);
+            lits = flattened.map((lit: Literal) => {
+              return [lit];
+            });
+            break;
+          case "any":
+            var swappedArgs = true;
+            var tolerant = true;
+            lits = this.literals(refs, objs, rel, swappedArgs, tolerant);
+            break;
+          case "all":
+            if(rel === "ontop" || rel === "inside") {
+              var objStr = toString(objspec);
+              var refStr = toString(refspec);
+              error = "A " + objStr + " cannot be " + rel + " of many " + refStr + "s";
               throw new Interpreter.Error(error);
             }
             lits = this.literals(objs, refs, rel);
@@ -237,11 +286,14 @@ module Interpreter {
 
       /*
        * Handles plural case when object is quantified by "all"
+       * (The specObj is only used for throwing a correctly understood error)
        */
-      plural(objs: string[],
-             rel: string,
-             refQuant: string,
-             refs: string[]): Literal[][] {
+      private all(objs: string[],
+                  rel: string,
+                  refQuant: string,
+                  refs: string[],
+                  objspec: Parser.Object,
+                  refspec: Parser.Object): Literal[][] {
         var lits: Literal[][];
 
         // Check if error occured with objects
@@ -250,35 +302,34 @@ module Interpreter {
           throw new Interpreter.Error(error);
 
         var ontopOrInside = rel === "ontop" || rel === "inside"
+        var objStr = toString(objspec);
+        var refStr = toString(refspec);
         switch(refQuant) {
           case "the":
             if(ontopOrInside) {
-              // TODO: you know what refs and what objects
-              error = "Multiple objects cannot be " + rel + " a single object";
+              error = "Multiple " + objStr + " cannot be " + rel + " a single " + refStr;
               throw new Interpreter.Error(error);
             }
             lits = this.literals(objs, refs, rel);
-            lits = [this.flatten(lits)]
-            break;
-          case "all":
-            lits = this.literals(objs, refs, rel);
-            lits = [this.flatten(lits)]
+            lits = [flatten(lits)]
             break;
           case "any":
             var swappedArgs = true;
             if(ontopOrInside) {
               if(refs.length < objs.length) {
-                // TODO: you know what refs and what objects
-                error = "There are not enough references for the objects to be " + rel + " of";
+                error = "There are not enough " + refStr + "s for the " + objStr + "s to be " + rel + " of";
                 throw new Interpreter.Error(error);
               }
               var tolerant = true;
               lits = this.literals(refs, objs, rel, swappedArgs, tolerant);
-              // all objects get to be in relation "rel" to unique object
-              lits = uniqueCombinations(lits, objs)
+              lits = uniqueCombinations(lits, objs, refs);
             } else {
               lits = this.literals(refs, objs, rel, swappedArgs);
             }
+            break;
+          case "all":
+            lits = this.literals(objs, refs, rel);
+            lits = [flatten(lits)]
             break;
         }
         return lits;
@@ -297,11 +348,11 @@ module Interpreter {
        * table the sentence refers to, in order to know what ball to take.
        *
        */
-      references(obj: Parser.Object): string[] {
+      private references(obj: Parser.Object): string[] {
         var matches: string[] = [];
         if(!obj.loc) {                       // base case: find all objects in spec
           var ids = this.worldObjects();
-          for(var i=0; i<ids.length; i++) {
+          for(var i = 0; i < ids.length; i++) {
             if(this.match(obj, ids[i]))
               matches.push(ids[i]);
           }
@@ -335,12 +386,12 @@ module Interpreter {
        *
        * Logic error if index out of bounds or if no object exist in that place.
        */
-      findTarget(obj: Parser.Object, rel: string, ref: string, onFloor: boolean): string {
+      private findTarget(obj: Parser.Object, rel: string, ref: string, onFloor: boolean): string {
         var stacks = this.state["stacks"];
         var target: string;
         var found = false;
-        for(var col=0; col<stacks.length && !found; col++) {
-          for(var row=0; row<stacks[col].length && !found; row++) {
+        for(var col = 0; col < stacks.length && !found; col++) {
+          for(var row = 0; row < stacks[col].length && !found; row++) {
             if(ref === stacks[col][row]) {
               found = true;                       // found: stop searching...
               switch(rel) {
@@ -398,19 +449,19 @@ module Interpreter {
         return (this.match(obj, target) ? target : null);
       }
 
-      findToLeftPosition(stacks: string[][], obj: Parser.Object, col: number, row: number): Position {
+      private findToLeftPosition(stacks: string[][], obj: Parser.Object, col: number, row: number): Position {
         return this.find(stacks, obj, col-1, -1, 0, 1);
       }
 
-      findToRightPosition(stacks: string[][], obj: Parser.Object, col: number, row: number): Position {
+      private findToRightPosition(stacks: string[][], obj: Parser.Object, col: number, row: number): Position {
         return this.find(stacks, obj, col+1, 1, 0, 1);
       }
 
-      findAbove(stacks: string[][], obj: Parser.Object, col: number, row: number): Position {
+      private findAbove(stacks: string[][], obj: Parser.Object, col: number, row: number): Position {
         return this.find(stacks, obj, col, 0, row+1, 1);
       }
 
-      findUnder(stacks: string[][], obj: Parser.Object, col: number, row: number): Position {
+      private findUnder(stacks: string[][], obj: Parser.Object, col: number, row: number): Position {
         return this.find(stacks, obj, col, 0, row-1, -1);
       }
 
@@ -418,7 +469,7 @@ module Interpreter {
        * Move through stacks from col and row position in col direction and row
        * direction, and look for object
        */
-      find(stacks: string[][], obj: Parser.Object, col: number, cdir: number, row: number, rdir: number): Position {
+      private find(stacks: string[][], obj: Parser.Object, col: number, cdir: number, row: number, rdir: number): Position {
         var refPos: Position = {col: null, row: null, id: null};
         var found = false;
         var c = col;
@@ -444,7 +495,11 @@ module Interpreter {
       /*
        * Makes literals of objects and references, specified by pol and relation
        */
-      literals(objs: string[], refs: string[], rel: string, swapped?: boolean, tolerant?: boolean): Literal[][] {
+      private literals(objs: string[],
+                       refs: string[],
+                       rel: string,
+                       swapped?: boolean,
+                       tolerant?: boolean): Literal[][] {
         var combs = this.combinations(objs, refs);
         var lits = this.transform(combs, rel, swapped, tolerant);
         function swapArgs(lit: Literal) {
@@ -464,7 +519,7 @@ module Interpreter {
       /*
        * Gives the combinations of two lists of strings in form of Pair[][]
        */
-      combinations(objs: string[], refs: string[]): Pair[][] {
+      private combinations(objs: string[], refs: string[]): Pair[][] {
         var combs: Pair[][];
         if(objs.length > 0 && refs.length > 0) {
           combs = objs.map((o: string) => {
@@ -477,27 +532,32 @@ module Interpreter {
       }
 
       /*
-       * tranform Pair[][] to Literal[][]. Returns only those arrays that does
-       * not have error in any of its positions.
+       * tranform Pair[][] to Literal[][].
+       * If strict returns only those arrays that does not have error in any of
+       * its positions.
+       * If tolerant return all arrays except when there is no possible lit in
+       * array.
        */
-      transform(matrix: Pair[][], rel: string, swapped: boolean, tolerant: boolean): Literal[][] {
+      private transform(matrix: Pair[][], rel: string, swapped: boolean, tolerant: boolean): Literal[][] {
         var error: string; // used for storing error that occured in an array of literals
         var lits = matrix.map((arr: Pair[]) => {
           var litArr = arr.map((pair: Pair) => {
             var obj = this.state["objects"][pair.obj];
             var ref = this.state["objects"][pair.ref];
             // keep track of error for each array
-            var locErr = this.locationError(obj, rel, ref, swapped);
-            if(locErr && !error) { // set error only if not already set
-              error = locErr;
-            } else {
-              return {pol: true, rel: rel, args: [pair.obj, pair.ref]};
+            if(obj !== ref) {
+              var locErr = this.locationError(obj, rel, ref, swapped);
+              if(locErr) { // set error only if not already set
+                error = error || locErr;
+              } else {
+                return {pol: true, rel: rel, args: [pair.obj, pair.ref]};
+              }
             }
           });
           return litArr;
         });
         if(tolerant) {
-          return this.weedOutBadLits(lits, error); // weed out only null(disallowed) literals from arrays
+          return this.weedOutBadLits(lits, error);   // weed out only null(disallowed) literals from arrays
         } else {
           return this.weedOutBadArrays(lits, error); // weed out any array with null(disallowed) literal
         }
@@ -506,14 +566,11 @@ module Interpreter {
       /*
        * Weeds out all bad arrays with any literal errors (strict)
        */
-      weedOutBadArrays(lits: Literal[][], error: string): Literal[][] {
+      private weedOutBadArrays(lits: Literal[][], error: string): Literal[][] {
         var weeded: Literal[][] = [];
-        function isNotNull(val: Literal): boolean {
-          return val ? true : false;
-        }
         // If an error occured any way in the array dont add array to weeded
         for(var i = 0; i < lits.length; i++) {
-          if(lits[i].every(isNotNull)) // no elem is null in array of literals => ok
+          if(lits[i].every(Boolean)) // no literal is null in array => ok
             weeded.push(lits[i]);
         }
         if(weeded.length > 0)
@@ -525,9 +582,9 @@ module Interpreter {
       /*
        * Weeds out all bad literals with errors (tolerant)
        */
-      weedOutBadLits(lits: Literal[][], error: string): Literal[][] {
+      private weedOutBadLits(lits: Literal[][], error: string): Literal[][] {
         var weeded: Literal[][] = [];
-        // If an error occured any way in the array dont add array to weeded
+        // add all nonempty literals to weeded
         for(var i = 0; i < lits.length; i++) {
           weeded[i] = [];
           for(var j = 0; j < lits[i].length; j++) {
@@ -535,14 +592,12 @@ module Interpreter {
               weeded[i].push(lits[i][j]);
           }
         }
-        // check that there is at least one literal in each array
-        var atLeastOneInEvery = weeded.reduce((prev: boolean, current: Literal[]) => {
-          var existInCurrent = current.length > 0;
-          return prev && existInCurrent;
-        }, true);
-        if(atLeastOneInEvery)
-          return weeded;
-        // else get the first error
+        // if there are some non empty clauses return them else throw error
+        var nonEmpty = weeded.filter((arr: Literal[]) => {
+          return arr.length > 0;
+        });
+        if(nonEmpty.length > 0)
+          return nonEmpty;
         throw new Interpreter.Error(error);
       }
 
@@ -552,22 +607,24 @@ module Interpreter {
       /*
        * Make error of type:
        * "Do you mean the large blue pyramid, the small yellow pyramid or the small red pyramid?"
+       * relation is provided if objects are actually rederences and we want to
+       * say that there are too many references with that relation
        */
-      tooManyObjectsError(objs: string[], rel: string): string {
+      private tooManyObjectsError(objs: string[], rel?: string): string {
         var strobjs = objs.map((obj: string) => {
           var o = toObjectDef(this.findObject(obj));
           return " the" + toString(o);
         });
-        strobjs.splice(-1, 0, "or"); // insert "or" before the last object
+        strobjs.splice(-1, 0, "or");            // insert "or" before the last object
         var enumeration = strobjs.slice(0, -2); // commaseparated part of sentence
-        var last = strobjs.slice(-2);
-        return "Do you mean" + (rel ? (" " + rel) : "") + enumeration.join(",") + last.join("") + "?";
+        var last = strobjs.slice(-2);           // last part of sentence
+        return "Did you mean" + (rel ? (" " + rel) : "") + enumeration.join(",") + last.join("") + "?";
       }
 
       /*
        * Check if object is allowed at location according to physical laws.
        */
-      locationError(obj: Parser.Object, rel: string, ref: Parser.Object, swapped: boolean): string {
+      private locationError(obj: Parser.Object, rel: string, ref: Parser.Object, swapped: boolean): string {
         // 0. Elementary assumptions
         var refObj = ref;
         if(swapped) { // refs are objects and objects refs
@@ -621,7 +678,7 @@ module Interpreter {
        * Error handler used in singular and plural to see if objs and refs are
        * not empty
        */
-      notEmptyHandler(objs: string[], refs: string[]): string {
+      private notEmptyHandler(objs: string[], refs: string[]): string {
         if(!objs || objs.length === 0)
           return "No objects found";
         if(!refs || refs.length === 0)
@@ -629,18 +686,12 @@ module Interpreter {
         return null;
       }
 
-      /*
-       * Flatten matrix to an array
-       */
-      flatten(lits: Literal[][]): Literal[] {
-        return [].concat.apply([], lits);
-      }
 
       /*
        * Checks if a given object matches the ObjectDefinition of an id in the
        * current world state.
        */
-      match(obj: Parser.Object, id: string): boolean {
+      private match(obj: Parser.Object, id: string): boolean {
         var rootObj = this.rootObject(obj);
         var def = this.findObject(id);
         if(!rootObj || !rootObj.form || !def)
@@ -658,35 +709,39 @@ module Interpreter {
       /*
        * Finds all objects on floor
        */
-      floorObjects(): string[] {
+      private floorObjects(): string[] {
         var stacks = this.state["stacks"];
         var floorObjs = stacks.map((arr: string[]) => {
           if(arr.length > 0)
             return arr[0];
         });
-        return floorObjs.filter(Boolean);
+        return floorObjs.filter(Boolean); // return only nonempty
       }
 
       /*
        * Tells if an object id is on the bottom of any of the stacks
        */
-      isOnFloor(id: string): boolean {
+      private isOnFloor(id: string): boolean {
         var floorObjs = this.floorObjects();
-        return (floorObjs.indexOf(id) > -1);
+        return floorObjs.indexOf(id) > -1;
       }
 
       /*
        * Returns all ids in the stacks of the world
        */
-      worldObjects(): string[] {
+      private worldObjects(): string[] {
         var stacks = this.state["stacks"];
-        return [].concat.apply([], stacks);
+        var worldObjs = [].concat.apply([], stacks);
+        var obj = this.state["holding"];
+        if(obj)
+          worldObjs.push(obj);
+        return worldObjs;
       }
 
       /*
        * Determines whether a object refers to the floor or not
        */
-      isFloor(obj: Parser.Object): boolean {
+      private isFloor(obj: Parser.Object): boolean {
         var rootObj = this.rootObject(obj);
         if(rootObj.form === "floor")
           return true;
@@ -695,24 +750,28 @@ module Interpreter {
 
       /*
        * Literal that says object (id) is not ontop of any othe object in world
+       * or held by arm.
        */
-      floorLiteral(ids: string[]): Literal[][] {
+      private floorLiteral(ids: string[]): Literal[][] {
         var refs = this.worldObjects();
         var lits = ids.map((id: string) => {
           var litArr = refs.map((ref: string) => {
             return {pol: false, rel: "ontop", args: [id, ref]};
           });
-          litArr.push({pol: false, rel: "holding", args: [id]});
+          litArr = litArr.filter((lit: Literal) => { // filter out where obj and ref are not same
+            return lit.args[0] !== lit.args[1];
+          });
+          litArr.push({pol: false, rel: "holding", args: [id]}); // add not holding lit aswell
           return litArr;
         });
-        return [this.flatten(lits)];
+        return [flatten(lits)];
       }
 
       /*
        * Gets the root object of an object, i.e the top level object that it
        * object describes
        */
-      rootObject(obj: Parser.Object): Parser.Object {
+      private rootObject(obj: Parser.Object): Parser.Object {
         if(obj) {
           if(obj.size || obj.color || obj.form)
             return obj;
@@ -723,14 +782,14 @@ module Interpreter {
       /*
        * Lookups ObjectDefinition in state
        */
-      findObject(id: string): ObjectDefinition {
+      private findObject(id: string): ObjectDefinition {
         return this.state["objects"][id];
       }
 
     } // class Interpret
 
     /*
-     * Interface used to pair up object ids to use in Literal (literals
+     * Interface used to pair up obj and ref ids to use in Literal ("literals"
      * function)
      */
     interface Pair {
@@ -740,7 +799,7 @@ module Interpreter {
 
     /*
      * Interface used to keep record of id of object and its position in the
-     * state
+     * state ("findtarget" function)
      */
     interface Position {
       col: number;
@@ -760,56 +819,65 @@ module Interpreter {
     }
 
     /*
-     * Finds all unique combinations with objects and references not repeated in
-     * a single literal array
+     * Flatten matrix to an array
      */
-    function uniqueCombinations(lits: Literal[][], objs: string[]): Literal[][] {
-      // sorted literals according to ascending length
-      var sortedLits = lits.sort((a: Literal[], b: Literal[]) => {
-        return a.length - b.length;
-      });
-      return uniqueCombHelper(sortedLits, 0, objs, [], []);
+    function flatten(lits: Literal[][]): Literal[] {
+      return [].concat.apply([], lits);
     }
 
     /*
-     * Helper for uniqueCombinations
+     * Finds all unique combinations with objects and references not repeated in
+     * a single literal array
      */
-    function uniqueCombHelper(lits: Literal[][],
-                              lind: number,
+    function uniqueCombinations(lits: Literal[][],
+                                objs: string[],
+                                refs: string[]): Literal[][] {
+      // sort literals according to ascending length
+      var sortedLits = lits.sort((a: Literal[], b: Literal[]) => {
+        return a.length - b.length;
+      });
+      return uniqueCombHelper(sortedLits, 0, objs, refs);
+    }
+
+    /*
+     * Helper for uniqueCombinations (Recursive)
+     */
+    function uniqueCombHelper(lits: Literal[][],       // literals
+                              lind: number,            // current literal index
                               objs: string[],
-                              usedObjs: string[],
-                              usedRefs: string[]): Literal[][] {
-      // if no more objects can be used or there are no more litarrays return
-      var enoughObjs = usedObjs && objs && usedObjs.length === objs.length;
-      var enoughLits = lits && lind !== lits.length;
-      if(enoughObjs && enoughLits) {
-        return;
-      } else {
+                              refs: string[]): Literal[][] {
+      var literals: Literal[][] = [];
+      // conditions for recursive step
+      var enoughLits = lits && lind < lits.length;
+      var someObjs = objs && objs.some(Boolean);
+      var someRefs = refs && refs.some(Boolean);
+      if(enoughLits && someObjs && someRefs) {
+        var unusedObjs = [];
+        var unusedRefs = [];
         for(var i = 0; i < objs.length; i++) {
           var obj = objs[i];
-          var used = usedObjs.indexOf(obj) > -1
-          if(obj && !used) {
-            var literals: Literal[][] = [];
-            var newUsedRefs = usedRefs.slice(0); // clone
-            // filter out literals that contains obj in args and unused ref
-            var candidates: Literal[] = lits[lind].filter((lit: Literal) => {
+          if(obj) {
+            unusedRefs[i] = refs.slice(); // clone
+            unusedObjs[i] = objs.slice();
+            // filter out literal candidates that contains obj and unused ref
+            var candidates = lits[lind].filter((lit: Literal) => {
               var hasObject = lit.args[0] === obj;
-              var notUsedRef = usedRefs.indexOf(lit.args[1]) < 0;
-              if(hasObject && notUsedRef) {
-                newUsedRefs.push(lit.args[1]);
+              var objIndex = unusedObjs[i].indexOf(lit.args[0]);
+              var refIndex = unusedRefs[i].indexOf(lit.args[1]);
+              // lit has object and unused reference mark them as used
+              if(hasObject && refIndex > -1) {
+                unusedObjs[i][objIndex] = null;
+                unusedRefs[i][refIndex] = null;
                 return true;
               } else {
                 return false;
               }
             });
-            // array should only contain at least one element
             if(candidates && candidates.length > 0) {
-              var newUsedObjs = usedObjs.slice(0); // clone
-              newUsedObjs.push(obj);
-              // recursive case: for all candidates get all possible combinations
-              var temp: Literal[][] = uniqueCombHelper(lits, lind+1, objs, newUsedObjs, newUsedRefs);
+              // recursive case: get the rest of the unique combinations
+              var temp: Literal[][] = uniqueCombHelper(lits, lind+1, unusedObjs[i], unusedRefs[i]);
               var newLits: Literal[][] = [];
-              // for each candidate extend lits from recursive case with the candidate
+              // for each candidate copy lits from recursive case and add cand
               candidates.forEach((lit: Literal) => {
                 if(temp && temp.length > 0) {
                   newLits = temp.map((arr: Literal[]) => {
@@ -819,13 +887,14 @@ module Interpreter {
                 } else {
                   newLits.push([lit]);
                 }
-                literals = literals.concat(newLits);
+                literals = literals.concat(newLits); // extend the current lits with new
               });
             }
           }
-        } // for
-        return literals;
-      } // else
+        }
+      }
+      // base case: the literal is empty
+      return literals;
     }
 
     /*
