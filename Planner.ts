@@ -96,13 +96,13 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     
 
     //counts objects on top of given object
-    countOnTop(a:ObjectDefinition, pddls:predicate[]):number{
+    countOnTop(a:string,state:WorldState, pddls:predicate[]):number{
         var counter = 0;
         var z = a;
          for(var index = 0; index < pddls.length; index++){
             var pddl = pddls[index];
             var x = pddl.args[1];
-            if(x == z){
+            if(this.equalObjects(state.objects[x], state.objects[z])){
                 z = pddl.args[0];
                 index = -1;
                 counter++;
@@ -111,7 +111,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         return counter;
     }
 
-    amountOfTiles(a:ObjectDefinition, state:WorldState, pddls:predicate[]){
+    amountOfTiles(a:string, state:WorldState, pddls:predicate[]){
         var counter = 0;
         counter += this.findPosition(a,state, pddls);
         
@@ -119,10 +119,10 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         var x = a;
         for(var index = 0; index < pddls.length; index++){
             var pddl = pddls[index];
-            if(pddl.args[0] == x){
+            if(this.equalObjects(state.objects[pddl.args[0]], state.objects[x])){
                 if(state.objects[pddl.args[1]].form == "floor") {
                     //found floor
-                    floor = state.objects[pddl.args[1]];//----------------------------------
+                    floor = pddl.args[1];//----------------------------------
                 }
                 else{
                     x = pddl.args[1];
@@ -133,7 +133,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         //time to move rightwards along the floors
         for(var index = 0; index < pddls.length; index++){
             var pddl = pddls[index];
-            if(pddl.rel == "righttof" &&  pddl.args[1] == floor){
+            if(pddl.rel == "rightof" &&  this.equalObjects(state.objects[pddl.args[1]], state.objects[floor])){
                 floor = pddl.args[0];
                 index = -1;
                 counter ++;
@@ -144,16 +144,16 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
 
     //returns x-pos (0->x) for object a
-    findPosition(a:ObjectDefinition, state:WorldState, pddls:predicate[]):number{
+    findPosition(a:string, state:WorldState, pddls:predicate[]):number{
        var x = a;
        var position = 0;
        var floor;
         for(var index = 0; index < pddls.length; index++){
             var pddl = pddls[index];
-            if(pddl.args[0] == x){
+            if(this.equalObjects(state.objects[pddl.args[0]], state.objects[x])){
                 if(state.objects[pddl.args[1]].form == "floor") {
                     //found floor
-                    floor = state.objects[pddl.args[1]];
+                    floor = pddl.args[1];
                 }
                 else{
                     x = pddl.args[1];
@@ -164,7 +164,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         //time to move leftwards along the floors
         for(var index = 0; index < pddls.length; index++){
             var pddl = pddls[index];
-            if(pddl.rel == "leftof" &&  pddl.args[1] == floor){
+            if(pddl.rel == "leftof" && this.equalObjects(state.objects[pddl.args[1]], state.objects[floor])){
                 floor = pddl.args[0];
                 index = -1;
                 position ++;
@@ -172,23 +172,30 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         }
         return position;
     }
+    equalObjects(a:ObjectDefinition, b:ObjectDefinition):boolean{
+        if(a.form == b.form && a.color == b.color && a.size == b.size)
+            return true;
+        return false;
+    }
 
     heuristic_cost_estimate(current:number, goal:number):number{//some parts can be improved
-        var cond = this._nodeValues[goal];
+        var cond = this._nodeValues[goal].
         var state = this._nodeValues[current];
-        var a = state.objects[cond.args[0]];
-        var b = state.objects[cond.args[1]];
+        var ao = state.objects[cond.args[0]];
+        var bo = state.objects[cond.args[1]];
+        var a = cond.args[0];
+        var b = cond.args[1];
         var pddls = state.pddl.toArray();
         var count = 0;
         var samePile:boolean = false;
 
         if(cond.rel == "ontop" || cond.rel == "inside"){
             //if a above b, take #objects on b * 4 + (ifnotinsamepile)#objects on a*4 + distancefromcrane to a + distancefromatob
-            if(state.holding == a && this.countOnTop(b,pddls) == 0){//check if a's stack is full
+            if(this.equalObjects(state.objects[state.holding], state.objects[a]) && this.countOnTop(b,state,pddls) == 0){//check if a's stack is full
                 return 1 + Math.abs(this.findPosition(b,state,pddls) - state.arm);
             }
-            else if(state.holding == b){
-                return 1+ this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
+            else if(this.equalObjects(state.objects[state.holding], state.objects[b])){
+                return 1+ this.countOnTop(a,state,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
             }
             
             var z = b;
@@ -196,9 +203,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             for(var index = 0; index < pddls.length; index++){
                 var pddl = pddls[index];
                 var x = pddl.args[1];
-                if(x == z){
-                    if(pddl.args[0]== a){
-                        if(pddl.args[1]==b)
+                if(this.equalObjects(state.objects[x], state.objects[z])){
+                    if(this.equalObjects(state.objects[pddl.args[0]], ao)){
+                        if(this.equalObjects(state.objects[pddl.args[1]],bo))
                             return 0;
                         samePile = true;
 
@@ -213,11 +220,11 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }
             //if a is not in the same pile as b, check how many objects on top of a
             if(!samePile){
-                z=a;
+                z= a;//z ==a...
                 for(var index = 0; index < pddls.length; index++){
                     var pddl = pddls[index];
                     var x = pddl.args[1];
-                    if(x == z){
+                    if(this.equalObjects(state.objects[x],state.objects[z])){
                        
                         z = pddl.args[0];
                         index = -1;
@@ -239,21 +246,21 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
         }
         else if(cond.rel == "above"){
-            if(state.holding == a){//check if a's stack is full
+            if(this.equalObjects(state.objects[state.holding], ao)){
                 return 1 + Math.abs(this.findPosition(b,state,pddls) - state.arm);
             }
-            else if(state.holding == b){
-                return 1+ this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
+            else if(this.equalObjects(state.objects[state.holding], bo)){
+                return 1+ this.countOnTop(a,state,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
             }
-            if(this.findPosition(a,state,pddls) == this.findPosition(b,state,pddls) && this.countOnTop(b,pddls) > this.countOnTop(a,pddls))//check if completed
+            if(this.findPosition(a,state,pddls) == this.findPosition(b,state,pddls) && this.countOnTop(b,state,pddls) > this.countOnTop(a,state,pddls))//check if completed
                 return 0;
             var z = a;
             //traverse up through a;
              for(var index = 0; index < pddls.length; index++){
                 var pddl = pddls[index];
                 var x = pddl.args[1];
-                if(x == z){
-                    if(pddl.args[0]== b)
+                if(this.equalObjects(state.objects[x],state.objects[z])){
+                    if(this.equalObjects(state.objects[ pddl.args[0]], bo))
                         samePile = true;
                     else{
                         z = pddl.args[0];
@@ -273,21 +280,21 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             return count;
         }
         else if(cond.rel == "under"){
-            if(state.holding == b){//check if a's stack is full
+            if(this.equalObjects(state.objects[state.holding], bo)){//check if a's stack is full
                 return 1 + Math.abs(this.findPosition(a,state,pddls) - state.arm);
             }
-            else if(state.holding == a){
-                return 1+ this.countOnTop(b,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm)*2;
+            else if(this.equalObjects(state.objects[state.holding], ao)){
+                return 1+ this.countOnTop(b,state,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm)*2;
             }
-            if(this.findPosition(a,state,pddls) == this.findPosition(b,state,pddls) && this.countOnTop(b,pddls) < this.countOnTop(a,pddls))
+            if(this.findPosition(a,state,pddls) == this.findPosition(b,state,pddls) && this.countOnTop(b,state,pddls) < this.countOnTop(a,state,pddls))
                 return 0;
-            var z = b;
+            var z = cond.args[0];
             //traverse up through b;
              for(var index = 0; index < pddls.length; index++){
                 var pddl = pddls[index];
                 var x = pddl.args[1];
-                if(x == z){
-                    if(pddl.args[0]== a)
+                if(this.equalObjects(state.objects[x],state.objects[z])){
+                    if(this.equalObjects(state.objects[pddl.args[0]], ao))
                         samePile = true;
                     else{
                         z = pddl.args[0];
@@ -308,74 +315,74 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         }
         else if(cond.rel == "rightof"){//currently not handling if B is in holding
 
-            if(state.holding == a && this.findPosition(b,state,pddls) != this.amountOfTiles(b,state,pddls)){
+            if(this.equalObjects(state.objects[state.holding], ao) && this.findPosition(b,state,pddls) != this.amountOfTiles(b,state,pddls)){
                 return Math.abs(this.findPosition(b,state,pddls)-state.arm+1); // currently not checking if stack next to b is full
 
             }
-            else if(state.holding == b){
-                return 1+ this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
+            else if(this.equalObjects(state.objects[state.holding], bo)){
+                return 1+ this.countOnTop(a,state,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
             }
 
             if(this.findPosition(b,state,pddls) == this.amountOfTiles(b,state,pddls)){//not perfect
-                count = this.countOnTop(a,pddls)*4 + this.countOnTop(b,pddls) + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
+                count = this.countOnTop(a,state,pddls)*4 + this.countOnTop(b,state,pddls) + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
                 + (Math.abs(this.findPosition(a,state,pddls)-this.findPosition(b,state,pddls)-1))+2;//not working if both in the last stack?
             }
 
-            if(this.countOnTop(b,pddls)>this.countOnTop(a,pddls)){
+            if(this.countOnTop(b,state,pddls)>this.countOnTop(a,state,pddls)){
 
-                count = this.countOnTop(b,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm) + (Math.abs(this.findPosition(a,state,pddls)
+                count = this.countOnTop(b,state,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm) + (Math.abs(this.findPosition(a,state,pddls)
                 -this.findPosition(b,state,pddls)+1))+2;//+2 is for picking up and dropping b 
             }
             else{
                 //move A
-                count = this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm) + (Math.abs(this.findPosition(a,state,pddls)
+                count = this.countOnTop(a,state,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm) + (Math.abs(this.findPosition(a,state,pddls)
                     -this.findPosition(b,state,pddls)+1))+2;
             }
 
         }
         else if(cond.rel == "leftof"){
-            if(state.holding == a && this.findPosition(b,state,pddls) != 0){
+            if(this.equalObjects(state.objects[state.holding], ao) && this.findPosition(b,state,pddls) != 0){
                 return Math.abs(this.findPosition(b,state,pddls)-state.arm-1); // currently not checking if stack next to b is full
 
             }
-            else if(state.holding == b){
+            else if(this.equalObjects(state.objects[state.holding], bo)){
                 if(this.amountOfTiles(a,state,pddls) == state.arm)
-                    return 2+ this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
-                return 1+ this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
+                    return 2+ this.countOnTop(a,state,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
+                return 1+ this.countOnTop(a,state,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
             }
 
             if(this.findPosition(b,state,pddls) == 0){//not perfect
-                count = this.countOnTop(a,pddls)*4 + this.countOnTop(b,pddls) + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
+                count = this.countOnTop(a,state,pddls)*4 + this.countOnTop(b,state,pddls) + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
                 + (Math.abs(this.findPosition(a,state,pddls)-this.findPosition(b,state,pddls)-1))+2;
             }
 
-            else if(this.countOnTop(b,pddls)>this.countOnTop(a,pddls)){
+            else if(this.countOnTop(b,state,pddls)>this.countOnTop(a,state,pddls)){
 
-                count = this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm) 
+                count = this.countOnTop(a,state,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm) 
                 + (Math.abs(this.findPosition(a,state,pddls)-this.findPosition(b,state,pddls)-1))+2;//+2 is for picking up and dropping b 
             }
             else{
                 //move B
-                count = this.countOnTop(b,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
+                count = this.countOnTop(b,state,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
                 + (Math.abs(this.findPosition(a,state,pddls)-this.findPosition(b,state,pddls)-1))+2;
             }
 
         }
         else if(cond.rel == "beside"){
-            if(state.holding == a){
+            if(this.equalObjects(state.objects[state.holding], ao)){
                 return Math.abs(this.findPosition(b,state,pddls)-state.arm)-1; // currently not checking if stack next to b is full
             }
-             else if(state.holding == b){
+             else if(this.equalObjects(state.objects[state.holding], bo)){
                 return 1 + Math.abs(this.findPosition(a,state,pddls)-state.arm)-1;
             }
-            if(this.countOnTop(b,pddls)>this.countOnTop(a,pddls)){
+            if(this.countOnTop(b,state,pddls)>this.countOnTop(a,state,pddls)){
 
-                count = this.countOnTop(b,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
+                count = this.countOnTop(b,state,pddls)*4 + Math.abs(this.findPosition(b,state,pddls)-state.arm) 
                 + (Math.abs(this.findPosition(a,state,pddls)-this.findPosition(b,state,pddls))-1)+2;//+2 is for picking up and dropping b 
             }
             else{
                 //move A
-                count = this.countOnTop(a,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)
+                count = this.countOnTop(a,state,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)
                  + (Math.abs(this.findPosition(a,state,pddls)-this.findPosition(b,state,pddls))-1)+2;
             }
             // a on floor? #objects on top of b + #objects leftofA < rightofA
@@ -405,17 +412,17 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     checkGoal(current:number, goal:number):boolean {
         var cond = this._nodeValues[goal];
         var state = this._nodeValues[current];
-        var a = state.objects[cond.args[0]];
-        var b = state.objects[cond.args[1]];
+        var a = cond.args[0];
+        var b = cond.args[1];
         var pddls = state.pddl.toArray();
 
         if(cond.rel == "above"){
             for(var index = 0; index < pddls.length; index++){
                 var pddl = pddls[index];
                 var x = pddl.args[0];
-                if(x == a){
+                if(this.equalObjects(state.objects[x], state.objects[a])){
                     var y = pddl.args[1];
-                    if(y == b)
+                    if(this.equalObjects(state.objects[y], state.objects[b]))
                         return true;
                     else if(state.objects[y].form == "floor") //hopefully this is the correct syntax
                         return false;
@@ -429,8 +436,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         else if(cond.rel == "ontop" || cond.rel == "inside"){
             for(var index = 0; index < pddls.length; index++){
                  var pddl = pddls[index];
-                 if(pddl.args[0] == a){
-                    if(pddl.args[1] == b)
+                 if(this.equalObjects(state.objects[pddl.args[0]], state.objects[a])){
+                    if(this.equalObjects(state.objects[pddl.args[1]], state.objects[b]))
                         return true;
                     return false;
                  }
@@ -440,9 +447,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
              for(var index = 0; index < pddls.length; index++){
                 var pddl = pddls[index];
                 var x = pddl.args[0];
-                if(x == b){
+                if(this.equalObjects(state.objects[x], state.objects[b])){
                     var y = pddl.args[1];
-                    if(y == a)
+                    if(this.equalObjects(state.objects[y],state.objects[a]))
                         return true;
                     else if(state.objects[y].form == "floor") 
                         return false;
@@ -474,7 +481,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 for(var indexFloor= 0; indexFloor < pddls.length; indexFloor++){
                     var pddl = pddls[indexFloor];
                     var x = pddl.args[0];
-                    if(pddl.rel == "rightof" && x == floor){
+                    if(pddl.rel == "rightof" && this.equalObjects(state.objects[x],state.objects[floor])){
                         floor2 = pddl.args[1];
                     }
                     //found floor, now work up
@@ -482,8 +489,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 for(var indexLeft = 0; indexLeft < pddls.length; indexLeft++){
                     var pddl = pddls[indexLeft];
                     var x = pddl.args[1];
-                    if(x == floor2){
-                        if(pddl.args[0]== b)
+                    if(this.equalObjects(state.objects[x],state.objects[floor2])){
+                        if(this.equalObjects(state.objects[pddl.args[0]], state.objects[b]))
                             return true;
                         else{
                             floor2 = pddl.args[0];
@@ -499,9 +506,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 for(var index = 0; index < pddls.length; index++){
                     var pddl = pddls[index];
                     var x = pddl.args[0];
-                    if(x == a){
+                    if(this.equalObjects(state.objects[x], state.objects[a])){//------------------
                         if(state.objects[pddl.args[1]].form == "floor")
-                            var floor = pddl.args[1];//found floor
+                            floor = pddl.args[1];//found floor
                         else{
                            a=x;
                            index =-1;
@@ -512,7 +519,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 for(var indexFloor= 0; indexFloor < pddls.length; indexFloor++){
                     var pddl = pddls[indexFloor];
                     var x = pddl.args[0];
-                    if(pddl.rel == "leftof" && x == floor){
+                    if(pddl.rel == "leftof" && this.equalObjects(state.objects[x],state.objects[floor])){
                         floor2 = pddl.args[1];
                     }
                     //found floor, now work up
@@ -520,8 +527,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 for(var indexRight = 0; indexRight < pddls.length; indexRight++){
                     var pddl = pddls[indexRight];
                     var x = pddl.args[1];
-                    if(x == floor2){
-                        if(pddl.args[0]== b)
+                    if(this.equalObjects(state.objects[x],state.objects[floor2])){
+                        if(this.equalObjects(state.objects[pddl.args[0]], state.objects[b]))
                             return true;
                         else{
                             floor2 = pddl.args[0];
