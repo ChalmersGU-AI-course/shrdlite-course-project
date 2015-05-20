@@ -2,6 +2,7 @@
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Astar.ts"/>
 ///<reference path="Heuristics.ts"/>
+///<reference path="Position.ts"/>
 
 module Planner {
 
@@ -51,7 +52,7 @@ module Planner {
 
         var goal = computeGoalFunction(intprt);
         var heur = Heuristics.computeHeuristicFunction(intprt);
-        var start = new Heuristics.State(state.arm, state.holding, state.stacks);
+        var start = new State(state.arm, state.holding, state.stacks);
 
         var plan : string[] = Astar.astar(neighbours, cost, heur, start, goal, true, 20000);
         plan.shift();
@@ -61,15 +62,15 @@ module Planner {
         return plan;
     }
 
-    function cost(a : Heuristics.State, b : Heuristics.State) : number{
+    function cost(a : State, b : State) : number{
         return 1;
     }
 
     /**
     * @return goal function for Astar.
     */
-    function computeGoalFunction(intprt : Interpreter.Literal[][]) : Astar.Goal<Heuristics.State>{
-        return (s : Heuristics.State) => {
+    function computeGoalFunction(intprt : Interpreter.Literal[][]) : Astar.Goal<State>{
+        return (s : State) => {
             for(var ix in intprt){
                 if(testConjunctiveClause(s, intprt[ix])){
                     return true;
@@ -80,7 +81,7 @@ module Planner {
         };
     }
 
-    function testConjunctiveClause(s : Heuristics.State, c : Interpreter.Literal[]) : boolean{
+    function testConjunctiveClause(s : State, c : Interpreter.Literal[]) : boolean{
         for(var ix in c){
             if(! testAtom(s, c[ix])){
                 return false;
@@ -95,9 +96,9 @@ module Planner {
     * Otherwise, returns the number of objects in between.
     * Is negative if b is above a.
     */
-    function heightDifference(s : Heuristics.State, above : String, below : String) : number {
-        var a = Heuristics.computeObjectPosition(s, above);
-        var b = Heuristics.computeObjectPosition(s, below);
+    function heightDifference(s : State, above : String, below : String) : number {
+        var a = computeObjectPosition(s, above);
+        var b = computeObjectPosition(s, below);
         if(b.isHeld || a.isHeld){
             return -1;
         }
@@ -124,9 +125,9 @@ module Planner {
     * Returns positive value if o2 is right of o1.
     * Value is the difference in stacks (1 or -1 if in stacks beside each other, 0 if same stack).
     */
-    function stackDifference(s : Heuristics.State, o1 : String, o2 : String) : number {
-        var a = Heuristics.computeObjectPosition(s, o1);
-        var b = Heuristics.computeObjectPosition(s, o2);
+    function stackDifference(s : State, o1 : String, o2 : String) : number {
+        var a = computeObjectPosition(s, o1);
+        var b = computeObjectPosition(s, o2);
         if(b.isHeld || a.isHeld){
             return 0;
         }
@@ -140,7 +141,7 @@ module Planner {
         return a.stackNo - b.stackNo;
     }
 
-    function testAtom(s : Heuristics.State, atom : Interpreter.Literal) : boolean {
+    function testAtom(s : State, atom : Interpreter.Literal) : boolean {
         var ret = (result => {
             if(atom.pol){
                 return result;
@@ -189,7 +190,7 @@ module Planner {
         return ret(false);
     }
 
-    function neighbours(s : Heuristics.State) : Astar.Neighb<Heuristics.State>[]{
+    function neighbours(s : State) : Astar.Neighb<State>[]{
         var result = [];
         var numStacks = s.stacks.length;
 
@@ -225,7 +226,7 @@ module Planner {
         return result;
     }
 
-    function performAction(action: string, state: Heuristics.State) : Astar.Neighb<Heuristics.State>{
+    function performAction(action: string, state: State) : Astar.Neighb<State>{
         var newState = cloneState(state);
 
         switch(action){
@@ -259,12 +260,12 @@ module Planner {
 //////////////////////////////////////////////////////////////////////
 // Basic helper functions
 
-    function cloneState(s : Heuristics.State) : Heuristics.State{
+    function cloneState(s : State) : State{
         var rs = [];
         for(var i in s.stacks){
             rs.push(s.stacks[i].slice());
         }
-        return new Heuristics.State(s.arm, s.holding, rs);
+        return new State(s.arm, s.holding, rs);
     }
 
     function getRandomInt(max) {

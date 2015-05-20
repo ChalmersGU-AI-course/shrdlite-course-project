@@ -208,19 +208,37 @@ module Interpreter {
     }
 
     function resolveObject(state : WorldState, goalObj : Parser.Object, loc : Parser.Location) : string[]{
-        if(goalObj.obj != null){
-            // TODO recurse down...
+        var result : string[] = [];
+
+        var possibleObjects : string[] = findTargetObjects(state, goalObj);
+        var possibleLocations : string[] = findTargetEntities(loc.ent, state);
+
+        for(var ox in possibleObjects){
+            var obj = possibleObjects[ox];
+            for(var lx in possibleLocations){
+                if(isObjectInLocation(state, obj, possibleLocations[lx], loc.rel)){
+                    result.push(obj);
+                    break;
+                }
+            }
         }
 
-        return null;
+        return result;
     }
 
+    function isObjectInLocation(state : WorldState, a : string, b : string, rel : string) : boolean{
+        var aObj = findObjDef(state, a);
+        var bObj = findObjDef(state, b);
+        return true;
+    }
+
+    // Returns a list of Object names that fits the goal Object.
     function findTargetObjects(state : WorldState, goalObj : Parser.Object) : string[]{
         var result : string[] = [];
 
-        var result : string[] = [];
-
         if(goalObj.obj != null){
+            // Ie form, size etc are null.
+            // Filter on location instead...
             return resolveObject(state, goalObj.obj, goalObj.loc);
         }
 
@@ -261,8 +279,7 @@ module Interpreter {
     * @return list of targets in the world that complies with the specified entity.
     */
     function findTargetEntities(en : Parser.Entity, state : WorldState) : string[] {
-        var goalObj : Parser.Object = en.obj;
-        var result : string[] = findTargetObjects(state, goalObj);
+        var result : string[] = findTargetObjects(state, en.obj);
 
         switch(en.quant){
             case "any":
