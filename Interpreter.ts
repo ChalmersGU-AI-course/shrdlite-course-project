@@ -135,7 +135,14 @@ module Interpreter {
                             for(var i = 1; i < moveTo.length; i++)
                             {
                                 var l : Literal = {pol:true,rel:moveTo[0],args:[result[r],moveTo[i]]};
-                                if(result[r] !== moveTo[i] && validateL(l,world))
+                                var t :bool =true;
+                                for(var s in ls)
+                                {
+                                if(fst(s)==result[r] ||snd(s)== moveTo[i])
+                                    t=false;
+                                
+                                }
+                                if(result[r] !== moveTo[i] && validateL(l,world) && false)
                                     ls.push(l);
                             }
                         }
@@ -155,6 +162,20 @@ module Interpreter {
         //console.log("End of travCoom ", res);
         //console.log(res);
         return res;
+    }
+    
+    
+    function isValidConfig(lits : Literal []) : boolean
+    {
+    var temp : boolean = true;
+    for(var r in lits)
+    {
+        for(r2 in lits)
+        {
+            temp = temp && (!(lis[r] == lits[r2] || lits[r] ==lits[r2]) || r==r2);
+        }
+    }
+    return temp;
     }
     
     function interpretEnt(ent : Parser.Entity, world : WorldState, wObjs : string[]) : string[]
