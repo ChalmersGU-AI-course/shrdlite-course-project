@@ -54,7 +54,7 @@ module Shrdlite {
 			{
 				world.printSystemOutput("What did you mean?");
 				interpretations.forEach((res, i) => {
-					world.printSystemOutput(i.toString + ": " + Interpreter.interpretationToString(res));
+					world.printSystemOutput(i.toString() + ": " + Interpreter.interpretationToString(res));
 				});
 				interpretations = interpretations.splice(clarification(world),1);
 			}
@@ -107,10 +107,10 @@ module Shrdlite {
         return plan;
     }
 	
-	function clarification(world : World, utterance : string = "") {
+	function clarification(world : World) {
 		var inputPrompt = "Choose the corresponding number.";
         var nextInput = () => world.readUserInput(inputPrompt, clarification);
-		return parseInt(utterance.trim())-1;
+		return parseInt(nextInput.trim())-1;
 	}
 
 }
