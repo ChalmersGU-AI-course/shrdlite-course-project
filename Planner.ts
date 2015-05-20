@@ -139,15 +139,15 @@ module Planner {
         
         /*
             TODO: Structure for planning
-                - Filter out obviously invalid interpretations
-                -- Check object physics
-                -- Check spatial relations
-                - Convert world to PDDL
-                - Calculate heuristic values on every valid interpretation
-                - Do A* to reach the goalstate
-                - List all possible moves
-                - Sort the plans with the one involving least steps first
-                - Convert to basic actions
+                - Filter out obviously invalid interpretations               [X]
+                -- Check object physics                                      [X]
+                -- Check spatial relations                                   [X]
+                - Convert world to PDDL                                      []
+                - Calculate heuristic values on every valid interpretation   []
+                - Do A* to reach the goalstate                               []
+                - List all possible moves                                    []
+                - Sort the plans with the one involving least steps first    []
+                - Convert to basic actions                                   []
         */
 
       // Remove invalid interpretations
@@ -160,6 +160,7 @@ module Planner {
           }
       }
       
+
         
       // This function returns a dummy plan involving a random stac
         do {
@@ -207,7 +208,20 @@ module Planner {
         
     }
 
-
+    // Function to get the possible moves of a interpretations
+    function getPossibleMoves(state : WorldState) : string[] {
+      // TODO: Should we push the floor? If we hold something: yes, if we don't: no ?
+        var stacks = state.stacks;
+        // Get all the toplevel objects
+        var topObjects = [];
+        for(var i = 0; i < stacks.length; i++){
+          var nObj = stacks[i].length;
+          if(nObj !== 0){
+            topObjects.push(stacks[i][nObj-1]);
+          }
+        }
+        return topObjects;
+    }
 
     function checkSpatialRelations(intp : Interpreter.Literal[], objects : {[s:string]: ObjectDefinition}) : boolean{
         // Check so that each spatial relation holds between the elements
@@ -239,7 +253,6 @@ module Planner {
                     stateSet.add(target); // Add the target so we know that it is occupied.
                 }
             }
-            console.log("PASSED: ");
             console.log(intp);
             return true;
 
