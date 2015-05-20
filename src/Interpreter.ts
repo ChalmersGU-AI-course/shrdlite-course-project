@@ -74,9 +74,8 @@ module Interpreter {
          {pol: true, rel: "holding", args: [a]}
         ]];
         */
-
        var test = checkList( [ {pol:true , rel:"ontop", args:['a','b']} , {pol:true, rel:"ontop", args:['a','c']}] );
-       var test2 = checkList( [ {pol:true , rel:"ontop", args:['a','b']} , {pol:true, rel:"ontop", args:['c','d']}] );
+       var test2 = checkList( [ {pol:true , rel:"ontop", args:['a','b']} , {pol:true, rel:"under", args:['a','b']}] );
        
        debugger;
 
@@ -342,8 +341,12 @@ module Interpreter {
     
     var flag=true;
     var checked=[];
+    var str="";
     
     list.forEach((lit) => { 
+                
+                if(!flag) return;
+                
                 var objA=lit.args[0]; // for each literal take out
                 var objB=lit.args[1]; // the pair of objects and analyze them
                 
@@ -355,53 +358,41 @@ module Interpreter {
                 var objB1List = [];   //list with all literals concerning  x->B   ,where x is any object
                 
                 
+                
+                pairList=list.filter((lit) => { return ( lit.args[0]== objA && lit.args[1]== objB ); } );
+                pairListInv=list.filter((lit) => { return ( lit.args[1]== objA && lit.args[0]== objB ); } );
+                
                 if(!contains(checked,objA))  //A not analyzed
                   {
                     objA0List=list.filter((lit) => {  return (lit.args[0] == objA );  });    
                     objA1List=list.filter((lit) => {  return (lit.args[1] == objA );  });                      
-                    pairList=list.filter((lit) => { return ( lit.args[0]== objA && lit.args[1]== objB ); } );
-                    pairListInv=list.filter((lit) => { return ( lit.args[1]== objA && lit.args[0]== objB ); } );
-                    
-                    if(!contains(checked,objB)) //A and B not analyzed
-                      {
-                         objB0List=list.filter((lit) => {  return (lit.args[0] == objB );  });    
-                         objB1List=list.filter((lit) => {  return (lit.args[1] == objB );  });    
-                      }
-                    
                   }
-                else if(!contains(checked,objB)) //B not analyzed
+                if(!contains(checked,objB)) //B not analyzed
                   {
                     objB0List=list.filter((lit) => {  return (lit.args[0] == objB );  });    
                     objB1List=list.filter((lit) => {  return (lit.args[1] == objB );  });    
-                    pairList=list.filter((lit) => { return ( lit.args[0]== objA && lit.args[1]== objB ); } );
-                    pairListInv=list.filter((lit) => { return ( lit.args[1]== objA && lit.args[0]== objB ); } );
-                  }
-                else
-                  {
-                    pairList=list.filter((lit) => { return ( lit.args[0]== objA && lit.args[1]== objB ); } );
-                    pairListInv=list.filter((lit) => { return ( lit.args[1]== objA && lit.args[0]== objB ); } );
-                  }
-                  
+                  }  
                   
                   // Check that for a pair a,b (or b,a) of objects, we don't have conflict relations 
 
-                  if( !checkRelationsPairs(pairList.map((lit) => lit.rel) ) ) { flag=false; return;}
-                  if( !checkRelationsPairs(pairListInv.map((lit) => lit.rel) ) ) { flag=false; return;}
+                  if( !checkRelationsPairs(pairList.map((lit) => lit.rel) ) ) { flag=false; str+=objA+";"+objB+":";}
+                  if( !checkRelationsPairs(pairListInv.map((lit) => lit.rel) ) ) { flag=false; str+=objB+";"+objA+":";}
                        
                   
                   // Check that an object (A or B) doesn't have conflict relations
-                  if( ! checkRelationsObj( objA0List.map((lit) => lit.rel) ) ){ flag=false; return;}
-                  if( ! checkRelationsObj( objA1List.map((lit) => lit.rel) ) ) { flag=false; return;}
-                  if( ! checkRelationsObj( objB0List.map((lit) => lit.rel) ) ) { flag=false; return;}
-                  if( ! checkRelationsObj( objB1List.map((lit) => lit.rel) ) ) { flag=false; return;}
+                  if( ! checkRelationsObj( objA0List.map((lit) => lit.rel) ) ) { flag=false; str+=objA+":"; }
+                  if( ! checkRelationsObj( objA1List.map((lit) => lit.rel) ) ) { flag=false; str+=objA+":"; }
+                  if( ! checkRelationsObj( objB0List.map((lit) => lit.rel) ) ) { flag=false; str+=objB+":"; }
+                  if( ! checkRelationsObj( objB1List.map((lit) => lit.rel) ) ) { flag=false; str+=objB+":"; }
                   
                 checked.push(objA);
                 checked.push(objB);
-                
+
+                return;
             });
     
-      if(!flag) return {val:false , str: "" };
-      else return { val:true , str: "" };
+      if(!flag) return {val:false , str: str+"Impossible request" };
+      else return { val:true , str: " " };
     
     }
     
