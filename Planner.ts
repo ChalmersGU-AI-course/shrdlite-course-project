@@ -28,7 +28,6 @@ module Planner {
         return res.plan.join(", ");
     }
 
-
     export class Error implements Error {
         public name = "Planner.Error";
         constructor(public message? : string) {}

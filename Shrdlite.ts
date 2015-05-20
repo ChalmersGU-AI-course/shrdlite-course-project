@@ -50,6 +50,14 @@ module Shrdlite {
 
         try {
             var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
+			if(interpretations.length > 1)
+			{
+				world.printSystemOutput("What did you mean?");
+				interpretations.forEach((res, i) => {
+					world.printSystemOutput(i.toString + ": " + Interpreter.interpretationToString(res));
+				});
+				interpretations = interpretations.splice(clarification(world),1);
+			}
         } catch(err) {
             if (err instanceof Interpreter.Error) {
                 world.printError("Interpretation error", err.message);
@@ -98,5 +106,11 @@ module Shrdlite {
         }
         return plan;
     }
+	
+	function clarification(world : World, utterance : string = "") {
+		var inputPrompt = "Choose the corresponding number.";
+        var nextInput = () => world.readUserInput(inputPrompt, clarification);
+		return parseInt(utterance.trim())-1;
+	}
 
 }
