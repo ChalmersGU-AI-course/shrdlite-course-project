@@ -138,18 +138,7 @@ module Interpreter {
                 break;
             case "move":
                 var targets = findTargetEntities(cmd.ent, state);
-                var location = cmd.loc;
-                var locationTargets = findTargetEntities(location.ent, state);
-
-                console.log("Target: "+targets[0]);
-
-                if(location.rel === "beside" || location.rel === "rightof" || location.rel === "leftof"){
-                    moveObjBeside(state, intprt, location.rel, targets, locationTargets);
-                } else if(location.rel === "under"){
-                    moveObjAbove(state, intprt, "above", locationTargets, targets);
-                } else {
-                    moveObjAbove(state, intprt, location.rel, targets, locationTargets);
-                }
+                findMoveInterpretations(cmd, state, intprt, targets);
                 break;
             case "put":
                 if (state.holding === null) {
@@ -157,25 +146,28 @@ module Interpreter {
                 }
                 var targets = new Array<string>();
                 targets[0] = state.holding;
-                var location = cmd.loc;
-                var locationTargets = findTargetEntities(location.ent, state);
-
-                console.log("Target: "+targets[0]);
-
-                if(location.rel === "beside" || location.rel === "rightof" || location.rel === "leftof"){
-                    moveObjBeside(state, intprt, location.rel, targets, locationTargets);
-                } else if(location.rel === "under"){
-                    moveObjAbove(state, intprt, "above", locationTargets, targets);
-                } else {
-                    moveObjAbove(state, intprt, location.rel, targets, locationTargets);
-                }
-                //throw new Interpreter.Error("Interpreter: put cmd not implemented");
+                findMoveInterpretations(cmd, state, intprt, targets);
                 break;
             default:
                 throw new Interpreter.Error("Interpreter: UNKNOWN cmd: " + cmd.cmd);
         }
 
         return intprt;
+    }
+
+    function findMoveInterpretations(cmd : Parser.Command, state : WorldState, intprt, targets) {
+        var location = cmd.loc;
+        var locationTargets = findTargetEntities(location.ent, state);
+
+        //console.log("Target: "+locationTargets[0]);
+
+        if(location.rel === "beside" || location.rel === "rightof" || location.rel === "leftof"){
+            moveObjBeside(state, intprt, location.rel, targets, locationTargets);
+        } else if(location.rel === "under"){
+            moveObjAbove(state, intprt, "above", locationTargets, targets);
+        } else {
+            moveObjAbove(state, intprt, location.rel, targets, locationTargets);
+        }
     }
 
     function moveObjBeside(state : WorldState, intprt, locationRel, fromList, toList){
