@@ -10,18 +10,37 @@ module Shrdlite {
             var inputPrompt = "What can I do for you today? ";
             var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
             if (utterance.trim()) {
-                var plan : string[] = splitStringIntoPlan(utterance);
-                if (!plan) {
-                    plan = parseUtteranceIntoPlan(world, utterance);
-                }
-                if (plan) {
-                    world.printDebugInfo("Plan: " + plan.join(", "));
-                    world.performPlan(plan, nextInput);
-                    return;
-                }
+		//world.printSystemOutput(utterance);
+		try {
+                    var plan : string[] = splitStringIntoPlan(utterance);
+                    if (!plan) {
+			plan = parseUtteranceIntoPlan(world, utterance);
+                    }
+                    if (plan) {
+			world.printDebugInfo("Plan: " + plan.join(", "));
+			world.performPlan(plan, nextInput);
+			return;
+                    }
+		} catch (err){
+		    if (err instanceof Interpreter.Ambiguity){
+			//world.printError("Found you!", "");
+			//world.printError("LISTS: ", world.currentState.ambiguousObjs.toString());
+			var question = "Do you mean ";
+			world.currentState.ambiguousObjs.forEach((obj) => {
+			    question = question + Parser.objToString(obj) + " ? ";
+			});
+			
+			// clear up status or we will always come back here
+			world.currentState.status = [];
+			world.currentState.ambiguousObjs = [];
+			nextInput = () => world.readUserInput(question, endlessLoop);
+		    } else {
+			throw err;
+		    }
+		} 
             }
             nextInput();
-        }
+	}
         world.printWorld(endlessLoop);
     }
 
@@ -54,12 +73,24 @@ module Shrdlite {
             if (err instanceof Interpreter.Error) {
                 world.printError("Interpretation error", err.message);
                 return;
-            } else if (err instanceof Interpreter.Ambiguity){
-		world.printError("Found ambiguity", err.toString);
-	    } else {
+            } else {
                 throw err;
             }
         }
+	//world.printDebugInfo(world.currentState.status);
+	world.currentState.status.forEach((status) => {
+	    if (status === "softambiguity"){
+		throw new Interpreter.Ambiguity(); // throw sth-else!
+	    }
+	    if (status === "multiValidInterpret"){
+		world.printSystemOutput("There're multiple valid interpretation");
+		world.printSystemOutput("But Im lazy and only performs minimum plan");
+		// clean up for multiValidInterpret
+		world.currentState.status = [];
+	    }
+	});
+
+
         world.printDebugInfo("Found " + interpretations.length + " interpretations");
         interpretations.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
@@ -76,13 +107,19 @@ module Shrdlite {
             }
         }
         world.printDebugInfo("Found " + plans.length + " plans");
+	var shortestPlan = plans[0].plan;
         plans.forEach((res, n) => {
+	    if (res.plan.length < shortestPlan.length){
+	    	shortestPlan = res.plan;
+	    };
             world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
         });
 
-        var plan : string[] = plans[0].plan;
-        world.printDebugInfo("Final plan: " + plan.join(", "));
-        return plan;
+        //var plan : string[] = plans[0].plan;
+        //world.printDebugInfo("Final plan: " + plan.join(", "));
+        //return plan;
+	world.printDebugInfo("Final plan: " + shortestPlan.join(", "));
+	return shortestPlan;
     }
 
 
@@ -100,5 +137,7 @@ module Shrdlite {
         }
         return plan;
     }
+
+
 
 }

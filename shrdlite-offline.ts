@@ -29,9 +29,23 @@ if (!isNaN(example)) {
 }
 
 world.printWorld(() => {
-    var plan = Shrdlite.parseUtteranceIntoPlan(world, utterance);
-    console.log();
-    world.performPlan(plan, () => {
-        world.printWorld();
-    });
+    try {
+	var plan = Shrdlite.parseUtteranceIntoPlan(world, utterance);
+	console.log();
+	world.performPlan(plan, () => {
+            world.printWorld();
+	});
+    } catch (err) {
+	if (err instanceof Interpreter.Ambiguity){
+	    console.log("you've given an ambiguious sentence");
+	    var question = "Do you mean ";
+	    world.currentState.ambiguousObjs.forEach((obj) => {
+	       question = question + Parser.objToString(obj) + " ? ";
+	    });
+	    console.log(question);
+	    console.log("not interactive enough to resolve this; BYE!");
+	} else {
+	    throw err;
+	}
+    }
 });
