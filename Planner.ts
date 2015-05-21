@@ -98,15 +98,203 @@ module Planner {
 		// assuming arm is on correct stackpos.
 		// s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(goalObj) * 4
 
+		// if we are already holding, we need atleast 1 move to drop it.
+		// TODO: generalize to something better.
+		if(s.holding && s.holding !== lit.args[0])
+			hval += 1;
+
+		// Also remove all objects above goalObj (each remove takes at best 4 actions)
+		// finds relevant stack and calculate distance from armpos to stack.
 		s.stacks.forEach((stack) => {
 			if(stack.indexOf(lit.args[0]) >= 0){
 				stackIndex = s.stacks.indexOf(stack);
-				hval = (s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(goalObj) ) * 4;
-				hval += Math.abs(stackIndex - s.armpos) +1 ;
+				hval += (s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(goalObj)+1 ) * 4;
+				hval += Math.abs(stackIndex - s.armpos) ;
 			}
 		});
-		
+
+		// +1 for taking the object
+		hval+=1;		
+
 		return hval;
+	}
+	else if(lit.rel === "above") {
+		var above = lit.args[0];
+		var below = lit.args[1];
+		var hval = 0;
+		// if we are already holding, we need atleast 1 move to drop it.
+		// TODO: generalize to something better.
+		if(s.holding && s.holding !== lit.args[0] )
+			hval += 1;
+
+		s.stacks.forEach((stack) => {
+			if(stack.indexOf(above) >= 0) {
+				var stackIndex = s.stacks.indexOf(stack);
+				// distance to stack
+				hval +=Math.abs(stackIndex - s.armpos);
+				//remove overlaying objects
+				hval += (s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(above)+1) * 4;
+				// pick it up
+				hval += 1;
+			}
+			if(stack.indexOf(below) >= 0) {
+				var stackIndex = s.stacks.indexOf(stack);
+				// distance to stack
+				hval += Math.abs(stackIndex - s.armpos);
+				// drop it
+				hval += 1;
+
+			}
+		});
+		return hval;
+//		return 0;
+	}
+	else if(lit.rel === "ontop" || lit.rel === "inside") {
+		var ontop = lit.args[0];
+		var under = lit.args[1];
+		var hval = 0;
+
+		if(s.holding && s.holding !== lit.args[0] )
+			hval += 1;
+
+		s.stacks.forEach((stack) => {
+			if(stack.indexOf(ontop) >= 0) {
+				var stackIndex = s.stacks.indexOf(stack);
+				// distance to stack
+				hval +=Math.abs(stackIndex - s.armpos);
+				//remove overlaying objects
+				hval += (s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(ontop)+1) * 4;
+				// pick it up
+				hval += 1;
+			}
+			if(stack.indexOf(under) >= 0) {
+				var stackIndex = s.stacks.indexOf(stack);
+				// distance to stack
+				hval += Math.abs(stackIndex - s.armpos);
+				//remove overlaying objects
+				hval += (s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(under)+1) * 4;
+				// drop it
+				hval += 1;
+
+			}
+		});
+		return hval;
+//		return 0;
+	}
+	else if(lit.rel === "under") {
+		var under = lit.args[0];
+		var above = lit.args[1];
+		var hval = 0;
+
+		if(s.holding && s.holding !== lit.args[1] )
+			hval += 1;
+		
+		s.stacks.forEach((stack) => {
+			if(stack.indexOf(above) >= 0) {
+				var stackIndex = s.stacks.indexOf(stack);
+				// distance to stack
+				hval +=Math.abs(stackIndex - s.armpos);
+				//remove overlaying objects
+				hval += (s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(above)+1) * 4;
+				// pick it up
+				hval += 1;
+			}
+			if(stack.indexOf(under) >= 0) {
+				var stackIndex = s.stacks.indexOf(stack);
+				// distance to stack
+				hval += Math.abs(stackIndex - s.armpos);
+				// drop it
+				hval += 1;
+			}
+		});
+		return hval;
+//		return 0;
+	}
+	else if(lit.rel === "rightof") {
+		var rightofThis = lit.args[1];
+		var obj = lit.args[0];
+
+		if(s.holding && s.holding !== lit.args[0] )
+			hval += 1;
+		
+		s.stacks.forEach((stack) => {
+			if(stack.indexOf(obj) >= 0) {
+				var stackIndex = s.stacks.indexOf(stack);
+				// distance to stack
+				hval +=Math.abs(stackIndex - s.armpos);
+				//remove overlaying objects
+				hval += (s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(obj)+1) * 4;
+				// pick it up
+				hval += 1;
+			}
+			if(stack.indexOf(rightofThis) >= 0) {
+				var stackIndex = s.stacks.indexOf(stack);
+				// distance to closest stack to the right
+				hval += Math.abs(stackIndex+1 - s.armpos);
+				// drop it
+				hval += 1;
+			}
+		});
+		return hval;
+//		return 0;
+	}
+	else if(lit.rel === "leftof") {
+		var leftofThis = lit.args[1];
+		var obj = lit.args[0];
+
+		if(s.holding && s.holding !== lit.args[0] )
+			hval += 1;
+		
+		s.stacks.forEach((stack) => {
+			if(stack.indexOf(obj) >= 0) {
+				var stackIndex = s.stacks.indexOf(stack);
+				// distance to stack
+				hval +=Math.abs(stackIndex - s.armpos);
+				//remove overlaying objects
+				hval += (s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(obj)+1) * 4;
+				// pick it up
+				hval += 1;
+			}
+			if(stack.indexOf(leftofThis) >= 0) {
+				var stackIndex = s.stacks.indexOf(stack);
+				// distance to closest stack to the left
+				hval += Math.abs(stackIndex-1 - s.armpos);
+				// drop it
+				hval += 1;
+			}
+		});
+		return hval;
+//		return 0;
+	}
+	else if(lit.rel === "beside") {
+		var besideThis = lit.args[1];
+		var obj = lit.args[0];
+
+		if(s.holding && s.holding !== lit.args[0] )
+			hval += 1;
+		
+		s.stacks.forEach((stack) => {
+			if(stack.indexOf(obj) >= 0) {
+				var stackIndex = s.stacks.indexOf(stack);
+				// distance to stack
+				hval +=Math.abs(stackIndex - s.armpos);
+				//remove overlaying objects
+				hval += (s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(obj)+1) * 4;
+				// pick it up
+				hval += 1;
+			}
+			if(stack.indexOf(besideThis) >= 0) {
+				var stackIndex = s.stacks.indexOf(stack);
+				// distance to closest stack to the left
+				var leftDist = Math.abs(stackIndex-1 - s.armpos);
+				var rightDist = Math.abs(stackIndex+1 - s.armpos);
+				hval += Math.min(leftDist, rightDist);
+				// drop it
+				hval += 1;
+			}
+		});
+		return hval;
+//		return 0;	
 	}
     }
 
@@ -257,7 +445,6 @@ module Planner {
 	    });
 	}
 	
-        console.log(flag);
 	if(lit.pol) return flag;
 	else return ! flag;
     }
