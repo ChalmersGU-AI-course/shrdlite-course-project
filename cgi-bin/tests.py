@@ -41,7 +41,7 @@ class TestMain(unittest.TestCase):
 
         self.assertEqual(
                         AStar.algorithm.getPlan(goal, came_from, actions_so_far,self.objects), 
-                        ['started on solution','Pick up the large blue ball','p','r','Drop it like its hot','d']
+                        ['Started on solution','Pick up the large blue ball','p','r',"Drop it like it's hot",'d']
                         )
 
 
@@ -84,7 +84,7 @@ class TestAStar(unittest.TestCase):
                                                             heuristic.heuristic)
         (intprt, stacks, holding, arm, objects) = goal
         self.assertEqual(stacks,[['floor0'],['floor1'],['floor2','b','a'],['floor3']])
-        self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far,self.objects), ['started on solution','Pick up the large blue ball','p','r','r','Drop it like its hot','d'])
+        self.assertEqual(AStar.algorithm.getPlan(goal, came_from, actions_so_far,self.objects), ['Started on solution','Pick up the large blue ball','p','r','r',"Drop it like it's hot",'d'])
 
 class TestActions(unittest.TestCase):
 
