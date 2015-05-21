@@ -326,12 +326,64 @@ module Planner {
         return Math.floor(Math.random() * max);
     }
 
+    /*
+        Costs for the heuristic:
+        - The heuristic aim to return the number of moves that at least are needed
+        - A move is either 'l', 'r', 'p' or 'd'
+        - The cost for a move is 1
+        - The different relations has different minimum costs
+
+    */
+    function allMovesCountsHeuristic(goals: Interpreter.Literal[][]): Search.Heuristic<N> {
+        return function (node: Nworld): number {
+            var cost: number = Number.MAX_VALUE;
+
+            for (var i = 0; i < goals.length; i++) {
+                var max: number = 0;
+             
+                for (var j = 0; j < goals[i].length; j++) {
+                    var temp : number = calculateCost(goals[i][j], node.states);
+                    max = Math.max(temp, max);
+                }
+                cost = Math.min(cost, max);
+            }
+            return cost;
+        }
+    }
+
+    function calculateCost(literal: Interpreter.Literal, state: WorldState) : number {
+        var cost: number = 0;
+
+        if (literal.rel === "holding") {
+            if (state.holding !== null) {
+                //TODO
+            }
+        } else if (literal.rel === "ontop" || literal.rel === "inside") {
+            //TODO
+        } else if (literal.rel === "holding") {
+            //TODO
+        }
+
+        return cost;
+    }
+
+    function clone(state : WorldState) : WorldState {
+        if (state === null)
+            return state;
+        var copy = state.constructor();
+        for (var attr in state) {
+            if (state.hasOwnProperty(attr))
+                copy[attr] = state[attr];
+        }
+        return copy;
+    }
+
     export class Nworld implements N{
         states : WorldState;
-        neighbours : [Nworld, number][];
         step : string;
         value : string;
         x : number;
-        y : number;
+        y: number;
+        neighbours: [Nworld, number][];
     }
 }
