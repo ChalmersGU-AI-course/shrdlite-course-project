@@ -19,9 +19,15 @@ module Interpreter {
             //return interpretations; //Aha found the place for disolving HARD ambiguity!
 	    var validInterprets : Result [] = [];
 	    interpretations.forEach((inter) => {
-		if (inter.intp.length > 0)
+		if (inter.intp.length > 0){
 		    validInterprets.push(inter);
+		}
 	    });
+	    // check if validInterprets.length > 0 then ask clearification !
+	    // throw new Interpreter.Ambiguity(); <- this wont work, we need to update worldstate 
+	    if (validInterprets.length > 1) {
+		currentState.status.push("multiValidInterpret");
+	    }
 	    return validInterprets;
         } else {
 	    console.log(interpretations);
@@ -146,8 +152,22 @@ module Interpreter {
                 break;
             case "move":
                 var location = cmd.loc;
-                var locationTargets = findTargetEntities(location.ent, state).targets;
-
+                var locationTargets = [];
+	        var supportiveAmbiguousTargets = [];
+	        // = findTargetEntities(location.ent, state).targets;
+		// not all location targets canSupport targets!
+	        findTargetEntities(location.ent, state).targets.forEach((t) => {
+		    if (canSupport( findObjDef(state, targets[0])
+				   ,findObjDef(state, t))) {
+			locationTargets.push(t);
+			supportiveAmbiguousTargets.push(findObjDef(state, t));
+		    }
+	        });
+	        if (locationTargets.length > 1 && state.ambiguousObjs.length >1){
+		    state.ambiguousObjs = supportiveAmbiguousTargets;
+		}
+	    
+	        /// small bug found: should revisit targets again to eliminate impossible ones 
                 console.log("Target: "+locationTargets[0]);
 
                 if(location.rel === "beside" || location.rel === "rightof" || location.rel === "leftof"){
@@ -206,7 +226,7 @@ module Interpreter {
         }
     }
 
-    function findObjDef(state : WorldState, name : string) : ObjectDefinition{
+    export function findObjDef(state : WorldState, name : string) : ObjectDefinition{
         if(name === "floor"){
             return {form: "floor", size: null, color: null};
         } else {
@@ -237,7 +257,8 @@ module Interpreter {
     function findTargetObjects(state : WorldState, goalObj : Parser.Object) : SearchingResult{
         var result : string[] = [];
 	var com = new collections.Set<string>();
-	var searchResult : SearchingResult = {status : "", targets : result, common : com};
+	var searchResult : SearchingResult = {
+	    status : "", targets : result, common : com, ambiguousObjs : []};
         if(goalObj.obj != null){
             // Ie form, size etc are null.
             // Filter on location instead...
@@ -276,6 +297,7 @@ module Interpreter {
 		    else {com.add("Form");}
                 }
                 result.push(objName);
+		searchResult.ambiguousObjs.push(obj);
             }
         }
         return searchResult;
@@ -295,6 +317,8 @@ module Interpreter {
 		    searchResult.status = "SoftAmbiguity";
 		    console.log("found multiple objects fits description");
 		    console.log(searchResult);
+		    state.status.push("softambiguity");
+		    state.ambiguousObjs = (searchResult.ambiguousObjs);
 		    // not nessecary to stop whole program for this!
                     //throw new Interpreter.Error("There are several objects that fit the description");
                 }
@@ -315,11 +339,11 @@ module Interpreter {
     /// Ambiguity thrown as Special Error (will be catched in Shrdlite)
     export class Ambiguity implements Error {
 	public name = "Interpreter.Ambiguity";
-	public cmd : Parser.Command;
+	public cmd : Parser.Command; // extending world state for this
 	public searchingResult : SearchingResult;
-	constructor(c: Parser.Command
-		    , previousSearch : SearchingResult
-		    , public message? : string) 
+	constructor( public message? : string
+	            , c ?: Parser.Command
+		    , previousSearch ?: SearchingResult) 
 	{
 	    this.cmd = c;
 	    this.searchingResult = previousSearch; 
@@ -331,5 +355,6 @@ module Interpreter {
 	status: string; 
 	targets: string[]; 
 	common: collections.Set<string>;
+	ambiguousObjs ?: Parser.Object[];
     }
 }
