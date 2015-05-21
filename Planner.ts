@@ -233,19 +233,17 @@ module Planner {
             }
 
             // only return if either use1 or use2
-            if (use1 && use2 && invalidActionFlag) {
+            if (invalidActionFlag) {
                 return null;
-            } else if (use1 || use2) {
-                return new PlannerNode(newState, actions, messages);
             } else {
-                return null;
+                return new PlannerNode(newState, actions, messages);
             }
         }
 
         moveArms(state: WorldState, direction1: number, direction2: number): PlannerNode {
             var numberOfStacks = state.stacks.length;
             var targetPos1 = state.arm1 + direction1;
-            var targetPos2 = state.arm1 + direction1;
+            var targetPos2 = state.arm2 + direction2;
             // var bothArmsUsed = (direction1 != 0) && (direction2 != 0);
 
             // We can use a shallow copy here since we don't need a deep copy
