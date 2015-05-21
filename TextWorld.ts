@@ -42,7 +42,7 @@ class TextWorld implements World {
         var stackWidth = 3 + Math.max.apply(null, stacks.map((s) => {
             return Math.max.apply(null, s.map((o) => {return o.length}))
         }));
-        var line = Array(minArm * stackWidth).join(" ");
+        var line = " " + Array(minArm * stackWidth).join(" ");
         var line2 = " " + Array((maxArm - minArm - 1) * stackWidth).join(" ");
         console.log(line + this.centerString("\\"+minArmName+"/", stackWidth) +
             line2 + this.centerString("\\"+maxArmName+"/", stackWidth));

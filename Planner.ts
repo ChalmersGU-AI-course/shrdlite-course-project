@@ -251,25 +251,29 @@ module Planner {
             // it's an invalid action if the targets are the same
             var invalidActionFlag = (targetPos1 == targetPos2);
 
-            var actions = ['n', 'n']; //by default don't do anything,change if needed
-            var messages = ["", ""];
+            var actions = ['n', 'n']; //by default don't do anything, change if needed
+            var messages = ['', ''];
 
-            if (targetPos1 >= 0 && targetPos1 < numberOfStacks) {
-                newState.arm1 = targetPos1;
+            if (direction1 != 0) {
+                if (targetPos1 >= 0 && targetPos1 < numberOfStacks) {
+                    newState.arm1 = targetPos1;
 
-                actions[0] = direction1 > 0 ? "r" : "l";
-                messages[0] = "Moving " + (direction1 > 0 ? "right" : "left") + ". ";
-            } else {
-                invalidActionFlag = true;
+                    actions[0] = direction1 > 0 ? "r" : "l";
+                    messages[0] = "Moving " + (direction1 > 0 ? "right" : "left") + ". ";
+                } else {
+                    invalidActionFlag = true;
+                }
             }
 
-            if (targetPos2 >= 0 && targetPos2 < numberOfStacks) {
-                newState.arm2 = targetPos2;
+            if (direction2 != 0) {
+                if (targetPos2 >= 0 && targetPos2 < numberOfStacks) {
+                    newState.arm2 = targetPos2;
 
-                actions[1] = direction2 > 0 ? "r" : "l";
-                messages[1] = "Moving " + (direction2 > 0 ? "right" : "left") + ". ";
-            } else {
-                invalidActionFlag = true;
+                    actions[1] = direction2 > 0 ? "r" : "l";
+                    messages[1] = "Moving " + (direction2 > 0 ? "right" : "left") + ". ";
+                } else {
+                    invalidActionFlag = true;
+                }
             }
 
             if (invalidActionFlag) {

@@ -26,7 +26,8 @@ if (process.argv.length != 3 || !ExampleWorlds[worldname]) {
 var origState = ExampleWorlds[worldname];
 var world = new TextWorld(origState);
 
-// origState.arm = 2;
+origState.arm1 = 1;
+origState.arm2 = 7;
 // origState.holding = "e";
 world.printWorld();
 
@@ -46,6 +47,8 @@ var graphStart = new Planner.PlannerNode(origState, null, null);
 var n = graphStart.getNeighbors();
 
 n.forEach(function(v) { console.log(v);})
+
+console.log("Found neighbors: " + n.length);
 // var startD = new Date().getTime();
 // var resultD = graphD.searchPath(graphStart);
 // var timeD = new Date().getTime() - startD;
