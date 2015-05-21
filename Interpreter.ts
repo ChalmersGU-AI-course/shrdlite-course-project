@@ -98,24 +98,27 @@ module Interpreter {
     {
         var res : Literal[][] = [];
         //var lit :Literal = {pol:true,rel : cmd.loc.rel}
-        var result : string[]; 
+        var result : string[] = interpretEnt(cmd.ent,world,wObjs);
+        
+        if(cmd.ent.quant === "the")
+        	if(result.length > 1)
+    			return [];
+		
+    	if(result.length <= 0)
+    		return [];
+        
         switch(cmd.cmd)
         {
             case "move":
                 
-                result = interpretEnt(cmd.ent,world,wObjs);
-                //console.log("after interpret ent ",result);
-                if(result.length <= 0)
-                {
-                    return [];
-                }
                 var moveTo: string[] = interpretLoc(cmd.loc,world,wObjs);
                 //console.log("after interloc" , moveTo);
                 if(moveTo.length <= 1)
                 {
                    return [];
                 }
-                if( cmd.ent.quant === "all"){
+                if( cmd.ent.quant === "all")
+                {
                     var ls : Literal [] = [];
                     var temp : Literal [] = [];
                     var grej : number = 0;
@@ -155,26 +158,23 @@ module Interpreter {
                     
                 }
                 else
-                {
-                    for(var r in result)
-                    {
-                        for(var i = 1; i < moveTo.length; i++)
-                        {
-                            var l : Literal = {pol:true,rel:moveTo[0],args:[result[r],moveTo[i]]};
-                            if(result[r] !== moveTo[i] && validateL(l,world))
-                                res.push([l]);
-                                
-                        }
-                    }
+                {	
+                	for(var r in result)
+	                {
+	                    for(var i = 1; i < moveTo.length; i++)
+	                    {
+	                        var l : Literal = {pol:true,rel:moveTo[0],args:[result[r],moveTo[i]]};
+	                        if(result[r] !== moveTo[i] && validateL(l,world))
+	                            res.push([l]);
+	                            
+	                    }
+	                }
                 }
                 break;
             case "take":
-                    var result : string[] = interpretEnt(cmd.ent,world,wObjs);
-                    if(result.length <= 0)
-                    {
-                        return [];
-                    }
-                    
+            		if(cmd.ent.quant === "all" && result.length > 1)
+            			return [];
+            			
                     res.push([{pol:true,rel:"holding",args:[result[0]]}])
                 break;
         }
