@@ -58,6 +58,11 @@ module Interpreter {
         console.log('stacks:', state.stacks);
         console.log('cmd:',cmd);
 
+        //workaround for incorrect command strings
+        if(cmd.cmd === 'put'){
+            cmd.cmd = 'move';
+        }
+
         var objects   = state.objectsWithId
           , pddlWorld = state.pddlWorld;
 
@@ -67,52 +72,47 @@ module Interpreter {
 
         var interpretations : PddlLiteral[][][] = [];
 
-        // TODO Maybe we should refactor all the duplicated code for the commands?
+        var entitiesIntrprt;
+        var resolveAmb = function(intrprt, str1, str2){
+            if (intrprt.length > 1) {
+                var promptStr = 'Multiple ' + str1 + ' to ' + str2 + ' found:\n'
+                for(var i in intrprt){
+                    var obj = intrprt[i][0][0];
+                    promptStr += i + '. The ' + obj.size + ' ' + obj.color + ' ' + obj.form + '.\n';
+                }
+                promptStr += 'Which one did you mean?';
+                var selected = Number(prompt(promptStr));
+                intrprt = [intrprt[selected]];
+            }
+            return intrprt;
+        };
 
         if (cmd.cmd === 'move') {
-                // Which entity we should move
-            if (cmd.ent != null) { // Move specified object.
-                var entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels)
-                // Where we should move it
-                    , locationsIntrprt = findEntities(cmd.loc.ent, objects, pddlWorld.rels)
-                // How entity will be positioned on location (ontop, inside, ...)
-                    , rel = cmd.loc.rel;
-                if (entitiesIntrprt.length > 1 || locationsIntrprt.length > 1) {
-                    console.warn('Interpreter warning: ambiguous entity or location!' +
-                        'Returning multiple interpretations');
-                }
-                // Add all possible combinations of interpretations 
-                interpretations = combineStuff(toIds(entitiesIntrprt), toIds(locationsIntrprt), rel);
-            } else { // Move "it", that is, the object the arm is holding.
-                var // Where we should move it
-                    locationsIntrprt = findEntities(cmd.loc.ent, objects, pddlWorld.rels)
-                // How entity will be positioned on location (ontop, inside, ...)
-                    , rel = cmd.loc.rel
-                    , it = pddlWorld.holding;
-                if (it != null) { // Is there an object to move?
-                    if (locationsIntrprt.length > 1) {
-                    console.warn('Interpreter warning: ambiguous entity or location!' +
-                        'Returning multiple interpretations');
-                    }
-                    // Add all possible combinations of interpretations
-                    interpretations = combineStuff([[[it]]], toIds(locationsIntrprt), rel);
-                } else {
-                    console.warn('Interpreter warning: no entity in arm to move!' +
-                        'Returning no interpretation');
-                }
+            // Which entity we should move
+            if (cmd.ent) { // Move specified object.
+                entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels);
+            }else{ // Move 'it', i.e. the currently held object
+                entitiesIntrprt = [[[state.objectsWithId[state.holding]]]];
             }
-        } else if (cmd.cmd === 'take') {
-            // TODO: Should we check (here?) if the arm is already holding something?
-            var entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels);
 
-            if (entitiesIntrprt.length > 1) {
-                console.warn('Interpreter warning: ambiguous entity or location!' +
-                'Returning multiple interpretations');
-            }
+            // Where we should move it
+            var locationsIntrprt = findEntities(cmd.loc.ent, objects, pddlWorld.rels)
+            // How entity will be positioned on location (ontop, inside, ...)
+                    , rel = cmd.loc.rel;
+            entitiesIntrprt = resolveAmb(entitiesIntrprt, 'objects', 'move');
+            locationsIntrprt = resolveAmb(locationsIntrprt, 'locations', 'move to');
+                
+            // Add all possible combinations of interpretations 
+            interpretations = combineStuff(toIds(entitiesIntrprt), toIds(locationsIntrprt), rel);
+            
+        } else if (cmd.cmd === 'take') {
+            entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels);
+            entitiesIntrprt = resolveAmb(entitiesIntrprt, 'objects', 'pick up');
             interpretations = combineStuff(toIds(entitiesIntrprt), null, 'holding');
         }
 
         else {
+            /*
             var objectKeys : string[] = concat(state.stacks);
             // Below: old code
             var a = objectKeys[getRandomInt(objectKeys.length)];
@@ -122,6 +122,7 @@ module Interpreter {
                 {pol: true, rel: "ontop", args: [a, "floor"]},
                 {pol: true, rel: "holding", args: [b]}
             ]];
+            */
         }
 
         //console.log("returning",interpretations[0][0].slice(), interpretations[0][0]);
