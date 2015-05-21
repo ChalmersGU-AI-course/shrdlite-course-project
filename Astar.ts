@@ -179,7 +179,6 @@ module Astar{
             s.order[s.x] = current ;
 
             if(s.isGoal(current.state)){
-                console.log("Completed in " + s.x + " iterations.");
                 return postProcess<T>(s.order, s.x);
             }
 
@@ -199,7 +198,7 @@ module Astar{
     * returns the path as a list, ie from start to goal.
     */
     export function postProcess<T>(order : Array<Vertex<T>>, finish : number) : string[]{
-
+        console.log("Completed in " + finish + " iterations.");
         var result = Array<string>();
 
         for(var x : number = finish; x >= 0; x = order[x].previous){

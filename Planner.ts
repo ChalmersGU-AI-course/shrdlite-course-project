@@ -56,9 +56,9 @@ module Planner {
 
         var search = new Astar.Search(start, 300, neighbours, heur, goal, 20000, true);
         var plan : string[] = IDAstar.idaSearch(search);
-        // var plan : string[] = IDAstar.astar(neighbours, cost, heur, start, goal, true, 20000);
-        // plan.shift();
+        // var plan : string[] = Astar.astarSearch(search);
 
+        plan.shift();
         console.log("This plan has " + plan.length + " elements...");
 
         return plan;
