@@ -8,6 +8,7 @@ ExampleWorlds["complex"] = {
     "holding": null,
     "arm": 0,
     "objects": {
+        "floor": { "form":"floor",   "size":"",  "color":"" },
         "a": { "form":"brick",   "size":"large",  "color":"yellow" },
         "b": { "form":"brick",   "size":"small",  "color":"white" },
         "c": { "form":"plank",   "size":"large",  "color":"red"   },
@@ -45,6 +46,7 @@ ExampleWorlds["medium"] = {
     "holding": null,
     "arm": 0,
     "objects": {
+        "floor": { "form":"floor",   "size":"",  "color":"" },
         "a": { "form":"brick",   "size":"large",  "color":"green" },
         "b": { "form":"brick",   "size":"small",  "color":"white" },
         "c": { "form":"plank",   "size":"large",  "color":"red"   },
@@ -79,6 +81,7 @@ ExampleWorlds["small"] = {
     "holding": "a",
     "arm": 0,
     "objects": {
+        "floor": { "form":"floor",   "size":"",  "color":"" },
         "a": { "form":"brick",   "size":"large",  "color":"green" },
         "b": { "form":"brick",   "size":"small",  "color":"white" },
         "c": { "form":"plank",   "size":"large",  "color":"red"   },
@@ -112,6 +115,7 @@ ExampleWorlds["impossible"] = {
     "holding": null,
     "arm": 0,
     "objects": {
+        "floor": { "form":"floor",   "size":"",  "color":"" },
         "lbrick1": { "form":"brick",   "size":"large",  "color":"green" },
         "sbrick1": { "form":"brick",   "size":"small",  "color":"yellow" },
         "sbrick2": { "form":"brick",   "size":"small",  "color":"blue" },
