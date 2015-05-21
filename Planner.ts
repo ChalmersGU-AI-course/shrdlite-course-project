@@ -189,6 +189,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         return position;
     }
     equalObjects(a:ObjectDefinition, b:ObjectDefinition):boolean{
+       // if(a == null || b == null)
+         //   return true;
         if(a.form == b.form && a.color == b.color && a.size == b.size)
             return true;
         return false;
@@ -206,12 +208,27 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         var cond = goal;
         var state = this._nodeValues[current];
         var ao = state.objects[cond.args[0]];
-        var bo = state.objects[cond.args[1]];
         var a = cond.args[0];
-        var b = cond.args[1];
         var pddls = state.pddl.toArray();
         var count = 0;
         var samePile:boolean = false;
+        console.log("a: " + a + ", holding: " + state.holding); 
+
+        if(cond.rel == "hold"){
+            if(state.holding != null){
+                if(this.equalObjects(state.objects[state.holding], ao)){
+                    return 0;
+                }
+                else{
+                    return this.countOnTop(a,state,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm-1) +1;//should maybe be +2..
+                }
+            }
+            else{
+                return this.countOnTop(a,state,pddls) + Math.abs(this.findPosition(a,state,pddls)-state.arm);
+            }
+        }
+        var bo = state.objects[cond.args[1]];
+        var b = cond.args[1];
 
         if(cond.rel == "ontop" || cond.rel == "inside"){
             //if a above b, take #objects on b * 4 + (ifnotinsamepile)#objects on a*4 + distancefromcrane to a + distancefromatob
@@ -219,7 +236,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 return 1 + Math.abs(this.findPosition(b,state,pddls) - state.arm);
             }
             else if(this.equalObjects(state.objects[state.holding], state.objects[b])){
-                return 1+ this.countOnTop(a,state,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)*2;
+                return 1+ this.countOnTop(a,state,pddls)*4 + Math.abs(this.findPosition(a,state,pddls)-state.arm)+2;
             }
             
             var z = b;
@@ -437,8 +454,14 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         var cond = goal;
         var state = this._nodeValues[current];
         var a = cond.args[0];
-        var b = cond.args[1];
         var pddls = state.pddl.toArray();
+
+        if(cond.rel == "hold"){
+            if(state.holding != null || this.equalObjects(state.objects[state.holding], state.objects[a]))
+                return true;
+            return false;
+        }
+        var b = cond.args[1];
 
         if(cond.rel == "above"){
             for(var index = 0; index < pddls.length; index++){
