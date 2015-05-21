@@ -138,6 +138,7 @@ module Interpreter {
                 break;
             case "move":
                 var targets = findTargetEntities(cmd.ent, state);
+// <<<<<<< HEAD
                 findMoveInterpretations(cmd, state, intprt, targets);
                 break;
             case "put":
@@ -147,6 +148,13 @@ module Interpreter {
                 var targets = new Array<string>();
                 targets[0] = state.holding;
                 findMoveInterpretations(cmd, state, intprt, targets);
+// =======
+//                 var location = cmd.loc;
+//                 var locationTargets = findTargetEntities(location.ent, state);
+//
+//                 // console.log("Target: "+locationTargets[0]);
+//                 moveCommand(state, intprt, location.rel, targets, locationTargets);
+// >>>>>>> possibleRefactor
                 break;
             default:
                 throw new Interpreter.Error("Interpreter: UNKNOWN cmd: " + cmd.cmd);
@@ -155,22 +163,32 @@ module Interpreter {
         return intprt;
     }
 
-    function findMoveInterpretations(cmd : Parser.Command, state : WorldState, intprt, targets) {
+    function findMoveInterpretations(cmd : Parser.Command, state : WorldState, intprt : Literal[][], targets) {
         var location = cmd.loc;
         var locationTargets = findTargetEntities(location.ent, state);
 
         //console.log("Target: "+locationTargets[0]);
 
-        if(location.rel === "beside" || location.rel === "rightof" || location.rel === "leftof"){
-            moveObjBeside(state, intprt, location.rel, targets, locationTargets);
-        } else if(location.rel === "under"){
-            moveObjAbove(state, intprt, "above", locationTargets, targets);
-        } else {
-            moveObjAbove(state, intprt, location.rel, targets, locationTargets);
+        switch(location.rel){
+            case "beside":
+            case "rightof":
+            case "leftof":
+                moveObjBeside(state, intprt, location.rel, targets, locationTargets);
+                break;
+            case "ontop":
+            case "inside":
+            case "above":
+                moveObjAbove(state, intprt, location.rel, targets, locationTargets);
+                break;
+            case "under":
+                moveObjAbove(state, intprt, "above", locationTargets, targets);
+                break;
+            default:
+                throw new Interpreter.Error("Unknown Relation in move: " + location.rel);
         }
     }
 
-    function moveObjBeside(state : WorldState, intprt, locationRel, fromList, toList){
+    function moveObjBeside(state : WorldState, intprt : Literal[][], locationRel : string, fromList : string[], toList : string[]){
         for (var ix in fromList){
             for(var jx in toList){
                 var object1 = fromList[ix];
@@ -188,7 +206,7 @@ module Interpreter {
         }
     }
 
-    function moveObjAbove(state : WorldState, intprt, locationRel, fromList, toList){
+    function moveObjAbove(state : WorldState, intprt : Literal[][], locationRel : string, fromList : string[], toList : string[]){
         for (var ix in fromList){
             for(var jx in toList){
                 var above = fromList[ix];
@@ -199,7 +217,6 @@ module Interpreter {
                 }
 
                 if(! canSupport( findObjDef(state, above), findObjDef(state, below))){
-                    // state.objects[above], state.objects[below])){
                     continue;
                 }
 
