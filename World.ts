@@ -44,7 +44,7 @@ function getWorldCloneShallow(world: WorldState): WorldState {
 }
 
 function getWorldCloneDeep(world: WorldState, stack1ToDeepCopy: number, stack2ToDeepCopy: number): WorldState {
-    var clone = this.getWorldCloneShallow(world);
+    var clone = getWorldCloneShallow(world);
 
     clone.stacks = clone.stacks.slice(0);
     clone.stacks[stack1ToDeepCopy] = clone.stacks[stack1ToDeepCopy].slice(0);
