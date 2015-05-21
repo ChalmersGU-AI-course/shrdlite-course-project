@@ -11,7 +11,7 @@ module LiteralHelpers {
 
             // AND part
             andPart.forEach(function(lit: Interpreter.Literal) {
-                andPartFulfilled = andPartFulfilled && isLiteralFullfilled(lit, state);
+                andPartFulfilled = andPartFulfilled && isLiteralFulfilled(lit, state);
             });
 
             if (andPartFulfilled) {
@@ -22,7 +22,7 @@ module LiteralHelpers {
         return result;
     }
 
-    export function isLiteralFullfilled(lit: Interpreter.Literal, state: WorldState): boolean {
+    export function isLiteralFulfilled(lit: Interpreter.Literal, state: WorldState): boolean {
         if (lit.rel == "ontop" || lit.rel == "inside") {
             return checkOntopLiteral(lit, state);
         }
