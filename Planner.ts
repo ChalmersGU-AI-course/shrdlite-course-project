@@ -135,7 +135,7 @@ module Planner {
 		for(var x =0; x<state.stacks.length; x++ ){
 			for(var y =0; y<state.stacks[x].length; y++ ){
 				if(y == 0){
-					lits.push([{pol : true, rel : "ontop", args : [state.stacks[x][0], "floor"+x ]}]);
+					lits.push([{pol : true, rel : "ontop", args : [state.stacks[x][0], "floor" ]}]);
 				}else{
 					if(state.objects[state.stacks[x][y-1]].form == "box"){
 						lits.push([{pol : true, rel : "inside", args : [state.stacks[x][y], state.stacks[x][y-1] ]}]);
@@ -168,7 +168,7 @@ module Planner {
 		for(var x =0; x<state.stacks.length; x++ ){
 			for(var y =0; y<state.stacks[x].length; y++ ){
 				for(var z = x-1; z<x+2; z++ ){
-					if(z >= 0 && z <= state.stacks.length-1){
+					if(z >= 0 && z!=x && z <= state.stacks.length-1){
 						lits = lits.concat(addBesideStack(state.stacks[z] , state.stacks[x][y]));
 					}
 				}				
@@ -207,17 +207,21 @@ module Planner {
 				var stackLoc = Interpreter.searchStack(state.stacks[x], goal[i][0].args[1]);
 				if(stackTar != -1){
 					//tar = state.stacks.length -1 + stackTar;
-					tar = state.stacks[x].length - stackTar;
+					tar = (state.stacks[x].length-1) - stackTar;
 					tarIndex = x;
 				}if(stackTar != -1){
 					//loc = state.stacks.length -1 + stackLoc;
-					loc = state.stacks[x].length - stackLoc;
+					loc = (state.stacks[x].length-1) - stackLoc;
 					locIndex =x;
 				}
+				var tmpTot = tar + loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex);
+				if(minimum > tmpTot){
+				minimum = tmpTot;
+			}
 			}
 
 			//var tmpTot = tar + loc + Math.max(tarIndex - locIndex, locIndex - tarIndex);
-			var tmpTot = tar + loc +  Math.max(tarIndex - locIndex, locIndex - tarIndex);
+			var tmpTot = tar + loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex);
 			if(minimum > tmpTot){
 				minimum = tmpTot;
 			}

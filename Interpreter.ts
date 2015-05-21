@@ -13,9 +13,11 @@ module Interpreter {
             intprt.intp = interpretCommand(intprt.prs, currentState);
             interpretations.push(intprt);
         });
-        if (interpretations.length) {
+        if (interpretations.length==1) {
             return interpretations;
-        } else {
+        }
+        else if(interpretations.length>1){throw new Interpreter.Error("Found ambigious interpretation");}
+         else {
             throw new Interpreter.Error("Found no interpretation");
         }
     }
@@ -227,16 +229,16 @@ module Interpreter {
     	} else {
     		
     		if (objs.form == "floor"){
-    			for(var x =0; x< state.stacks.length;  x++){
-    				list.push(new position(x,-1, {form : "floor", size : "none" , color : "none"}, "floor"+x));
-    			}
+    			//for(var x =0; x< state.stacks.length;  x++){
+    				list.push(new position(x,-1, {form : "floor", size : "none" , color : "none"}, "floor"));
+    			//}
     			
     	    }else{
 	    	    for(var x =0; x< state.stacks.length;  x++){
 		    		for (var y=0; y< state.stacks[x].length; y++){
 		    			var index = state.stacks[x][y];
 		    			if((objs.color == null || objs.color == state.objects[index].color) && 
-		    				(objs.form == null || objs.form == state.objects[index].form)  && 
+		    				(objs.form == null || objs.form=="anyform" || objs.form == state.objects[index].form)  && 
 		    				(objs.size == null || objs.size == state.objects[index].size)){
 		    
 		    				var pos = new position(x,y, state.objects[state.stacks[x][y]], state.stacks[x][y]);
