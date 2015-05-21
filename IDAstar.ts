@@ -5,7 +5,7 @@ module IDAstar{
     //-- Interfaces -------------------------------------------
 
     export class Error implements Error {
-        public name = "IDError";
+        public name = "IDAstar.Error";
         constructor(public message? : string) {}
         public toString() {return this.name + ": " + this.message}
     }
@@ -49,8 +49,9 @@ module IDAstar{
     // Depth first search until a heuristic limit.
     // Returns if the goal was found.
     // Goal vertex can be found in `s.order[s.x]`
-    function depthFirstUntil<T>(s : Search<T>) : boolean{
+    function depthFirstUntil<T>(start : Vertex<T>, s : Search<T>) : boolean{
         var stack = new collections.Stack<Vertex<T>>();
+        stack.push(start);
 
         // TODO improvement: heuristic depth-first instead of simple depth first?
         while(! stack.isEmpty){
@@ -87,7 +88,9 @@ module IDAstar{
     }
 
     function idaSearch<T>(s : Search<T>) : string[] {
-        while(! depthFirstUntil<T>(s)){
+        var nextAttempt : Vertex<T> = s.startVertex;
+        while(! depthFirstUntil<T>(nextAttempt, s)){
+            nextAttempt = s.prioQueue.dequeue();
             s.hLimit = 2*s.hLimit ;
         }
         return postProcess(s.order, s.x);
