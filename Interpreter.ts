@@ -138,7 +138,6 @@ module Interpreter {
                 break;
             case "move":
                 var targets = findTargetEntities(cmd.ent, state);
-// <<<<<<< HEAD
                 findMoveInterpretations(cmd, state, intprt, targets);
                 break;
             case "put":
@@ -148,18 +147,10 @@ module Interpreter {
                 var targets = new Array<string>();
                 targets[0] = state.holding;
                 findMoveInterpretations(cmd, state, intprt, targets);
-// =======
-//                 var location = cmd.loc;
-//                 var locationTargets = findTargetEntities(location.ent, state);
-//
-//                 // console.log("Target: "+locationTargets[0]);
-//                 moveCommand(state, intprt, location.rel, targets, locationTargets);
-// >>>>>>> possibleRefactor
                 break;
             default:
                 throw new Interpreter.Error("Interpreter: UNKNOWN cmd: " + cmd.cmd);
         }
-
         return intprt;
     }
 
