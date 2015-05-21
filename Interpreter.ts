@@ -301,11 +301,11 @@ module Interpreter {
     }
 
     /** 
-     * This function returns how o2 relates to o1. e.g o2 is left of o1; 
+     * This function returns which objects of o1s that relates correctly to any o2s; 
      * returns 'none' if there is no relation
      * possible relations: left, right, inside, under, above (beside = left or right)
      */
-    function getRelation(o1s : string[], o2s : string[], rel : string, stacks : string[][]) : string[]{
+   export function getRelation(o1s : string[], o2s : string[], rel : string, stacks : string[][]) : string[]{
         var correct = new collections.Set<string>();
         
         // Special case when O2 is the floor. Floor has character "_"
