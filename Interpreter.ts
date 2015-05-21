@@ -18,6 +18,8 @@
      * 
      * Extension:
      * Ask the user to choose wich of the parses were intended (In the case where there are multiple).
+     * (It is only to disambiguate the parses not the interpretations, if there are two balls and the user input is "take the ball" no question
+     * will be asked to the user)
      * For example:
      * if the user input was "put the white ball in a box on the floor" and two interpretations are found then the user hasto choose between
      * the following choices: put the white ball in a box that is on the floor" or "put the white ball that is in a box on the floor"
