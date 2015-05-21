@@ -210,7 +210,6 @@ module Interpreter {
                                 var arg1 = ((entitiesAnd[m] == null) ? [] : [entitiesAnd[m]]);
                                 var arg2 = ((combo[m] == null) ? [] : [combo[m]]);
                                 var pddlGoal = { pol: true, rel: rel, args: arg1.concat(arg2) };
-                                console.log(arg1, arg2);
                                 interpretationAnd.push(pddlGoal);
                             }
                             interpretationOr.push(interpretationAnd);
