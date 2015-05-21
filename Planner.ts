@@ -48,7 +48,8 @@ module Planner {
         var plan: string[][] = [];
 
         var graphGoal = new MultipleGoals(intprt);
-        var graph = new astar.Graph(new SimpleHeuristic(intprt), graphGoal);
+        //var graph = new astar.Graph(new SimpleHeuristic(intprt), graphGoal);
+        var graph = new astar.Graph(new DijkstraHeuristic(), graphGoal);
         var graphStart = new PlannerNode(state, null, null);
         var result = graph.searchPath(graphStart);
 

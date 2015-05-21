@@ -129,7 +129,7 @@ class SVGWorld implements World {
 
         // The arm1:
         $(this.SVG('line')).attr({
-            id:'arm',
+            id:'arm1',
             x1: this.stackWidth() / 2,
             y1: this.armSize * this.stackWidth() - this.canvasHeight, 
             x2: this.stackWidth() / 2, 
@@ -162,7 +162,7 @@ class SVGWorld implements World {
         }
     }
 
-    public performPlan(plan, callback?) {
+ /*   public performPlan(plan, callback?) {
         if (this.isSpeaking()) {
             setTimeout(() => this.performPlan(plan, callback), this.animationPause * 1000);
             return;
@@ -187,6 +187,48 @@ class SVGWorld implements World {
                             setTimeout(performNextAction, this.animationPause * 1000);
                         } else {
                             this.printSystemOutput(item);
+                            performNextAction();
+                        }
+                    } else {
+                        performNextAction();
+                    }
+                }
+            } else {
+                if (callback) setTimeout(callback, this.promptPause * 1000);
+            }
+        }
+        performNextAction();
+    }*/
+
+    public performPlan(plan, callback?) {
+        if (this.isSpeaking()) {
+            setTimeout(() => this.performPlan(plan, callback), this.animationPause * 1000);
+            return;
+        }
+        var planctr = 0;
+        var performNextAction = () => {
+            planctr++;
+            if (plan && plan.length) {
+                var item = plan.shift()
+                if (item.length == 2) { //Two actions
+                    var action1 = this.getAction([item[0].trim(),item[1].trim()+"2"]);
+                    //var action2 = this.getAction(item[1].trim()+"2");
+                }
+                if (item.length == 2 && action1) {
+                    try {
+                        action1.call(this, performNextAction);
+                        //action2.call(this, performNextAction);
+                    } catch(err) {
+                        this.printError(err);
+                        if (callback) setTimeout(callback, this.promptPause * 1000);
+                    }
+                } else {
+                    if (item && item[0] != "#") {
+                        if (this.isSpeaking()) {
+                            plan.unshift(item);
+                            setTimeout(performNextAction, this.animationPause * 1000);
+                        } else {
+                            this.printSystemOutput(item[0]);
                             performNextAction();
                         }
                     } else {
@@ -256,31 +298,42 @@ class SVGWorld implements World {
     // The basic actions: left, right, pick, drop for both arms
 
     private getAction(act) {
-        var actions = {p:this.pick, d:this.drop, l:this.left, r:this.right, p2:this.pick2, d2:this.drop2, l2:this.left2, r2:this.right2};
-        return actions[act.toLowerCase()];
-    }
+        var actions = {n:this.doNothing,p:this.pick, d:this.drop, l:this.left, r:this.right, n2:this.doNothing,p2:this.pick2, d2:this.drop2, l2:this.left2, r2:this.right2};
+        //return actions[act.toLowerCase()];
+        var a1 = actions[act[0].toLowerCase()].bind(this);
+        var a2 = actions[act[1].toLowerCase()].bind(this);
+        return function (callback?) {
+            var duration2 = a2.call();
+            var duration1 = a1.call();
+            if (callback) setTimeout(callback.bind(this), (duration1 + duration2 + this.animationPause) * 1000);
+        }
+    } 
 
+    private doNothing(callback?) {
+        return 0; //doNothing
+    }
     private left(callback?) {
         if (this.currentState.arm1 <= 0) {
             throw "Already at left edge!";
         }
-        this.horizontalMove(this.currentState.arm1 - 1, callback);
+        return this.horizontalMove(this.currentState.arm1 - 1, callback);
     }
 
     private right(callback?) {
         if (this.currentState.arm1 >= this.currentState.stacks.length - 1) {
             throw "Already at right edge!";
         }
-        this.horizontalMove(this.currentState.arm1 + 1, callback);
+        return this.horizontalMove(this.currentState.arm1 + 1, callback);
     }
 
     private drop(callback?) {
         if (!this.currentState.holding1) {
             throw "Not holding anything!";
         }
-        this.verticalMove('drop', callback);
+        var duration = this.verticalMove('drop', callback);
         this.currentState.stacks[this.currentState.arm1].push(this.currentState.holding1);
         this.currentState.holding1 = null;
+        return duration;
     }
 
     private pick(callback?) {
@@ -288,30 +341,31 @@ class SVGWorld implements World {
             throw "Already holding something!";
         }
         this.currentState.holding1 = this.currentState.stacks[this.currentState.arm1].pop();
-        this.verticalMove('pick', callback);
+        return this.verticalMove('pick', callback);
     }
 
     private left2(callback?) {
         if (this.currentState.arm2 <= 0) {
             throw "Already at left edge!";
         }
-        this.horizontalMove2(this.currentState.arm2 - 1, callback);
+        return this.horizontalMove2(this.currentState.arm2 - 1, callback);
     }
 
     private right2(callback?) {
         if (this.currentState.arm2 >= this.currentState.stacks.length - 1) {
             throw "Already at right edge!";
         }
-        this.horizontalMove2(this.currentState.arm2 + 1, callback);
+        return this.horizontalMove2(this.currentState.arm2 + 1, callback);
     }
 
     private drop2(callback?) {
         if (!this.currentState.holding2) {
             throw "Not holding anything!";
         }
-        this.verticalMove2('drop', callback);
+        var duration = this.verticalMove2('drop', callback);
         this.currentState.stacks[this.currentState.arm2].push(this.currentState.holding2);
         this.currentState.holding2 = null;
+        return duration;
     }
 
     private pick2(callback?) {
@@ -319,7 +373,7 @@ class SVGWorld implements World {
             throw "Already holding something!";
         }
         this.currentState.holding2 = this.currentState.stacks[this.currentState.arm2].pop();
-        this.verticalMove2('pick', callback);
+        return this.verticalMove2('pick', callback);
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -330,7 +384,7 @@ class SVGWorld implements World {
         var xNewArm = newArm * this.stackWidth() + this.wallSeparation;
         var path1 = ["M", xArm, 0, "H", xNewArm];
         var duration = Math.abs(xNewArm - xArm) / this.armSpeed;
-        var arm = $('#arm');
+        var arm = $('#arm1');
         this.animateMotion(arm, path1, 0, duration);
         if (this.currentState.holding1) {
             var objectHeight = this.getObjectDimensions(this.currentState.holding1).heightadd;
@@ -341,7 +395,7 @@ class SVGWorld implements World {
         }
         this.currentState.arm1 = newArm;
         if (callback) setTimeout(callback, (duration + this.animationPause) * 1000);
-        return 
+        return duration;
     }
 
     private verticalMove(action, callback?) {
@@ -354,7 +408,7 @@ class SVGWorld implements World {
         var path1 = ["M", xArm, 0, "V", yArm];
         var path2 = ["M", xArm, yArm, "V", 0];
         var duration = (Math.abs(yArm)) / this.armSpeed;
-        var arm = $('#arm');
+        var arm = $('#arm1');
         var object = $("#" + this.currentState.holding1)
 
         this.animateMotion(arm, path1, 0, duration);
@@ -367,6 +421,7 @@ class SVGWorld implements World {
             this.animateMotion(object, path3, 0, duration)
         }
         if (callback) setTimeout(callback, 2*(duration + this.animationPause) * 1000);
+        return duration;
     }
 
 private horizontalMove2(newArm, callback?) {
@@ -376,21 +431,21 @@ private horizontalMove2(newArm, callback?) {
         var duration = Math.abs(xNewArm - xArm) / this.armSpeed;
         var arm = $('#arm2');
         this.animateMotion(arm, path1, 0, duration);
-        if (this.currentState.holding1) {
-            var objectHeight = this.getObjectDimensions(this.currentState.holding1).heightadd;
+        if (this.currentState.holding2) {
+            var objectHeight = this.getObjectDimensions(this.currentState.holding2).heightadd;
             var yArm = -(this.canvasHeight - this.armSize * this.stackWidth() - objectHeight);
             var path2 = ["M", xArm, yArm, "H", xNewArm];
-            var object = $("#" + this.currentState.holding1)
+            var object = $("#" + this.currentState.holding2)
             this.animateMotion(object, path2, 0, duration);
         }
         this.currentState.arm2 = newArm;
         if (callback) setTimeout(callback, (duration + this.animationPause) * 1000);
-        return 
+        return duration;
     }
 
     private verticalMove2(action, callback?) {
         var altitude = this.getAltitude(this.currentState.arm2);
-        var objectHeight = this.getObjectDimensions(this.currentState.holding1).heightadd;
+        var objectHeight = this.getObjectDimensions(this.currentState.holding2).heightadd;
         var yArm = this.canvasHeight - altitude - this.armSize * this.stackWidth() - objectHeight;
         var yStack = -altitude;
         var xArm = this.currentState.arm2 * this.stackWidth() + this.wallSeparation;
@@ -399,7 +454,7 @@ private horizontalMove2(newArm, callback?) {
         var path2 = ["M", xArm, yArm, "V", 0];
         var duration = (Math.abs(yArm)) / this.armSpeed;
         var arm = $('#arm2');
-        var object = $("#" + this.currentState.holding1)
+        var object = $("#" + this.currentState.holding2)
 
         this.animateMotion(arm, path1, 0, duration);
         this.animateMotion(arm, path2, duration + this.animationPause, duration);
@@ -411,6 +466,7 @@ private horizontalMove2(newArm, callback?) {
             this.animateMotion(object, path3, 0, duration)
         }
         if (callback) setTimeout(callback, 2*(duration + this.animationPause) * 1000);
+        return duration;
     }
 
     //////////////////////////////////////////////////////////////////////
