@@ -71,8 +71,88 @@ module Interpreter {
         if(!objs.length){
         	return [];
         }
-        
+        // find the botton objects in obj
+        var endObjs : string [][] = [];
+        for(var i = 0; i < objs.length; i++){
+    		endObjs[i] = findendliterals(objs[i]);
+    	}
+    	var intprt : Literal[][] = [];
+        if(cmd.cmd == "move" || cmd.cmd == "put" || cmd.cmd == "drop"){
         // Find location to move to
+        // find all possiable locations
+	        var locs : Literal [][] = identifyEnt(cmd.loc.ent, cmd.loc.rel, null, state);
+	        
+	        // find the top object in location
+	        var startLocs : string [][] = [];
+	        for(var i = 0; i < locs.length; i++){
+	        	startLocs[i] = findstartliterals(locs[i]);
+	        }	
+	        
+	        for(var i = 0; i < endObjs.length; i++){
+	        	var possibleLits : Literal[] = [];
+	        	for(var j = 0; j < endObjs[i].length; j++){
+	        		for(var n = 0; n < startLocs.length; n++){
+	        			for(var m = 0; m < startLocs[n].length; m++){
+	        				var nlit : Literal = {pol : true, rel : cmd.loc.rel, 
+	        						args : [endObjs[i][j], startLocs[n][m]]};
+	        				if(checkIllegal(nlit, state)){
+	        					// add to possible list need to fill list
+	        					possibleLits.push(nlit);
+	        				}
+						}
+	        		}
+	        	}
+	        	// if all, then combine the possibleLits with itself, 
+	        	// endObjs[i].length number of times
+	        	if(cmd.loc.ent.quant == "all" || cmd.loc.ent.quant == "all" 
+	        			|| cmd.ent.quant == "all" || cmd.ent.quant == "all"){
+	        		var combi = combine(possibleLits, endObjs[i].length, state);
+	        		for(var c = 0; c < combi.length; c ++){
+	        			combi[c] = clearIlligal(combi[c], state);
+	        		}
+	        		
+	        		intprt = combi;
+	        	}
+	        	// if the or any, then pick all leagal and put them i separete lists.
+	        	if(cmd.loc.ent.quant != "all" && cmd.loc.ent.quant != "all" 
+	        			&& cmd.ent.quant != "all" && cmd.ent.quant != "all"){
+		        	for(var k = 0; k < possibleLits.length; k ++){
+		        		if(checkIllegal(possibleLits[k], state)){
+		        			var lits : Literal[] = [];
+		        			lits = append(lits,objs[i]);
+		        			//find loc -- not sure
+		        			var index = -1;
+		        			for(var l = 0; l < startLocs.length; l++){
+		        				for(var ll = 0; ll < startLocs[l].length; ll ++){
+		        					if(startLocs[l][ll] == possibleLits[k].args[1]){
+		        						index = l;
+		        					}
+		        				}
+		        				
+		        			}
+		        			if(index != -1){
+		        				lits = append(lits,locs[index]);
+		        			}
+		        			lits.push(possibleLits[k]);
+		        			lits = clearIlligal(lits,state);
+		        			intprt.push(lits);
+		        		}
+		        	}
+	        	}
+	        	
+	        }
+        }else if(cmd.cmd == "take"){
+        	for(var i = 0; i < objs.length; i++){
+        		for(var j = 0; j < objs[i].length; j++){
+        			objs[i][j].rel = "hold";
+        		}
+        		intprt.push(objs[i]);
+        	}
+        //	intprt[0] =[{pol:true, rel:cmd.cmd, args : findendliterals(objs[0])}];
+        }
+        // Pick possible loaction untill there are no combinations left
+        
+        /*
         var intprt : Literal[][] = [];
         var loc : Literal [][] = [];
         var n : number = 0; 
@@ -91,7 +171,6 @@ module Interpreter {
         						loc : cmd.loc , size:ob.size, color: ob.color, form:ob.form};
         			var tempent : Parser.Entity = {quant:"any", obj: object};
         			temp = identifyEnt(tempent, null, lstlits[l], state);
-        		//	tint = append(tint, temp);
         			if(cmd.ent.quant == "all" || cmd.loc.ent.quant == "all"){
         				tint = merge(tint, temp);
         			}else{
@@ -146,7 +225,7 @@ module Interpreter {
         		intprt.push(objs[i]);
         	}
         //	intprt[0] =[{pol:true, rel:cmd.cmd, args : findendliterals(objs[0])}];
-        }
+        }*/
 
         return intprt;
     }
@@ -166,6 +245,7 @@ module Interpreter {
     	 
     	var unqObjs : string[] = uniqeObjects(result);
     	var locresults : Literal[][] = [];
+    	// If there is a location to this obj
     	if(ent.obj.loc){
 
     		var locres : Literal [][]= identifyLocation(ent.obj.loc, state);
@@ -176,7 +256,7 @@ module Interpreter {
 				locresults[i] = append<Literal>(locresults[i], locres[i]);
 			}
     	}
-    	
+    	// Specifys that the obj found is uniqe
     	if(ent.quant == "the" && ent.obj.form != "floor"){
     		// ambigous interpet, use clairifying parse
     		if(unqObjs.length > 1){
@@ -199,20 +279,19 @@ module Interpreter {
     		if(unqObjs.length != totalUnqObjs.length){
     			if(!clairifyingparse){
 					throw new Interpreter.ErrorInput("Could you tell me which " + 
-						state.objects[result[0]].form + " I should move?");
+						state.objects[result[0]].form + " I should move? all");
 				}
 				var objs : string[] = solveAmbiguity(ent.obj,unqObjs, state);
 				if(objs.length > 1){
 					throw new Interpreter.ErrorInput("Could you tell me which " + 
-						state.objects[result[0]].form + " I should move?");
+						state.objects[result[0]].form + " I should move? all");
 				}
 				result = objs;
     		}
 
-    	} else
-    	if (ent.quant == "any" || ent.obj.form == "floor"){ // any
-   			;// TODO
-    	}
+    	} 
+    	// If any or floor, then we dont have to worry
+
     	// Find location to move to
         var intprt : Literal[][] = [];
         var n : number = 0; 
@@ -224,14 +303,14 @@ module Interpreter {
     	var n : number = 0; 
 		for(var i = 0; i < result.length; i++){
 			var lit : Literal;
-			if(ent.obj.loc){
+			if(ent.obj.loc){	// If ther is a location
 				for(var j = 0 ; j < locresults.length ;j++){
 					for(var k = 0 ; k < locresults[j].length ;k++){
 						// create new literal
 						lit = {pol : true, rel : ent.obj.loc.rel, args : [result[i], 
 								locresults[j][k].args[0]]};
 						if(checkIllegal(lit, state)){
-							if(!intrpt[n]){ 	// used j before
+							if(!intrpt[n]){ 	
 								intrpt[n] = []; 
 							}
 							if(checkIllegal(locresults[j][k], state)){
@@ -242,8 +321,8 @@ module Interpreter {
 						}
 					}
 				}
-			}else{
-				if(ent.quant != "all"){
+			}else{	// if ther is no location
+				if(ent.quant != "all"){	// if all then put all on tha same index.
 					n = i;
 				}
 				lit = {pol : true, rel : rel, args : [result[i]]};
@@ -320,58 +399,55 @@ module Interpreter {
     
     //////////////////////////////////////////////////////////////////////
     // util functions
-    
-    function combine(loclitss : Literal[][], objlitss : Literal[][], 
+    function combine(lits : Literal[], num : number, 
     		state: WorldState):Literal[][]{
     	var result : Literal[][]= [];	
-    	
-    	for(var i = 0; i < objlitss.length; i ++){
-    		var ks : number[] = [0];
-			var maxL = objlitss[i].length;
-			if(loclitss[0]){
-				if(loclitss[0].length > objlitss[i].length){
-					maxL = loclitss[0].length;
-				}
-			}
-			
-			for(var jj = 0; jj < maxL; jj++){
-				ks.push(0);
-			}
-    		append(result,combineLiterals([], loclitss, objlitss[i], ks, "", state));
-    	}		
-    	
+		var ks : number[] = [0];		
+		
+		for(var jj = 0; jj < num; jj++){
+			ks.push(0);
+		}
+		result = append(result,combineLiterals([], lits, num, ks, "ontop", state));
+
     	return result;
     }
     
-    function combineLiterals(litss : Literal[][], loclitss : Literal[][]
-    			, objlits : Literal[], ks : number[], rel : string, 
-    			state : WorldState):Literal[][]{
+    function combineLiterals(litss : Literal[][], lits : Literal[], num : number, 
+    		ks : number[], rel : string, state : WorldState):Literal[][]{
     	var k = ks[0];
-    	if(k == Math.pow(loclitss.length,  objlits.length)){
+    	if(k == Math.pow(lits.length,  num)){
     		return litss;
     	}
 		if(!checkequal(ks,rel)){
-			litss[k] = append(litss[k], objlits);
-			var j = 0;
 			for(var i = 1; i < ks.length; i ++){
-				litss[k] = append(litss[k], [loclitss[ks[i]%loclitss.length][j]]);
-				j++;
+				if(lits[ks[i]]){
+					if(!litss[k]){
+						litss[k] = [];
+					}
+					litss[k].push(lits[ks[i]]);
+				}
 			}
 		}
-		var inced = false;
 		for(var i = ks.length-1; i > 0 ; i--){
-			if(ks[i]== loclitss.length-1){
+			if(i == ks.length-1){
+				if(ks[i]== lits.length-1 ){
+					ks[i] = 0;
+					if(i > 1){
+						ks[i-1] = ks[i-1] +1;
+					}
+				}else{
+					ks[i] = ks[i] + 1; 
+				}
+			}else if(ks[i] > lits.length-1 ){
 				ks[i] = 0;
 				if(i > 1){
 					ks[i-1] = ks[i-1] +1;
 				}
-			}else if(i == ks.length-1){
-				ks[i] = ks[i] +1;
-			}
+			} 
 		}
 			
 		ks[0] = k+1;
-		return combineLiterals(litss, loclitss, objlits, ks, rel, state);
+		return combineLiterals(litss, lits, num, ks, rel, state);
     }
     
     function checkequal(ks : number[], rel : string):boolean{
@@ -396,9 +472,10 @@ module Interpreter {
 	    		if(templit2.rel == templit.rel && i != j){
 	    			if((templit2.rel == "ontop" || templit2.rel == "inside") && 
 	    					(templit2.args[0] == templit.args[0] || 
-	    					 templit2.args[1] == templit.args[1] ||
-	    					 templit2.args[0] == templit.args[1] ||
-	    					 templit2.args[1] == templit.args[0])){
+	    					 templit2.args[1] == templit.args[1] //||
+	    					// templit2.args[0] == templit.args[1] ||
+	    					// templit2.args[1] == templit.args[0]
+	    					 	)){
 	    				return true;
 	    			}
 	    		}
@@ -409,8 +486,67 @@ module Interpreter {
     }
     
     function filterEquality(intrps : Result []):Result []{
-    	//TODO
-    	return intrps;
+		var resIntrps : Result [] = [];
+		var filterdLits : Literal[][][] = [];
+    	for(var i = 0; i < intrps.length; i++){
+    		for(var j = 0; j < intrps[i].intp.length; j++){
+				var lits = intrps[i].intp[j];
+				if(!checkLitEquals(filterdLits, lits)){
+					if(!filterdLits[i]){
+						filterdLits[i] = [];
+					}
+					filterdLits[i].push(lits);
+				}
+    		}
+    		if(filterdLits[i]){
+    			intrps[i].intp = filterdLits[i];
+    			resIntrps.push(intrps[i]);    		
+    		}
+    	}
+    	
+    	return resIntrps;
+    }
+    
+    function checkLitEquals(litsss : Literal[][][], lits : Literal[]):boolean{
+    	for(var i = 0; i < litsss.length; i++){
+    		
+    		//Check every literal in the intrp against the literal we sent in, 
+    		// if the content is equal, not depening on order, then they are equal
+    		for(var j = 0; j < litsss[i].length; j++){
+    			var counter = 0;
+    			for(var n = 0; n < litsss[i][j].length; n++){
+	    			for(var k = 0; k < lits.length; k++){
+	    				if(literalEquals(litsss[i][j][n], lits[k])){
+	    					counter ++;
+	    				}
+	    			}
+    			}
+    			if(counter >= lits.length){
+    				return true;
+    			}
+    		}
+    	}
+		return false;    	
+    }
+    
+    function literalEquals(lit1 : Literal, lit2 : Literal):boolean{
+    	if(lit1.rel != lit2.rel || lit1.pol != lit2.pol){
+    		return false;
+    	}else{
+    		if(lit1.rel == "beside" && ((lit1.args[0] == lit2.args[0]
+    				&& lit1.args[1] == lit2.args[1]) ||
+    				(lit1.args[0] == lit2.args[1]
+    				&& lit1.args[1] == lit2.args[0]))){
+    			return true;
+    		}else if(lit1.rel == "beside"){
+    			return false;
+    		}
+    		if(lit1.args[0] != lit2.args[0] || lit1.args[1] != lit2.args[1]){
+    			return false;
+    		}
+    	}
+    	
+    	return true;
     }
     
     function clearIlligal(lits : Literal[], state): Literal[]{
@@ -462,6 +598,9 @@ module Interpreter {
     function checkIllegal(lit : Literal, state : WorldState):boolean{
     	var a = state.objects[lit.args[0]];
     	var b = state.objects[lit.args[1]];
+    	if(!a || !b){
+    		return false;
+    	}
     	
     	if(!lit.rel || lit.rel == null){
     		return false;
@@ -470,7 +609,7 @@ module Interpreter {
     		return false;
     	}
     	if(b.form == "floor" && a.form != b.form){
-    		if(lit.rel == "under"){
+    		if(lit.rel == "under" || lit.rel == "inside" ){
     			return false;
     		}
     		return true;
@@ -502,6 +641,26 @@ module Interpreter {
     	}
     	
     	return true;
+    }
+    
+    function findstartliterals(lits : Literal []): string[]{
+    	var temp : Literal [] = [];
+    	var start : string[] = [];
+    	var found : boolean = true;
+    	for(var i = 0; i < lits.length; i++){
+    		var lit : Literal = lits[i];
+    		found = true;
+    		for(var j = 0; j < lits.length; j++){
+    			var lit2 : Literal = lits[j];
+    			if(lit2.args[1] == lit.args[0]){
+    				found = false;
+    			}
+    		}
+    		if(found){
+    			start.push(lit.args[lit.args.length-1]);
+    		}
+    	}
+    	return start;
     }
     
     function findendliterals(lits : Literal []): string[]{
