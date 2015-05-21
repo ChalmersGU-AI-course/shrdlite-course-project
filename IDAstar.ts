@@ -29,9 +29,7 @@ module IDAstar{
         icf : collections.ICompareFunction<Vertex<T>>;
     }
 
-    export function OLDastar<T>(f : Astar.Neighbours<T>, c : Astar.Cost<T>, h : Astar.Heuristic<T>, start : T,
-                      isGoal : Goal<T>, multiPathPruning : boolean = true,
-                      maxIter : number = 25000 ) : string[]{
+    export function OLDastar<T>(f : Astar.Neighbours<T>, c : Astar.Cost<T>, h : Astar.Heuristic<T>, start : T, isGoal : Astar.Goal<T>, multiPathPruning : boolean = true, maxIter : number = 25000 ) : string[]{
         var comp : Compare<T> = {
             icf : ((a, b) => {
                 return b.cost + h(b.state) - a.cost - h(a.state);
@@ -40,9 +38,7 @@ module IDAstar{
         return OLDsearch<T>(comp, f, c, h, start, isGoal, multiPathPruning, maxIter);
     }
 
-    function OLDsearch<T>(comp : Compare<T>, f : Astar.Neighbours<T>, c : Astar.Cost<T>, h : Astar.Heuristic<T>,
-                       start : T, isGoal : Goal<T>, multiPathPruning : boolean = true,
-                       maxIter : number = 25000 ) : string[]{
+    function OLDsearch<T>(comp : Compare<T>, f : Astar.Neighbours<T>, c : Astar.Cost<T>, h : Astar.Heuristic<T>, start : T, isGoal : Astar.Goal<T>, multiPathPruning : boolean = true, maxIter : number = 25000 ) : string[]{
         var queue = new collections.PriorityQueue<Vertex<T>>(comp.icf) ;
 
         var order : Array<Vertex<T>> = [];
