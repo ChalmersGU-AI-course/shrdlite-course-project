@@ -43,10 +43,8 @@ Array.prototype.flatten = function() {
 var SearchGraph = function (currentState, pddl) {
     this.objects = currentState.objects;
     this.startNode = {stacks: currentState.stacks,
-                      leftHolding: currentState.leftHolding,
-                      rightHolding: currentState.rightHolding,
-                      leftArm: currentState.leftArm,
-                      rightArm: currentState.rightArm
+                      holding: [currentState.leftHolding, currentState.rightHolding],
+                      arm: [currentState.leftArm, currentState.rightArm],
                  };
     this.pddl = pddl;
 };
@@ -76,6 +74,65 @@ SearchGraph.prototype.can_place = function(top, stack) {
     );
 };
 
+function cartesian(lst) {
+  function addTo(curr, args) {
+
+    var i, copy,
+        rest = args.slice(1),
+        last = !rest.length,
+        result = [];
+
+    for (i = 0; i < args[0].length; i++) {
+
+      copy = curr.slice();
+      copy.push(args[0][i]);
+
+      if (last) {
+        result.push(copy);
+
+      } else {
+        result = result.concat(addTo(copy, rest));
+      }
+    }
+
+    return result;
+  }
+
+
+  return addTo([], Array.prototype.slice.call(lst));
+}
+
+function collision(arr) {
+    var look = {};
+    for (var e of arr) {
+        if (typeof e == 'string') {
+            continue;
+
+        }
+        if (e in look) {
+            return true;
+        }
+        look[e] = true;
+    }
+    return false;
+}
+
+function permutations(arm, stack_length) {
+    var combs = [];
+    for (var i=0; i < arm.length; i++) {
+        combs.push(['d', 'p', '-', arm[i]-1, arm[i], arm[i]+1] )
+    }
+    var candidates = cartesian(combs)
+    var valid = [];
+    for (var cand of candidates) {
+        if ((!cand.contains(-1)) && (!cand.contains(stack_length)) && (!collision(cand))) {
+            valid.push(cand);
+        }
+    }
+    return valid;
+
+}
+console.log(permutations([0, 1]));
 
 
 // Move left or right, or put up or down
@@ -107,7 +164,7 @@ SearchGraph.prototype.neighbours = function* (state) {
         };
     }
 
-    // Let arm right, right arm left
+    // Left arm right, right arm left
     if(state.leftArm < state.rightArm-2) {
         yield {
             leftArm: state.leftArm+1, leftHolding: state.leftHolding,
