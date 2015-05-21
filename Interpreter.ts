@@ -168,15 +168,13 @@ module Interpreter {
 
             // Find all objects that matches the definition in the world
             var objsToCheck: string[] = interpretObject(obj.obj, state);
-            
+
             // Only keep objects that fulfill the location requirement
             var relEnitities: string[][] = interpretEntity(obj.loc.ent, state);
 
             return objsToCheck.filter(function(objToCheck: string) {
                 // Does the object-to-check fulfill the location requirement?
                 var lits = createBiLiteralsSpecifyFirstAND(relEnitities, obj.loc.rel, objToCheck);
-
-                console.log(lits);
 
                 return LiteralHelpers.areLiteralsFulfilled(lits, state);
             });

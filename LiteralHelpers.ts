@@ -26,17 +26,23 @@ module LiteralHelpers {
         if (lit.rel == "ontop" || lit.rel == "inside") {
             return checkOntopLiteral(lit, state);
         }
-        if (lit.rel == "holding") {
+        else if (lit.rel == "holding") {
             return checkHoldingLiteral(lit, state);
         }
-        if (lit.rel == "under") {
-            return checkUnderLiteral(lit, state);
-        }
-        if (lit.rel == "beside") {
+        else if (lit.rel == "beside") {
             return checkBesideLiteral(lit, state);
         }
-        if (lit.rel == "above") {
+        else if (lit.rel == "above") {
             return checkAboveLiteral(lit, state);
+        }
+        else if (lit.rel == "under") {
+            return checkUnderLiteral(lit, state);
+        }
+        else if (lit.rel == "leftof") {
+            return checkLeftOfLiteral(lit, state);
+        }
+        else if (lit.rel == "rightof") {
+            return checkRightOfLiteral(lit, state);
         }
         return false;
     }
@@ -73,11 +79,6 @@ module LiteralHelpers {
         return (state.holding1 == lit.args[0]) || (state.holding2 == lit.args[0]);
     }
 
-    export function checkUnderLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
-        var swapLiteral = { pol: lit.pol, rel: lit.rel, args: [lit.args[1], lit.args[0]] };
-        return checkAboveLiteral(swapLiteral, state);
-    }
-
     export function checkAboveLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
         var posOn = getPositionOfObject(lit.args[0], state);
         var posUnder = getPositionOfObject(lit.args[1], state);
@@ -86,6 +87,10 @@ module LiteralHelpers {
             return (posOn[0] == posUnder[0] && posOn[1] > posUnder[1]);
         }
         return false;
+    }
+
+    export function checkUnderLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
+        return checkAboveLiteral(reverseOrder(lit), state);
     }
 
     export function checkBesideLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
@@ -98,7 +103,24 @@ module LiteralHelpers {
         return false;
     }
 
+    export function checkLeftOfLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
+        var pos1 = getPositionOfObject(lit.args[0], state);
+        var pos2 = getPositionOfObject(lit.args[1], state);
 
+        if (pos1 && pos2) {
+            return pos1[0] < pos2[0];
+        }
+
+        return false;
+    }
+
+    export function checkRightOfLiteral(lit: Interpreter.Literal, state: WorldState): boolean {
+        return checkLeftOfLiteral(reverseOrder(lit), state);
+    }
+
+    function reverseOrder(lit: Interpreter.Literal): Interpreter.Literal {
+        return { pol: lit.pol, rel: lit.rel, args: [lit.args[1], lit.args[0]] };
+    }
 
     export function getPositionOfObject(item: string, state: WorldState): number[] {
         // check all stacks
