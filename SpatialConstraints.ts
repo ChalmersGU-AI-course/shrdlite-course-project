@@ -1,6 +1,42 @@
 
 module Spatial { 
 
+    export function validatePDDLGoal(pddl, state : WorldState) : string
+    {
+        
+        if(pddl.rel === "ontop" || 
+                pddl.rel == "inside" || 
+                pddl.rel == "under")
+        {
+            var objA = pddl.args[0];
+            var objB = pddl.args[1];
+        
+            if(objA === objB)
+                return "Can't put an object on itself.";
+        
+            
+            if(pddl.rel == "under")
+            {
+                var tmp = objA;
+                objA = objB;
+                objB = tmp;
+            }    
+            
+            //Some things cannot be placed ontop of other things.
+            //But everything can be placed on the floor.
+            if(pddl.args[1] !== "floor")
+            {
+                var a =  state.objects[objA];
+                var b =  state.objects[objB];            
+                if(!Spatial.canBeOntop(a, b) )
+                    return Spatial.ontopError(a, b);
+            }
+        }
+        
+        return "ok";
+    }
+    
+
     function sizeCmp(a : string, b :string) {
         if(a === "large")
         {
@@ -17,8 +53,8 @@ module Spatial {
     }
 
     export function canBeOntop(over, under)
-    {
-              //Balls must be in boxes or on the floor.
+    {      
+        //Balls must be in boxes or on the floor.
         if(over.form === "ball" &&
            under.form !== "box")
            return false;

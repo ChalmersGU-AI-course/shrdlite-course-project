@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
+///<reference path="SpatialConstraints.ts"/>
 
 module Interpreter {
 
@@ -20,7 +21,15 @@ module Interpreter {
         // and the user can try again to be more specific.
         if (interpretations.length > 1) {
             throw new Interpreter.Error("Your utterance was ambiguous, please be more specific!");
-        } else if (interpretations.length){
+        } else if (interpretations.length) {
+            
+            for(var i = 0; i < interpretations.length; i++)
+            {
+                var err = Spatial.validatePDDLGoal(interpretations[i].intp[0][0], currentState);
+                if(err !== "ok")
+                    throw new Interpreter.Error(err);
+            }            
+            
             return interpretations;
         } else {
             throw new Interpreter.Error("Found no interpretation");
