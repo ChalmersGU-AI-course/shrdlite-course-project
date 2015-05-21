@@ -17,16 +17,6 @@ module Astar{
         (state : T) : Neighb<T>[] ;
     }
 
-    export function neighbourVertex<T>(s : Search<T>, v : Vertex<T>, neighb : Neighb<T>){
-        return {
-            state : neighb.state,
-            cost : v.cost + neighb.transitionCost,
-            heur : s.h(neighb.state),
-            previous : s.x,
-            action : neighb.action
-        };
-    }
-
     export interface Neighb<T>{
         state : T ;
         action : string ;
@@ -89,72 +79,6 @@ module Astar{
         }
     }
 
-    /**
-    * Type alias used for comparison in the PriorityQueue.
-    */
-    interface Compare<T> {
-        icf : collections.ICompareFunction<Vertex<T>>;
-    }
-
-    //-- Algorithms -------------------------------------------
-
-    // export function astar<T>(f : Neighbours<T>, c : Cost<T>, h : Heuristic<T>, start : T,
-    //                   isGoal : Goal<T>, multiPathPruning : boolean = true,
-    //                   maxIter : number = 25000 ) : string[]{
-    //     // var comp : Compare<T> = {
-    //     //     icf : ((a, b) => {
-    //     //         return b.cost + h(b.state) - a.cost - h(a.state);
-    //     //     } )
-    //     // } ;
-    //     var searchObj : Search<T> = new Search<T>(start, Infinity, f, h, isGoal, maxIter, multiPathPruning);
-    //     return astarSearch
-    //     // return
-    //     // return search<T>(comp, f, c, h, start, isGoal, multiPathPruning, maxIter);
-    // }
-
-    /**
-    * Best-first algorithm.
-    *
-    * Entirely disregards cost, only looking at the heuristic.
-    */
-    // export function bestFirst<T>(f : Neighbours<T>, h : Heuristic<T>, start : T, isGoal : Goal<T>,
-    //                       multiPathPruning : boolean = true, maxIter : number = 25000 ) : string[]{
-    //     var c : Cost<T> = ((a,b)=>0);
-    //     var comp : Compare<T> = {
-    //         icf : ((a, b) => {
-    //             return h(b.state) - h(a.state);
-    //         } )
-    //     } ;
-    //     return search<T>(comp, f, c, h, start, isGoal, multiPathPruning, maxIter);
-    // }
-
-    /**
-    * Lowest-cost algorithm.
-    *
-    * Entirely disregards heuristic, only looking at the cost.
-    */
-    // export function lowestCost<T>(f : Neighbours<T>, c : Cost<T>, start : T, isGoal : Goal<T>,
-    //                        multiPathPruning : boolean = true, maxIter : number = 25000 ) : string[]{
-    //     var h : Heuristic<T> = (s => 0);
-    //     var comp : Compare<T> = {
-    //         icf : ((a, b) => {
-    //             return b.cost - a.cost;
-    //         } )
-    //     } ;
-    //     return search<T>(comp, f, c, h, start, isGoal, multiPathPruning, maxIter);
-    // }
-
-    /**
-    * Breadth-first algorithm.
-    *
-    * Entirely disregards heuristic and assumes cost 1 on each state transition.
-    */
-    // export function breadthFirst<T>(f : Neighbours<T>, start : T, isGoal : Goal<T>,
-    //                        multiPathPruning : boolean = true, maxIter : number = 25000 ) : string[]{
-    //     var c : Cost<T> = ((a,b)=>1);
-    //     return lowestCost<T>(f, c, start, isGoal, multiPathPruning, maxIter);
-    // }
-
     export function astarSearch<T>(s : Search<T>){
 
         var visited = new collections.Set<T>() ;
@@ -191,6 +115,17 @@ module Astar{
         }
         throw new Astar.Error("No solution found!");
     }
+
+    export function neighbourVertex<T>(s : Search<T>, v : Vertex<T>, neighb : Neighb<T>){
+        return {
+            state : neighb.state,
+            cost : v.cost + neighb.transitionCost,
+            heur : s.h(neighb.state),
+            previous : s.x,
+            action : neighb.action
+        };
+    }
+
     /**
     * Backtracks from the final state to the original state.
     *
