@@ -67,30 +67,14 @@ module Interpreter {
 		{
 			return null;
 		}
-        /*var failureVar : number = 0;
-        for(var i in result)
-        {
-            if (result[i] == "")
-                failureVar = -1;
-        }
-        if (failureVar != -1)
-        {
-            console.log(result);
-            console.log("found all requested objects");
-        }
-        else 
-        {
-            console.log("did not find requested objects");
-        }
-        
-        */
-        
+        /*
         var a = objs[getRandomInt(objs.length)];
         var b = objs[getRandomInt(objs.length)];
         var intprt : Literal[][] = [[
             {pol: true, rel: "ontop", args: [a, "floor"]},
             {pol: true, rel: "holding", args: [b]}
         ]];
+        */
         return result;//intprt;
     }
     
@@ -102,10 +86,10 @@ module Interpreter {
         
         if(cmd.ent.quant === "the")
         	if(result.length > 1)
-    			throw "Description is not unambiguous";
+    			throw new Interpreter.Error("Description is not unambiguous");
 		
     	if(result.length <= 0)
-    		throw "Can not find any objects matching the description";
+    		throw new Interpreter.Error( "Can not find any objects matching the description");
         
         switch(cmd.cmd)
         {
@@ -203,7 +187,7 @@ module Interpreter {
         
         if (typeof (ent.obj) !== "undefined")
         {
-            res = res.concat(compareWithWorld(ent.obj,world,wObjs));
+            res = res.concat(compareWithWorld(ent.obj,world,wObjs)); //if errors don't propagate, then it might be a good idê to fix a try catch ot to revert compareWithWorld to returning 0 on failure
         }
         return res; 
     }
@@ -394,7 +378,7 @@ module Interpreter {
                             }
                             if(i != 0)
                             {
-                                return 0;
+                                throw new Interpreter.Error("Scan did not end in the last column"); //return 0;
                             }
                         
                         }
