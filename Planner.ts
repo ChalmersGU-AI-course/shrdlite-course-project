@@ -206,27 +206,6 @@ module Planner {
                 }
             }
             return false;
-            /* // Here is old code
-            for(var n in world) {
-                for(var i in goalWorld) {
-                    for(var j in goalWorld[i]) {
-                        if(goalWorld[i][j].rel === 'holding' && goalWorld[i][j].args[0] === pddlWorld.holding) {
-                            goalWorld[i].splice(i, 1);
-                            break;
-                        }
-                        if(world[n].rel === goalWorld[i][j].rel &&
-                            world[n].args[0] === goalWorld[i][j].args[0] &&
-                            world[n].args[1] === goalWorld[i][j].args[1]) {
-                            goalWorld[i].splice(i, 1);
-                            break;
-                        }
-                    }
-
-                    done = done || goalWorld[i].length === 0;
-                }
-            }
-            return done;
-            */
         }
     }
 
