@@ -59,14 +59,12 @@ module Interpreter {
         var intprt = [];
 
         if (cmd.cmd == "take") {
-            if (!state.holding) {
-                // "Take" an object if we know that the request only
-                // considers at most one object in each OR-part
-                var entities = interpretEntity(cmd.ent, state);
+            // "Take" an object if we know that the request only
+            // considers at most one object in each OR-part
+            var entities = interpretEntity(cmd.ent, state);
 
-                if (maxNumberOfEntitiesConsidered(entities) == 1) {
-                    intprt = createUnLiterals(entities, "holding");
-                }
+            if (maxNumberOfEntitiesConsidered(entities) == 1) {
+                intprt = createUnLiterals(entities, "holding");
             }
         }
         else if (cmd.cmd == "put") {
@@ -190,6 +188,10 @@ module Interpreter {
         // We can't use state.objects here since not all objects are placed in the world!
         var objNamesInWorld: string[] = Array.prototype.concat.apply([], state.stacks);
 
+        if (state.holding) {
+            objNamesInWorld.push(state.holding);
+        }
+
         // Collect objects that fulfill the object definition
         var output = [];
 
@@ -214,7 +216,7 @@ module Interpreter {
         // Make sure that the object definition matches the request
         var objOk = true;
 
-        if (form && form != "anyform") {
+        if (form && form != 'anyform') {
             objOk = objOk && (objDef.form == form);
         }
         if (size) {
