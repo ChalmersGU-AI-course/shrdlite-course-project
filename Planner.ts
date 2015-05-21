@@ -42,7 +42,10 @@ module Planner {
                    
         var goal = Goals.createGoalFromPDDL(pddl, state);
         var heur = Heuristics.createHeuristicsFromPDDL(pddl, state);
-        var result = Astar.findPath(state, Neighbour.listNeighbours, heur, worldEq, goal, worldStr);
+        var result = Astar.findPath(state, Neighbour.listNeighbours, heur, worldEq, goal, worldStr, 20000);
+        if(!result.success)
+            throw new Planner.Error("The planner could not find a solution to the query.");
+        
         var path = [];
         for (var i = 1; i < result.nodes.length; i++)
         {
@@ -95,6 +98,7 @@ module Planner {
 
     function worldEq(a: WorldState, b: WorldState): boolean 
     {
+        if(a.holding !== b.holding) return false;
         if(a.stacks.length !== b.stacks.length) return false;
         for (var i = 0; i < a.stacks.length; i++)
         {

@@ -23,15 +23,15 @@ module Astar
 	 * @param start 	- The starting point
 	 * @param end		- The target destination
 	 * @param gen   	- function used to generate all adjacent nodes of a node.
-	 * @param equals	- a function that can determine equality.
 	 * @param heuristic - a guess for how close a node is to the end node.
+	 * @param maxIterations - the maximal number of nodes the algorithm visits.
 	 */
 	export function findPath<T>(start : T, 
 								gen : (t : T) => T[],
 								heuristic : (t : T) => number,
-                                equals : (t: T, t0 : T) => boolean,
 								goal : (t : T) => boolean,
-                                strFun : (t : T) => string)  : SearchResult<T>
+                                strFun : (t : T) => string,
+								maxIterations : number)  : SearchResult<T>
 	{
 		//Simple case:
 		if(goal(start)) 
@@ -116,6 +116,9 @@ module Astar
 
 			node = pQueue.dequeue();
 			iterations++;
+			
+			if(iterations > maxIterations)
+				break;
 		}
 
 		if(goal(node))
