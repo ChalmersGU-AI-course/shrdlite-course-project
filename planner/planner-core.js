@@ -120,9 +120,9 @@ function collision(arr) {
 function permutations(arm, stack_length) {
     var combs = [];
     for (var i=0; i < arm.length; i++) {
-        combs.push(['d', 'p', '-', arm[i]-1, arm[i], arm[i]+1] )
+        combs.push(['d', 'p', '-', arm[i]-1, arm[i], arm[i]+1] );
     }
-    var candidates = cartesian(combs)
+    var candidates = cartesian(combs);
     var valid = [];
     for (var cand of candidates) {
         if ((!cand.contains(-1)) && (!cand.contains(stack_length)) && (!collision(cand))) {
