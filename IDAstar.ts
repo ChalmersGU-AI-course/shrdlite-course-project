@@ -54,8 +54,6 @@ module IDAstar{
         stack.push(start);
 
         // TODO improvement: heuristic depth-first instead of simple depth first?
-
-        // TODO can "unnatural failure happen? ie exist no solution."
         while(! stack.isEmpty){
             var v : Vertex<T> = stack.pop();
             s.order[s.x] = v;
@@ -99,6 +97,9 @@ module IDAstar{
     function idaSearch<T>(s : Search<T>) : string[] {
         var nextAttempt : Vertex<T> = s.startVertex;
         while(! depthFirstUntil<T>(nextAttempt, s)){
+            if(s.prioQueue.isEmpty()){
+                throw new IDAstar.Error("No solution found!");
+            }
             nextAttempt = s.prioQueue.dequeue();
             s.hLimit = 2*s.hLimit ;
         }
