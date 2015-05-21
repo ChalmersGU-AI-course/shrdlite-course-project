@@ -142,7 +142,7 @@ module Interpreter {
                 var location = cmd.loc;
                 var locationTargets = findTargetEntities(location.ent, state);
 
-                console.log("Target: "+locationTargets[0]);
+                console.log("Target: "+targets[0]);
 
                 if(location.rel === "beside" || location.rel === "rightof" || location.rel === "leftof"){
                     moveObjBeside(state, intprt, location.rel, targets, locationTargets);
@@ -151,6 +151,26 @@ module Interpreter {
                 } else {
                     moveObjAbove(state, intprt, location.rel, targets, locationTargets);
                 }
+                break;
+            case "put":
+                if (state.holding === null) {
+                    throw new Interpreter.Error("I don't understand what you mean with 'it'")
+                }
+                var targets = new Array<string>();
+                targets[0] = state.holding;
+                var location = cmd.loc;
+                var locationTargets = findTargetEntities(location.ent, state);
+
+                console.log("Target: "+targets[0]);
+
+                if(location.rel === "beside" || location.rel === "rightof" || location.rel === "leftof"){
+                    moveObjBeside(state, intprt, location.rel, targets, locationTargets);
+                } else if(location.rel === "under"){
+                    moveObjAbove(state, intprt, "above", locationTargets, targets);
+                } else {
+                    moveObjAbove(state, intprt, location.rel, targets, locationTargets);
+                }
+                //throw new Interpreter.Error("Interpreter: put cmd not implemented");
                 break;
             default:
                 throw new Interpreter.Error("Interpreter: UNKNOWN cmd: " + cmd.cmd);
