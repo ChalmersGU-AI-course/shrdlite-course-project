@@ -168,13 +168,15 @@ module Interpreter {
 
             // Find all objects that matches the definition in the world
             var objsToCheck: string[] = interpretObject(obj.obj, state);
-
+            
             // Only keep objects that fulfill the location requirement
             var relEnitities: string[][] = interpretEntity(obj.loc.ent, state);
 
             return objsToCheck.filter(function(objToCheck: string) {
                 // Does the object-to-check fulfill the location requirement?
-                var lits = createBiLiteralsSpecifySecondAND(relEnitities, obj.loc.rel, objToCheck);
+                var lits = createBiLiteralsSpecifyFirstAND(relEnitities, obj.loc.rel, objToCheck);
+
+                console.log(lits);
 
                 return LiteralHelpers.areLiteralsFulfilled(lits, state);
             });
@@ -193,6 +195,12 @@ module Interpreter {
         // Collect objects that fulfill the object definition
         var output = [];
 
+        // Check floor
+        if (form == 'floor') {
+            output.push('floor');
+        }
+
+        // Check all objects in the world
         objNamesInWorld.forEach(function(objName) {
             var objDef = state.objects[objName];
 
@@ -205,11 +213,6 @@ module Interpreter {
     }
 
     function objectFulfillsDefinition(objDef: ObjectDefinition, size: string, color: string, form: string): boolean{
-        // Handle the "floor" object and other objects that lack an object definition
-        if (!objDef) {
-            return true;
-        }
-
         // Make sure that the object definition matches the request
         var objOk = true;
 
