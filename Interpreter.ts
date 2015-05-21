@@ -101,8 +101,8 @@ module Interpreter {
 
     function interpretEntity(ent : Parser.Entity, state : WorldState) : string[] {
 	var objs : string[] = interpretObject(ent.obj, state);
-	if(objs.length < 1)
-		throw new Error("No object exists of that specification.");
+	/*if(objs.length < 1)
+		throw new Error("No object exists of that specification.");*/
 	var intprt : string[] = [];
 	console.log(objs);
 	if(ent.quant === "any")	{
@@ -115,8 +115,8 @@ module Interpreter {
 	else if(ent.quant === "the") {
 		if(objs.length == 1)
     		    intprt.push(objs[0]);
-		else
-			throw new Error("Ambiguous, more than 1 of the object exists.");
+		/*else
+			throw new Error("Ambiguous, more than 1 of the object exists.");*/
 	}
 	else if(ent.quant == "all") {
 		throw new Error("Not Implemented Yet: all quantifier");

@@ -76,15 +76,14 @@ module Planner {
 
     function makeHeurFunc(intprt : Interpreter.Literal[][]) {
 	return (s : State) => {
-/*	    var hVals : number[] = [];
+	    var hVal : number = 123123123123;
 	    intprt.forEach((i) => {
-		hVals.push(h(s, i[0]));
-//		hVals.push(dummyH(s, i[0]));
+		var hi : number = h(s, i[0]);
+		if(hi < hVal)
+			hVal = hi;
 	    });
-	    // pick the minimum h-value
-	    return hVals.reduce( (a, b) => {return a < b ? a : b});
-*/
-	    return h(s, intprt[0][0]);
+	    return hVal;
+//	    return 0;
 	};
     }
 
@@ -93,20 +92,20 @@ module Planner {
 	if(lit.rel === "holding") {
 		var goalObj = lit.args[0];
 		var stackIndex;
-		var hval = 1231231230;
+		var hval = 0;
 		//findObjinStacks(goalObj);
 		// best case for picking up object is 'p l|r d r|l', 4 actions per object ontop of goal object
 		// assuming arm is on correct stackpos.
-		// s.stacks[goalObjstack].length - s.stacks[goalObjstack].indexOf(goalObj) * 4
+		// s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(goalObj) * 4
+
 		s.stacks.forEach((stack) => {
 			if(stack.indexOf(lit.args[0]) >= 0){
 				stackIndex = s.stacks.indexOf(stack);
-				hval = (s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(goalObj) );
-				hval += Math.abs(s.armpos - stackIndex) +1 ;
+				hval = (s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(goalObj) ) * 4;
+				hval += Math.abs(stackIndex - s.armpos) +1 ;
 			}
 		});
 		
-	//	return (s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(goalObj) )* 4;
 		return hval;
 	}
     }
