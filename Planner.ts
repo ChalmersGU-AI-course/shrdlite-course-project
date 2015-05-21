@@ -72,9 +72,9 @@ module Planner {
             return item.length != 0;
         });
         if (messages.length == 2) {
-            return [messages.join(" & ")];
+            return [messages[0]+" and "+ messages[1].toLowerCase()+"."];
         } else {
-            return messages;
+            return [messages[0]+"."];
         }
     }
 
@@ -217,7 +217,7 @@ module Planner {
                         newState.stacks[state.arm1].splice(topItemIndexArm1, 1);
 
                         actions[0] = 'p';
-                        messages[0] = "Picking up the " + newState.objects[newState.holding1].form + ". ";
+                        messages[0] = "Picking up the " + newState.objects[newState.holding1].form;
                     } else {
                         invalidActionFlag = true;
                     }
@@ -233,7 +233,7 @@ module Planner {
                         newState.holding1 = null;
 
                         actions[0] = 'd';
-                        messages[0] = "Dropping the " + holdingObj.form + ". ";
+                        messages[0] = "Dropping the " + holdingObj.form;
                     } else {
                         invalidActionFlag = true;
                     }
@@ -251,7 +251,7 @@ module Planner {
                         newState.stacks[state.arm2].splice(topItemIndexArm2, 1);
 
                         actions[1] = 'p';
-                        messages[1] = "Picking up the " + newState.objects[newState.holding2].form + ". ";
+                        messages[1] = "Picking up the " + newState.objects[newState.holding2].form;
                     } else {
                         invalidActionFlag = true;
                     }
@@ -266,7 +266,7 @@ module Planner {
                         newState.holding2 = null;
 
                         actions[1] = 'd';
-                        messages[1] = "Dropping the " + holdingObj.form + ". ";
+                        messages[1] = "Dropping the " + holdingObj.form;
                     } else {
                         invalidActionFlag = true;
                     }
@@ -300,7 +300,7 @@ module Planner {
                     newState.arm1 = targetPos1;
 
                     actions[0] = direction1 > 0 ? "r" : "l";
-                    messages[0] = "Moving " + (direction1 > 0 ? "right" : "left") + ". ";
+                    messages[0] = "Moving left arm " + (direction1 > 0 ? "right" : "left");
                 } else {
                     invalidActionFlag = true;
                 }
@@ -311,7 +311,7 @@ module Planner {
                     newState.arm2 = targetPos2;
 
                     actions[1] = direction2 > 0 ? "r" : "l";
-                    messages[1] = "Moving " + (direction2 > 0 ? "right" : "left") + ". ";
+                    messages[1] = "Moving right arm " + (direction2 > 0 ? "right" : "left");
                 } else {
                     invalidActionFlag = true;
                 }
