@@ -34,15 +34,18 @@ class TextWorld implements World {
         console.log();
         var minArm = Math.min(this.currentState.arm1, this.currentState.arm2);
         var maxArm = Math.max(this.currentState.arm1, this.currentState.arm2);
+        var minArmName = this.currentState.arm1 > this.currentState.arm2 ? '2' : '1';
+        var maxArmName = this.currentState.arm1 > this.currentState.arm2 ? '1' : '2';
+
         var stacks = this.currentState.stacks;
         var maxHeight = Math.max.apply(null, stacks.map((s) => {return s.length}));
         var stackWidth = 3 + Math.max.apply(null, stacks.map((s) => {
             return Math.max.apply(null, s.map((o) => {return o.length}))
         }));
         var line = Array(minArm * stackWidth).join(" ");
-        var line2 = Array((maxArm - minArm - 1) * stackWidth).join(" ");
-        console.log(line + this.centerString("\\_/", stackWidth) +
-            line2 + this.centerString("\\_/", stackWidth));
+        var line2 = " " + Array((maxArm - minArm - 1) * stackWidth).join(" ");
+        console.log(line + this.centerString("\\"+minArmName+"/", stackWidth) +
+            line2 + this.centerString("\\"+maxArmName+"/", stackWidth));
         if (this.currentState.holding1) {
             console.log(line + this.centerString(this.currentState.holding1, stackWidth));
         }
