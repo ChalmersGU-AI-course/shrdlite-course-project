@@ -35,7 +35,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         var neigNumbers : Array<number>;
         //var found;
         //only if not it nodevalues
-        if(state.arm > 1){
+        if(state.arm > 0){
             neig.push(state);
             neig[neig.length].arm = state.arm-1;
             neig[neig.length].planAction = "l";
@@ -45,6 +45,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             neig[neig.length].arm = state.arm+1;
             neig[neig.length].planAction = "l";
         }
+        var pddlIndex:number = this.getTopObjInd(state.arm, state.pddl.toArray());
+        console.log("pddlindex" + pddlIndex);
+        //world.printWorld(state.holding ? "holding" : "not holding");
         if(state.holding != ""){
             neig.push(state);
             
@@ -53,19 +56,19 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
              item and the current on top */ 
             var newobj : Interpreter.Literal;
              newobj.rel = "ontop";
-             newobj.args = [neig[2].holding, state.pddl[index].args[0]];
+             newobj.args = [neig[neig.length].holding, state.pddl[pddlIndex].args[0]];
              //neig[neig.length].holding = state.pddl.push(newobj)
              state.pddl.add(newobj);
              neig[neig.length].holding = "";
              neig[neig.length].planAction = "up";
-        }else if(false /* object in position */) {
+        }else if(neig[neig.length].pddl[pddlIndex].args[0].substr(0, 1)!="f" /* object in position */) {
             neig.push(state);
             //not holding, pick at position    
             /* find object on top at positon, set as index, remove relation, and add object to pddl.holding */ 
-            var index:number=1;
             
-            neig[neig.length].holding = state.pddl[index].args[0];
-            neig[neig.length].pddl.remove(state.pddl[index].args[0]); // this may be error
+            
+            neig[neig.length].holding = state.pddl[pddlIndex].args[0];
+            neig[neig.length].pddl.remove(state.pddl[pddlIndex].args[0]); // this may be error
             neig[neig.length].planAction = "d";
         }
         for(var i = 0; i < neig.length;i++){
@@ -93,6 +96,24 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         return neigNumbers; 
     }
     
+    getTopObjInd(fln:number, pddls:Interpreter.Literal[]):number{
+        var ind :number= -1;
+        var z = "f" + fln.toString();
+        for(var index = 0; index < pddls.length; index++){
+            var pddl = pddls[index];
+            var x = pddl.args[1];
+            if(x == z){
+                z = pddl.args[0];
+                ind=index;
+                index = -1;
+
+                //counter++;
+            }
+        }
+        return ind;
+    }
+
+
     getcost(from: number,to:number):number{
         return 1;
     }
