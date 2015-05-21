@@ -208,20 +208,6 @@ module Planner {
         
     }
 
-    // Function to get the possible moves of a interpretations
-    function getPossibleMoves(state : WorldState) : string[] {
-      // TODO: Should we push the floor? If we hold something: yes, if we don't: no ?
-        var stacks = state.stacks;
-        // Get all the toplevel objects
-        var topObjects = [];
-        for(var i = 0; i < stacks.length; i++){
-          var nObj = stacks[i].length;
-          if(nObj !== 0){
-            topObjects.push(stacks[i][nObj-1]);
-          }
-        }
-        return topObjects;
-    }
 
     function checkSpatialRelations(intp : Interpreter.Literal[], objects : {[s:string]: ObjectDefinition}) : boolean{
         // Check so that each spatial relation holds between the elements
@@ -296,13 +282,29 @@ module Planner {
         // Store a set of all interpretations expressed as strings to make subset checks with current world.
 
         return (function foundGoal(currentWorld : Nworld) : boolean{
-            var intps = intrps;
+            var intps  = intrps;
+            var stacks = currentWorld.states.stacks;
             for(var i = 0; i < intrps.length; i++){
                 // Check if interpretation i holds in the current world
+                var goal = true;
+              for(var j = 0; j < intrps[i].length; j++){
+                  var pObj  = intrps[i][j].args[0];
+                  var tObj  = intrps[i][j].args[1];
+                  var rel   = intrps[i][j].rel;
+                  var holds = Interpreter.getRelation([pObj], [tObj], rel, stacks); // In this pObj & tObj might need to switch, can't figure out how getRelation does it right now.
+
+                  if(!holds.length){
+                      goal = false;
+                  }
+              }
+              // If we have a literal that is a goal state, return true, otherwise keep searching.
+              if(goal)
+                return goal;
             }
             return false;
         });
     }
+
     function getNeighbours(currentWorld : Nworld) : [Nworld, number][]{
         // Return all possible moves as corresponing Nworlds, with actual cost (?)
         return null; // Dummy return
