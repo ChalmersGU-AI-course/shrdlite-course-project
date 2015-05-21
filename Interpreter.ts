@@ -186,12 +186,13 @@ module Interpreter {
     
     function pruningLits(lits : Literal [][]) : Literal [][]
     {
-        var temp : Literal [] = [];
-        for(l in lits)
+        var temp : Literal [][] = [];
+        for(var l in lits)
         {   
-            if(isValidConfig(l))
-                temp.push(l);
+            if(isValidConfig(lits[l]))
+                temp.push(lits[l]);
         }
+        return temp;
     }
     
     function isValidConfig(lits : Literal []) : boolean

@@ -125,17 +125,19 @@ module AStar {
                 if(i == 0)
                 {
                     sugar = "Finally ";
-                    i++;
+                    i = 1;
                 }
                 else
                     sugar = "Then ";
                 var obj = current.wState.stacks[current.wState.arm][current.wState.stacks[current.wState.arm].length-1];
                 obj1 = uniqueAttr[obj].slice().reverse().join(" ");
                 
-                if( curr2.wState.holding !== null && (typeof (curr2.wState.holding) !== "undefined") )
+                if( i == 1 && curr2.wState.holding !== null && (typeof (curr2.wState.holding) !== "undefined") )
                 {
                     result = uniqueAttr[curr2.wState.holding].slice().reverse().join(" ");
-                    total_path.push("Picking up the " + result);
+                    total_path.push(sugar + "I pick up the " + result);
+                    i = 2; 
+                    sugar = "Then ";
                 }
                 
                 if(current.wState.stacks[current.wState.arm].length >1)
