@@ -184,7 +184,7 @@ module Interpreter {
     }
     
     
-    function isValidConfig(lits : Literal [][]) : Literal [][]
+    function pruningLits(lits : Literal [][]) : Literal [][]
     {
         var temp : Literal [] = [];
         for(l in lits)
