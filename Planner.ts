@@ -89,7 +89,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 //if new node exist, do not return that.(no need to go back)
                 console.log("NN: "+neigNumbers);
                  this._nodeValues.push(neig[i]);
-                neigNumbers.push( this._nodeValues.length);
+                neigNumbers.push( this._nodeValues.length-1);
             }   
         }
         console.log("Returning");
@@ -513,9 +513,10 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     }
     reachedGoal(current: number, cond :  Interpreter.Literal[]):boolean{
       // var state = this._nodeValues[current];
-        for(var i = 0; cond.length; i++ ){
-            if(!this.checkGoal( current, cond[i]))
+        for(var i = 0; i < cond.length; i++ ){
+            if( cond[i] != null && !this.checkGoal( current, cond[i]))
                 return false;
+            
         }
         return true;
     }
@@ -528,6 +529,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         var pddls = state.pddl.toArray();
 
         if(cond.rel == "hold"){
+            console.log("this is it");
             if(state.holding != null && this.equalObjects(state.objects[state.holding], state.objects[a]))
                 return true;
             return false;
@@ -739,7 +741,7 @@ module Planner {
 
             temp = as.star(0, intprt[i]);
 
-            if(temp.length < result.length || result == null){
+            if(result == null ||temp.length < result.length ){
                 result = temp;      
                 tempNodevalues = this._nodeValues;
             }
