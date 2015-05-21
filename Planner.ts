@@ -1,7 +1,7 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
 ///<reference path="IDAstar.ts"/>
-///<reference path="NotIDAstar.ts"/>
+///<reference path="Astar.ts"/>
 ///<reference path="Heuristics.ts"/>
 ///<reference path="Position.ts"/>
 
