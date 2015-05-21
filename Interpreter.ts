@@ -167,8 +167,6 @@ module Interpreter {
         var location = cmd.loc;
         var locationTargets = findTargetEntities(location.ent, state);
 
-        //console.log("Target: "+locationTargets[0]);
-
         switch(location.rel){
             case "beside":
             case "rightof":
@@ -177,11 +175,13 @@ module Interpreter {
                 break;
             case "ontop":
             case "inside":
+                moveObjAbove(state, intprt, location.rel, targets, locationTargets, true);
+                break;
             case "above":
-                moveObjAbove(state, intprt, location.rel, targets, locationTargets);
+                moveObjAbove(state, intprt, location.rel, targets, locationTargets, false);
                 break;
             case "under":
-                moveObjAbove(state, intprt, "above", locationTargets, targets);
+                moveObjAbove(state, intprt, "above", locationTargets, targets, false);
                 break;
             default:
                 throw new Interpreter.Error("Unknown Relation in move: " + location.rel);
@@ -206,7 +206,7 @@ module Interpreter {
         }
     }
 
-    function moveObjAbove(state : WorldState, intprt : Literal[][], locationRel : string, fromList : string[], toList : string[]){
+    function moveObjAbove(state : WorldState, intprt : Literal[][], locationRel : string, fromList : string[], toList : string[], exactlyAbove : boolean){
         for (var ix in fromList){
             for(var jx in toList){
                 var above = fromList[ix];
@@ -216,7 +216,8 @@ module Interpreter {
                     continue;
                 }
 
-                if(! canSupport( findObjDef(state, above), findObjDef(state, below))){
+                if(exactlyAbove && !canSupport( findObjDef(state, above),
+                                                findObjDef(state, below))){
                     continue;
                 }
 
