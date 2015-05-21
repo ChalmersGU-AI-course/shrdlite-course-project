@@ -2,7 +2,6 @@
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Astar.ts"/>
 
-
 class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
      _nodeValues : Array<WorldState>;
     _nodeneighbors : Array<Array<WorldState>>;   //neighboring nodes to index node 
@@ -39,10 +38,12 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         if(state.arm > 1){
             neig.push(state);
             neig[neig.length].arm = state.arm-1;
+            neig[neig.length].planAction = "l";
         }
         if(state.arm < GetFloorSize(state)){
             neig.push(state);
             neig[neig.length].arm = state.arm+1;
+            neig[neig.length].planAction = "l";
         }
         if(state.holding != ""){
             neig.push(state);
@@ -54,8 +55,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
              newobj.rel = "ontop";
              newobj.args = [neig[2].holding, state.pddl[index].args[0]];
              //neig[neig.length].holding = state.pddl.push(newobj)
-             state.pddl.push(newobj);
+             state.pddl.add(newobj);
              neig[neig.length].holding = "";
+             neig[neig.length].planAction = "up";
         }else if(false /* object in position */) {
             neig.push(state);
             //not holding, pick at position    
@@ -63,7 +65,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             var index:number=1;
             
             neig[neig.length].holding = state.pddl[index].args[0];
-            neig[neig.length].pddl.splice(index, 1);
+            neig[neig.length].pddl.remove(state.pddl[index].args[0]); // this may be error
+            neig[neig.length].planAction = "d";
         }
         for(var i = 0; i < neig.length;i++){
             var bflag:boolean = false;
@@ -178,7 +181,15 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         return false;
     }
 
-    heuristic_cost_estimate(current:number, goal:Interpreter.Literal):number{//some parts can be improved
+    heuristic_cost_estimate(current:number, goal:Interpreter.Literal[]):number{
+        var count = 0;
+        for(var i = 0; goal.length; i++ ){
+            count += this.heuristic_cost(current, goal[i]);
+        }
+        return count;
+    }
+
+    heuristic_cost(current:number, goal:Interpreter.Literal):number{//some parts can be improved
         var cond = goal;
         var state = this._nodeValues[current];
         var ao = state.objects[cond.args[0]];
@@ -547,19 +558,19 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
 
 function GetFloorSize(state : WorldState):number{
-  /*  var nFloors : number = 0;
+    var nFloors : number = 0;
     do{
         nFloors++;
-        for(var i = 0; i < state.pddl.length; i++){
-            var temp : collections.Set<Interpreter.Literal> = state.pddl[i];
-            var found : boolean = (temp.args[0]=="f" + nFloors);
+        var temp : Interpreter.Literal[] = state.pddl.toArray();
+        for(var i = 0; i < state.pddl.size(); i++){
+            var found : boolean = (temp[i].args[0]=="f" + nFloors);
             if(found){
                 break;
             }
         }
         
-     }while(!found)*/           
-    return 0;//return nFloors;
+     }while(!found)          
+    return nFloors;
 }
 
 

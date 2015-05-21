@@ -8,7 +8,7 @@ interface ObjectDefinition {
     color: string;
 }
 
-/*interface Litteral{
+/*interface Literal{
     pol: boolean;
 	rel: string; //ontopof
 	args: string[];
@@ -21,6 +21,7 @@ interface WorldState {
     arm: number;
     objects: { [s:string]: ObjectDefinition; };
     examples: string[];
+    planAction: string; // l, r, up, d(the possible actions that got us into this state)
 }
 
 interface World {

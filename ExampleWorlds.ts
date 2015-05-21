@@ -3,7 +3,7 @@
 
 var ExampleWorlds : {[s:string]: WorldState} = {};
 	
-function stacksToPDDL(stacks:string[][]):collections.Set<predicate>{
+function stacksToPDDL(stacks:string[][]):collections.Set<Interpreter.Literal>{
 	var pddl = new collections.Set<Interpreter.Literal>(
 					function (p){		// ToString
 						var res:string;
@@ -36,6 +36,7 @@ ExampleWorlds["complex"] = {
     "pddl": stacksToPDDL([["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]]),
     "holding": null,
     "arm": 0,
+    "planAction":"start",
     "objects": {
         "a": { "form":"brick",   "size":"large",  "color":"yellow" },
         "b": { "form":"brick",   "size":"small",  "color":"white" },
@@ -55,7 +56,7 @@ ExampleWorlds["complex"] = {
         "f2": { "form":"floor",    "size":"large",  "color":"" },
         "f3": { "form":"floor",    "size":"large",  "color":"" },
         "f4": { "form":"floor",    "size":"large",  "color":"" }
-    },
+        },
    // "objIds":["a","b","c","d","e","f","g","h","i","j", "k","l","m"],
     "examples": [
     	"put a box on a floor",
@@ -81,6 +82,7 @@ ExampleWorlds["small"] = {
     "pddl": stacksToPDDL([["e"],["g","l"],[],["k","m","f"],[]]),
     "holding": "a",
     "arm": 0,
+    "planAction":"start",
     "objects": {
         "a": { "form":"brick",   "size":"large",  "color":"green" },
         "b": { "form":"brick",   "size":"small",  "color":"white" },
