@@ -295,7 +295,7 @@ module Planner {
     function goalFuncHandle(intrps : Interpreter.Literal[][]){ 
         // Store a set of all interpretations expressed as strings to make subset checks with current world.
 
-        return (function foundGoal(currentWorld : WorldState) : boolean{
+        return (function foundGoal(currentWorld : Nworld) : boolean{
             var intps = intrps;
             for(var i = 0; i < intrps.length; i++){
                 // Check if interpretation i holds in the current world
@@ -303,7 +303,10 @@ module Planner {
             return false;
         });
     }
-
+    function getNeighbours(currentWorld : Nworld) : [Nworld, number][]{
+        // Return all possible moves as corresponing Nworlds, with actual cost (?)
+        return null; // Dummy return
+    }
     function getStackIndex(o1 : string, stacks : string[][]) : number[]{
         var cords:number[] = [-1, -1];
         for(var i = 0; i < stacks.length; i++){
