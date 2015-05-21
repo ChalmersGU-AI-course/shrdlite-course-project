@@ -29,7 +29,6 @@ module Interpreter {
           var msg : string = "Ambiguous command. Please use fewer relative descriptions.";
           throw new Interpreter.Error(msg);
         } else {
-          console.log(interpretations[0]);
           return interpretations;
         }
     } 
@@ -128,10 +127,8 @@ module Interpreter {
       var candidates : string[];
       
       candidates = findObjectsFromObject(state, obj);
-      console.log(candidates);
       
       if (candidates.length == 0) {
-        console.log("length=0");
         throw new Interpreter.Error("Object cannot be found");
       } else if (candidates.length > 1) {
         var form : string = state.objects[candidates[0]].form;
@@ -211,7 +208,7 @@ module Interpreter {
           } else if (rel == "rightof") {
             return (aPos[0] > bPos[0]);          
           } else if (rel == "beside") {
-            return (aPos[0] != bPos[0]);
+            return (Math.abs(aPos[0] - bPos[0]) == 1);
           } else if (rel == "under") {
             return ((aPos[0] == bPos[0]) &&
                     ((aPos[1] - bPos[1]) < 0));   

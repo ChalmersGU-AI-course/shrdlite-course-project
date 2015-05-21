@@ -63,7 +63,6 @@ AStar :: Graph -> Path
         if it is then finds and returns the path.
         */
         current = openset.dequeue(); 
-        console.log(current);
         if(functions.is_goalNode(current)){
           var path = new collections.LinkedList<Node>();
           path.add(current)

@@ -54,6 +54,7 @@ module Planner {
         // This function returns an empty plan involving no random stack
         var plan : string[] = [];
         var statenr = 0;
+        var MAX_STATES = 10000;
 
         //TODO: Make an appropriate type/struct for action/actions.
         var actions : string[]  = ['RIGHT','GRAB','LEFT','DROP']; 
@@ -83,18 +84,10 @@ module Planner {
                 return (a.holding == args[0]);
             },
             inside: function(a:ActionState, args:string[]) : boolean{
-                var position;
-                try{
-                    position = find_obj([args[0]],a.stacks);
-                }catch(err){
-                    return false 
-                }
-                if(((a.stacks[position[0]][(position[1] - 1)]) == args[1]) &&  
-                    state.objects[args[1]].form == "box"){
-                    return true;
-                }
-                return false;   
+                return (pddl["ontop"](a,args)) &&
+                       (state.objects[args[1]].form == "box");
             }
+            //TODO: beside, under, leftof, rightof, ontop
         }
         
         /*
@@ -145,12 +138,74 @@ module Planner {
                 }else if (action == 'RIGHT'){
                     return (astate.arm < state.stacks.length - 1)
                 }else if (action == 'GRAB'){
-                    return (astate.holding == null)
+                    return (canPickUp(astate))
                 }else if (action == 'DROP'){
-                    return (astate.holding != null) //&& (state.stacks[state.arm])
-                }
-                    //Alternative: returns allways false
+                    return (canDrop(astate));
+                } else {
+                    //Alternative: returns always false
                     throw new Error("unsupported action");
+                }
+        }
+        
+        function canPickUp(astate : ActionState) : boolean  {
+            var armEmpty = astate.holding == null;
+            var somethingToPickUp = astate.stacks[astate.arm].length != 0;
+            return armEmpty && somethingToPickUp;
+        }
+        
+        function canDrop(astate : ActionState) : boolean {
+            var heldObject = astate.holding;
+            if (heldObject == null) {
+              return false;
+            }
+            var stack = astate.stacks[astate.arm];
+            if (stack.length == 0) {
+              return true;
+            }
+            var topObject = stack[stack.length - 1];
+            return canRestOn(heldObject,
+                              topObject);
+        }
+        
+        function canRestOn(a : string, b : string) : boolean {
+            var aForm = state.objects[a].form;
+            var aSize = state.objects[a].size;
+            var bForm = state.objects[b].form;
+            var bSize = state.objects[b].size;
+            // Balls cannot support:
+            if (bForm == "ball") {
+                return false;
+            }
+            // Balls must be in boxes:
+            if (aForm == "ball" && bForm != "box") {
+                return false;
+            }
+            // Small cannot support large:
+            if (bSize == "small" && aSize == "large") {
+                return false;    
+            }
+            // Large can always support small:
+            if (bSize == "large" && aSize == "small") {
+                return true;
+            }
+            // If we get here, both are same size
+            // Boxes cannot support pyramids, planks or boxes of same size:
+            if (bForm == "box") {
+                return (aForm != "pyramid" && aForm != "plank" && aForm != "box");
+            }
+            // Small bricks and pyramids cannot support small boxes:
+            if (bSize == "small") {
+                //i.e. both are small
+                if (bForm == "brick" || bForm == "pyramid") {
+                    return (aForm != "box");
+                }
+            }
+            // If we get here, both are large
+            // Large pyramids cannot support large boxes:
+            if (aForm == "box" && bForm == "pyramid") {
+                return false;
+            }
+            return true;
         }
         
         /*
@@ -161,6 +216,9 @@ module Planner {
         function calculate_state(action, astate : ActionState) : ActionState {
             //TODO: calculates the next state given a action.
             statenr++;
+            if (statenr > MAX_STATES) {
+                throw new Error("Search tree too big; no solution found.");
+            }
             var newstate = new ActionState(("state" + statenr));
             if (action == 'LEFT'){
                     newstate.arm = ( astate.arm - 1 );
@@ -180,24 +238,24 @@ module Planner {
                     newstate.arm = astate.arm;
                     var stack = astate.stacks[astate.arm].slice();
                     var height = (stack.length);
-                    var hold = stack[height-1];
+                    var objectToHold = stack[height-1];
                     stack.pop();
-                    newstate.holding = hold;//Alt stack[height-1]
+                    newstate.holding = objectToHold;//Alt stack[height-1]
                     newstate.stacks = astate.stacks.slice();
                     newstate.stacks[astate.arm] = stack.slice();
                     newstate.action = "p";
-                    console.log(state);
-                    newstate.msg = ("Picking up the "); //+ state.objects[newstate.holding].form);
+                    newstate.msg = ("Picking up the "+ state.objects[objectToHold].form);
                     return newstate;
             }else if (action == 'DROP'){
                     var stack = astate.stacks[astate.arm].slice();
-                    stack.push(astate.holding);
+                    var objectToDrop = astate.holding;
+                    stack.push(objectToDrop);
                     newstate.holding = null;
                     newstate.stacks = astate.stacks.slice();
                     newstate.stacks[astate.arm] = stack;
                     newstate.arm = astate.arm;
                     newstate.action = "d";
-                    newstate.msg = ("Dropping the "); //+ state.objects[newstate.holding].form) ;
+                    newstate.msg = ("Dropping the "+ state.objects[objectToDrop].form) ;
                     return newstate; //&& (state.stacks[state.arm])
             }
                     //Alternative: returns always false
