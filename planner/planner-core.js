@@ -114,7 +114,7 @@ SearchGraph.prototype.internal_neighbours =  function(state) {
 
     // Things that depend only on the arm itself
     for (var arm of state.arms) {
-        var actions = [];
+        var actions = ['-'];
         if (arm.holding === null) {
             if (state.stacks[arm.pos].length > 0) {
               actions.push('p');
@@ -130,7 +130,6 @@ SearchGraph.prototype.internal_neighbours =  function(state) {
         if (arm.pos !== state.stacks.length-1) {
             actions.push(1);
         }
-        actions.push('-');
         combs.push(actions);
     }
     var candidates = cartesian(combs);
