@@ -481,6 +481,10 @@ module Interpreter {
             detail2 = {form:"floor", size:"", color:""};
         }
 
+        if(obj1 == obj2){
+            return false;
+        }
+
         switch(rel){
             case "inside":
                 if(detail2.form == "box"){
@@ -500,7 +504,24 @@ module Interpreter {
                 if(detail1.form == "ball"){
                     result = (detail2.form == "floor");
                 }
+                else if(detail2.form == "box"){
+                    result = false;
+                }
                 else{
+                    if(detail1.size == "large" && detail2.size == "small"){
+                        result = false;
+                    }
+                    if(detail1.size == "small" && detail1.size == "box"){
+                        if(detail2.size == "small" && (detail2.form == "brick" || detail2.form == "pyramid")){
+                            result = false;
+                        }
+                    }
+                    if(detail1.size == "large" && detail1.size == "box"){
+                        if(detail2.size == "large" && detail2.form == "pyramid"){
+                            result = false;
+                        }
+                    }
+
 
                 }
                 break; 
