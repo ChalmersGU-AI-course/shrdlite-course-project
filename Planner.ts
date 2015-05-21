@@ -187,23 +187,8 @@ module Planner {
 
         isReached(node: astar.INode): boolean {
             var n = <PlannerNode> node;
-
-            // TODO: Use LiteralHelpers
-            for (var iOrLiteral = 0; iOrLiteral < this.targets.length; iOrLiteral++) {
-                var currentOrLiteral = this.targets[iOrLiteral];
-                var goalReachable = true;
-                for (var i = 0; i < currentOrLiteral.length; i++) {
-                    var currentLiteral = currentOrLiteral[i];
-
-                    if (!LiteralHelpers.isLiteralFullfilled(currentLiteral, n.state)) {
-                        goalReachable = false;
-                    }
-                }
-                if (goalReachable) {
-                    return true;
-                }
-            }
-            return false;
+            
+            return LiteralHelpers.areLiteralsFulfilled(this.targets, n.state);
         }
     }
 

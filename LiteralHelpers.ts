@@ -3,6 +3,8 @@
 module LiteralHelpers {
 
     export function areLiteralsFulfilled(orPart: Interpreter.Literal[][], state: WorldState): boolean {
+        var result = false;
+
         // OR part
         orPart.forEach(function(andPart: Interpreter.Literal[]) {
             var andPartFulfilled = true;
@@ -13,11 +15,11 @@ module LiteralHelpers {
             });
 
             if (andPartFulfilled) {
-                return true;
+                result = true;
             }
         });
 
-        return false;
+        return result;
     }
 
     export function isLiteralFullfilled(lit: Interpreter.Literal, state: WorldState): boolean {
