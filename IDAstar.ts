@@ -29,9 +29,7 @@ module IDAstar{
 
         var est : number = node.cost + node.heur;
         if(est > s.bound) return est;
-        if(s.isGoal(node.state)) {
-            return -1;
-        }
+        if(s.isGoal(node.state)) return -1;
 
         var neighbours : Astar.Neighb<T>[] = s.f(node.state);
         var min : number = Infinity;
