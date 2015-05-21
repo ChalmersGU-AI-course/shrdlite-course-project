@@ -55,7 +55,7 @@ module Planner {
         if (result.found) {
             for (var i = 1; i < result.path.length; i++) {
                 var current = <PlannerNode> result.path[i];
-                plan.push([current.actionMessage.join(" & ")]);
+                plan.push(makeReadableMessage(current.actionMessage));
                 plan.push(current.lastAction);
             }
             plan.push(["Taddaaa!"]);
@@ -64,6 +64,17 @@ module Planner {
         }
 
         return plan;
+    }
+
+    function makeReadableMessage(actions: string[]): string[] {
+        var messages = actions.filter(function(item) {
+            return item.length != 0;
+        });
+        if (messages.length == 2) {
+            return [messages.join(" & ")];
+        } else {
+            return messages;
+        }
     }
 
     export class PlannerNode implements astar.INode {
