@@ -26,7 +26,7 @@ module Planner {
     }
 
 
-    export interface Result extends Interpreter.Result {plan:string[];}
+    export interface Result extends Interpreter.Result { plan:string[][]; }
 
 
     export function planToString(res : Result) : string {
@@ -55,7 +55,7 @@ module Planner {
         if (result.found) {
             for (var i = 1; i < result.path.length; i++) {
                 var current = <PlannerNode> result.path[i];
-                plan.push(current.actionMessage);
+                plan.push([current.actionMessage.join(" & ")]);
                 plan.push(current.lastAction);
             }
             plan.push(["Taddaaa!"]);
