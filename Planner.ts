@@ -594,6 +594,7 @@ module Planner {
 
     export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
         var plans : Result[] = [];
+
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
             plan.plan = planInterpretation(plan.intp, currentState);
@@ -632,19 +633,21 @@ module Planner {
         var sp = new Shortestpath(1);
         var as = new Astar<number[]>(sp);
 
+        sp._nodeValues.push(state);//added this.. not sure if this is the place
+
         var result = null;
         var temp;
         var tempNodevalues = [];
         for(var i = 0; i < intprt.length; i++){
             this._nodeValues = [];
             this._neighborValues = [];
-            this.nodevalues.push(state);
+            this._nodeValues.push(state);
 
             temp = as.star(0, intprt[i]);
 
             if(temp.length < result.length || result == null){
                 result = temp;      
-                tempNodevalues = this._nodeValues
+                tempNodevalues = this._nodeValues;
             }
 
         }
