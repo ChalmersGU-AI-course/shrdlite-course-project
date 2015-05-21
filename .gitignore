@@ -6,3 +6,5 @@ AStartests.js
 Auxiliary.js
 World.js
 SpatialConstraints.js
+Interpreter.js
+Goals.js
