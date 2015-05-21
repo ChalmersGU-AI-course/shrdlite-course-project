@@ -24,6 +24,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         console.log("in get neighbor func");
         var state : WorldState = this._nodeValues[node];
         //var cur = this._nodeValues[node];
+        console.log("Narmpos: "+state.arm + " , holding: " + state.holding);
         var neig :Array<WorldState> = [];
         var neigNumbers :Array<number> =[];
         //var found;
@@ -58,7 +59,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
              //neig[neig.length].holding = state.pddl.push(newobj)
              state.pddl.add(newobj);
              neig[neig.length-1].holding = null;
-             neig[neig.length-1].planAction = "p";
+             neig[neig.length-1].planAction = "d";
         }else if( pddlIndex >0){//neig[neig.length-1].pddl[pddlIndex].args[0].substr(0, 1) != "f" /* object in position */) {
             console.log("if2");
             neig.push(state);
@@ -66,7 +67,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             /* find object on top at positon, set as index, remove relation, and add object to pddl.holding */             
             neig[neig.length-1].holding = this.getTopObj(state, state.pddl.toArray());
             neig[neig.length-1].pddl.remove(this.getTopRelation (state, state.pddl.toArray())); // this may be error
-            neig[neig.length-1].planAction = "d";
+            neig[neig.length-1].planAction = "p";
         }
         console.log("stop4");
         for(var i = 0; i < neig.length;i++){
@@ -92,7 +93,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 neigNumbers.push( this._nodeValues.length-1);
             }   
         }
-        console.log("Returning");
+        console.log("ENDNarmpos: "+state.arm + " , holding: " + state.holding);
         //Add new to nodevalues, return new indexes
         return neigNumbers; 
     }
@@ -263,6 +264,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }
         }
         console.log("finished heur");
+        console.log("armpos: "+ this._nodeValues[current].arm + " , holding: " +  this._nodeValues[current].holding);
         return count;
     }
 
@@ -278,7 +280,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         console.log("at heuristics");
 
         
-
+        console.log("11armpos: "+state.arm + " , holding: " + state.holding);
         if(cond.rel == "hold"){
             console.log("at hold1");
             if(state.holding != null){
@@ -724,6 +726,7 @@ module Planner {
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         
+        console.log("armpos: "+state.arm + " , holding: " + state.holding);
         var shortest = null;//keeps track of shortest path encountered
 
         var sp = new Shortestpath(1);
@@ -751,14 +754,18 @@ module Planner {
 
         //sen execute:A den bästa planen (om det blev någon plan)
         var plan : string[] = [];
+
         if(result != null){
-            for(var i = 1; i<this._nodeValues.length; i++ ){
-                plan.push(this._nodeValues[i].planAction);//possible to check what kind of action and add text here
+            console.log("length of plan: " + tempNodevalues.length)
+            for(var i = 0; i<this._nodeValues.length; i++ ){
+                console.log("action planned: "+this._nodeValues[i].planAction);
+                plan.push("p");//possible to check what kind of action and add text here
             }
         }
         else{
             //throw error
         }
+        console.log("armpos2: "+state.arm + " , holding: " + state.holding);
         return plan;
     }
 
