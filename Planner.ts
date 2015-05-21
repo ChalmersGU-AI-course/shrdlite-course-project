@@ -39,12 +39,15 @@ module Planner {
     // Private classes
 
     class ActionState extends Astar.Node {
-            action: string;
+            action: Action;
             stacks: string[][];
             holding: string;
             arm: number;
             msg: string;
-
+    }
+    
+    interface Action {
+            command : string;
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -57,7 +60,12 @@ module Planner {
         var MAX_STATES = 10000;
 
         //TODO: Make an appropriate type/struct for action/actions.
-        var actions : string[]  = ['RIGHT','GRAB','LEFT','DROP']; 
+        var left : Action = {command : "l"};
+        var right : Action = {command : "r"};
+        var drop : Action = {command : "d"};
+        var pick : Action = {command : "p"};
+                
+        var actions : Action[]  = [left, right, pick, drop]; 
         
         /*
         These PDDL Interpretation function could be lifted out to a separate module,
@@ -119,7 +127,7 @@ module Planner {
         function dynamic_children(astate : ActionState){
             var states : ActionState[] = []; 
              actions.forEach((action) => { 
-                if(works(action,astate) ){ //TODO: set ids etc  
+                if(works(action,astate) ){
                     var s = calculate_state(action,astate);
                     states.push(s);
                 }
@@ -130,21 +138,38 @@ module Planner {
         /*
         This function validates whether an action can be applied to a state, without
         violating the physical conditions given. 
-        TODO: Extend 'Drop', so that it cosiders the shape of the element at the top of the state stack.
         */
-        function works( action : string , astate : ActionState) : boolean {
-                if (action == 'LEFT'){
+        function works(action : Action , astate : ActionState) : boolean {
+                if (isOpposite(action, astate.action)) {
+                    return false;
+                }
+                if (action == left){
                     return (astate.arm > 0) 
-                }else if (action == 'RIGHT'){
+                }else if (action == right){
                     return (astate.arm < state.stacks.length - 1)
-                }else if (action == 'GRAB'){
+                }else if (action == pick){
                     return (canPickUp(astate))
-                }else if (action == 'DROP'){
+                }else if (action == drop){
                     return (canDrop(astate));
                 } else {
                     //Alternative: returns always false
                     throw new Error("unsupported action");
                 }
+        }
+        
+        function isOpposite(a1 : Action, a2 : Action) {
+            if (a1 == a2) {
+                return false;
+            } else if (a1 == left) {
+                return (a2 == right)
+            } else if (a1 == right) {
+                return (a2 == left)
+            } else if (a1 == drop) {
+                return (a2 == pick)
+            } else if (a1 == pick) {
+                return (a2 == drop)
+            }
+            return false;
         }
         
         function canPickUp(astate : ActionState) : boolean  {
@@ -210,31 +235,30 @@ module Planner {
         
         /*
         Given a state and an action, action is applied upon the state, the state is modified,
-        it is also given an 'plan action' - l:Left,r:right,d:drop,g:grab - and a corresponding
+        it is also given an 'plan action' - l:Left,r:right,d:drop,p:pick - and a corresponding
         message to go with it. 
         */ 
-        function calculate_state(action, astate : ActionState) : ActionState {
+        function calculate_state(action : Action, astate : ActionState) : ActionState {
             //TODO: calculates the next state given a action.
             statenr++;
             if (statenr > MAX_STATES) {
                 throw new Error("Search tree too big; no solution found.");
             }
             var newstate = new ActionState(("state" + statenr));
-            if (action == 'LEFT'){
+            newstate.action = action;
+            if (action == left){
                     newstate.arm = ( astate.arm - 1 );
-                    newstate.action = "l";
                     newstate.holding = astate.holding
                     newstate.stacks = astate.stacks.slice();
                     newstate.msg = "Moving left"; 
                     return newstate;
-            }else if (action == 'RIGHT'){
+            }else if (action == right){
                     newstate.arm = ( astate.arm + 1 );
-                    newstate.action = "r"
                     newstate.holding = astate.holding
                     newstate.stacks = astate.stacks.slice();
                     newstate.msg = "Moving right"; 
                     return newstate; 
-            }else if (action == 'GRAB'){
+            }else if (action == pick){
                     newstate.arm = astate.arm;
                     var stack = astate.stacks[astate.arm].slice();
                     var height = (stack.length);
@@ -243,10 +267,9 @@ module Planner {
                     newstate.holding = objectToHold;//Alt stack[height-1]
                     newstate.stacks = astate.stacks.slice();
                     newstate.stacks[astate.arm] = stack.slice();
-                    newstate.action = "p";
                     newstate.msg = ("Picking up the "+ state.objects[objectToHold].form);
                     return newstate;
-            }else if (action == 'DROP'){
+            }else if (action == drop){
                     var stack = astate.stacks[astate.arm].slice();
                     var objectToDrop = astate.holding;
                     stack.push(objectToDrop);
@@ -254,7 +277,6 @@ module Planner {
                     newstate.stacks = astate.stacks.slice();
                     newstate.stacks[astate.arm] = stack;
                     newstate.arm = astate.arm;
-                    newstate.action = "d";
                     newstate.msg = ("Dropping the "+ state.objects[objectToDrop].form) ;
                     return newstate; //&& (state.stacks[state.arm])
             }
@@ -303,7 +325,7 @@ module Planner {
           });
         for (var p = 1; p < path.length; p++){
             plan.push((<ActionState>path[p]).msg);
-            plan.push((<ActionState>path[p]).action);            
+            plan.push((<ActionState>path[p]).action.command);            
         }
         return plan;
     }
