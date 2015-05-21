@@ -298,10 +298,6 @@ module Interpreter {
         return result;
     }
 
-    // function checkLocation() : boolean {
-    //     return true;
-    // }
-
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
