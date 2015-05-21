@@ -94,7 +94,7 @@ module Interpreter {
                 else sourcesBranches = [[getHolding()]]
                 var targetBraches = find(cmd.loc.ent, worldLit, objectMap);
                 var literals : Literal[] = [];
-                debugger;
+
                 product(sourcesBranches, targetBraches).forEach((param) => {
                     var sources = param[0], targets = param[1];
                     var literals : Literal[] = [];
@@ -150,21 +150,27 @@ module Interpreter {
 
     function findAll(obj : Parser.Object, allLiterals : Literal[], objects : ObjectMap) : Key[] {
         if ("obj" in obj) {
-            var relatedObjKeys = find(obj.loc.ent, allLiterals, objects);
-            if (relatedObjKeys.length == 0) return [];
+            var relatedObjKeysBranches = find(obj.loc.ent, allLiterals, objects);
+            // TODO this picks the first possible path
+            // the find should always result in an arrays of branches
+            for(var i in relatedObjKeysBranches) {
+                var relatedObjKeys : Key[] = relatedObjKeysBranches[i];
+                if (relatedObjKeys.length == 0) return [];
 
-            var targetObjKeys = searchObjects(obj.obj, objects);
-            if (targetObjKeys.length == 0) return [];
+                var targetObjKeys = searchObjects(obj.obj, objects);
+                if (targetObjKeys.length == 0) return [];
 
-            var matchingLiterals = allLiterals.filter((lit) => {
-                return (
-                    lit.rel == obj.loc.rel &&
-                    contains(targetObjKeys, lit.args[0]) &&
-                    contains(relatedObjKeys, lit.args[1])
-                );
-            });
+                var matchingLiterals = allLiterals.filter((lit) => {
+                    return (
+                        lit.rel == obj.loc.rel &&
+                        contains(targetObjKeys, lit.args[0]) &&
+                        contains(relatedObjKeys, lit.args[1])
+                    );
+                });
 
-            return matchingLiterals.map((lit) => lit.args[0]);
+                return matchingLiterals.map((lit) => lit.args[0]);
+            }
+            return [];
         } else {
             return searchObjects(obj, objects);
         }
