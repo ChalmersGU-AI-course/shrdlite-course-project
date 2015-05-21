@@ -290,7 +290,7 @@ module Planner {
             // We can use a shallow copy here since we don't need a deep copy
             var newState = getWorldCloneShallow(state);
             // it's an invalid action if the targets are the same
-            var invalidActionFlag = (targetPos1 == targetPos2);
+            var invalidActionFlag = (targetPos1 >= targetPos2);
 
             var actions = ['n', 'n']; //by default don't do anything, change if needed
             var messages = ['', ''];
