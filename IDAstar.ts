@@ -13,6 +13,7 @@ module IDAstar{
     var result : string[];
 
     export function idaSearch<T>(s : Astar.Search<T>) : string[] {
+        console.log("Using IDAstar search...");
         result = [];
         var t = 0;
         while(t >= 0){

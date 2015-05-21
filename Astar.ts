@@ -80,6 +80,7 @@ module Astar{
     }
 
     export function astarSearch<T>(s : Search<T>){
+        console.log("Using Astar search...");
 
         var visited = new collections.Set<T>() ;
         s.prioQueue.enqueue(s.startVertex);
