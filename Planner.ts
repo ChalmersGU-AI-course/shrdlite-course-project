@@ -56,9 +56,9 @@ module Planner {
         var start = new State(state.arm, state.holding, state.stacks);
 
         console.log(" ");
-        var search = new Astar.Search(start, neighbours, heur, goal, 20, true);
-        // var plan : string[] = IDAstar.idaSearch(search);
-        var plan : string[] = Astar.astarSearch(search);
+        var search = new Astar.Search(start, neighbours, heur, goal);
+        var plan : string[] = IDAstar.idaSearch(search);
+        // var plan : string[] = Astar.astarSearch(search);
 
         console.log("Completed in " + search.x + " iterations.");
         console.log("This plan has " + plan.length + " elements...");

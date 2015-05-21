@@ -3,7 +3,7 @@
 /// <reference path="Astar.ts"/>
 
 module IDAstar{
-    
+
     var result : string[];
 
     export function idaSearch<T>(s : Astar.Search<T>) : string[] {
@@ -23,6 +23,9 @@ module IDAstar{
     // Otherwise, returns minimum f-value of its successors.
     function searchUntil<T>(node : Astar.Vertex<T>, s : Astar.Search<T>) : number{
         s.x = s.x + 1;
+        if(s.x > s.maxIter){
+            throw new Planner.Error("Max iterations exceeded: "+s.x);
+        }
 
         var est : number = node.cost + node.heur;
         if(est > s.bound) return est;

@@ -82,7 +82,8 @@ module Astar{
         while(! s.prioQueue.isEmpty()){
 
             if(s.x > s.maxIter){
-                throw new Planner.Error("Stopping early after " + s.x + " iterations. Size of queue: " + s.prioQueue.size() + " current cost: " + current.cost);
+                throw new Planner.Error("Max iterations exceeded: " + s.x +
+                " current cost: " + current.cost);
             }
 
             var current : Vertex<T> = s.prioQueue.dequeue();
