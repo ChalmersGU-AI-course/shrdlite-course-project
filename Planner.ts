@@ -57,8 +57,8 @@ module Planner {
 
         console.log(" ");
         var search = new Astar.Search(start, neighbours, heur, goal);
-        var plan : string[] = IDAstar.idaSearch(search);
-        // var plan : string[] = Astar.astarSearch(search);
+        // var plan : string[] = IDAstar.idaSearch(search);
+        var plan : string[] = Astar.astarSearch(search);
 
         var len = plan.length;
         plan.unshift("Completed in " + search.x + " iterations.");
