@@ -50,7 +50,7 @@ module Planner {
         var graphGoal = new MultipleGoals(intprt);
         //var graph = new astar.Graph(new SimpleHeuristic(intprt), graphGoal);
         //var graph = new astar.Graph(new DijkstraHeuristic(), graphGoal);
-        var graph = new astar.Graph(new DijkstraHeuristic(), graphGoal);
+        var graph = new astar.Graph(new TwoArmHeuristic(intprt), graphGoal);
         var graphStart = new PlannerNode(state, null, null);
         var result = graph.searchPath(graphStart);
 
