@@ -141,21 +141,34 @@ module Interpreter {
                 var location = cmd.loc;
                 var locationTargets = findTargetEntities(location.ent, state);
 
-                console.log("Target: "+locationTargets[0]);
-
-                if(location.rel === "beside" || location.rel === "rightof" || location.rel === "leftof"){
-                    moveObjBeside(state, intprt, location.rel, targets, locationTargets);
-                } else if(location.rel === "under"){
-                    moveObjAbove(state, intprt, "above", locationTargets, targets);
-                } else {
-                    moveObjAbove(state, intprt, location.rel, targets, locationTargets);
-                }
+                // console.log("Target: "+locationTargets[0]);
+                moveCommand(state, intprt, location.rel, targets, locationTargets);
                 break;
             default:
                 throw new Interpreter.Error("Interpreter: UNKNOWN cmd: " + cmd.cmd);
         }
 
         return intprt;
+    }
+
+    function moveCommand(state : WorldState, intprt, relation, targets, locationTargets):void{
+        switch(relation){
+            case "beside":
+            case "rightof":
+            case "leftof":
+                moveObjBeside(state, intprt, relation, targets, locationTargets);
+                break;
+            case "under":
+                moveObjAbove(state, intprt, "above", locationTargets, targets);
+                break;
+            case "ontop":
+            case "inside":
+            case "above":
+                moveObjAbove(state, intprt, relation, targets, locationTargets);
+                break;
+            default:
+                throw new Interpreter.Error("Unknown Relation in move: " + relation);
+        }
     }
 
     function moveObjBeside(state : WorldState, intprt, locationRel, fromList, toList){
