@@ -27,11 +27,6 @@ grammar.js: grammar.ne
 run: shrdlite-offline.js
 	# node shrdlite-offline.js small "grasp the yellow box"
 	# node shrdlite-offline.js small "put the blue table on a box"
-	# node shrdlite-offline.js small "put the blue table above the red box"
-	# node shrdlite-offline.js small "put the white ball on the white ball"
-	# node shrdlite-offline.js small "put the blue box in the red box"
-	# node shrdlite-offline.js small "put the red box on the floor"
-	# node shrdlite-offline.js small "put the table below the blue box"
 	# node shrdlite-offline.js small "move the blue table beside the yellow box" # tests 'beside'
 	# node shrdlite-offline.js small "put the blue table right of the blue box" # tests 'right of'
 	# node shrdlite-offline.js small "put the yellow box left of the blue box" # tests 'left of'
@@ -41,11 +36,10 @@ run: shrdlite-offline.js
 medium: shrdlite-offline.js
 	# node shrdlite-offline.js medium "put the blue box above the red box"
 	# node shrdlite-offline.js medium "put the red box below the blue box"
-	# node shrdlite-offline.js medium "put the green brick below the yellow pyramid"
+	node shrdlite-offline.js medium "put the green brick below the yellow pyramid"
 
-bug: shrdlite-offline.js
+complex: shrdlite-offline.js
+	node shrdlite-offline.js complex "put the green plank above the yellow pyramid"
+
+ambiguity: shrdlite-offline.js
 	node shrdlite-offline.js medium "put a ball that is on the floor beside the green plank"
-
-floor: shrdlite-offline.js
-	node shrdlite-offline.js medium "put the red table on the floor"
-	# node shrdlite-offline.js medium "put the green brick above the floor"

@@ -45,8 +45,7 @@ module Interpreter {
 
     export function canSupport(above: ObjectDefinition, below: ObjectDefinition) : boolean{
         if(below == null){
-            console.log("Interpreter.canSupport(): below was NULL");
-            return false; // might not be a good idea to return true, only a hotfix!
+            throw new Interpreter.Error("Interpreter.canSupport(): below was NULL");
         }
 
         if(below.form == "floor"){
@@ -260,33 +259,44 @@ module Interpreter {
             result.push("floor");
         }
 
-        // for(var objName in state.objects){
+        if(state.holding != null){
+            var objName = state.holding;
+            if(testObject(state, state.holding, goalObj)){
+                result.push(state.holding);
+            }
+        }
+
         for(var stackNo in state.stacks){
             var currentStack = state.stacks[stackNo];
             for(var heightNo in currentStack){
                 var objName = currentStack[heightNo];
-                var obj : ObjectDefinition = state.objects[objName];
-
-                if(goalObj.size != null){
-                    if(goalObj.size != obj.size){
-                        continue;
-                    }
+                if(testObject(state, objName, goalObj)){
+                    result.push(objName);
                 }
-                if(goalObj.color != null){
-                    if(goalObj.color != obj.color){
-                        continue;
-                    }
-                }
-                if(goalObj.form != null){
-                    if(goalObj.form != obj.form){
-                        continue;
-                    }
-                }
-                result.push(objName);
             }
         }
 
         return result;
+    }
+
+    function testObject(state : WorldState, objName : string, goalObj : Parser.Object) : boolean {
+        var obj : ObjectDefinition = state.objects[objName];
+        if(goalObj.size != null){
+            if(goalObj.size != obj.size){
+                return false;
+            }
+        }
+        if(goalObj.color != null){
+            if(goalObj.color != obj.color){
+                return false;
+            }
+        }
+        if(goalObj.form != null){
+            if(goalObj.form != obj.form){
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -307,10 +317,6 @@ module Interpreter {
 
         return result;
     }
-
-    // function checkLocation() : boolean {
-    //     return true;
-    // }
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);

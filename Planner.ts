@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="IDAstar.ts"/>
 ///<reference path="Astar.ts"/>
 ///<reference path="Heuristics.ts"/>
 ///<reference path="Position.ts"/>
@@ -54,20 +55,20 @@ module Planner {
         var heur = Heuristics.computeHeuristicFunction(intprt);
         var start = new State(state.arm, state.holding, state.stacks);
 
-        var plan : string[] = Astar.astar(neighbours, cost, heur, start, goal, true, 20000);
-        plan.shift();
+        console.log(" ");
+        var search = new Astar.Search(start, neighbours, heur, goal);
+        // var plan : string[] = IDAstar.idaSearch(search);
+        var plan : string[] = Astar.astarSearch(search);
 
-        console.log("This plan has " + plan.length + " elements...");
+        var len = plan.length;
+        plan.unshift("Completed in " + search.x + " iterations.");
+        plan.unshift("This plan has " + len + " actions.");
 
         return plan;
     }
 
-    function cost(a : State, b : State) : number{
-        return 1;
-    }
-
     /**
-    * @return goal function for Astar.
+    * @return goal function for IDAstar.
     */
     function computeGoalFunction(intprt : Interpreter.Literal[][]) : Astar.Goal<State>{
         return (s : State) => {
@@ -159,7 +160,7 @@ module Planner {
                 throw new Planner.Error("ERROR: unknown action "+action);
                 return undefined;
         }
-        return {state: newState, action: action};
+        return {state: newState, action: action, transitionCost: 1};
     }
 
     function canSupport(above: string, below: string) : boolean{
