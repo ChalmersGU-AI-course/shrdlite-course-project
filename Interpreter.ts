@@ -1,6 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
-///<reference path="AstarPlanner/collections.ts"/>
+///<reference path="Astar/collections.ts"/>
 
 
 module Interpreter {
@@ -381,7 +381,7 @@ module Interpreter {
         }
         else{
             var combinations = allCombinations(objs);
-            // console.log(combinations);
+            console.log(combinations);
 
             for(var i = 0 ;i < combinations.length; i++){
 
@@ -427,6 +427,11 @@ module Interpreter {
         var a_loc = getStackLocation(obj1,state);
         var b_loc = getStackLocation(obj2,state);
 
+        console.log(obj1);
+        console.log(obj2);
+        console.log(rel);
+
+
         //special case for "floor"
         if(obj2 == "z"){
             if(a_loc.y == 0)
@@ -442,7 +447,7 @@ module Interpreter {
 
         switch(rel){
             case "inside":
-                //it should somehow check that obj1 should be in form of Box otherwise return error
+                //consider it as ontop case but it will be checked about laws later
                 result = (a_loc.x == b_loc.x) && (a_loc.y == (b_loc.y + 1));
                 break;
             case "ontop":
@@ -455,13 +460,13 @@ module Interpreter {
                 result = (a_loc.x == b_loc.x) && (a_loc.y < b_loc.y);
                 break;
             case "beside":
-                result = ((a_loc.x == (b_loc.x +1)) || (a_loc.x == (b_loc.x -1)))  && (a_loc.y == b_loc.y);
+                result = ((a_loc.x == (b_loc.x +1)) || (a_loc.x == (b_loc.x -1)));
                 break;
             case "leftof":
-                result = (a_loc.x == (b_loc.x -1)) && (a_loc.y == b_loc.y);
+                result = (a_loc.x < b_loc.x);
                 break;
             case "rightof":
-                result = (a_loc.x == (b_loc.x +1)) && (a_loc.y == b_loc.y);
+                result = (a_loc.x > b_loc.x);
                 break;
         }
 
@@ -592,7 +597,7 @@ module Interpreter {
                 results.push(objs[i]);
             }
         }
-       // console.log(results);
+       console.log(results);
        return results; 
 
     }
