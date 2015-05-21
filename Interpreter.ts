@@ -341,7 +341,7 @@ module Interpreter {
             objsLaw.push(objA_move);
             objsLaw.push(objB_move);
             var combs = allCombinations(objsLaw);
-            console.log(combs);
+            // console.log(combs);
 
             for(var i = 0 ;i < combs.length; i++){
 
@@ -381,7 +381,7 @@ module Interpreter {
         }
         else{
             var combinations = allCombinations(objs);
-            console.log(combinations);
+            // console.log(combinations);
 
             for(var i = 0 ;i < combinations.length; i++){
 
@@ -470,7 +470,7 @@ module Interpreter {
                 break;
         }
 
-        console.log(result);
+        // console.log(result);
         return result;
     }
 
@@ -533,7 +533,7 @@ module Interpreter {
 
         }
 
-        console.log(obj1 + " " + obj2 + " " + rel + " " + result);
+        // console.log(obj1 + " " + obj2 + " " + rel + " " + result);
 
         return result;
     }
@@ -597,7 +597,7 @@ module Interpreter {
                 results.push(objs[i]);
             }
         }
-       console.log(results);
+       // console.log(results);
        return results; 
 
     }
