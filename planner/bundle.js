@@ -344,50 +344,50 @@ SearchGraph.prototype.neighbours = function* (state) {
     }
 
     // Lower left arm
-    if(state.leftHolding !== null &&
-            this.can_place(state.leftHolding, state.stacks[state.leftArm])) {
-        var new_stacks = state.stacks.slice();
-        new_stacks[state.leftArm] = new_stacks[state.leftArm].slice();
-        new_stacks[state.leftArm].push(state.leftHolding);
+    if(state.leftHolding !== null) {
+        if(this.can_place(state.leftHolding, state.stacks[state.leftArm])) {
+            var new_stacks = state.stacks.slice();
+            new_stacks[state.leftArm] = new_stacks[state.leftArm].slice();
+            new_stacks[state.leftArm].push(state.leftHolding);
 
-        // Right arm left
-        if(state.rightArm !== state.leftArm+1) {
-            yield {
-                leftArm: state.leftArm, leftHolding: null,
-                rightArm: state.rightArm-1, rightHolding: state.rightHolding,
-                stacks: new_stacks
-            };
-        }
-        // Right arm right
-        if(state.rightArm !== state.stacks.length-1) {
-            yield {
-                leftArm: state.leftArm, leftHolding: null,
-                rightArm: state.rightArm+1, rightHolding: state.rightHolding,
-                stacks: new_stacks
-            };
-        }
-        // Right arm lower
-        if(state.rightHolding !== null &&
-                this.can_place(state.rightHolding, new_stacks[state.rightArm])) {
-            var new_stacks = new_stacks.slice();
-            new_stacks[state.rightArm] = new_stacks[state.rightArm].slice();
-            new_stacks[state.rightArm].push(state.rightHolding);
+            // Right arm left
+            if(state.rightArm !== state.leftArm+1) {
+                yield {
+                    leftArm: state.leftArm, leftHolding: null,
+                    rightArm: state.rightArm-1, rightHolding: state.rightHolding,
+                    stacks: new_stacks
+                };
+            }
+            // Right arm right
+            if(state.rightArm !== state.stacks.length-1) {
+                yield {
+                    leftArm: state.leftArm, leftHolding: null,
+                    rightArm: state.rightArm+1, rightHolding: state.rightHolding,
+                    stacks: new_stacks
+                };
+            }
+            // Right arm lower
+            if(state.rightHolding !== null) {
+                if(this.can_place(state.rightHolding, new_stacks[state.rightArm])) {
+                    new_stacks[state.rightArm] = new_stacks[state.rightArm].slice();
+                    new_stacks[state.rightArm].push(state.rightHolding);
 
-            yield {
-                leftArm: state.leftArm, leftHolding: null,
-                rightArm: state.rightArm, rightHolding: null,
-                stacks: new_stacks
-            };
-        }
-        // Pick up with right arm
-        else if(new_stacks[state.rightArm].length > 0) {
-            var new_stacks = new_stacks.slice();
-            new_stacks[state.rightArm] = new_stacks[state.rightArm].slice();
-            yield {
-                leftArm: state.leftArm, leftHolding: null,
-                rightArm: state.rightArm, rightHolding: new_stacks[state.rightArm].pop(),
-                stacks: new_stacks
-            };
+                    yield {
+                        leftArm: state.leftArm, leftHolding: null,
+                        rightArm: state.rightArm, rightHolding: null,
+                        stacks: new_stacks
+                    };
+                }
+            }
+            // Pick up with right arm
+            else if(new_stacks[state.rightArm].length > 0) {
+                new_stacks[state.rightArm] = new_stacks[state.rightArm].slice();
+                yield {
+                    leftArm: state.leftArm, leftHolding: null,
+                    rightArm: state.rightArm, rightHolding: new_stacks[state.rightArm].pop(),
+                    stacks: new_stacks
+                };
+            }
         }
     }
     // Pick up with left arm
@@ -414,17 +414,17 @@ SearchGraph.prototype.neighbours = function* (state) {
             };
         }
         // Right arm lower
-        if(state.rightHolding !== null &&
-                this.can_place(state.rightHolding, new_stacks[state.rightArm])) {
-            var new_stacks = new_stacks.slice();
-            new_stacks[state.rightArm] = new_stacks[state.rightArm].slice();
-            new_stacks[state.rightArm].push(state.rightHolding);
+        if(state.rightHolding !== null) {
+            if(this.can_place(state.rightHolding, new_stacks[state.rightArm])) {
+                new_stacks[state.rightArm] = new_stacks[state.rightArm].slice();
+                new_stacks[state.rightArm].push(state.rightHolding);
 
-            yield {
-                leftArm: state.leftArm, leftHolding: item,
-                rightArm: state.rightArm, rightHolding: null,
-                stacks: new_stacks
-            };
+                yield {
+                    leftArm: state.leftArm, leftHolding: item,
+                    rightArm: state.rightArm, rightHolding: null,
+                    stacks: new_stacks
+                };
+            }
         }
         // Pick up with right arm
         else if(new_stacks[state.rightArm].length > 0) {
@@ -651,8 +651,8 @@ SearchGraph.prototype.h = function (state) {
 */
 
 SearchGraph.prototype.state_hash = function(state) {
-    return JSON.stringify(state.stacks) + state.leftArm * 10 + state.rightArm * 100+
-        state.leftHolding * 1000 + state.rightHolding * 10000;
+    return JSON.stringify(state.stacks) + state.leftArm + "-" + state.rightArm + "-" +
+        state.leftHolding + "-" + state.rightHolding;
 };
 
 //TODO

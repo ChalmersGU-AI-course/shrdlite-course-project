@@ -144,9 +144,9 @@ class SVGWorld implements World {
         // The right arm:
         $(this.SVG('line')).attr({
             id:'rightArm',
-            x1: this.stackWidth() / 2,
+            x1: this.stackWidth() / 2, //this.currentState.rightArm * this.stackWidth() + this.stackWidth()/2,
             y1: this.armSize * this.stackWidth() - this.canvasHeight, 
-            x2: this.stackWidth() / 2, 
+            x2: this.stackWidth() / 2, //this.currentState.rightArm * this.stackWidth() + this.stackWidth()/2,
             y2: this.armSize * this.stackWidth(), 
             stroke: 'black', 
             'stroke-width': this.armSize * this.stackWidth(),
@@ -179,8 +179,9 @@ class SVGWorld implements World {
                 var rightAction = this.getAction(item[1]);
                 if (leftAction) {
                     try {
-                    leftAction.call(this, this.currentState.leftArm,
-                        rightAction.call(this, this.currentState.rightArm, performNextAction));
+                        leftAction.call(this, this.currentState.leftArm,
+                            rightAction.call(this, this.currentState.rightArm,
+                                performNextAction));
                     } catch(err) {
                         this.printError(err);
                         if (callback) setTimeout(callback, this.promptPause * 1000);
