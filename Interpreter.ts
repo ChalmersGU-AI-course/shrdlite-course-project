@@ -102,10 +102,10 @@ module Interpreter {
         
         if(cmd.ent.quant === "the")
         	if(result.length > 1)
-    			return [];
+    			throw "Description is not unambiguous";
 		
     	if(result.length <= 0)
-    		return [];
+    		throw "Can not find any objects matching the description";
         
         switch(cmd.cmd)
         {
@@ -114,9 +114,8 @@ module Interpreter {
                 var moveTo: string[] = interpretLoc(cmd.loc,world,wObjs);
                 //console.log("after interloc" , moveTo);
                 if(moveTo.length <= 1)
-                {
-                   return [];
-                }
+                   throw new Interpreter.Error("No matching objects found");
+                
                 if( cmd.ent.quant === "all")
                 {
                     //var ls : Literal [] = [];
@@ -140,22 +139,7 @@ module Interpreter {
                         }
                         
                     }
-                    console.log("el done");
-                    /*for(var t in res)
-                        for(var p in res[t])
-                            console.log(res[t][p].args);
-                    for(var i = 1; i < moveTo.length; i++)
-                    {
-                        for(var r in result)
-                        {
-                            var l : Literal = {pol:true,rel:moveTo[0],args:[result[r],moveTo[i]]};
-                            if(result[r] !== moveTo[i] && validateL(l,world))
-                                ls.push(l);
-                        }
-                        res.push(ls);
-                        ls = [];
-                    }*/
-                    
+                    console.log("el done"); 
                 }
                 else
                 {	
@@ -173,7 +157,7 @@ module Interpreter {
                 break;
             case "take":
             		if(cmd.ent.quant === "all" && result.length > 1)
-            			return [];
+            			throw new Interpreter.Error("Asked to hold " + result.length + " objects, but can only hold one") ;
             			
                     res.push([{pol:true,rel:"holding",args:[result[0]]}])
                 break;
