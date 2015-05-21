@@ -55,12 +55,22 @@ class Interpreter
         parses[getClarificationAnswer(parses.length)]
         
     getClarificationAnswer = (listLength) ->
-        questionAnswer = -1
+        input = -1 # The input to be read
         fs = require 'fs'
-        fd = fs.openSync("/dev/stdin", "rs")
         buf = new Buffer( 256 )
-        questionAnswer = fs.readSync(fd, buf, 0, 256)
-        parseInt(buf.toString(null, 0, questionAnswer), 10)
+        # Windows and Linux/OS X reads the prompt differently
+        if process.platform is "win32"
+            input  = fs.readSync(process.stdin.fd, buf, 0, 256)
+        else
+            fd = fs.openSync("/dev/stdin", "rs")
+            input = fs.readSync(fd, buf, 0, 256)
+        ans = parseInt(buf.toString(null, 0, input), 10) # Try to parse the input as a number
+        # If it is a number between 0 and length
+        if not isNaN(ans) and 0 <= ans and ans < listLength
+          return ans
+        else # Repeat until a valid number is given
+          console.log "You must input a number int the range 0.." + (listLength-1)
+          return getClarificationAnswer listLength
 
     getEntString = (entity) ->
         entString = entity.quant + " "
