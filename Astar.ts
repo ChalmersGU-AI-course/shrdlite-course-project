@@ -65,10 +65,10 @@ module Astar{
         public x : number = 0;
         public order : Array<Astar.Vertex<T>> = [];
         public startVertex : Astar.Vertex<T>;
+        public hLimit : number;
 
         constructor(
             start : T,
-            public hLimit : number,
             public f : Astar.Neighbours<T>,
             public h : Astar.Heuristic<T>,
             public isGoal : Astar.Goal<T>,
@@ -78,13 +78,13 @@ module Astar{
             this.prioQueue = new collections.PriorityQueue<Astar.Vertex<T>>(( (a, b) => {
                 return b.cost + b.heur - a.cost - a.heur;
             } )) ;
+            this.hLimit = h(start);
             this.startVertex = {
                 state : start,
                 cost : 0,
-                heur : 0,
+                heur : this.hLimit,
                 previous : -1,
                 action : "init"
-
             };
         }
     }
@@ -164,7 +164,6 @@ module Astar{
 
             if(s.x > s.maxIter){
                 throw new Astar.Error("Stopping early after " + s.x + " iterations. Size of queue: " + s.prioQueue.size() + " current cost: " + current.cost);
-                // return postProcess<T>(order, x-1);
             }
 
             var current : Vertex<T> = s.prioQueue.dequeue();
