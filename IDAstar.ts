@@ -54,6 +54,8 @@ module IDAstar{
         stack.push(start);
 
         // TODO improvement: heuristic depth-first instead of simple depth first?
+
+        // TODO can "unnatural failure happen? ie exist no solution."
         while(! stack.isEmpty){
             var v : Vertex<T> = stack.pop();
             s.order[s.x] = v;
@@ -72,6 +74,13 @@ module IDAstar{
                     previous : s.x,
                     action : neighb.action
                 };
+
+                if(s.multiPathPruning){
+                    if(s.visited.contains(vn.state)){
+                        continue;
+                    }
+                    s.visited.add(vn.state);
+                }
 
                 if(vn.heur < s.hLimit){
                     stack.push(vn);
@@ -97,10 +106,11 @@ module IDAstar{
     }
 
     export class Search<T>{
-        public prioQueue : collections.PriorityQueue<Vertex<T>> ;
+        public prioQueue : collections.PriorityQueue<Vertex<T>>;
+        public visited : collections.Set<T> = new collections.Set<T>();
         public x : number = 0;
         public order : Array<Vertex<T>> = [];
-        public startVertex : Vertex<T>
+        public startVertex : Vertex<T>;
 
         constructor(
             start : T,
