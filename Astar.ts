@@ -4,12 +4,6 @@
 module Astar{
     //-- Interfaces -------------------------------------------
 
-    export class Error implements Error {
-        public name = "Astar.Error";
-        constructor(public message? : string) {}
-        public toString() {return this.name + ": " + this.message}
-    }
-
     /**
     * returns the neighbouring states from the current state.
     */
@@ -88,7 +82,7 @@ module Astar{
         while(! s.prioQueue.isEmpty()){
 
             if(s.x > s.maxIter){
-                throw new Astar.Error("Stopping early after " + s.x + " iterations. Size of queue: " + s.prioQueue.size() + " current cost: " + current.cost);
+                throw new Planner.Error("Stopping early after " + s.x + " iterations. Size of queue: " + s.prioQueue.size() + " current cost: " + current.cost);
             }
 
             var current : Vertex<T> = s.prioQueue.dequeue();
@@ -114,7 +108,7 @@ module Astar{
             }
             s.x = s.x + 1;
         }
-        throw new Astar.Error("No solution found!");
+        throw new Planner.Error("No solution found!");
     }
 
     export function neighbourVertex<T>(s : Search<T>, v : Vertex<T>, neighb : Neighb<T>){

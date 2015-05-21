@@ -3,13 +3,7 @@
 /// <reference path="Astar.ts"/>
 
 module IDAstar{
-
-    export class Error implements Error {
-        public name = "IDAstar.Error";
-        constructor(public message? : string) {}
-        public toString() {return this.name + ": " + this.message}
-    }
-
+    
     var result : string[];
 
     export function idaSearch<T>(s : Astar.Search<T>) : string[] {
