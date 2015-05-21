@@ -60,8 +60,9 @@ module Planner {
         var plan : string[] = IDAstar.idaSearch(search);
         // var plan : string[] = Astar.astarSearch(search);
 
-        console.log("Completed in " + search.x + " iterations.");
-        console.log("This plan has " + plan.length + " elements...");
+        var len = plan.length;
+        plan.unshift("Completed in " + search.x + " iterations.");
+        plan.unshift("This plan has " + len + " actions.");
 
         return plan;
     }
