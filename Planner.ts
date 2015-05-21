@@ -8,7 +8,7 @@ module Planner {
     // exported functions, classes and interfaces/types
 
     //TODO should this be moved somewhere? Argument och global parameter?
-    var searchDepth = 7;
+    var searchDepth = 10;
     var NUM_STACKS;
 
     export function plan(interpretation : PddlLiteral[][], currentState : ExtendedWorldState) : string[] {
@@ -180,6 +180,33 @@ module Planner {
             var pddlWorld = node.label;
             var world = pddlWorld.rels;
             var done = false;
+            // Here begins new code
+            for (var i in goalWorld) {
+                var conjunction = true;
+                for (var j in goalWorld[i]) {
+                    var atom = false;
+                    // For each 'and', check all rels in world.
+                    for (var n in world) {
+                        if ((goalWorld[i][j].rel === 'holding' && 
+                            goalWorld[i][j].args[0] === pddlWorld.holding) ||
+                            world[n].rel === goalWorld[i][j].rel &&
+                            world[n].args[0] === goalWorld[i][j].args[0] &&
+                            world[n].args[1] === goalWorld[i][j].args[1]) {
+                            atom = true;
+                            break;
+                        }
+                    }
+                    if (!atom) {
+                        conjunction = false;
+                        break;
+                    }
+                }
+                if (conjunction) {
+                    return true;
+                }
+            }
+            return false;
+            /* // Here is old code
             for(var n in world) {
                 for(var i in goalWorld) {
                     for(var j in goalWorld[i]) {
@@ -198,8 +225,8 @@ module Planner {
                     done = done || goalWorld[i].length === 0;
                 }
             }
-
             return done;
+            */
         }
     }
 
