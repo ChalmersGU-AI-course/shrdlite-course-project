@@ -52,9 +52,14 @@ module IDAstar{
     function depthFirstUntil<T>(start : Vertex<T>, s : Search<T>) : boolean{
         var stack = new collections.Stack<Vertex<T>>();
         stack.push(start);
+        // if(stack.isEmpty()){
+        //     console.log("Stack is empty at the very start!!!!!!");
+        // }
+        //
+        // console.log("DepthFirst with hLimit: "+s.hLimit);
 
         // TODO improvement: heuristic depth-first instead of simple depth first?
-        while(! stack.isEmpty){
+        while(! stack.isEmpty()){
             var v : Vertex<T> = stack.pop();
             s.order[s.x] = v;
 
@@ -63,6 +68,7 @@ module IDAstar{
             }
 
             var neighbours : Neighb<T>[] = s.f(v.state);
+            // console.log("Found starting neighbours: "+neighbours.length);
             for(var n in neighbours){
                 var neighb = neighbours[n];
                 var vn : Vertex<T> = {
@@ -75,14 +81,17 @@ module IDAstar{
 
                 if(s.multiPathPruning){
                     if(s.visited.contains(vn.state)){
+                        // console.log("Already visited this???...");
                         continue;
                     }
                     s.visited.add(vn.state);
                 }
 
                 if(vn.heur < s.hLimit){
+                    // console.log("Pushes to stack...");
                     stack.push(vn);
                 } else {
+                    // console.log("Pusehs to prioQueue...");
                     s.prioQueue.enqueue(vn);
                 }
 
@@ -94,9 +103,10 @@ module IDAstar{
         return false;
     }
 
-    function idaSearch<T>(s : Search<T>) : string[] {
+    export function idaSearch<T>(s : Search<T>) : string[] {
         var nextAttempt : Vertex<T> = s.startVertex;
         while(! depthFirstUntil<T>(nextAttempt, s)){
+
             if(s.prioQueue.isEmpty()){
                 throw new IDAstar.Error("No solution found!");
             }

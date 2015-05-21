@@ -54,22 +54,20 @@ module Planner {
         var heur = Heuristics.computeHeuristicFunction(intprt);
         var start = new State(state.arm, state.holding, state.stacks);
 
-        var plan : string[] = Astar.astar(neighbours, cost, heur, start, goal, true, 20000);
-        plan.shift();
+        var search = new IDAstar.Search(start, 300, neighbours, heur, goal, 20000, true);
+        var plan : string[] = IDAstar.idaSearch(search);
+        // var plan : string[] = IDAstar.astar(neighbours, cost, heur, start, goal, true, 20000);
+        // plan.shift();
 
         console.log("This plan has " + plan.length + " elements...");
 
         return plan;
     }
 
-    function cost(a : State, b : State) : number{
-        return 1;
-    }
-
     /**
-    * @return goal function for Astar.
+    * @return goal function for IDAstar.
     */
-    function computeGoalFunction(intprt : Interpreter.Literal[][]) : Astar.Goal<State>{
+    function computeGoalFunction(intprt : Interpreter.Literal[][]) : IDAstar.Goal<State>{
         return (s : State) => {
             for(var ix in intprt){
                 if(testConjunctiveClause(s, intprt[ix])){
@@ -102,7 +100,7 @@ module Planner {
         }
     }
 
-    function neighbours(s : State) : Astar.Neighb<State>[]{
+    function neighbours(s : State) : IDAstar.Neighb<State>[]{
         var result = [];
         var numStacks = s.stacks.length;
 
@@ -138,7 +136,7 @@ module Planner {
         return result;
     }
 
-    function performAction(action: string, state: State) : Astar.Neighb<State>{
+    function performAction(action: string, state: State) : IDAstar.Neighb<State>{
         var newState = cloneState(state);
 
         switch(action){
@@ -159,7 +157,7 @@ module Planner {
                 throw new Planner.Error("ERROR: unknown action "+action);
                 return undefined;
         }
-        return {state: newState, action: action};
+        return {state: newState, action: action, transitionCost: 1};
     }
 
     function canSupport(above: string, below: string) : boolean{
