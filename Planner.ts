@@ -1,6 +1,7 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
 ///<reference path="IDAstar.ts"/>
+///<reference path="NotIDAstar.ts"/>
 ///<reference path="Heuristics.ts"/>
 ///<reference path="Position.ts"/>
 
@@ -55,10 +56,11 @@ module Planner {
         var start = new State(state.arm, state.holding, state.stacks);
 
         var search = new Astar.Search(start, neighbours, heur, goal, 20000, true);
-        var plan : string[] = IDAstar.idaSearch(search);
-        // var plan : string[] = Astar.astarSearch(search);
+        // var plan : string[] = IDAstar.idaSearch(search);
+        var plan : string[] = Astar.astarSearch(search);
+        // var plan : string[] = NotIDAstar.search(search);
 
-        plan.shift();
+        console.log("Completed in " + search.x + " iterations.");
         console.log("This plan has " + plan.length + " elements...");
 
         return plan;

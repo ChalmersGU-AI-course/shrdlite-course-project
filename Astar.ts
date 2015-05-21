@@ -65,7 +65,7 @@ module Astar{
         public x : number = 0;
         public order : Array<Astar.Vertex<T>> = [];
         public startVertex : Astar.Vertex<T>;
-        public hLimit : number;
+        public bound : number;
 
         constructor(
             start : T,
@@ -78,11 +78,11 @@ module Astar{
             this.prioQueue = new collections.PriorityQueue<Astar.Vertex<T>>(( (a, b) => {
                 return b.cost + b.heur - a.cost - a.heur;
             } )) ;
-            this.hLimit = h(start);
+            this.bound = h(start);
             this.startVertex = {
                 state : start,
                 cost : 0,
-                heur : this.hLimit,
+                heur : this.bound,
                 previous : -1,
                 action : "init"
             };
@@ -197,12 +197,12 @@ module Astar{
     * returns the path as a list, ie from start to goal.
     */
     export function postProcess<T>(order : Array<Vertex<T>>, finish : number) : string[]{
-        console.log("Completed in " + finish + " iterations.");
         var result = Array<string>();
 
         for(var x : number = finish; x >= 0; x = order[x].previous){
             result.unshift(order[x].action);
         }
+        result.shift();
         return result;
     }
 

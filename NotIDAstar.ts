@@ -2,23 +2,24 @@
 /// <reference path="lib/collections.ts" />
 /// <reference path="Astar.ts"/>
 
+// Finds non-optimal solution quickly.
 module NotIDAstar{
 
     export class Error implements Error {
-        public name = "IDAstar.Error";
+        public name = "NotIDAstar.Error";
         constructor(public message? : string) {}
         public toString() {return this.name + ": " + this.message}
     }
 
-    export function idaSearch<T>(s : Astar.Search<T>) : string[] {
+    export function search<T>(s : Astar.Search<T>) : string[] {
         var nextAttempt : Astar.Vertex<T> = s.startVertex;
         while(! depthFirstUntil<T>(nextAttempt, s)){
 
             if(s.prioQueue.isEmpty()){
-                throw new IDAstar.Error("No solution found!");
+                throw new NotIDAstar.Error("No solution found!");
             }
             nextAttempt = s.prioQueue.dequeue();
-            s.hLimit = 2*s.hLimit ;
+            s.bound = 2*s.bound ;
         }
         return Astar.postProcess(s.order, s.x);
     }
@@ -51,7 +52,7 @@ module NotIDAstar{
                     s.visited.add(vn.state);
                 }
 
-                if(vn.heur < s.hLimit){
+                if(vn.heur < s.bound){
                     stack.push(vn);
                 } else {
                     s.prioQueue.enqueue(vn);
