@@ -9,7 +9,13 @@ class SVGWorld implements World {
         public useSpeech = false
     ) {
         if (!this.currentState.arm1) this.currentState.arm1 = 0;
+        if (!this.currentState.arm2) this.currentState.arm2 = 0;
         if (this.currentState.holding1) this.currentState.holding1 = null;
+        if (this.currentState.holding2) this.currentState.holding2 = null;
+
+        console.log(this.currentState.arm1);
+        console.log(this.currentState.arm2);
+
         this.canvasWidth = this.containers.world.width() - 2 * this.wallSeparation;
         this.canvasHeight = this.containers.world.height() - this.floorThickness;
 
@@ -141,13 +147,17 @@ class SVGWorld implements World {
         // The arm2:
         $(this.SVG('line')).attr({
             id:'arm2',
-            x1: this.canvasWidth - this.stackWidth() / 2,
+            x1: this.stackWidth() / 2,
             y1: this.armSize * this.stackWidth() - this.canvasHeight, 
-            x2: this.canvasWidth - this.stackWidth() / 2, 
+            x2: this.stackWidth() / 2, 
             y2: this.armSize * this.stackWidth(), 
             stroke: 'black', 
             'stroke-width': this.armSize * this.stackWidth(),
         }).appendTo(svg);
+
+        // Move arms to initial positions
+        this.animateMotion($('#arm1'), ["M", 0, 0, "H", this.currentState.arm1 * this.stackWidth() + this.wallSeparation], 0, 1);
+        this.animateMotion($('#arm2'), ["M", 0, 0, "H", this.currentState.arm2 * this.stackWidth() + this.wallSeparation], 0, 1);
 
         var timeout = 0;
         for (var stacknr=0; stacknr < this.currentState.stacks.length; stacknr++) {
