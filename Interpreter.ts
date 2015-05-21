@@ -188,8 +188,11 @@ module Interpreter {
         // We can't use state.objects here since not all objects are placed in the world!
         var objNamesInWorld: string[] = Array.prototype.concat.apply([], state.stacks);
 
-        if (state.holding) {
-            objNamesInWorld.push(state.holding);
+        if (state.holding1) {
+            objNamesInWorld.push(state.holding1);
+        }
+        if (state.holding2) {
+            objNamesInWorld.push(state.holding2);
         }
 
         // Collect objects that fulfill the object definition
