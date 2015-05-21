@@ -5,9 +5,18 @@
 
 class GLGWorld implements World {
     protected gl: WebGLRenderingContext;
-    protected enabled: boolean;
-    protected floorVertexBuffer: WebGLBuffer;
+
     protected shaderProgram: WebGLProgram;
+
+    protected pMatrixUniform: WebGLUniformLocation;
+    protected mvMatrixUniform: WebGLUniformLocation;
+
+    protected floorVertexBuffer: WebGLBuffer;
+
+    protected pMatrix: Float32Array;
+    protected mvMatrix: Float32Array;
+    protected vertexPositionAttribute: number;
+
     constructor(
         public currentState: WorldState,
         public canvas: HTMLCanvasElement
@@ -19,10 +28,11 @@ class GLGWorld implements World {
             this.gl.clearColor(0.0, 0.0, 0.2, 1.0);
             this.gl.enable(this.gl.DEPTH_TEST);
             this.gl.depthFunc(this.gl.LEQUAL);
+            
 
             //Matrices
-            var mvMatrix: Float32Array = mat4.create();
-            var pMatrix: Float32Array = mat4.create();
+            this.mvMatrix = mat4.create();
+            this.pMatrix = mat4.create();
             
 
             //Shader set-up
@@ -58,70 +68,67 @@ class GLGWorld implements World {
 
             if (!this.gl.getProgramParameter(this.shaderProgram, this.gl.LINK_STATUS)) {
                 alert("Could not initialise shaders");
+                return;
             }
 
             this.gl.useProgram(this.shaderProgram);
 
-            var vertexPositionAttribute = this.gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
-            this.gl.enableVertexAttribArray(vertexPositionAttribute);
+            this.vertexPositionAttribute = this.gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
+            this.gl.enableVertexAttribArray(this.vertexPositionAttribute);
 
-            var pMatrixUniform: WebGLUniformLocation = this.gl.getUniformLocation(this.shaderProgram, "uPMatrix");
-            var mvMatrixUniform: WebGLUniformLocation = this.gl.getUniformLocation(this.shaderProgram, "uMVMatrix");
+            this.pMatrixUniform = this.gl.getUniformLocation(this.shaderProgram, "uPMatrix");
+            this.mvMatrixUniform = this.gl.getUniformLocation(this.shaderProgram, "uMVMatrix");
 
             //Set up some buffers
             this.floorVertexBuffer = this.gl.createBuffer();
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.floorVertexBuffer);
             var vertices = [
-                0.0, 1.0, 0.0,
-                -1.0, -1.0, 0.0,
-                1.0, -1.0, 0.0
+                -5.0, -2.0, -1.0,
+                5.0, -2.0, -1.0,
+                -5.0, -2.0, -11.0,
+                5.0, -2.0, -11.0
             ];
-
             this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
-            
-
-
 
 
             //Now draw!
 
-            this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-
-            mat4.perspective(pMatrix, 45, this.canvas.width / this.canvas.height, 0.1, 100.0);
-            mat4.identity(mvMatrix);
-            
-
-            var translation = vec3.create();
-            vec3.set(translation, -1.5, 0.0, -7.0);
-            mat4.translate(mvMatrix, mvMatrix, translation);
-
-
-            
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.floorVertexBuffer);
-            this.gl.vertexAttribPointer(vertexPositionAttribute, 3, this.gl.FLOAT, false, 0, 0);
-            this.gl.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
-            this.gl.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
-
-            this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 3);
-
-
-            
-            
-
-
-
-
-
+            this.drawLoop();
 
 
             
 
+
+
+            
+            
         }
         catch (e) {
             alert(e);
             this.gl = undefined;
         }
+    }
+
+    drawLoop(): void {
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+        this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+        mat4.perspective(this.pMatrix, 1.04 /*60 grader i radianer*/, this.canvas.width / this.canvas.height, 0.1, 100.0);
+        //mat4.lookAt(...)
+
+        mat4.identity(this.mvMatrix);
+
+        var translation = vec3.create();
+        vec3.set(translation, 0.0, 0.0, -1.0);
+        mat4.translate(this.mvMatrix, this.mvMatrix, translation);
+
+        this.gl.uniformMatrix4fv(this.pMatrixUniform, false, this.pMatrix);
+        this.gl.uniformMatrix4fv(this.mvMatrixUniform, false, this.mvMatrix);
+
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.floorVertexBuffer);
+        this.gl.vertexAttribPointer(this.vertexPositionAttribute, 3, this.gl.FLOAT, false, 0, 0);
+
+        this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+
     }
 
     printWorld(callback?: () => void): void {
