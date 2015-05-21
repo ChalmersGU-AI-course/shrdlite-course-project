@@ -236,6 +236,8 @@ module Planner {
 		            case "holding":
 		                regExp = new RegExp (derp.concat( x , "$" ));
 		                break;
+                    default:
+                        throw new Planner.Error("Unknown relation: " + rel);
 		        }
 		        if(!regExp.test(curr))
 		        {
@@ -356,19 +358,11 @@ module Planner {
 		            	{
 		            		totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1;
 		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
-		                    if(totHue < 0)
-		                    {
-		                        console.log("FAIL!");
-		                    }
 		            	}
 		            	else if(yStack[1] === -1)
 		            	{
 		            		totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +1;
 		            		totHue += +Math.abs(+yStack[0] - +xStack[0]) + +1;
-		                    if(totHue < 0)
-		                    {
-		                        console.log("FAIL2!");
-		                    }
 		            	}
 		            	else
 		            	{
@@ -382,10 +376,6 @@ module Planner {
 				                {
 				                    totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +2;
 				                }
-		                        if(totHue < 0)
-		                        {
-		                            console.log("FAIL3!");
-		                        }
 				            }
 				            else
 				            {
@@ -463,24 +453,17 @@ module Planner {
 		            	{
 		            		totHue += +curr.stacks[xStack[0]].length-(+xStack[1] + +1);//totHue += 0;
 		            	}
-		                
+		            break;
+                    default:
+                        throw new Planner.Error("Unknown relation: " + rel );
 		        }
 		        biggestTot = Math.min(biggestTot,totHue);
 		    }
 	    }
-        //console.log(totHue);
         return biggestTot;
     }
     
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
-        		
-		//console.log(worldItteration(state));
-        //console.log(WorldFunc.compareWorld(state,state));
-        //console.log(w2N(state).neighbours);
-        //console.log(convertToMap(state));
-        console.log("asdasdasd");
-       
         var unqAttr : {[s:string]: string[];} = uniqueAttributes(state);
         var tempplan =  AStar.astar(intprt,state,goalFunction,getHueristic,w2N,unqAttr);
         var plan = [];
@@ -491,80 +474,9 @@ module Planner {
         while(tempplan.length > 0)
         {
             var s: string = tempplan.pop();
-            /*switch (s)
-            {
-                case "l":
-                    arm--;
-                    //plan.push("Moving left");
-                    break;
-                case "r":
-                    arm++;
-                    //plan.push("Moving Right");
-                    break;
-                case "d":
-                    if(state.stacks[arm].length === 0)
-                    {
-                        plan.push("Dropping the "+state.objects[obj1].form +" on the floor");
-                    }
-                    else
-                    {
-                        obj2 = state.stacks[arm][state.stacks[arm].length-1];
-                        plan.push("Dropping the "+state.objects[obj1].form +" on the " +state.objects[obj2].form);
-                    }
-                    
-                    break;
-                case "p":
-                    obj1 = state.stacks[arm][state.stacks[arm].length-1]
-                    console.log(obj1);
-                    plan.push("Picking up the " + state.objects[obj1].form);
-                    break;
-            }*/
-            
             plan.push(s);
         }
         plan.push("GOBY PLZ!");
-        //console.log(plan);
-		/*do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
-        var plan : string[] = [];
-
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
-            }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
-            }
-        }
-
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
-
-        if (pickstack < state.stacks.length-1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
-                plan.push("r");
-            }
-
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
-                plan.push("l");
-            }
-        }
-
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
-        */
         return plan;
     }
 
@@ -574,8 +486,6 @@ module Planner {
     }
 
 }
-
-
 
 
 function uniqueAttributes ( w : WorldState  ) : { [s:string]: string[]}
