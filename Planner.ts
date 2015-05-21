@@ -326,15 +326,15 @@ module Planner {
             // TODO: Use LiteralHelpers
             for (var iOrLiteral = 0; iOrLiteral < this.targets.length; iOrLiteral++) {
                 var currentOrLiteral = this.targets[iOrLiteral];
-                var goalReachable = true;
+                var goalReached = true;
                 for (var i = 0; i < currentOrLiteral.length; i++) {
                     var currentLiteral = currentOrLiteral[i];
 
                     if (!LiteralHelpers.isLiteralFullfilled(currentLiteral, n.state)) {
-                        goalReachable = false;
+                        goalReached = false;
                     }
                 }
-                if (goalReachable) {
+                if (goalReached) {
                     return true;
                 }
             }
