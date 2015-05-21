@@ -181,7 +181,6 @@ module Interpreter {
         if (locationsIntrprt == null) {
             locationsIntrprt = [[[null]]];
         }
-        console.log("Marker 1");
         // For all interpretations...
         var interpretations : PddlLiteral[][][] = [];
         for (var i in entitiesIntrprt) {
@@ -193,7 +192,6 @@ module Interpreter {
                 for (var k in entitiesOr) {
                     var entitiesAnd = entitiesOr[k];
                     if (locationsOr.length > 1) {
-                        console.log("Marker 2");
                         // Combine all entities with a location using cartesian product.
                         // Will return some "impossible" goals in OR, but that's ok.
                         // ... Rules cannot be handled here.
@@ -201,12 +199,9 @@ module Interpreter {
                         var setToProduct: string[][] = [];
                         for (var l in entitiesAnd) {
                             // One dimension in the cartesian product for each entity.
-                            console.log("Marker 4");
                             setToProduct.push(flatLocOr.slice());
-                            console.log("Marker 5");
                         }
                         var combinations = cartesianProduct(setToProduct);
-                        console.log("Marker 6");
                         for (l in combinations) {
                             var combo = combinations[l];
                             var interpretationAnd: PddlLiteral[] = [];
@@ -215,15 +210,12 @@ module Interpreter {
                                 var arg1 = ((entitiesAnd[m] == null) ? [] : [entitiesAnd[m]]);
                                 var arg2 = ((combo[m] == null) ? [] : [combo[m]]);
                                 var pddlGoal = { pol: true, rel: rel, args: arg1.concat(arg2) };
-                                console.log("Marker 7");
                                 console.log(arg1, arg2);
                                 interpretationAnd.push(pddlGoal);
-                                console.log("Marker 8");
                             }
                             interpretationOr.push(interpretationAnd);
                         }
                     } else {
-                        console.log("Marker 3");
                         // Combine all entities with all locations.
                         var interpretationAnd: PddlLiteral[] = [];
                         for (var m in locationsOr[0]) {
@@ -237,57 +229,6 @@ module Interpreter {
                         interpretationOr.push(interpretationAnd);
                     }
                 }
-                 /* else { // Conjunctive
-                    var entitiesAnd = entitiesOr[0]
-                      , locs = squishList(locationsOr);
-                    // Put all balls in all boxes is the same as put all balls in a box, except 
-                    // that the first one requires that the number of balls is the same as the 
-                    // number of boxes.
-                    if (locationsOr[0].length > 1 && entitiesAnd.length != locs.length) {
-                        console.warn("Impossible command, returning empty list");
-                        return [];
-                    }
-                    var locPerms = waysToTake(locs, entitiesAnd.length);
-                    console.log("entitiesAnd.length", entitiesAnd.length);
-                    var entPerms = permutator(entitiesAnd);
-                    console.log("locs", locs, "locPerms", locPerms);
-                    console.log("zipping now", locPerms, entPerms);
-                    function zipEntLoc(entities, locations) : PddlLiteral[] {
-                        var interpretationsAnd: PddlLiteral[] = [];
-                        for (var idx in entities) {
-                            var arg1 = ((entities[idx] == null) ? [] : [entities[idx]]);
-                            var arg2 = ((locations[idx] == null) ? [] : [locations[idx]]);
-                            var pddlGoal = { pol: true, rel: rel, args: arg1.concat(arg2) };
-                            interpretationsAnd.push(pddlGoal);
-                        }
-                        return interpretationsAnd;
-                    }
-                    for (var k in locPerms) {
-                        for (var l in entPerms) {
-                            interpretationOr.push(zipEntLoc(entPerms[l], locPerms[k]));
-                        }
-                    }
-                }*/
-
-                /*// Old code...
-                for (var k in entitiesOr) {
-                    for (var l in locationsOr) {
-                        var entitiesAnd = entitiesOr[k]
-                            , locationsAnd = locationsOr[l]
-                            , interpretationAnd: PddlLiteral[] = [];
-                        // Conjunctive
-                        for (var m in entitiesAnd) {
-                            for (var n in locationsAnd) {
-                                var arg1 = ((entitiesAnd[m] == null) ? [] : [entitiesAnd[m]]);
-                                var arg2 = ((locationsAnd[n] == null) ? [] : [locationsAnd[n]]);
-                                var pddlGoal = { pol: true, rel: rel, args: arg1.concat(arg2) };
-                                interpretationAnd.push(pddlGoal);
-                            }
-                        }
-                        interpretationOr.push(interpretationAnd);
-                    }
-                }*/
-                
                 interpretations.push(interpretationOr);
             }
         }
