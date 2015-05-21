@@ -2,7 +2,7 @@
 /// <reference path="lib/collections.ts" />
 /// <reference path="Astar.ts"/>
 
-// Finds non-optimal solution quickly.
+// Finds non-optimal solution quickly?.
 module NotIDAstar{
 
     export class Error implements Error {
@@ -24,15 +24,18 @@ module NotIDAstar{
         return Astar.postProcess(s.order, s.x);
     }
 
-    // Depth first search until a heuristic limit.
+    // Heuristic depth first search until a heuristic limit.
     // Returns if the goal was found.
     // Goal vertex can be found in `s.order[s.x]`
     function depthFirstUntil<T>(start : Astar.Vertex<T>, s : Astar.Search<T>) : boolean{
         var stack = new collections.Stack<Astar.Vertex<T>>();
         stack.push(start);
+        var localQueue = new collections.PriorityQueue<Astar.Vertex<T>>(( (a, b) => {
+            return b.cost + b.heur - a.cost - a.heur;
+        } )) ;
 
-        // TODO improvement: heuristic depth-first instead of simple depth first?
         while(! stack.isEmpty()){
+            localQueue.clear();
             var v : Astar.Vertex<T> = stack.pop();
             s.order[s.x] = v;
 
@@ -53,11 +56,16 @@ module NotIDAstar{
                 }
 
                 if(vn.heur < s.bound){
-                    stack.push(vn);
+                    localQueue.enqueue(vn);
+                    // stack.push(vn);
                 } else {
                     s.prioQueue.enqueue(vn);
                 }
 
+            }
+
+            while(!localQueue.isEmpty()){
+                stack.push(localQueue.dequeue());
             }
 
             s.x = s.x + 1;
