@@ -21,6 +21,8 @@
      * For example:
      * if the user input was "put the white ball in a box on the floor" and two interpretations are found then the user hasto choose between
      * the following choices: put the white ball in a box that is on the floor" or "put the white ball that is in a box on the floor"
+     *
+     * Basically it only returns interpretations that are possible in the current world 
      */
 module Interpreter {
     //////////////////////////////////////////////////////////////////////
