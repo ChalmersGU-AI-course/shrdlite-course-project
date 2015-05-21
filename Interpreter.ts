@@ -148,16 +148,39 @@ module Interpreter {
         return interpretIds;
     }
 
+    // example input: [[1,2,3], ['hej', 'svej'], [6, 7, 8 , 9]]
+    export function cartesianProduct<T>(inputArrays: T[][]) : T[][] {
+        if (inputArrays.length == 1) {
+            var result: T[][] = [];
+            for (var i in inputArrays[0]) {
+                result.push([inputArrays[0][i]]);
+            }
+            return result;
+        }
+        var result: T[][] = [];
+        var first = inputArrays.shift();
+        var rec = cartesianProduct(inputArrays);
+        for (var i in first) {
+            for (var j in rec) {
+                var newElem = [first[i]].concat(rec[j]);
+                result.push(newElem);
+            }
+        }
+        return result;
+
+    }
+
     // Helper function for interpret command. Takes two 3-dim lists with ids.
     // First list for entities, second for locations. Third argument is the relation between the two.
     // You can send a list as null, in case you don't want a relation with it.
-    function combineStuff(entitiesIntrprt, locationsIntrprt, rel) : PddlLiteral[][][] {
+    function combineStuff(entitiesIntrprt: string[][][], locationsIntrprt: string[][][], rel: string) : PddlLiteral[][][] {
         if (entitiesIntrprt == null) {
             entitiesIntrprt = [[[null]]];
         }
         if (locationsIntrprt == null) {
             locationsIntrprt = [[[null]]];
         }
+        console.log("Marker 1");
         // For all interpretations...
         var interpretations : PddlLiteral[][][] = [];
         for (var i in entitiesIntrprt) {
@@ -165,19 +188,55 @@ module Interpreter {
                 var entitiesOr = entitiesIntrprt[i]
                     , locationsOr = locationsIntrprt[j]
                     , interpretationOr: PddlLiteral[][] = [];
-                // Disjunctive
-                if (entitiesOr.length > 1) {
-                    for (var k in entitiesOr) {
-                        for (var l in locationsOr) {
-                            // TODO Should check that we don't say "Put a ball in all boxes".
-                            // Right now only takes the first element in 'and' if that's the case.
-                            var arg1 = ((entitiesOr[k][0] == null) ? [] : [entitiesOr[k][1]]);
-                            var arg2 = ((locationsOr[l][0] == null) ? [] : [locationsOr[l][1]]);
-                            var pddlGoal = { pol: true, rel: rel, args: arg1.concat(arg2) };
-                            interpretationOr.push([pddlGoal]);
+                // Separate disjunctions of entities.
+                for (var k in entitiesOr) {
+                    var entitiesAnd = entitiesOr[k];
+                    if (locationsOr.length > 1) {
+                        console.log("Marker 2");
+                        // Combine all entities with a location using cartesian product.
+                        // Will return some "impossible" goals in OR, but that's ok.
+                        // ... Rules cannot be handled here.
+                        var flatLocOr = squishList(locationsOr);
+                        var setToProduct: string[][] = [];
+                        for (var l in entitiesAnd) {
+                            // One dimension in the cartesian product for each entity.
+                            console.log("Marker 4");
+                            setToProduct.push(flatLocOr.slice());
+                            console.log("Marker 5");
                         }
+                        var combinations = cartesianProduct(setToProduct);
+                        console.log("Marker 6");
+                        for (l in combinations) {
+                            var combo = combinations[l];
+                            var interpretationAnd: PddlLiteral[] = [];
+                            for (var m in entitiesAnd) {
+                                // Length of combo and entitiesAnd is guaranteed to be same.
+                                var arg1 = ((entitiesAnd[m] == null) ? [] : [entitiesAnd[m]]);
+                                var arg2 = ((combo[m] == null) ? [] : [combo[m]]);
+                                var pddlGoal = { pol: true, rel: rel, args: arg1.concat(arg2) };
+                                console.log("Marker 7");
+                                console.log(arg1, arg2);
+                                interpretationAnd.push(pddlGoal);
+                                console.log("Marker 8");
+                            }
+                            interpretationOr.push(interpretationAnd);
+                        }
+                    } else {
+                        console.log("Marker 3");
+                        // Combine all entities with all locations.
+                        var interpretationAnd: PddlLiteral[] = [];
+                        for (var m in locationsOr[0]) {
+                            for (var l in entitiesAnd) {
+                                var arg1 = ((entitiesAnd[l] == null) ? [] : [entitiesAnd[l]]);
+                                var arg2 = ((locationsOr[0][m] == null) ? [] : [locationsOr[0][m]]);
+                                var pddlGoal = { pol: true, rel: rel, args: arg1.concat(arg2) };
+                                interpretationAnd.push(pddlGoal);
+                            }
+                        }
+                        interpretationOr.push(interpretationAnd);
                     }
-                } else { // Conjunctive
+                }
+                 /* else { // Conjunctive
                     var entitiesAnd = entitiesOr[0]
                       , locs = squishList(locationsOr);
                     // Put all balls in all boxes is the same as put all balls in a box, except 
@@ -207,9 +266,9 @@ module Interpreter {
                             interpretationOr.push(zipEntLoc(entPerms[l], locPerms[k]));
                         }
                     }
-                }
+                }*/
 
-                /* // Old code...
+                /*// Old code...
                 for (var k in entitiesOr) {
                     for (var l in locationsOr) {
                         var entitiesAnd = entitiesOr[k]
@@ -226,8 +285,8 @@ module Interpreter {
                         }
                         interpretationOr.push(interpretationAnd);
                     }
-                }
-                */
+                }*/
+                
                 interpretations.push(interpretationOr);
             }
         }
