@@ -45,8 +45,7 @@ module Interpreter {
 
     export function canSupport(above: ObjectDefinition, below: ObjectDefinition) : boolean{
         if(below == null){
-            console.log("Interpreter.canSupport(): below was NULL");
-            return false; // might not be a good idea to return true, only a hotfix!
+            throw new Interpreter.Error("Interpreter.canSupport(): below was NULL");
         }
 
         if(below.form == "floor"){
