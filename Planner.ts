@@ -1,6 +1,7 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
 ///<reference path="search/AStar.ts"/>
+///<reference path="test/Graph.ts"/>
 
 module Planner {
 
@@ -293,28 +294,13 @@ module Planner {
     // Function to return a function to check if we fulfilled the goal state
     function goalFuncHandle(intrps : Interpreter.Literal[][]){ 
         // Store a set of all interpretations expressed as strings to make subset checks with current world.
-        var intrpsSet : collections.Set<string>[] = [];
-        for(var i = 0; i < intrps.length; i++){
-            intrpsSet[i] = new collections.Set<string>();
-            var intpArr = intprToArr(intrps[i]);
-            for(var k = 0; k < intpArr.length; k++){
-                intrpsSet[i].add(intpArr[k]);
-            }
-
-        }
 
         return (function foundGoal(currentWorld : WorldState) : boolean{
-          var cWorldArr : string[] = worldToStrings(currentWorld);
-          var worldSet : collections.Set<string> = new collections.Set<string>();
-          for(var i = 0; i < cWorldArr.length; i++){
-              worldSet.add(cWorldArr[i]);    
-          }
-
-          for( var i = 0; i < intrpsSet.length; i++){
-              if(intrpsSet[i].isSubsetOf(worldSet))
-                return true;
-          }
-          return false;
+            var intps = intrps;
+            for(var i = 0; i < intrps.length; i++){
+                // Check if interpretation i holds in the current world
+            }
+            return false;
         });
     }
 
@@ -335,4 +321,12 @@ module Planner {
         return Math.floor(Math.random() * max);
     }
 
+    export class Nworld implements N{
+        states : WorldState;
+        neighbours : [Nworld, number][];
+        step : string;
+        value : string;
+        x : number;
+        y : number;
+    }
 }
