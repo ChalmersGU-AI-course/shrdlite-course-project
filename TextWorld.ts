@@ -4,8 +4,11 @@
 class TextWorld implements World {
 
     constructor(public currentState: WorldState) {
-        if (!this.currentState.arm) this.currentState.arm = 0;
-        if (this.currentState.holding) this.currentState.holding = null;
+        if (!this.currentState.arm1) this.currentState.arm1 = 0;
+        if (this.currentState.holding1) this.currentState.holding1 = null;
+
+        if (!this.currentState.arm2) this.currentState.arm2 = 0;
+        if (this.currentState.holding2) this.currentState.holding2 = null;
     }
 
     public readUserInput(prompt, callback) {
@@ -29,15 +32,19 @@ class TextWorld implements World {
 
     public printWorld(callback? : ()=>void) {
         console.log();
+        var minArm = Math.min(this.currentState.arm1, this.currentState.arm2);
+        var maxArm = Math.max(this.currentState.arm1, this.currentState.arm2);
         var stacks = this.currentState.stacks;
         var maxHeight = Math.max.apply(null, stacks.map((s) => {return s.length}));
         var stackWidth = 3 + Math.max.apply(null, stacks.map((s) => {
             return Math.max.apply(null, s.map((o) => {return o.length}))
         }));
-        var line = Array(this.currentState.arm * stackWidth).join(" ");
-        console.log(line + this.centerString("\\_/", stackWidth));
-        if (this.currentState.holding) {
-            console.log(line + this.centerString(this.currentState.holding, stackWidth));
+        var line = Array(minArm * stackWidth).join(" ");
+        var line2 = Array((maxArm - minArm - 1) * stackWidth).join(" ");
+        console.log(line + this.centerString("\\_/", stackWidth) +
+            line2 + this.centerString("\\_/", stackWidth));
+        if (this.currentState.holding1) {
+            console.log(line + this.centerString(this.currentState.holding1, stackWidth));
         }
         for (var y = maxHeight; y >= 0; y--) {
             var line = "";
@@ -55,11 +62,11 @@ class TextWorld implements World {
         console.log(line);
         console.log();
         var printObject = (obj) => {
-            var props = world.currentState.objects[obj];
+            var props = this.currentState.objects[obj];
             console.log(this.centerString(obj, stackWidth) + ": " +
                         Object.keys(props).map((k) => {return props[k]}).join(", "));
         };
-        if (this.currentState.holding) printObject(this.currentState.holding);
+        if (this.currentState.holding1) printObject(this.currentState.holding1);
         stacks.forEach((stack) => stack.forEach(printObject));
         console.log();
         if (callback) callback();
@@ -102,41 +109,41 @@ class TextWorld implements World {
     }
 
     private left(callback: ()=>void) {
-        if (this.currentState.arm <= 0) {
+        if (this.currentState.arm1 <= 0) {
             throw "Already at left edge!";
         }
-        this.currentState.arm--;
+        this.currentState.arm1--;
         callback();
     }
 
     private right(callback: ()=>void) {
-        if (this.currentState.arm >= this.currentState.stacks.length - 1) {
+        if (this.currentState.arm1 >= this.currentState.stacks.length - 1) {
             throw "Already at right edge!";
         }
-        this.currentState.arm++;
+        this.currentState.arm1++;
         callback();
     }
 
     private pick(callback: ()=>void) {
-        if (this.currentState.holding) {
+        if (this.currentState.holding1) {
             throw "Already holding something!";
         }
-        var stack = this.currentState.arm;
+        var stack = this.currentState.arm1;
         var pos = this.currentState.stacks[stack].length - 1;
         if (pos < 0) {
             throw "Stack is empty!";
         }
-        this.currentState.holding = this.currentState.stacks[stack].pop();
+        this.currentState.holding1 = this.currentState.stacks[stack].pop();
         callback();
     }
 
     private drop(callback: ()=>void) {
-        if (!this.currentState.holding) {
+        if (!this.currentState.holding1) {
             throw "Not holding anything!";
         }
-        var stack = this.currentState.arm;
-        this.currentState.stacks[stack].push(this.currentState.holding);
-        this.currentState.holding = null;
+        var stack = this.currentState.arm1;
+        this.currentState.stacks[stack].push(this.currentState.holding1);
+        this.currentState.holding1 = null;
         callback();
     }
 

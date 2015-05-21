@@ -43,27 +43,30 @@ var tar: Interpreter.Literal[][] = [[
 var graphGoal = new Planner.MultipleGoals(tar);
 var graphD = new astar.Graph(new Planner.DijkstraHeuristic(), graphGoal);
 var graphStart = new Planner.PlannerNode(origState, null, null);
-var startD = new Date().getTime();
-var resultD = graphD.searchPath(graphStart);
-var timeD = new Date().getTime() - startD;
+var n = graphStart.getNeighbors();
 
-var graphH = new astar.Graph(new Planner.SimpleHeuristic(tar), graphGoal);
-var startH = new Date().getTime();
-var resultH = graphH.searchPath(graphStart);
-var timeH = new Date().getTime() - startH;
-// var heur = new Planner.SimpleHeuristic(tar[0]);
-// console.log("test heuristic")
-// console.log(heur.get(graphStart, null));
+n.forEach(function(v) { console.log(v);})
+// var startD = new Date().getTime();
+// var resultD = graphD.searchPath(graphStart);
+// var timeD = new Date().getTime() - startD;
 
-console.log("Dijkstra path length: " + resultD.path.length);
-console.log("Heuristic path length: " + resultH.path.length);
+// var graphH = new astar.Graph(new Planner.SimpleHeuristic(tar), graphGoal);
+// var startH = new Date().getTime();
+// var resultH = graphH.searchPath(graphStart);
+// var timeH = new Date().getTime() - startH;
+// // var heur = new Planner.SimpleHeuristic(tar[0]);
+// // console.log("test heuristic")
+// // console.log(heur.get(graphStart, null));
 
-console.log("Dijkstra visited length: " + resultD.visited.length);
-console.log("Heuristic visited length: " + resultH.visited.length);
+// console.log("Dijkstra path length: " + resultD.path.length);
+// console.log("Heuristic path length: " + resultH.path.length);
+
+// console.log("Dijkstra visited length: " + resultD.visited.length);
+// console.log("Heuristic visited length: " + resultH.visited.length);
 
 
-console.log("Dijkstra runtime: " + timeD/1000 + "s");
-console.log("Heuristic runtime: " + timeH/1000 + "s");
+// console.log("Dijkstra runtime: " + timeD/1000 + "s");
+// console.log("Heuristic runtime: " + timeH/1000 + "s");
 
-console.log("Dijkstra result: " + resultD.found);
-console.log("Heuristic result: " + resultH.found);
+// console.log("Dijkstra result: " + resultD.found);
+// console.log("Heuristic result: " + resultH.found);
