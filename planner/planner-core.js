@@ -174,26 +174,7 @@ SearchGraph.prototype.internal_neighbours =  function(state) {
     return valid;
 };
 
-// var testState =  {
-//   "stacks": [
-//     [
-//       "e"
-//     ],
-//     [
-//       "g",
-//       "l"
-//     ],
-//     [],
-//     [
-//       "k",
-//       "m",
-//       "f"
-//     ],
-//     []
-//   ],
-//   "arms": [{holding: null, pos: 0}, {holding: null, pos: 1}]
-// };
-// console.log(permutations(testState));
+
 
 function clone(obj) {
     if(obj === null || typeof(obj) !== 'object')
@@ -217,16 +198,28 @@ SearchGraph.prototype.neighbours = function* (state) {
 
     for (var outer of internal) {
         var new_state = clone(state);
+        //injecting backlink
+        new_state.backlink = [];
         for (var i=0; i < outer.length; i++) {
             switch (outer[i]) {
-                case -1: new_state.arm[i].pos -= 1; break;
-                case +1: new_state.arm[i].pos += 1; break;
-                case 'p': new_state.arm[i].holding = new_state.stacks[new_state.arm[i].pos].pop(); break;
-                case 'd':
-                    new_state.stacks[new_state.arm[i].pos].push(new_state.arm[i].holding);
-                    new_state.arm[i].holding = null;
+                case -1: new_state.arms[i].pos -= 1;
+                    new_state.backlink[i] = 'l';
                     break;
-                default: break; // This captures the '-'
+                case +1: new_state.arms[i].pos += 1;
+                    new_state.backlink[i] = 'r';
+                    break;
+                case 'p':
+                    new_state.arms[i].holding = new_state.stacks[new_state.arms[i].pos].pop();
+                    new_state.backlink[i] = 'p';
+                    break;
+                case 'd':
+                    new_state.stacks[new_state.arms[i].pos].push(new_state.arms[i].holding);
+                    new_state.arms[i].holding = null;
+                    new_state.backlink[i] = 'd';
+                    break;
+                default:
+                    new_state.backlink[i] = '-';
+                    break; // This captures the '-'
             }
         }
         yield new_state;
@@ -445,7 +438,7 @@ SearchGraph.prototype.h = function (state) {
 */
 
 SearchGraph.prototype.state_hash = function(state) {
-    return JSON.stringify(state);
+    return JSON.stringify([state.stacks, state.arms]);
 };
 
 //TODO
@@ -482,23 +475,8 @@ SearchGraph.prototype.isPossible = function(state) {
 // r right
 function backlink(path) {
     var link = [];
-    for (var i =0; i < path.length-1; i++) {
-        var a = path[i];
-        var b = path[i+1];
-        link[i] = [];
-        // Left arm
-        if (a.leftArm == b.leftArm) {
-            link[i].push(a.leftHolding === null ? 'p' : 'd');
-        } else {
-            link[i].push(a.leftArm < b.leftArm ? 'r' : 'l');
-        }
-        // Right arm
-        if(a.rightArm == b.rightArm) {
-            link[i].push(a.rightHolding === null ? 'p' : 'd');
-        } else {
-            link[i].push(a.rightArm < b.rightArm ? 'r' : 'l');
-        }
-
+    for (var i = 1; i < path.length; i++) {
+        link.push(path[i].backlink);
     }
 
     return link;

@@ -18,8 +18,8 @@ var TMP_currentState = {
     ],
     []
   ],
-  "holding": null,
-  "arm": 0,
+  "arms": [{holding: null, pos: 0}, {holding: null, pos: 4}],
+
   "objects": {
     "a": {
       "form": "brick",
