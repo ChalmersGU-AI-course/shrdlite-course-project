@@ -263,26 +263,10 @@ module Planner {
         }
         
         /*
-        NOTE: This function is to be viewed as the first version, it has
-        known flaws, so feel free to change the it - if you can come up
-        with something better.
-        
-        The function considers two factors when aproximating/undestimating
-        the number of steps needed to reach a goal-state, namely :
-        * The distance from the arm the nearest misplaced object.
-        * The number of missplaced objects and the distance between them. 
-        using this two parameter one
-
-        NOTE: That the current heuristics is apperently making it slower!
-        That is why it is commented out. Now it is basicly a breath first
-        search.
+        The simplest possible one is "return 0", which turns Astar
+        into breadth-first search.
         */
-        function state_heur(a1 : ActionState, a2 : ActionState){
-
-            // var nearest_obj = find_obj(["g"],a2.stacks)[0] //g
-            // var arm_dist = Math.abs(a1.arm - nearest_obj);
-            // console.log("\n");
-            // return arm_dist; 
+        function state_heur(a1 : ActionState){
             return 0;
         }
         
@@ -311,7 +295,7 @@ module Planner {
         /*
         Conversion from path to plan.
         */
-        var path = Astar.Astar(start,start,{
+        var path = Astar.Astar(start,{
             heuristic_approx: state_heur,
             dist_between: get_state_dist,
             get_children: dynamic_children,

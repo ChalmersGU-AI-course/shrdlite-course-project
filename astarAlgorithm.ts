@@ -14,7 +14,9 @@ module Astar {
     }
   }
   interface Functions{
-    heuristic_approx(n1:Node, n2:Node) : number
+    // A heuristic approx. of the distance from
+    // n1 to the goal (as defined by is_goalNode)
+    heuristic_approx(n1:Node) : number
     dist_between(n1:Node, n2:Node) : number
     get_children(n1:Node) : Node[]
     is_goalNode(n1:Node) : boolean
@@ -25,10 +27,9 @@ TODO: config priority que to sort by f(x)
 
 AStar :: Graph -> Path
 */
- export function Astar(s: Node, g:Node, functions : Functions): Node[]{
+ export function Astar(s: Node, functions : Functions): Node[]{
     //Node comparion function
     var start:Node = s;
-    var goal:Node = g;
     function comp(a:Node,b:Node){
       if (a.fscore < b.fscore)
         return 1;
@@ -45,7 +46,7 @@ AStar :: Graph -> Path
     var openset =  new collections.PriorityQueue<Node>(comp); // workes in paralell with opensset
     // Initial calculations 
     start.gscore = 0; // the inital distace 
-    start.fscore = start.gscore + functions.heuristic_approx(start,goal);
+    start.fscore = start.gscore + functions.heuristic_approx(start);
     openset.add(start);
     // Variable initiations moved outside reduce redundancy 
     var current : Node
@@ -91,7 +92,7 @@ AStar :: Graph -> Path
 
                     neighbors[n].successor = current
                     neighbors[n].gscore = g_score
-                    neighbors[n].fscore = neighbors[n].gscore + functions.heuristic_approx(neighbors[n],goal);
+                    neighbors[n].fscore = neighbors[n].gscore + functions.heuristic_approx(neighbors[n]);
                     
                     if (!openset.contains(neighbors[n])){
                         // The neighbors[n] has passed all checks and the node is added, before the next node is considered.
