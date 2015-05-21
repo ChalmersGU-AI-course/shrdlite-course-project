@@ -54,7 +54,7 @@ module Planner {
         var heur = Heuristics.computeHeuristicFunction(intprt);
         var start = new State(state.arm, state.holding, state.stacks);
 
-        var search = new IDAstar.Search(start, 300, neighbours, heur, goal, 20000, true);
+        var search = new Astar.Search(start, 300, neighbours, heur, goal, 20000, true);
         var plan : string[] = IDAstar.idaSearch(search);
         // var plan : string[] = IDAstar.astar(neighbours, cost, heur, start, goal, true, 20000);
         // plan.shift();
@@ -67,7 +67,7 @@ module Planner {
     /**
     * @return goal function for IDAstar.
     */
-    function computeGoalFunction(intprt : Interpreter.Literal[][]) : IDAstar.Goal<State>{
+    function computeGoalFunction(intprt : Interpreter.Literal[][]) : Astar.Goal<State>{
         return (s : State) => {
             for(var ix in intprt){
                 if(testConjunctiveClause(s, intprt[ix])){
@@ -100,7 +100,7 @@ module Planner {
         }
     }
 
-    function neighbours(s : State) : IDAstar.Neighb<State>[]{
+    function neighbours(s : State) : Astar.Neighb<State>[]{
         var result = [];
         var numStacks = s.stacks.length;
 
@@ -136,7 +136,7 @@ module Planner {
         return result;
     }
 
-    function performAction(action: string, state: State) : IDAstar.Neighb<State>{
+    function performAction(action: string, state: State) : Astar.Neighb<State>{
         var newState = cloneState(state);
 
         switch(action){
