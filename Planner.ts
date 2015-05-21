@@ -84,75 +84,104 @@ module Planner {
         getNeighbors(): astar.Neighbor[] {
             var n: astar.Neighbor[] = [];
 
+            var singleArmMovementCost = 1;
+            var doubleArmMovementCost = 1.5;
+
 
             // pure arm use
             var useArm1State = this.useArms(this.state, true, false);
             if (useArm1State) {
-                n.push(
-                    new astar.Neighbor(useArm1State, 1));
+                n.push(new astar.Neighbor(useArm1State, singleArmMovementCost));
             }
 
             var useArm2State = this.useArms(this.state, false, true);
             if (useArm2State) {
-                n.push(
-                    new astar.Neighbor(useArm2State, 1));
+                n.push(new astar.Neighbor(useArm2State, singleArmMovementCost));
             }
             var useArmsState = this.useArms(this.state, true, true);
             if (useArmsState) {
-                n.push(
-                    new astar.Neighbor(useArmsState, 1.5));
+                n.push(new astar.Neighbor(useArmsState, doubleArmMovementCost));
             }
 
 
             // right arm
             var moveArm1rState = this.moveArms(this.state, 1, 0);
             if (moveArm1rState) {
-                n.push(
-                    new astar.Neighbor(moveArm1rState, 1));
+                n.push(new astar.Neighbor(moveArm1rState, singleArmMovementCost));
             }
             var moveArm1lState = this.moveArms(this.state, -1, 0);
             if (moveArm1lState) {
-                n.push(
-                    new astar.Neighbor(moveArm1lState, 1));
+                n.push(new astar.Neighbor(moveArm1lState, singleArmMovementCost));
             }
 
             // left arm
             var moveArm2rState = this.moveArms(this.state, 0, 1);
             if (moveArm2rState) {
-                n.push(
-                    new astar.Neighbor(moveArm2rState, 1));
+                n.push(new astar.Neighbor(moveArm2rState, singleArmMovementCost));
             }
             var moveArm2lState = this.moveArms(this.state, 0, -1);
             if (moveArm2lState) {
-                n.push(
-                    new astar.Neighbor(moveArm2lState, 1));
+                n.push(new astar.Neighbor(moveArm2lState, singleArmMovementCost));
             }
 
-            //both arms, same direction
+            // both arms, same direction
             var moveArmsRState = this.moveArms(this.state, 1, 1);
             if (moveArmsRState) {
-                n.push(
-                    new astar.Neighbor(moveArmsRState, 1.5));
+                n.push(new astar.Neighbor(moveArmsRState, doubleArmMovementCost));
             }
             var moveArmsLState = this.moveArms(this.state, -1, -1);
             if (moveArmsLState) {
-                n.push(
-                    new astar.Neighbor(moveArmsLState, 1.5));
+                n.push(new astar.Neighbor(moveArmsLState, doubleArmMovementCost));
             }
 
-            // both arm, opposite direction
+            // both arms, opposite direction
             var moveArmsOutState = this.moveArms(this.state, -1, 1);
             if (moveArmsOutState) {
-                n.push(
-                    new astar.Neighbor(moveArmsOutState, 1.5));
+                n.push(new astar.Neighbor(moveArmsOutState, doubleArmMovementCost));
             }
             var moveArmsInState = this.moveArms(this.state, +1, -1);
             if (moveArmsInState) {
-                n.push(
-                    new astar.Neighbor(moveArmsInState, 1.5));
+                n.push(new astar.Neighbor(moveArmsInState, doubleArmMovementCost));
             }
 
-            //TODO: missing combined states here
+            // mix states
+            // use arm1, move arm2
+            if (useArm1State) {
+                var action1 = useArm1State.lastAction[0];
+                var message1 = useArm1State.actionMessage[0];
+
+                var andMoveArm2Left = this.moveArms(useArm1State.state, 0, -1);
+                if (andMoveArm2Left) {
+                    andMoveArm2Left.lastAction[0] = action1;
+                    andMoveArm2Left.actionMessage[0] = message1;
+                    n.push(new astar.Neighbor(andMoveArm2Left, doubleArmMovementCost));
+                }
+                var andMoveArm2Right = this.moveArms(useArm1State.state, 0, 1);
+                if (andMoveArm2Right) {
+                    andMoveArm2Right.lastAction[0] = action1;
+                    andMoveArm2Right.actionMessage[0] = message1;
+                    n.push(new astar.Neighbor(andMoveArm2Right, doubleArmMovementCost));
+                }
+            }
+
+            // move arm1, use arm2
+            if (useArm2State) {
+                var action2 = useArm2State.lastAction[1];
+                var message2 = useArm2State.actionMessage[1];
+
+                var andMoveArm1Left = this.moveArms(useArm2State.state, -1, 0);
+                if (andMoveArm1Left) {
+                    andMoveArm1Left.lastAction[1] = action2;
+                    andMoveArm1Left.actionMessage[1] = message2;
+                    n.push(new astar.Neighbor(andMoveArm1Left, doubleArmMovementCost));
+                }
+                var andMoveArm1Right = this.moveArms(useArm2State.state, 1, 0);
+                if (andMoveArm1Right) {
+                    andMoveArm1Right.lastAction[1] = action2;
+                    andMoveArm1Right.actionMessage[1] = message2;
+                    n.push(new astar.Neighbor(andMoveArm1Right, doubleArmMovementCost));
+                }
+            }
 
             return n;
         }
