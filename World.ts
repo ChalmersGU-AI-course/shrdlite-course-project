@@ -21,7 +21,7 @@ interface WorldState {
     arm: number;
     objects: { [s:string]: ObjectDefinition; };
     examples: string[];
-    planAction: string; // l, r, up, d(the possible actions that got us into this state)
+    planAction: string; // l, r, p, d(the possible actions that got us into this state)
 }
 
 interface World {

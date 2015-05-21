@@ -12,18 +12,10 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
     constructor(heuristic:number){
         this._heuristicWeight = heuristic;
-        //this._width = size;
-        //this._heigth = size;
+        
         this._nodeValues = [];
-        var index = 0;
-        //for(var i = 0; i < this._width; i++){
-        //    for(var j = 0; j < this._heigth; j++){
-          //      this._nodeValues[index] = [i,j];  
+        var index = 0;  
                 index ++;  
-        //    }
-        //}  
-        //this._nodeneighbors = [[1,2],[4],[3],[5],[]];
-        //this._edges         = [[2,3],[2],[3],[3],[]];
         
     }
 
@@ -35,7 +27,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         var neigNumbers : Array<number>;
         //var found;
         //only if not it nodevalues
-        if(state.arm > 1){
+        if(state.arm > 0){
             neig.push(state);
             neig[neig.length].arm = state.arm-1;
             neig[neig.length].planAction = "l";
@@ -43,8 +35,11 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         if(state.arm < GetFloorSize(state)){
             neig.push(state);
             neig[neig.length].arm = state.arm+1;
-            neig[neig.length].planAction = "l";
+            neig[neig.length].planAction = "r";
         }
+        var pddlIndex:number = this.getTopObjInd(state.arm, state.pddl.toArray());
+        console.log("pddlindex" + pddlIndex);
+        //world.printWorld(state.holding ? "holding" : "not holding");
         if(state.holding != ""){
             neig.push(state);
             
@@ -53,19 +48,19 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
              item and the current on top */ 
             var newobj : Interpreter.Literal;
              newobj.rel = "ontop";
-             newobj.args = [neig[2].holding, state.pddl[index].args[0]];
+             newobj.args = [neig[neig.length].holding, state.pddl[pddlIndex].args[0]];
              //neig[neig.length].holding = state.pddl.push(newobj)
              state.pddl.add(newobj);
              neig[neig.length].holding = "";
-             neig[neig.length].planAction = "up";
-        }else if(false /* object in position */) {
+             neig[neig.length].planAction = "p";
+        }else if(neig[neig.length].pddl[pddlIndex].args[0].substr(0, 1)!="f" /* object in position */) {
             neig.push(state);
             //not holding, pick at position    
             /* find object on top at positon, set as index, remove relation, and add object to pddl.holding */ 
-            var index:number=1;
             
-            neig[neig.length].holding = state.pddl[index].args[0];
-            neig[neig.length].pddl.remove(state.pddl[index].args[0]); // this may be error
+            
+            neig[neig.length].holding = state.pddl[pddlIndex].args[0];
+            neig[neig.length].pddl.remove(state.pddl[pddlIndex].args[0]); // this may be error
             neig[neig.length].planAction = "d";
         }
         for(var i = 0; i < neig.length;i++){
@@ -93,6 +88,24 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         return neigNumbers; 
     }
     
+    getTopObjInd(fln:number, pddls:Interpreter.Literal[]):number{
+        var ind :number= -1;
+        var z = "f" + fln.toString();
+        for(var index = 0; index < pddls.length; index++){
+            var pddl = pddls[index];
+            var x = pddl.args[1];
+            if(x == z){
+                z = pddl.args[0];
+                ind=index;
+                index = -1;
+
+                //counter++;
+            }
+        }
+        return ind;
+    }
+
+
     getcost(from: number,to:number):number{
         return 1;
     }
@@ -581,6 +594,7 @@ module Planner {
 
     export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
         var plans : Result[] = [];
+
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
             plan.plan = planInterpretation(plan.intp, currentState);
@@ -613,48 +627,42 @@ module Planner {
     // private functions
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
+        
+        var shortest = null;//keeps track of shortest path encountered
+
+        var sp = new Shortestpath(1);
+        var as = new Astar<number[]>(sp);
+
+        sp._nodeValues.push(state);//added this.. not sure if this is the place
+
+        var result = null;
+        var temp;
+        var tempNodevalues = [];
+        for(var i = 0; i < intprt.length; i++){
+            this._nodeValues = [];
+            this._neighborValues = [];
+            this._nodeValues.push(state);
+
+            temp = as.star(0, intprt[i]);
+
+            if(temp.length < result.length || result == null){
+                result = temp;      
+                tempNodevalues = this._nodeValues;
+            }
+
+        }
+        this._nodeValues = tempNodevalues;
+
+        //sen execute:A den bästa planen (om det blev någon plan)
         var plan : string[] = [];
-
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
-            }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
+        if(result != null){
+            for(var i = 1; i<this._nodeValues.length; i++ ){
+                plan.push(this._nodeValues[i].planAction);//possible to check what kind of action and add text here
             }
         }
-
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
-
-        if (pickstack < state.stacks.length-1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
-                plan.push("r");
-            }
-
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
-                plan.push("l");
-            }
+        else{
+            //throw error
         }
-
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
-
         return plan;
     }
 
