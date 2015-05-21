@@ -184,6 +184,16 @@ module Interpreter {
     }
     
     
+    function isValidConfig(lits : Literal [][]) : Literal [][]
+    {
+        var temp : Literal [] = [];
+        for(l in lits)
+        {   
+            if(isValidConfig(l))
+                temp.push(l);
+        }
+    }
+    
     function isValidConfig(lits : Literal []) : boolean
     {
         var temp : boolean = true;
@@ -191,7 +201,7 @@ module Interpreter {
         {
             for(var r2 in lits)
             {
-                temp = temp && (!(lits[r] == lits[r2] || lits[r] ==lits[r2]) || r==r2);
+                temp = temp && (!(lits[r] == lits[r2]) || r==r2);
             }
         }
         return temp;
