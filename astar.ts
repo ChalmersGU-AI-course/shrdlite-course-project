@@ -12,7 +12,7 @@ module AStar {
 		var costSoFar = new collections.Dictionary<T, number>();
 	
 		var frontier = new collections.PriorityQueue<Node<T>>(function(a,b) {
-			return ((costSoFar.getValue(a.node)+h(a.node)) - (costSoFar.getValue(b.node)+h(b.node)));
+			return ((costSoFar.getValue(b.node)+h(b.node)) - (costSoFar.getValue(a.node)+h(a.node)));
 		});
 
 		costSoFar.setValue(start, 0);
