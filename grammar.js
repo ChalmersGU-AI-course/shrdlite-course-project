@@ -32,6 +32,7 @@ function R(obj) {
 var grammar = {
     ParserRules: [
     {"name": "main", "symbols": [" ebnf$1", " ebnf$2", "command", " ebnf$3"], "postprocess":  R(2) },
+    {"name": "command", "symbols": [/[1-9]/], "postprocess":  R({cmd:"clar", letter:0}) },
     {"name": "command", "symbols": ["take", "entity"], "postprocess":  R({cmd:"take", ent:1}) },
     {"name": "command", "symbols": ["move", "it", "location"], "postprocess":  R({cmd:"put", loc:2}) },
     {"name": "command", "symbols": ["move", "entity", "location"], "postprocess":  R({cmd:"move", ent:1, loc:2}) },

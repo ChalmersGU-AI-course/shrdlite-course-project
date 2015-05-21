@@ -1,7 +1,7 @@
 
 ## This is a grammar for Shrdlite, written for the Nearley Javascript chartparser
 ## To compile into a Javascript file:  nearleyc grammar.ne > grammar.js
-## For more information:  nhttps://github.com/Hardmath123/nearley
+## For more information:  nahttps://github.com/Hardmath123/nearley
 
 @{%
 
@@ -37,7 +37,7 @@ function R(obj) {
 
 main --> will_you:? please:? command please:?  {% R(2) %}  
 
-command --> entity location:?     {% R({cmd:"clar", ent:0, loc:1}) %}
+command --> [1-9]                 {% R({cmd:"clar", letter:0}) %}
 command --> take entity           {% R({cmd:"take", ent:1}) %}
 command --> move  it    location  {% R({cmd:"put", loc:2}) %}
 command --> move entity location  {% R({cmd:"move", ent:1, loc:2}) %}

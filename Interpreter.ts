@@ -17,7 +17,6 @@ module Interpreter {
 
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
-
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
         parses.forEach((parseresult) => {
@@ -30,10 +29,116 @@ module Interpreter {
         if (interpretations.length == 1) {
             return interpretations;
         } else if(interpretations.length) {
-	    throw new Interpreter.Clarification("Ambiguous interpretation. Please clarify");
+	    var error = new Interpreter.Clarification(getClarQuest(interpretations));
+	    error.data = interpretations;
+	    throw error;
 	}else {
             throw new Interpreter.Error("Found no interpretation");
         }
+    }
+
+    function fold(func, base, list) {
+	if(list.length == 0) { return base; }
+	var v = func(base, list.shift());
+	return fold(func, v, list);
+    }
+
+    function getClarQuest(intprts : Result[]): string{
+	var str : string = "Did you mean:";
+	for(var i = 0; i < intprts.length; i++) {
+	    var intprt : Result = intprts[i];
+	    var list : Parser.Command[] = [];
+	    for(var j = 0; j < intprts.length; j++) {
+		if(j != i) {
+		    list.push(intprts[j].prs);
+		}
+	    }
+	    var res = fold (cmpCmd, intprt.prs, list);
+	    if(res.ent){
+		str += " " + (i + 1) + "." + genClarQuest(res.ent.obj);
+	    }
+	    if(intprt.prs.loc) {
+		str += " " + intprt.prs.loc.rel ;
+		str += " " + genClarQuest(intprt.prs.loc.ent.obj);
+	    }
+	}
+	return str;
+    }
+
+    function cmpCmd(c1 : Parser.Command, c2 : Parser.Command) : Parser.Command {
+	var newcmd : Parser.Command = {cmd: c1.cmd};
+	if(c1.ent && c2.ent) {
+	    var ob = cmpObjs (c1.ent.obj, c2.ent.obj);
+	    if( hasElements(ob) ) {
+		newcmd.ent = {quant: c1.ent.quant, obj: ob};
+	    }
+	}
+	if(c1.loc && c2.loc) {
+	    var ob = cmpObjs(c1.loc.ent.obj, c2.loc.ent.obj);
+	    if(hasElements(ob)) {
+		newcmd.loc = {rel: c1.loc.rel, ent: {quant: c1.loc.ent.quant, obj: ob }};
+	    }
+	}
+	return newcmd;
+    }
+
+    function hasElements(o : Parser.Object) {
+	return o.obj || o.loc || o.form || o.size || o.color;
+    }
+
+    function cmpObjs(o1 : Parser.Object, o2 : Parser.Object) : Parser.Object {
+	var newobj : Parser.Object = {};
+	var o1rec  : boolean       = o1.obj != undefined;
+	var o2rec  : boolean       = o2.obj != undefined;
+	if(o1rec != o2rec) { // Difference in rec
+	    if(o1rec) {
+		newobj = o1;
+	    }else{
+		
+	    }
+	} else if (o1rec){   //Both Recursive
+	    var ob1 = cmpObjs(o1.obj, o2.obj);
+	    if(hasElements(ob1)) { 
+		newobj.obj = ob1;
+		var ob2 = cmpObjs(o1.loc.ent.obj, o2.loc.ent.obj);
+		if(hasElements(ob2)) {
+		    newobj.loc = {rel: o1.loc.rel, ent: {quant: o1.loc.ent.quant, obj :ob2}};
+		}
+	    }
+	} else {             //None recursive
+	    if(o1.size != o2.size) {
+		newobj.size = o1.size;
+	    }if(o1.color != o2.color) {
+		newobj.color = o1.color;
+	    }if(o1.form != o2.form) {
+		newobj.form = o1.form;
+	    }
+	}
+	return newobj;
+    }
+
+    function genClarQuest(obj : Parser.Object) : string{
+        var str : string = "";
+	if(obj.obj) {   //Recursive case
+	    str += genClarQuest(obj.obj);
+	    if(obj.loc) {
+		str += " that is " + obj.loc.rel;
+		str += " " + genClarQuest(obj.loc.ent.obj);
+	    }
+	} else { //Base case
+	    if(obj.size)  {str += " " + obj.size  + " "}
+	    if(obj.form)  {str += " " + obj.form  + " "}
+	    if(obj.color) {str += " " + obj.color + " "}
+	}
+	return str;
+    }
+
+    function getDepth(obj: Parser.Object) : number {
+	if(obj.obj) {
+	    return 1 + getDepth(obj.loc.ent.obj);
+	} else {
+	    return 1;
+	}
     }
 
     export interface Result extends Parser.Result {intp:Literal[][];}
@@ -59,6 +164,7 @@ module Interpreter {
 
     export class Clarification implements Error {
         public name = "Interpreter.Clarification";
+	public data : Result[] = [];
         constructor(public message : string) {}
         public toString() {return this.message;}
     }

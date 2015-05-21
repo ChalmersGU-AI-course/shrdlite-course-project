@@ -1,4 +1,4 @@
-
+///<reference path="Interpreter.ts"/>
 // Interface definitions for worlds
 
 interface ObjectDefinition {
@@ -17,7 +17,7 @@ interface WorldState {
 
 interface World {
     currentState : WorldState;
-    previousState : WorldState;
+    previousRes : Interpreter.Result[];
 
     printWorld(callback? : () => void) : void;
     performPlan(plan: string[], callback? : () => void) : void;

@@ -8,7 +8,7 @@ module Shrdlite {
     export function interactive(world : World) : void {
         function endlessLoop(utterance : string = "") : void {
             console.log("faawk");
-            console.log(world.previousState);
+            console.log(world.previousRes);
             var inputPrompt = "What can I do for you today? ";
             var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
             if (utterance.trim()) {
@@ -34,10 +34,6 @@ module Shrdlite {
     // - then it creates plan(s) for the interpretation(s)
 
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
-        if(world.previousState) { 
-            world.currentState = world.previousState;
-            world.previousState = null;
-        }
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
             var parses : Parser.Result[] = Parser.parse(utterance);
@@ -55,13 +51,20 @@ module Shrdlite {
         });
 
         try {
-            var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
+	    var interpretations : Interpreter.Result[] = [];
+	    if(world.previousRes.length == 0) {
+		interpretations = Interpreter.interpret(parses, world.currentState);
+	    } else {
+		interpretations = [world.previousRes[parseInt(parses[0].prs.letter) - 1]];
+		world.previousRes = [];
+	    }
         } catch(err) {
             if (err instanceof Interpreter.Error) {
                 world.printError("Interpretation error", err.message);
                 return;
             }else if(err instanceof Interpreter.Clarification) {
-                world.previousState = world.currentState;
+                world.previousRes = err.data;
+		world.printError(err.message);
                 return;
             } else {
                 throw err;
