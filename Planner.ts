@@ -55,6 +55,7 @@ module Planner {
         var heur = Heuristics.computeHeuristicFunction(intprt);
         var start = new State(state.arm, state.holding, state.stacks);
 
+        console.log(" ");
         var search = new Astar.Search(start, neighbours, heur, goal, 20000, true);
         // var plan : string[] = IDAstar.idaSearch(search);
         var plan : string[] = Astar.astarSearch(search);
