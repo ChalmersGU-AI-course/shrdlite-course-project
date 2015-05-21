@@ -119,7 +119,7 @@ module Interpreter {
                 }
                 if( cmd.ent.quant === "all")
                 {
-                    var ls : Literal [] = [];
+                    //var ls : Literal [] = [];
                     var temp : Literal [] = [];
                     var grej : number = 0;
                     for(var i = 1; i < moveTo.length; i++)
