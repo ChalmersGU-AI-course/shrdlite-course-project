@@ -217,14 +217,14 @@ module Planner {
 
     function getHeur(ors : Interpreter.Literal[][], lits: Interpreter.Literal[]) : number {
 
-	var isHolding : boolean = false;
+	var holding : string = null;
 	var colData = [];
 	var ontopData = [];
 	var aboveData = [];
 	var belowData = [];
 	var armpos : number;
 	lits.forEach(function(lit) {
-	    if(lit.rel == "holding") {  isHolding = true; }
+	    if(lit.rel == "holding") { holding = lit.args[0]; }
 	    else if(lit.rel == "column") {
 		colData[lit.args[0]] = lit.args[1];
 	    }else if(lit.rel == "ontop") {
@@ -247,40 +247,70 @@ module Planner {
 	    var cost : number = 0;
 	    ands.forEach(function(and) {
 		if(and.rel == "ontop" || and.rel == "above") {
-		    if(isHolding) {
-			cost += 1; //ADD armor to arg1 COLUMN DIFF
+		    if(holding != null) {
+			if(holding == and.args[0]) {
+			    cost += Math.abs(armpos - colData[and.args[1]]);
+			    if(belowData[and.args[1]]) {
+				cost += (4 * (belowData[and.args[1]].length));
+			    }
+			} else {
+			    cost += 3;
+			    if(belowData[and.args[0]]) {
+				cost += (4 * (belowData[and.args[0]].length + 1)); 
+			    }
+			    if(and.rel == "ontop" && belowData[and.args[1]]) {
+				cost += (4 * (belowData[and.args[1]].length));
+			    }
+			}
 		    } else {
 			var satisfied : boolean = false;
-			if(and.rel == "ontop") { satisfied = ontopData[and.args[0]] == and.args[1]; }
-			else {
+			if(and.rel == "ontop") { 
+			    satisfied = (ontopData[and.args[0]] == and.args[1]) == and.pol; 
+			} else {
 			    if(aboveData[and.args[0]]) {
-				aboveData[and.args[0]].forEach(function(l) {
-				    if(and.args[1] == l) { satisfied = true; }
-				});
+				for(var i = 0; i < aboveData[and.args[0]].length; i++) {
+				    var l = aboveData[and.args[0]][i];
+				    if(and.args[1] == l) { 
+					satisfied = true == and.pol; 
+					break;
+				    }
+				}
 			    } 
 			}
 
 			if(!satisfied) {
 			    if(colData[and.args[0]] == colData[and.args[1]]) {
+				cost += 1;
 				if(belowData[and.args[0]]) {
-				    cost += (2 * (belowData[and.args[0]].length + 1)) + 1;
+				    cost += (4 * (belowData[and.args[0]].length + 1));
 				} else {
 				    cost += 3;
 				}
 			    } else {
 				cost += Math.abs(colData[and.args[0]] - colData[and.args[1]]);
+				if(belowData[and.args[0]]) {
+				    cost += (4 * (belowData[and.args[0]].length + 1));
+				}
+				if(and.rel == "ontop" && belowData[and.args[1]]) {
+				    cost += (4 * (belowData[and.args[1]].length));
+				}
 			    }
+			    cost += Math.abs(armpos - colData[and.args[0]]);
 			}
-			//ADD Armpos to arg0 column diff
 		    }
-		} else if( and.rel == "holding" && !isHolding) {
-		    cost += 1; // add armpos to arg0, belowdata 
+		} else if( and.rel == "holding" && holding != and.args[0]) {
+		    if(holding == null) {
+			cost += Math.abs(armpos - colData[and.args[0]]);
+		    }
+		    if(belowData[and.args[0]]) {
+			cost += (4 * belowData[and.args[0]].length );
+		    }
 		} else if (and.rel == "column") {
-		    if(!isHolding){
-			cost += Math.abs(parseInt(and.args[1]) - parseInt(colData[and.args[0]]));
+		    /*if(holding == and.args[0]) {
+			cost += Math.abs(armpos - parseInt(and.args[1]));
 		    } else {
-			//add armpos to arg1
-		    }
+			
+		    }*/
 		}
 	    });
 	    if(cost < lowestCost) { lowestCost = cost; }

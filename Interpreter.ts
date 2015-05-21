@@ -53,13 +53,16 @@ module Interpreter {
 		    list.push(intprts[j].prs);
 		}
 	    }
-	    var res = fold (cmpCmd, intprt.prs, list);
+	    var res : Parser.Command = fold (cmpCmd, intprt.prs, list);
+	    str += " " + (i + 1) + ". ";
 	    if(res.ent){
-		str += " " + (i + 1) + "." + genClarQuest(res.ent.obj);
+		str += " " + genClarQuest(res.ent.obj);
 	    }
-	    if(intprt.prs.loc) {
-		str += " " + intprt.prs.loc.rel ;
-		str += " " + genClarQuest(intprt.prs.loc.ent.obj);
+	    if(res.loc) {
+		if(res.ent) {
+		    str += " " + res.loc.rel ;
+		}
+		str += " " + genClarQuest(res.loc.ent.obj);
 	    }
 	}
 	return str;
@@ -127,8 +130,8 @@ module Interpreter {
 	    }
 	} else { //Base case
 	    if(obj.size)  {str += " " + obj.size  + " "}
-	    if(obj.form)  {str += " " + obj.form  + " "}
 	    if(obj.color) {str += " " + obj.color + " "}
+	    if(obj.form)  {str += " " + obj.form  + " "}
 	}
 	return str;
     }
