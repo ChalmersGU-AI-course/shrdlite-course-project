@@ -130,6 +130,9 @@ module Interpreter {
         switch(cmd.cmd){
             case "take":
                 var targets = findTargetEntities(cmd.ent, state);
+                if(targets.length == 0){
+                    throw new Interpreter.Error("Can't find such an object to grasp.");
+                }
                 for (var ix in targets){
                     intprt.push( [
                         {pol: true, rel: "holding", args: [targets[ix]] }
@@ -155,8 +158,15 @@ module Interpreter {
     }
 
     function findMoveInterpretations(cmd : Parser.Command, state : WorldState, intprt : Literal[][], targets) {
+        if(targets.length == 0){
+            throw new Interpreter.Error("Can't find such an object to move.");
+        }
+
         var location = cmd.loc;
         var locationTargets = findTargetEntities(location.ent, state);
+        if(locationTargets.length == 0){
+            throw new Interpreter.Error("Can't find such a place to move it to.");
+        }
 
         switch(location.rel){
             case "beside":
