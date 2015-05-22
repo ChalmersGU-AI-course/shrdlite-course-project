@@ -244,16 +244,19 @@ module Interpreter {
     // Returns all objects in the world which fit a given (form, ?color, ?size) description
     function getAllObjectsOfDesc(state : WorldState, form : string, color : string, size : string) : string[] {
       var candidates : string[] = [];
+      function isCandidate(objDef) : boolean {
+        return ((objDef.form == form) && 
+              (color == null || objDef.color == color) &&
+              (size == null || objDef.size == size));
+      }
+      if (state.holding != null){
+        var objDef : ObjectDefinition = state.objects[state.holding];
+        isCandidate(objDef) ? candidates.push(state.holding) : 0 ;
+      }
       state.stacks.forEach((stack) => {
         stack.forEach((objectInStack) => {
           var objDef : ObjectDefinition = state.objects[objectInStack];
-          if (objDef.form == form) {
-            if (color == null || objDef.color == color) {
-              if (size == null || objDef.size == size) {
-                candidates.push(objectInStack);
-              }
-            }
-          }
+                isCandidate(objDef) ? candidates.push(objectInStack) : 0 ; 
         });
       });
       return candidates;
