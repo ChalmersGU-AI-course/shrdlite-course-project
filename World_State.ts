@@ -53,7 +53,6 @@
             var object_in_arm = this.State.objects[this.State.holding];
             var target = this.get_object_on_top(this.State.arm);
 
-            //If there is no target object, then the target object is the floor.
             if (!target) {
                 target = {
                     form: "floor",
@@ -61,33 +60,31 @@
                     color: null,
                 };
             }
-            //Balls cannot support anything.
+ 
             if (target.form == "ball") {
                 return false;
             }
-            //Small objects cannot support large objects.
+
             if(target.size == "small" && object_in_arm.size =="large"){
                 return false;
             }
-            //Balls must be in boxes or on the floor, otherwise they roll away.
-            //TODO check if baseobject is floor
+
             if(object_in_arm.form == "ball" && !(target.form == "box" || target.form == "floor")){
                     return false;
             }
-            //Boxes cannot contain pyramids, planks or boxes of the same size.
+
             if(target.form == "box" && 
               ((object_in_arm.form == "pyramid" && target.size == object_in_arm.size) ||
                (object_in_arm.form =="plank" && target.size == object_in_arm.size) ||
                 (object_in_arm.form == "box" && target.size == object_in_arm.size))){
                 return false;
             }
-            //Small boxes cannot be supported by small bricks or pyramids.
+
             if(object_in_arm.size == "small" && object_in_arm.form == "box" && 
               (target.form == "brick" ||target.form == "pyramid")){
                 return false
             }
 
-            //Large boxes cannot be supported by large pyramids.
             if(target.form == "pyramid" && target.size == "large" &&
                object_in_arm.form == "box" && object_in_arm.size == "large"){
                 return false;
