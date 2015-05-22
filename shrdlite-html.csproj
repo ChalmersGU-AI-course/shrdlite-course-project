@@ -22,8 +22,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="grammar.js" />
+    <Content Include="lib\gl-matrix-min.js" />
     <Content Include="lib\jquery-1.11.0.min.js" />
     <Content Include="lib\nearley.js" />
+    <Content Include="shrdlite.css" />
     <Content Include="shrdlite.html" />
     <Content Include="web.config" />
   </ItemGroup>
@@ -39,12 +41,14 @@
   <ItemGroup>
     <TypeScriptCompile Include="ExampleWorlds.ts" />
     <TypeScriptCompile Include="Interpreter.ts" />
+    <TypeScriptCompile Include="lib\gl-matrix.d.ts" />
     <TypeScriptCompile Include="lib\jquery.d.ts" />
     <TypeScriptCompile Include="lib\node.d.ts" />
     <TypeScriptCompile Include="Parser.ts" />
     <TypeScriptCompile Include="Planner.ts" />
     <TypeScriptCompile Include="shrdlite-html.ts" />
     <TypeScriptCompile Include="Shrdlite.ts" />
+    <TypeScriptCompile Include="GLWorld.ts" />
     <TypeScriptCompile Include="SVGWorld.ts" />
     <TypeScriptCompile Include="World.ts" />
   </ItemGroup>
