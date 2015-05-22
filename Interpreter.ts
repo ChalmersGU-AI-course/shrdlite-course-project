@@ -1,6 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
-///<reference path="AstarPlanner/collections.ts"/>
+///<reference path="Astar/collections.ts"/>
 
 
 module Interpreter {
