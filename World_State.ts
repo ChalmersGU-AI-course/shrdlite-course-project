@@ -76,8 +76,10 @@
             }
             //Boxes cannot contain pyramids, planks or boxes of the same size.
             if(target.form == "box" && 
-              (object_in_arm.form == "pyramid" || object_in_arm.form =="plank" ||
-              (object_in_arm.form == "box" && target.size == object_in_arm.size))){
+              ((object_in_arm.form == "pyramid" && target.size == object_in_arm.size) ||
+               (object_in_arm.form =="plank" && target.size == object_in_arm.size) ||
+                (object_in_arm.form == "box" && target.size == object_in_arm.size))){
+                console.log("YOOOO");
                 return false;
             }
             //Small boxes cannot be supported by small bricks or pyramids.
