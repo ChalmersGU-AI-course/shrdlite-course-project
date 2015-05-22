@@ -71,6 +71,10 @@ module Shrdlite {
 							s = s + interpretations[i].input + " or ";
 						}
 						world.printSystemOutput(s);
+						//world.printPickList(string[]);
+						break;
+					}
+					else {
 						break;
 					}
 				}
