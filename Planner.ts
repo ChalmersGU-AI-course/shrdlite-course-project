@@ -59,7 +59,6 @@ module Planner {
         var statenr = 0;
         var MAX_STATES = 10000;
 
-        //TODO: Make an appropriate type/struct for action/actions.
         var left : Action = {command : "l"};
         var right : Action = {command : "r"};
         var drop : Action = {command : "d"};
@@ -76,7 +75,7 @@ module Planner {
             ontop: function(a:ActionState, args:string[]) : boolean{
                 var position;
                 try{
-                    position = find_obj([args[0]],a.stacks);
+                    position = find_obj(args[0],a.stacks);
                 }catch(err){
                     return false 
                 }
@@ -99,23 +98,23 @@ module Planner {
         }
         
         /*
-        Given a PDDL(1) description, this function is supposed to decides if a
-        the given state satiesfies the PDDL which hence makes it a so called 
+        Given a PDDL(1) description, this function is supposed to decide if a
+        the given state satisfies the PDDL, making it a so called 
         goal-state. && between colums and || between rows.
 
         (1) - http://en.wikipedia.org/wiki/Planning_Domain_Definition_Language 
         */      
-        function is_goalstate(astate : ActionState){ //Typescript is a shitty thing!!!
-            var and : boolean[] = []; 
+        function is_goalstate(astate : ActionState){
+            var or : boolean[] = []; 
             for(var i = 0 ; i < intprt.length ; i++){
-                var or : boolean =  pddl[(intprt[i][0]).rel](astate,(intprt[i][0]).args)
+                var and : boolean =  pddl[(intprt[i][0]).rel](astate,(intprt[i][0]).args)
                 for(var ii = 1; ii < intprt[i].length ; ii++){
-                    or = or && pddl[(intprt[i][ii]).rel](astate,(intprt[i][ii]).args)
+                    and = and && pddl[(intprt[i][ii]).rel](astate,(intprt[i][ii]).args)
                 }
-                and.push(or);
+                or.push(and);
             }
-            var result : boolean = and[0];
-            and.forEach((a)=> { result = result || a });
+            var result : boolean = or[0];
+            or.forEach((a)=> { result = result || a });
             return result;
         } 
 
@@ -288,25 +287,101 @@ module Planner {
         The simplest possible one is "return 0", which turns Astar
         into breadth-first search.
         */
-        function state_heur(a1 : ActionState){
+        function state_heur(a1 : ActionState) : number {
+            /*var or : number = MAX_STATES; 
+            for(var i = 0 ; i < intprt.length ; i++){
+                var and : number =  heuristic[(intprt[i][0]).rel](a1,(intprt[i][0]).args)
+                for(var ii = 1; ii < intprt[i].length ; ii++){
+                    and = and + heuristic[(intprt[i][ii]).rel](a1,(intprt[i][ii]).args)
+                }
+                or = Math.min(or, and);
+            }
+            return or;*/
             return 0;
+        } 
+        
+        /*var heuristic = {
+            ontop : function(a:ActionState, args:string[]) : number{
+                var top = args[0];
+                var bottom = args[1];
+                var botPosX = find_obj(bottom, a.stacks)[0];
+                var topPosX = find_obj(top, a.stacks)[0];
+                var toFreeTop = heurFree(a,top);
+                var toFreeBottom = heurFree(a,bottom)
+                if (toFreeTop == 0) {
+                    return heurMoveToPOI(a,[topPosX]) + toFreeBottom +
+                           heurMove(a,top,botPosX);
+                } else if (toFreeBottom == 0) {
+                    return heurMoveToPOI(a,[botPosX]) + toFreeTop +
+                           heurMove(a,top,botPosX);
+                } else {
+                    return heurMoveToFreeBoth(a,[topPosX, botPosX]) +
+                           toFreeTop + toFreeBottom + heurMove(a,top,botPosX);
+                }
+            }
+        }*/
+        
+        // The approximate cost of moving the arm to a Place Of Interest
+        // (while also dropping whatever it's holding from before)
+        function heurMoveToPOI(a:ActionState, positions:number[]) : number {
+            var dists : number[] = [];
+            positions.forEach((pos) => {
+                dists.push(Math.abs(a.arm - pos));
+            });
+            return Math.min.apply(null,dists);
+        }
+
+/*        function heurMoveToFreeBoth(a:ActionState, positions:number[]) : number {
+            var dists : number[] = [];
+            positions.forEach((pos) => {
+                dists.push(Math.abs(a.arm - pos));
+            });
+            return Math.min.apply(null,dists);
+        }
+        
+        function heurMove(a:ActionState, obj:string, posX:number) : number {
+            var objPos : number;
+            var pickUpCost : number;
+            if (a.holding == obj) {
+                objPos = a.arm;
+                pickUpCost = 0;
+            } else {
+                
+            }
+        }*/
+        
+        /*
+        function isFree(a:ActionState, obj:string) : boolean {
+            return heurFree(a,obj) == 0;
+        }*/
+        
+        function heurFree(a:ActionState, obj:string) : number {
+            if (a.holding == obj) {
+                return 0;
+            } else {
+                // Don't catch the error - if the object doesn't exist, we're
+                // working toward an impossible goal anyway
+                var position = find_obj(obj,a.stacks);
+                var heightOfObj = position[1];
+                var heightOfStack = a.stacks[position[0]].length;
+                return ((heightOfStack - 1) - heightOfObj) * 4;
+                // 4 is the minimum number of moves needed per object to be removed
+            }
         }
         
         /*
         Calculates the distance between two states, see astarTest.
         In this case, the weight of a step is 1. 
         */
-        function get_state_dist(){
+        function get_state_dist() : number {
             return 1; 
         }
         
         //Probably unnecessary
-        function find_obj(objs : string[], stacks : string[][]) {
-            var objects : number[][] = [];
+        function find_obj(obj : string, stacks : string[][]) : number[] {
             for (var i = 0 ; i < stacks.length; i++){
                 for (var ii = 0 ; ii < stacks[i].length ; ii++){
-                    //objects.push([i,ii])
-                    if (objs[0] == stacks[i][ii]){
+                    if (obj == stacks[i][ii]){
                       return [i,ii]  
                     }
                 } 
