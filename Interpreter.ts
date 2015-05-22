@@ -129,7 +129,11 @@ module Interpreter {
         //add new rule according to parsed array
         var newRules = genRule(tokens,state);
         if(newRules !== null){
-            intprt.push(newRules);
+
+            for(var i = 0;i < newRules.length;i++){
+                intprt.push([newRules[i]]);
+
+            }
         }
         else return null;
 
@@ -193,10 +197,15 @@ module Interpreter {
             }
 
             var goalObj = findObject(objs,rels,state);
+            var allGoals : Literal[] = [];
             if(goalObj.length == 0)
                 return null;
-            else 
-                return [{pol:true, rel:"holding", args:[goalObj[0]]}];
+            else{
+                for(var i = 0;i < goalObj.length;i++){
+                    allGoals.push({pol:true, rel:"holding", args:[goalObj[i]]});
+                }
+                return allGoals;
+            }
 
         }
         //case put cmd
@@ -536,6 +545,9 @@ module Interpreter {
                 else if(detail2.form == "box"){
                     result = false;
                 }
+                else if(detail2.form == "ball"){
+                    result = false;
+                }
                 else{
                     if(detail1.size == "large" && detail2.size == "small"){
                         result = false;
@@ -557,7 +569,7 @@ module Interpreter {
 
         }
 
-        // console.log(obj1 + " " + obj2 + " " + rel + " " + result);
+        console.log(obj1 + " " + obj2 + " " + rel + " " + result);
 
         return result;
     }
