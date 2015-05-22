@@ -17,7 +17,7 @@ module Interpreter {
         if (interpretations.length > 0 && interpretations[0].intp.length > 0) {
             return interpretations;
         } else {
-            throw new Interpreter.Error("Found no interpretation");
+            throw new Interpreter.Error("Found no legal interpretation");
         }
     }
 
