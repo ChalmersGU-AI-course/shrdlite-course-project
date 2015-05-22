@@ -119,15 +119,37 @@ module Interpreter {
 				var rel : string = this.nodeL[n].rel;
 				var workDone : boolean = false;
 
+				var nP : number = p.length;
+				var nC : number = c.length;
+				var parentChecker : number[] = [];
+				for (var i = 0; i < nP; i++) {
+					parentChecker.push(nC);
+				}
+				var childChecker : number[] = [];
+				for (var i = 0; i < nC; i++) {
+					childChecker.push(nP);
+				}
+
+				//for every potential relation that does not actually exist, decrease the respective checker by 1
 				for (var i = 0; i < p.length; i++) {
 					for (var j = 0; j < c.length; j++) {
 						if (!this.isReachable(p[i], c[j], rel)) {
-							c.splice(j, 1);
+							parentChecker[i] = parentChecker[i] - 1;
+							childChecker[j] = childChecker[j] - 1;
 							workDone = true;
 						}
 					}
-					if (workDone) {
+				}
+				
+				//if the checker is 0 (no relation exists), then remove that Position
+				for (var i = nP-1; i >= 0; i--) {
+					if (parentChecker[i] == 0) {
 						p.splice(i, 1);
+					}
+				}
+				for (var i = nC-1; i >= 0; i--) {
+					if (childChecker[i] == 0) {
+						c.splice(i, 1);
 					}
 				}
 				this.nodeL[n].pos = p;
@@ -199,10 +221,8 @@ module Interpreter {
 		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof)
 		 * @return {boolean} Does the relation hold?
 		 */
-		//todo: check for physical impossibilities
 		//todo: can a ball inside a small yellow box which is inside a large blue box be considered as "inside the blue box" ?
 		//todo: What to do with "move all balls inside all boxes"
-		//physics: https://ai-course-tin172-dit410.github.io/project.html#physical-laws
 		private isReachable(orig : Position, dest : Position, rel : string) : boolean {
 			switch (rel) {
 				case "inside":
@@ -358,6 +378,13 @@ module Interpreter {
 							error = "Balls must be in boxes or on the floor.";
 							continue;
 						}
+
+						//if (nO > 1 && nD == 1) {
+						//	origChecker[i] = origChecker[i] - 1;
+						//	destChecker[j] = destChecker[j] - 1;
+						//	error = "Only one thing can be inside another thing.";
+						//	continue;
+						//}
 					}
 
 					if (rel == "ontop" || rel == "above") {
@@ -402,15 +429,22 @@ module Interpreter {
 							error = "Small objects cannot support large objects.";
 							continue;
 						}
+
+						if (nO > 1 && nD == 1 && rel == "ontop" && formD != "floor") {
+							origChecker[i] = origChecker[i] - 1;
+							destChecker[j] = destChecker[j] - 1;
+							error = "Only one thing can be ontop of another thing.";
+							continue;
+						}
 					}
 				}
 			}
-			for (var i = 0; i < nO; i++) {
+			for (var i = nO-1; i >= 0; i--) {
 				if (origChecker[i] == 0) {
 					origs.splice(i, 1);
 				}
 			}
-			for (var i = 0; i < nD; i++) {
+			for (var i = nD-1; i >= 0; i--) {
 				if (destChecker[i] == 0) {
 					dests.splice(i, 1);
 				}
