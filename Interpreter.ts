@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
+///<reference path="lib/collections.ts"/>
 
 module Interpreter {
 
@@ -14,8 +15,20 @@ module Interpreter {
             intprt.intp = interpretCommand(intprt.prs, currentState);
             interpretations.push(intprt);
         });
-        if (interpretations.length > 0 && interpretations[0].intp.length > 0) {
-            return interpretations;
+        if (interpretations.length > 0) { //&& interpretations[0].intp.length > 0
+            //return interpretations; //Aha found the place for disolving HARD ambiguity!
+            var validInterprets : Result [] = [];
+            interpretations.forEach((inter) => {
+                if (inter.intp.length > 0){
+                    validInterprets.push(inter);
+                }
+            });
+            // check if validInterprets.length > 0 then ask clearification !
+            // throw new Interpreter.Ambiguity(); <- this wont work, we need to update worldstate
+            if (validInterprets.length > 1) {
+                currentState.status.push("multiValidInterpret");
+            }
+            return validInterprets;
         } else {
             throw new Interpreter.Error("Found no legal interpretation");
         }
@@ -126,10 +139,9 @@ module Interpreter {
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
 
         var intprt : Literal[][] = [];
-
+        var targets = findTargetEntities(cmd.ent, state).targets;
         switch(cmd.cmd){
             case "take":
-                var targets = findTargetEntities(cmd.ent, state);
                 if(targets.length == 0){
                     throw new Interpreter.Error("Can't find such an object to grasp.");
                 }
@@ -140,17 +152,17 @@ module Interpreter {
                 }
                 break;
             case "move":
-                var targets = findTargetEntities(cmd.ent, state);
                 findMoveInterpretations(cmd, state, intprt, targets);
                 break;
             case "put":
                 if (state.holding === null) {
                     throw new Interpreter.Error("I don't understand what you mean with 'it'")
                 }
-                var targets = new Array<string>();
-                targets[0] = state.holding;
-                findMoveInterpretations(cmd, state, intprt, targets);
+                var target = new Array<string>();
+                target[0] = state.holding;
+                findMoveInterpretations(cmd, state, intprt, target);
                 break;
+            // Still no put yet
             default:
                 throw new Interpreter.Error("Interpreter: UNKNOWN cmd: " + cmd.cmd);
         }
@@ -163,10 +175,27 @@ module Interpreter {
         }
 
         var location = cmd.loc;
-        var locationTargets = findTargetEntities(location.ent, state);
+        var locationTargets = [];
+        var supportiveAmbiguousTargets = [];
+        // = findTargetEntities(location.ent, state).targets;
+        // not all location targets canSupport targets!
+        findTargetEntities(location.ent, state).targets.forEach((t) => {
+            if (canSupport( findObjDef(state, targets[0])
+                           ,findObjDef(state, t))) {
+                locationTargets.push(t);
+                supportiveAmbiguousTargets.push(findObjDef(state, t));
+            }
+        });
+        if (locationTargets.length > 1 && state.ambiguousObjs.length >1){
+            state.ambiguousObjs = supportiveAmbiguousTargets;
+        }
+
+        // var locationTargets = findTargetEntities(location.ent, state);
         if(locationTargets.length == 0){
             throw new Interpreter.Error("Can't find such a place to move it to.");
         }
+
+        /// small bug found: should revisit targets again to eliminate impossible ones
 
         switch(location.rel){
             case "beside":
@@ -240,7 +269,7 @@ module Interpreter {
         }
     }
 
-    function findObjDef(state : WorldState, name : string) : ObjectDefinition{
+    export function findObjDef(state : WorldState, name : string) : ObjectDefinition{
         if(name === "floor"){
             return {form: "floor", size: null, color: null};
         } else {
@@ -251,8 +280,8 @@ module Interpreter {
     function resolveObject(state : WorldState, goalObj : Parser.Object, loc : Parser.Location) : string[]{
         var result : string[] = [];
 
-        var possibleObjects : string[] = findTargetObjects(state, goalObj);
-        var possibleLocations : string[] = findTargetEntities(loc.ent, state);
+        var possibleObjects : string[] = findTargetObjects(state, goalObj).targets;
+        var possibleLocations : string[] = findTargetEntities(loc.ent, state).targets;
 
         for(var ox in possibleObjects){
             var obj = possibleObjects[ox];
@@ -268,13 +297,17 @@ module Interpreter {
     }
 
     // Returns a list of Object names that fits the goal Object.
-    function findTargetObjects(state : WorldState, goalObj : Parser.Object) : string[]{
+    function findTargetObjects(state : WorldState, goalObj : Parser.Object) : SearchingResult{
         var result : string[] = [];
-
+        var com = new collections.Set<string>();
+        var searchResult : SearchingResult = {
+            status : "", targets : result, common : com, ambiguousObjs : []};
         if(goalObj.obj != null){
             // Ie form, size etc are null.
             // Filter on location instead...
-            return resolveObject(state, goalObj.obj, goalObj.loc);
+            //return resolveObject(state, goalObj.obj, goalObj.loc);
+            searchResult.targets = resolveObject(state, goalObj.obj, goalObj.loc);
+            return searchResult;
         }
 
         if(goalObj.form === "floor"){
@@ -292,13 +325,39 @@ module Interpreter {
             var currentStack = state.stacks[stackNo];
             for(var heightNo in currentStack){
                 var objName = currentStack[heightNo];
+// <<<<<<< HEAD
                 if(testObject(state, objName, goalObj)){
+                    var obj : ObjectDefinition = state.objects[objName];
                     result.push(objName);
+                    searchResult.ambiguousObjs.push(obj);
                 }
+// =======
+//                 var obj : ObjectDefinition = state.objects[objName];
+//
+//                 if(goalObj.size != null){
+//                     if(goalObj.size != obj.size){
+//                         continue;
+//                     }
+//                     // else {com.add("Size");}
+//                 }
+//                 if(goalObj.color != null){
+//                     if(goalObj.color != obj.color){
+//                         continue;
+//                     }
+//                         // else {com.add("Color");}
+//                 }
+//                 if(goalObj.form != null){
+//                     if(goalObj.form != obj.form){
+//                         continue;
+//                     }
+//                     // else {com.add("Form");}
+//                 }
+//                 result.push(objName);
+//                 searchResult.ambiguousObjs.push(obj);
+// >>>>>>> solving_ambiguity
             }
         }
-
-        return result;
+        return searchResult;
     }
 
     function testObject(state : WorldState, objName : string, goalObj : Parser.Object) : boolean {
@@ -324,24 +383,51 @@ module Interpreter {
     /**
     * @return list of targets in the world that complies with the specified entity.
     */
-    function findTargetEntities(en : Parser.Entity, state : WorldState) : string[] {
-        var result : string[] = findTargetObjects(state, en.obj);
-
+    function findTargetEntities(en : Parser.Entity, state : WorldState) : SearchingResult {
+        //var result : string[] = findTargetObjects(state, en.obj);
+        var searchResult = findTargetObjects(state, en.obj);
         switch(en.quant){
             case "any":
                 break;
             case "the":
-                if(result.length > 1){
-                    throw new Interpreter.Error("There are several objects that fit the description");
+                if(searchResult.targets.length > 1){
+                    searchResult.status = "SoftAmbiguity";
+                    console.log("found multiple objects fits description");
+                    console.log(searchResult);
+                    state.status.push("softambiguity");
+                    state.ambiguousObjs = (searchResult.ambiguousObjs);
+                    // not nessecary to stop whole program for this!
+                    //throw new Interpreter.Error("There are several objects that fit the description");
                 }
                 break;
         }
 
-        return result;
+        return searchResult;
     }
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
-
+    ////////// disambiguity //////////
+    /// Ambiguity thrown as Special Error (will be catched in Shrdlite)
+    export class Ambiguity implements Error {
+        public name = "Interpreter.Ambiguity";
+        public cmd : Parser.Command; // extending world state for this
+        public searchingResult : SearchingResult;
+        constructor( public message? : string
+                    , c ?: Parser.Command
+                    , previousSearch ?: SearchingResult)
+        {
+            this.cmd = c;
+            this.searchingResult = previousSearch;
+        }
+        public toString() {return this.name + ": " + this.message +" -> "+ this.cmd}
+    }
+    /// SearchingResult holds possible extra information from findTargetObjects
+    export interface SearchingResult {
+        status: string;
+        targets: string[];
+        common: collections.Set<string>;
+        ambiguousObjs ?: Parser.Object[];
+    }
 }

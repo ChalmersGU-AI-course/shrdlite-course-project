@@ -37,6 +37,8 @@ ExampleWorlds["complex"] = {
         "put all red objects above a yellow object on the floor",
         "put all yellow objects under a red object under an object"
     ]
+    ,"status": []
+    , "ambiguousObjs" :[]
 };
 
 
@@ -71,11 +73,13 @@ ExampleWorlds["medium"] = {
         "move all bricks on a table",
         "move all balls inside a large box"
     ]
+    , "status": []
+    , "ambiguousObjs" :[]
 };
 
 
 ExampleWorlds["small"] = { 
-    "stacks": [["e"],["g","l"],[],["k","m","f"],[]],
+    "stacks": [["e"],["g","l"],[],["k"],["m","f"]],
     "holding": "a",
     "arm": 0,
     "objects": {
@@ -83,7 +87,7 @@ ExampleWorlds["small"] = {
         "b": { "form":"brick",   "size":"small",  "color":"white" },
         "c": { "form":"plank",   "size":"large",  "color":"red"   },
         "d": { "form":"plank",   "size":"small",  "color":"green" },
-        "e": { "form":"ball",    "size":"large",  "color":"white" },
+        "e": { "form":"ball",    "size":"large",  "color":"black" },
         "f": { "form":"ball",    "size":"small",  "color":"black" },
         "g": { "form":"table",   "size":"large",  "color":"blue"  },
         "h": { "form":"table",   "size":"small",  "color":"red"   },
@@ -101,6 +105,8 @@ ExampleWorlds["small"] = {
         "put all boxes on the floor",
         "move all balls inside a large box"
     ]
+    , "status": []
+    , "ambiguousObjs" :[]
 };
 
 
@@ -131,4 +137,6 @@ ExampleWorlds["impossible"] = {
     "examples": [
         "this is just an impossible world"
     ]
+    , "status": []
+    , "ambiguousObjs" :[]
 };
