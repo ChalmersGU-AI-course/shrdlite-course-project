@@ -93,8 +93,31 @@ module Planner {
             inside: function(a:ActionState, args:string[]) : boolean{
                 return (pddl["ontop"](a,args)) &&
                        (state.objects[args[1]].form == "box");
-            }
-            //TODO: beside, under, leftof, rightof, ontop
+            },
+            leftof: function(a:ActionState, args:string[]) : boolean{
+                if (a.holding == args[0] || a.holding == args[1]) {
+                    return false;
+                }
+                var posX1 = find_obj(args[0], a.stacks)[0];
+                var posX2 = find_obj(args[1], a.stacks)[0];
+                return (posX1 < posX2);
+            }, 
+            rightof : function(a:ActionState, args:string[]) : boolean {
+                return pddl["leftof"](a, [args[1], args[0]]);
+            },
+            above : function(a:ActionState, args:string[]) : boolean {
+                if (a.holding == args[0] || a.holding == args[1]) {
+                    return false;
+                }
+                var pos1 = find_obj(args[0], a.stacks);
+                var pos2 = find_obj(args[1], a.stacks);
+                return (pos1[0] == pos2[0] && pos1[1] > pos2[1]);
+            },
+            below : function(a:ActionState, args:string[]) : boolean {
+                return pddl["above"](a, [args[1], args[0]]);
+            },
+            
+            //TODO: beside
         }
         
         /*
@@ -288,7 +311,7 @@ module Planner {
         into breadth-first search.
         */
         function state_heur(a1 : ActionState) : number {
-            /*var or : number = MAX_STATES; 
+            var or : number = MAX_STATES; 
             for(var i = 0 ; i < intprt.length ; i++){
                 var and : number =  heuristic[(intprt[i][0]).rel](a1,(intprt[i][0]).args)
                 for(var ii = 1; ii < intprt[i].length ; ii++){
@@ -296,34 +319,100 @@ module Planner {
                 }
                 or = Math.min(or, and);
             }
-            return or;*/
-            return 0;
-        } 
+            return or;
+        }
         
-        /*var heuristic = {
-            ontop : function(a:ActionState, args:string[]) : number{
+        var heuristic = {
+            ontop : function(a:ActionState, args:string[]) : number {
+                var top = args[0];
+                var topPosX : number =
+                    a.holding == top ? a.arm : find_obj(top, a.stacks)[0];
+                var toFreeTop = heurFree(a,top);
+                
+                var bottom = args[1];
+                var botPosX : number;
+                var toFreeBottom : number;
+                if (bottom == "floor") {
+                    botPosX = findBestFloorSpot(a, topPosX);
+                    toFreeBottom = heurFreeFloor(a, botPosX);
+                } else {
+                    botPosX = a.holding == bottom ? a.arm : find_obj(bottom, a.stacks)[0];
+                    toFreeBottom = heurFree(a, bottom);
+                }
+
+                if (toFreeTop == 0) {
+                    return heurMoveArmToPOI(a,[topPosX]) + toFreeBottom +
+                           heurMoveObject(a,top,botPosX);
+                } else if (toFreeBottom == 0) {
+                    return heurMoveArmToPOI(a,[botPosX]) + toFreeTop +
+                           heurMoveObject(a,top,botPosX);
+                } else {
+                    return heurMoveArmToFreeBoth(a, topPosX, botPosX) +
+                           toFreeTop + toFreeBottom + heurMoveObject(a,top,botPosX);
+                }
+                // TODO: special case when the objects are in the same stack
+            },
+            inside : function(a:ActionState, args:string[]) : number {
+                return heuristic["ontop"](a,args);
+            },
+            holding : function(a:ActionState, args:string[]) : number {
+                return 0;
+            },
+            beside : function(a:ActionState, args:string[]) : number {
+                return 0;
+            },
+            /*above : function(a:ActionState, args:string[]) : number {
                 var top = args[0];
                 var bottom = args[1];
-                var botPosX = find_obj(bottom, a.stacks)[0];
-                var topPosX = find_obj(top, a.stacks)[0];
+                var holdingCost = a.holding == bottom ? 1 : 0;
+                var topPos : number[] =
+                    a.holding == top ? a.arm : find_obj(top, a.stacks);
+                var bottomPosX : number =
+                    a.holding == bottom ? a.arm : find_obj(bottom, a.stacks)[0];
+
                 var toFreeTop = heurFree(a,top);
-                var toFreeBottom = heurFree(a,bottom)
-                if (toFreeTop == 0) {
-                    return heurMoveToPOI(a,[topPosX]) + toFreeBottom +
-                           heurMove(a,top,botPosX);
-                } else if (toFreeBottom == 0) {
-                    return heurMoveToPOI(a,[botPosX]) + toFreeTop +
-                           heurMove(a,top,botPosX);
+                
+                return heurMoveArmToPOI(a,topPosX) + toFreeTop +
+                       heurMoveObject(a, top, bottomPosX) + holdingCost;
+            },*/
+            below : function(a:ActionState, args:string[]) : number {
+                return 0;
+            },
+            rightof : function(a:ActionState, args:string[]) : number {
+                var currentLeft = args[0];
+                var currentRight = args[1];
+                var cLeftPosX : number =
+                    a.holding == currentLeft ? a.arm : find_obj(currentLeft, a.stacks)[0];
+                var cRightPosX : number =
+                    a.holding == currentRight ? a.arm : find_obj(currentRight, a.stacks)[0];
+                var toFreeCLeft = heurFree(a,currentLeft);
+                var toFreeCRight = heurFree(a,currentRight);
+                if (cLeftPosX == 0) {
+                    if (cRightPosX == a.stacks.length) {
+                        return heurMoveArmToPOI(a, [cLeftPosX, cRightPosX]) +
+                               toFreeCLeft + toFreeCRight + a.stacks.length;
+                    } else {
+                        return heurMoveArmToPOI(a, [cLeftPosX]) + toFreeCLeft + 
+                           heurMoveObject(a,currentLeft,cRightPosX+1);
+                    }
+                } else if (cRightPosX == a.stacks.length || toFreeCRight < toFreeCLeft) {
+                    return heurMoveArmToPOI(a, [cRightPosX]) + toFreeCRight + 
+                           heurMoveObject(a,currentRight,cLeftPosX-1);
                 } else {
-                    return heurMoveToFreeBoth(a,[topPosX, botPosX]) +
-                           toFreeTop + toFreeBottom + heurMove(a,top,botPosX);
+                    return heurMoveArmToPOI(a, [cLeftPosX]) + toFreeCLeft + 
+                           heurMoveObject(a,currentLeft,cRightPosX+1);
                 }
+
+            },         
+            leftof : function(a:ActionState, args:string[]) : number {
+                return heuristic["rightof"](a, [args[1], args[0]]);
             }
-        }*/
+            //TODO: above, below, beside
+        }
         
         // The approximate cost of moving the arm to a Place Of Interest
         // (while also dropping whatever it's holding from before)
-        function heurMoveToPOI(a:ActionState, positions:number[]) : number {
+        function heurMoveArmToPOI(a:ActionState, positions:number[]) : number {
             var dists : number[] = [];
             positions.forEach((pos) => {
                 dists.push(Math.abs(a.arm - pos));
@@ -331,24 +420,29 @@ module Planner {
             return Math.min.apply(null,dists);
         }
 
-/*        function heurMoveToFreeBoth(a:ActionState, positions:number[]) : number {
-            var dists : number[] = [];
-            positions.forEach((pos) => {
-                dists.push(Math.abs(a.arm - pos));
-            });
-            return Math.min.apply(null,dists);
+        // The approximate cost of the arm movements needed to free two objects,
+        // excluding the actual freeing (i.e. moving the arm to and between the places
+        // to free)
+        function heurMoveArmToFreeBoth(a:ActionState, pos1:number, pos2:number) : number {
+            var armPos = a.arm;
+            var moveTo = Math.min(Math.abs(armPos - pos1), Math.abs(armPos - pos2));
+            var moveBetween = Math.abs(pos1 - pos2) - 1;
+            return moveTo + moveBetween;
         }
         
-        function heurMove(a:ActionState, obj:string, posX:number) : number {
+        function heurMoveObject(a:ActionState, obj:string, posX:number) : number {
             var objPos : number;
             var pickUpCost : number;
             if (a.holding == obj) {
                 objPos = a.arm;
                 pickUpCost = 0;
             } else {
-                
+                objPos = find_obj(obj, a.stacks)[0];
+                pickUpCost = 1;
             }
-        }*/
+            var moveDist = Math.abs(objPos - posX);
+            return moveDist + pickUpCost;
+        }
         
         /*
         function isFree(a:ActionState, obj:string) : boolean {
@@ -367,6 +461,35 @@ module Planner {
                 return ((heightOfStack - 1) - heightOfObj) * 4;
                 // 4 is the minimum number of moves needed per object to be removed
             }
+        }
+        
+        function heurFreeFloor(a:ActionState, posX:number) : number {
+                var heightOfStack = a.stacks[posX].length;
+                return heightOfStack * 4;
+        }
+        
+        function findBestFloorSpot(a:ActionState, posX:number) : number {
+                var spots : number[] = [];
+                var stack;
+                for (var i = 0; i < a.stacks.length; i++) {
+                    stack = a.stacks[i];
+                    spots.push(stack.length * 4 + Math.abs(i - posX));
+                }
+                console.log("inside findBestFloorSpot");
+                return min_index(spots);
+        }
+        
+        function min_index(elements) {
+            var i = 1;
+            var mi = 0;
+            while (i < elements.length) {
+                console.log("inside min_index");
+                if (elements[i] < elements[mi]) {
+                    mi = i;
+                }
+                i += 1;
+            }
+            return mi;
         }
         
         /*
@@ -392,12 +515,16 @@ module Planner {
         /*
         Conversion from path to plan.
         */
-        var path = Astar.Astar(start,{
-            heuristic_approx: state_heur,
-            dist_between: get_state_dist,
-            get_children: dynamic_children,
-            is_goalNode: is_goalstate
-          });
+        try {
+            var path = Astar.Astar(start,{
+                heuristic_approx: state_heur,
+                dist_between: get_state_dist,
+                get_children: dynamic_children,
+                is_goalNode: is_goalstate
+              });
+        } catch (err) {
+            throw new Error("Impossible problem.");
+        }
         for (var p = 1; p < path.length; p++){
             plan.push((<ActionState>path[p]).msg);
             plan.push((<ActionState>path[p]).action.command);            
