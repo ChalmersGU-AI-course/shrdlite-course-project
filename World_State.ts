@@ -79,7 +79,6 @@
               ((object_in_arm.form == "pyramid" && target.size == object_in_arm.size) ||
                (object_in_arm.form =="plank" && target.size == object_in_arm.size) ||
                 (object_in_arm.form == "box" && target.size == object_in_arm.size))){
-                console.log("YOOOO");
                 return false;
             }
             //Small boxes cannot be supported by small bricks or pyramids.
