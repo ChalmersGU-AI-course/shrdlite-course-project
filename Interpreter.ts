@@ -229,9 +229,9 @@ module Interpreter {
     	} else {
     		
     		if (objs.form == "floor"){
-    			//for(var x =0; x< state.stacks.length;  x++){
+    			for(var x =0; x< state.stacks.length;  x++){
     				list.push(new position(x,-1, {form : "floor", size : "none" , color : "none"}, "floor"));
-    			//}
+    			}
     			
     	    }else{
 	    	    for(var x =0; x< state.stacks.length;  x++){
