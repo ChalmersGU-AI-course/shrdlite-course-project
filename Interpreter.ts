@@ -23,15 +23,15 @@ module Interpreter {
           return res.intp[0].length > 0;
         });
         // error checking
+        var err: string;
         if(nonEmpty.length > 1) {
-          var err = "Do you mean "
           var enumeration = nonEmpty.map((res: Result) => {
             return locationToString(res.prs.loc);
           });
-          err += enumeration.join(", or ") + "?";
+          err = "Do you mean " + enumeration.join(", or ") + "?";
         }
         if(nonEmpty.length == 0)
-          var err = interpretError || "Found no interpretations";
+          err = interpretError || "Found no interpretations";
         if(err)
           throw new Interpreter.Error(err);
         return nonEmpty;
