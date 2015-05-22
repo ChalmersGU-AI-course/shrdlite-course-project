@@ -306,11 +306,17 @@ module Planner {
 			cost += (4 * belowData[and.args[0]].length );
 		    }
 		} else if (and.rel == "column") {
-		    /*if(holding == and.args[0]) {
+		    if(holding == null) {
+			cost += 2;
+			if(belowData[and.args[0]]) {
+			    cost += (2 * belowData[and.args[0]].length);
+			}
+			cost += Math.abs(colData[and.args[0]] - parseInt(and.args[1]));
+		    } else if (holding == and.args[0]) {
 			cost += Math.abs(armpos - parseInt(and.args[1]));
 		    } else {
-			
-		    }*/
+			cost += Math.abs(colData[and.args[0]] - parseInt(and.args[1]));
+		    }
 		}
 	    });
 	    if(cost < lowestCost) { lowestCost = cost; }

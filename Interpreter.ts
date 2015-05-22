@@ -225,19 +225,20 @@ module Interpreter {
 			var p : Literal = {pol: true, rel: relation == "inside" ? "ontop" : relation, args: [key.name, target.name] };
 			or.push([p]);
 		    } else if(relation == "under") {
-		
-			    var p : Literal = {pol: false, rel: "above", args: [key.name, target.name] };
-			    for(var j = 0; j < state.stacks.length; j++) {
-				and = [];
-				var p2 : Literal = {pol: true, rel: "column", args: [key.name, "" + j] };
-				var p3 : Literal = {pol: true, rel: "column", args: [target.name, "" + j] };
-				and.push(p);
-				and.push(p2);
-				and.push(p3);
-				if(checkSize(target.obj, key.obj)) {
-				    or.push(and);
-				}
+			var p : Literal = {pol: true, rel: "above", args: [target.name, key.name] };
+			or.push([p]);
+			/*var p : Literal = {pol: false, rel: "above", args: [key.name, target.name] };
+			for(var j = 0; j < state.stacks.length; j++) {
+			    and = [];
+			    var p2 : Literal = {pol: true, rel: "column", args: [key.name, "" + j] };
+			    var p3 : Literal = {pol: true, rel: "column", args: [target.name, "" + j] };
+			    and.push(p);
+			    and.push(p2);
+			    and.push(p3);
+			    if(checkSize(target.obj, key.obj)) {
+				or.push(and);
 			    }
+			}*/
 			
 		    } else if(relation == "leftof" || relation == "rightof") {
 			var left : boolean = relation == "leftof";
