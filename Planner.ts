@@ -363,6 +363,29 @@ module Planner {
 
             cost = calculateHolding(primary, state);
 
+        } else if (literal.rel === "ontop" || literal.rel === "inside") {
+            if (state.holding === primary) {
+                cost = calculateHolding(target, state) - 1 + 4; //-1 since no picking up then move primary on target
+            } else if (state.holding === target) {
+                cost = calculateHolding(primary, state) + 2; //sidestep + drop
+            } else if (findStack(primary, state.stacks) === findStack(target, state.stacks)) {
+                var indexA: number = findStack(primary, state.stacks);
+                var indexB: number = findStack(target, state.stacks);
+                if (howManyAbove(primary, state.stacks[indexA]) < howManyAbove(target, state.stacks[indexB]))
+                    cost = calculateHolding(target, state) - 1 + 4; //-1 since no picking up then move primary on target
+                else //target is above
+                    cost = calculateHolding(primary, state) + 2; //sidestep + drop
+            } else { //primary and taret is in different stacks
+                var indexA: number = findStack(primary, state.stacks);
+                var indexB: number = findStack(target, state.stacks);
+                var dist: number = Math.abs(findStack(primary, state.stacks) - indexB);
+                if (howManyAbove(target, state.stacks[indexB]) !== 0) {
+                    cost = howManyAbove(target, state.stacks[indexB]) * 4 - 2; //no picking up or moving back to the stack
+                    dist = 2 * dist - Math.abs(state.arm - indexA) + Math.abs(state.arm - indexB);
+                }
+                cost = cost + calculateHolding(primary, state);
+                cost = cost + dist + 1; //drop
+            }
         } 
 
         return cost;
