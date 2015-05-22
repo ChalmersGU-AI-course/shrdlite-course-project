@@ -80,6 +80,8 @@ module Interpreter {
 		for(var j = 0; j < locati.length; j++) {
 		    if(entity[i] === "floor")
 			throw new Error("I cannot pickup the floor");
+		    if(locati[j] === "floor") tmp.push([entity[i],locati[j]]);
+		    else if(!validPhysics(entity[i],locati[j], state)) throw new Error("This does not obey physics");
 		    else tmp.push([entity[i],locati[j]]);
 		}
 	    }
@@ -93,7 +95,9 @@ module Interpreter {
 	    var locati : string[] = interpretLocation(cmd.loc, state);
 	    if (state.holding) {
 		locati.forEach( (locElem) => {
-   	            intprt.push([{pol: true, rel: cmd.loc.rel, args: [state.holding, locElem]}]);
+		    if(locElem === "floor") intprt.push([{pol: true, rel: cmd.loc.rel, args: [state.holding, locElem]}]);
+		    else if(!validPhysics(state.holding, locElem, state)) throw new Error("This does not obey physics");
+   	            else intprt.push([{pol: true, rel: cmd.loc.rel, args: [state.holding, locElem]}]);
 		});
 	    }
 	    else throw new Error("Cannot put down something I am not holding");
@@ -337,22 +341,6 @@ module Interpreter {
 	    });
 	}
 
-	/*
-
-
-	var immObjs : string[] = interpretObject(obj.obj, state);
-	var posObjs : string[] = interpretLocation(obj.loc, state);
-	var intprt : string[] = [];
-
-
-
-	*/
-		posObjs.forEach((e) => {
-			intprt.filter((o) => { return validatePhysics(o, e, state); });
-		});
-
-
-
 	return intprt;
     }
 
@@ -454,7 +442,8 @@ module Interpreter {
     // insideof(a,b) a inside b
     // 
     function isInside(a : string, b : string, state : WorldState) : boolean {
-	var flag : boolean = false;	
+	var flag : boolean = false;
+	console.log(a+", "+b);	
 	state.stacks.forEach( (stack) => {
 
 	    if(stack.indexOf(b) >= 0 && stack.indexOf(a) >= 0 &&
@@ -509,10 +498,9 @@ module Interpreter {
 	return flag;
     }
 
-    function validatePhysics(a: string, b: string, state : WorldState) : boolean {
-	var objHolding : ObjectDefinition = state[a];
-	var objSupport : ObjectDefinition = state[b];
-	
+    function validPhysics(a: string, b: string, state : WorldState) : boolean {
+	var objHolding : ObjectDefinition = state.objects[a];
+	var objSupport : ObjectDefinition = state.objects[b];	
 	if(objHolding.form === "ball" && objSupport.form !== "box") return false;
 	if(objSupport.form === "ball") return false;
 	if(objHolding.size === "large" && objSupport.size === "small") return false;
