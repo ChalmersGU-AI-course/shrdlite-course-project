@@ -170,9 +170,9 @@ module Interpreter {
     }
 
     function findMoveInterpretations(cmd : Parser.Command, state : WorldState, intprt : Literal[][], targets) {
-        if(targets.length == 0){
-            throw new Interpreter.Error("Can't find such an object to move.");
-        }
+        // if(targets.length == 0){
+        //     throw new Interpreter.Error("Can't find such an object to move.");
+        // }
 
         var location = cmd.loc;
         var locationTargets = [];
@@ -187,13 +187,13 @@ module Interpreter {
             }
         });
         if (locationTargets.length > 1 && state.ambiguousObjs.length >1){
-            state.ambiguousObjs = supportiveAmbiguousTargets;
+            state.ambiguousObjs.push(supportiveAmbiguousTargets);
         }
 
         // var locationTargets = findTargetEntities(location.ent, state);
-        if(locationTargets.length == 0){
-            throw new Interpreter.Error("Can't find such a place to move it to.");
-        }
+        // if(locationTargets.length == 0){
+        //     throw new Interpreter.Error("Can't find such a place to move it to.");
+        // }
 
         /// small bug found: should revisit targets again to eliminate impossible ones
 
