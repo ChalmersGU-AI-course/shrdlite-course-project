@@ -106,6 +106,7 @@ module Interpreter {
         var objs : string[][] = interpretObject(ent.obj, state);
         if(ent.quant === "the"){
             if(objs.length>1){
+                throw new Interpreter.Error("There are more than one object that matches that description");
                 return objs;
             } else{
                 return objs;
@@ -189,10 +190,13 @@ module Interpreter {
 
     function buildStates(futureState : boolean, rel : string, objs : string[][], locs : string[][], state : WorldState) : objLocPair[][]{
         var toomanydims : objLocPair[][][] = [];
-        var b : boolean = objs.length>1;
-        if(b){
-            objs = transpose(objs); 
-        }
+        
+        //this works for everything but "put any object on all tables" and such queries.
+        //and all loose relations of course. "above","below","leftof","rightof"
+            locs = transpose(locs);
+
+
+
         objs.map(x => locs.map(y => 
         {
             var fx : string[];
@@ -205,7 +209,7 @@ module Interpreter {
                 fy = y.filter(l => x.some(o => state.relationExists(o,l,rel)));
             }
             if(fx.length !== 0 && fy.length !== 0){
-                var disjs : objLocPair[][] = combineConj(fx,fy, b);
+                var disjs : objLocPair[][] = combineConj(fx,fy, rel);
                 toomanydims.push(disjs);
             }
         }));
@@ -217,45 +221,39 @@ module Interpreter {
         return [];
     }
 
-    function combineConj(objs : string[], locs : string[], b : boolean) :  objLocPair[][]{
-        if(objs.length > locs.length){
-            if(b){
-                var p1 : string[][] = permute(objs, [],[]);
-                var allRules : objLocPair[][] = [];
-                p1.forEach(obj => {
-                    var row : objLocPair[] = [];
-                    for(var i = 0; i< locs.length; i++){
-                        row.push({"obj":obj[i], "loc":locs[i]});
-                    }
+    function combineConj(objs : string[], locs : string[], rel : string) :  objLocPair[][]{
+        var allRules : objLocPair[][] = [];
+        if( rel ==="leftof" || rel ==="rightof" || rel === "below" || rel === "above"){
+
+        } else{
+            if(objs.length > locs.length){
+                if(locs.length === 1 && locs[0] === "floor"){
+                    //special case for floor
+                    var row : objLocPair[] = []
+                    objs.map(o => row.push({"obj":o, "loc":locs[0]}));
                     allRules.push(row);
-                });
-            } else{
-                var p1 : string[][] = permute(objs, [],[]);
-                var allRules : objLocPair[][] = [];
-                p1.forEach(obj => {
-                    var row : objLocPair[] = [];
-                    for(var i = 0; i< locs.length; i++){
-                        for(var j = 0; j< objs.length;j++){
-                            row.push({"obj":obj[j], "loc":locs[i]});
-                        }
-                    }
-                    allRules.push(row);
-                });
-            }
-        }else {
-            
-            console.log("we arrive here");
-            //throw "why are you here";
-            
-            var p1 : string[][] = permute(locs, [],[]);
-            var allRules : objLocPair[][] = [];
-            p1.forEach(loc => {
-                var row : objLocPair[] = [];
-                for(var i = 0; i< objs.length; i++){
-                    row.push({"obj":objs[i], "loc":loc[i]});
                 }
-                allRules.push(row);
-            });
+                else{
+                    var p1 : string[][] = permute(objs, [],[]);
+                    console.log("hello. man." + p1.length);
+                    p1.forEach(obj => {
+                        var row : objLocPair[] = [];
+                        for(var i = 0; i< locs.length; i++){
+                            row.push({"obj":obj[i], "loc":locs[i]});
+                        }
+                        allRules.push(row);
+                    });
+                }
+            } else {
+                var p1 : string[][] = permute(locs, [],[]);
+                p1.forEach(loc => {
+                    var row : objLocPair[] = [];
+                    for(var i = 0; i< objs.length; i++){
+                        row.push({"obj":objs[i], "loc":loc[i]});
+                    }
+                    allRules.push(row);
+                });
+            }     
         }
         return allRules;
     }
@@ -284,19 +282,39 @@ module Interpreter {
         if(filtered.length === 0){
             return grid;
         }
-
+        console.log(filtered.length)
         //remove duplicates
-        filtered.map(row => {
-            var contains : boolean = grid.some(r => row.every(p => rowContainsPair(r, p.obj, p.loc, locs.rel)));
-            if(!contains){
-                grid.push(row);
-            }
-        });
+
+            filtered.map(row => {
+                var contains : boolean = grid.some(r => row.every(p => rowContainsPair(r, p.obj, p.loc, locs.rel)));
+                if(!contains){
+                    grid.push(row);
+                }
+            });
         return grid;
 
     }
 
+    function validRuleSet(row : objLocPair[]) : boolean{    
+        for (var i = 0; i < row.length; i++) {
+            for (var j = 0; j < row.length; j++) {
+                if(i !== j) {
+                    if(row[j].loc !== "floor" || row[i].loc !== "floor"){
+                        if(row[i].obj === row[j].obj || (row[i].loc === row[j].loc) ){7
+                            console.log(row[j].obj + row[j].loc +"  spaces-- " + row[i].obj + row[i].loc);
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     function rowContainsPair(row : objLocPair[], obj : string, loc : string, rel : string) : boolean {
+        //console.log("comparing with : " + row.map(o => "o: "+o.obj+" l: "+o.loc+"\t"));
+        //console.log("obj : "+obj + "\t loc : " + loc+ "\t value: "+  row.some(o => (o.obj === obj && o.loc === loc) || 
+          //  !(o.obj === obj && o.loc !== loc && loc === "floor")));
         return row.some(o => (o.obj === obj && o.loc === loc) || 
             !(o.obj === obj && o.loc !== loc && loc === "floor"));
     }
