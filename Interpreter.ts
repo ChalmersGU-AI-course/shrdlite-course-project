@@ -10,11 +10,15 @@ module Interpreter {
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
 
         var interpretations : Result[] = [];
+        console.log("DEBUG parse len: " + parses.length);
+
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
             interpretations.push(intprt);
         });
+
+        console.log("DEBUG: "+ interpretationToString(interpretations[0]));
 
         if (interpretations.length > 0) { //&& interpretations[0].intp.length > 0
             //return interpretations; //Aha found the place for disolving HARD ambiguity!
@@ -29,7 +33,7 @@ module Interpreter {
             if (validInterprets.length > 1) {
                 currentState.status.push("multiValidInterpret");
             }
-            return validInterprets;
+            return interpretations;
         } else {
             throw new Interpreter.Error("Found no legal interpretation");
         }
@@ -155,6 +159,7 @@ module Interpreter {
                 break;
             case "move":
                 var targets = findTargetEntities(cmd.ent, state).targets;
+                console.log("TARGETS: "+targets.length);
                 findMoveInterpretations(cmd, state, intprt, targets);
                 break;
             case "put":
@@ -172,7 +177,7 @@ module Interpreter {
         return intprt;
     }
 
-    function findMoveInterpretations(cmd : Parser.Command, state : WorldState, intprt : Literal[][], targets) {
+    function findMoveInterpretations(cmd : Parser.Command, state : WorldState, intprt : Literal[][], tar : string[]) {
         // if(targets.length == 0){
         //     throw new Interpreter.Error("Can't find such an object to move.");
         // }
@@ -183,8 +188,9 @@ module Interpreter {
         // = findTargetEntities(location.ent, state).targets;
         // not all location targets canSupport targets!
         findTargetEntities(location.ent, state).targets.forEach((t) => {
-            if (canSupport( findObjDef(state, targets[0])
-                           ,findObjDef(state, t))) {
+            // if (canSupport( findObjDef(state, tar[0])
+            //                ,findObjDef(state, t)))
+            {
                 locationTargets.push(t);
                 supportiveAmbiguousTargets.push(findObjDef(state, t));
             }
@@ -204,17 +210,17 @@ module Interpreter {
             case "beside":
             case "rightof":
             case "leftof":
-                moveObjBeside(state, intprt, location.rel, targets, locationTargets);
+                moveObjBeside(state, intprt, location.rel, tar, locationTargets);
                 break;
             case "ontop":
             case "inside":
-                moveObjAbove(state, intprt, location.rel, targets, locationTargets, true);
+                moveObjAbove(state, intprt, location.rel, tar, locationTargets, true);
                 break;
             case "above":
-                moveObjAbove(state, intprt, location.rel, targets, locationTargets, false);
+                moveObjAbove(state, intprt, location.rel, tar, locationTargets, false);
                 break;
             case "under":
-                moveObjAbove(state, intprt, "above", locationTargets, targets, false);
+                moveObjAbove(state, intprt, "above", locationTargets, tar, false);
                 break;
             default:
                 throw new Interpreter.Error("Unknown Relation in move: " + location.rel);
