@@ -355,20 +355,62 @@ module Planner {
 
     function calculateCost(literal: Interpreter.Literal, state: WorldState): number {
         var cost: number = 0;
+        var primary: string = literal.args[0];
+        var target = literal.args[1];
+        // Since we are searching for the cost we have not yet reached the goal
 
         if (literal.rel === "holding") {
-            if (state.holding !== null) {
-                //TODO
-            }
-        } else if (literal.rel === "ontop" || literal.rel === "inside") {
-            //TODO
-        } else if (literal.rel === "holding") {
-            //TODO
-        }
+
+            cost = calculateHolding(primary, state);
+
+        } 
 
         return cost;
     }
 
+    function calculateHolding(primary : string, state : WorldState): number {
+        var cost: number = 0;
+        
+        // It we hold the goal we are done
+        // Holding an object above the primary's stack costs three (l d r | r d l)
+        // Holding an object anywhere else costs one (d) 
+        if (state.holding !== null) {
+            if (state.holding === primary)
+                return cost;
+            cost = state.arm === findStack(primary, state.stacks) ? cost + 3 : cost++;
+        }
+        // The least amount of moves in horizontal position is added to the cost (# of 'l' or 'r')
+        var position: number = findStack(primary, state.stacks);
+        if (position !== -1)
+            cost = + Math.abs(position - state.arm);
+        else
+            return Number.MAX_VALUE; //The object doesn't exist in the world
+
+        // When the arm is positioned above the correct stack, it takes at least 4 moves 
+        // to move each item above the goal object (p + l|r + d + r|l)
+        cost = + howManyAbove(primary, state.stacks[position]) * 4;
+        // It costs one move to pick up the goal ('p')
+        cost++;
+
+        return cost;
+    }
+
+
+    //Returns the index of the stack in stacks where the obj is
+    function findStack(obj: string, stacks: string[][]): number {
+        for (var i; i < stacks.length; i++) {
+            if (stacks[i].lastIndexOf(obj) !== -1)
+                return i;
+        }
+        return -1;
+    }
+
+    //Returns how many items obj has above in the stack
+    function howManyAbove(obj: string, stack: string[]): number {
+        return stack.length - stack.lastIndexOf(obj) + 1;
+    }
+
+    //Clones the worldstate
     function cloneWorldstate(state: WorldState): WorldState {
         var clone: WorldState = {
             arm: state.arm,
