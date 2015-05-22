@@ -14,6 +14,7 @@ module Interpreter {
             intprt.intp = interpretCommand(intprt.prs, currentState);
 
             if (intprt.intp.length > 0) {
+                // && checkWorldRules(intprt.intp)
                 interpretations.push(intprt);
             }
         });
@@ -346,5 +347,10 @@ module Interpreter {
 
         return orPart;
     }
+
+    /*function checkWorldRules(literal: Literal[][]): boolean {
+        literal.forEach(function());
+    }*/
 }
+
 

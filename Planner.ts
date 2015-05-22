@@ -49,7 +49,8 @@ module Planner {
 
         var graphGoal = new MultipleGoals(intprt);
         //var graph = new astar.Graph(new SimpleHeuristic(intprt), graphGoal);
-        var graph = new astar.Graph(new DijkstraHeuristic(), graphGoal);
+        //var graph = new astar.Graph(new DijkstraHeuristic(), graphGoal);
+        var graph = new astar.Graph(new TwoArmHeuristic(intprt), graphGoal);
         var graphStart = new PlannerNode(state, null, null);
         var result = graph.searchPath(graphStart);
 
@@ -373,17 +374,29 @@ module Planner {
         }
 
         getEstimateForLiteral(lit: Interpreter.Literal, state: WorldState): number {
+            if (LiteralHelpers.isLiteralFulfilled(lit, state)) {
+                return 0;
+            }
             if (lit.rel == "ontop") {
-                if (LiteralHelpers.checkHoldingLiteral(lit, state)) {
-                    return 0;
-                }
                 return this.getOntopEstimate(lit, state);
             }
+            if (lit.rel == "under") {
+                return this.getUnderEstimate(lit, state);
+            }
+            if (lit.rel == "above") {
+                return this.getAboveEstimate(lit, state);
+            }
+            if (lit.rel == "beside") {
+                return this.getBesideEstimate(lit, state);
+            }
             if (lit.rel == "holding") {
-                if (LiteralHelpers.checkHoldingLiteral(lit, state)) {
-                    return 0;
-                }
                 return this.getHoldingEstimate(lit, state);
+            }
+            if (lit.rel == "leftof") {
+                return this.getLeftOfEstimate(lit, state);
+            }
+            if (lit.rel == "rightof") {
+                return this.getRightOfEstimate(lit, state);
             }
             return 0;
         }
@@ -396,39 +409,206 @@ module Planner {
                 // to get away an object on top requires four actions
                 // we need to move to the according stack
                 // we need to pick up the desired object
-                return depth * 4 + distance + 1;
+                if(state.holding1) {
+                    return depth * 4 + distance + 2;
+                }
+                else {
+                    return depth * 4 + distance + 1;
+                }
             }
             return 0;
         }
 
         getOntopEstimate(lit: Interpreter.Literal, state: WorldState): number {
-            var on = lit.args[0];
-            var position = LiteralHelpers.getPositionOfObject(on, state);
+            var positionTopObject = LiteralHelpers.getPositionOfObject(lit.args[0], state);
+            var positionBottomObject = LiteralHelpers.getPositionOfObject(lit.args[1], state);
 
-            if (position) {
-                var depth = state.stacks[position[0]].length - position[1] - 1;
-                var distance = Math.abs(position[0] - state.arm1);
+            if (positionTopObject && positionBottomObject) {
+                var depthTop = state.stacks[positionTopObject [0]].length - positionTopObject[1] - 1;
+                var depthBottom = state.stacks[positionBottomObject [0]].length - positionBottomObject[1] - 1;
+                var distanceTop = Math.abs(positionTopObject[0] - state.arm1);
+                var distanceBottom = Math.abs(positionBottomObject[0] - state.arm1);
+                var distanceBetweenObjects = Math.abs(positionTopObject[0] - positionBottomObject[0]);
+                var distance = Math.min(distanceTop, distanceBottom) + distanceBetweenObjects;
                 // to get away an object on top requires four actions
                 // we need to move to the according stack
                 // we need to pick up the desired object, move it, drop it
-                return depth * 4 + distance + 3;
+                if (positionTopObject[0] == positionBottomObject[0]) {
+                    return depthBottom * 4 + distance + 2;
+                }
+                else {
+                    return depthTop * 4 + depthBottom * 4 + distance + 2;
+                }
             }
             return 0;
+        }
+
+        getAboveEstimate(lit: Interpreter.Literal, state: WorldState): number {
+            var positionTopObject = LiteralHelpers.getPositionOfObject(lit.args[0], state);
+            var positionBottomObject = LiteralHelpers.getPositionOfObject(lit.args[1], state);
+
+            if (positionTopObject && positionBottomObject) {
+                var depthTop = state.stacks[positionTopObject[0]].length - positionTopObject[1] - 1;
+                var distanceTop = Math.abs(positionTopObject[0] - state.arm1);
+                var distanceBottom = Math.abs(positionBottomObject[0] - state.arm1);
+                var distanceBetweenObjects = Math.abs(positionTopObject[0] - positionBottomObject[0]);
+                var distance = Math.min(distanceTop, distanceBottom) + distanceBetweenObjects;
+                // to get away an object on top requires four actions
+                // we need to move to the according stack
+                // we need to pick up the desired object, move it, drop it
+                return depthTop * 4 + distance + 2;
+            }
+            return 0;
+        }
+
+        getUnderEstimate(lit: Interpreter.Literal, state: WorldState): number {
+            var swapLiteral = { pol: lit.pol, rel: lit.rel, args: [lit.args[1], lit.args[0]] };
+            return this.getAboveEstimate(swapLiteral, state);
         }
 
         getBesideEstimate(lit: Interpreter.Literal, state: WorldState): number {
-            var on = lit.args[0];
-            var position = LiteralHelpers.getPositionOfObject(on, state);
+            return this.getAboveEstimate(lit, state) - 1;
+        }
+        getLeftOfEstimate(lit: Interpreter.Literal, state: WorldState): number {
+            return this.getAboveEstimate(lit, state) + 1;
+        }
+        getRightOfEstimate(lit: Interpreter.Literal, state: WorldState): number {
+            return this.getAboveEstimate(lit, state) + 1;
+        }
+    }
 
-            if (position) {
-                var depth = state.stacks[position[0]].length - position[1] - 1;
-                var distance = Math.abs(position[0] - state.arm1);
-                // to get away an object on top requires four actions
-                // we need to move to the according stack
-                // we need to pick up the desired object, move it, drop it
-                return depth * 4 + distance + 3;
+
+    export class TwoArmHeuristic implements astar.IHeuristic {
+        targets: Interpreter.Literal[][] = null;
+
+        constructor (targets: Interpreter.Literal[][]) {
+            this.targets = targets;
+        }
+
+        get(node: astar.INode, goal: astar.IGoal): number {
+            var n = <PlannerNode> node;
+            var minEstimate = Number.MAX_VALUE;
+
+            for (var j = 0; j < this.targets.length; j++) {
+                var currentTargetsList = this.targets[j];
+
+                var localMaxEstimate = 0;
+
+                for (var i = 0; i < currentTargetsList.length; i++) {
+                    var currentLiteral = currentTargetsList[i];
+
+                    var currentEstimate = this.getEstimateForLiteral(currentLiteral, n.state);
+                    localMaxEstimate = Math.max(localMaxEstimate, currentEstimate);
+                }
+
+                minEstimate = Math.min(minEstimate, localMaxEstimate);
+            }
+            return minEstimate;
+        }
+
+        getEstimateForLiteral(lit: Interpreter.Literal, state: WorldState): number {
+            if (LiteralHelpers.isLiteralFulfilled(lit, state)) {
+                return 0;
+            }
+            if (lit.rel == "ontop") {
+                return this.getOntopEstimate(lit, state);
+            }
+            if (lit.rel == "under") {
+                return this.getUnderEstimate(lit, state);
+            }
+            if (lit.rel == "above") {
+                return this.getAboveEstimate(lit, state);
+            }
+            if (lit.rel == "beside") {
+                return this.getBesideEstimate(lit, state);
+            }
+            if (lit.rel == "holding") {
+                return this.getHoldingEstimate(lit, state);
+            }
+            if (lit.rel == "leftof") {
+                return this.getLeftOfEstimate(lit, state);
+            }
+            if (lit.rel == "rightof") {
+                return this.getRightOfEstimate(lit, state);
             }
             return 0;
         }
+
+        getHoldingEstimate(lit: Interpreter.Literal, state: WorldState): number {
+            var position = LiteralHelpers.getPositionOfObject(lit.args[0], state);
+            if (position) {
+                var depth = state.stacks[position[0]].length - position[1] - 1;
+                var distance = Math.min(Math.abs(position[0] - state.arm1), Math.abs(position[0] - state.arm2));
+                // to get away an object on top requires four actions
+                // we need to move to the according stack
+                // we need to pick up the desired object
+                if(state.holding1 && state.holding2) {
+                    return depth * 2 + distance + 2;
+                }
+                else {
+                    return depth * 2 + distance + 1;
+                }
+            }
+            return 0;
+        }
+
+        getOntopEstimate(lit: Interpreter.Literal, state: WorldState): number {
+            var positionTopObject = LiteralHelpers.getPositionOfObject(lit.args[0], state);
+            var positionBottomObject = LiteralHelpers.getPositionOfObject(lit.args[1], state);
+
+            if (positionTopObject && positionBottomObject) {
+                var depthTop = state.stacks[positionTopObject [0]].length - positionTopObject[1] - 1;
+                var depthBottom = state.stacks[positionBottomObject [0]].length - positionBottomObject[1] - 1;
+                var distanceTop = Math.min(Math.abs(positionTopObject[0] - state.arm1), Math.abs(positionTopObject[0] - state.arm2));
+                var distanceBottom = Math.min(Math.abs(positionBottomObject[0] - state.arm1), Math.abs(positionBottomObject[0] - state.arm2));
+                var distanceBetweenObjects = Math.abs(positionTopObject[0] - positionBottomObject[0]);
+                var distance = Math.min(distanceTop, distanceBottom) + distanceBetweenObjects;
+                // to get away an object on top requires four actions
+                // we need to move to the according stack
+                // we need to pick up the desired object, move it, drop it
+                if (positionTopObject[0] == positionBottomObject[0]) {
+                    return depthBottom * 2 + distance + 2;
+                }
+                else {
+                    return depthTop * 2 + depthBottom * 2 + distance + 2;
+                }
+            }
+            return 0;
+        }
+
+        getAboveEstimate(lit: Interpreter.Literal, state: WorldState): number {
+            var positionTopObject = LiteralHelpers.getPositionOfObject(lit.args[0], state);
+            var positionBottomObject = LiteralHelpers.getPositionOfObject(lit.args[1], state);
+
+            if (positionTopObject && positionBottomObject) {
+                var depthTop = state.stacks[positionTopObject[0]].length - positionTopObject[1] - 1;
+                var distanceTop = Math.min(Math.abs(positionTopObject[0] - state.arm1), Math.abs(positionTopObject[0] - state.arm2));
+                var distanceBottom = Math.min(Math.abs(positionBottomObject[0] - state.arm1), Math.abs(positionBottomObject[0] - state.arm2));
+                var distanceBetweenObjects = Math.abs(positionTopObject[0] - positionBottomObject[0]);
+                var distance = Math.min(distanceTop, distanceBottom) + distanceBetweenObjects;
+                // to get away an object on top requires four actions
+                // we need to move to the according stack
+                // we need to pick up the desired object, move it, drop it
+                return depthTop * 2 + distance + 2;
+            }
+            return 0;
+        }
+
+        getUnderEstimate(lit: Interpreter.Literal, state: WorldState): number {
+            var swapLiteral = { pol: lit.pol, rel: lit.rel, args: [lit.args[1], lit.args[0]] };
+            return this.getAboveEstimate(swapLiteral, state);
+        }
+
+        getBesideEstimate(lit: Interpreter.Literal, state: WorldState): number {
+            return this.getAboveEstimate(lit, state) - 1;
+        }
+        getLeftOfEstimate(lit: Interpreter.Literal, state: WorldState): number {
+            return this.getAboveEstimate(lit, state) + 1;
+        }
+        getRightOfEstimate(lit: Interpreter.Literal, state: WorldState): number {
+            return this.getAboveEstimate(lit, state) + 1;
+        }
     }
+
+
 }
