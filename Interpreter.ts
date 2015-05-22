@@ -62,73 +62,71 @@ module Interpreter {
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
 	
 	var intprt : Literal[][] = [];
-	if(cmd.cmd === "take") {
-	    var entities : string[] = interpretEntity(cmd.ent, state);
 
-	    entities.forEach( (ent) => {
-		if(ent === "floor") throw new Error("I cannot pickup the floor");
-		intprt.push([{pol: true, rel: "holding", args: [ent]}]);
-	    });
+	switch(cmd.cmd) {
+		case "take":
+			return interpretTake(cmd.ent, state);
+			break;
+		case "move":
+			return interpretMove(cmd.ent, cmd.loc, state);
+			break;
+		case "put":
+			return interpretPut(cmd.loc, state);
+			break;
+		default:
+			throw new Error(cmd.cmd+" is an invalid command.");
 	}
-	else if(cmd.cmd === "move") {
+
+    }
+
+    function interpretTake(entity, state) : Literal[][] {
+	var entities : string[] = interpretEntity(entity, state);
+
+	return entities.map((ent) => {
+		if(ent !== "floor") return [{pol: true, rel: "holding", args: [ent] }];
+	});
+    }
+
+    function interpretMove(entity, location, state) : Literal[][] {
+	var ent : string[] = interpretEntity(entity, state);
+	var loc : string[] = interpretLocation(location, state);
 	
-	    var entity : string[] = interpretEntity(cmd.ent, state);
-	    var locati : string[] = interpretLocation(cmd.loc, state);
-            var tmp : string[][] = [];
-
-	    for(var i = 0; i < entity.length; i++) {
-		for(var j = 0; j < locati.length; j++) {
-		    if(entity[i] === "floor")
-			throw new Error("I cannot pickup the floor");
-		    if(locati[j] === "floor") tmp.push([entity[i],locati[j]]);
-		    else if(!validPhysics(entity[i],locati[j], state)) throw new Error("This does not obey physics");
-		    else tmp.push([entity[i],locati[j]]);
+	var intprt : Literal[][] = [];
+	for(var i = 0; i < ent.length; i++) {
+		for(var j = 0; j < loc.length; j++) {
+			if(validPhysics(ent[i], loc[j], state))
+				intprt.push([{pol: true, rel: location.rel, args: [ent[i],loc[j]] }]);
 		}
-	    }
-	    tmp.forEach((elem) => { 
-		intprt.push([{pol: true, rel: cmd.loc.rel, args: elem}]);
-	    });
 	}
-	// We assume the arm is already holding something
-	else if(cmd.cmd === "put") {
-		i
-	    var locati : string[] = interpretLocation(cmd.loc, state);
-	    if (state.holding) {
-		locati.forEach( (locElem) => {
-		    if(locElem === "floor") intprt.push([{pol: true, rel: cmd.loc.rel, args: [state.holding, locElem]}]);
-		    else if(!validPhysics(state.holding, locElem, state)) throw new Error("This does not obey physics");
-   	            else intprt.push([{pol: true, rel: cmd.loc.rel, args: [state.holding, locElem]}]);
+	return intprt;
+    }
+
+    function interpretPut(location, state) : Literal[][] {
+	var locations : string[] = interpretLocation(location, state);
+
+	if(state.holding) {
+		return locations.map((loc) => {
+			if(validPhysics(state.holding, loc, state))
+				return [{pol: true, rel: location.rel, args: [state.holding, loc] }];
 		});
-	    }
-	    else throw new Error("Cannot put down something I am not holding");
 	}
-        return intprt;
+	else throw new Error("I need to hold it");
     }
 
     function interpretEntity(ent : Parser.Entity, state : WorldState) : string[] {
 	var objs : string[] = interpretObject(ent.obj, state);
-	/*if(objs.length < 1)
-		throw new Error("No object exists of that specification.");*/
-	var intprt : string[] = [];
 	console.log(objs);
-	if(ent.quant === "any")	{
-		objs.forEach((elem) => {
-		    intprt.push(elem);
-
-		});
+	switch(ent.quant) {
+	    case "the":
+		if(objs.length == 1) return objs;
+		else return [];
+		break;
+	    case "any":
+		return objs;
+		break;
+	    default:
+		throw new Error(ent.quant+" is not implemented yet.");
 	}
-	// there should only be one object for 'the' interpretation to be valid
-	else if(ent.quant === "the") {
-		if(objs.length == 1)
-    		    intprt.push(objs[0]);
-		/*else
-			throw new Error("Ambiguous, more than 1 of the object exists.");*/
-	}
-	else if(ent.quant == "all") {
-		throw new Error("Not Implemented Yet: all quantifier");
-	}
-	else throw new Error("unknown quantifier");
-	return intprt;
     }
 
     /*
@@ -178,107 +176,21 @@ module Interpreter {
 
     // obj = {size?, color?, form}
     // returns all matching objects from the stack
-    // could probably be optimized
     function interpretSimpleObject(obj : Parser.Object, state : WorldState) : string[] {
-	var valid : string[] = [];
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
 	
-	// do we really need to check the whole state if the given object is floor?
 	if(obj.form === "floor") {
-	    valid.push("floor");
-	    return valid;
+	    return ["floor"];
 	}
-	
-	// if the form is of any form we dont check if the form match
-	// otherwise we do check if the form match
-	if(obj.form === "anyform") {
-		// if size an color are given we use them
-		if(obj.size && obj.color) {
-		    objs.forEach((o) => {
-			if(checkSize(obj, state.objects[o]) && 
-			   checkColor(obj, state.objects[o])) {
-			    valid.push(o);
-			}
-		    });
-		}
-		// if only size is given we only use size
-		else if(obj.size) {
-		    objs.forEach((o) => {
-			if(checkSize(obj, state.objects[o])) {
-			    valid.push(o);
-			}
-		    });
-		}
-		// same with color
-		else if(obj.color) {
-		    objs.forEach((o) => {
-			if(checkColor(obj, state.objects[o])) {
-			    valid.push(o);
-			}
-		    });
-		}
-		// otherwise we only use the form
-		else {
-		    objs.forEach((o) => {
-			valid.push(o);
-		    });
-		}
-	}
-	else {
-		// if size an color are given we use them
-		if(obj.size && obj.color) {
-		    objs.forEach((o) => {
-			if(checkSize(obj, state.objects[o]) && 
-			   checkColor(obj, state.objects[o]) &&
-			   checkForm(obj, state.objects[o])) {
-			    valid.push(o);
-			}
-		    });
-		}
-		// if only size is given we only use size
-		else if(obj.size) {
-		    objs.forEach((o) => {
-			if(checkSize(obj, state.objects[o]) &&
-			   checkForm(obj, state.objects[o])) {
-			    valid.push(o);
-			}
-		    });
-		}
-		// same with color
-		else if(obj.color) {
-		    objs.forEach((o) => {
-			if(checkColor(obj, state.objects[o]) &&
-			   checkForm(obj, state.objects[o])) {
-			    valid.push(o);
-			}
-		    });
-		}
-		// otherwise we only use the form
-		else {
-		    objs.forEach((o) => {
-			if(checkForm(obj, state.objects[o])) {
-			    valid.push(o);
-			}
-		    });
-		}
-	}
-	
-	return valid;
+
+	return objs.filter((o) => {return checkObject(obj, state.objects[o], obj.size, obj.color);});
     }
 	
     // obj =  {obj , loc}
-    // TODO: this is where I stopped last time, quite a mess.
     function interpretComplexObject(obj : Parser.Object, state : WorldState) : string[] {
-	
-
-
 	var immObjs : string[] = interpretObject(obj.obj, state);
 	var posObjs : string[] = interpretLocation(obj.loc, state);
 	var intprt : string[] = [];
-
-
-
-
 
 	// posObjs should give us a list of all object where the location is possible 
 	// now we should check with immObjs and see if they match up in the state.stacks
@@ -332,7 +244,6 @@ module Interpreter {
 	     });
 	}
 	else if(obj.loc.rel === "above") {
-		
 	    immObjs.forEach((o) => {
     	        posObjs.forEach((e) => {
 	            if(isAbove(o, e, state))
@@ -342,6 +253,19 @@ module Interpreter {
 	}
 
 	return intprt;
+    }
+
+    function checkObject(a : Parser.Object, b : ObjectDefinition, size, color) : boolean {
+	if(size && color) {
+	    return checkSize(a, b) && checkColor(a, b) && checkForm(a, b);
+	}
+	else if(size) {
+	    return checkSize(a, b) && checkForm(a, b);
+	}
+	else if(color) {
+	    return checkColor(a, b) && checkForm(a, b);
+	}
+	else return checkForm(a, b);
     }
 
     function checkColor(a : Parser.Object, b : ObjectDefinition) : boolean {
@@ -355,6 +279,7 @@ module Interpreter {
     }
 
     function checkForm(a : Parser.Object, b : ObjectDefinition) : boolean {
+	if(a.form === "anyform") return true;
 	if(a.form === b.form) return true;
 	else return false;
     }
@@ -439,8 +364,8 @@ module Interpreter {
 	}
 	return flag;
     }
+
     // insideof(a,b) a inside b
-    // 
     function isInside(a : string, b : string, state : WorldState) : boolean {
 	var flag : boolean = false;
 	console.log(a+", "+b);	
@@ -499,6 +424,9 @@ module Interpreter {
     }
 
     function validPhysics(a: string, b: string, state : WorldState) : boolean {
+	if(a === "floor") return false;
+	if(b === "floor") return true;
+
 	var objHolding : ObjectDefinition = state.objects[a];
 	var objSupport : ObjectDefinition = state.objects[b];	
 	if(objHolding.form === "ball" && objSupport.form !== "box") return false;
