@@ -217,9 +217,20 @@ module Interpreter {
                     continue;
                 }
 
-                if(exactlyAbove && !canSupport( findObjDef(state, above),
-                                                findObjDef(state, below))){
-                    continue;
+                var objA = findObjDef(state, above);
+                var objB = findObjDef(state, below);
+                if(exactlyAbove){
+                    if(!canSupport(objA, objB)){
+                        continue;
+                    }
+                } else { // somewhere above.
+                    if(objB.form == "ball"){
+                        continue;
+                    }
+                    if(compareSize(objA.size, objB.size) > 0){
+                        // A > B
+                        continue;
+                    }
                 }
 
                 intprt.push( [
