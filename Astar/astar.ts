@@ -1,154 +1,152 @@
 ///<reference path="collections.ts"/>
-///<reference path="graph.ts"/>
+///<reference path="../Planner.ts"/>
 
-module AStar {
-	
-
-//helper function for priority queue to keep it sorted from lowest F to highest
-function compareCost(first : Graph.Vertex, second : Graph.Vertex) : number {
-    if(first.getF() < second.getF()){
-        return 1;
-    }else if(first.getF() > second.getF()){
-        return -1;
-    }
-    return 0;
-        
-}
-
-export class AStarSearch {
-
-    private openList  : collections.Dictionary<string,Graph.Vertex>;
-    private closeList : collections.Dictionary<string,Graph.Vertex>;
-    private priQueue  : collections.PriorityQueue<Graph.Vertex>;
-    private graphs    : Graph.Graph;
-
-    constructor(g : Graph.Graph){
-        this.openList  = new collections.Dictionary<string,Graph.Vertex>();
-        this.closeList = new collections.Dictionary<string,Graph.Vertex>();
-        this.priQueue  = new collections.PriorityQueue<Graph.Vertex>(compareCost);
-        this.graphs    = g;
+    interface goal_test<T> {
+        (state: T): boolean;
     }
 
-    //calculate manhattan's distance from 2 position
-    calMD(from : string, to : string) : number{
-        var fromVtx = this.graphs.getVertex(from).getCoor();
-        var toVtx = this.graphs.getVertex(to).getCoor();
-
-        return Math.abs(fromVtx.posX - toVtx.posX) + Math.abs(fromVtx.posY - toVtx.posY);
-
+    interface heuristic_gen<T> {
+        (current_node: T, 
+         next_node: T
+        ): number;
     }
 
-    //convert result from runSearchAstar to string that easier to read on HTML
-    printPath(as : Array<string>) : string{
-        var temp = "";
+    interface State_Node<T> {
+        get_Neighbour_Nodes(): Neighbour<State_Node<T>>[];
+    }
 
-        for (var i = 0; i < as.length; i++) {
-            if(i == 0){
-                temp += "Start : " + as[i] + "</br>";
+    class Path<T> {
+        constructor(
+            public States: T[],
+            public Operations: string[],
+            public Cost: number,
+            public Heuristic: number
+        ){}
+        Add_Node(node: T, operation: string, cost: number, heuristic: number): Path<T> {
+            var states = this.States.slice();
+            states.push(node);
+            var operations = this.Operations.slice();
+            operations.push(operation);
+            return new Path(states, operations, this.Cost + cost, heuristic);
+        }
+        Last_Node(): T {
+            return this.States[this.States.length - 1];
+        }
+    }
+
+    class ShortestPath<T> {
+        constructor(
+            public Path: Path<T>
+        ){}
+    }
+
+    function astar_search<T>(starting_state: State_Node<T>, check_if_goal_state: goal_test<State_Node<T>>, heuristic: heuristic_gen<State_Node<T>>): ShortestPath<State_Node<T>> {
+        var frontier_nodes = new collections.PriorityQueue<Path<State_Node<T>>>(Best_Direction);
+        var visited_nodes = new collections.Dictionary<State_Node<T>, number>();
+
+        var first_node : Path<State_Node<T>> = new Path<State_Node<T>>([starting_state], [], 0, 0);
+        frontier_nodes.enqueue(first_node);
+        while (!frontier_nodes.isEmpty()) {
+            var path = frontier_nodes.dequeue();
+            var currentNode = path.Last_Node();
+            if (check_if_goal_state(currentNode)) {
+                return new ShortestPath<State_Node<T>>(path);
             }
-            else if(i==as.length -1){
-                temp += "Goal : " + as[i] + "</br>";
-            }
-            else{
-                temp += "Goto : " + as[i] + "</br>";
+            var neighbours = currentNode.get_Neighbour_Nodes();
+            for (var i = 0; i < neighbours.length; i++) {
+                var neighbour = neighbours[i];
+                var visitedCost = visited_nodes.getValue(neighbour.State);
+                if (visitedCost == undefined || visitedCost > path.Cost + neighbour.Cost) {
+                    var heuristicCost = heuristic(currentNode, neighbour.State);
+                    var newPath = path.Add_Node(neighbour.State, neighbour.Decission, neighbour.Cost, heuristicCost);
+                    visited_nodes.setValue(neighbour.State, newPath.Cost);
+                    frontier_nodes.enqueue(newPath);
+                }
             }
         }
-        return temp;
+        return new ShortestPath<State_Node<T>>(null);
     }
 
+    function Best_Direction<T>(first_path: Path<T>, second_path: Path<T>): number {
+        if (first_path.Cost + first_path.Heuristic < second_path.Cost + second_path.Heuristic) {
+            return 1;
+        } else if (first_path == second_path) {
+            return 0;
+        }
+        return -1;
+    }
 
-    //search a star 
-    runSearchAStar(start : string, goal : string) : Array<string> {
+    function create_heuristic(intprt: Interpreter.Literal[][]) {
+        return function(fromWorld: State, state: State): number {
+            var list_of_heuristics = intprt.map(function(literal) {
+                var blocks_and_distance_ = [objects_stack_heuristic, arm_movement_heuristic].map(function(f) {
+                    return f(literal, state);
+                });
+                return blocks_and_distance_.reduce(function(total, num){ return total + num }, 0);
+            });
+            return Math.min.apply(null,list_of_heuristics);
+        }
+    }
 
-        var startNode = this.graphs.getVertex(start);
-        this.openList.setValue(start,startNode);
-        this.priQueue.add(startNode);
+    function objects_stack_heuristic(target: Interpreter.Literal[], state: State): number {
+        var blocked: Interpreter.Literal[] = target.filter(function(literal) {
+            return Planner.checkStateValidity(state.State, literal);
+        })
 
-        var goalNode : Graph.Vertex = null;
+        var objects: string[] = [];
 
-        while(this.openList.size() > 0){
-            var currentNode = this.priQueue.dequeue();
-            this.openList.remove(currentNode.getVertexId());
-
-            if(currentNode.getVertexId() == goal){
-                goalNode = currentNode;
-                console.log("found goal : " + goalNode.getVertexId());
-                break;
+        for (var i = 0; i < blocked.length; i++) {
+            var literal = blocked[i];
+            for (var j = 0; j < literal.args.length; j++) {
+                objects.push(literal.args[i]);
             }
-            else{
+        }
 
-                console.log("searching for node : " + currentNode.getVertexId());
+        var objects_on_the_way = {};
+        var objects_count = 0;
 
-                this.closeList.setValue(currentNode.getVertexId(),currentNode);
-                var adjacents = this.graphs.getAdjacent(currentNode.getVertexId()).toArray();
-
-                for (var i = 0; i < adjacents.length; i++) {
-
-                    var neighbor : Graph.Vertex = adjacents[i];
-                    var isVisited = this.closeList.containsKey(neighbor.getVertexId());
-                    console.log("expanding node : " + neighbor.getVertexId());
-
-                    if(!isVisited){
-                        var g = currentNode.getG() + this.graphs.getCostG(currentNode.getVertexId(),neighbor.getVertexId());
-                        var n = this.openList.getValue(neighbor.getVertexId());
-                        
-                        if(n == null){
-                            if(this.graphs.getEnabledGrid()){
-                               var h = this.calMD(neighbor.getVertexId(),goal);
-                               // n = new Graph.Vertex(neighbor,g,h);
-                               n = this.graphs.getVertex(neighbor.getVertexId());
-                               n.setG(g);
-                               n.setH(h);
-                            }
-                            else{
-                               // n = new AStarVertex(neighbor,g,neighbor.getH());
-                               n = this.graphs.getVertex(neighbor.getVertexId());
-                               n.setG(g);
-                            }
-                            n.setParent(currentNode);
-                            this.openList.setValue(neighbor.getVertexId(),n);
-                            this.priQueue.add(n);
-
-
-                        }else if(g < n.getG()){
-                            n.setParent(currentNode);
-                            n.setG(g);
-                            if(this.graphs.getEnabledGrid()){
-                                var h = this.calMD(neighbor.getVertexId(),goal);
-                                n.setH(h);
-                            }
-                            else{
-                                n.setH(neighbor.getH());
-                            }
-
-                        }
-                    }
+        for (var i = 0; i < objects.length; i++) {
+            var blocking = state.get_objects_on_top(objects[i]);
+            for (var j = 0; j < blocking.length; j++) {
+                if (!objects_on_the_way[blocking[j]]) {
+                    objects_on_the_way[blocking[j]] = true;
+                    objects_count++;
                 }
             }
         }
 
-        if(goalNode != null){
-            var stack = new collections.Stack<Graph.Vertex>();
-            var list = new collections.LinkedList<string>();
-            stack.push(goalNode);
-            var parent = goalNode.getParent();
-            while(parent!= null){
-                stack.push(parent);
-                parent = parent.getParent();
-            }
-
-            while(stack.size() > 0){
-                list.add(stack.pop().getVertexId());
-            }
-            return list.toArray();
-
-        }
-
-        return ["error goal not found"];
-
+        return objects_count;
     }
 
+    function arm_movement_heuristic(target: Interpreter.Literal[], state: State): number {
+        var movement = [];
 
-}
+        for (var i = 0; i < target.length; i++) {
+            if (Planner.checkStateValidity(state.State, target[i])) {
+                continue;
+            }
 
-}
+            var distances = target[i].args.map(function(arg) {
+                if (state.get_object_location(arg))
+                    return Math.abs(state.get_object_location(arg) - state.State.arm);
+                else
+                    return 0;
+            });
+
+            var minimum_distance = Math.min.apply(null,distances);
+
+            if (target[i].rel.indexOf("ontop") != -1 || target[i].rel.indexOf("inside") != -1) {
+                for (var j = 1; j < target[i].args.length; j++) {
+                    var firstPos = state.get_object_location(target[i].args[j - 1]);
+                    var secondPos = state.get_object_location(target[i].args[j]);
+                    if (firstPos && secondPos) {
+                        minimum_distance += Math.abs(firstPos - secondPos);
+                    }
+                }
+            }
+
+            movement.push(minimum_distance);
+        }
+
+        return Math.max.apply(null,movement);
+    }
