@@ -20,7 +20,7 @@ module Interpreter {
         });
         // weed out empty interpretations
         var nonEmpty = interpretations.filter((res: Result) => {
-          return res.intp[0].length > 0;
+          return res.intp && res.intp.length > 0 && res.intp[0].length > 0;
         });
         // error checking
         var err: string;
@@ -31,7 +31,7 @@ module Interpreter {
           err = "Do you mean " + enumeration.join(", or ") + "?";
         }
         if(nonEmpty.length == 0)
-          err = interpretError || "Found no interpretations";
+          err = interpretError || "Found no interpretations, please check your sentence";
         if(err)
           throw new Interpreter.Error(err);
         return nonEmpty;
@@ -933,17 +933,19 @@ module Interpreter {
       if(obj.color)
         str += " " + obj.color;
       if(obj.form)
-        str += " " + obj.form;
+        str += " " + (obj.form !== "anyform" ? obj.form : "object");
       if(obj.loc) // this only occurs when entityToString calls the function
         str += " " + locationToString(obj.loc);
       return str;
     }
 
     function locationToString(loc: Parser.Location): string {
-      if(loc)
-        return loc.rel + " of " + entityToString(loc.ent);
-      else
+      if(loc) {
+        var isAboveOrUnder = loc.rel === "above" || loc.rel === "under";
+        return loc.rel + (isAboveOrUnder ? " " : " of ") + entityToString(loc.ent);
+      } else {
         return "";
+      }
     }
 
     function entityToString(ent: Parser.Entity): string {
