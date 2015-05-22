@@ -214,7 +214,7 @@ module Planner {
         );
         
         //console.log("A* done!");
-        
+         
         if(path == undefined){
             plan.push("No path found. (ノ ゜Д゜)ノ ︵ ┻━┻");
             //console.log("------------planInterpretation returns 2------------");
@@ -298,6 +298,7 @@ module Planner {
                 break;
             }
         }
+        plan.push("Done");
         //console.log("------------planInterpretation returns 3------------");
         return plan;
         
