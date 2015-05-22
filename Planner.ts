@@ -221,7 +221,6 @@ module Planner {
       // find the first argument
       for (var i = 0; i < this.stacks.length; i++) {
         for (var j = 0; j < this.stacks[i].length; j++) {
-          console.log("stack = " + i + ", pos0 = " + j + ", arg0: " + lit.args[0] + " arg1: " + lit.args[1] + ", rel = " + lit.rel);
           if (this.stacks[i][j].name == lit.args[0] || lit.rel == "holding") {
             // evaluate based on the relation
             switch(lit.rel) {
@@ -252,15 +251,7 @@ module Planner {
 
               case "under":
                 for (var k = 0; k < j; k++) {
-/*                  console.log("  stack = " + i + 
-                              ", pos0 = " + j + 
-                              ", posCurr = " + k + 
-                              ", arg0: " + lit.args[0] + 
-                              ", arg1: " + lit.args[1] + 
-                              ", curr: " + this.stacks[i][k].name);*/
-                  console.log(i + " " + j + " " + k);
                   if (lit.args[1] == this.stacks[i][k].name) {
-                    console.log("check");
                     return lit.pol;
                   }
                 }
@@ -306,7 +297,6 @@ module Planner {
       var curr = 0;
       var min = Number.MAX_VALUE;
       var found = false;
-      return 0;
      //go through all OR parts
       for(var i = 0; i < goal.alternatives.length; i++) {
         //go through all AND parts
