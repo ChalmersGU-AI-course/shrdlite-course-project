@@ -22,9 +22,9 @@ module Interpreter {
 	else if (interpretations.length > 1) {
 	    console.log(interpretationToString(interpretations[0]));
 	    console.log(interpretationToString(interpretations[1]));
-	    //throw new Interpreter.Error("Ambiguous interpretation");
+	    throw new Interpreter.Error("Ambiguous interpretation");
 		
-		return interpretations;
+		//return interpretations;
 	} 
 	else {
             throw new Interpreter.Error("Found no interpretation");
@@ -81,7 +81,6 @@ module Interpreter {
 
     function interpretTake(entity, state) : Literal[][] {
 	var entities : string[] = interpretEntity(entity, state);
-
 	return entities.map((ent) => {
 		if(ent !== "floor") return [{pol: true, rel: "holding", args: [ent] }];
 	});
@@ -94,7 +93,8 @@ module Interpreter {
 	var intprt : Literal[][] = [];
 	for(var i = 0; i < ent.length; i++) {
 		for(var j = 0; j < loc.length; j++) {
-			if(validPhysics(ent[i], loc[j], state))
+			// physics is only relevant to 'ontop' and 'inside'
+			if(validPhysics(ent[i], loc[j], location.rel, state))
 				intprt.push([{pol: true, rel: location.rel, args: [ent[i],loc[j]] }]);
 		}
 	}
@@ -106,7 +106,7 @@ module Interpreter {
 
 	if(state.holding) {
 		return locations.map((loc) => {
-			if(validPhysics(state.holding, loc, state))
+			if(validPhysics(state.holding, loc, location.rel, state))
 				return [{pol: true, rel: location.rel, args: [state.holding, loc] }];
 		});
 	}
@@ -115,10 +115,9 @@ module Interpreter {
 
     function interpretEntity(ent : Parser.Entity, state : WorldState) : string[] {
 	var objs : string[] = interpretObject(ent.obj, state);
-	console.log(objs);
 	switch(ent.quant) {
 	    case "the":
-		if(objs.length == 1) return objs;
+		if(objs.length == 1 || objs.every(o => o === objs[0])) return objs;
 		else return [];
 		break;
 	    case "any":
@@ -291,6 +290,7 @@ module Interpreter {
 		flag = true;
 	    }
 	});
+
 	return flag;
     }
 
@@ -331,7 +331,7 @@ module Interpreter {
     }
 
     function validAbove(obj : string, state : WorldState) : boolean {
-	if(obj === "ball") return false;
+	if(state.objects[obj].form === "ball") return false;
 	else return true;
     }
 
@@ -347,6 +347,7 @@ module Interpreter {
 	    if(state.stacks[i].indexOf(a) >= 0)
 		flag = true;
 	}
+
 	return flag;
     }
 
@@ -368,7 +369,6 @@ module Interpreter {
     // insideof(a,b) a inside b
     function isInside(a : string, b : string, state : WorldState) : boolean {
 	var flag : boolean = false;
-	console.log(a+", "+b);	
 	state.stacks.forEach( (stack) => {
 
 	    if(stack.indexOf(b) >= 0 && stack.indexOf(a) >= 0 &&
@@ -423,24 +423,63 @@ module Interpreter {
 	return flag;
     }
 
-    function validPhysics(a: string, b: string, state : WorldState) : boolean {
+    function validPhysics(a: string, b: string, rel : string, state : WorldState) : boolean {
+	//we cannot hold the floor
 	if(a === "floor") return false;
+	// the floor supports everything
 	if(b === "floor") return true;
+	// you cannot be inside,ontop,above,leftof,rightof,under,beside youself
+	if(a === b) return false;
+	var objA : ObjectDefinition = state.objects[a];
+	var objB : ObjectDefinition = state.objects[b];
 
-	var objHolding : ObjectDefinition = state.objects[a];
-	var objSupport : ObjectDefinition = state.objects[b];	
-	if(objHolding.form === "ball" && objSupport.form !== "box") return false;
-	if(objSupport.form === "ball") return false;
-	if(objHolding.size === "large" && objSupport.size === "small") return false;
-	if(objSupport.form === "box") {
-		if(objHolding.size == objSupport.size && (objHolding.form === "pyramid" || 
-							  objHolding.form === "plank" || 
-							  objHolding.form === "box"))
-			return false;
+	if(rel === "ontop") {
+		// You cannot put large objects on top of small objects
+		if(objA.size === "large" && objB.size === "small") return false;
+
+		// pyramid cannot support boxes of equal size
+		if(objA.size === objB.size && 
+		   objB.form === "pyramid" && 
+		   objA.form === "box") return false;
+
+		// small bricks cannot support small boxes
+		if(objA.form === "box" && 
+		   objA.size === "small" && 
+		   objB.size === "small" && 
+		   objB.form === "brick") return false;
+
+		// balls cannot be on top of anything except the floor (and inside boxes)
+		if(objA.form === "ball") return false;
 	}
-	if(objSupport.form === "pyramid" && objHolding.form === "box") return false;
-	if(objHolding.form === "box" && objHolding.size === "small" && objSupport.form === "brick") return false;
+	else if(rel === "inside") {
+		// You cannot put large objects inside a small box
+		if(objA.size === "large" && objB.size === "small") return false;
 
+		// boxes cannot have pyramids, planks and boxes of same size inside them
+		if(objA.size == objB.size && (objA.form === "pyramid" || 
+					      objA.form === "plank" || 
+					      objA.form === "box"))
+			return false;
+	
+	}
+	else if(rel === "under") {
+		// small objects cannot support large objects
+		if(objA.size === "small" && objB.size === "large") return false;
+
+		// balls cannot support anything; ball under x, under(ball, x),  is invalid
+		if(objA.form === "ball") return false;
+
+		// pyramids cannot support boxes of equal size
+		if(objA.size === objB.size && 
+		   objB.form === "box" && 
+		   objA.form === "pyramid") return false;
+
+		// small bricks cannot support small boxes
+		if(objA.form === "brick" && 
+		   objA.size === "small" && 
+		   objB.size === "small" &&
+		   objB.form === "box") return false;
+	}
 	return true;
 
     }
