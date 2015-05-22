@@ -230,6 +230,7 @@ module Interpreter {
             var foundX = false;
             var objA = state.holding;
             var objB : string[] = [];
+            var pluralFound = false;
 
             for(var i = 2;i< tokens.length ;i++){
 
@@ -252,7 +253,9 @@ module Interpreter {
                         rels.push(token)
                         break;
                     case "quant": 
-                        //... to do
+                        if(token == "all" || token == "every"){
+                            pluralFound = true;
+                        }
                         break;
                 }
 
@@ -279,25 +282,71 @@ module Interpreter {
 
             //check physical laws
             var allGoals : Literal[][] = [];
+            var allQuantGoals : Literal[] = [];
 
+            // for(var i = 0 ;i < objB.length; i++){
+
+            //     if(checkLaws(objA,objB[i],sRel,state)){
+            //         if(objB[i] == "z"){
+            //             // return [{pol:true, rel:sRel, args:[objA,"floor"]}];
+            //             allGoals.push([{pol:true, rel:sRel, args:[objA,"floor"]}]);
+            //         }
+            //         else{
+            //             // return [{pol:true, rel:sRel, args:[objA,objB[i]]}];
+            //             allGoals.push([{pol:true, rel:sRel, args:[objA,objB[i]]}]);
+            //         }
+            //     }
+            // }
+
+            // if(allGoals.length > 0)
+            //     return allGoals;
+            // else
+            //     throw new Interpreter.Error("Physical Laws error.");
+
+            ////////////
             for(var i = 0 ;i < objB.length; i++){
 
                 if(checkLaws(objA,objB[i],sRel,state)){
-                    if(objB[i] == "z"){
-                        // return [{pol:true, rel:sRel, args:[objA,"floor"]}];
-                        allGoals.push([{pol:true, rel:sRel, args:[objA,"floor"]}]);
+
+                    if(pluralFound){
+                        if(objB[i] == "z"){
+                            allQuantGoals.push({pol:true, rel:sRel, args:[objA,"floor"]});
+                        }
+                        else {
+                            allQuantGoals.push({pol:true, rel:sRel, args:[objA,objB[i]]});
+                        }
+
                     }
                     else{
-                        // return [{pol:true, rel:sRel, args:[objA,objB[i]]}];
-                        allGoals.push([{pol:true, rel:sRel, args:[objA,objB[i]]}]);
+                        if(objB[i] == "z"){
+                            allGoals.push([{pol:true, rel:sRel, args:[objA,"floor"]}]);
+                        }
+                        else {
+                            allGoals.push([{pol:true, rel:sRel, args:[objA,objB[i]]}]);
+                        }
                     }
                 }
             }
+            if(pluralFound){
+                if(allQuantGoals.length > 0){
+                    if(allQuantValidate(allQuantGoals)){
+                        var grouped = groupRules(allQuantGoals,false,true);
+                        return grouped;
+                    }
+                    else
+                        throw new Interpreter.Error("Physical Laws error.");
+                }
+                else
+                    throw new Interpreter.Error("Physical Laws error.");
+            }
 
-            if(allGoals.length > 0)
+            if(allGoals.length > 0){
                 return allGoals;
+            }
             else
                 throw new Interpreter.Error("Physical Laws error.");
+
+
 
         }
 
