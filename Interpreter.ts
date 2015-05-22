@@ -16,7 +16,8 @@ module Interpreter {
             var result = interpretCommand(intprt.prs, currentState);
 
             if(result !== null){
-                intprt.intp = result;
+                intprt.intp = result.literals;
+                intprt.speech = result.speech;
                 interpretations.push(intprt);
             }
 
@@ -28,8 +29,10 @@ module Interpreter {
         }
     }
 
+    export interface PairOfResult { literals : Literal[][]; speech : string[];}
 
-    export interface Result extends Parser.Result {intp:Literal[][];}
+    export interface Result extends Parser.Result {intp:Literal[][]; speech:string[];}
+
     export interface Literal {pol:boolean; rel:string; args:string[];}
 
 
@@ -62,7 +65,7 @@ module Interpreter {
     var globalDic  = new collections.Dictionary<string,string>();
 
 
-    function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
+    function interpretCommand(cmd : Parser.Command, state : WorldState) : PairOfResult {
 
         // console.log(cmd);
         console.log(state);
@@ -115,7 +118,7 @@ module Interpreter {
             if(currentEnt.obj != null){
                 var objArrays = recursiveObject(currentEnt.obj);
                 tokens = tokens.concat(objArrays);
-                tokens.push("x");
+                tokens.push("(and move it)");
             }
 
             if(currentLoc != null){
@@ -129,24 +132,34 @@ module Interpreter {
         //add new rule according to parsed array
         var newRules = genRule(tokens,state);
         if(newRules !== null){
-
-            for(var i = 0;i < newRules.length;i++){
-                intprt.push([newRules[i]]);
-
-            }
+            return {literals:newRules, speech:tokens};
         }
         else return null;
 
+        // if(intprt.length > 1){
+        //     for(var i = 0 ; i < objects.length ; i++){
+        //         var c = confirm("Ambiguous: Did you mean " + objectToDescription(objects[i], state));
+        //         if (c == true){
 
-        return intprt;
+        //             result.push(objects[i]);
+        //             break;
+        //         }
+        //     }
+
+        // }
+
+        // Pair { litertals : Literal[][]; speech : string[]}
+
+        // return intprt;
     }
+
 
     //generate rule from prepared array
     //for example , 
     // query : put the black ball in a box on the floor
     // tokens = ["move","the","black","ball","inside","any","box","ontop","the","floor"]
     //modify some algorithm here to properly generate new rule. e.g. inside(a,b), ontop(a,b)
-    function genRule(tokens : string[], state : WorldState) : Literal[] {
+    function genRule(tokens : string[], state : WorldState) : Literal[][] {
        
         var rules : Literal[] = [];
 
@@ -197,12 +210,12 @@ module Interpreter {
             }
 
             var goalObj = findObject(objs,rels,state);
-            var allGoals : Literal[] = [];
+            var allGoals : Literal[][] = [];
             if(goalObj.length == 0)
                 return null;
             else{
                 for(var i = 0;i < goalObj.length;i++){
-                    allGoals.push({pol:true, rel:"holding", args:[goalObj[i]]});
+                    allGoals.push([{pol:true, rel:"holding", args:[goalObj[i]]}]);
                 }
                 return allGoals;
             }
@@ -265,18 +278,18 @@ module Interpreter {
             }
 
             //check physical laws
-            var allGoals : Literal[] = [];
+            var allGoals : Literal[][] = [];
 
             for(var i = 0 ;i < objB.length; i++){
 
                 if(checkLaws(objA,objB[i],sRel,state)){
                     if(objB[i] == "z"){
                         // return [{pol:true, rel:sRel, args:[objA,"floor"]}];
-                        allGoals.push({pol:true, rel:sRel, args:[objA,"floor"]});
+                        allGoals.push([{pol:true, rel:sRel, args:[objA,"floor"]}]);
                     }
                     else{
                         // return [{pol:true, rel:sRel, args:[objA,objB[i]]}];
-                        allGoals.push({pol:true, rel:sRel, args:[objA,objB[i]]});
+                        allGoals.push([{pol:true, rel:sRel, args:[objA,objB[i]]}]);
                     }
                 }
             }
@@ -298,6 +311,10 @@ module Interpreter {
             var objA_move : string[] = [];
             var objB_move : string[] = [];
             var pluralFound = false;
+            var allQuantLeft = false;
+            var allQuantRight = false;
+            var foundSplited = false;
+
 
             for(var i =1;i< tokens.length ;i++){
 
@@ -328,6 +345,12 @@ module Interpreter {
                         //... to do
                         if(token == "all" || token == "every"){
                             pluralFound = true;
+                            if(foundSplited){
+                                allQuantRight = true;
+                            }
+                            else{
+                                allQuantLeft = true;
+                            }
                         }
                         break;
 
@@ -335,6 +358,7 @@ module Interpreter {
                         //case "x" for ambiguous
                         splitIndex = i;
                         foundX = true;
+                        foundSplited = true;
                 }
 
                 if(foundForm){
@@ -363,9 +387,18 @@ module Interpreter {
             var objsLaw : string[][] = [];
             objsLaw.push(objA_move);
             objsLaw.push(objB_move);
+
             var combs = allCombinations(objsLaw);
-            var allGoals : Literal[] = [];
-            console.log(combs);
+            var allGoals : Literal[][] = [];
+            var allQuantGoals : Literal[] = [];
+            var isAllValid = false;
+
+            combs = combs.filter(function(elem, pos) {
+                return combs.indexOf(elem) == pos;
+            }); 
+
+            // console.log(combs);
+
 
             for(var i = 0 ;i < combs.length; i++){
 
@@ -375,22 +408,36 @@ module Interpreter {
 
                     if(pluralFound){
                         if(combArray[1] == "z"){
-                            allGoals.push({pol:true, rel:sRel, args:[combArray[0],"floor"]});
+                            allQuantGoals.push({pol:true, rel:sRel, args:[combArray[0],"floor"]});
                         }
                         else {
-                            allGoals.push({pol:true, rel:sRel, args:[combArray[0],combArray[1]]});
+                            allQuantGoals.push({pol:true, rel:sRel, args:[combArray[0],combArray[1]]});
                         }
 
                     }
                     else{
                         if(combArray[1] == "z"){
-                            allGoals.push({pol:true, rel:sRel, args:[combArray[0],"floor"]});
+                            allGoals.push([{pol:true, rel:sRel, args:[combArray[0],"floor"]}]);
                         }
                         else {
-                            allGoals.push({pol:true, rel:sRel, args:[combArray[0],combArray[1]]});
+                            allGoals.push([{pol:true, rel:sRel, args:[combArray[0],combArray[1]]}]);
                         }
                     }
                 }
+            }
+            if(pluralFound){
+                if(allQuantGoals.length > 0){
+                    if(allQuantValidate(allQuantGoals)){
+                        var grouped = groupRules(allQuantGoals,allQuantLeft,allQuantRight);
+                        return grouped;
+                        // allGoals.push(allQuantGoals);
+                        // return allGoals;
+                    }
+                    else
+                        throw new Interpreter.Error("Physical Laws error.");
+                }
+                else
+                    throw new Interpreter.Error("Physical Laws error.");
             }
 
             if(allGoals.length > 0){
@@ -405,9 +452,84 @@ module Interpreter {
 
     }
 
-    function findObject(objs : string[][], rels : string[], state : WorldState) : string[] {
-        // console.log(objs);
+    // {pol:boolean; rel:string; args:string[];}
 
+    function allQuantValidate(literals : Literal[]) : boolean {
+
+        var sRel = literals[0].rel;
+
+        if(sRel == "ontop" || sRel == "inside"){
+            if(literals[0].args[1] == "floor"){
+                return true;
+            }
+            else 
+                return false;
+        }
+        else 
+            return true;
+
+    }
+
+    function groupRules(literals : Literal[], left : boolean, right : boolean) : Literal[][] {
+
+        var result : Literal[][] = [];
+
+        var occurences = 1;
+
+        //case all quantifier on left hand side
+        if(left && !right){
+
+            for(var i =0;i < literals.length - 1;i++){
+                if(literals[i].args[1] != literals[i+1].args[1]){
+                    occurences++;
+                }
+            }
+            var chunk = literals.length / occurences;
+
+            for (var i=0; i < literals.length; i+=chunk) {
+                var temp = literals.slice(i,i+chunk);
+                result.push(temp);
+            }
+        }
+
+        //case all quantifier on right hand side
+        if(!left && right){
+
+            for(var i =0;i < literals.length - 1;i++){
+                if(literals[i].args[1] != literals[i+1].args[1]){
+                    occurences++;
+                }
+            }
+
+            var sorted = literals.sort(sortHelper);
+            for (var i=0; i < sorted.length; i+=occurences) {
+                var temp = sorted.slice(i,i+occurences);
+                result.push(temp);
+            }
+
+        }
+
+        //case all quantifier for both object
+        if(left && right){
+            result.push(literals);
+        }
+
+        return result;
+    }
+
+    function sortHelper(a : Literal, b :Literal){
+
+        if(a.args[0] < b.args[0]){
+            return -1;
+        }
+        else if(a.args[0] > b.args[0]){
+            return 1;
+        }
+        return 0;
+
+    }
+
+    function findObject(objs : string[][], rels : string[], state : WorldState) : string[] {
         var result : string[] = [];
 
         //case simple object, no relation
@@ -591,7 +713,7 @@ module Interpreter {
 
         }
 
-        console.log(obj1 + " " + obj2 + " " + rel + " " + result);
+        // console.log(obj1 + " " + obj2 + " " + rel + " " + result);
 
         return result;
     }

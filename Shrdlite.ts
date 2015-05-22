@@ -63,8 +63,22 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
         });
 
+        var selIndex = 0;
+        if(interpretations.length > 1){
+            for(var i = 0 ; i < interpretations.length ; i++){
+                var arr = interpretations[i].speech;
+                arr[0] = "pick";
+                var speech = arr.join(" ");
+                var c = confirm("Ambiguous: Did you mean \"" + speech + "\".");
+                if (c == true){
+                    selIndex = i;
+                    break;
+                }
+            }
+        }
+
         try {
-            var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
+            var plans : Planner.Result[] = Planner.plan([interpretations[selIndex]], world.currentState);
         } catch(err) {
             if (err instanceof Planner.Error) {
                 world.printError("Planning error", err.message);
