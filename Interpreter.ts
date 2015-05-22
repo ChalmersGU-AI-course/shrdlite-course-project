@@ -16,7 +16,7 @@ module Interpreter {
         if (interpretations.length==1) {
             return interpretations;
         }
-        else if(interpretations.length>1){throw new Interpreter.Error("Found ambigious interpretation");}
+        else if(interpretations.length>1){throw new Interpreter.Error(getClariQuest(interpretations));}
          else {
             throw new Interpreter.Error("Found no interpretation");
         }
@@ -43,7 +43,156 @@ module Interpreter {
         constructor(public message? : string) {}
         public toString() {return this.name + ": " + this.message}
     }
+    
+    
+	function getClariQuest(interps : Result[]) : string {
+		
+    	//for(var i = 0; i < interps.length; i++){
+    	//	for(var j = 0; j < interps.length; j++){
+    			
+    			
+    			//if(i != j){
+    				console.log (cmpObj(interps[0].prs.ent.obj, interps[1].prs.ent.obj));
+    				console.log (cmpObj(interps[0].prs.loc.ent.obj, interps[1].prs.loc.ent.obj));
+    				//console.log(interps[1].intp);
+    			//}
+    			
 
+    			
+    			
+    	//	}
+    	//}
+    	
+    
+    	return ;
+    }
+
+	function cmpObj (fstObj : Parser.Object, sndObj : Parser.Object) : string {
+		var fst : boolean = false;
+		var objPath :  string = "";
+		var snd : boolean = false;
+		
+		while(true){
+			
+			if (fstObj.obj){
+				fst = true;
+				//fstObj = fstObj.obj;
+			}
+			
+			if (sndObj.obj){
+				snd = true;
+				//sndObj = sndObj.obj;
+			}
+			
+			if(snd != fst){
+				if(fst){
+					objPath = objPath + objectToString(fstObj.obj) + " ";
+					objPath = objPath + fstObj.loc.rel;
+					objPath = objPath + objectToString(fstObj.loc.ent.obj);
+					
+				}else{
+					objPath = objPath + objectToString(sndObj.obj)+ " ";
+					objPath = objPath + sndObj.loc.rel;
+					objPath = objPath + objectToString(sndObj.loc.ent.obj);
+				}
+				break;
+				
+			}else if(snd == true && fst == true  ){
+				var fstLoc : boolean = false;
+				var sndLoc : boolean = false;
+				
+				if(fstObj.loc.ent.obj){
+					fstLoc = true;
+				}
+				
+				if(sndObj.loc.ent.obj){
+					sndLoc = true;
+				}
+				
+				if(fstLoc == true && sndLoc == true){
+					fstObj = fstObj.loc.ent.obj;
+					sndObj = sndObj.loc.ent.obj;
+					objPath = objPath + sndObj.loc.rel;
+				}
+				
+				
+//				if(fstLoc != sndLoc ){
+//					if(fstLoc){
+//						objPath = objPath + objectToString(fstObj.loc.ent.obj) + " ";
+//						objPath = objPath + fstObj.loc.rel;
+//						objPath = objPath + objectToString(fstObj.loc.ent.obj);
+//						
+//					}else{
+//						objPath = objPath + objectToString(sndObj.loc.ent.obj)+ " ";
+//						objPath = objPath + sndObj.loc.rel;
+//						objPath = objPath + objectToString(sndObj.loc.ent.obj);
+//					}
+			//	}else{
+			//		break;
+				//}
+
+				
+			}else{
+				break;
+				//objPath = objPath + objectToString(fstObj);
+			}
+			snd = false;
+			fst = false;
+		}
+		return objPath;
+	}
+	
+	function objectToString (obj : Parser.Object) : string{
+		var str : string ="";
+		
+		if(obj.size){str = str + " " + obj.size}
+		if(obj.color){str = str + " " + obj.color}
+		if(obj.form){str = str + " " + obj.form}
+		
+		return str;
+	}
+	
+//		function cmpObj (fstObj : Parser.Object, sndObj : Parser.Object) : string {
+//		var fst : boolean = false;
+//		var objPath :  string = "";
+//		var snd : boolean = false;
+//		
+//		//while(true){
+//			
+//			if (fstObj.obj){
+//				fst = true;
+//				//fstObj = fstObj.obj;
+//			}
+//			
+//			if (sndObj.obj){
+//				snd = true;
+//				//sndObj = sndObj.obj;
+//			}
+//			
+//			if(snd != fst){
+//				if(fst){
+//					objPath = objPath + objectToString(fstObj.obj) + " ";
+//					objPath = objPath + fstObj.loc.rel;
+//					objPath = objPath + objectToString(fstObj.loc.ent.obj);
+//					
+//				}else{
+//					objPath = objPath + objectToString(sndObj.obj)+ " ";
+//					objPath = objPath + sndObj.loc.rel;
+//					objPath = objPath + objectToString(sndObj.loc.ent.obj);
+//				}
+//				//break;
+//				
+//			}//else if(snd == false && fst == false){
+//				//break;
+//			//}
+//				else{
+//				objPath = objPath + objectToString(fstObj);
+//			}
+//			snd = false;
+//			fst = false;
+//		//}
+//		return objPath;
+//	}
 
     //////////////////////////////////////////////////////////////////////
     // private functions
@@ -89,6 +238,8 @@ module Interpreter {
     	}
     	
     }
+    
+
     
     function goalsToPDDL(ent : Parser.Entity , loc : Parser.Location , state : WorldState) : Literal[][] {
     	var lits : Literal[][] = [];
