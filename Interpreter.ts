@@ -183,21 +183,21 @@ module Interpreter {
         // }
 
         var location = cmd.loc;
-        var locationTargets = [];
-        var supportiveAmbiguousTargets = [];
+        var locationTargets = findTargetEntities(location.ent, state).targets;
+        // var supportiveAmbiguousTargets = [];
         // = findTargetEntities(location.ent, state).targets;
         // not all location targets canSupport targets!
-        findTargetEntities(location.ent, state).targets.forEach((t) => {
-            // if (canSupport( findObjDef(state, tar[0])
-            //                ,findObjDef(state, t)))
-            {
-                locationTargets.push(t);
-                supportiveAmbiguousTargets.push(findObjDef(state, t));
-            }
-        });
-        if (locationTargets.length > 1 && state.ambiguousObjs.length >1){
-            state.ambiguousObjs.push(supportiveAmbiguousTargets);
-        }
+        // findTargetEntities(location.ent, state).targets.forEach((t) => {
+        //     if (canSupport( findObjDef(state, tar[0])
+        //                     ,findObjDef(state, t)))
+        //     {
+        //         //locationTargets.push(t);
+        //         supportiveAmbiguousTargets.push(findObjDef(state, t));
+        //     }
+        // });
+        // if (locationTargets.length > 1 && state.ambiguousObjs.length >1){
+        //     state.ambiguousObjs.push(supportiveAmbiguousTargets);
+        // }
 
         // var locationTargets = findTargetEntities(location.ent, state);
         // if(locationTargets.length == 0){
@@ -246,6 +246,7 @@ module Interpreter {
     }
 
     function moveObjAbove(state : WorldState, intprt : Literal[][], locationRel : string, fromList : string[], toList : string[], exactlyAbove : boolean){
+        var supportiveAmbiguousTargets = [];
         for (var ix in fromList){
             for(var jx in toList){
                 var above = fromList[ix];
@@ -270,11 +271,15 @@ module Interpreter {
                         continue;
                     }
                 }
+                supportiveAmbiguousTargets.push(objB);
 
                 intprt.push( [
                     {pol: true, rel: locationRel, args: [above, below] }
                 ] );
             }
+        }
+        if (state.ambiguousObjs.length >1){
+            state.ambiguousObjs.push(supportiveAmbiguousTargets);
         }
     }
 
