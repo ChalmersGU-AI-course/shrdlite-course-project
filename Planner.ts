@@ -50,17 +50,17 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         //only if not it nodevalues
         console.log("stop1");
         if(state.arm > 0){
-            neig.push(state);
+            neig.push(this.clone(state));
             neig[neig.length-1].arm = state.arm-1;
             neig[neig.length-1].planAction = "l";
         }
         console.log("stop2");
         if(state.arm < GetFloorSize(state)){
-            console.log("xzczcarmpos: "+state.arm + " , holding: " + state.holding);
-            neig.push(state);
+            console.log("xzczcarmpos: "+state2.arm + " , holding: " + state2.holding);
+            neig.push(this.clone(state));
             neig[neig.length-1].arm = state.arm+1;
             neig[neig.length-1].planAction = "r";
-            console.log("ffffffarmpos: "+state.arm + " , holding: " + state.holding);
+            console.log("ffffffarmpos: "+state2.arm + " , holding: " + state2.holding);
         }
         console.log("stop3");
         var pddlIndex:number = this.getTopObjInd(state, state.pddl.toArray());
@@ -70,29 +70,30 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         //world.printWorld(state.holding ? "holding" : "not holding");
         if(state.holding != null){
             console.log("if1");
-            neig.push(state);
+            neig.push(this.clone(state));
             //Already holding, drop at position
              /* find object on top at positon, set as index, add relation on top between holding
              item and the current on top */ 
             var newobj : Interpreter.Literal;
+             newobj = this.clone(state.pddl[state.pddl.length -1]); 
              newobj.rel = "ontop";
-             newobj.args = [neig[neig.length-1].holding, state.pddl[pddlIndex].args[0]];
+             newobj.args = [neig[neig.length-1].holding, this.getTopRelation(state, state.pddl.toArray()).args[0]]; // this can't be right.
              //neig[neig.length].holding = state.pddl.push(newobj)
              state.pddl.add(newobj);
              neig[neig.length-1].holding = null;
              neig[neig.length-1].planAction = "d";
-        }else if( pddlIndex >0){//neig[neig.length-1].pddl[pddlIndex].args[0].substr(0, 1) != "f" /* object in position */) {
-           console.log("ANarmpos: "+state.arm + " , holding: " + state.holding);
+        }else if( pddlIndex !=-1){//neig[neig.length-1].pddl[pddlIndex].args[0].substr(0, 1) != "f" /* object in position */) {
+           console.log("ANarmpos: "+state2.arm + " , holding: " + state2.holding);
             console.log("if2");
-            neig.push(state);
+            neig.push(this.clone(state));
             //not holding, pick at position    
             /* find object on top at positon, set as index, remove relation, and add object to pddl.holding */             
             neig[neig.length-1].holding = this.getTopObj(state, state.pddl.toArray());
             neig[neig.length-1].pddl.remove(this.getTopRelation (state, state.pddl.toArray())); // this may be error
             neig[neig.length-1].planAction = "p";
-            console.log("ZNarmpos: "+state.arm + " , holding: " + state.holding);
+            console.log("ZNarmpos: "+state2.arm + " , holding: " + state2.holding);
         }
-        console.log("midNarmpos: "+state.arm + " , holding: " + state.holding);
+        console.log("midNarmpos: "+state2.arm + " , holding: " + state2.holding);
         for(var i = 0; i < neig.length;i++){
             var bflag:boolean = false;
             for(var j = 0; j <  this._nodeValues.length;j++){
@@ -116,10 +117,11 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 neigNumbers.push( this._nodeValues.length-1);
             }   
         }
-        console.log("ENDNarmpos: "+state.arm + " , holding: " + state.holding);
+        console.log("ENDNarmpos: "+state2.arm + " , holding: " + state2.holding);
         //Add new to nodevalues, return new indexes
+        
       
-        console.log("ENDNarmpos: "+state.arm + " , holding: " + state.holding);
+        console.log("ENDNarmpos: "+state2.arm + " , holding: " + state2.holding);
         return neigNumbers; 
     }
     getTopObj(state:WorldState, pddls:Interpreter.Literal[]):string{
@@ -129,7 +131,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         for(var index = 0; index < pddls.length; index++){
             var pddl = pddls[index];
             var x = pddl.args[1];
-            if(pddl.rel == "ontop" && this.equalObjects(state.objects[x], state.objects[z])){
+            if(pddl.args[1] == null){}
+            else if(pddl.rel == "ontop" && this.equalObjects(state.objects[x], state.objects[z])){
                 z = pddl.args[0];
                 ind=index;
                 index = -1;
@@ -148,7 +151,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         for(var index = 0; index < pddls.length; index++){
             var pddl = pddls[index];
             var x = pddl.args[1];
-            if(pddl.rel == "ontop" && this.equalObjects(state.objects[x], state.objects[z])){
+            console.log("loop");
+            if(pddl.args[0] == null){}
+            else if(pddl.rel == "ontop" && this.equalObjects(state.objects[x], state.objects[z])){
                 z = pddl.args[0];
                 ind=index;
                 index = -1;
@@ -162,14 +167,18 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
     getTopObjInd(state:WorldState, pddls:Interpreter.Literal[]):number{
         var ind :number= -1;
-        var fln = state.arm;
+        var fln = state.arm; 
+        console.log("inside gettop");
         var z = "f" + fln.toString();
         for(var index = 0; index < pddls.length; index++){
+            console.log("x: " + x + " , z: "+z);
             var pddl = pddls[index];
-            var x = pddl.args[1];
-            if(pddl.rel == "ontop" && this.equalObjects(state.objects[x], state.objects[z])){
+            var x = pddl.args[0];
+            if(pddl.args[0] == null){}
+            else if(pddl.rel == "ontop" && this.equalObjects(state.objects[x], state.objects[z])){
+                console.log("new vals :x: " + x + " , z: "+z);
                 z = pddl.args[0];
-                ind=index;
+                ind= index;
                 index = -1;
 
                 //counter++;
@@ -236,24 +245,15 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
     //returns x-pos (0->x) for object a
     findPosition(a:string, state:WorldState, pddls:Interpreter.Literal[]):number{
-       var x = a;
+       console.log("at findPosition, a =" + a);
+       var x = a;// this.clone(a);
        var position = 0;
-       var floor;
-       console.log("at findPosition");
-        for(var index = 0; index < pddls.length; index++){
-  
-            var pddl = pddls[index];
-            if(this.equalObjects(state.objects[pddl.args[0]], state.objects[x])){
-                if(state.objects[pddl.args[1]].form == "floor") {
-                    //found floor
-                    floor = pddl.args[1];
-                }
-                else{
-                    x = pddl.args[1];
-                    index = -1;
-                }
-            }
-        }
+       var fln = state.arm;
+       var floor = "f" + fln.toString();
+       console.log("at findPosition, x =" + x);
+
+       
+        console.log("floor: " + floor);
         //time to move leftwards along the floors
         for(var index = 0; index < pddls.length; index++){
             var pddl = pddls[index];
@@ -318,7 +318,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 }
             }
             else{
-                console.log("not holding the right object");
+                console.log("not holding an object: " +state.holding);
                 return this.countOnTop(a,state,pddls) + Math.abs(this.findPosition(a,state,pddls)-state.arm);
             }
         }
