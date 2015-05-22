@@ -386,7 +386,21 @@ module Planner {
                 cost = cost + calculateHolding(primary, state);
                 cost = cost + dist + 1; //drop
             }
-        } 
+        } else if (literal.rel === "above") {
+            // First calculate the cost for picking up the primary object
+            cost = calculateHolding(primary, state);
+            // Add the horizontal distance
+            cost = cost + Math.abs(findStack(primary, state.stacks) - findStack(target, state.stacks));
+            // Add one move to drop the picked up object, add one more sidestep if they shared stack 
+            cost = findStack(primary, state.stacks) === findStack(target, state.stacks) ? cost + 2 : cost + 1;
+        } else if (literal.rel === "under") {
+            // First calculate the cost for picking up the primary object
+            cost = calculateHolding(target, state);
+            // Add the horizontal distance
+            cost = cost + Math.abs(findStack(primary, state.stacks) - findStack(target, state.stacks));
+            // Add one move to drop the picked up object, add one more sidestep if they shared stack 
+            cost = findStack(primary, state.stacks) === findStack(target, state.stacks) ? cost + 2 : cost + 1;
+        }
 
         return cost;
     }
