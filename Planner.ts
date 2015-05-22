@@ -47,7 +47,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			neig.push(possiblestate);
 		}
 		// move arm right
-		if(currentstate.arm < this.getFloorSize(currentstate)){
+		if(currentstate.arm < this.getWorldWidth(currentstate)){
 			var possiblestate : WorldState = this.clone(currentstate);
 			// increase arm poss
 			possiblestate.arm += 1;
@@ -70,12 +70,14 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			var possiblestate : WorldState = this.clone(currentstate);
 			var topobj = this.getTopObj(currentstate, currentstate.pddl.toArray());
 			var newliteral = {pol: true, rel : "ontop", args : [possiblestate.holding, topobj]};
-			// remove holding obj
-			possiblestate.holding = null;
-			possiblestate.planAction = "d";
-			// add new top literal 
-			possiblestate.pddl.add(newliteral);
-			neig.push(possiblestate);
+			if(Interpreter.checkIllegal(newliteral, currentstate)){ // check if the drop is leagal
+				// remove holding obj
+				possiblestate.holding = null;
+				possiblestate.planAction = "d";
+				// add new top literal 
+				possiblestate.pddl.add(newliteral);
+				neig.push(possiblestate);
+			}
 		}
 		
 		// check if we have allready been there
@@ -801,6 +803,21 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             
         }
         return true;
+    }
+    
+    getWorldWidth(state : WorldState):number{
+    	var nFloors : number = 0;
+	    var pddls = state.pddl.toArray();
+	    for(var i = 0; i < pddls.length; i++){
+	    	if(pddls[i].rel == "leftof" && state.objects[pddls[i].args[0]].form == "floor"){
+	    		nFloors ++;
+	    	}
+	    }
+	    // add one extra, just because number of leftofs is one less than nmbr floors.
+	    if(nFloors > 0){
+	    	nFloors ++;
+	    }
+	    return nFloors;
     }
     
     getFloorSize(state : WorldState):number{

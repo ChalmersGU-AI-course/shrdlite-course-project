@@ -58,6 +58,54 @@ module Interpreter {
         constructor(public message? : string) {}
         public toString() {return this.name + ": " + this.message}
     }
+    
+    export function checkIllegal(lit : Literal, state : WorldState):boolean{
+    	var a = state.objects[lit.args[0]];
+    	var b = state.objects[lit.args[1]];
+    	if(!a || !b){
+    		return false;
+    	}
+    	
+    	if(!lit.rel || lit.rel == null){
+    		return false;
+    	}
+    	if(lit.args[0] == lit.args[1]){
+    		return false;
+    	}
+    	if(b.form == "floor" && a.form != b.form){
+    		if(lit.rel == "under" || lit.rel == "inside" ){
+    			return false;
+    		}
+    		return true;
+    	}
+    	if(a.form == "ball" && ((lit.rel == "ontop" && b.form != "floor") || (lit.rel == "inside" && 
+    			(a.size == "large" && b.size == "small")))){
+    		return false;
+    	}
+    	if(b.form == "ball" && (lit.rel == "ontop" || lit.rel == "above" )){
+    		return false;
+    	}
+    	if(lit.rel == "inside" && (b.form != "box")){
+    		return false;
+    	}
+    	if(lit.rel == "inside" && ((a.form == "pyramid" || a.form == "plank" || 
+    			a.form == "floor" || a.form == "box")&&
+    			(a.size == b.size || (a.size == "large" && b.size == "small")))){
+    		return false;
+    	}
+    	if((lit.rel == "ontop" || lit.rel == "above" || lit.rel == "inside") && 
+    			((a.size == "large" && b.size == "small")|| a.form == "floor")){
+    		return false;
+    	}
+    	if(lit.rel == "under" && ((b.size == "large" && a.size == "small") || a.form == "ball")){
+    		return false;
+    	}
+    	if(b.form == "box" && lit.rel == "ontop"){
+    		return false;
+    	}
+    	
+    	return true;
+    }
 
 
     //////////////////////////////////////////////////////////////////////
@@ -595,53 +643,7 @@ module Interpreter {
     }
     
     
-    function checkIllegal(lit : Literal, state : WorldState):boolean{
-    	var a = state.objects[lit.args[0]];
-    	var b = state.objects[lit.args[1]];
-    	if(!a || !b){
-    		return false;
-    	}
-    	
-    	if(!lit.rel || lit.rel == null){
-    		return false;
-    	}
-    	if(lit.args[0] == lit.args[1]){
-    		return false;
-    	}
-    	if(b.form == "floor" && a.form != b.form){
-    		if(lit.rel == "under" || lit.rel == "inside" ){
-    			return false;
-    		}
-    		return true;
-    	}
-    	if(a.form == "ball" && ((lit.rel == "ontop" && b.form != "floor") || (lit.rel == "inside" && 
-    			(a.size == "large" && b.size == "small")))){
-    		return false;
-    	}
-    	if(b.form == "ball" && (lit.rel == "ontop" || lit.rel == "above" )){
-    		return false;
-    	}
-    	if(lit.rel == "inside" && (b.form != "box")){
-    		return false;
-    	}
-    	if(lit.rel == "inside" && ((a.form == "pyramid" || a.form == "plank" || 
-    			a.form == "floor" || a.form == "box")&&
-    			(a.size == b.size || (a.size == "large" && b.size == "small")))){
-    		return false;
-    	}
-    	if((lit.rel == "ontop" || lit.rel == "above" || lit.rel == "inside") && 
-    			((a.size == "large" && b.size == "small")|| a.form == "floor")){
-    		return false;
-    	}
-    	if(lit.rel == "under" && ((b.size == "large" && a.size == "small") || a.form == "ball")){
-    		return false;
-    	}
-    	if(b.form == "box" && lit.rel == "ontop"){
-    		return false;
-    	}
-    	
-    	return true;
-    }
+    
     
     function findstartliterals(lits : Literal []): string[]{
     	var temp : Literal [] = [];
