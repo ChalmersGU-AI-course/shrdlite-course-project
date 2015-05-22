@@ -77,13 +77,19 @@ module Interpreter {
         var entitiesIntrprt;
         var resolveAmb = function(intrprt, str1, str2){
             if (intrprt.length > 1) {
-                var promptStr = 'Multiple ' + str1 + ' to ' + str2 + ' found:\n'
+                var promptStr = 'Multiple ' + str1 + ' to ' + str2 + ' found:\n';
                 for(var i in intrprt){
                     var obj = intrprt[i][0][0];
                     promptStr += i + '. The ' + obj.size + ' ' + obj.color + ' ' + obj.form + '.\n';
                 }
                 promptStr += 'Which one did you mean?';
-                var selected = Number(prompt(promptStr));
+                var selected;
+                while(!intrprt[selected]){
+                    selected = Number(prompt(promptStr));
+                    if(!intrprt[selected]){
+                        alert("Unfortunately, I didn't quite grasp that. Try again.");
+                    }
+                }
                 intrprt = [intrprt[selected]];
             }
             return intrprt;
