@@ -1,6 +1,6 @@
 ///<reference path="Astar.ts"/>
 
-class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
+class Shortestpathex implements Graph<number[]>{   // index 0 = x, index 1 = y
     _nodeValues : Array<number[]>;
     _nodeneighbors : Array<Array<number>>;   //neighboring nodes to index node 
     _edges : Array<Array<number>>;        //from index node a to index node b
@@ -116,7 +116,7 @@ function printres(res:number[], nodeVal){
 /* ex 1 */
 console.info("Example 1 with heuristic: no wall");
 
-var sp = new Shortestpath(10, false, -1, 1);// 10x10 map, true for wall and 5 for hole in wall 
+var sp = new Shortestpathex(10, false, -1, 1);// 10x10 map, true for wall and 5 for hole in wall 
 var as = new Astar<number[]>(sp);
 var start = sp.specialIndexOf([2,2]);
 var end = sp.specialIndexOf([6,6]);
@@ -128,7 +128,7 @@ printres(res, sp._nodeValues);
 console.info("Example 2 with heuristic: wall");
 
 
-var sp = new Shortestpath(10, true, -1, 1);// 10x10 map, true for wall and 5 for hole in wall 
+var sp = new Shortestpathex(10, true, -1, 1);// 10x10 map, true for wall and 5 for hole in wall 
 var as = new Astar<number[]>(sp);
 var start = sp.specialIndexOf([2,2]);
 var end = sp.specialIndexOf([6,6]);
@@ -140,7 +140,7 @@ printres(res, sp._nodeValues);
 console.info("Example 3 with heuristic: wall with hole in middle");
 
 
-var sp = new Shortestpath(10, true, 5, 1);// 10x10 map, true for wall and 5 for hole in wall 
+var sp = new Shortestpathex(10, true, 5, 1);// 10x10 map, true for wall and 5 for hole in wall 
 var as = new Astar<number[]>(sp);
 var start = sp.specialIndexOf([2,2]);
 var end = sp.specialIndexOf([6,6]);
@@ -152,7 +152,7 @@ printres(res, sp._nodeValues);
 console.info("Example 4 without heuristic: wall with hole in middle");
 
 
-var sp = new Shortestpath(10, true, 5, 0);// 10x10 map, true for wall and 5 for hole in wall 
+var sp = new Shortestpathex(10, true, 5, 0);// 10x10 map, true for wall and 5 for hole in wall 
 var as = new Astar<number[]>(sp);
 var start = sp.specialIndexOf([2,2]);
 var end = sp.specialIndexOf([6,6]);
@@ -164,7 +164,7 @@ printres(res, sp._nodeValues);
 console.info("Example 5 with heuristic weight 10(instead of 1): wall with hole in middle");
 
 
-var sp = new Shortestpath(10, true, 5, 10);// 10x10 map, true for wall and 5 for hole in wall 
+var sp = new Shortestpathex(10, true, 5, 10);// 10x10 map, true for wall and 5 for hole in wall 
 var as = new Astar<number[]>(sp);
 var start = sp.specialIndexOf([2,2]);
 var end = sp.specialIndexOf([6,6]);

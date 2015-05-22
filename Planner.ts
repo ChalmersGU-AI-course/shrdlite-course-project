@@ -20,21 +20,131 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     }
 
     clone(object:any): any {
-    var objectCopy = <any>{};
-
-    for (var key in object)
-    {
-        if (object.hasOwnProperty(key))
-        {
-            objectCopy[key] = object[key];
-        }
+	    var objectCopy = <any>{};
+	
+	    for (var key in object)
+	    {
+	        if (object.hasOwnProperty(key))
+	        {
+	            objectCopy[key] = object[key];
+	        }
+	    }
+	
+	    return objectCopy;
+	}
+	getneighbors(node :number):Array<number>{
+		// get current state
+		var currentstate : WorldState = this._nodeValues[node];
+		var neig :WorldState[] = [];
+		// max 3 possible states
+		
+		// move arm left
+		if(currentstate.arm > 0){
+			var possiblestate : WorldState = this.clone(currentstate);
+			// reduce arm poss
+			possiblestate.arm -= 1;
+			possiblestate.planAction = "l";
+			neig.push(possiblestate);
+		}
+		// move arm right
+		if(currentstate.arm < this.getFloorSize(currentstate)){
+			var possiblestate : WorldState = this.clone(currentstate);
+			// increase arm poss
+			possiblestate.arm += 1;
+			possiblestate.planAction = "r";
+			neig.push(possiblestate);
+		}
+		// pick up
+		var topLit = this.getTopLiteral(currentstate, currentstate.arm);
+		if(!currentstate.holding && topLit){	
+			// if it is not holding anything and ther is something on the floor
+			var possiblestate : WorldState = this.clone(currentstate);
+			var topobj = this.getTopObj(currentstate, currentstate.pddl.toArray());
+			// set the top obj as holding
+			possiblestate.holding = topobj;
+			// remove top literal
+			possiblestate.pddl.remove(topLit);
+			possiblestate.planAction = "p";
+			neig.push(possiblestate);
+		}else{ // drop
+			var possiblestate : WorldState = this.clone(currentstate);
+			var topobj = this.getTopObj(currentstate, currentstate.pddl.toArray());
+			var newliteral = {pol: true, rel : "ontop", args : [possiblestate.holding, topobj]};
+			// remove holding obj
+			possiblestate.holding = null;
+			possiblestate.planAction = "d";
+			// add new top literal 
+			possiblestate.pddl.add(newliteral);
+			neig.push(possiblestate);
+		}
+		
+		// check if we have allready been there
+		neig = this.filterVissited(neig);
+		
+		// convert states to indexes
+		var neigNumbers : number[] = [];
+		for(var i = 0; i < neig.length; i++){
+			this._nodeValues.push(neig[i]);
+			neigNumbers.push(this._nodeValues.length-1);
+		}
+        
+        
+        return neigNumbers;
     }
-
-    return objectCopy;
-}
-
     
-    getneighbors(node :number):Array<number>{
+    filterVissited(states : WorldState[]):WorldState[]{
+    	var newstates : WorldState[] = [];
+    	for(var i = 0; i < states.length; i++){
+    		for(var j = 0; j < this._nodeValues.length; j++){
+    			if(!this.equalsWorldstate(states[i], this._nodeValues[j])){
+    				newstates.push(states[i]);
+    			}
+    		}
+    	}
+    	return newstates;
+    }
+    
+    equalsWorldstate(state1 : WorldState, state2 : WorldState):boolean{
+    	if(state1.holding != state2.holding || state1.arm != state2.arm){
+    		return false;
+    	}
+    	var pddls1 = state1.pddl.toArray();
+    	for(var i = 0; i < pddls1.length; i++){
+    		if(!state2.pddl.contains(pddls1[i])){
+    			return false;
+    		}
+    	}
+    	
+    	return true;
+    }
+    
+    getTopLiteral(state : WorldState, armposs : number): Interpreter.Literal{
+    	var pddls = state.pddl.toArray();
+    	// Finde floor possition and the one ontop
+    	for(var i = 0; i < pddls.length; i++){
+    		if(pddls[i].args[0]=="f"+armposs && pddls[i].rel == "leftof"){
+    			return this.findTopLiteral(pddls[i], pddls);
+    		}
+    	}
+    }
+    
+    // recursive function to follow a literal to find the one on the top
+    findTopLiteral(lit : Interpreter.Literal, lits : Interpreter.Literal[] ): Interpreter.Literal{
+		var result : Interpreter.Literal;
+		for(var j = 0; j < lits.length; j++){
+			if(lits[j].args[1] == lit.args[0] && lits[j].rel == "ontop"){
+				result = lits[j];
+				break;
+			}
+		}
+		if(result){
+			return lit;
+		}else{
+			return this.findTopLiteral(result, lits);
+		}	
+    }
+    
+ /*   getneighbors(node :number):Array<number>{
         console.log("in get neighbor func");
 
         var state2 : WorldState = this._nodeValues[node];
@@ -72,8 +182,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             console.log("if1");
             neig.push(this.clone(state));
             //Already holding, drop at position
-             /* find object on top at positon, set as index, add relation on top between holding
-             item and the current on top */ 
+             // find object on top at positon, set as index, add relation on top between holding
+            // item and the current on top 
             var newobj : Interpreter.Literal;
              newobj = this.clone(state.pddl[state.pddl.length -1]); 
              newobj.rel = "ontop";
@@ -82,12 +192,12 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
              state.pddl.add(newobj);
              neig[neig.length-1].holding = null;
              neig[neig.length-1].planAction = "d";
-        }else if( pddlIndex !=-1){//neig[neig.length-1].pddl[pddlIndex].args[0].substr(0, 1) != "f" /* object in position */) {
+        }else if( pddlIndex !=-1){//neig[neig.length-1].pddl[pddlIndex].args[0].substr(0, 1) != "f"  object in position ) {
            console.log("ANarmpos: "+state2.arm + " , holding: " + state2.holding);
             console.log("if2");
             neig.push(this.clone(state));
             //not holding, pick at position    
-            /* find object on top at positon, set as index, remove relation, and add object to pddl.holding */             
+           //  find object on top at positon, set as index, remove relation, and add object to pddl.holding             
             neig[neig.length-1].holding = this.getTopObj(state, state.pddl.toArray());
             neig[neig.length-1].pddl.remove(this.getTopRelation (state, state.pddl.toArray())); // this may be error
             neig[neig.length-1].planAction = "p";
@@ -123,7 +233,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
       
         console.log("ENDNarmpos: "+state2.arm + " , holding: " + state2.holding);
         return neigNumbers; 
-    }
+    } */
+    
     getTopObj(state:WorldState, pddls:Interpreter.Literal[]):string{
         var ind :number= -1;
         var fln = state.arm;
@@ -244,12 +355,12 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
 
     //returns x-pos (0->x) for object a
-    findPosition(a:string, state:WorldState, pddls:Interpreter.Literal[]):number{
+    findPosition(a : string, state : WorldState, pddls : Interpreter.Literal[]):number{
        console.log("at findPosition, a =" + a);
        var x = a;// this.clone(a);
        var position = 0;
        var fln = state.arm;
-       var floor = "f" + fln.toString();
+       var floor : string = "f" + fln.toString();
        console.log("at findPosition, x =" + x);
 
        
@@ -270,7 +381,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         }
         return position;//should never happen
     }
-    equalObjects(a:ObjectDefinition, b:ObjectDefinition):boolean{
+    
+    equalObjects(a : ObjectDefinition, b : ObjectDefinition):boolean{
        // if(a == null || b == null)
          //   return true;
         if(a.form == b.form && a.color == b.color && a.size == b.size)
@@ -690,24 +802,26 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         }
         return true;
     }
+    
+    getFloorSize(state : WorldState):number{
+	    var nFloors : number = 0;
+	    do{
+	        nFloors++;
+	        var temp : Interpreter.Literal[] = state.pddl.toArray();
+	        for(var i = 0; i < state.pddl.size(); i++){
+	            var found : boolean = (temp[i].args[0]=="f" + nFloors);
+	            if(found){
+	                break;
+	            }
+	        }
+	        
+	     }while(!found)          
+	    return nFloors;
+	}
 }
 
 
-function GetFloorSize(state : WorldState):number{
-    var nFloors : number = 0;
-    do{
-        nFloors++;
-        var temp : Interpreter.Literal[] = state.pddl.toArray();
-        for(var i = 0; i < state.pddl.size(); i++){
-            var found : boolean = (temp[i].args[0]=="f" + nFloors);
-            if(found){
-                break;
-            }
-        }
-        
-     }while(!found)          
-    return nFloors;
-}
+
 
 
 module Planner {
@@ -798,11 +912,5 @@ module Planner {
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
-
-
-
-
-    
-    
     
 }
