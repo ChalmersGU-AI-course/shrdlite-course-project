@@ -57,16 +57,19 @@ module Planner {
     // find a path from the initial state to the final PDDL using A*
     solution = Astar.search(convert(state), null, goal);
 
-    for (var i = 0; i < solution.path.length; i++) {
-      // print out the path
-      console.log(solution.path[i].toString());
+    if(solution && solution.path){
+      for (var i = 0; i < solution.path.length; i++) {
+        // print out the path
+        console.log("path: " + solution.path[i].toString());
+      }
+      
+      for (var i = 1; i < solution.path.length; i++) {
+        // concatenate the steps between each state
+        plan = plan.concat(getMoves(solution.path[i-1], solution.path[i]));
+      }
+    } else {
+      throw new Error("no path found");
     }
-    
-    for (var i = 1; i < solution.path.length; i++) {
-      // concatenate the steps between each state
-      plan = plan.concat(getMoves(solution.path[i-1], solution.path[i]));
-    }
-
     return plan;
   }
 
@@ -218,6 +221,7 @@ module Planner {
       // find the first argument
       for (var i = 0; i < this.stacks.length; i++) {
         for (var j = 0; j < this.stacks[i].length; j++) {
+          console.log("stack = " + i + ", pos0 = " + j + ", arg0: " + lit.args[0] + " arg1: " + lit.args[1] + ", rel = " + lit.rel);
           if (this.stacks[i][j].name == lit.args[0] || lit.rel == "holding") {
             // evaluate based on the relation
             switch(lit.rel) {
@@ -225,14 +229,14 @@ module Planner {
               case "ontop":
                 if (this.stacks[i][j-1]
                        && lit.args[1] == this.stacks[i][j-1].name)
-                  return true == lit.pol;
+                  return lit.pol;
                 break;
 
               case "leftof":
                 for (var k = i-1; k < this.stacks.length; k--) {
                   for (var l = 0; l < this.stacks[k].length; l++) {
                     if (this.stacks[k][l].name == lit.args[1])
-                      return true == lit.pol;
+                      return lit.pol;
                   }
                 }
                 break;
@@ -241,15 +245,24 @@ module Planner {
                 for (var k = i+1; k < this.stacks.length; k++) {
                   for (var l = 0; l < this.stacks[k].length; l++) {
                     if (this.stacks[k][l].name == lit.args[1])
-                      return true == lit.pol;
+                      return lit.pol;
                   }
                 }
                 break;
 
               case "under":
                 for (var k = 0; k < j; k++) {
-                  if (lit.args[1] == this.stacks[i][k].name)
-                    return true == lit.pol;
+/*                  console.log("  stack = " + i + 
+                              ", pos0 = " + j + 
+                              ", posCurr = " + k + 
+                              ", arg0: " + lit.args[0] + 
+                              ", arg1: " + lit.args[1] + 
+                              ", curr: " + this.stacks[i][k].name);*/
+                  console.log(i + " " + j + " " + k);
+                  if (lit.args[1] == this.stacks[i][k].name) {
+                    console.log("check");
+                    return lit.pol;
+                  }
                 }
                 break;
 
@@ -257,14 +270,14 @@ module Planner {
                 if (this.stacks[i-1]) {
                   for (var k = 0; k < this.stacks[i-1].length; k++) {
                     if (this.stacks[i-1][k].name == lit.args[1]) {
-                      return true == lit.pol;
+                      return lit.pol;
                     }
                   }
                 }
                 if (this.stacks[i+1]) {
                   for (var k = 0; k < this.stacks[i+1].length; k++) {
                     if (this.stacks[i+1][k].name == lit.args[1]) {
-                      return true == lit.pol;
+                      return lit.pol;
                     }
                   }
                 }
@@ -273,7 +286,7 @@ module Planner {
               case "above":
                 for (var k = j+1; k < this.stacks[i].length; k++) {
                   if (this.stacks[i][k] && this.stacks[i][k].name == lit.args[1])
-                    return true == lit.pol;
+                    return lit.pol;
                 }
                 break;
 
@@ -285,7 +298,7 @@ module Planner {
           }
         }
       }
-      return false == lit.pol;
+      return !lit.pol;
     }
 
     //guesses a distance from the current state to goals describet in a PDDL
@@ -293,6 +306,7 @@ module Planner {
       var curr = 0;
       var min = Number.MAX_VALUE;
       var found = false;
+      return 0;
      //go through all OR parts
       for(var i = 0; i < goal.alternatives.length; i++) {
         //go through all AND parts
