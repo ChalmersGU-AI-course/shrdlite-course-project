@@ -15,6 +15,7 @@ module Interpreter {
             intprt.intp = interpretCommand(intprt.prs, currentState);
             interpretations.push(intprt);
         });
+
         if (interpretations.length > 0) { //&& interpretations[0].intp.length > 0
             //return interpretations; //Aha found the place for disolving HARD ambiguity!
             var validInterprets : Result [] = [];
@@ -139,9 +140,10 @@ module Interpreter {
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
 
         var intprt : Literal[][] = [];
-        var targets = findTargetEntities(cmd.ent, state).targets;
+
         switch(cmd.cmd){
             case "take":
+                var targets = findTargetEntities(cmd.ent, state).targets;
                 if(targets.length == 0){
                     throw new Interpreter.Error("Can't find such an object to grasp.");
                 }
@@ -152,6 +154,7 @@ module Interpreter {
                 }
                 break;
             case "move":
+                var targets = findTargetEntities(cmd.ent, state).targets;
                 findMoveInterpretations(cmd, state, intprt, targets);
                 break;
             case "put":
