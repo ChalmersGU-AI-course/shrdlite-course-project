@@ -199,7 +199,8 @@ module Shrdlite {
         return plan;
     }
 
-    // TODO shouldn't need this anymore, handled by interpreter
+
+    // DEPRECATED
     // Given several interpretations, prompts the user to select one of them
     function resolveAmbiguity(interpretations : PddlLiteral[][][]) : PddlLiteral[][] {
         var interpretation : PddlLiteral[][] = null;

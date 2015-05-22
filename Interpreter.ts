@@ -23,6 +23,7 @@ module Interpreter {
         }
     }
 
+    // DEPRECATED
     export function interpretationToString(res : PddlLiteral[][]) : string {
         // TODO: print human-readable sentence? Or at least add new function for that
         return res.map((lits) => {
@@ -30,6 +31,7 @@ module Interpreter {
         }).join(" | ");
     }
 
+    // DEPRECATED
     export function literalToString(lit : PddlLiteral) : string {
         return (lit.pol ? "" : "-") + lit.rel + "(" + lit.args.join(",") + ")";
     }
