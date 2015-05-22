@@ -25,7 +25,6 @@ module Shrdlite {
         world.printWorld(endlessLoop);
     }
 
-
     // Generic function that takes an utterance and returns a plan:
     // - first it parses the utterance
     // - then it interprets the parse(s)
@@ -48,20 +47,37 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
         });
 
-        try {
-            var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
-        } catch(err) {
-            if (err instanceof Interpreter.Error) {
-                world.printError("Interpretation error", err.message);
-                return;
-            } else {
-                throw err;
-            }
-        }
-        world.printDebugInfo("Found " + interpretations.length + " interpretations");
-        interpretations.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
-        });
+				//todo: ambiguous check!
+				while(true) {
+					try {
+							var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
+					} catch(err) {
+							if (err instanceof Interpreter.Error) {
+									world.printError("Interpretation error", err.message);
+									return;
+							} else {
+									throw err;
+							}
+					}
+					world.printDebugInfo("Found " + interpretations.length + " interpretations");
+					interpretations.forEach((res, n) => {
+							world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
+					});
+
+					if (interpretations.length > 1) {
+						world.printSystemOutput("The utterance is ambiguous.");
+						var s : string = "Did you mean ";
+						for (var i = 0; i < interpretations.length; i++) {
+							s = s + interpretations[i].input + " or ";
+						}
+						world.printSystemOutput(s);
+						//world.printPickList(string[]);
+						break;
+					}
+					else {
+						break;
+					}
+				}
 
         try {
             var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
