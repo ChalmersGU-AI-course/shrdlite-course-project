@@ -1,6 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
-///<reference path="Astar/collections.ts"/>
+///<reference path="AstarPlanner/collections.ts"/>
 
 
 module Interpreter {
@@ -177,7 +177,8 @@ module Interpreter {
                         rels.push(token)
                         break;
                     case "quant": 
-                        //... to do
+                        if(token == "all")
+                            throw new Interpreter.Error("The arm cannot take more than 1 object");
                         break;
                 }
 
@@ -278,6 +279,7 @@ module Interpreter {
             var foundX = false;
             var objA_move : string[] = [];
             var objB_move : string[] = [];
+            var pluralFound = false;
 
             for(var i =1;i< tokens.length ;i++){
 
@@ -306,6 +308,9 @@ module Interpreter {
                         break;
                     case "quant": 
                         //... to do
+                        if(token == "all" || token == "every"){
+                            pluralFound = true;
+                        }
                         break;
 
                     default:
@@ -341,22 +346,41 @@ module Interpreter {
             objsLaw.push(objA_move);
             objsLaw.push(objB_move);
             var combs = allCombinations(objsLaw);
-            // console.log(combs);
+            var rules : Literal[] = [];
+            console.log(combs);
 
             for(var i = 0 ;i < combs.length; i++){
 
                 var combArray = combs[i].split("");
 
                 if(checkLaws(combArray[0],combArray[1],sRel,state)){
-                    if(combArray[1] == "z"){
-                        return [{pol:true, rel:sRel, args:[combArray[0],"floor"]}];
+
+                    if(pluralFound){
+                        if(combArray[1] == "z"){
+                            rules.push({pol:true, rel:sRel, args:[combArray[0],"floor"]});
+                        }
+                        else {
+                            rules.push({pol:true, rel:sRel, args:[combArray[0],combArray[1]]});
+                        }
 
                     }
-                    return [{pol:true, rel:sRel, args:[combArray[0],combArray[1]]}];
+                    else{
+                        if(combArray[1] == "z"){
+                            return [{pol:true, rel:sRel, args:[combArray[0],"floor"]}];
+
+                        }
+                        else {
+                            return [{pol:true, rel:sRel, args:[combArray[0],combArray[1]]}];
+                        }
+                    }
                 }
             }
 
-            throw new Interpreter.Error("Physical Laws error.");
+            if(rules.length > 0){
+                return rules;
+            }
+            else
+                throw new Interpreter.Error("Physical Laws error.");
 
 
 
@@ -427,9 +451,9 @@ module Interpreter {
         var a_loc = getStackLocation(obj1,state);
         var b_loc = getStackLocation(obj2,state);
 
-        console.log(obj1);
-        console.log(obj2);
-        console.log(rel);
+        // console.log(obj1);
+        // console.log(obj2);
+        // console.log(rel);
 
 
         //special case for "floor"
