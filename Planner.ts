@@ -400,6 +400,12 @@ module Planner {
             cost = cost + Math.abs(findStack(primary, state.stacks) - findStack(target, state.stacks));
             // Add one move to drop the picked up object, add one more sidestep if they shared stack 
             cost = findStack(primary, state.stacks) === findStack(target, state.stacks) ? cost + 2 : cost + 1;
+        } else if (literal.rel === "beside") {
+            //TODO
+        } else if (literal.rel === "leftof") {
+            cost = calculateLeftOf(primary, target, state);
+        } else if (literal.rel === "rightof") {
+            cost = calculateLeftOf(target, primary, state);
         }
 
         return cost;
@@ -432,6 +438,61 @@ module Planner {
         return cost;
     }
 
+    //Calculates the least number of moves needed to get A left of B
+    function calculateLeftOf(a: string, b: string, state: WorldState): number {
+        var cost: number = 0;
+        var indexA = findStack(a, state.stacks);
+        var indexB = findStack(b, state.stacks);
+
+        //B is either being held or is in the same stack as A
+        if (indexA == 0) {
+            //Pick up b
+            cost = calculateHolding(b, state);
+            if (indexB == -1) {
+                cost = state.arm == 0 ? cost + 2 : cost + 1; // 1 = (d) 2 = (r,d)
+            } else {
+                //if a is above b, move b further right so +1 (r)	
+                if (howManyAbove(a, state.stacks[indexA]) < howManyAbove(b, state.stacks[indexB]))
+                    cost++;
+            }
+        }
+        //A is either being held or is in the same stack as B
+        else if (indexB == state.stacks.length) {
+            //Pick up a
+            cost = calculateHolding(a, state);
+            if (indexA == -1) {
+                cost = state.arm == state.stacks.length ? cost + 2 : cost + 1; // 1 = (d) 2 = (r,d)
+            } else {
+                //if b is above a, move a further left so +1 (l)
+                if (howManyAbove(b, state.stacks[indexB]) < howManyAbove(a, state.stacks[indexA]))
+                    cost++;
+            }
+        }
+        //A and B are in the same stack
+        else if (indexA == indexB) {
+            //See which object is highest up in the stack
+            var obj = (howManyAbove(a, state.stacks[indexA]) < howManyAbove(b, state.stacks[indexB])) ? a : b
+		    //Move the object to the side
+            cost = calculateHolding(obj, state) + 2; //(r|l,d)
+        }
+        //A is being held by the arm
+        else if (indexA == -1) {
+            var dist = Math.abs(state.arm - indexB);
+            cost = cost + dist + 2; //(l,d)
+        }
+        //B is being held by the arm
+        else if (indexB == -1) {
+            var dist = Math.abs(state.arm - indexA);
+            cost = cost + dist + 2; //(r,d)
+        }
+        //Else b is left of a
+        else {
+            cost = Math.min(calculateHolding(a, state), calculateHolding(b, state));
+            var dist = Math.abs(indexA - indexB);
+            cost = cost + dist + 2; //(l|r + d);
+        }
+        return cost;
+    } 
 
     //Returns the index of the stack in stacks where the obj is
     function findStack(obj: string, stacks: string[][]): number {
