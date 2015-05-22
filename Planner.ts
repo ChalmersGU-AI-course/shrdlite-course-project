@@ -8,10 +8,10 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
-    export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
-        var plans : Result[] = [];
+    export function plan(interpretations: Interpreter.Result[], currentState: WorldState): Result[] {
+        var plans: Result[] = [];
         interpretations.forEach((intprt) => {
-            var plan : Result = <Result>intprt;
+            var plan: Result = <Result>intprt;
             plan.plan = planInterpretation(plan.intp, currentState);
             plans.push(plan);
         });
@@ -24,18 +24,18 @@ module Planner {
     }
 
 
-    export interface Result extends Interpreter.Result {plan:string[];}
+    export interface Result extends Interpreter.Result { plan: string[]; }
 
 
-    export function planToString(res : Result) : string {
+    export function planToString(res: Result): string {
         return res.plan.join(", ");
     }
 
 
     export class Error implements Error {
         public name = "Planner.Error";
-        constructor(public message? : string) {}
-        public toString() {return this.name + ": " + this.message}
+        constructor(public message?: string) { }
+        public toString() {return this.name + ": " + this.message }
     }
 
 
@@ -63,7 +63,7 @@ module Planner {
     module PhysicalLaws {
 
         //Check the validity for arm pickups
-        export function possibleArmPickup (obj : string, state : WorldState) : boolean {
+        export function possibleArmPickup(obj: string, state: WorldState): boolean {
             var bool = false;
 
             if (state.holding !== null) {
@@ -110,25 +110,25 @@ module Planner {
             return true;
         }
 
-        export function checkInterp(intp : Interpreter.Literal[], state : WorldState) : boolean{
+        export function checkInterp(intp: Interpreter.Literal[], state: WorldState): boolean {
             var rel = intp[0].rel;
-          
-            for(var i = 0; i < intp.length; i++){
-                var target        = intp[i].args[1];
-                var primary       = intp[i].args[0];
-                var targetObject  = state.objects[target];
+
+            for (var i = 0; i < intp.length; i++) {
+                var target = intp[i].args[1];
+                var primary = intp[i].args[0];
+                var targetObject = state.objects[target];
                 var primaryObject = state.objects[primary];
 
-                if(rel === 'ontop' || rel === 'above' || rel === 'inside'){
-                    if(validPosition(primaryObject, targetObject) === false){
+                if (rel === 'ontop' || rel === 'above' || rel === 'inside') {
+                    if (validPosition(primaryObject, targetObject) === false) {
                         console.log("Removed interpretation in physical check");
                         return false;
                     }
-                }else if(rel === 'under'){
-                    if(validPosition(targetObject, primaryObject) === false){
+                } else if (rel === 'under') {
+                    if (validPosition(targetObject, primaryObject) === false) {
                         console.log("Removed interpretation in physical check");
                         return false;
-                    }   
+                    }
                 }
             }
             console.log("Interpretation passed physical check");
@@ -136,8 +136,8 @@ module Planner {
         }
     }
 
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        
+    function planInterpretation(intprt: Interpreter.Literal[][], state: WorldState): string[] {
+
         /*
             TODO: Structure for planning
                 - Filter out obviously invalid interpretations               [X]
@@ -150,23 +150,24 @@ module Planner {
                 - Sort the plans with the one involving least steps first    []
         */
 
-      // Remove invalid interpretations
-      var validInterps : Interpreter.Literal[][] = [];
-      for(var i = 0; i < intprt.length; i++){
-          if(checkSpatialRelations(intprt[i], state.objects) && PhysicalLaws.checkInterp(intprt[i], state)){
-              console.log("Added!");
-              validInterps.push(intprt[i]);
-              console.log(validInterps.length);
-          }
-      }
-      
+        // Remove invalid interpretations
+        var validInterps: Interpreter.Literal[][] = [];
+        for (var i = 0; i < intprt.length; i++) {
+            if (checkSpatialRelations(intprt[i], state.objects) && PhysicalLaws.checkInterp(intprt[i], state)) {
+                console.log("Added!");
+                validInterps.push(intprt[i]);
+                console.log(validInterps.length);
+            }
+        }
 
-        
-      // This function returns a dummy plan involving a random stac
+        //Remove when done
+        testCloning(state);
+
+        // This function returns a dummy plan involving a random stac
         do {
             var pickstack = getRandomInt(state.stacks.length);
         } while (state.stacks[pickstack].length == 0);
-        var plan : string[] = [];
+        var plan: string[] = [];
 
         // First move the arm to the leftmost nonempty stack
         if (pickstack < state.arm) {
@@ -182,85 +183,85 @@ module Planner {
         }
 
         // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
+        var obj = state.stacks[pickstack][state.stacks[pickstack].length - 1];
         plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
+            "p");
 
-        if (pickstack < state.stacks.length-1) {
+        if (pickstack < state.stacks.length - 1) {
             // Then move to the rightmost stack
             plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
+            for (var i = pickstack; i < state.stacks.length - 1; i++) {
                 plan.push("r");
             }
 
             // Then move back
             plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
+            for (var i = state.stacks.length - 1; i > pickstack; i--) {
                 plan.push("l");
             }
         }
 
         // Finally put it down again
         plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
+            "d");
 
         return plan;
-        
+
     }
 
 
-    function checkSpatialRelations(intp : Interpreter.Literal[], objects : {[s:string]: ObjectDefinition}) : boolean{
+    function checkSpatialRelations(intp: Interpreter.Literal[], objects: { [s: string]: ObjectDefinition }): boolean {
         // Check so that each spatial relation holds between the elements
         // Inside
         // Ontop
         var rel = intp[0].rel;
-        if(rel === "inside"){
+        if (rel === "inside") {
             // * Several things cannot be in one box
             // * Target is a box 
             var stateSet = new collections.Set<string>(); // To know that one box contain one thing
-            for(var i = 0; i < intp.length; i++){
+            for (var i = 0; i < intp.length; i++) {
                 var target = intp[i].args[1];
-                var obj    = intp[i].args[0];
+                var obj = intp[i].args[0];
 
                 // Check that target is a box.
-                if(objects[target].form !== 'box'){
+                if (objects[target].form !== 'box') {
                     console.log("Removed interpretation: ");
                     console.log(intp[i]);
                     console.log("Due to target is not a box.");
                     return false;
                 }
 
-                if(stateSet.contains(target)){
+                if (stateSet.contains(target)) {
                     console.log("Removed interpretation: ");
                     console.log(intp[i]);
                     console.log("Due to bad spatial inside relation");
                     return false; // Two things cannot be inside the same box
-                }else{
+                } else {
                     stateSet.add(target); // Add the target so we know that it is occupied.
                 }
             }
             console.log(intp);
             return true;
 
-        }else if(rel === "ontop"){ 
+        } else if (rel === "ontop") {
             var stateSet = new collections.Set<string>();
-            for(var i = 0; i < intp.length; i++){
+            for (var i = 0; i < intp.length; i++) {
                 var target = intp[i].args[1];
-                var obj    = intp[i].args[0];
-                if(objects[target].form === 'box'){
+                var obj = intp[i].args[0];
+                if (objects[target].form === 'box') {
                     return false; // Things are inside a box, not ontop. Or is this too harsh?
                 }
-                if(stateSet.contains(target)){
+                if (stateSet.contains(target)) {
                     return false;
-                }else{
+                } else {
                     stateSet.add(target);
                 }
 
             }
             return true;
-            }
+        }
     }
-    
+
 
     // Current thoughts of implementations.
     // We accept the interpretations we have left as possible valid solutions
@@ -278,42 +279,43 @@ module Planner {
 
 
     // Function to return a function to check if we fulfilled the goal state
-    function goalFuncHandle(intrps : Interpreter.Literal[][]){ 
+    function goalFuncHandle(intrps: Interpreter.Literal[][]) {
         // Store a set of all interpretations expressed as strings to make subset checks with current world.
 
-        return (function foundGoal(currentWorld : Nworld) : boolean{
-            var intps  = intrps;
+        return (function foundGoal(currentWorld: Nworld): boolean {
+            var intps = intrps;
             var stacks = currentWorld.states.stacks;
-            for(var i = 0; i < intrps.length; i++){
+            for (var i = 0; i < intrps.length; i++) {
                 // Check if interpretation i holds in the current world
                 var goal = true;
-              for(var j = 0; j < intrps[i].length; j++){
-                  var pObj  = intrps[i][j].args[0];
-                  var tObj  = intrps[i][j].args[1];
-                  var rel   = intrps[i][j].rel;
-                  var holds = Interpreter.getRelation([pObj], [tObj], rel, stacks); // In this pObj & tObj might need to switch, can't figure out how getRelation does it right now.
+                for (var j = 0; j < intrps[i].length; j++) {
+                    var pObj = intrps[i][j].args[0];
+                    var tObj = intrps[i][j].args[1];
+                    var rel = intrps[i][j].rel;
+                    var holds = Interpreter.getRelation([pObj], [tObj], rel, stacks); // In this pObj & tObj might need to switch, can't figure out how getRelation does it right now.
 
-                  if(!holds.length){
-                      goal = false;
-                  }
-              }
-              // If we have a literal that is a goal state, return true, otherwise keep searching.
-              if(goal)
-                return goal;
+                    if (!holds.length) {
+                        goal = false;
+                    }
+                }
+                // If we have a literal that is a goal state, return true, otherwise keep searching.
+                if (goal)
+                    return goal;
             }
             return false;
         });
     }
 
-    function getNeighbours(currentWorld : Nworld) : [Nworld, number][]{
+    function getNeighbours(currentWorld: Nworld): [Nworld, number][]{
         // Return all possible moves as corresponing Nworlds, with actual cost (?)
         return null; // Dummy return
     }
-    function getStackIndex(o1 : string, stacks : string[][]) : number[]{
-        var cords:number[] = [-1, -1];
-        for(var i = 0; i < stacks.length; i++){
-            for(var j = 0; j < stacks[i].length; j++){
-                if(stacks[i][j] === o1){
+
+    function getStackIndex(o1: string, stacks: string[][]): number[] {
+        var cords: number[] = [-1, -1];
+        for (var i = 0; i < stacks.length; i++) {
+            for (var j = 0; j < stacks[i].length; j++) {
+                if (stacks[i][j] === o1) {
                     cords[0] = i;
                     cords[1] = j;
                 }
@@ -340,9 +342,9 @@ module Planner {
 
             for (var i = 0; i < goals.length; i++) {
                 var max: number = 0;
-             
+
                 for (var j = 0; j < goals[i].length; j++) {
-                    var temp : number = calculateCost(goals[i][j], node.states);
+                    var temp: number = calculateCost(goals[i][j], node.states);
                     max = Math.max(temp, max);
                 }
                 cost = Math.min(cost, max);
@@ -351,7 +353,7 @@ module Planner {
         }
     }
 
-    function calculateCost(literal: Interpreter.Literal, state: WorldState) : number {
+    function calculateCost(literal: Interpreter.Literal, state: WorldState): number {
         var cost: number = 0;
 
         if (literal.rel === "holding") {
@@ -367,22 +369,77 @@ module Planner {
         return cost;
     }
 
-    function clone(state : WorldState) : WorldState {
-        if (state === null)
-            return state;
-        var copy = state.constructor();
-        for (var attr in state) {
-            if (state.hasOwnProperty(attr))
-                copy[attr] = state[attr];
+    function cloneWorldstate(state: WorldState): WorldState {
+        var clone: WorldState = {
+            arm: state.arm,
+            holding: state.holding,
+            examples: cloneObject(state.examples),
+            objects: cloneObject(state.objects),
+            stacks: cloneObject(state.stacks)
+        };
+        return clone;
+    }
+
+    // recursive function to clone an object. If a non object parameter
+    // is passed in, that parameter is returned and no recursion occurs.
+    function cloneObject(obj) {
+        if (obj === null || typeof obj !== 'object') {
+            return obj;
         }
-        return copy;
+
+        var temp = obj.constructor(); // give temp the original obj's constructor
+        for (var key in obj) {
+            temp[key] = cloneObject(obj[key]);
+        }
+
+        return temp;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+    /*  
+        TTTTTTT   EEEEE      sSSSs   tTTTTTt
+           T      E         sS   ss      T
+           T      EEEe        Ss        T
+           T      E        ss   Ss       T
+           T      EEEEE     sSSSs        T
+    */
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function testCloning(state: WorldState) {
+        var cloned: WorldState = cloneWorldstate(state);
+        if (cloned.arm == state.arm)
+            console.log("STATES ARMS ARE EQUAL");
+        if (cloned.examples == state.examples)
+            console.log("STATES EXAMPLES ARE EQUAL");
+        if (cloned.holding == state.holding)
+            console.log("STATES HOLDING ARE EQUAL");
+        if (cloned.objects == state.objects)
+            console.log("STATES OBJECTS ARE EQUAL");
+        if (cloned.stacks == state.stacks)
+            console.log("STATES STACKS ARE EQUAL");
+
+        state.stacks = null;
+        state.examples = null;
+        state.objects = null;
+        console.log("Current state: " + state.arm);
+        console.log("Current state: " + state.examples);
+        console.log("Current state: " + state.holding);
+        console.log("Current state: " + state.objects);
+        console.log("Current state: " + state.stacks);
+        console.log("Cloned state: " + cloned.arm);
+        console.log("Cloned state: " + cloned.examples);
+        console.log("Cloned state: " + cloned.holding);
+        console.log("Cloned state: " + cloned.objects);
+        console.log("Cloned state: " + cloned.stacks);
+        state.stacks = cloneObject(cloned.stacks);
+        state.objects = cloneObject(cloned.objects);
     }
 
     export class Nworld implements N{
-        states : WorldState;
-        step : string;
-        value : string;
-        x : number;
+        states: WorldState;
+        step: string;
+        value: string;
+        x: number;
         y: number;
         neighbours: [Nworld, number][];
     }
