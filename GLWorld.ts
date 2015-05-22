@@ -33,7 +33,7 @@ class GLGWorld implements World {
             //Matrices
             this.mvMatrix = mat4.create();
             this.pMatrix = mat4.create();
-            
+            //mvpMatrix
 
             //Shader set-up
             this.shaderProgram = this.gl.createProgram();
@@ -73,6 +73,7 @@ class GLGWorld implements World {
 
             this.gl.useProgram(this.shaderProgram);
 
+            //Uniforms
             this.vertexPositionAttribute = this.gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
             this.gl.enableVertexAttribArray(this.vertexPositionAttribute);
 
@@ -94,14 +95,6 @@ class GLGWorld implements World {
             //Now draw!
 
             this.drawLoop();
-
-
-            
-
-
-
-            
-            
         }
         catch (e) {
             alert(e);
@@ -125,7 +118,7 @@ class GLGWorld implements World {
         this.gl.uniformMatrix4fv(this.mvMatrixUniform, false, this.mvMatrix);
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.floorVertexBuffer);
-        this.gl.vertexAttribPointer(this.vertexPositionAttribute, 3, this.gl.FLOAT, false, 0, 0);
+        this.gl.vertexAttribPointer(this.vertexPositionAttribute, 3, this.gl.FLOAT, false, 0, 0); //CHeck this up
 
         this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
 

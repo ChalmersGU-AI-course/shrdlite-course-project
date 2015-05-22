@@ -6,6 +6,7 @@
 interface GraphNode {
     name: string;
     costTo(to: GraphNode): number;
+    neighbours(): GraphNode[];
 }
 
 /**
@@ -17,6 +18,9 @@ class PointNode implements GraphNode {
 
     costTo(to: PointNode): number {
         return Math.sqrt((this.x - to.x) * (this.x - to.x) + (this.y - to.y) * (this.y - to.y));
+    }
+    neighbours(): PointNode[]{
+        return undefined;
     }
 }
 

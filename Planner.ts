@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="Graph.ts"/>
 
 module Planner {
 
@@ -21,6 +22,31 @@ module Planner {
     }
 
 
+    class ShrdliteNode implements GraphNode {
+        public name: string;
+
+        private stacks: string[][];
+        private holding: string;
+        private arm: number;
+
+        public constructor(state: WorldState) {
+            this.stacks = state.stacks;
+            this.arm = state.arm;
+            this.holding = state.holding;
+            this.name = "wtf";
+        }
+
+
+        costTo(to: ShrdliteNode): number {
+            return 1;
+        }
+
+        neighbours(): ShrdliteNode[]{
+
+            return undefined;
+        }
+    }
+
     export interface Result extends Interpreter.Result {plan:string[];}
 
 
@@ -39,7 +65,15 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
+    function planInterpretation(intprt: Interpreter.Literal[][], state: WorldState): string[]{
+        //Add my amazing code here!
+        var currentNode: ShrdliteNode = new ShrdliteNode(state);
+        //var targetNode: ShrdliteNode = new ShrdliteNode(intprt);
+
+        var g: Graph<ShrdliteNode> = new Graph<ShrdliteNode>([currentNode], null);
+        //g.findPath(currentNode, targetNode);
+
+
         // This function returns a dummy plan involving a random stack
         do {
             var pickstack = getRandomInt(state.stacks.length);
