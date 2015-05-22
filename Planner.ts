@@ -231,8 +231,8 @@ module Planner {
                   return lit.pol;
                 break;
 
-              case "leftof":
-                for (var k = i-1; k < this.stacks.length; k--) {
+              case "rightof":
+                for (var k = i-1; k > 0; k--) {
                   for (var l = 0; l < this.stacks[k].length; l++) {
                     if (this.stacks[k][l].name == lit.args[1])
                       return lit.pol;
@@ -240,7 +240,7 @@ module Planner {
                 }
                 break;
 
-              case "rightof":
+              case "leftof":
                 for (var k = i+1; k < this.stacks.length; k++) {
                   for (var l = 0; l < this.stacks[k].length; l++) {
                     if (this.stacks[k][l].name == lit.args[1])
@@ -249,7 +249,7 @@ module Planner {
                 }
                 break;
 
-              case "under":
+              case "above":
                 for (var k = 0; k < j; k++) {
                   if (lit.args[1] == this.stacks[i][k].name) {
                     return lit.pol;
@@ -274,7 +274,7 @@ module Planner {
                 }
                 break;
 
-              case "above":
+              case "under":
                 for (var k = j+1; k < this.stacks[i].length; k++) {
                   if (this.stacks[i][k] && this.stacks[i][k].name == lit.args[1])
                     return lit.pol;
@@ -468,11 +468,11 @@ module Planner {
           return false;
 
         // boxes cannot contain pyramids, planks or boxes of the same size
-        if ((currentObjectDescription.form == "pyramid"
-             || currentObjectDescription.form == "plank"
-             || currentObjectDescription.form == "boxes")
-            && belowObjectDescription.form == "box"
-            && belowObjectDescription.size == currentObjectDescription.size)
+        if (belowObjectDescription.form == "box"
+            && (currentObjectDescription.form == "pyramid"
+                || currentObjectDescription.form == "plank"
+                || (currentObjectDescription.form == "box"
+                    && belowObjectDescription.size == currentObjectDescription.size)))
           return false;
 
         // small boxes cannot be supported by small bricks or pyramids

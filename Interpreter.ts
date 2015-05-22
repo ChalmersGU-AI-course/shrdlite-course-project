@@ -8,33 +8,33 @@ module Interpreter {
 
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
-        var interpretErrors : string[] = [];
+        var interpretError : string;
         parses.forEach((parseresult) => {
           try {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
             interpretations.push(intprt);
           } catch(err) {
-            interpretErrors.push(err.message);
+            interpretError = interpretError || err.message;
           }
         });
-        if (interpretations.length > 0) {
-          var nonEmpty = interpretations.filter((res: Result) => {
-            return res.intp[0].length > 0;
+        // weed out empty interpretations
+        var nonEmpty = interpretations.filter((res: Result) => {
+          return res.intp && res.intp.length > 0 && res.intp[0].length > 0;
+        });
+        // error checking
+        var err: string;
+        if(nonEmpty.length > 1) {
+          var enumeration = nonEmpty.map((res: Result) => {
+            return locationToString(res.prs.loc);
           });
-          if(nonEmpty.length > 1)
-            var err = "Ambigous utterance, please specify";
-          if(nonEmpty.length == 0)
-            var err = interpretErrors[0] || "Found no interpretations";
-          if(err)
-            throw new Interpreter.Error(err);
-          return nonEmpty;
-        } else if(interpretations.length == 0) {
-          var err = interpretErrors.pop();
-          throw new Interpreter.Error(err);
-        } else {
-          throw new Interpreter.Error("Found no interpretation");
+          err = "Do you mean " + enumeration.join(", or ") + "?";
         }
+        if(nonEmpty.length == 0)
+          err = interpretError || "Found no interpretations, please check your sentence";
+        if(err)
+          throw new Interpreter.Error(err);
+        return nonEmpty;
     }
 
     export interface Result extends Parser.Result {intp:Literal[][];}
@@ -94,7 +94,7 @@ module Interpreter {
        * Top-level interpreter method:
        * Defines the following interpretation depending on the verb action.
        * The verb actions: "take", "put" and "move" only check preconditions, the real
-       * work is done by "singular"/"plural" and "literals" that these functions call
+       * work is done by "the/any/all" and "literals" that these functions call
        */
       public derive(cmd: Parser.Command): Literal[][] {
         switch(cmd.cmd) {
@@ -157,7 +157,7 @@ module Interpreter {
           return this.floorLiteral([obj]);
 
         // specification of object for throwing undestandable errors
-        var refspec = this.rootObject(loc.ent.obj);
+        var refspec = rootObject(loc.ent.obj);
         return this.the([obj], loc.rel, refQuant, refs, refspec);
       }
 
@@ -180,8 +180,8 @@ module Interpreter {
           return this.floorLiteral(objs);
 
         // specification of object for throwing undestandable errors
-        var objspec = this.rootObject(ent.obj);
-        var refspec = this.rootObject(loc.ent.obj);
+        var objspec = rootObject(ent.obj);
+        var refspec = rootObject(loc.ent.obj);
 
         switch(objQuant) {
           case "the":
@@ -195,7 +195,7 @@ module Interpreter {
 
 
       //////////////////////////////////////////////////////////////////////
-      // Singular or Plural object
+      // Quantifiers
 
       /*
        * Handles singular case when object is quantified by "the"
@@ -208,7 +208,7 @@ module Interpreter {
         var lits: Literal[][];
 
         // Check that not there exist at least one object and one reference
-        var error = this.notEmptyHandler(objs, refs);
+        var error = this.emptyError(objs, refs);
         if(!error && objs.length > 1)
           error = this.tooManyObjectsError(objs);
         if(error)
@@ -228,8 +228,8 @@ module Interpreter {
             break;
           case "all":
             if(rel === "ontop" || rel === "inside") {
-              var objStr = toString(this.findObject(objs[0]));
-              var refStr = toString(refspec);
+              var objStr = objectToString(this.findObject(objs[0]));
+              var refStr = objectToString(refspec);
               error = "A " + objStr + " cannot be " + rel + " of many " + refStr + "s";
               throw new Interpreter.Error(error);
             }
@@ -251,8 +251,8 @@ module Interpreter {
                   refspec: Parser.Object): Literal[][] {
         var lits: Literal[][];
 
-        // Check that not there exist at least one object and one reference
-        var error = this.notEmptyHandler(objs, refs);
+        // Check that there exist at least one object and one reference
+        var error = this.emptyError(objs, refs);
         if(error)
           throw new Interpreter.Error(error);
 
@@ -273,8 +273,8 @@ module Interpreter {
             break;
           case "all":
             if(rel === "ontop" || rel === "inside") {
-              var objStr = toString(objspec);
-              var refStr = toString(refspec);
+              var objStr = objectToString(objspec);
+              var refStr = objectToString(refspec);
               error = "A " + objStr + " cannot be " + rel + " of many " + refStr + "s";
               throw new Interpreter.Error(error);
             }
@@ -296,14 +296,14 @@ module Interpreter {
                   refspec: Parser.Object): Literal[][] {
         var lits: Literal[][];
 
-        // Check if error occured with objects
-        var error = this.notEmptyHandler(objs, refs);
+        // Check that there exist at least one object and one reference
+        var error = this.emptyError(objs, refs);
         if(error)
           throw new Interpreter.Error(error);
 
         var ontopOrInside = rel === "ontop" || rel === "inside"
-        var objStr = toString(objspec);
-        var refStr = toString(refspec);
+        var objStr = objectToString(objspec);
+        var refStr = objectToString(refspec);
         switch(refQuant) {
           case "the":
             if(ontopOrInside) {
@@ -405,7 +405,7 @@ module Interpreter {
                   if(pos.id)
                     target = pos.id
                   break;
-                case "beside":                    // check that only one case is possible
+                case "beside":
                   var leftPos = this.findToLeftPosition(stacks, obj, col, row)
                   var rightPos = this.findToRightPosition(stacks, obj, col, row)
                   if(leftPos && !rightPos)
@@ -424,7 +424,7 @@ module Interpreter {
                     target = pos.id
                   break;
                 case "ontop":
-                  if(onFloor) {                   // special: take the x ontop of the floor (refers to it self)
+                  if(onFloor) {                    // special: take the x ontop of the floor (refers to it self)
                     target = ref
                   } else {
                     var r = this.findObject(ref);
@@ -602,7 +602,7 @@ module Interpreter {
       }
 
       //////////////////////////////////////////////////////////////////////
-      // Helper methods
+      // Error checkers
 
       /*
        * Make error of type:
@@ -613,7 +613,7 @@ module Interpreter {
       private tooManyObjectsError(objs: string[], rel?: string): string {
         var strobjs = objs.map((obj: string) => {
           var o = toObjectDef(this.findObject(obj));
-          return " the" + toString(o);
+          return " the" + objectToString(o);
         });
         strobjs.splice(-1, 0, "or");            // insert "or" before the last object
         var enumeration = strobjs.slice(0, -2); // commaseparated part of sentence
@@ -632,8 +632,8 @@ module Interpreter {
           refObj = toObjectDef(obj);
           obj = temp;
         }
-        var objstr = toString(obj);
-        var refstr = toString(refObj);
+        var objstr = objectToString(obj);
+        var refstr = objectToString(refObj);
         if(!obj || !refObj)
           return "no object or reference found";
         if(rel === "ontop" || rel === "inside") {
@@ -678,7 +678,7 @@ module Interpreter {
        * Error handler used in singular and plural to see if objs and refs are
        * not empty
        */
-      private notEmptyHandler(objs: string[], refs: string[]): string {
+      private emptyError(objs: string[], refs: string[]): string {
         if(!objs || objs.length === 0)
           return "No objects found";
         if(!refs || refs.length === 0)
@@ -686,13 +686,15 @@ module Interpreter {
         return null;
       }
 
+      //////////////////////////////////////////////////////////////////////
+      // Helper methods
 
       /*
        * Checks if a given object matches the ObjectDefinition of an id in the
        * current world state.
        */
       private match(obj: Parser.Object, id: string): boolean {
-        var rootObj = this.rootObject(obj);
+        var rootObj = rootObject(obj);
         var def = this.findObject(id);
         if(!rootObj || !rootObj.form || !def)
           return false;
@@ -704,6 +706,25 @@ module Interpreter {
         if(rootObj.color && rootObj.color !== def.color)
           return false;
         return true;
+      }
+
+      /*
+       * Lookups ObjectDefinition in state
+       */
+      private findObject(id: string): ObjectDefinition {
+        return this.state["objects"][id];
+      }
+
+      /*
+       * Returns all ids in the world
+       */
+      private worldObjects(): string[] {
+        var stacks = this.state["stacks"];
+        var worldObjs = [].concat.apply([], stacks);
+        var obj = this.state["holding"];
+        if(obj)
+          worldObjs.push(obj);
+        return worldObjs;
       }
 
       /*
@@ -727,22 +748,10 @@ module Interpreter {
       }
 
       /*
-       * Returns all ids in the stacks of the world
-       */
-      private worldObjects(): string[] {
-        var stacks = this.state["stacks"];
-        var worldObjs = [].concat.apply([], stacks);
-        var obj = this.state["holding"];
-        if(obj)
-          worldObjs.push(obj);
-        return worldObjs;
-      }
-
-      /*
-       * Determines whether a object refers to the floor or not
+       * Determines whether an object refers to the floor or not
        */
       private isFloor(obj: Parser.Object): boolean {
-        var rootObj = this.rootObject(obj);
+        var rootObj = rootObject(obj);
         if(rootObj.form === "floor")
           return true;
         return false;
@@ -767,24 +776,6 @@ module Interpreter {
         return [flatten(lits)];
       }
 
-      /*
-       * Gets the root object of an object, i.e the top level object that it
-       * object describes
-       */
-      private rootObject(obj: Parser.Object): Parser.Object {
-        if(obj) {
-          if(obj.size || obj.color || obj.form)
-            return obj;
-          return this.rootObject(obj.obj);
-        }
-      }
-
-      /*
-       * Lookups ObjectDefinition in state
-       */
-      private findObject(id: string): ObjectDefinition {
-        return this.state["objects"][id];
-      }
 
     } // class Interpret
 
@@ -805,6 +796,21 @@ module Interpreter {
       col: number;
       row: number;
       id: string;
+    }
+
+    //////////////////////////////////////////////////////////////////////
+    // Helper functions
+
+    /*
+     * Gets the root object of an object, i.e the top level object that it
+     * object describes
+     */
+    function rootObject(obj: Parser.Object): Parser.Object {
+      if(obj) {
+        if(obj.size || obj.color || obj.form)
+          return obj;
+        return rootObject(obj.obj);
+      }
     }
 
     /*
@@ -847,17 +853,19 @@ module Interpreter {
                               objs: string[],
                               refs: string[]): Literal[][] {
       var literals: Literal[][] = [];
-      // conditions for recursive step
+      // conditions for recursive step: there still are unused lits, objs, refs
       var enoughLits = lits && lind < lits.length;
       var someObjs = objs && objs.some(Boolean);
       var someRefs = refs && refs.some(Boolean);
       if(enoughLits && someObjs && someRefs) {
+        // keep track of which objects and refs are used
         var unusedObjs = [];
         var unusedRefs = [];
         for(var i = 0; i < objs.length; i++) {
           var obj = objs[i];
           if(obj) {
-            unusedRefs[i] = refs.slice(); // clone
+            // clone objs and refs to enable mutation in this recursive level
+            unusedRefs[i] = refs.slice();
             unusedObjs[i] = objs.slice();
             // filter out literal candidates that contains obj and unused ref
             var candidates = lits[lind].filter((lit: Literal) => {
@@ -918,16 +926,34 @@ module Interpreter {
       return {form: obj.form, size: obj.size, color: obj.color};
     }
 
-    function toString(obj: Parser.Object): string {
+    function objectToString(obj: Parser.Object): string {
       var str: string = "";
       if(obj.size)
         str += " " + obj.size;
       if(obj.color)
         str += " " + obj.color;
       if(obj.form)
-        str += " " + obj.form;
-      str += " ";
+        str += " " + (obj.form !== "anyform" ? obj.form : "object");
+      if(obj.loc) // this only occurs when entityToString calls the function
+        str += " " + locationToString(obj.loc);
       return str;
+    }
+
+    function locationToString(loc: Parser.Location): string {
+      if(loc) {
+        var isAboveOrUnder = loc.rel === "above" || loc.rel === "under";
+        return loc.rel + (isAboveOrUnder ? " " : " of ") + entityToString(loc.ent);
+      } else {
+        return "";
+      }
+    }
+
+    function entityToString(ent: Parser.Entity): string {
+      if(ent.obj.obj)
+        var objstr = objectToString(ent.obj.obj) + " " + locationToString(ent.obj.loc);
+      else
+        var objstr = objectToString(ent.obj);
+      return ent.quant + objstr;
     }
 
     function literalsToString(litss: Literal[][]): string {
