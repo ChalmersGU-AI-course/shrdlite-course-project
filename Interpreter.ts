@@ -15,7 +15,7 @@ module Interpreter {
             var intprt : Result = <Result>parseresult;
             var result = interpretCommand(intprt.prs, currentState);
 
-            if(result !== null && interpretations.length == 0){
+            if(result !== null){
                 intprt.intp = result;
                 interpretations.push(intprt);
             }
@@ -265,17 +265,26 @@ module Interpreter {
             }
 
             //check physical laws
+            var allGoals : Literal[] = [];
+
             for(var i = 0 ;i < objB.length; i++){
 
                 if(checkLaws(objA,objB[i],sRel,state)){
                     if(objB[i] == "z"){
-                        return [{pol:true, rel:sRel, args:[objA,"floor"]}];
+                        // return [{pol:true, rel:sRel, args:[objA,"floor"]}];
+                        allGoals.push({pol:true, rel:sRel, args:[objA,"floor"]});
                     }
-                    return [{pol:true, rel:sRel, args:[objA,objB[i]]}];
+                    else{
+                        // return [{pol:true, rel:sRel, args:[objA,objB[i]]}];
+                        allGoals.push({pol:true, rel:sRel, args:[objA,objB[i]]});
+                    }
                 }
             }
 
-            throw new Interpreter.Error("Physical Laws error.");
+            if(allGoals.length > 0)
+                return allGoals;
+            else
+                throw new Interpreter.Error("Physical Laws error.");
 
         }
 
@@ -355,7 +364,7 @@ module Interpreter {
             objsLaw.push(objA_move);
             objsLaw.push(objB_move);
             var combs = allCombinations(objsLaw);
-            var rules : Literal[] = [];
+            var allGoals : Literal[] = [];
             console.log(combs);
 
             for(var i = 0 ;i < combs.length; i++){
@@ -366,27 +375,26 @@ module Interpreter {
 
                     if(pluralFound){
                         if(combArray[1] == "z"){
-                            rules.push({pol:true, rel:sRel, args:[combArray[0],"floor"]});
+                            allGoals.push({pol:true, rel:sRel, args:[combArray[0],"floor"]});
                         }
                         else {
-                            rules.push({pol:true, rel:sRel, args:[combArray[0],combArray[1]]});
+                            allGoals.push({pol:true, rel:sRel, args:[combArray[0],combArray[1]]});
                         }
 
                     }
                     else{
                         if(combArray[1] == "z"){
-                            return [{pol:true, rel:sRel, args:[combArray[0],"floor"]}];
-
+                            allGoals.push({pol:true, rel:sRel, args:[combArray[0],"floor"]});
                         }
                         else {
-                            return [{pol:true, rel:sRel, args:[combArray[0],combArray[1]]}];
+                            allGoals.push({pol:true, rel:sRel, args:[combArray[0],combArray[1]]});
                         }
                     }
                 }
             }
 
-            if(rules.length > 0){
-                return rules;
+            if(allGoals.length > 0){
+                return allGoals;
             }
             else
                 throw new Interpreter.Error("Physical Laws error.");
@@ -552,19 +560,33 @@ module Interpreter {
                     if(detail1.size == "large" && detail2.size == "small"){
                         result = false;
                     }
-                    if(detail1.size == "small" && detail1.size == "box"){
+                    if(detail1.size == "small" && detail1.form == "box"){
                         if(detail2.size == "small" && (detail2.form == "brick" || detail2.form == "pyramid")){
                             result = false;
                         }
                     }
-                    if(detail1.size == "large" && detail1.size == "box"){
+                    if(detail1.size == "large" && detail1.form == "box"){
                         if(detail2.size == "large" && detail2.form == "pyramid"){
                             result = false;
                         }
                     }
-
-
                 }
+                break;
+            case "under":
+                if(detail1.form == "ball"){
+                    result = false;
+                }     
+                break;        
+            case "above":
+                if(detail2.form == "ball"){
+                    result = false;
+                }
+                if(detail1.form == "ball" && detail1.size == "large"){
+                    if(detail2.size == "small"){
+                        result = false;
+                    }
+                }
+
                 break; 
 
         }
