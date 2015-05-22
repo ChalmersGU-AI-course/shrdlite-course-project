@@ -8,13 +8,15 @@ module Interpreter {
 
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
+
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
+
 	    if(intprt.intp.length > 0)
             	interpretations.push(intprt);
         });
-        if (interpretations.length == 1) {
+        if (interpretations.length == 1) {	
             return interpretations;
         }
 	else if (interpretations.length > 1) {
@@ -263,9 +265,16 @@ module Interpreter {
     // obj =  {obj , loc}
     // TODO: this is where I stopped last time, quite a mess.
     function interpretComplexObject(obj : Parser.Object, state : WorldState) : string[] {
+	
+
+
 	var immObjs : string[] = interpretObject(obj.obj, state);
 	var posObjs : string[] = interpretLocation(obj.loc, state);
 	var intprt : string[] = [];
+
+
+
+
 
 	// posObjs should give us a list of all object where the location is possible 
 	// now we should check with immObjs and see if they match up in the state.stacks
@@ -327,6 +336,22 @@ module Interpreter {
 	        });	
 	    });
 	}
+
+	/*
+
+
+	var immObjs : string[] = interpretObject(obj.obj, state);
+	var posObjs : string[] = interpretLocation(obj.loc, state);
+	var intprt : string[] = [];
+
+
+
+	*/
+		posObjs.forEach((e) => {
+			intprt.filter((o) => { return validatePhysics(o, e, state); });
+		});
+
+
 
 	return intprt;
     }
@@ -426,10 +451,12 @@ module Interpreter {
 	}
 	return flag;
     }
-
+    // insideof(a,b) a inside b
+    // 
     function isInside(a : string, b : string, state : WorldState) : boolean {
 	var flag : boolean = false;	
 	state.stacks.forEach( (stack) => {
+
 	    if(stack.indexOf(b) >= 0 && stack.indexOf(a) >= 0 &&
 		stack.indexOf(a) > stack.indexOf(b) && stack.indexOf(a) - stack.indexOf(b) == 1)
 		flag = true;
@@ -480,6 +507,26 @@ module Interpreter {
 		flag = true;
 	});
 	return flag;
+    }
+
+    function validatePhysics(a: string, b: string, state : WorldState) : boolean {
+	var objHolding : ObjectDefinition = state[a];
+	var objSupport : ObjectDefinition = state[b];
+	
+	if(objHolding.form === "ball" && objSupport.form !== "box") return false;
+	if(objSupport.form === "ball") return false;
+	if(objHolding.size === "large" && objSupport.size === "small") return false;
+	if(objSupport.form === "box") {
+		if(objHolding.size == objSupport.size && (objHolding.form === "pyramid" || 
+							  objHolding.form === "plank" || 
+							  objHolding.form === "box"))
+			return false;
+	}
+	if(objSupport.form === "pyramid" && objHolding.form === "box") return false;
+	if(objHolding.form === "box" && objHolding.size === "small" && objSupport.form === "brick") return false;
+
+	return true;
+
     }
 }
 
