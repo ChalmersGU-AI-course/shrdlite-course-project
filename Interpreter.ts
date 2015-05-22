@@ -6,7 +6,6 @@ module Interpreter {
 	//////////////////////////////////////////////////////////////////////
 	// exported functions, classes and interfaces/types
 
-	//todo: ambiguity, what to do when there are several possible interpretations?
 	export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
 		var interpretations : Result[] = [];
 		parses.forEach((parseresult) => {
@@ -113,11 +112,11 @@ module Interpreter {
 		 * @return {boolean} Has any pruning been done?
 		 */
 		public prune() : boolean {
+			var workDone : boolean = false;
 			for (var n = 0; n < (this.nodeL.length - 1); n++) {
 				var p : Position [] = this.nodeL[n].pos;
 				var c : Position [] = this.nodeL[n+1].pos;
 				var rel : string = this.nodeL[n].rel;
-				var workDone : boolean = false;
 
 				var nP : number = p.length;
 				var nC : number = c.length;
@@ -221,7 +220,6 @@ module Interpreter {
 		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof)
 		 * @return {boolean} Does the relation hold?
 		 */
-		//todo: can a ball inside a small yellow box which is inside a large blue box be considered as "inside the blue box" ?
 		//todo: What to do with "move all balls inside all boxes"
 		private isReachable(orig : Position, dest : Position, rel : string) : boolean {
 			switch (rel) {
@@ -326,6 +324,8 @@ module Interpreter {
 		 */
 		//todo:put the balls in the small box
 		//todo:put all balls in a box
+		//todo:take a blue object
+		//todo:take all blue objects
 		private isPhysicallyPossible(goal : string, origs : string[], dests : string[]) : boolean {
 			var error : string = "";
 			var sizeO : string, formO : string, sizeD : string, formD : string = "";
