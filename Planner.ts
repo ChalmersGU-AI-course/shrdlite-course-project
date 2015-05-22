@@ -20,8 +20,8 @@ module Planner {
         });
 
         if (plans.length) {
-	    // if plans.length > 1 take the shortest one :)
-	    // Dont modify here; instead work on Shrdlite
+            // if plans.length > 1 take the shortest one :)
+            // Dont modify here; instead work on Shrdlite
             return plans;
         } else {
             throw new Planner.Error("Found no plans");
