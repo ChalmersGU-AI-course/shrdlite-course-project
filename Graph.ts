@@ -9,6 +9,10 @@ interface GraphNode {
     neighbours(): GraphNode[];
 }
 
+interface GraphFilter {
+    costTo(state): number;
+}
+
 /**
  * @class represent a Node which have euclidean coordinates
  */
@@ -19,6 +23,7 @@ class PointNode implements GraphNode {
     costTo(to: PointNode): number {
         return Math.sqrt((this.x - to.x) * (this.x - to.x) + (this.y - to.y) * (this.y - to.y));
     }
+
     neighbours(): PointNode[]{
         return undefined;
     }
@@ -27,12 +32,19 @@ class PointNode implements GraphNode {
 /**
  * @class represent a G(v,E)
  */
-class Graph<T extends GraphNode> {
+class Graph<T extends GraphNode, F extends GraphFilter> {
     /*
     * Creates an instance of Graph
     * @constructor
     */
     public constructor(private nodes: T[], private edges: [number, number][][]  /*A list of tuples for every node */ ) {
+    }
+
+    public fintPathToFilter(start: T, F: GraphFilter): GraphNode[]{
+        var openset = new collections.Set<T>();
+        openset.add(start);
+        
+        return undefined;
     }
 
     /**
@@ -43,8 +55,7 @@ class Graph<T extends GraphNode> {
     * @param {number} goal The node you want to find the path to
     * @return [number, number][] List of edges which creates the shortest path between start and goal. Returns undefined if no path was found and an empty set [] if start is goal
     */
-    public findPath(start: number, goal: number): [number, number][] //Returns a list of edges
-    {
+    public findPath(start: number, goal: number): [number, number][] { //Returns a list of edges
         if (start > this.nodes.length || start < 0 || goal > this.nodes.length || goal < 0)
             throw new RangeError("Node does not exist");
 
