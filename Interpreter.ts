@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
+///<reference path="collections.ts"/>
 
 module Interpreter {
 

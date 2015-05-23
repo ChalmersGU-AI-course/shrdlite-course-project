@@ -1,7 +1,10 @@
 ///<reference path="World.ts"/>
 ///<reference path="lib/node.d.ts"/>
+///<reference path="Interpreter.ts" />
 
 class ANSIWorld implements World {
+
+    public lastAns : Interpreter.Result[] = [];
 
     constructor(
         public currentState : WorldState,

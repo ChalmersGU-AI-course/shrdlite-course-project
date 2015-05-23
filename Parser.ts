@@ -1,6 +1,7 @@
 ///<reference path="World.ts"/>
 ///<reference path="lib/node.d.ts"/>
 
+
 module Parser {
 
     //////////////////////////////////////////////////////////////////////
@@ -30,7 +31,7 @@ module Parser {
 
 
     export interface Result {input:string; prs:Command;}
-    export interface Command {cmd:string; ent?:Entity; loc?:Location;}
+    export interface Command {cmd:string; ent?:Entity; loc?:Location; num?:string}
     export interface Entity {quant:string; obj:Object;}
     export interface Location {rel:string; ent:Entity;}
     // The following should really be a union type, but TypeScript doesn't support that:
