@@ -22,7 +22,7 @@ class GLGWorld implements World {
         public canvas: HTMLCanvasElement
         ) {
         try {
-            //this.gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+            this.gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 
             
             this.gl.clearColor(0.0, 0.0, 0.2, 1.0);

@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="ExampleWorlds.ts" />
+    <TypeScriptCompile Include="Graph.ts" />
     <TypeScriptCompile Include="Interpreter.ts" />
     <TypeScriptCompile Include="lib\gl-matrix.d.ts" />
     <TypeScriptCompile Include="lib\jquery.d.ts" />

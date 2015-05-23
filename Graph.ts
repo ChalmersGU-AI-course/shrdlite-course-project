@@ -68,12 +68,15 @@ class Graph<T, E> {
                 }
 
                 //Reverse
+                /*
+                No need for reversing since we need yo unpack it it planner
                 var pathI: Array<E> = [];
                 for (var i = 0; i < path.length; ++i) {
                     pathI[i] = path[path.length - 1 - i];
                 }
 
-                return pathI;
+                return pathI;*/
+                return path;
             }
 
             //find current in openset and remove that element and add to closed
@@ -94,7 +97,7 @@ class Graph<T, E> {
 
 
                 if (!openset.contains(currentNeighbours[i].node) || (gScore.containsKey(currentNeighbours[i].node) && tentativeGScore < gScore.getValue(currentNeighbours[i].node))) { //TODO: contains() may be overhead
-                    cameFrom.setValue(currentNeighbours[i].node, currentNeighbours[i]);
+                    cameFrom.setValue(currentNeighbours[i].node, { edge: currentNeighbours[i].edge, node: current });
                     gScore.setValue(currentNeighbours[i].node, tentativeGScore);
 
                     fScore.enqueue({ node: currentNeighbours[i].node, cost: tentativeGScore + filter.costTo(currentNeighbours[i].node) });

@@ -6,11 +6,11 @@
 module Shrdlite {
 
     export function interactive(world: World, glworld: World): void {
-        function endlessLoop(utterance : string = "") : void {
+        function endlessLoop(utterance: string = ""): void {
             var inputPrompt = "What can I do for you today? ";
             var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
             if (utterance.trim()) {
-                var plan : string[] = splitStringIntoPlan(utterance);
+                var plan: string[] = splitStringIntoPlan(utterance);
                 if (!plan) {
                     plan = parseUtteranceIntoPlan(world, utterance);
                 }
@@ -30,11 +30,11 @@ module Shrdlite {
     // - then it interprets the parse(s)
     // - then it creates plan(s) for the interpretation(s)
 
-    export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
+    export function parseUtteranceIntoPlan(world: World, utterance: string): string[] {
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
-            var parses : Parser.Result[] = Parser.parse(utterance);
-        } catch(err) {
+            var parses: Parser.Result[] = Parser.parse(utterance);
+        } catch (err) {
             if (err instanceof Parser.Error) {
                 world.printError("Parsing error", err.message);
                 return;
@@ -47,40 +47,40 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
         });
 
-				//todo: ambiguity check!
-				while(true) {
-					try {
-							var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
-					} catch(err) {
-							if (err instanceof Interpreter.Error) {
-									world.printError("Interpretation error", err.message);
-									return;
-							} else {
-									throw err;
-							}
-					}
-					world.printDebugInfo("Found " + interpretations.length + " interpretations");
-					interpretations.forEach((res, n) => {
-							world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
-					});
+        //todo: ambiguity check!
+        while (true) {
+            try {
+                var interpretations: Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
+            } catch (err) {
+                if (err instanceof Interpreter.Error) {
+                    world.printError("Interpretation error", err.message);
+                    return;
+                } else {
+                    throw err;
+                }
+            }
+            world.printDebugInfo("Found " + interpretations.length + " interpretations");
+            interpretations.forEach((res, n) => {
+                world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
+            });
 
-					if (interpretations.length > 1) {
-						world.printSystemOutput("The utterance is ambiguous.\nCan you please clarify ...");
-						var s : string[] = [];
-						interpretations.forEach((res, n) => {
-							s.push(Interpreter.interpretationToString(res));
-						});
-						world.printPickList(s);
-						break;
-					}
-					else {
-						break;
-					}
-				}
+            if (interpretations.length > 1) {
+                world.printSystemOutput("The utterance is ambiguous.\nCan you please clarify ...");
+                var s: string[] = [];
+                interpretations.forEach((res, n) => {
+                    s.push(Interpreter.interpretationToString(res));
+                });
+                world.printPickList(s);
+                break;
+            }
+            else {
+                break;
+            }
+        }
 
         try {
-            var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
-        } catch(err) {
+            var plans: Planner.Result[] = Planner.plan(interpretations, world.currentState);
+        } catch (err) {
             if (err instanceof Planner.Error) {
                 world.printError("Planning error", err.message);
                 return;
@@ -93,7 +93,7 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
         });
 
-        var plan : string[] = plans[0].plan;
+        var plan: string[] = plans[0].plan;
         world.printDebugInfo("Final plan: " + plan.join(", "));
         return plan;
     }
@@ -102,10 +102,10 @@ module Shrdlite {
     // This is a convenience function that recognizes strings
     // of the form "p r r d l p r d"
 
-    export function splitStringIntoPlan(planstring : string) : string[] {
-        var plan : string[] = planstring.trim().split(/\s+/);
-        var actions = {p:"pick", d:"drop", l:"left", r:"right"};
-        for (var i = plan.length-1; i >= 0; i--) {
+    export function splitStringIntoPlan(planstring: string): string[] {
+        var plan: string[] = planstring.trim().split(/\s+/);
+        var actions = { p: "pick", d: "drop", l: "left", r: "right" };
+        for (var i = plan.length - 1; i >= 0; i--) {
             if (!actions[plan[i]]) {
                 return;
             }
