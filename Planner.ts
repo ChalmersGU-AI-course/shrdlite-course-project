@@ -84,11 +84,11 @@ module Planner {
 			 */
 			isPhysicallyPossible(n : number) : boolean {
 				//which object is on top?
-				topPos : number = this.state.stacks[n].length - 1;
-				dest = this.state.objects[this.state.stacks[n][topPos]];
+				var topPos : number = this.state.stacks[n].length - 1;
+				var dest = this.state.objects[this.state.stacks[n][topPos]];
 				
 				//which object do we want to put there?
-				orig = this.state.objects[this.state.holding];
+				var orig = this.state.objects[this.state.holding];
 
 				//Balls must be in boxes or on the floor.
 				if (orig.form == "ball" &&  dest.form != "floor") {
