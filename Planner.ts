@@ -139,7 +139,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 				break;
 			}
 		}
-		if(result){
+		if(!result){
 			return lit;
 		}else{
 			return this.findTopLiteral(result, lits);
@@ -303,7 +303,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     
 
     //counts objects on top of given object
-    countOnTop(a:string,state:WorldState, pddls:Interpreter.Literal[]):number{
+    countOnTop(a:string, state:WorldState, pddls:Interpreter.Literal[]):number{
         var counter = 0;
         var z = a;
         console.log("at countontop");
@@ -318,6 +318,22 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         }
         console.log("returning from countontop");
         return counter;
+    }
+    
+    findOnTop(counter : number, lit : Interpreter.Literal, lits : Interpreter.Literal[] ):number{
+		var result : Interpreter.Literal;
+		for(var j = 0; j < lits.length; j++){
+			if(lits[j].args[1] == lit.args[0] && lits[j].rel == "ontop"){
+				result = lits[j];
+				counter++;
+				break;
+			}
+		}
+		if(result){
+			return counter;
+		}else{
+			return this.findOnTop(counter, result, lits);
+		}	
     }
 
     amountOfTiles(a:string, state:WorldState, pddls:Interpreter.Literal[]){
