@@ -77,7 +77,10 @@ class SVGWorld implements World {
         }
         $('<p>').attr("class", participant)
             .text(output)
-            .insertBefore(this.containers.inputform);
+            .insertBefore(this.containers.inputform)
+						.click(function() {
+							alert("The paragraph was clicked.");
+						});
         dialogue.scrollTop(dialogue.prop("scrollHeight"));
 
         if (this.useSpeech && utterance && /^\w/.test(utterance)) {
