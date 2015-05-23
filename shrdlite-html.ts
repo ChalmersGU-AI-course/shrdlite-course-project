@@ -7,6 +7,7 @@
 var defaultWorld = 'small';
 var defaultSpeech = false;
 
+//When document is ready
 $(function(){
     var current = getURLParameter('world');
     if (!(current in ExampleWorlds)) {

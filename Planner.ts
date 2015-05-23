@@ -1,7 +1,62 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="Graph.ts"/>
+///<reference path="lib/collections.ts"/>
 
 module Planner {
+
+    class ShrdliteNodeFilter implements GraphFilter {
+        public constructor(protected intptr: Interpreter.Literal) {
+
+        }
+        public costTo(node: ShrdliteNode) {
+            switch (this.intptr.rel) {
+                case 'holding':
+                    if (node.state.holding == this.intptr.args[0])
+                        return 0;
+                default:
+                    break;
+            }
+            return 1;
+        }
+    }
+
+    class ShrdliteNode implements GraphNode {
+        public name: string;
+        private objects: { [s: string]: ObjectDefinition; };
+
+        public constructor(public state: WorldState) {
+            this.name = this.toString();
+        }
+
+
+        costTo(to: ShrdliteNode): number {
+            return 1;
+        }
+
+        neighbours(): ShrdliteNode[]{
+            if (this.state.holding == undefined) {
+                //take up object
+            }
+            else {
+                //put down object
+            }
+            return undefined;
+        }
+
+        toString(): string {
+            var str: string = "";
+            for (var i = 0; i < this.state.stacks.length; ++i) {
+                for (var j = 0; j < this.state.stacks[i].length; ++j) {
+                    str += this.state.stacks[i][j] + ",";
+                }
+                str += ";"
+            }
+            str += ";;" + this.state.holding + ";;";
+
+            return str;
+        }
+    }
 
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
@@ -19,7 +74,6 @@ module Planner {
             throw new Planner.Error("Found no plans");
         }
     }
-
 
     export interface Result extends Interpreter.Result {plan:string[];}
 
@@ -39,7 +93,19 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
+    function planInterpretation(intprt: Interpreter.Literal[][], state: WorldState): string[]{
+        //Add my amazing code here!
+        var currentNode: ShrdliteNode = new ShrdliteNode(state);
+        var targetFilter: ShrdliteNodeFilter = new ShrdliteNodeFilter(intprt[0][0]);
+
+
+
+        //var targetNode: ShrdliteNode = new ShrdliteNode(intprt);
+
+        var g: Graph<ShrdliteNode, ShrdliteNodeFilter> = new Graph<ShrdliteNode, ShrdliteNodeFilter>([currentNode], null);
+        g.fintPathToFilter(currentNode, targetFilter);
+
+
         // This function returns a dummy plan involving a random stack
         do {
             var pickstack = getRandomInt(state.stacks.length);

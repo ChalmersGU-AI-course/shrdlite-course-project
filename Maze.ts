@@ -43,7 +43,7 @@ class Maze {
         return nodes;
     }
 
-    public generateGraph(width: number, height: number, seed: number, balance: number): Graph<PointNode> {
+    public generateGraph(width: number, height: number, seed: number, balance: number): Graph<PointNode, GraphFilter> {
         this.width = width;
         this.height = height;
 
