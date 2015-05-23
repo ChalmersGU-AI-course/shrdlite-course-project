@@ -575,7 +575,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             for(var index = 0; index < pddls.length; index++){
                 var pddl = pddls[index];
                 var x = pddl.args[1];
-                if(x == z){
+                if(x == z && pddl.rel == "ontop"){
                     if(pddl.args[0]==a){
                         if(pddl.args[1]==b){
                             return 0;
