@@ -95,9 +95,9 @@ module Interpreter {
 
                 // AND-part
                 andPart.forEach(function(obj: string) {
-                    // Create a set of literals for moving the current obj to
-                    // any of the allowed locations
-                    var lits = createBiLiteralsSpecifyFirstOR(locEntities, cmd.loc.rel, obj);
+                    // Create a set of literals for moving the current obj(s) to
+                    // all of the location requirements
+                    var lits = createBiLiteralsSpecifyFirstAND(locEntities, cmd.loc.rel, obj);
 
                     // TODO: Check if lits are allowed!
                     orStatements.push(lits);
