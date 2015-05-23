@@ -22,7 +22,7 @@ all: $(TARGETS)
 $(TARGETS): %: shrdlite-%.js
 
 %.js: %.ts $(TSFILES)
-	tsc --out $@ $<
+	tsc --target es5 --out $@ $<
 
 grammar.js: grammar.ne
 	nearleyc $< > $@

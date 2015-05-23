@@ -67,6 +67,19 @@ class SVGWorld implements World {
         this.inputCallback = callback;
     }
 
+		public printPickList(elements : string[]) {
+			$('<select>').attr("class", "system")
+					//.attr('style', 'box-shadow: black 0.1em 0.1em 0.1em; border: solid blue; border-radius: 0.05em' )
+          //.append(elements[0])
+					.append(new Option(elements[0], "option1"))
+          .insertBefore(this.containers.inputform);
+					//.click(function() {
+					//	alert("something was clicked.");
+					//});
+			var dialogue = this.containers.dialogue;
+			dialogue.scrollTop(dialogue.prop("scrollHeight"));
+		}
+
     public printSystemOutput(output, participant="system", utterance?) {
         if (utterance == undefined) {
             utterance = output;
@@ -76,12 +89,8 @@ class SVGWorld implements World {
             dialogue.children().first().remove();
         }
         $('<p>').attr("class", participant)
-						//.attr('style', 'box-shadow: black 0.1em 0.1em 0.1em; border: solid blue; border-radius: 0.05em' )
             .text(output)
-            .insertBefore(this.containers.inputform)
-						.click(function() {
-							alert("The paragraph was clicked.");
-						});
+            .insertBefore(this.containers.inputform);
         dialogue.scrollTop(dialogue.prop("scrollHeight"));
 
         if (this.useSpeech && utterance && /^\w/.test(utterance)) {

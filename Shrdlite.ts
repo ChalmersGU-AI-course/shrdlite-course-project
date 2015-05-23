@@ -47,7 +47,7 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
         });
 
-				//todo: ambiguous check!
+				//todo: ambiguity check!
 				while(true) {
 					try {
 							var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
@@ -65,13 +65,12 @@ module Shrdlite {
 					});
 
 					if (interpretations.length > 1) {
-						world.printSystemOutput("The utterance is ambiguous.");
-						var s : string = "Did you mean ";
+						world.printSystemOutput("The utterance is ambiguous.\nCan you please clarify ...");
+						var s : string[] = [];
 						for (var i = 0; i < interpretations.length; i++) {
-							s = s + interpretations[i].input + " or ";
+							s.push(interpretations[i].input);
 						}
-						world.printSystemOutput(s);
-						//world.printPickList(string[]);
+						world.printPickList(s);
 						break;
 					}
 					else {

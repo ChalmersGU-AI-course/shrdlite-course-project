@@ -22,6 +22,7 @@ interface World {
     performPlan(plan: string[], callback? : () => void) : void;
 
     readUserInput(prompt : string, callback : (string) => void) : void;
+		printPickList(elements : string[]) : void;
     printSystemOutput(output : string, participant? : string) : void;
     printDebugInfo(info : string) : void;
     printError(error : string, message? : string) : void;

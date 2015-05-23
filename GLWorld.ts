@@ -141,6 +141,8 @@ class GLGWorld implements World {
     }
     readUserInput(prompt: string, callback: (string) => void): void {
     }
+		printPickList(elements : string[]) : void {
+		}
     printSystemOutput(output: string, participant?: string): void {
     }
     printDebugInfo(info: string): void {
