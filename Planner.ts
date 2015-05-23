@@ -105,7 +105,7 @@ module Planner {
             var orig = this.state.objects[this.state.holding];
 
             //Balls must be in boxes or on the floor.
-            if (orig.form == "ball" && (dest.form != "floor" || dest.form != "box")) {
+            if (orig.form == "ball" && dest.form != "floor" && dest.form != "box") {
                 return false;
             }
 
@@ -213,6 +213,10 @@ module Planner {
         // Overhead med noder... borde kanske edgen vara 'l', 'r', 'p', 'd' direkt? och bara returnera den?
         // This function returns a dummy plan involving a random stack
         var plan: Array<string> = [];
+
+        if (picks == undefined)
+            return ['r', 'l'];
+
 
         while (picks.length > 0) {
             var pick = picks.pop();
