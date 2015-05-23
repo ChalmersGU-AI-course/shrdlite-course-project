@@ -3,7 +3,7 @@
 
 var ExampleWorlds : {[s:string]: WorldState} = {};
 	
-function stacksToPDDL(stacks:string[][]):collections.Set<Interpreter.Literal>{
+function stacksToPDDL(stacks:string[][], objects : { [s:string]: ObjectDefinition; }):collections.Set<Interpreter.Literal>{
 	var pddl = new collections.Set<Interpreter.Literal>(
 					function (p){		// ToString
 						var res:string;
@@ -24,20 +24,20 @@ function stacksToPDDL(stacks:string[][]):collections.Set<Interpreter.Literal>{
 			if(j == 0){
 				pddl.add({pol: true,rel:"ontop", args:[stacks[i][j],"f"+i]})
 			}else{
-				pddl.add({pol: true,rel:"ontop", args:[stacks[i][j],stacks[i][j-1]]})
+				var relation : string;
+				if(objects[stacks[i][j-1]].form == "box"){
+					relation = "ontop";
+				}else{
+					relation = "inside";
+				}
+				pddl.add({pol: true,rel:relation, args:[stacks[i][j],stacks[i][j-1]]})
 			}
 		}
 	}			    
 	return pddl;
 }
-	
-ExampleWorlds["complex"] = {
-	"stacks": [["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]],
-    "pddl": stacksToPDDL([["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]]),
-    "holding": null,
-    "arm": 0,
-    "planAction":"start",
-    "objects": {
+
+var complexobjs : { [s:string]: ObjectDefinition; }= {
         "a": { "form":"brick",   "size":"large",  "color":"yellow" },
         "b": { "form":"brick",   "size":"small",  "color":"white" },
         "c": { "form":"plank",   "size":"large",  "color":"red"   },
@@ -56,8 +56,15 @@ ExampleWorlds["complex"] = {
         "f2": { "form":"floor",    "size":"large",  "color":"" },
         "f3": { "form":"floor",    "size":"large",  "color":"" },
         "f4": { "form":"floor",    "size":"large",  "color":"" }
-        },
-   // "objIds":["a","b","c","d","e","f","g","h","i","j", "k","l","m"],
+        };
+	
+ExampleWorlds["complex"] = {
+	"stacks": [["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]],
+    "holding": null,
+    "arm": 0,
+    "planAction":"start",
+    "objects": complexobjs,
+    "pddl": stacksToPDDL([["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]], complexobjs),
     "examples": [
     	"put a box on a floor",
     	"put a box in the box",
@@ -77,13 +84,8 @@ ExampleWorlds["complex"] = {
     ]
 };	
 
-ExampleWorlds["small"] = { 
-    "stacks": [["e"],["g","l"],[],["k","m","f"],[]],
-    "pddl": stacksToPDDL([["e"],["g","l"],[],["k","m","f"],[]]),
-    "holding": "a",
-    "arm": 0,
-    "planAction":"start",
-    "objects": {
+
+var smallobjects : { [s:string]: ObjectDefinition; } = {
         "a": { "form":"brick",   "size":"large",  "color":"green" },
         "b": { "form":"brick",   "size":"small",  "color":"white" },
         "c": { "form":"plank",   "size":"large",  "color":"red"   },
@@ -102,7 +104,14 @@ ExampleWorlds["small"] = {
         "f2": { "form":"floor",    "size":"large",  "color":"" },
         "f3": { "form":"floor",    "size":"large",  "color":"" },
         "f4": { "form":"floor",    "size":"large",  "color":"" }
-    },
+    };
+ExampleWorlds["small"] = { 
+    "stacks": [["e"],["g","l"],[],["k","m","f"],[]],
+    "holding": "a",
+    "arm": 0,
+    "planAction":"start",
+    "objects": smallobjects,
+    "pddl": stacksToPDDL([["e"],["g","l"],[],["k","m","f"],[]], smallobjects),
     "examples": [
         "put the white ball in a box on the floor",
         "put the black ball in a box on the floor",

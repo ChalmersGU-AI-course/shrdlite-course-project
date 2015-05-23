@@ -120,12 +120,19 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			console.log("getneighbors: down pddl" + currentstate.pddl.size());
 			var topl = this.getTopLiteral(currentstate, currentstate.arm);
 			var topobj :string;
+			var relation : string = "ontop";
 			if(topl){
 				topobj = topl.args[0];
+				// check if there is a box (ontop or inside relation)
+				if(possiblestate.objects[topobj].form == "box"){
+					relation = "inside";	
+				}
 			}else{
 				topobj = "f" + currentstate.arm;
 			}
-			var newliteral = {pol: true, rel : "ontop", args : [possiblestate.holding, topobj]};
+			
+			
+			var newliteral = {pol: true, rel : relation, args : [possiblestate.holding, topobj]};
 			if(Interpreter.checkIllegal(newliteral, currentstate)){ // check if the drop is leagal
 				// remove holding obj
 				possiblestate.holding = null;
@@ -186,7 +193,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     	var result : Interpreter.Literal;
     	// Finde floor possition and the one ontop
     	for(var i = 0; i < pddls.length; i++){
-    		if(pddls[i].args[1]=="f"+armposs && pddls[i].rel == "ontop"){
+    		if(pddls[i].args[1]=="f"+armposs && (pddls[i].rel == "ontop" ||  pddls[i].rel == "inside")){
     			result = this.findTopLiteral(pddls[i], pddls);
     			break;
     		}
@@ -198,7 +205,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     findTopLiteral(lit : Interpreter.Literal, lits : Interpreter.Literal[] ): Interpreter.Literal{
 		var result : Interpreter.Literal;
 		for(var j = 0; j < lits.length; j++){
-			if(lits[j].args[1] == lit.args[0] && lits[j].rel == "ontop"){
+			if(lits[j].args[1] == lit.args[0] && (lits[j].rel == "ontop" || lits[j].rel == "inside")){
 				result = lits[j];
 				break;
 			}
@@ -307,7 +314,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         for(var index = 0; index < pddls.length; index++){
             var pddl = pddls[index];
             var x = pddl.args[1];
-            if(pddl.args[1] != null && (pddl.rel == "ontop" && x == obj)){
+            if(pddl.args[1] != null && ((pddl.rel == "ontop" || pddl.rel == "inside")&& x == obj)){
                 obj = pddl.args[0];
                 ind=index;
                 index = -1;
@@ -326,7 +333,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             var x = pddl.args[1];
             console.log("loop");
             if(pddl.args[0] == null){}
-            else if(pddl.rel == "ontop" && this.equalObjects(state.objects[x], state.objects[z])){
+            else if((pddl.rel == "ontop" || pddl.rel == "inside")&& this.equalObjects(state.objects[x], state.objects[z])){
                 z = pddl.args[0];
                 ind=index;
                 index = -1;
@@ -348,7 +355,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             var pddl = pddls[index];
             var x = pddl.args[0];
             if(pddl.args[0] == null){}
-            else if(pddl.rel == "ontop" && this.equalObjects(state.objects[x], state.objects[z])){
+            else if((pddl.rel == "ontop" || pddl.rel == "inside")&& this.equalObjects(state.objects[x], state.objects[z])){
                 console.log("new vals :x: " + x + " , z: "+z);
                 z = pddl.args[0];
                 ind= index;
@@ -393,7 +400,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     countOnTopHelper(counter : number, lit : Interpreter.Literal, lits : Interpreter.Literal[] ):number{
 		var result : Interpreter.Literal;
 		for(var j = 0; j < lits.length; j++){
-			if(lits[j].args[1] == lit.args[0] && lits[j].rel == "ontop"){
+			if(lits[j].args[1] == lit.args[0] && (lits[j].rel == "ontop" || lits[j].rel == "inside")){
 				result = lits[j];
 				counter++;
 				break;
@@ -511,7 +518,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     containsObj(obj : string, lit : Interpreter.Literal, lits : Interpreter.Literal[] ): boolean{
     	var result : Interpreter.Literal;
 		for(var j = 0; j < lits.length; j++){
-			if(lits[j].args[1] == lit.args[0] && lits[j].rel == "ontop"){
+			if(lits[j].args[1] == lit.args[0] && (lits[j].rel == "ontop" || lits[j].rel == "inside")){
 				result = lits[j];
 				break;
 			}
@@ -839,13 +846,11 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         }
         else if(cond.rel == "ontop" || cond.rel == "inside"){
             for(var index = 0; index < pddls.length; index++){
-                 var pddl = pddls[index];
-                 if(this.equalObjects(state.objects[pddl.args[0]], state.objects[a])){
-                    if(this.equalObjects(state.objects[pddl.args[1]], state.objects[b]))
-                        return true;
-                    return false;
-                 }
-            }
+                var pddl = pddls[index];
+                if(pddl.args[0]== a && pddl.args[1]== b){
+	                return true;
+                }
+            }return false;
         }
         else if(cond.rel == "under"){
              for(var index = 0; index < pddls.length; index++){
