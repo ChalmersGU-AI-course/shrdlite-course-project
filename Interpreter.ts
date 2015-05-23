@@ -552,7 +552,7 @@ module Interpreter {
 			}
 
 			//for a move/put/drop command when we are holding something and the "it" specifier is used (e.g. "drop it on the floor")
-			if (cmdS == "move" && this.state.holding != null && typeof this.cmd.ent === "undefined") {
+			if ((cmdS == "put" || cmdS == "move") && this.state.holding != null && typeof this.cmd.ent === "undefined") {
 				//check destination
 				var ent = this.cmd.loc.ent;
 				var origs : string[] = [this.state.holding];
