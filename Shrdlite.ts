@@ -100,7 +100,6 @@ module Shrdlite {
         plans.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
         });
-	//	world.currentState = plans[0].currentstate;
         var plan : string[] = plans[0].plan;
         world.printDebugInfo("Final plan: " + plan.join(", "));
         return plan;

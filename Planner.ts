@@ -100,7 +100,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			neig.push(possiblestate);
 		}
 		// pick up
-		var topLit = this.getTopLiteral(currentstate, currentstate.arm);
+		var topLit = Planner.getTopLiteral(currentstate, currentstate.arm);
 		if(!currentstate.holding && topLit){	
 			console.log("getneighbors: up");
 			// if it is not holding anything and ther is something on the floor
@@ -118,7 +118,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			// get top obj
 			console.log("getneighbors: down arm" + currentstate.arm);
 			console.log("getneighbors: down pddl" + currentstate.pddl.size());
-			var topl = this.getTopLiteral(currentstate, currentstate.arm);
+			var topl = Planner.getTopLiteral(currentstate, currentstate.arm);
 			var topobj :string;
 			var relation : string = "ontop";
 			if(topl){
@@ -186,36 +186,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     	
     	return true;
     }
-    
-    // gets the top literal in a column, null if no object is in the column
-    getTopLiteral(state : WorldState, armposs : number): Interpreter.Literal{
-    	var pddls = state.pddl.toArray();
-    	var result : Interpreter.Literal;
-    	// Finde floor possition and the one ontop
-    	for(var i = 0; i < pddls.length; i++){
-    		if(pddls[i].args[1]=="f"+armposs && (pddls[i].rel == "ontop" ||  pddls[i].rel == "inside")){
-    			result = this.findTopLiteral(pddls[i], pddls);
-    			break;
-    		}
-    	}
-    	return result;
-    }
-    
-    // recursive function to follow a literal to find the one on the top
-    findTopLiteral(lit : Interpreter.Literal, lits : Interpreter.Literal[] ): Interpreter.Literal{
-		var result : Interpreter.Literal;
-		for(var j = 0; j < lits.length; j++){
-			if(lits[j].args[1] == lit.args[0] && (lits[j].rel == "ontop" || lits[j].rel == "inside")){
-				result = lits[j];
-				break;
-			}
-		}
-		if(!result){
-			return lit;
-		}else{
-			return this.findTopLiteral(result, lits);
-		}	
-    }
+   
     
  /*   getneighbors(node :number):Array<number>{
         console.log("in get neighbor func");
@@ -999,9 +970,7 @@ module Planner {
 
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
-            var resultplan = planInterpretation(plan.intp, currentState);
-            plan.plan = resultplan.plan;
-            plan.currentstate = resultplan.currentstate;
+            plan.plan = planInterpretation(plan.intp, currentState);;
             plans.push(plan);
         });
         if (plans.length) {
@@ -1013,7 +982,7 @@ module Planner {
 
 
     export interface Result extends Interpreter.Result {plan:string[]; currentstate:WorldState;}
-    export interface Plan {plan:string[]; currentstate:WorldState;}
+   // export interface Plan {plan:string[]; currentstate:WorldState;}
 
 
     export function planToString(res : Result) : string {
@@ -1026,12 +995,42 @@ module Planner {
         constructor(public message? : string) {}
         public toString() {return this.name + ": " + this.message}
     }
+    
+        // gets the top literal in a column, null if no object is in the column
+    export function getTopLiteral(state : WorldState, armposs : number): Interpreter.Literal{
+    	var pddls = state.pddl.toArray();
+    	var result : Interpreter.Literal;
+    	// Finde floor possition and the one ontop
+    	for(var i = 0; i < pddls.length; i++){
+    		if(pddls[i].args[1]=="f"+armposs && (pddls[i].rel == "ontop" ||  pddls[i].rel == "inside")){
+    			result = this.findTopLiteral(pddls[i], pddls);
+    			break;
+    		}
+    	}
+    	return result;
+    }
+    
+    // recursive function to follow a literal to find the one on the top
+    export function findTopLiteral(lit : Interpreter.Literal, lits : Interpreter.Literal[] ): Interpreter.Literal{
+		var result : Interpreter.Literal;
+		for(var j = 0; j < lits.length; j++){
+			if(lits[j].args[1] == lit.args[0] && (lits[j].rel == "ontop" || lits[j].rel == "inside")){
+				result = lits[j];
+				break;
+			}
+		}
+		if(!result){
+			return lit;
+		}else{
+			return this.findTopLiteral(result, lits);
+		}	
+    }
 
 
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : Plan {
+    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         
         console.log("armpos: "+state.arm + " , holding: " + state.holding);
         var shortest = null;//keeps track of shortest path encountered
@@ -1069,14 +1068,14 @@ module Planner {
         this._nodeValues = tempNodevalues;
 
         //sen execute:A den bästa planen (om det blev någon plan)
-        var plan : Plan = {plan : [], currentstate : state};
+        var plan : string[] = [];
         if(!results.isEmpty()){
         	var path : number[]= results.dequeue();
         	//update current state
         	state = sp._nodeValues[path[path.length-1]];
-        	plan.currentstate = sp._nodeValues[path[path.length-1]];
+        	//plan.currentstate = sp._nodeValues[path[path.length-1]];
         	for(var i = path.length-1; i >= 0 ; i--){ // travers backwards
-        		plan.plan.push(sp._nodeValues[ path[i] ].planAction);
+        		plan.push(sp._nodeValues[ path[i] ].planAction);
         	}
         }
         

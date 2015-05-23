@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="lib/jquery.d.ts" />
+///<reference path="Planner.ts"/>
 
 
 class SVGWorld implements World {
@@ -269,6 +270,22 @@ class SVGWorld implements World {
             throw "Not holding anything!";
         }
         this.verticalMove('drop', callback);
+        // Update pddl
+        
+    	var topl = Planner.getTopLiteral(this.currentState, this.currentState.arm);
+		var topobj :string;
+		var relation : string = "ontop";
+		if(topl){
+			topobj = topl.args[0];
+			// check if there is a box (ontop or inside relation)
+			if(this.currentState.objects[topobj].form == "box"){
+				relation = "inside";	
+			}
+		}else{
+			topobj = "f" + this.currentState.arm;
+		}
+        var newpddl : Interpreter.Literal = {pol : true, rel: relation, args:[this.currentState.holding,topobj]};
+        this.currentState.pddl.add(newpddl);
         this.currentState.stacks[this.currentState.arm].push(this.currentState.holding);
         this.currentState.holding = null;
     }
@@ -277,6 +294,9 @@ class SVGWorld implements World {
         if (this.currentState.holding) {
             throw "Already holding something!";
         }
+        //Update pddl
+        var topl = Planner.getTopLiteral(this.currentState, this.currentState.arm);
+        this.currentState.pddl.remove(topl);
         this.currentState.holding = this.currentState.stacks[this.currentState.arm].pop();
         this.verticalMove('pick', callback);
     }
