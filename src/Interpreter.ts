@@ -98,12 +98,18 @@ module Interpreter {
                 product(sourcesBranches, targetBraches).forEach((param) => {
                     var sources = param[0], targets = param[1];
                     var literals : Literal[] = [];
+                    // TODO var possibleMatches : Literal [][];
                     sources.forEach((source) => {
+                        // TODO var possibleLits: Literal [] = [];
                         targets.forEach((target) => {
                             var newLit = { pol: true, rel: cmd.loc.rel, args: [source, target] };
-                            if (checkLiteral(objectMap, newLit).val) literals.push(newLit);
+                            if (checkLiteral(objectMap, newLit).val) literals.push(newLit); //TODO takeout
+                            // TODO if (checkLiteral(objectMap, newLit).val) possibleLits.push(newLit);
                         });
+                        // TODO possibleMatches.push(possibleLits);
                     });
+                    
+                    // TODO if ( findMatch(possibleMatches[0],possibleMatches.slice(1),literals) && literals.length ) intprt.push(literals); //should end up with valid list of literals if such exists;
                     if (literals.length && checkList(literals).val) intprt.push(literals);
                 });
                 break;
@@ -124,7 +130,30 @@ module Interpreter {
         };
         return intprt;
     }
-
+    
+    // TODO
+    // // The recursion will test out every combination of literals that satisfy the existence of one literal per 
+    // // source;
+    //
+    //function findMatch( currentSet: Literal[] , remainingSets: Literal[][] , lits: Literal[] ) : Boolean
+    //  {
+    //    var testLiteral: Literal ;
+    //
+    //    for(var j=0 , j < currentSet.length , j++)
+    //      {
+    //        testLiteral=currentSet[j];
+    //        lits.push(testLiteral);
+    //
+    //        if(next.length) flag=findMatch( remainingSets[0] , remainingSets.slice(1) , lits);
+    //        else flag=checkList(lits);    
+    //
+    //        if(flag) return flag;
+    //        else  lits.pop();  //remove the literal that didn't work to try another
+    //      }
+    //    return false;
+    //  }
+    //
+    
     function find(ent : Parser.Entity, literals : Literal[], objects : ObjectMap) : Key[][] {
         switch (ent.quant) {
             case "the": return [findThe(ent.obj, literals, objects)];
@@ -155,10 +184,10 @@ module Interpreter {
             // the find should always result in an arrays of branches
             for(var i in relatedObjKeysBranches) {
                 var relatedObjKeys : Key[] = relatedObjKeysBranches[i];
-                if (relatedObjKeys.length == 0) return [];
+                if (relatedObjKeys.length == 0) return []; //TODO takeout
 
                 var targetObjKeys = searchObjects(obj.obj, objects);
-                if (targetObjKeys.length == 0) return [];
+                if (targetObjKeys.length == 0) return [];  //TODO takeout
 
                 var matchingLiterals = allLiterals.filter((lit) => {
                     return (
@@ -169,8 +198,10 @@ module Interpreter {
                 });
 
                 return matchingLiterals.map((lit) => lit.args[0]);
+                // TODO litList=litList.concat(matchingLiterals.map((lit) => lit.args[0]));
             }
             return [];
+            // TODO return litList;
         } else {
             return searchObjects(obj, objects);
         }
