@@ -205,11 +205,35 @@ module Planner {
     		for(var x =0; x<state.stacks.length; x++ ){
 				var stackTar = Interpreter.searchStack(state.stacks[x], goal[i][0].args[0]);
 				var stackLoc = Interpreter.searchStack(state.stacks[x], goal[i][0].args[1]);
-				if(stackTar != -1){
+				if(stackTar != -1 && stackTar != -1 )
+				{
+					tar = (state.stacks[x].length-1) - stackTar;
+					loc = (state.stacks[x].length-1) - stackLoc;
+					
+					if(stackTar>stackLoc)
+					{
+						tarIndex = x;
+						locIndex =x;
+
+						tar = tar*2;
+						loc =loc*2;
+					}
+					else
+					{
+						tarIndex = x+tar;
+						locIndex =x-loc;
+
+						tar = tar*2;
+						loc =loc*2;
+					}
+					
+					
+				}
+				else if(stackTar != -1){
 					//tar = state.stacks.length -1 + stackTar;
 					tar = (state.stacks[x].length-1) - stackTar;
 					tarIndex = x;
-				}if(stackTar != -1){
+				}else if(stackTar != -1){
 					//loc = state.stacks.length -1 + stackLoc;
 					loc = (state.stacks[x].length-1) - stackLoc;
 					locIndex =x;
