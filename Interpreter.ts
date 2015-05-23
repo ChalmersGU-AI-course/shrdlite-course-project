@@ -322,11 +322,15 @@ module Interpreter {
 		 * @param {string[]} array of string that represent the objects for the destination
 		 * @return {boolean} true if it is possible
 		 */
-		//todo:put the balls in the small box
-		//todo:put all balls in a box
-		//todo:take a blue object
 		//todo:take all blue objects
-		private isPhysicallyPossible(goal : string, origs : string[], dests : string[]) : boolean {
+		private isPhysicallyPossible(goal : string, quantOrig : string, quantDest : string, origs : string[], dests : string[]) : boolean {
+			//a quick check for the "take" command
+			if (goal == "holding" && quantOrig == "all" && origs.length > 1) {
+				throw new Interpreter.Error("Only one object can be held by the arm at the same time.");
+			} else if (goal == "holding"){
+				return true;
+			}
+
 			var error : string = "";
 			var sizeO : string, formO : string, sizeD : string, formD : string = "";
 			var nO : number = origs.length;
@@ -342,6 +346,7 @@ module Interpreter {
 
 			for (var i = 0; i < nO; i++) {
 				for (var j = 0; j < nD; j++) {
+
 					var rel : string = goal;
 					var sizeO : string = this.state.objects[origs[i]].size;
 					var formO : string = this.state.objects[origs[i]].form;
@@ -379,12 +384,19 @@ module Interpreter {
 							continue;
 						}
 
-						//if (nO > 1 && nD == 1) {
-						//	origChecker[i] = origChecker[i] - 1;
-						//	destChecker[j] = destChecker[j] - 1;
-						//	error = "Only one thing can be inside another thing.";
-						//	continue;
-						//}
+						if (nO > 1 && nD == 1) {
+							origChecker[i] = origChecker[i] - 1;
+							destChecker[j] = destChecker[j] - 1;
+							error = "Only one thing can be inside another thing.";
+							continue;
+						}
+
+						if (quantOrig == "all" && nO > 1) {
+							origChecker[i] = origChecker[i] - 1;
+							destChecker[j] = destChecker[j] - 1;
+							error = "Only one thing can be inside another thing.";
+							continue;
+						}
 					}
 
 					if (rel == "ontop" || rel == "above") {
@@ -431,6 +443,13 @@ module Interpreter {
 						}
 
 						if (nO > 1 && nD == 1 && rel == "ontop" && formD != "floor") {
+							origChecker[i] = origChecker[i] - 1;
+							destChecker[j] = destChecker[j] - 1;
+							error = "Only one thing can be ontop of another thing.";
+							continue;
+						}
+
+						if (quantOrig == "all" && rel == "ontop" && nO > 1 && formD != "floor") {
 							origChecker[i] = origChecker[i] - 1;
 							destChecker[j] = destChecker[j] - 1;
 							error = "Only one thing can be ontop of another thing.";
@@ -522,28 +541,28 @@ module Interpreter {
 			var cmdS : string = this.cmd.cmd;
 
 			//for a take/grasp/pick up command
-			if (cmdS == "take" || cmdS == "grasp" || cmdS == "pick up") {
+			if (cmdS == "take") {
 				//check origin
 				var ent = this.cmd.ent;
 				var origs : string[] = this.checkExistence(ent);
-				if (origs.length) {
+				if (origs.length && this.isPhysicallyPossible("holding", ent.quant, "", origs, [])) {
 					return this.buildLiteral("holding", ent.quant, "", origs, []);
 				}
 			}
 
 			//for a move/put/drop command when we are holding something and the "it" specifier is used (e.g. "drop it on the floor")
-			if ((cmdS == "move" || cmdS == "put" || cmdS == "drop") && this.state.holding != null && typeof this.cmd.ent === "undefined") {
+			if (cmdS == "move" && this.state.holding != null && typeof this.cmd.ent === "undefined") {
 				//check destination
 				var ent = this.cmd.loc.ent;
 				var origs : string[] = [this.state.holding];
 				var dests : string[] = this.checkExistence(ent);
-				if (dests.length && this.isPhysicallyPossible(this.cmd.loc.rel, origs, dests)) {
+				if (dests.length && this.isPhysicallyPossible(this.cmd.loc.rel, entO.quant, entD.quant, origs, dests)) {
 					return this.buildLiteral(this.cmd.loc.rel, "the", ent.quant, origs, dests); 
 				}
 			}
 
 			//for a move/put/drop command from an origin pattern to a destination pattern
-			if (cmdS == "move" || cmdS == "put" || cmdS == "drop") {
+			if (cmdS == "move") {
 				//check origin
 				var entO = this.cmd.ent;
 				var origs : string[] = this.checkExistence(entO);
@@ -552,7 +571,7 @@ module Interpreter {
 				var entD = this.cmd.loc.ent;
 				var dests : string[] = this.checkExistence(entD);
 
-				if (origs.length && dests.length && this.isPhysicallyPossible(this.cmd.loc.rel, origs, dests)) {
+				if (origs.length && dests.length && this.isPhysicallyPossible(this.cmd.loc.rel, entO.quant, entD.quant, origs, dests)) {
 					return this.buildLiteral(this.cmd.loc.rel, entO.quant, entD.quant, origs, dests); 
 				}
 			}
