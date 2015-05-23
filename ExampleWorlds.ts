@@ -26,9 +26,9 @@ function stacksToPDDL(stacks:string[][], objects : { [s:string]: ObjectDefinitio
 			}else{
 				var relation : string;
 				if(objects[stacks[i][j-1]].form == "box"){
-					relation = "ontop";
-				}else{
 					relation = "inside";
+				}else{
+					relation = "ontop";
 				}
 				pddl.add({pol: true,rel:relation, args:[stacks[i][j],stacks[i][j-1]]})
 			}

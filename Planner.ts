@@ -999,7 +999,9 @@ module Planner {
 
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
-            plan.plan = planInterpretation(plan.intp, currentState);
+            var resultplan = planInterpretation(plan.intp, currentState);
+            plan.plan = resultplan.plan;
+            plan.currentstate = resultplan.currentstate;
             plans.push(plan);
         });
         if (plans.length) {
@@ -1010,7 +1012,8 @@ module Planner {
     }
 
 
-    export interface Result extends Interpreter.Result {plan:string[];}
+    export interface Result extends Interpreter.Result {plan:string[]; currentstate:WorldState;}
+    export interface Plan {plan:string[]; currentstate:WorldState;}
 
 
     export function planToString(res : Result) : string {
@@ -1028,7 +1031,7 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
+    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : Plan {
         
         console.log("armpos: "+state.arm + " , holding: " + state.holding);
         var shortest = null;//keeps track of shortest path encountered
@@ -1066,11 +1069,14 @@ module Planner {
         this._nodeValues = tempNodevalues;
 
         //sen execute:A den bästa planen (om det blev någon plan)
-        var plan : string[] = [];
+        var plan : Plan = {plan : [], currentstate : state};
         if(!results.isEmpty()){
         	var path : number[]= results.dequeue();
+        	//update current state
+        	state = sp._nodeValues[path[path.length-1]];
+        	plan.currentstate = sp._nodeValues[path[path.length-1]];
         	for(var i = path.length-1; i >= 0 ; i--){ // travers backwards
-        		plan.push(sp._nodeValues[ path[i] ].planAction);
+        		plan.plan.push(sp._nodeValues[ path[i] ].planAction);
         	}
         }
         
