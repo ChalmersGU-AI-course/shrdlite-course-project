@@ -64,16 +64,16 @@ module Planner {
 
                         //TODO: ta bort från stack
                     }
-                        
             }
             else {
                 //put down object
                 for (var i = 0; i < this.state.stacks.length; ++i) {
-                        //TODO: Interpreter.ts rad 350 isch
-                    path.push({node: new ShrdliteNode(this.state), edge: i});
+										if (this.isPhysicallyPossible(i)) {
+												path.push({node: new ShrdliteNode(this.state), edge: i});
+										} 
                 }
             }
-            return []; //test
+            return path; 
         }
 
 			/**
