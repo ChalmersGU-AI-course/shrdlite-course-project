@@ -209,6 +209,8 @@ module Planner {
         // This function returns a dummy plan involving a random stack
         var plan: Array<string> = [];
 
+        var isHolding: boolean = (state.holding != null);
+
         while (picks.length > 0) {
             var pickstack = picks.pop();
 
@@ -225,11 +227,15 @@ module Planner {
                 }
             }
 
-            //Pick.. jaja.. hur fan ska vi veta om di pickar eller droppar. Kanske lika bra att göra edgena i string och köra med arm states? enklast att lösa med en bool antar jag så länge. DÅ slipper vi ett enormt stort statespace men frågan är om det är onödig optimering?
-            var obj = state.stacks[pickstack][state.stacks[pickstack].length - 1];
-            plan.push("Picking up the " + state.objects[obj].form, "p");
-
-            //plan.push("Dropping the " + state.objects[obj].form, "d");
+            if (!isHolding) {
+                //Pick.. jaja.. hur fan ska vi veta om di pickar eller droppar. Kanske lika bra att göra edgena i string och köra med arm states? enklast att lösa med en bool antar jag så länge. DÅ slipper vi ett enormt stort statespace men frågan är om det är onödig optimering?
+                var obj = state.stacks[pickstack][state.stacks[pickstack].length - 1];
+                plan.push("Picking up the " + state.objects[obj].form, "p");
+                isHolding = true;
+            } else {
+                plan.push("Dropping the " + state.objects[obj].form, "d");
+                isHolding = false;
+            }
 
         }
 
