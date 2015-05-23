@@ -19,7 +19,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         
     }
 
-    clone(object:any): any {
+   /* clone(object:any): any {
 	    var objectCopy = <any>{};
 	
 	    for (var key in object)
@@ -31,7 +31,50 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 	    }
 	
 	    return objectCopy;
+	}*/
+	cloneWorld(world :WorldState):WorldState{
+		var newworld : WorldState = {
+			"stacks": [[""]],
+    		"pddl": this.cloneSet(world.pddl),
+    		"holding": world.holding,
+    		"arm": this.clone<number>(world.arm),
+    		"planAction": world.planAction,
+    		"objects": world.objects,
+			"examples": world.examples};
+		return newworld;
 	}
+	
+	cloneSet(pddls : collections.Set<Interpreter.Literal>):collections.Set<Interpreter.Literal>{
+		var arypddls = pddls.toArray();
+		var newpddls = new collections.Set<Interpreter.Literal>(function (p){		// ToString
+						var res:string;
+						res = p.rel + "(";
+						for(var i = 0; i < p.args.length; i++){
+							res = res + p.args[i] + ", "
+						}
+						//res = res.substring(0, res.length-2);
+						res = res + ")";
+				    	return res;
+				    });
+		for(var i = 0; i < arypddls.length; i++){
+			newpddls.add(this.clone<Interpreter.Literal>(arypddls[i]));
+		}
+		return newpddls;
+	}
+	
+	clone<T>(obj: T): T {
+        if (obj != null && typeof obj == "object") {
+            var result : T = obj.constructor();
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    result[key] = this.clone<T>(obj[key]);
+                }
+            }
+            return result;
+        } else {
+            return obj;
+        }
+    }
 	getneighbors(node :number):Array<number>{
 		// get current state
 		var currentstate : WorldState = this._nodeValues[node];
@@ -40,7 +83,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		
 		// move arm left
 		if(currentstate.arm > 0){
-			var possiblestate : WorldState = this.clone(currentstate);
+			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// reduce arm poss
 			possiblestate.arm -= 1;
 			possiblestate.planAction = "l";
@@ -48,7 +91,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		}
 		// move arm right
 		if(currentstate.arm < this.getWorldWidth(currentstate)){
-			var possiblestate : WorldState = this.clone(currentstate);
+			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// increase arm poss
 			possiblestate.arm += 1;
 			possiblestate.planAction = "r";
@@ -58,7 +101,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		var topLit = this.getTopLiteral(currentstate, currentstate.arm);
 		if(!currentstate.holding && topLit){	
 			// if it is not holding anything and ther is something on the floor
-			var possiblestate : WorldState = this.clone(currentstate);
+			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			var topobj = this.getTopObj(currentstate, currentstate.pddl.toArray());
 			// set the top obj as holding
 			possiblestate.holding = topobj;
@@ -67,7 +110,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			possiblestate.planAction = "p";
 			neig.push(possiblestate);
 		}else{ // drop
-			var possiblestate : WorldState = this.clone(currentstate);
+			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			var topobj = this.getTopObj(currentstate, currentstate.pddl.toArray());
 			var newliteral = {pol: true, rel : "ontop", args : [possiblestate.holding, topobj]};
 			if(Interpreter.checkIllegal(newliteral, currentstate)){ // check if the drop is leagal
@@ -120,14 +163,18 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     	return true;
     }
     
+    // gets the top literal in a column, null if no object is in the column
     getTopLiteral(state : WorldState, armposs : number): Interpreter.Literal{
     	var pddls = state.pddl.toArray();
+    	var result : Interpreter.Literal;
     	// Finde floor possition and the one ontop
     	for(var i = 0; i < pddls.length; i++){
-    		if(pddls[i].args[0]=="f"+armposs && pddls[i].rel == "leftof"){
-    			return this.findTopLiteral(pddls[i], pddls);
+    		if(pddls[i].args[1]=="f"+armposs && pddls[i].rel == "ontop"){
+    			result = this.findTopLiteral(pddls[i], pddls);
+    			break;
     		}
     	}
+    	return result;
     }
     
     // recursive function to follow a literal to find the one on the top
@@ -303,8 +350,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     
 
     //counts objects on top of given object
-    countOnTop(a:string, state:WorldState, pddls:Interpreter.Literal[]):number{
-        var counter = 0;
+    countOnTop(obj :string, state:WorldState, pddls:Interpreter.Literal[]):number{
+      /*  var counter = 0;
         var z = a;
         console.log("at countontop");
          for(var index = 0; index < pddls.length; index++){
@@ -317,10 +364,16 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }
         }
         console.log("returning from countontop");
-        return counter;
+        return counter;*/
+        var lit = this.findObjLiteral(obj, state);
+        // if obj is ontop then this is the top obj and no one is above
+        if(lit.args[0] = obj){
+        	return 0;
+        }
+        return this.countOnTopHelper(0, lit, pddls);
     }
     
-    findOnTop(counter : number, lit : Interpreter.Literal, lits : Interpreter.Literal[] ):number{
+    countOnTopHelper(counter : number, lit : Interpreter.Literal, lits : Interpreter.Literal[] ):number{
 		var result : Interpreter.Literal;
 		for(var j = 0; j < lits.length; j++){
 			if(lits[j].args[1] == lit.args[0] && lits[j].rel == "ontop"){
@@ -329,10 +382,10 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 				break;
 			}
 		}
-		if(result){
-			return counter;
+		if(!result){
+			return counter ; // for the last one
 		}else{
-			return this.findOnTop(counter, result, lits);
+			return this.countOnTopHelper(counter, result, lits);
 		}	
     }
 
@@ -395,6 +448,24 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		return position;//should never happen
     }
     
+    findObjLiteral(obj : string, state : WorldState): Interpreter.Literal{
+    	var pddls = state.pddl.toArray();
+    	for(var i = 0; i < pddls.length; i++){
+    		// first try to find the litterl where obj is arg 1
+    		if(pddls[i].args[1] == obj){
+    			return pddls[i];
+    		}
+    	}
+    	for(var i = 0; i < pddls.length; i++){
+    		// second try to find the litterl where obj is arg 0 
+    		//(means that it is on the top or at the edge of the world if floor.)
+    		if(pddls[i].args[0] == obj){
+    			return pddls[i];
+    		}
+    	}
+    	return null;
+    }
+    
     getPosition(obj : string, state : WorldState): number{
     	var pddls = state.pddl.toArray();
     	var counter = 0;
@@ -430,7 +501,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		}
 		if(!result){
 			return false;
-		}else if(result.args[0] = obj){
+		}else if(result.args[0] == obj){
 			return true;
 		}else{
 			return this.containsObj(obj, result, lits);

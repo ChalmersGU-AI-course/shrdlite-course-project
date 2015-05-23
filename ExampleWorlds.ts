@@ -8,10 +8,10 @@ function stacksToPDDL(stacks:string[][]):collections.Set<Interpreter.Literal>{
 					function (p){		// ToString
 						var res:string;
 						res = p.rel + "(";
-						p.args.forEach((arg)=> 
-							res = res + arg + ", "
-						);
-						res = res.substring(0, res.length-2);
+						for(var i = 0; i < p.args.length; i++){
+							res = res + p.args[i] + ", "
+						}
+						//res = res.substring(0, res.length-2);
 						res = res + ")";
 				    	return res;
 				    });
