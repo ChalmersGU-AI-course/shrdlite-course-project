@@ -49,12 +49,22 @@ module Shrdlite {
         });
 
         try {
-            var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
+        	var interpretations : Interpreter.Result[] = [];
+        	if(world.lastAns.length == 0){
+            	interpretations = Interpreter.interpret(parses, world.currentState);
+            }else{
+            	interpretations = [world.lastAns[1]];
+            	world.lastAns = [];
+            }
         } catch(err) {
             if (err instanceof Interpreter.Error) {
                 world.printError("Interpretation error", err.message);
                 return;
-            } else {
+            }else if(err instanceof Interpreter.ClariQuest){
+            	world.lastAns = err.interp;
+            	world.printError(err.message);
+            }
+             else {
                 throw err;
             }
         }

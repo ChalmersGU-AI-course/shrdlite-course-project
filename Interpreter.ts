@@ -16,8 +16,11 @@ module Interpreter {
         if (interpretations.length==1) {
             return interpretations;
         }
-        else if(interpretations.length>1){throw new Interpreter.Error(getClariQuest(interpretations));}
-         else {
+        else if(interpretations.length>1){
+        	var err = new Interpreter.ClariQuest(makeClariQuest(interpretations));
+        	err.interp = interpretations; 
+        	throw err;
+        }else {
             throw new Interpreter.Error("Found no interpretation");
         }
     }
@@ -44,102 +47,66 @@ module Interpreter {
         public toString() {return this.name + ": " + this.message}
     }
     
+     export class ClariQuest implements Error {
+        public name = "ClariQuest.Error";
+        public interp : Result [] = [];
+        constructor(public message : string) {}
+        public toString() {return this.message}
+    }
     
-	function getClariQuest(interps : Result[]) : string {
-		
-    	//for(var i = 0; i < interps.length; i++){
-    	//	for(var j = 0; j < interps.length; j++){
-    			
-    			
-    			//if(i != j){
-    				console.log (cmpObj(interps[0].prs.ent.obj, interps[1].prs.ent.obj));
-    				console.log (cmpObj(interps[0].prs.loc.ent.obj, interps[1].prs.loc.ent.obj));
-    				//console.log(interps[1].intp);
-    			//}
-    			
-
-    			
-    			
-    	//	}
-    	//}
-    	
     
-    	return ;
+	function makeClariQuest(interps : Result[]) : string {
+		var uniqueString = new collections.Set<string>();
+    	for(var i = 0; i < interps.length; i++){
+    		for(var j = 0; j < interps.length; j++){
+    			
+    			
+    			if(i != j){
+    				uniqueString.add(cmpObj(interps[i].prs.ent.obj, interps[j].prs.ent.obj, ""));
+    				uniqueString.add(cmpObj(interps[i].prs.loc.ent.obj, interps[j].prs.loc.ent.obj, ""));
+    				//console.log (cmpObj(interps[i].prs.ent.obj, interps[j].prs.ent.obj, ""));
+    				//console.log (cmpObj(interps[i].prs.loc.ent.obj, interps[j].prs.loc.ent.obj, ""));
+    			}
+    		}
+    	}
+    	uniqueString.remove("");
+    	return uniqueString.toString();
     }
 
-	function cmpObj (fstObj : Parser.Object, sndObj : Parser.Object) : string {
+	function cmpObj (fstObj : Parser.Object, sndObj : Parser.Object, objPath : string) : string {
 		var fst : boolean = false;
-		var objPath :  string = "";
-		var snd : boolean = false;
+		var fstObjLoc : boolean = false;
 		
-		while(true){
+		var snd : boolean = false;
+		var sndObjLoc : boolean = false;
+		
+			if (fstObj.obj){fst = true;}
 			
-			if (fstObj.obj){
-				fst = true;
-				//fstObj = fstObj.obj;
-			}
-			
-			if (sndObj.obj){
-				snd = true;
-				//sndObj = sndObj.obj;
-			}
+			if (sndObj.obj){snd = true;}
 			
 			if(snd != fst){
 				if(fst){
-					objPath = objPath + objectToString(fstObj.obj) + " ";
-					objPath = objPath + fstObj.loc.rel;
-					objPath = objPath + objectToString(fstObj.loc.ent.obj);
-					
+					objPath += getRestOfPath(fstObj,objPath);					
 				}else{
-					objPath = objPath + objectToString(sndObj.obj)+ " ";
-					objPath = objPath + sndObj.loc.rel;
-					objPath = objPath + objectToString(sndObj.loc.ent.obj);
+					objPath += getRestOfPath(sndObj,objPath);
 				}
-				break;
-				
-			}else if(snd == true && fst == true  ){
-				var fstLoc : boolean = false;
-				var sndLoc : boolean = false;
-				
-				if(fstObj.loc.ent.obj){
-					fstLoc = true;
-				}
-				
-				if(sndObj.loc.ent.obj){
-					sndLoc = true;
-				}
-				
-				if(fstLoc == true && sndLoc == true){
-					fstObj = fstObj.loc.ent.obj;
-					sndObj = sndObj.loc.ent.obj;
-					objPath = objPath + sndObj.loc.rel;
-				}
-				
-				
-//				if(fstLoc != sndLoc ){
-//					if(fstLoc){
-//						objPath = objPath + objectToString(fstObj.loc.ent.obj) + " ";
-//						objPath = objPath + fstObj.loc.rel;
-//						objPath = objPath + objectToString(fstObj.loc.ent.obj);
-//						
-//					}else{
-//						objPath = objPath + objectToString(sndObj.loc.ent.obj)+ " ";
-//						objPath = objPath + sndObj.loc.rel;
-//						objPath = objPath + objectToString(sndObj.loc.ent.obj);
-//					}
-			//	}else{
-			//		break;
-				//}
-
-				
-			}else{
-				break;
-				//objPath = objPath + objectToString(fstObj);
-			}
-			snd = false;
-			fst = false;
-		}
+			}else if (fst){
+					objPath+= cmpObj(fstObj.obj, sndObj.obj, objPath);
+			}	
 		return objPath;
+	}
+	
+	function getRestOfPath (obj : Parser.Object, path : string){
+		if(obj.obj || obj.loc){
+			
+			if(obj.obj){path += getRestOfPath(obj.obj, path);}
+			if (obj.loc){		
+				path += " " + obj.loc.rel + " " + obj.loc.ent.quant;
+				path+= getRestOfPath(obj.loc.ent.obj, "");
+			}
+		}else{path += objectToString(obj);}
+
+		return path; 
 	}
 	
 	function objectToString (obj : Parser.Object) : string{
@@ -151,48 +118,6 @@ module Interpreter {
 		
 		return str;
 	}
-	
-//		function cmpObj (fstObj : Parser.Object, sndObj : Parser.Object) : string {
-//		var fst : boolean = false;
-//		var objPath :  string = "";
-//		var snd : boolean = false;
-//		
-//		//while(true){
-//			
-//			if (fstObj.obj){
-//				fst = true;
-//				//fstObj = fstObj.obj;
-//			}
-//			
-//			if (sndObj.obj){
-//				snd = true;
-//				//sndObj = sndObj.obj;
-//			}
-//			
-//			if(snd != fst){
-//				if(fst){
-//					objPath = objPath + objectToString(fstObj.obj) + " ";
-//					objPath = objPath + fstObj.loc.rel;
-//					objPath = objPath + objectToString(fstObj.loc.ent.obj);
-//					
-//				}else{
-//					objPath = objPath + objectToString(sndObj.obj)+ " ";
-//					objPath = objPath + sndObj.loc.rel;
-//					objPath = objPath + objectToString(sndObj.loc.ent.obj);
-//				}
-//				//break;
-//				
-//			}//else if(snd == false && fst == false){
-//				//break;
-//			//}
-//				else{
-//				objPath = objPath + objectToString(fstObj);
-//			}
-//			snd = false;
-//			fst = false;
-//		//}
-//		return objPath;
-//	}
 
     //////////////////////////////////////////////////////////////////////
     // private functions

@@ -4,6 +4,8 @@
 
 class SVGWorld implements World {
 
+	public lastAns : Interpreter.Result[] = [];
+
     constructor(
         public currentState: WorldState,
         public useSpeech = false
