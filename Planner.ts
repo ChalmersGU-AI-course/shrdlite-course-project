@@ -111,7 +111,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			neig.push(possiblestate);
 		}else{ // drop
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
-			var topobj = this.getTopObj(currentstate, currentstate.pddl.toArray());
+			// get top obj
+			var topl = this.getTopLiteral(currentstate, currentstate.arm);
+			var topobj = topl.args[0];
 			var newliteral = {pol: true, rel : "ontop", args : [possiblestate.holding, topobj]};
 			if(Interpreter.checkIllegal(newliteral, currentstate)){ // check if the drop is leagal
 				// remove holding obj
@@ -367,7 +369,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         return counter;*/
         var lit = this.findObjLiteral(obj, state);
         // if obj is ontop then this is the top obj and no one is above
-        if(lit.args[0] = obj){
+        if(lit.args[0] == obj){
         	return 0;
         }
         return this.countOnTopHelper(0, lit, pddls);
