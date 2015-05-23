@@ -43,7 +43,7 @@ class Maze {
         return nodes;
     }
 
-    public generateGraph(width: number, height: number, seed: number, balance: number): Graph<PointNode, GraphFilter> {
+    public generateGraph(width: number, height: number, seed: number, balance: number): Graph<PointNode, [number, number]> {
         this.width = width;
         this.height = height;
 
@@ -79,7 +79,7 @@ class Maze {
         this.edges_ = this.primLike(edges, 0);
         this.nodes_ = this.genNodes();
 
-        return new Graph(this.nodes_, this.edges_);
+        return new Graph<PointNode, [number, number]>(this.nodes_, this.edges_);
     }
 
     public xy2node(x: number, y: number): number {

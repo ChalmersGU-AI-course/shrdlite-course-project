@@ -21,7 +21,7 @@ function init(): void {
         $('#to').append('<option>' + Europe.Nodes[n].name + '</option>');
     }
 
-    var G = new Graph(Europe.Nodes, Europe.Edges);
+    var G = new Graph<PointNode, [number, number]>(Europe.Nodes, Europe.Edges);
 
     $('#route').click(function () {
 
@@ -78,7 +78,7 @@ function init(): void {
 
     var maze = new Maze();
 
-    var mazeGraph: Graph<PointNode, GraphFilter> = maze.generateGraph(32, 32, 1024, 0.5); //default values in html code
+    var mazeGraph: Graph<PointNode, [number, number]> = maze.generateGraph(32, 32, 1024, 0.5); //default values in html code
     var mazeCtx: CanvasRenderingContext2D = mazeCanvas.getContext('2d');
     mazeCtx.translate(0.5, 0.5);
     mazeCtx.msImageSmoothingEnabled = false;

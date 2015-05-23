@@ -21,7 +21,7 @@ module Planner {
         }
     }
 
-    class ShrdliteNode implements GraphNode {
+    class ShrdliteNode implements GraphNode<number> {
         public name: string;
         private objects: { [s: string]: ObjectDefinition; };
 
@@ -34,12 +34,22 @@ module Planner {
             return 1;
         }
 
-        neighbours(): ShrdliteNode[]{
+        neighbours(): { node: ShrdliteNode; edge: number }[] {
+            var n: number[] = [];
+
+            //take up object
             if (this.state.holding == undefined) {
-                //take up object
+                
+                for (var i = 0; i < this.state.stacks.length; ++i)
+                    if (this.state.stacks[i].length > 0)
+                        n.push(i);
             }
             else {
                 //put down object
+                for (var i = 0; i < this.state.stacks.length; ++i) {
+                        //TODO: Interpreter.ts rad 350 isch
+                    //n.push(i)
+                }
             }
             return undefined;
         }
@@ -102,8 +112,8 @@ module Planner {
 
         //var targetNode: ShrdliteNode = new ShrdliteNode(intprt);
 
-        var g: Graph<ShrdliteNode, ShrdliteNodeFilter> = new Graph<ShrdliteNode, ShrdliteNodeFilter>([currentNode], null);
-        g.fintPathToFilter(currentNode, targetFilter);
+        var g: Graph<ShrdliteNode, number> = new Graph<ShrdliteNode, number>([currentNode], null);
+        g.fintPathToFilter<ShrdliteNodeFilter>(currentNode, targetFilter);
 
 
         // This function returns a dummy plan involving a random stack

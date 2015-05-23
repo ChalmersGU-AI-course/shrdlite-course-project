@@ -3,10 +3,10 @@
 /**
  * @interface represent a node in the graph
  */
-interface GraphNode {
+interface GraphNode<E> {
     name: string;
-    costTo(to: GraphNode): number;
-    neighbours(): GraphNode[];
+    costTo(to: GraphNode<E>): number;
+    neighbours(): { node: GraphNode<E>; edge: E}[];
 }
 
 interface GraphFilter {
@@ -16,7 +16,7 @@ interface GraphFilter {
 /**
  * @class represent a Node which have euclidean coordinates
  */
-class PointNode implements GraphNode {
+class PointNode implements GraphNode<[number, number]> {
     public constructor(public name: string, public x: number, public y: number) {
     }
 
@@ -24,7 +24,7 @@ class PointNode implements GraphNode {
         return Math.sqrt((this.x - to.x) * (this.x - to.x) + (this.y - to.y) * (this.y - to.y));
     }
 
-    neighbours(): PointNode[]{
+    neighbours(): { node: PointNode; edge: [number, number] }[] {
         return undefined;
     }
 }
@@ -32,18 +32,82 @@ class PointNode implements GraphNode {
 /**
  * @class represent a G(v,E)
  */
-class Graph<T extends GraphNode, F extends GraphFilter> {
+class Graph<T, E> {
     /*
     * Creates an instance of Graph
     * @constructor
     */
-    public constructor(private nodes: T[], private edges: [number, number][][]  /*A list of tuples for every node */ ) {
+    public constructor(private nodes: GraphNode<E>[], private edges: E[][]  /*A list of edges for every node */) {
     }
 
-    public fintPathToFilter(start: T, F: GraphFilter): GraphNode[]{
-        var openset = new collections.Set<T>();
+    public fintPathToFilter<F extends GraphFilter>(start: GraphNode<E>, filter: F): E[]{
+        var openset = new collections.Set<GraphNode<E>>();
+
+        var cameFrom = new collections.Dictionary<GraphNode<E>, { node: GraphNode<E>; edge: E }>();
+
+        var fScore = new collections.PriorityQueue<{ node: GraphNode<E>; cost: number }>(function (a, b): number {
+            return a.cost < b.cost ? 1 : -1;
+        });
+        var closedSet = new collections.Set<GraphNode<E>>();
+        var gScore = new collections.Dictionary<GraphNode<E>, number>();
+
+
         openset.add(start);
-        
+        gScore.setValue(start, 0);
+        fScore.enqueue({ node: start, cost: gScore.getValue(start) + filter.costTo(start) });
+
+        while (!openset.isEmpty()) {
+            var current = fScore.dequeue().node;
+
+            if (filter.costTo(current) == 0) {
+                var path: Array<E> = [];
+                var nodeIterator = current;
+                while (nodeIterator != start) {
+                    path.push(cameFrom.getValue(nodeIterator).edge);
+                    nodeIterator = cameFrom.getValue(nodeIterator).node;
+                }
+
+                //Reverse
+                var pathI: Array<E> = [];
+                for (var i = 0; i < path.length; ++i) {
+                    pathI[i] = path[path.length - 1 - i];
+                }
+
+                return pathI;
+            }
+
+            //find current in openset and remove that element and add to closed
+            closedSet.add(current);
+            openset.remove(current);
+            var currentNeighbours = current.neighbours();
+
+            for (var i = 0; i < currentNeighbours.length; ++i) {
+
+                if (closedSet.contains(currentNeighbours[i].node))
+                    continue;
+
+
+                var edge_between_cost = current.costTo(currentNeighbours[i].node);
+
+                var tentativeGScore = gScore.getValue(current) + edge_between_cost;
+
+
+
+                if (!openset.contains(currentNeighbours[i].node) || (gScore.containsKey(currentNeighbours[i].node) && tentativeGScore < gScore.getValue(currentNeighbours[i].node))) { //TODO: contains() may be overhead
+                    cameFrom.setValue(currentNeighbours[i].node, currentNeighbours[i]);
+                    gScore.setValue(currentNeighbours[i].node, tentativeGScore);
+
+                    fScore.enqueue({ node: currentNeighbours[i].node, cost: tentativeGScore + filter.costTo(currentNeighbours[i].node) });
+
+                    if (!openset.contains(currentNeighbours[i].node))
+                        openset.add(currentNeighbours[i].node);
+                }
+            }
+        }
+
+
+
+
         return undefined;
     }
 
@@ -59,7 +123,7 @@ class Graph<T extends GraphNode, F extends GraphFilter> {
         if (start > this.nodes.length || start < 0 || goal > this.nodes.length || goal < 0)
             throw new RangeError("Node does not exist");
 
-        var cameFrom: number[] = []; //matris typ
+        var cameFrom: Array<number> = []; //matris typ
 
         var openset = new collections.Set<number>();
 
@@ -141,7 +205,7 @@ class Graph<T extends GraphNode, F extends GraphFilter> {
     * @param {number} node The node you want the neighbours of
     * @return {[number, number][]} A list of edges
     */
-    private edgesFor(node: number): [number, number][] {
+    private edgesFor(node: number): E[] {
         if (node < 0 || node >= this.nodes.length)
             throw new RangeError("Node does not exist");
 
@@ -155,11 +219,11 @@ class Graph<T extends GraphNode, F extends GraphFilter> {
         return this.nodes.length;
     }
 
-    public get Nodes(): T[]{
+    public get Nodes(): GraphNode<E>[]{
         return this.nodes;
     }
 
-    public get Edges(): [number, number][][]  /*A list of tuples for every node */ {
+    public get Edges(): E[][]  /*A list of edges for every node */ {
         return this.edges;
     }
 }
