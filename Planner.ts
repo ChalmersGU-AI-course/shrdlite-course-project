@@ -9,11 +9,25 @@ module Planner {
         public constructor(protected intptr: Interpreter.Literal) {
 
         }
-        public costTo(node: ShrdliteNode) {
+        public costTo(node: ShrdliteNode): number {
             switch (this.intptr.rel) {
                 case 'holding':
                     if (node.state.holding == this.intptr.args[0])
                         return 0;
+                    break;
+                case 'ontop':
+                case 'inside':
+                    break;
+                case 'above':
+                    break;
+                case 'beside':
+                    break;
+                case 'leftof':
+                    break;
+                case 'rightof':
+                    break;
+                case 'under':
+                    break;
                 default:
                     break;
             }
@@ -35,20 +49,28 @@ module Planner {
         }
 
         neighbours(): { node: ShrdliteNode; edge: number }[] {
-            var n: number[] = [];
+            var path: Array<{ node: ShrdliteNode; edge: number }> = [];
 
             //take up object
             if (this.state.holding == null) {
                 
                 for (var i = 0; i < this.state.stacks.length; ++i)
                     if (this.state.stacks[i].length > 0)
-                        n.push(i);
+                    {
+                        var newNode = new ShrdliteNode(this.state);
+                        //newNode.state.holding = i;
+
+                        path.push({node: newNode, edge: i});
+
+                        //TODO: ta bort från stack
+                    }
+                        
             }
             else {
                 //put down object
                 for (var i = 0; i < this.state.stacks.length; ++i) {
-                        //TODO: Interpreter.ts rad 350 isch, insert the physics stuff
-                    //n.push(i)
+                        //TODO: Interpreter.ts rad 350 isch
+                    path.push({node: new ShrdliteNode(this.state), edge: i});
                 }
             }
             return []; //test

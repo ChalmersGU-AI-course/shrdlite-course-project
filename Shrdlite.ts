@@ -67,9 +67,9 @@ module Shrdlite {
 					if (interpretations.length > 1) {
 						world.printSystemOutput("The utterance is ambiguous.\nCan you please clarify ...");
 						var s : string[] = [];
-						for (var i = 0; i < interpretations.length; i++) {
-							s.push(interpretations[i].input);
-						}
+						interpretations.forEach((res, n) => {
+							s.push(Interpreter.interpretationToString(res));
+						});
 						world.printPickList(s);
 						break;
 					}
