@@ -242,6 +242,7 @@ module Planner {
                 var obj = currentNode.state.stacks[pickstack][currentNode.state.stacks[pickstack].length - 1];
                 plan.push("Picking up the " + currentNode.state.objects[obj].form, "p");
             } else {
+                var obj = currentNode.state.holding;
                 plan.push("Dropping the " + currentNode.state.objects[obj].form, "d");
             }
         }
