@@ -76,6 +76,7 @@ class SVGWorld implements World {
             dialogue.children().first().remove();
         }
         $('<p>').attr("class", participant)
+						//.attr('style', 'box-shadow: black 0.1em 0.1em 0.1em; border: solid blue; border-radius: 0.05em' )
             .text(output)
             .insertBefore(this.containers.inputform)
 						.click(function() {
