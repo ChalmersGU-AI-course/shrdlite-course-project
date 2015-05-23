@@ -53,7 +53,7 @@ module Shrdlite {
         	if(world.lastAns.length == 0){
             	interpretations = Interpreter.interpret(parses, world.currentState);
             }else{
-            	interpretations = [world.lastAns[1]];
+            	interpretations = [world.lastAns[parseInt(parses[0].input)]];
             	world.lastAns = [];
             }
         } catch(err) {
