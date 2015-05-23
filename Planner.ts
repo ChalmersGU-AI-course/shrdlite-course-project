@@ -813,8 +813,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
         if(cond.rel == "hold"){
             console.log("this is it");
-            if(state.holding != null && this.equalObjects(state.objects[state.holding], state.objects[a]))
+            if(state.holding && state.holding == a){
                 return true;
+            }
             return false;
         }
         var b = cond.args[1];
@@ -1033,15 +1034,24 @@ module Planner {
         sp._nodeValues.push(state);//added this.. not sure if this is the place
 
         var result = null;
-        var temp;
+        var temp : number[];
         var tempNodevalues = [];
+        
+        var results = new collections.PriorityQueue<number[]>(
+        					function (a : number[], b : number[]){
+        						return b.length - a.length;
+        					});
         for(var i = 0; i < intprt.length; i++){
             this._nodeValues = [];
             this._neighborValues = [];
             this._nodeValues.push(state);
 
             temp = as.star(0, intprt[i]);
-
+            
+            if(temp && temp.length > 0){
+            	results.enqueue(temp);
+            }
+			
             if(result == null ||temp.length < result.length ){
                 result = temp;      
                 tempNodevalues = this._nodeValues;
@@ -1052,8 +1062,15 @@ module Planner {
 
         //sen execute:A den bästa planen (om det blev någon plan)
         var plan : string[] = [];
+        if(!results.isEmpty()){
+        	var path : number[]= results.dequeue();
+        	for(var i = path.length-1; i >= 0 ; i--){ // travers backwards
+        		plan.push(sp._nodeValues[ path[i] ].planAction);
+        	}
+        }
+        
 
-        if(result != null){
+    /*    if(result != null){
             console.log("length of plan: " + tempNodevalues.length)
             for(var i = 0; i<this._nodeValues.length; i++ ){
                 console.log("action planned: "+this._nodeValues[i].planAction);
@@ -1062,7 +1079,7 @@ module Planner {
         }
         else{
             //throw error
-        }
+        }*/
         console.log("armpos2: "+state.arm + " , holding: " + state.holding);
         return plan;
     }
