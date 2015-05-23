@@ -51,7 +51,7 @@ module Planner {
                     //n.push(i)
                 }
             }
-            return [];
+            return []; //test
         }
 
         toString(): string {
