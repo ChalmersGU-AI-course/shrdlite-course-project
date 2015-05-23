@@ -575,12 +575,12 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             for(var index = 0; index < pddls.length; index++){
                 var pddl = pddls[index];
                 var x = pddl.args[1];
-                if(this.equalObjects(state.objects[x], state.objects[z])){
+                if(x == z){
                     if(this.equalObjects(state.objects[pddl.args[0]], ao)){
-                        if(this.equalObjects(state.objects[pddl.args[1]],bo))
+                        if(this.equalObjects(state.objects[pddl.args[1]],bo)){
                             return 0;
+                        }
                         samePile = true;
-
                     }
                     else{
                         z = pddl.args[0];
@@ -982,7 +982,6 @@ module Planner {
 
 
     export interface Result extends Interpreter.Result {plan:string[]; currentstate:WorldState;}
-   // export interface Plan {plan:string[]; currentstate:WorldState;}
 
 
     export function planToString(res : Result) : string {
@@ -1071,9 +1070,7 @@ module Planner {
         var plan : string[] = [];
         if(!results.isEmpty()){
         	var path : number[]= results.dequeue();
-        	//update current state
         	state = sp._nodeValues[path[path.length-1]];
-        	//plan.currentstate = sp._nodeValues[path[path.length-1]];
         	for(var i = path.length-1; i >= 0 ; i--){ // travers backwards
         		plan.push(sp._nodeValues[ path[i] ].planAction);
         	}
