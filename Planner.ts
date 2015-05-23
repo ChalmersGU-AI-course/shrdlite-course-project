@@ -36,9 +36,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		var newworld : WorldState = {
 			"stacks": [[""]],
     		"pddl": this.cloneSet(world.pddl),
-    		"holding": world.holding,
+    		"holding": this.clone<string>(world.holding),
     		"arm": this.clone<number>(world.arm),
-    		"planAction": world.planAction,
+    		"planAction": this.clone<string>(world.planAction),
     		"objects": world.objects,
 			"examples": world.examples};
 		return newworld;
@@ -77,12 +77,13 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     }
 	getneighbors(node :number):Array<number>{
 		// get current state
+		console.log("getneighbors: starting");
 		var currentstate : WorldState = this._nodeValues[node];
 		var neig :WorldState[] = [];
 		// max 3 possible states
-		
 		// move arm left
 		if(currentstate.arm > 0){
+			console.log("getneighbors: left");
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// reduce arm poss
 			possiblestate.arm -= 1;
@@ -91,6 +92,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		}
 		// move arm right
 		if(currentstate.arm < this.getWorldWidth(currentstate)){
+			console.log("getneighbors: right");
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// increase arm poss
 			possiblestate.arm += 1;
@@ -100,6 +102,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		// pick up
 		var topLit = this.getTopLiteral(currentstate, currentstate.arm);
 		if(!currentstate.holding && topLit){	
+			console.log("getneighbors: up");
 			// if it is not holding anything and ther is something on the floor
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			var topobj = this.getTopObj(currentstate, currentstate.pddl.toArray());
@@ -109,11 +112,19 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			possiblestate.pddl.remove(topLit);
 			possiblestate.planAction = "p";
 			neig.push(possiblestate);
-		}else{ // drop
+		}else if(currentstate.holding){ // drop
+			console.log("getneighbors: down");
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// get top obj
+			console.log("getneighbors: down arm" + currentstate.arm);
+			console.log("getneighbors: down pddl" + currentstate.pddl.size());
 			var topl = this.getTopLiteral(currentstate, currentstate.arm);
-			var topobj = topl.args[0];
+			var topobj :string;
+			if(topl){
+				topobj = topl.args[0];
+			}else{
+				topobj = "f" + currentstate.arm;
+			}
 			var newliteral = {pol: true, rel : "ontop", args : [possiblestate.holding, topobj]};
 			if(Interpreter.checkIllegal(newliteral, currentstate)){ // check if the drop is leagal
 				// remove holding obj
@@ -134,7 +145,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			this._nodeValues.push(neig[i]);
 			neigNumbers.push(this._nodeValues.length-1);
 		}
-        
+        console.log("getneighbors: ending")
         
         return neigNumbers;
     }
@@ -142,10 +153,14 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     filterVissited(states : WorldState[]):WorldState[]{
     	var newstates : WorldState[] = [];
     	for(var i = 0; i < states.length; i++){
+    		var equals = false;
     		for(var j = 0; j < this._nodeValues.length; j++){
-    			if(!this.equalsWorldstate(states[i], this._nodeValues[j])){
-    				newstates.push(states[i]);
+    			if(this.equalsWorldstate(states[i], this._nodeValues[j])){
+    				equals = true;
     			}
+    		}
+    		if(!equals){
+    			newstates.push(states[i]);
     		}
     	}
     	return newstates;
