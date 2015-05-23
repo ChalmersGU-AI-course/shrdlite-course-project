@@ -38,7 +38,7 @@ module Planner {
             var n: number[] = [];
 
             //take up object
-            if (this.state.holding == undefined) {
+            if (this.state.holding == null) {
                 
                 for (var i = 0; i < this.state.stacks.length; ++i)
                     if (this.state.stacks[i].length > 0)
@@ -47,12 +47,59 @@ module Planner {
             else {
                 //put down object
                 for (var i = 0; i < this.state.stacks.length; ++i) {
-                        //TODO: Interpreter.ts rad 350 isch
+                        //TODO: Interpreter.ts rad 350 isch, insert the physics stuff
                     //n.push(i)
                 }
             }
             return []; //test
         }
+
+			/**
+			 * Check if the transition is physically possible
+			 *
+			 * @param {number} number of the stack you want to check
+			 * @return {boolean} true if it is possible
+			 */
+			isPhysicallyPossible(n : number) : boolean {
+				//which object is on top?
+				topPos : number = this.state.stacks[n].length - 1;
+				dest = this.state.objects[this.state.stacks[n][topPos]];
+				
+				//which object do we want to put there?
+				orig = this.state.objects[this.state.holding];
+
+				//Balls must be in boxes or on the floor.
+				if (orig.form == "ball" &&  dest.form != "floor") {
+					return false;
+				}
+
+				//Large boxes cannot be supported by large pyramids.
+				if ((orig.size == "large" && orig.form == "box") && (dest.size == "large" && dest.size == "pyramid")) {
+					return false;
+				}
+
+				//Small boxes cannot be supported by small bricks or pyramids.
+				if ((orig.size == "small" && orig.form == "box") && (dest.size == "small" && (dest.form == "pyramid" || dest.form == "brick"))) {
+					return false;
+				}
+
+				//Boxes cannot contain pyramids, planks or boxes of the same size.
+				if ((orig.form == "pyramid" || orig.form == "box" || orig.form == "plank") && (orig.size == dest.size) && (dest.form == "box")) {
+					return false;
+				}
+
+				//Balls cannot support other objects.
+				if (dest.form == "ball") {
+					return false;
+				}
+
+				//Small objects cannot support large objects.
+				if (orig.size == "large" && dest.size == "small") {
+					return false;
+				}
+
+				return true;
+			}
 
         toString(): string {
             var str: string = "";
