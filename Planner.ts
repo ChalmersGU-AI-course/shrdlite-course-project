@@ -85,13 +85,20 @@ module Planner {
 			isPhysicallyPossible(n : number) : boolean {
 				//which object is on top?
 				var topPos : number = this.state.stacks[n].length - 1;
-				var dest = this.state.objects[this.state.stacks[n][topPos]];
 				
-				//which object do we want to put there?
+				//destination object
+				var dest;
+				if (topPos >= 0) { //there is actually an object on this stack
+					dest = this.state.objects[this.state.stacks[n][topPos]];
+				} else { //otherwise use the floor object
+					dest = this.state.objects["floor"];
+				}
+				
+				//origin object from the crane
 				var orig = this.state.objects[this.state.holding];
 
 				//Balls must be in boxes or on the floor.
-				if (orig.form == "ball" &&  dest.form != "floor") {
+				if (orig.form == "ball" && (dest.form != "floor" || dest.form != "box")) {
 					return false;
 				}
 
