@@ -258,7 +258,10 @@ SearchGraph.prototype.rule_satisfied = function(rule, state) {
 
     switch (rule.rel) {
         case "holding":
-            return state.leftHolding == rule.item || state.rightHolding == rule.item;
+            var res = state.arms.some(function(arm) {
+                return arm.holding === rule.item;
+            });
+            return res;
 
         case "floor":
             return j === 0;
