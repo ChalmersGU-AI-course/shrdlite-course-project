@@ -269,12 +269,9 @@ Array.prototype.flatten = function() {
 
 var SearchGraph = function (currentState, pddl) {
     this.objects = currentState.objects;
-    this.startNode = {stacks: currentState.stacks,
-                      leftHolding: currentState.leftHolding,
-                      rightHolding: currentState.rightHolding,
-                      leftArm: currentState.leftArm,
-                      rightArm: currentState.rightArm
-                 };
+    this.startNode = { stacks: currentState.stacks,
+                       arms: currentState.arms
+                     };
     this.pddl = pddl;
 };
 
@@ -303,139 +300,155 @@ SearchGraph.prototype.can_place = function(top, stack) {
     );
 };
 
+function cartesian(lst) {
+    function addTo(curr, args) {
+        var i, copy;
+        var rest = args.slice(1);
+        var last = !rest.length;
+        var result = [];
+
+        for (i = 0; i < args[0].length; i++) {
+            copy = curr.slice();
+            copy.push(args[0][i]);
+            if (last) {
+                result.push(copy);
+            } else {
+                result = result.concat(addTo(copy, rest));
+            }
+        }
+
+        return result;
+    }
+    return addTo([], Array.prototype.slice.call(lst));
+}
+
+function collision(arr) {
+    var look = {};
+    for (var e of arr) {
+        if (typeof e == 'string') {
+            continue;
+        }
+        if (e in look) {
+            return true;
+        }
+        look[e] = true;
+    }
+    return false;
+}
+
+SearchGraph.prototype.internal_neighbours =  function(state) {
+    var combs = [];
+
+    // Things that depend only on the arm itself
+    for (var arm of state.arms) {
+        var actions = ['-'];
+        if (arm.holding === null) {
+            if (state.stacks[arm.pos].length > 0) {
+              actions.push('p');
+            }
+        } else {
+            if (this.can_place(arm.holding, state.stacks[arm.pos])) {
+                actions.push('d');
+            }
+        }
+        if (arm.pos !== 0) {
+            actions.push(-1);
+        }
+        if (arm.pos !== state.stacks.length-1) {
+            actions.push(1);
+        }
+        combs.push(actions);
+    }
+    var candidates = cartesian(combs);
+
+
+    // Invalidating dependent actions
+    var valid = [];
+    outer: for (var cand of candidates) {
+        // Candidate arm posisiton
+        var next_armpos = new Array(cand.length);
+        for (var i = 0; i < cand.length; i++) {
+            if (typeof(cand[i]) == 'number') {
+                next_armpos[i] = cand[i] + state.arms[i].pos;
+            } else {
+                next_armpos[i] = state.arms[i].pos;
+            }
+        }
+
+        // No doing nothing
+        if (cand.every(function(x) { return x == '-';})) {
+            continue;
+        }
+
+        // Never arms on the same spot
+        if (collision(next_armpos)) {
+            continue;
+        }
+
+        // No crossing other arms
+        // permutations :)
+        for (var i=0; i<next_armpos.length; i++) {
+            for (var j=0; j<next_armpos.length; j++) {
+                if (next_armpos[i] > next_armpos[j] && state.arms[i].pos < state.arms[j].pos) {
+                    continue outer;
+                }
+            }
+        }
+
+        valid.push(cand);
+    }
+    return valid;
+};
+
+
+
+function clone(obj) {
+    if(obj === null || typeof(obj) !== 'object')
+        return obj;
+
+    var temp = obj.constructor(); // changed
+
+    for(var key in obj) {
+        if(Object.prototype.hasOwnProperty.call(obj, key)) {
+            temp[key] = clone(obj[key]);
+        }
+    }
+    return temp;
+}
 
 
 // Move left or right, or put up or down
 SearchGraph.prototype.neighbours = function* (state) {
-    // Both left
-    if(state.leftArm !== 0) {
-        yield {
-            leftArm: state.leftArm-1, leftHolding: state.leftHolding,
-            rightArm: state.rightArm-1, rightHolding: state.rightHolding,
-            stacks: state.stacks
-        };
-    }
+    var internal = this.internal_neighbours(state);
 
-    // Both right
-    if(state.rightArm !== state.stacks.length-1) {
-        yield {
-            leftArm: state.leftArm+1, leftHolding: state.leftHolding,
-            rightArm: state.rightArm+1, rightHolding: state.rightHolding,
-            stacks: state.stacks
-        };
-    }
 
-    // Left arm left, right arm right
-    if(state.leftArm !== 0 && state.rightArm !== state.stacks.length-1) {
-        yield {
-            leftArm: state.leftArm-1, leftHolding: state.leftHolding,
-            rightArm: state.rightArm+1, rightHolding: state.rightHolding,
-            stacks: state.stacks
-        };
-    }
-
-    // Let arm right, right arm left
-    if(state.leftArm < state.rightArm-2) {
-        yield {
-            leftArm: state.leftArm+1, leftHolding: state.leftHolding,
-            rightArm: state.rightArm-1, rightHolding: state.rightHolding,
-            stacks: state.stacks
-        };
-    }
-
-    // Lower left arm
-    if(state.leftHolding !== null) {
-        if(this.can_place(state.leftHolding, state.stacks[state.leftArm])) {
-            var new_stacks = state.stacks.slice();
-            new_stacks[state.leftArm] = new_stacks[state.leftArm].slice();
-            new_stacks[state.leftArm].push(state.leftHolding);
-
-            // Right arm left
-            if(state.rightArm !== state.leftArm+1) {
-                yield {
-                    leftArm: state.leftArm, leftHolding: null,
-                    rightArm: state.rightArm-1, rightHolding: state.rightHolding,
-                    stacks: new_stacks
-                };
-            }
-            // Right arm right
-            if(state.rightArm !== state.stacks.length-1) {
-                yield {
-                    leftArm: state.leftArm, leftHolding: null,
-                    rightArm: state.rightArm+1, rightHolding: state.rightHolding,
-                    stacks: new_stacks
-                };
-            }
-            // Right arm lower
-            if(state.rightHolding !== null) {
-                if(this.can_place(state.rightHolding, new_stacks[state.rightArm])) {
-                    new_stacks[state.rightArm] = new_stacks[state.rightArm].slice();
-                    new_stacks[state.rightArm].push(state.rightHolding);
-
-                    yield {
-                        leftArm: state.leftArm, leftHolding: null,
-                        rightArm: state.rightArm, rightHolding: null,
-                        stacks: new_stacks
-                    };
-                }
-            }
-            // Pick up with right arm
-            else if(new_stacks[state.rightArm].length > 0) {
-                new_stacks[state.rightArm] = new_stacks[state.rightArm].slice();
-                yield {
-                    leftArm: state.leftArm, leftHolding: null,
-                    rightArm: state.rightArm, rightHolding: new_stacks[state.rightArm].pop(),
-                    stacks: new_stacks
-                };
+    for (var outer of internal) {
+        var new_state = clone(state);
+        //injecting backlink
+        new_state.backlink = [];
+        for (var i=0; i < outer.length; i++) {
+            switch (outer[i]) {
+                case -1: new_state.arms[i].pos -= 1;
+                    new_state.backlink[i] = 'l';
+                    break;
+                case +1: new_state.arms[i].pos += 1;
+                    new_state.backlink[i] = 'r';
+                    break;
+                case 'p':
+                    new_state.arms[i].holding = new_state.stacks[new_state.arms[i].pos].pop();
+                    new_state.backlink[i] = 'p';
+                    break;
+                case 'd':
+                    new_state.stacks[new_state.arms[i].pos].push(new_state.arms[i].holding);
+                    new_state.arms[i].holding = null;
+                    new_state.backlink[i] = 'd';
+                    break;
+                default:
+                    new_state.backlink[i] = '-';
+                    break; // This captures the '-'
             }
         }
-    }
-    // Pick up with left arm
-    else if(state.stacks[state.leftArm].length > 0) {
-        var new_stacks = state.stacks.slice();
-        new_stacks[state.leftArm] = new_stacks[state.leftArm].slice();
-
-        var item = new_stacks[state.leftArm].pop();
-
-        // Right arm left
-        if(state.rightArm !== state.leftArm+1) {
-            yield {
-                leftArm: state.leftArm, leftHolding: item,
-                rightArm: state.rightArm-1, rightHolding: state.rightHolding,
-                stacks: new_stacks
-            };
-        }
-        // Right arm right
-        if(state.rightArm !== state.stacks.length-1) {
-            yield {
-                leftArm: state.leftArm, leftHolding: item,
-                rightArm: state.rightArm+1, rightHolding: state.rightHolding,
-                stacks: new_stacks
-            };
-        }
-        // Right arm lower
-        if(state.rightHolding !== null) {
-            if(this.can_place(state.rightHolding, new_stacks[state.rightArm])) {
-                new_stacks[state.rightArm] = new_stacks[state.rightArm].slice();
-                new_stacks[state.rightArm].push(state.rightHolding);
-
-                yield {
-                    leftArm: state.leftArm, leftHolding: item,
-                    rightArm: state.rightArm, rightHolding: null,
-                    stacks: new_stacks
-                };
-            }
-        }
-        // Pick up with right arm
-        else if(new_stacks[state.rightArm].length > 0) {
-            var new_stacks = new_stacks.slice();
-            new_stacks[state.rightArm] = new_stacks[state.rightArm].slice();
-            yield {
-                leftArm: state.leftArm, leftHolding: item,
-                rightArm: state.rightArm, rightHolding: new_stacks[state.rightArm].pop(),
-                stacks: new_stacks
-            };
-        }
+        yield new_state;
     }
 };
 
@@ -472,7 +485,10 @@ SearchGraph.prototype.rule_satisfied = function(rule, state) {
 
     switch (rule.rel) {
         case "holding":
-            return state.leftHolding == rule.item || state.rightHolding == rule.item;
+            var res = state.arms.some(function(arm) {
+                return arm.holding === rule.item;
+            });
+            return res;
 
         case "floor":
             return j === 0;
@@ -651,8 +667,7 @@ SearchGraph.prototype.h = function (state) {
 */
 
 SearchGraph.prototype.state_hash = function(state) {
-    return JSON.stringify(state.stacks) + state.leftArm + "-" + state.rightArm + "-" +
-        state.leftHolding + "-" + state.rightHolding;
+    return JSON.stringify([state.stacks, state.arms]);
 };
 
 //TODO
@@ -689,23 +704,8 @@ SearchGraph.prototype.isPossible = function(state) {
 // r right
 function backlink(path) {
     var link = [];
-    for (var i =0; i < path.length-1; i++) {
-        var a = path[i];
-        var b = path[i+1];
-        link[i] = [];
-        // Left arm
-        if (a.leftArm == b.leftArm) {
-            link[i].push(a.leftHolding === null ? 'p' : 'd');
-        } else {
-            link[i].push(a.leftArm < b.leftArm ? 'r' : 'l');
-        }
-        // Right arm
-        if(a.rightArm == b.rightArm) {
-            link[i].push(a.rightHolding === null ? 'p' : 'd');
-        } else {
-            link[i].push(a.rightArm < b.rightArm ? 'r' : 'l');
-        }
-
+    for (var i = 1; i < path.length; i++) {
+        link.push(path[i].backlink);
     }
 
     return link;

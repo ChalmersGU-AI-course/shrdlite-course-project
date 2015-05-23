@@ -7,12 +7,11 @@ interface ObjectDefinition {
     color: string;
 }
 
+interface arm { holding: string; pos: number; }
+
 interface WorldState {
     stacks: string[][];
-    leftHolding: string;
-    rightArm: number;
-    rightHolding: string;
-    leftArm: number;
+    arms: arm[]
     objects: { [s:string]: ObjectDefinition; };
     examples: string[];
 }
