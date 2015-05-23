@@ -308,7 +308,24 @@ module Planner {
 
     function getNeighbours(currentWorld: Nworld): [Nworld, number][]{
         // Return all possible moves as corresponing Nworlds, with actual cost (?)
-        return null; // Dummy return
+        var arm     = currentWorld.states.arm;
+        var holding = currentWorld.states.holding;
+        var stacks  = currentWorld.states.stacks;
+        var moves :  [Nworld, number][] = [];
+        // Total possible moves: Left,Right,Pick,Drop
+        if(arm > 0){
+            //Move left possible
+        }
+        if(arm < stacks.length){
+            // Move right possible
+        }
+        if(holding === null){
+            // Pick up is possible
+        }
+        if(holding !== null){
+            // Drop is possible (if all other if-cases holds e.g. physical laws)
+        }
+        return moves;
     }
 
     function getStackIndex(o1: string, stacks: string[][]): number[] {
