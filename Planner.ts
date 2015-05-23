@@ -60,20 +60,25 @@ module Planner {
                 for (var i = 0; i < this.state.stacks.length; ++i)
                     if (this.state.stacks[i].length > 0) {
                         var newNode = new ShrdliteNode(this.cloneOfWorld());
-
+                        newNode.state.arm = i;
                         newNode.state.holding = newNode.state.stacks[i].pop();
                         newNode.updateName(); //Overhead but nice anyway
                         path.push({ node: newNode, edge: i });
                     }
             }
             else {
-                /*
+                
                 //put down object
                 for (var i = 0; i < this.state.stacks.length; ++i) {
                     if (this.isPhysicallyPossible(i)) {
-                        path.push({ node: new ShrdliteNode(this.state), edge: i });
+                        var newNode = new ShrdliteNode(this.cloneOfWorld());
+                        newNode.state.arm = i;
+                        newNode.state.stacks[i].push(newNode.state.holding);
+                        newNode.state.holding = null;
+                        newNode.updateName(); //Overhead but nice anyway
+                        path.push({ node: newNode, edge: i });
                     }
-                }*/
+                }
             }
             return path;
         }
@@ -203,40 +208,38 @@ module Planner {
         //var targetNode: ShrdliteNode = new ShrdliteNode(intprt);
 
         var g: Graph<ShrdliteNode, number> = new Graph<ShrdliteNode, number>([currentNode], null);
-        var picks: number[] = g.fintPathToFilter<ShrdliteNodeFilter>(currentNode, targetFilter);
+        var picks: { node: ShrdliteNode; edge: number }[] = <{ node: ShrdliteNode; edge: number }[]>g.fintPathToFilter<ShrdliteNodeFilter>(currentNode, targetFilter);
 
-
+        // Overhead med noder... borde kanske edgen vara 'l', 'r', 'p', 'd' direkt? och bara returnera den?
         // This function returns a dummy plan involving a random stack
         var plan: Array<string> = [];
 
-        var isHolding: boolean = (state.holding != null);
-
         while (picks.length > 0) {
-            var pickstack = picks.pop();
+            var pick = picks.pop();
+            var currentNode = pick.node;
+            var pickstack = pick.edge;
+
 
             //Move arm!
-            if (pickstack < state.arm) {
+            if (pickstack < currentNode.state.arm) {
                 plan.push("Moving left");
-                for (var i = state.arm; i > pickstack; i--) {
+                for (var i = currentNode.state.arm; i > pickstack; i--) {
                     plan.push("l");
                 }
-            } else if (pickstack > state.arm) {
+            } else if (pickstack > currentNode.state.arm) {
                 plan.push("Moving right");
-                for (var i = state.arm; i < pickstack; i++) {
+                for (var i = currentNode.state.arm; i < pickstack; i++) {
                     plan.push("r");
                 }
             }
 
-            if (!isHolding) {
+            if (currentNode.state.holding == null) {
                 //Pick.. jaja.. hur fan ska vi veta om di pickar eller droppar. Kanske lika bra att göra edgena i string och köra med arm states? enklast att lösa med en bool antar jag så länge. DÅ slipper vi ett enormt stort statespace men frågan är om det är onödig optimering?
-                var obj = state.stacks[pickstack][state.stacks[pickstack].length - 1];
-                plan.push("Picking up the " + state.objects[obj].form, "p");
-                isHolding = true;
+                var obj = currentNode.state.stacks[pickstack][currentNode.state.stacks[pickstack].length - 1];
+                plan.push("Picking up the " + currentNode.state.objects[obj].form, "p");
             } else {
-                plan.push("Dropping the " + state.objects[obj].form, "d");
-                isHolding = false;
+                plan.push("Dropping the " + currentNode.state.objects[obj].form, "d");
             }
-
         }
 
         return plan;

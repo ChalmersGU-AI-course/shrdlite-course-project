@@ -40,7 +40,7 @@ class Graph<T, E> {
     public constructor(private nodes: GraphNode<E>[], private edges: E[][]  /*A list of edges for every node */) {
     }
 
-    public fintPathToFilter<F extends GraphFilter>(start: GraphNode<E>, filter: F): E[]{
+    public fintPathToFilter<F extends GraphFilter>(start: GraphNode<E>, filter: F): { node: GraphNode<E>; edge: E }[] {
         var openset = new collections.Set<GraphNode<E>>();
 
         var cameFrom = new collections.Dictionary<GraphNode<E>, { node: GraphNode<E>; edge: E }>();
@@ -60,10 +60,10 @@ class Graph<T, E> {
             var current = fScore.dequeue().node;
 
             if (filter.costTo(current) == 0) {
-                var path: Array<E> = [];
+                var path: Array<{ node: GraphNode<E>; edge: E }> = [];
                 var nodeIterator = current;
                 while (nodeIterator != start) {
-                    path.push(cameFrom.getValue(nodeIterator).edge);
+                    path.push(cameFrom.getValue(nodeIterator));
                     nodeIterator = cameFrom.getValue(nodeIterator).node;
                 }
 
