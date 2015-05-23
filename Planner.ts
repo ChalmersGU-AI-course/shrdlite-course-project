@@ -48,7 +48,7 @@ module Planner {
 
 
         costTo(to: ShrdliteNode): number {
-            return 1;
+            return Math.abs(to.state.arm - this.state.arm);
         }
 
         neighbours(): { node: ShrdliteNode; edge: number }[] {
