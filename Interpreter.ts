@@ -220,7 +220,6 @@ module Interpreter {
 		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof)
 		 * @return {boolean} Does the relation hold?
 		 */
-		//todo: What to do with "move all balls inside all boxes"
 		private isReachable(orig : Position, dest : Position, rel : string) : boolean {
 			switch (rel) {
 				case "inside":
@@ -318,11 +317,12 @@ module Interpreter {
 		 * Check if the transition is physically possible
 		 *
 		 * @param {string} goal of the movement (ontop, above, under, beside, leftof, rightof, inside)
+		 * @param {string} quantifier for the origin (the, any)
+		 * @param {string} quantifier for the destination (the, any)
 		 * @param {string[]} array of string that represent the objects for the origin
 		 * @param {string[]} array of string that represent the objects for the destination
 		 * @return {boolean} true if it is possible
 		 */
-		//todo:take all blue objects
 		private isPhysicallyPossible(goal : string, quantOrig : string, quantDest : string, origs : string[], dests : string[]) : boolean {
 			//a quick check for the "take" command
 			if (goal == "holding" && quantOrig == "all" && origs.length > 1) {
@@ -534,6 +534,7 @@ module Interpreter {
 		 * @return {Literal[][]} Literal describing the PDDL goals
 		 */
 		//todo: ambigous stuff like "move the ball on the floor" currently produces two PDDL goals when there are two balls present
+		//solution (maybe): quantifier is "the" and we receive more than 1 PDDL goal -> ambiguous!
 		public getInterpretation() : Literal[][] {
 			//typeof this.cmd.ent !== "undefined"
 			//typeof this.cmd.loc !== "undefined"
