@@ -15,8 +15,6 @@ module Planner {
                     if (node.state.holding == this.intptr.args[0])
                         return 0;
                     break;
-                case 'inside':
-                    break;
                 case 'ontop':
                 case 'inside':
                     break;
