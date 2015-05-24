@@ -68,7 +68,7 @@ module Interpreter {
     
     /** Returns a string representation of the given object.
      *  Will use as much information that is available */
-    function findObject(object: Parser.Object){
+    function findObject(object: Parser.Object): string{
         if(object == undefined) return "";
         
         var hasSize  = object.size  != null;
@@ -110,8 +110,14 @@ module Interpreter {
         var objectTemp = cmd.ent.obj;
         var objectToUse = objectTemp.obj == undefined ? objectTemp : objectTemp.obj;
         
+        console.log("objectToUse: " + objectToUse);
+        console.log("quant: " + quant);
+        
         //Extract the information about the object
         var objectStr = findObject(objectToUse);
+        
+        objectStr = (objectToUse.form == "anyform" && quant == "all") ? (objectStr + "s") : objectStr;
+        
         var objectLocation = objectTemp.loc;
         var objectHasLocation = objectTemp.loc != undefined;
         var objectLocationRelation = objectHasLocation ? objectLocation.rel : "";
@@ -126,7 +132,11 @@ module Interpreter {
         
         //If the object also has a location, add that.
         if(objectHasLocation){
-            sentence.push("that is");
+            if(quant == "all"){
+                sentence.push("that are");
+            } else {
+                sentence.push("that is");
+            }
             sentence.push(objectLocationRelation);
             sentence.push(objectLocationQuant);
             sentence.push(objectLocationStr);
@@ -183,7 +193,6 @@ module Interpreter {
         
         //First check if the object is inside the world...
         var objectKeys = getObjectKey(object, objs, state.objects, state.stacks, true);
-        
         
         //...if this is not true, we did not find an object that matched
         if(rightNumberOfResults(cmd.ent.quant, objectKeys.length)){
@@ -383,6 +392,7 @@ module Interpreter {
                         return false;
                     } else {
                         if(hasColor && hasSize){
+                            returnList.push(availableObject);
                         } else if(hasColor && currentHasColor && !currentHasSize){
                             returnList.push(availableObject);
                         } else if(hasSize && currentHasSize && !currentHasColor){
@@ -436,8 +446,6 @@ module Interpreter {
         var locationObjects = getObjectKeysWithoutObject(loc.ent.obj, availableObjects, objects);
         
         if(rightNumberOfResults(loc.ent.quant, locationObjects.length)){
-            var breakTheLoops = false;
-            var finalFoundKey: string = undefined;
             
             locationObjects.forEach(
                 (locationObject: string) => {
@@ -446,20 +454,16 @@ module Interpreter {
                         (foundKey: string) => {
                         
                             if(check(foundKey, loc.rel, locationObject, worldStacks)){
-                                finalFoundKey = foundKey;
-                                breakTheLoops = true;
+                                returnList.push(foundKey);
                             }
                             
-                            return !breakTheLoops;
+                            return true;
                         }
                     );
-                    return !breakTheLoops;
+                    return true;
                 }
             );
             
-            if(finalFoundKey != undefined){
-                returnList.push(finalFoundKey); 
-            }
         }
         
         return returnList;

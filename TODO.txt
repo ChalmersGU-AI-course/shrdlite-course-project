@@ -1,0 +1,3 @@
+move the white ball that is inside any box ontop of the floor
+
+bug, ger fel felmeddelande
