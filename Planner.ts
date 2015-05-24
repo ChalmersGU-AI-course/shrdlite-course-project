@@ -753,12 +753,20 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         	
         	var ontopA = this.countOnTop(a,state,pddls);
         	var ontopB = this.countOnTop(b,state,pddls);
-        	
+        	// if holding then 
             if(state.holding != null && state.holding== a){
-                return Math.abs(possB-state.arm)-1; // currently not checking if stack next to b is full
+            	var dist = Math.abs(possB-state.arm);
+            	if(dist == 0){
+            		dist ++;
+            	}
+                return dist; // currently not checking if stack next to b is full
             }
              else if(state.holding != null && state.holding== b){
-                return 1 + Math.abs(possA-state.arm)-1;
+             	var dist = Math.abs(possA-state.arm);
+            	if(dist == 0){
+            		dist ++;
+            	}
+                return dist;
             }
             if(ontopB > ontopA){
 
