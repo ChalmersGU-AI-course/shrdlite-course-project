@@ -548,10 +548,19 @@ module Interpreter {
 					if(!filterdLits[i]){
 						filterdLits[i] = [];
 					}
-					filterdLits[i].push(lits);
+					var filternulls = [];
+					for(var k = 0; k < lits.length; k++){
+						if(lits[k]){
+							filternulls.push(lits[k]);
+						}
+					}
+					if(filternulls.length > 0){
+						filterdLits[i].push(filternulls);
+					}
+					
 				}
     		}
-    		if(filterdLits[i]){
+    		if(filterdLits[i] ){
     			intrps[i].intp = filterdLits[i];
     			resIntrps.push(intrps[i]);    		
     		}
