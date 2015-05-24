@@ -2,6 +2,7 @@
 ///<reference path="Parser.ts"/>
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Planner.ts"/>
+///<reference path="Planalyzer.ts"/>
 
 module Shrdlite {
 
@@ -85,7 +86,8 @@ module Shrdlite {
 
         var plan : string[] = plans[0].plan;
         world.printDebugInfo("Final plan: " + plan.join(", "));
-        return plan;
+        var analyzedPlan = PlanalyzeActions(plan, world.currentState);
+        return analyzedPlan;
     }
 
 
