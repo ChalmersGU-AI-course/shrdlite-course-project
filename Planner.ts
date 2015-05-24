@@ -17,58 +17,58 @@ module Planner {
                     break;
                 case 'ontop':
                 case 'inside':
-                    for (var i = 0; i < this.state.stacks.length; ++i) {
-                        for (var j = 0; j < this.state.stacks[i].length; ++j) {
-                            if (node.state.states[i][j] == this.intptr.args[0] && node.state.states[i][j+1]==this.intptr.args[1])
+                    for (var i = 0; i < node.state.stacks.length; ++i) {
+                        for (var j = 0; j < node.state.stacks[i].length; ++j) {
+                            if (node.state.stacks[i][j] == this.intptr.args[0] && node.state.stacks[i][j+1]==this.intptr.args[1])
                                 return 0;
                         }
                     }
                     break;
                 case 'above':
-                    for (var i = 0; i < this.state.stacks.length; ++i) {
-                        for (var j = 0; j < this.state.stacks[i].length; ++j) {
-                            for ( var k = j; k < this.state.stacks[i].length; ++k ) { //some redundant chacks here
-                                if (node.state.states[i][j] == this.intptr.args[0] && node.state.states[i][j+k]==this.intptr.args[1])
+                    for (var i = 0; i < node.state.stacks.length; ++i) {
+                        for (var j = 0; j < node.state.stacks[i].length; ++j) {
+                            for (var k = j; k < node.state.stacks[i].length; ++k ) { //some redundant chacks here
+                                if (node.state.stacks[i][j] == this.intptr.args[0] && node.state.stacks[i][j+k]==this.intptr.args[1])
                                     return 0;
                             }
                         }
                     }
                     break;
                 case 'beside':
-                for (var i = 0; i < this.state.stacks.length; ++i) {
-                        for (var j = 0; j < this.state.stacks[i].length; ++j) {
-                            for ( var k = 0; k < this.state.stacks[i].length; ++k){
-                                if (node.state.states[i][j] == this.intptr.args[0] && node.state.states[i+1][k]==this.intptr.args[1])
+                    for (var i = 0; i < node.state.stacks.length; ++i) {
+                        for (var j = 0; j < node.state.stacks[i].length; ++j) {
+                            for (var k = 0; k < node.state.stacks[i].length; ++k){
+                                if (node.state.stacks[i][j] == this.intptr.args[0] && node.state.stacks[i + 1][k] == this.intptr.args[1])
                                     return 0;                      
                             }
                         }
                     }
                     break;
                 case 'leftof':
-                    for (var i = 0; i < this.state.stacks.length; ++i) {
-                        for (var j = 0; j < this.state.stacks[i].length; ++j) {
-                            for ( var k = 0; k < this.state.stacks[i].length; ++k){
-                                if (node.state.states[i][j] == this.intptr.args[0] && node.state.states[i+1][k]==this.intptr.args[1])
+                    for (var i = 0; i < node.state.stacks.length; ++i) {
+                        for (var j = 0; j < node.state.stacks[i].length; ++j) {
+                            for (var k = 0; k < node.state.stacks[i].length; ++k){
+                                if (node.state.stacks[i][j] == this.intptr.args[0] && node.state.stacks[i+1][k]==this.intptr.args[1])
                                     return 0;                      
                             }
                         }
                     }
                     break;
                 case 'rightof':
-                    for (var i = 0; i < this.state.stacks.length; ++i) {
-                        for (var j = 0; j < this.state.stacks[i].length; ++j) {
-                            for ( var k = 0; k < this.state.stacks[i].length; ++k){
-                                if (node.state.states[i][j] == this.intptr.args[1] && node.state.states[i+1][k]==this.intptr.args[0])
+                    for (var i = 0; i < node.state.stacks.length; ++i) {
+                        for (var j = 0; j < node.state.stacks[i].length; ++j) {
+                            for (var k = 0; k < node.state.stacks[i].length; ++k){
+                                if (node.state.stacks[i][j] == this.intptr.args[1] && node.state.stacks[i + 1][k] == this.intptr.args[0])
                                     return 0;                      
                             }
                         }
                     }
                     break;
                 case 'under':
-                    for (var i = 0; i < this.state.stacks.length; ++i) {
-                        for (var j = 0; j < this.state.stacks[i].length; ++j) {
-                            for ( var k = j; k < this.state.stacks[i].length; ++k){
-                                if (node.state.states[i][j] == this.intptr.args[1] && node.state.states[i][k]==this.intptr.args[0])
+                    for (var i = 0; i < node.state.stacks.length; ++i) {
+                        for (var j = 0; j < node.state.stacks[i].length; ++j) {
+                            for (var k = j; k < node.state.stacks[i].length; ++k){
+                                if (node.state.stacks[i][j] == this.intptr.args[1] && node.state.stacks[i][k] == this.intptr.args[0])
                                     return 0;                      
                             }
                         }
