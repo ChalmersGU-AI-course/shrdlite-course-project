@@ -22,8 +22,10 @@ module Interpreter {
             	interpretations.push(intprt);
             }
         });
-        if (interpretations.length) {
+        if(interpretations){
         	interpretations = filterEquality(interpretations);
+        }
+        if (interpretations.length > 0) {
             return interpretations;
         } else {
             throw new Interpreter.Error("Found no interpretation");
@@ -531,6 +533,12 @@ module Interpreter {
 	    					 	)){
 	    				return true;
 	    			}
+	    			if((templit2.rel == "leftof" || templit2.rel == "rightof") && 
+	    					(templit2.args[0] == templit.args[1] && 
+	    					 templit2.args[1] == templit.args[0] 
+	    					 	)){
+	    				return true;
+	    			}
 	    		}
     		}
     	}
@@ -541,6 +549,7 @@ module Interpreter {
     function filterEquality(intrps : Result []):Result []{
 		var resIntrps : Result [] = [];
 		var filterdLits : Literal[][][] = [];
+		var empty = true;
     	for(var i = 0; i < intrps.length; i++){
     		for(var j = 0; j < intrps[i].intp.length; j++){
 				var lits = intrps[i].intp[j];
@@ -560,12 +569,15 @@ module Interpreter {
 					
 				}
     		}
-    		if(filterdLits[i] ){
+    		if(filterdLits[i] && filterdLits[i].length > 0){
     			intrps[i].intp = filterdLits[i];
-    			resIntrps.push(intrps[i]);    		
+    			resIntrps.push(intrps[i]);
+    			empty = false;    		
     		}
     	}
-    	
+    	if(empty){
+    		return [];
+    	}
     	return resIntrps;
     }
     
