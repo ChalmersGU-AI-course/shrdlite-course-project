@@ -308,7 +308,7 @@ function heuristicOntop(first: string, second: string, stacks: string[][]){
         for(var i=0; i<stacks.length; i++){
             if(stacks[i].length<h){
                 foundS=i;
-                h = stacks[i].length;
+                h = stacks[i].length*(pickDropCost+1);
             }
         }
     }
@@ -319,11 +319,11 @@ function heuristicOntop(first: string, second: string, stacks: string[][]){
                 if(stacks[i].length-1>j && stacks[i][j+1] == first){
                     return 0
                 }
-                h += stacks[i].length-1-j;
+                h += (stacks[i].length-1-j)*(pickDropCost+1);
             }
             if(stacks[i][j] == first){
                 foundF = i;
-                h += stacks[i].length-1-j;
+                h += (stacks[i].length-1-j)*(pickDropCost+1);
             }
             if(foundF!=-1 && foundS!=-1){
                 return h+Math.abs(foundS-foundF)+pickDropCost;
@@ -348,7 +348,7 @@ function heuristicAbove(first: string, second: string, stacks: string[][]){
             }
             if(stacks[i][j] == first){
                 foundF = i;
-                h = stacks[i].length-1-j;
+                h = (stacks[i].length-1-j)*(pickDropCost+1);
             }
             if(foundF!=-1 && foundS!=-1){
                 return h+Math.abs(foundS-foundF)+pickDropCost;
@@ -376,7 +376,7 @@ function heuristicBeside(first: string, second: string, stacks: string[][]){
                         }
                     }
                 }
-                hS = stacks[i].length-1-j;
+                hS = (stacks[i].length-1-j)*(pickDropCost+1);
             }
             if(stacks[i][j] == first){
                 foundF = i;
@@ -387,7 +387,7 @@ function heuristicBeside(first: string, second: string, stacks: string[][]){
                         }
                     }
                 }
-                hF = stacks[i].length-1-j;
+                hF = (stacks[i].length-1-j)*(pickDropCost+1);
             }
             if(foundF && foundS){
                 return Math.min(hF,hS)+Math.abs(foundS-foundF)+pickDropCost;
@@ -405,7 +405,7 @@ function heuristicLeft(first: string, second: string, stacks: string[][]){
         for(var j=0; j<stacks[i].length; j++){
             if(stacks[i][j] == second){
                 foundS = i;
-                hS = stacks[i].length-1-j;
+                hS = (stacks[i].length-1-j)*(pickDropCost+1);
             }
             if(stacks[i][j] == first){
                 foundF = i;
@@ -416,7 +416,7 @@ function heuristicLeft(first: string, second: string, stacks: string[][]){
                         }
                     }
                 }
-                hF = stacks[i].length-1-j;
+                hF = (stacks[i].length-1-j)*(pickDropCost+1);
             }
             if(foundF && foundS){
                 return Math.min(hF,hS)+Math.abs(foundS-foundF)+pickDropCost;
@@ -432,7 +432,7 @@ function heuristicHold(first: string, stacks: string[][]){
     for(var i=0; i<stacks.length; i++){
         for(var j=0; j<stacks[i].length; j++){
             if(stacks[i][j] == first){
-                return stacks[i].length-1-j;
+                return (stacks[i].length-1-j)*(pickDropCost+1);
             }
         }
     }
