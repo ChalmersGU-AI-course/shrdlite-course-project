@@ -34,6 +34,7 @@ module astar {
         var currentAd = graph.adjacencyMap.getValue(startID);
 
         var currentNode = currentAd.node;
+        var previousNode;
 
         visited.add(currentNode);
         
@@ -50,7 +51,7 @@ module astar {
             }
         
             //Create next states
-            generateNeighbours(currentNode);
+            generateNeighbours(currentNode,previousNode);
         
             currentAd.neighbours.forEach(
                 function addEdge(edge: graphmodule.Edge<T>) {
@@ -78,6 +79,7 @@ module astar {
             }
 
             currentNode = currentPath.path.last().to;
+            previousNode = currentPath.path.last().from;
 
             visited.add(currentNode);
 

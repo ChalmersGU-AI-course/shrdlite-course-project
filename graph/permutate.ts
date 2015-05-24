@@ -54,7 +54,7 @@ function permutate(initWorld: WorldState):graphmodule.Graph<string[][]>{
 }
 */
 
-function permutateBasedOn(baseOn: graphmodule.GraphNode<string[][]>, objects: { [s:string]: ObjectDefinition; }, graph: graphmodule.Graph<string[][]>){
+function permutateBasedOn(baseOn: graphmodule.GraphNode<string[][]>, prevNode: graphmodule.GraphNode<string[][]>, objects: { [s:string]: ObjectDefinition; }, graph: graphmodule.Graph<string[][]>){
     //Get the data that the given node contains
     var baseOnState = baseOn.data;
     
@@ -115,8 +115,14 @@ function permutateBasedOn(baseOn: graphmodule.GraphNode<string[][]>, objects: { 
                         //Add the neighbour to the graph
                         graph.addNode(newNode);
                         
+                        //arm possition
+                        var arm = i;
+                        if(prevNode != undefined){
+                            arm = movedTo(prevNode.data, baseOnState);
+                        }
+                        
                         //Add edge between current node and neighbour
-                        graph.addEdge(baseOn.id, newNode.id, Math.abs(j-i)+pickDropCost, true);
+                        graph.addEdge(baseOn.id, newNode.id, Math.abs(j-i) + pickDropCost + Math.abs(arm-i), true);
                         
                         //console.log("permutate.permutateBasedOn added State: " + prettyMat(newState2));
                     }
@@ -126,6 +132,15 @@ function permutateBasedOn(baseOn: graphmodule.GraphNode<string[][]>, objects: { 
         }
         
     }
+}
+
+function movedTo(from: string[][], to: string[][]){
+    for(var i = 0; i < from.length; i++){
+        if(to[i].length>from[i].length){
+            return i;
+        }
+    }
+    return undefined;
 }
 
 

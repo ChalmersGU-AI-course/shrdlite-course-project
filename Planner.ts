@@ -159,8 +159,8 @@ module Planner {
                 return minH;
             }
         ,
-            (basedOn: graphmodule.GraphNode<string[][]>) => {
-                return permutateBasedOn(basedOn, state.objects, graph);
+            (basedOn: graphmodule.GraphNode<string[][]>, prevNode: graphmodule.GraphNode<string[][]>) => {
+                return permutateBasedOn(basedOn, prevNode, state.objects, graph);
             }
         );
         

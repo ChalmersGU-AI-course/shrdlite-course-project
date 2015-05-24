@@ -111,7 +111,7 @@ module graphmodule {
     
     /** Function which can generate nodes given a node */
     export interface GenerateNodes<T>{
-        (basedOn: GraphNode<T>);
+        (basedOn: GraphNode<T>, prevNode: GraphNode<T>);
     }
     
     /** Function which checks if a given node is valid as end-node */
