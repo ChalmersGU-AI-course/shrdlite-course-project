@@ -38,6 +38,7 @@ module Interpreter {
         if (interpretations.length == 1) {
             return interpretations;
         } else if(interpretations.length) {
+	    //This only occurs when there are ambiuity, either in the utterance or that the quantifier matches several objects
 	    var error = new Interpreter.Clarification(getClarQuest(interpretations, currentState));
 	    error.data = interpretations;
 	    throw error;
@@ -46,12 +47,14 @@ module Interpreter {
         }
     }
 
+    //Haskell-like fold
     function fold(func, base, list) {
 	if(list.length == 0) { return base; }
 	var v = func(base, list.shift());
 	return fold(func, v, list);
     }
 
+    //Generates a string containing choices for resolving the results ambiguity
     function getClarQuest(intprts : Result[], state: WorldState): string{
 	var str : string = "Did you mean:";
 	for(var i = 0; i < intprts.length; i++) {
@@ -83,6 +86,7 @@ module Interpreter {
 	return str;
     }
 
+    //Returns the difference in two commands
     function cmpCmd(c1 : Parser.Command, c2 : Parser.Command) : Parser.Command {
 	var newcmd : Parser.Command = {cmd: c1.cmd};
 	if(c1.ent && c2.ent) {
@@ -100,10 +104,12 @@ module Interpreter {
 	return newcmd;
     }
 
+    //Returns true if the object has elements i.e is not empty
     function hasElements(o : Parser.Object) {
 	return o.obj || o.loc || o.form || o.size || o.color;
     }
 
+    //Returns the difference between two objects in the form of a new object
     function cmpObjs(o1 : Parser.Object, o2 : Parser.Object) : Parser.Object {
 	var newobj : Parser.Object = {};
 	var o1rec  : boolean       = o1.obj != undefined;
@@ -135,6 +141,7 @@ module Interpreter {
 	return newobj;
     }
 
+    //Generates a string containing all the information about an object
     function genClarQuest(obj : Parser.Object) : string{
         var str : string = "";
 	if(obj.obj) {   //Recursive case
@@ -151,16 +158,10 @@ module Interpreter {
 	return str;
     }
 
-    function getDepth(obj: Parser.Object) : number {
-	if(obj.obj) {
-	    return 1 + getDepth(obj.loc.ent.obj);
-	} else {
-	    return 1;
-	}
-    }
-
     export interface Result extends Parser.Result {intp:Literal[][]; amb? : Parser.Object}
     export interface Literal {pol:boolean; rel:string; args:string[];}
+
+    //Litambs contain a pddl and an optional ambiguity object
     export interface LitAmb {lits: Literal[][]; amb?: Parser.Object}
     export function interpretationToString(res : Result) : string {
         return res.intp.map((lits) => {
@@ -178,6 +179,7 @@ module Interpreter {
         public toString() {return this.name + ": " + this.message}
     }
 
+    //Error class used for printing ambiguity
     export class Clarification implements Error {
         public name = "Interpreter.Clarification";
 	public data : Result[] = [];
@@ -257,8 +259,7 @@ module Interpreter {
 	return ambs;
     }
 
-    //Converts to a pddl subset of all relations
-    //rels £ {holding, above, ontop, column}
+    //Converts the goals to a pddl subset of all relations
     function convertGoalsToPDDL(keys : ObjectInfo[], loc : Parser.Location, state: WorldState) : LitAmb[] 
     {
 	var ambs : LitAmb[]     = [];
@@ -302,6 +303,7 @@ module Interpreter {
 	return ambs;
     }
 
+    //Returns the pddl of the key with a relation to all objects in value
     function getPddl(key: ObjectInfo, relation: string, value : ObjectInfo[], state: WorldState) : Literal[][] {
 	var or   : Literal[][]  = [];
 	var and  : Literal[]    = [];
@@ -340,7 +342,6 @@ module Interpreter {
 			}
 		    }
 		}
-		
 	    } else if(relation == "beside") {
 		if(target.obj.form != "floor") {
 		    for(var j = 0; j < state.stacks.length; j++) {
@@ -367,7 +368,8 @@ module Interpreter {
 	return or;
     }
 
-
+    
+    //Returns the obj at pos
     function getObjectAtPosition(pos : Position, state : WorldState) : ObjectInfo {
         if( pos.x >= 0 && pos.x < state.stacks.length && pos.y >= 0 && pos.y < state.stacks[pos.x].length) {
             var name = state.stacks[pos.x][pos.y];
@@ -378,6 +380,7 @@ module Interpreter {
         }
     }
 
+    //Returns all obj besides a certain pos
     function getBesides(pos: Position, target: ObjectInfo, obj: Parser.Object, state : WorldState ) : ObjectInfo[] {
         var valids : ObjectInfo[] = [];
         if(pos.x < state.stacks.length && pos.x >= 0) {
@@ -397,6 +400,7 @@ module Interpreter {
     }
 
 
+    //Returns true if above can be places on below
     export function checkSize(above : Parser.Object, below : Parser.Object) : boolean {
         if(below.form == "floor") {
             return true;
@@ -420,6 +424,7 @@ module Interpreter {
         return true;
     }
 
+    //Returns all objects in the state that match the specified obj
     function findValid(obj : Parser.Object, state : WorldState) : ObjectInfo[]{
         var valids : collections.Set<ObjectInfo> = new collections.Set<ObjectInfo>(function(a) {
 	    return a.name;
@@ -510,9 +515,6 @@ module Interpreter {
 		}
                 if(objUnderTarget && yes != -1) valids.add(valids2[yes]);
             }
-
-            
-
         } else { //Base case
             if(obj.form == "floor") {
                 for(var n = 0; n < state.stacks.length; n++) {
@@ -536,6 +538,7 @@ module Interpreter {
         return valids.toArray();
     } 
 
+    //Get all valid objs beside a pos
     function getValidsBeside (pos : Position, valids2: ObjectInfo[],  state : WorldState) : ObjectInfo[] {
         var valids : ObjectInfo[] = [];
         if(pos.x < state.stacks.length && pos.x >= 0) {
@@ -553,6 +556,7 @@ module Interpreter {
     }
 
 
+    //Checks if obj is in valids
     function checkObjInRelation(obj: string, valids : ObjectInfo[]) : number{
         var nr : number = -1;
         for( var i = 0; i < valids.length; i++) {
@@ -565,6 +569,7 @@ module Interpreter {
     }
 
 
+    //Returns the position of an obj
     function findObject(key : string, state : WorldState) : Position {
         if(key.indexOf("f_") != -1) {
             return {x:parseInt(key.charAt(2)), y:-1};
@@ -579,8 +584,6 @@ module Interpreter {
         //should never get here
         return null;
     }
-
-
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);

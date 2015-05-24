@@ -51,6 +51,7 @@ module Planner {
         }
     }
 
+    //Returns true if any goal is reached
     export function checkGoal(goal : Interpreter.Literal[][]) : AStar.Goal<Interpreter.Literal[]>{
         return function(lits : Interpreter.Literal[]){
             var allFound : boolean = false;
@@ -66,6 +67,7 @@ module Planner {
         }
     }
 
+    //Returns true if elem is an element in arr
     function isElem2(elem : Interpreter.Literal, arr : Interpreter.Literal[]): boolean {
         for(var i = 0; i < arr.length; i++) {
 	    var a = arr[i];
@@ -94,6 +96,7 @@ module Planner {
         return edges;
     }
 
+    //Returns the current state
     export function cloneWorldState(state : WorldState) : WorldState {
         var newStack : string[][] = []; 
         state.stacks.forEach(function(col: string[]){
@@ -167,14 +170,15 @@ module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
+    //Converts the stack version of the state into a pddl representation
     function stackToPddl(state :WorldState) : Interpreter.Literal[] {
-    var pddl :Interpreter.Literal[] = [];
+	var pddl :Interpreter.Literal[] = [];
 	if(state.holding != null) {
 	    pddl.push({pol:true, rel: "holding", args: [state.holding]});
 	} 
 
-    pddl.push({pol:true, rel: "armpos", args: [state.arm + ""]})
-    pddl.push({pol:true, rel: "maxcol", args: [state.stacks.length + ""]})
+	pddl.push({pol:true, rel: "armpos", args: [state.arm + ""]})
+	pddl.push({pol:true, rel: "maxcol", args: [state.stacks.length + ""]})
 
 	for(var x = 0; x < state.stacks.length; x++) {
 	    //Create on top of floor
@@ -200,6 +204,7 @@ module Planner {
 	return pddl;
     }
 
+    //Runs A* alg and returns the found path
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
 
         var plan : string[] = [];
@@ -215,6 +220,7 @@ module Planner {
         return Math.floor(Math.random() * max);
     }
 
+    //Heuristic function for A*
     function getHeur(ors : Interpreter.Literal[][], lits: Interpreter.Literal[]) : number {
 
 	var holding : string = null;
@@ -223,6 +229,7 @@ module Planner {
 	var aboveData = [];
 	var belowData = [];
 	var armpos : number;
+	//Retreive all data necessary once and for all!
 	lits.forEach(function(lit) {
 	    if(lit.rel == "holding") { holding = lit.args[0]; }
 	    else if(lit.rel == "column") {
@@ -241,8 +248,13 @@ module Planner {
 	});
 
 
-
-	var lowestCost : number = 600000000; //High number!
+	var lowestCost : number = 60000000000; //High number, should be INFINITE
+	/*
+	  Heur is calculated below. The general idea is to add a cost for the:
+	  Distance between arm and object to move/pickup
+	  Distance between current position and target position
+	  The number of object above an object to be moved
+	 */
 	ors.forEach(function(ands) {
 	    var cost : number = 0;
 	    ands.forEach(function(and) {
@@ -256,15 +268,15 @@ module Planner {
 			} else {
 			    cost += 3;
 			    if(belowData[and.args[0]]) {
-				cost += (4 * (belowData[and.args[0]].length + 1)); 
+				cost += (4 * (belowData[and.args[0]].length + 1)); //+1 as we need to move the obj itself aswell
 			    }
 			    if(and.rel == "ontop" && belowData[and.args[1]]) {
 				cost += (4 * (belowData[and.args[1]].length));
 			    }
 			}
 		    } else {
-			var satisfied : boolean = false;
-			if(and.rel == "ontop") { 
+			var satisfied : boolean = false; //Is relation sat?
+ 			if(and.rel == "ontop") { 
 			    satisfied = (ontopData[and.args[0]] == and.args[1]) == and.pol; 
 			} else {
 			    if(aboveData[and.args[0]]) {
@@ -278,6 +290,7 @@ module Planner {
 			    } 
 			}
 
+			//Only add a cost if relation is not already sat
 			if(!satisfied) {
 			    if(colData[and.args[0]] == colData[and.args[1]]) {
 				cost += 1;
@@ -323,5 +336,4 @@ module Planner {
 	});
 	return lowestCost;
     }
-
 }
