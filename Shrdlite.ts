@@ -52,10 +52,10 @@ module Shrdlite {
         	var interpretations : Interpreter.Result[] = [];
         	if(world.lastAns.length == 0){
             	interpretations = Interpreter.interpret(parses, world.currentState);
-            }else{
+            }else if(parseInt(parses[0].input) < world.lastAns.length){
             	interpretations = [world.lastAns[parseInt(parses[0].input)]];
             	world.lastAns = [];
-            }
+            }else{ throw new Interpreter.Error("no Goals selected");}
         } catch(err) {
             if (err instanceof Interpreter.Error) {
                 world.printError("Interpretation error", err.message);
@@ -63,6 +63,7 @@ module Shrdlite {
             }else if(err instanceof Interpreter.ClariQuest){
             	world.lastAns = err.interp;
             	world.printError(err.message);
+            	return;
             }
              else {
                 throw err;

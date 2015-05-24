@@ -71,7 +71,12 @@ module Interpreter {
     		}
     	}
     	uniqueString.remove("");
-    	return uniqueString.toString();
+    	var array = uniqueString.toArray();
+    	for(var i=0; i<array.length; i++){
+    		array[i] = i + " " + array[i];
+    	}
+    	
+    	return "Did you mean: " + array.toString();
     }
 
 	function cmpObj (fstObj : Parser.Object, sndObj : Parser.Object, objPath : string) : string {
