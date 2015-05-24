@@ -77,13 +77,11 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     }
 	getneighbors(node :number):Array<number>{
 		// get current state
-		console.log("getneighbors: starting");
 		var currentstate : WorldState = this._nodeValues[node];
 		var neig :WorldState[] = [];
 		// max 3 possible states
 		// move arm left
 		if(currentstate.arm > 0){
-			console.log("getneighbors: left");
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// reduce arm poss
 			possiblestate.arm -= 1;
@@ -92,7 +90,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		}
 		// move arm right
 		if(currentstate.arm < this.getWorldWidth(currentstate)){
-			console.log("getneighbors: right");
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// increase arm poss
 			possiblestate.arm += 1;
@@ -102,7 +99,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		// pick up
 		var topLit = Planner.getTopLiteral(currentstate, currentstate.arm);
 		if(!currentstate.holding && topLit){	
-			console.log("getneighbors: up");
 			// if it is not holding anything and ther is something on the floor
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			var topobj = this.getTopObj(currentstate, currentstate.pddl.toArray());
@@ -113,11 +109,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			possiblestate.planAction = "p";
 			neig.push(possiblestate);
 		}else if(currentstate.holding){ // drop
-			console.log("getneighbors: down");
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// get top obj
-			console.log("getneighbors: down arm" + currentstate.arm);
-			console.log("getneighbors: down pddl" + currentstate.pddl.size());
 			var topl = Planner.getTopLiteral(currentstate, currentstate.arm);
 			var topobj :string;
 			var relation : string = "ontop";
@@ -152,7 +145,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			this._nodeValues.push(neig[i]);
 			neigNumbers.push(this._nodeValues.length-1);
 		}
-        console.log("getneighbors: ending")
         
         return neigNumbers;
     }
@@ -302,15 +294,12 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         for(var index = 0; index < pddls.length; index++){
             var pddl = pddls[index];
             var x = pddl.args[1];
-            console.log("loop");
             if(pddl.args[0] == null){}
             else if((pddl.rel == "ontop" || pddl.rel == "inside") && x==z){
                 z = pddl.args[0];
                 ind=index;
                 index = -1;
                 pd = pddl;
-
-                //counter++;
             }
         }
         return pddl;
@@ -319,7 +308,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     getTopObjInd(state:WorldState, pddls:Interpreter.Literal[]):number{
         var ind :number= -1;
         var fln = state.arm; 
-        console.log("inside gettop");
         var z = "f" + fln.toString();
         for(var index = 0; index < pddls.length; index++){
             console.log("x: " + x + " , z: "+z);
@@ -332,7 +320,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 ind= index;
                 index = -1;
 
-                //counter++;
             }
         }
         return ind;
@@ -346,20 +333,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
     //counts objects on top of given object
     countOnTop(obj :string, state:WorldState, pddls:Interpreter.Literal[]):number{
-      /*  var counter = 0;
-        var z = a;
-        console.log("at countontop");
-         for(var index = 0; index < pddls.length; index++){
-            var pddl = pddls[index];
-            var x = pddl.args[1];
-            if(this.equalObjects(state.objects[x], state.objects[z])){
-                z = pddl.args[0];
-                index = -1;
-                counter++;
-            }
-        }
-        console.log("returning from countontop");
-        return counter;*/
         var lit = this.findObjLiteral(obj, state);
         // if obj is ontop then this is the top obj and no one is above
         if(!lit){
@@ -421,13 +394,10 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
     //returns x-pos (0->x) for object a
     findPosition_old(obj : string, state : WorldState, pddls : Interpreter.Literal[]):number{
-		console.log("at findPosition, a =" + obj);
 		var x = obj;// this.clone(a);
 		var position = 0;
 		var floor : string = "f" + state.arm;
-		console.log("at findPosition, x =" + x);
 
-		console.log("floor: " + floor);
 		//time to move leftwards along the floors
 		for(var index = 0; index < pddls.length; index++){
 		    var pddl = pddls[index];
@@ -439,7 +409,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		
 		    }
 		    if(floor == "f0"){
-		        console.log("returning from findPosition1");
 		        return position;
 		    }
 		}
@@ -524,38 +493,28 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     heuristic_cost_estimate(current:number, goal:Interpreter.Literal[]):number{
         var count = 0;
         for(var i = 0; i < goal.length; i++ ){
-            console.log("starting heur loop");
             if(goal[i] != null){
-                console.log("wasnt null");
                 count += this.heuristic_cost(current, goal[i]);
-
             }
         }
-        console.log("finished heur");
-        console.log("armpos: "+ this._nodeValues[current].arm + " , holding: " +  this._nodeValues[current].holding);
         return count;
     }
 
     heuristic_cost(current:number, goal:Interpreter.Literal):number{//some parts can be improved
         var cond = goal;
         var state = this._nodeValues[current];
-        console.log("printing a: "+cond.args[0]+", b: " +cond.args[1] );
         var ao = state.objects[cond.args[0]];
         var a = cond.args[0];
         var pddls = state.pddl.toArray();
         var count = 0;
         var samePile:boolean = false;
-        console.log("at heuristics");
         
         if(this.checkGoal(current, goal)){
             return 0;
         }
         
-        console.log("11armpos: "+state.arm + " , holding: " + state.holding);
         if(cond.rel == "hold"){
-            console.log("at hold1");
             if(state.holding != null){
-                console.log("at hold2");
                 if(state.holding == a){
                     return 0;
                 }
@@ -564,14 +523,11 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 }
             }
             else{
-                console.log("not holding an object: " +state.holding);
                 return this.countOnTop(a,state,pddls) + Math.abs(this.getPosition(a,state)-state.arm);
             }
         }
-        console.log("after hold");
         var bo = state.objects[cond.args[1]];
         var b = cond.args[1];
-        console.log("a: " + a + ", b: " + b + ", hold: " + state.holding);
 
         if(cond.rel == "ontop" || cond.rel == "inside"){
             //if a above b, take #objects on b * 4 + (ifnotinsamepile)#objects on a*4 + distancefromcrane to a + distancefromatob
@@ -839,14 +795,12 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     }
 
     checkGoal(current:number, goal:Interpreter.Literal):boolean {
-        console.log("at checkgoal");
         var cond = goal;
         var state = this._nodeValues[current];
         var a = cond.args[0];
         var pddls = state.pddl.toArray();
 
         if(cond.rel == "hold"){
-            console.log("this is it");
             if(state.holding && state.holding == a){
                 return true;
             }
@@ -1044,12 +998,7 @@ module Planner {
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         
-        console.log("armpos: "+state.arm + " , holding: " + state.holding);
         var shortest = null;//keeps track of shortest path encountered
-
-        
-
-        //sp._nodeValues.push(state);//added this.. not sure if this is the place
 
         var result = null;
         var temp : number[];
@@ -1062,7 +1011,6 @@ module Planner {
         for(var i = 0; i < intprt.length; i++){
             var sp = new Shortestpath(1);
             var as = new Astar<number[]>(sp);
-           // sp._edges =[];
             sp._nodeValues.push(state);
 
             temp = as.star(0, intprt[i]);
@@ -1089,19 +1037,7 @@ module Planner {
         		plan.push(sp1._nodeValues[ path[i] ].planAction);
         	}
         }
-        
 
-    /*    if(result != null){
-            console.log("length of plan: " + tempNodevalues.length)
-            for(var i = 0; i<this._nodeValues.length; i++ ){
-                console.log("action planned: "+this._nodeValues[i].planAction);
-                plan.push("p");//possible to check what kind of action and add text here
-            }
-        }
-        else{
-            //throw error
-        }*/
-        console.log("armpos2: "+state.arm + " , holding: " + state.holding);
         return plan;
     }
 
