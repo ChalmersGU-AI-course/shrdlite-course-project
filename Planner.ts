@@ -1047,23 +1047,23 @@ module Planner {
         console.log("armpos: "+state.arm + " , holding: " + state.holding);
         var shortest = null;//keeps track of shortest path encountered
 
-        var sp = new Shortestpath(1);
-        var as = new Astar<number[]>(sp);
+        
 
-        sp._nodeValues.push(state);//added this.. not sure if this is the place
+        //sp._nodeValues.push(state);//added this.. not sure if this is the place
 
         var result = null;
         var temp : number[];
         var tempNodevalues = [];
-        
+        var sp1 : Shortestpath;
         var results = new collections.PriorityQueue<number[]>(
         					function (a : number[], b : number[]){
         						return b.length - a.length;
         					});
         for(var i = 0; i < intprt.length; i++){
-            this._nodeValues = [];
-            this._neighborValues = [];
-            this._nodeValues.push(state);
+            var sp = new Shortestpath(1);
+            var as = new Astar<number[]>(sp);
+           // sp._edges =[];
+            sp._nodeValues.push(state);
 
             temp = as.star(0, intprt[i]);
             
@@ -1073,7 +1073,8 @@ module Planner {
 			
             if(result == null ||temp.length < result.length ){
                 result = temp;      
-                tempNodevalues = this._nodeValues;
+                tempNodevalues = sp._nodeValues;
+                sp1= sp;
             }
 
         }
@@ -1083,9 +1084,9 @@ module Planner {
         var plan : string[] = [];
         if(!results.isEmpty()){
         	var path : number[]= results.dequeue();
-        	state = sp._nodeValues[path[path.length-1]];
+        	state = sp1._nodeValues[path[path.length-1]];
         	for(var i = path.length-1; i >= 0 ; i--){ // travers backwards
-        		plan.push(sp._nodeValues[ path[i] ].planAction);
+        		plan.push(sp1._nodeValues[ path[i] ].planAction);
         	}
         }
         
