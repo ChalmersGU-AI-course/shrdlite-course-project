@@ -3,6 +3,8 @@
 
 module astar {
 
+    var MAXIMUM_ASTAR_RUNTIME: number = 3000;
+
     /** Compute the a path from the given start node to the given end node and the given graph */
     export function compute<T>(graph: graphmodule.Graph<T>, startID: string, isEndState: graphmodule.ValidStateFunction<T>, hFun: graphmodule.HeuristicFunction<T>, generateNeighbours: graphmodule.GenerateNodes<T>) {
     
@@ -41,7 +43,7 @@ module astar {
         
             var nowTime = new Date().getTime();
             
-            if((nowTime - startTime) > 5000){
+            if((nowTime - startTime) > MAXIMUM_ASTAR_RUNTIME){
                 //Not allowed to run any longer
                 console.log("A* IS NOT ALLOWED TO RUN ANY LONGER!!");
                 return undefined;
