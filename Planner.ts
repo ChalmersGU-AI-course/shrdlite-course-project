@@ -1007,7 +1007,6 @@ module Planner {
         
         var shortest = null;//keeps track of shortest path encountered
 
-        var result = null;
         var temp : number[];
         var tempNodevalues = [];
         var sp1 : Shortestpath;
@@ -1019,19 +1018,19 @@ module Planner {
             var sp = new Shortestpath(1);
             var as = new Astar<number[]>(sp);
             sp._nodeValues.push(state);
-
-            temp = as.star(0, intprt[i]);
-            
-            if(temp && temp.length > 0){
-            	results.enqueue(temp);
-            }
+			var bestsofar = results.peek();
+			var bestsofarlength = 100000;;
+			if(bestsofar){
+				bestsofarlength = bestsofar.length;
+			}
 			
-            if(result == null ||temp.length < result.length ){
-                result = temp;      
-                tempNodevalues = sp._nodeValues;
-                sp1= sp;
+            temp = as.star(0, intprt[i], bestsofarlength);
+            
+            if(temp && temp.length > 0 && temp.length <= bestsofarlength){
+            	results.enqueue(temp);
+            	tempNodevalues = sp._nodeValues;
+            	sp1= sp;
             }
-
         }
         this._nodeValues = tempNodevalues;
 

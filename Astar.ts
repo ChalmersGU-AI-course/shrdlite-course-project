@@ -38,14 +38,16 @@ class Astar <T>{
         this.mGraph = g;
     }
 
-    private reconstruct_path(came_from : number[], goal:number):number[]{
+    private reconstruct_path(came_from : number[], goal:number, print : boolean):number[]{
         var result_path:number[] = [];
         result_path.push(goal);
         while(came_from[goal] > 0){
         	goal = came_from[goal];
         	result_path.push(goal);
         }
-        console.log("path length(Astar): "+result_path.length);
+        if(print){
+        	console.log("path length(Astar): "+result_path.length);
+        }
         
         return result_path;
     }
@@ -64,7 +66,7 @@ class Astar <T>{
         return result;
     }
     
-    public star (start: number, goal : Interpreter.Literal[]): number[]{
+    public star (start: number, goal : Interpreter.Literal[], bestsofar : number): number[]{
         // The set of tentative nodes to be evaluated, initially containing the start node
         var openset = new collections.PriorityQueue<NodeScore>(
         					function (a:NodeScore,b:NodeScore){
@@ -82,12 +84,16 @@ class Astar <T>{
         var counter = 0;
         
         while (!openset.isEmpty()){
+        	var path = this.reconstruct_path(came_from, current, false);
+        	if(bestsofar < path.length){
+        		return path;
+        	}
             var current = openset.dequeue().getIndex();
             openset_ids.remove(current);
             counter ++;
             if(this.mGraph.reachedGoal(current, goal)){
                 console.log("Number of nodes visited " + counter);
-                return this.reconstruct_path(came_from, current);//changed to current, since goal will be literals
+                return this.reconstruct_path(came_from, current, true);//changed to current, since goal will be literals
             } //needs to be adjusted
             closedset.push(current);
             var currentNeighbors = this.neighbor_nodes(current);
