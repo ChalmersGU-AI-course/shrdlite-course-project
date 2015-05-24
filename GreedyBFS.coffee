@@ -1,5 +1,5 @@
 PriorityQueue = require('./priority-queue.js')
-# A* algorithm.
+# GreedyBFS algorithm.
 # start is the start state
 # goal is the goal "state"
 # heuristicFunction is the heuristic function
@@ -18,7 +18,7 @@ GreedyBFS = (start, goal, heuristicFunction, nextMoves, getNextState,
       cost:   totalCost
   openSet.queue(startObject)
 
-  # A* iteration
+  # BFS iteration
   while openSet.length > 0
     current = openSet.dequeue()
     if satisfaction(current.state, goal)
