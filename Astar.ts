@@ -86,7 +86,7 @@ class Astar <T>{
             openset_ids.remove(current);
             counter ++;
             if(this.mGraph.reachedGoal(current, goal)){
-                console.info("Number of nodes visited " + counter);
+                console.log("Number of nodes visited " + counter);
                 return this.reconstruct_path(came_from, current);//changed to current, since goal will be literals
             } //needs to be adjusted
             closedset.push(current);
