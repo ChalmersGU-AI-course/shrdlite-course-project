@@ -537,7 +537,10 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         var count = 0;
         var samePile:boolean = false;
         console.log("at heuristics");
-
+        
+        if(this.checkGoal){
+            return 0;
+        }
         
         console.log("11armpos: "+state.arm + " , holding: " + state.holding);
         if(cond.rel == "hold"){
@@ -563,7 +566,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
         if(cond.rel == "ontop" || cond.rel == "inside"){
             //if a above b, take #objects on b * 4 + (ifnotinsamepile)#objects on a*4 + distancefromcrane to a + distancefromatob
-            if(state.holding != null && state.holding==a && this.countOnTop(b,state,pddls) == 0){//check if a's stack is full
+            
+            if(state.holding==a && this.countOnTop(b,state,pddls) == 0){//check if a's stack is full
                 return 1 + Math.abs(this.getPosition(b,state) - state.arm);
             }
             else if(state.holding != null && state.holding==b){
@@ -844,36 +848,17 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         else if(cond.rel == "beside"|| cond.rel == "rightof"|| cond.rel == "leftof"){
             if(cond.rel == "beside"|| cond.rel == "rightof"){
                 //find floor (a is rightof b, so floor to left of floor and search upwards)
-                var floor;
-                for(var index = 0; index < pddls.length; index++){
-                    var pddl = pddls[index];
-                    var x = pddl.args[0];
-                    if(x == a){
-                        if(state.objects[pddl.args[1]].form == "floor")
-                            floor = pddl.args[1];//found floor
-                        else{
-                           a=x;
-                           index =-1;
-                        }
-                    }
-                }
-                var floor2;
-                for(var indexFloor= 0; indexFloor < pddls.length; indexFloor++){
-                    var pddl = pddls[indexFloor];
-                    var x = pddl.args[0];
-                    if(pddl.rel == "rightof" && x==floor){
-                        floor2 = pddl.args[1];
-                    }
-                    //found floor, now work up
-                }
+                var floor = "f"+(this.getPosition(b, state)+1);
+
+                
                 for(var indexLeft = 0; indexLeft < pddls.length; indexLeft++){
                     var pddl = pddls[indexLeft];
                     var x = pddl.args[1];
-                    if(x==floor2){
-                        if(pddl.args[0]==b)
+                    if(x==floor && pddl.rel == "ontop"){
+                        if(pddl.args[0]==a)
                             return true;
                         else{
-                            floor2 = pddl.args[0];
+                            floor = pddl.args[0];
                             indexLeft = -1;
                         }
                     }
@@ -882,37 +867,19 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
             }
             if(cond.rel == "beside"|| cond.rel == "leftof"){
-                var floor;
-                for(var index = 0; index < pddls.length; index++){
-                    var pddl = pddls[index];
-                    var x = pddl.args[0];
-                    if(x==a){//------------------
-                        if(state.objects[pddl.args[1]].form == "floor")
-                            floor = pddl.args[1];//found floor
-                        else{
-                           a=x;
-                           index =-1;
-                        }
-                    }
-                }
-                var floor2;
-                for(var indexFloor= 0; indexFloor < pddls.length; indexFloor++){
-                    var pddl = pddls[indexFloor];
-                    var x = pddl.args[0];
-                    if(pddl.rel == "leftof" && x==floor){
-                        floor2 = pddl.args[1];
-                    }
-                    //found floor, now work up
-                }
-                for(var indexRight = 0; indexRight < pddls.length; indexRight++){
-                    var pddl = pddls[indexRight];
+               
+                 var floor = "f"+(this.getPosition(b, state)-1);
+
+                
+                for(var indexLeft = 0; indexLeft < pddls.length; indexLeft++){
+                    var pddl = pddls[indexLeft];
                     var x = pddl.args[1];
-                    if(x==floor2){
-                        if(pddl.args[0]==b)
+                    if(x==floor && pddl.rel == "ontop"){
+                        if(pddl.args[0]==a)
                             return true;
                         else{
-                            floor2 = pddl.args[0];
-                            indexRight = -1;
+                            floor = pddl.args[0];
+                            indexLeft = -1;
                         }
                     }
 
