@@ -6,7 +6,7 @@ PriorityQueue = require('./priority-queue.js')
 # nextMoves gives the possible moves from current state
 # getNextState gives a new state given a move
 # Equality compares to states for equality
-Astar = (start, goal, heuristicFunction, nextMoves, getNextState,
+GreedyBFS = (start, goal, heuristicFunction, nextMoves, getNextState,
     satisfaction, equality) ->
   openSet = new PriorityQueue({ comparator: compareObjects })
   closedSet = []
@@ -22,7 +22,7 @@ Astar = (start, goal, heuristicFunction, nextMoves, getNextState,
   while openSet.length > 0
     current = openSet.dequeue()
     if satisfaction(current.state, goal)
-      console.log "Number of states searched in Astar: " + closedSet.length
+      console.log "Number of states searched in GreedyBFS: " + closedSet.length
       console.log "Length of solution: " + current.moves.length
       return current.moves
     closedSet.push(current.state)
@@ -32,7 +32,7 @@ Astar = (start, goal, heuristicFunction, nextMoves, getNextState,
       state = getNextState(current.state, move)
       if not (true in (equality(state, closed) for closed in closedSet))
         path = current.moves.concat(move)
-        totalCost = heuristicFunction(state, goal) + path.length
+        totalCost = heuristicFunction(state, goal)
         stateObject =
           state:  state
           moves:  path

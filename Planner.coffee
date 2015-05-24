@@ -40,7 +40,10 @@ heuristicFunction = (state, goalRep) ->
       for stack,i in state.stacks
         # If the item is in a stack add distance to it
         if item in stack
-          sum += Math.abs( state.arm - i )# + 1
+          sum += Math.abs( state.arm - i )
+          sum += 3*(stack.length-stack.indexOf(item)+1)
+      sum += if item isnt state.holding then 1 else 0 # add cost to pick it up
+
     else # All other relations has two arguments
       e1 = goal.args[0][0]
       e2 = goal.args[1][0]
@@ -53,12 +56,31 @@ heuristicFunction = (state, goalRep) ->
           si2 = i
       # Floor is a special case 
       if e2 is "floor"
+        #dist to nearest empty spot, else 
+        mindist = 10000 #INF
+        for stack,i in state.stacks
+          if si1 is i
+            mindist = Math.min(mindist, 6 + 3*stack.indexOf(e1))
+          else
+            if e1 isnt state.holding
+              mindist = Math.min(mindist, 2 + Math.abs(i-si1) + 3*state.stacks[i].length)
+            else
+              mindist = Math.min(mindist, 1 + Math.abs(i-state.arm) + 3*state.stacks[i].length)
         if e1 isnt state.holding
           stack = state.stacks[si1]
           if stack.indexOf(e1) isnt 0
             sum += 3*(stack.length-stack.indexOf(e1))
+            # cost for items above e1  
+            sum += 3*(stack.length-stack.indexOf(e1) + 1)
+            # cost for lifting e1, and dropping at new location
+            sum += mindist
+        else
+          # cost for dropping e1 at current location
+          # if floor does not have empty space.
+          sum += mindist - 1 - (i+1)
       else
         # Found the stack of both items
+        # incorrect, stack -1 if holding
         switch goal.rel
           when "ontop", "inside"
             if not onTopCheck(state, e1, e2)
@@ -70,14 +92,21 @@ heuristicFunction = (state, goalRep) ->
                 sum = sum + 3*(state.stacks[si1].length - minPos)
               # If they are in different stacks then add for both elements
               else # Add 3 for all items on top of e1 and e2
-                s1 = state.stacks[si1]
-                s2 = state.stacks[si2]
                 if e1 isnt state.holding
-                  sum += 3*(s1.length-s1.indexOf(e1))
+                  stack = state.stacks[si1]
+                  sum += 3*(stack.length - stack.indexOf(e1) + 1)
                 if e2 isnt state.holding
-                  sum += 3*(s2.length-s2.indexOf(e2))
-                # Also add for the difference in columns between them
-                sum += Math.abs(si1 - si2)
+                  stack = state.stacks[si2]
+                  sum += 3*(stack.length - stack.indexOf(e2) + 1)
+
+                sum += 1 # add drop cost for the item to move
+                if e1 isnt state.holding # add pick up cost for the item
+                  sum += 1
+
+                # Also add for the difference in columns between the items
+                pos1 = if si1 is -1 then state.arm else si1
+                pos2 = if si2 is -1 then state.arm else si2
+                sum += Math.abs(pos1 - pos2)
           when "leftof"
             if e1 is state.holding
               # The distance should be 1 and +1 for drop
