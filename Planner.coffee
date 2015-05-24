@@ -3,10 +3,22 @@ class Planner
 Planner.plan = (interpretations, currentState) ->
   
   plans = []
-  plan = interpretations[0]
+  # Pick the interpretation with the lowest heuristic
+  minHeuristic = -1
+  planIndex = -1
+  for inter,i in interpretations
+    heuristic = heuristicFunction(currentState, inter.intp)
+    if heuristic < minHeuristic or planIndex is -1
+      planIndex = i
+      minHeuristic = heuristic
+  plan = interpretations[planIndex]
+  console.log "The interpretation (" + planIndex + ") was chosen with heuristic " + minHeuristic
   goalRep = plan.intp
+  moves2 = GreedyBFS(currentState, goalRep, heuristicFunction,
+     nextMoves, getNextState, satisfaction, equality)
   movesToGoal = Astar(currentState, goalRep, heuristicFunction,
      nextMoves, getNextState, satisfaction, equality)
+ 
   plan.plan = planInterpretation(movesToGoal)
   plans.push(plan)
   return plans
@@ -41,7 +53,7 @@ heuristicFunction = (state, goalRep) ->
         # If the item is in a stack add distance to it
         if item in stack
           sum += Math.abs( state.arm - i )
-          sum += 3*(stack.length-stack.indexOf(item)+1)
+          sum += 4*(stack.length-stack.indexOf(item)-1)
       sum += if item isnt state.holding then 1 else 0 # add cost to pick it up
 
     else # All other relations has two arguments
@@ -94,10 +106,10 @@ heuristicFunction = (state, goalRep) ->
               else # Add 3 for all items on top of e1 and e2
                 if e1 isnt state.holding
                   stack = state.stacks[si1]
-                  sum += 3*(stack.length - stack.indexOf(e1) + 1)
+                  sum += 3*(stack.length - stack.indexOf(e1) - 1)
                 if e2 isnt state.holding
                   stack = state.stacks[si2]
-                  sum += 3*(stack.length - stack.indexOf(e2) + 1)
+                  sum += 3*(stack.length - stack.indexOf(e2) - 1)
 
                 sum += 1 # add drop cost for the item to move
                 if e1 isnt state.holding # add pick up cost for the item
@@ -160,8 +172,8 @@ heuristicFunction = (state, goalRep) ->
               h2 = state.stacks[si2].indexOf(e2)
               # If not e1 above e2
               if not (si1 is si2 and h1 < h2)
-                # Add work for all items above h1
-                sum += 3*(state.stacks[si1].length-h2);
+                # Add work for all items above h2
+                sum += 3*(state.stacks[si2].length-h2);
                 # Add work for distance between them
                 sum += Math.abs(si1-si2)
   return sum
@@ -369,7 +381,7 @@ satisfaction = (state, goalRep) ->
       when "under"
         A = goal.args[0]
         B = goal.args[1]
-        c = checkRelation(state, q1, A, aboveCheck, q2, B)
+        c = checkRelation(state, q2, B, aboveCheck, q1, A)
     result = result and polarity(p, c)
 
   return result
