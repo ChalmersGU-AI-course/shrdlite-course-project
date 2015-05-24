@@ -21,6 +21,7 @@ module Interpreter {
 	if (currentState.status[0] === "softambiguity") {
 	    currentState.previousCmd = parses;
 	} else {
+	    // cleaning it up
 	    currentState.previousCmd = null;
 	}
 
@@ -264,7 +265,7 @@ module Interpreter {
         }
 	// make sure supportiveAmbiguousTargets is not undefined and more than one
 	if (supportiveAmbiguousTargets && supportiveAmbiguousTargets.length >1){
-            state.ambiguousObjs = supportiveAmbiguousTargets;
+            state.ambiguousObjs.push(supportiveAmbiguousTargets);
         }
     }
 

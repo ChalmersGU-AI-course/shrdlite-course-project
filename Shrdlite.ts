@@ -48,18 +48,66 @@ module Shrdlite {
     // - then it interprets the parse(s)
     // - then it creates plan(s) for the interpretation(s)
 
+    function mergeCmd(world : World, previousCmd : Parser.Result[], utterance : string ) : Parser.Result[] {
+	try {
+	    var parses : Parser.Result[] = Parser.parse(utterance);
+	} catch (err) {
+		if (err instanceof Parser.Error) {
+		   var newInfo = utterance.toLowerCase().replace(/\W/g, "");
+		    var newResult : Parser.Result[] = [];
+		    switch (newInfo){
+		    case "small":
+		    case "tiny" :{
+			previousCmd[0].prs.ent.obj.size = "small";
+			newResult.push(previousCmd[0]);
+			return newResult;
+		    }
+		    case "large":
+		    case "big" :{
+			previousCmd[0].prs.ent.obj.size = "large";
+			newResult.push(previousCmd[0]);
+			return newResult;
+		    }
+		    case "black" :
+		    case "white" :
+		    case "green" :
+		    case "yellow" :
+		    case "red" :
+		    case "blue" :{
+			previousCmd[0].prs.ent.obj.color = newInfo;
+			newResult.push(previousCmd[0]);
+			return newResult;
+		    }
+
+		    default: 
+			return previousCmd;
+		    }
+		} else {
+                    throw err;
+		}
+	}
+	return parses;
+}
+
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
-        try {
-            var parses : Parser.Result[] = Parser.parse(utterance);
-        } catch(err) {
-            if (err instanceof Parser.Error) {
-                world.printError("Parsing error", err.message);
-                return;
-            } else {
-                throw err;
+	if (world.currentState.previousCmd !== null) {
+	    world.printSystemOutput("I've remembered you said: " 
+				+ world.currentState.previousCmd[0].input);
+	    var parses = mergeCmd(world, world.currentState.previousCmd, utterance);
+	}
+	else {
+            try {
+		var parses : Parser.Result[] = Parser.parse(utterance);
+            } catch(err) {
+		if (err instanceof Parser.Error) {
+                    world.printError("Parsing error", err.message);
+                    return;
+		} else {
+                    throw err;
+		}
             }
-        }
+	}
         world.printDebugInfo("Found " + parses.length + " parses");
         parses.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
