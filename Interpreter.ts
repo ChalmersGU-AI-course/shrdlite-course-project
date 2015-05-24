@@ -348,7 +348,7 @@ module Interpreter {
             }
         }
         if(goalObj.form != null){
-            if(goalObj.form != obj.form){
+            if(goalObj.form != obj.form && goalObj.form != "anyform"){
                 return false;
             }
         }
