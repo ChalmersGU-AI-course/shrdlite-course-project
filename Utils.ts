@@ -322,6 +322,9 @@ function heuristicOntop(first: string, second: string, stacks: string[][]){
                 h += (stacks[i].length-1-j)*(pickDropCost+1);
             }
             if(stacks[i][j] == first){
+                if(j==0 && second == "floor"){
+                    return 0;
+                }
                 foundF = i;
                 h += (stacks[i].length-1-j)*(pickDropCost+1);
             }
