@@ -315,15 +315,48 @@ module Planner {
         // Total possible moves: Left,Right,Pick,Drop
         if(arm > 0){
             //Move left possible
+            var worldstate    = new Nworld();
+            var state         = cloneWorldstate(currentWorld.states);
+            worldstate.states = state;
+            worldstate.step = 'l';
+            currentWorld.neighbours.push([worldstate, 1]);
         }
         if(arm < stacks.length){
             // Move right possible
+            var worldstate = new Nworld();
+            var state = cloneWorldstate(currentWorld.states);
+            worldstate.states = state;
+            worldstate.step = 'r';
+            currentWorld.neighbours.push([worldstate, 1]);
         }
-        if(holding === null){
+        // Not hodling an object and object exist at arm position
+        if(holding === null && currentWorld.states[arm].length > 0){ 
             // Pick up is possible
+            var worldstate = new Nworld();
+            var state = cloneWorldstate(currentWorld.states);
+            var holding = state.stacks[arm][state.stacks.length-1];
+            state.stacks[arm][state.stacks.length-1] = null;
+            state.holding = holding;          
+            worldstate.states = state;
+            worldstate.step = 'p';
+            currentWorld.neighbours.push([worldstate, 1]);
+
         }
         if(holding !== null){
             // Drop is possible (if all other if-cases holds e.g. physical laws)
+            // Check all laws
+            // If all laws is OK
+            var topObject = state.objects[holding];
+            var bottomObject = state.objects[stacks[arm][stacks[arm].length-1]];
+            if(PhysicalLaws.validPosition(topObject, bottomObject)){
+                var worldstate = new Nworld();
+                var state = cloneWorldstate(currentWorld.states);
+                state.stacks[arm][state.stacks[arm].length] = holding;
+                state.holding = null;
+                worldstate.states = state;
+                worldstate.step = 'd';
+                currentWorld.neighbours.push([worldstate, 1]);
+            }
         }
         return moves;
     }
