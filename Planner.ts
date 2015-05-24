@@ -488,6 +488,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     // recursive function to follow a literal to find the one on the top
     containsObj(obj : string, lit : Interpreter.Literal, lits : Interpreter.Literal[] ): boolean{
     	var result : Interpreter.Literal;
+    	if(lit.args[0] == obj){
+    		return true;
+    	}
 		for(var j = 0; j < lits.length; j++){
 			if(lits[j].args[1] == lit.args[0] && (lits[j].rel == "ontop" || lits[j].rel == "inside")){
 				result = lits[j];
@@ -741,21 +744,27 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
         }
         else if(cond.rel == "beside"){
+        	var possA = this.getPosition(a,state);
+        	var possB = this.getPosition(b,state);
+        	
+        	var ontopA = this.countOnTop(a,state,pddls);
+        	var ontopB = this.countOnTop(b,state,pddls);
+        	
             if(state.holding != null && state.holding== a){
-                return Math.abs(this.getPosition(b,state)-state.arm)-1; // currently not checking if stack next to b is full
+                return Math.abs(possB-state.arm)-1; // currently not checking if stack next to b is full
             }
              else if(state.holding != null && state.holding== b){
-                return 1 + Math.abs(this.getPosition(a,state)-state.arm)-1;
+                return 1 + Math.abs(possA-state.arm)-1;
             }
-            if(this.countOnTop(b,state,pddls)>this.countOnTop(a,state,pddls)){
+            if(ontopB > ontopA){
 
-                count = this.countOnTop(b,state,pddls)*4 + Math.abs(this.getPosition(b,state)-state.arm) 
-                + (Math.abs(this.getPosition(a,state)-this.getPosition(b,state))-1)+2;//+2 is for picking up and dropping b 
+                count = ontopB*4 + Math.abs(possB-state.arm) 
+                + (Math.abs(possA-possB)-1)+2;//+2 is for picking up and dropping b 
             }
             else{
                 //move A
-                count = this.countOnTop(a,state,pddls)*4 + Math.abs(this.getPosition(a,state)-state.arm)
-                 + (Math.abs(this.getPosition(a,state)-this.getPosition(b,state))-1)+2;
+                count = ontopA * 4 + Math.abs(possA-state.arm)
+                 + (Math.abs(possA-possB)-1)+2;
             }
             // a on floor? #objects on top of b + #objects leftofA < rightofA
 
