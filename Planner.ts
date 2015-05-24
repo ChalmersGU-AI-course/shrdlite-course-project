@@ -94,54 +94,6 @@ module Planner {
             startNode.neighbours.push(eSnd);
             getNeighbours(secNode);
         }
-
-        /*
-        for(var i = 0; i<searchDepth; i++){
-            nodes[i+1] = [];
-            for(var n in nodes[i]){
-                var oldNode       = nodes[i][n]
-                  , oldNodeWorld  = oldNode.label
-                  , armPos        = oldNodeWorld.arm;
-                for(var j = 0; j<NUM_STACKS; j++) {
-                    if(armPos != j) {
-                        var dir  :string = j>armPos ? "r" : "l"
-                          , cost :number = Math.abs(armPos-j)
-                          , newNodeWorld = moveArm(oldNodeWorld, j);
-
-                        var newNode = null;
-                        // We can either -lift- or -putDown-
-                        if(!isHolding(oldNodeWorld)) {
-                            // We can't always lift - not if we lack objects!
-                            var newerNodeWorld = liftObject(newNodeWorld, j);
-                            if (newerNodeWorld) {
-                                newNode = new AStar.Node<PddlWorld>(newerNodeWorld, [], Infinity, null, dir+cost+"p"+1);
-                            } else {
-                                //console.warn("breaking the first commandment");
-                            }
-                        } else {
-                            // Try to putDown. Will fail if move is illegal
-                            var newerNodeWorld = putDownObject(newNodeWorld, j, state);
-                            if (newerNodeWorld) {
-                                newNode = new AStar.Node<PddlWorld>(newerNodeWorld, [], Infinity, null, dir+cost+"d"+1);
-                            } else {
-                                //console.warn("breakin the laaw");
-                            }
-                        }
-
-                        // Check if performing action at current column was legal
-                        if (newNode) {
-                            var edge = new AStar.Edge<PddlWorld>(oldNode, newNode, cost);
-                            oldNode.neighbours.push(edge); // Note: we don't want a return edge
-
-                            // TODO: what happens when we do not push here?
-                            nodes[i+1].push(newNode);
-                        }
-                    }
-                }
-            }
-        }*/
-        //console.log("nodes",nodes);
-
         
         var searchResult = AStar.astar(startNode, createGoalFunction(intprt), createHeuristicFunction());
         
