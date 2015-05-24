@@ -1,9 +1,10 @@
 class Interpreter
 
     Interpreter.interpret = (parses, currentState) ->
-        if parses.length > 1
+      # If there are more than 1 parse than do a clarify 
+      if parses.length > 1
             parse = getParseClarification(parses)
-        else
+        else # Else just pick the one
             parse = parses[0]
 
         parseInterpList = []
@@ -13,7 +14,8 @@ class Interpreter
             matchingLocEntities = getMatchingEntities(parse.prs.loc.ent, currentState)
             for obj in matchingObjEntities
                 for locObj in matchingLocEntities
-                    if obj isnt locObj
+                    # A simple check to remove some impossible scenarios
+                    if objRelValid(obj, locObj, parse.prs.loc.rel, currentState)
                         intrp = {
                             input: parse.input,
                             prs: parse.prs,
@@ -35,6 +37,16 @@ class Interpreter
         else
             parseInterpList
 
+    objRelValid = (obj, locObj, rel, state) ->
+        if obj is locObj
+            return false
+        if (rel is "ontop" or rel is "inside") and locObj isnt "floor"
+            # We need to use getItem to get information about the objects
+            o1 = getItem(state, obj)
+            o2 = getItem(state, locObj)
+            return isObjectDropValid(o1, o2)
+        true
+    
     getObjClarification = (objs, currentState) ->
         console.log "Did you mean: "
         for obj, i in objs
@@ -87,7 +99,10 @@ class Interpreter
             objString = objString + obj.size + " "
         if obj.color?
             objString = objString + obj.color + " "
-        objString = objString + obj.form + " "
+        if obj.form is "anyform"
+            objString = objString + "object "
+        else
+            objString = objString + obj.form + " "
         objString
 
     getLocString = (loc) ->
@@ -96,7 +111,7 @@ class Interpreter
             when "ontop" then "on "
             when "leftof" then "left of "
             when "rightof" then "right of "
-            else " " + loc.rel + " "
+            else loc.rel + " "
 
     getMatchingEntities = (entity, currentState) ->
         retObjs = []  
