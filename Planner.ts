@@ -666,13 +666,41 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             return count;
         }
         else if(cond.rel == "under"){
+        	var posA = this.getPosition(a,state);
+        	var posB = this.getPosition(b,state);
+        	var ontopA = this.countOnTop(a,state,pddls);
+        	var ontopB = this.countOnTop(b,state,pddls);
+        	
+        	// check number of objs above b 
+        	count += (this.countOnTop(b, state, state.pddl.toArray()) * 4);
+        	// add them
+        	// check arm distance to b and add to count
+        	var armdist = Math.abs(state.arm - posB);
+        	count += armdist;
+        	if(armdist == 0 && !state.holding ){
+        		count ++;
+        	}else if(armdist == 0 && state.holding != b){
+        		count += 2;	//move and drop the object
+        	}else if(!state.holding){
+        		count ++;
+        	}
+        	// check number of steps left/right from b to a column
+        	var objdist = Math.abs(posA - posB);
+        	if(objdist == 0 && state.holding == b){
+        		count ++;
+        	}else if(objdist == 0 && state.holding == a){
+        		count += 6;
+        	}
+        	count += objdist;
+        	/*
+        	
             if(state.holding != null && state.holding== b){//check if a's stack is full
-                return 1 + Math.abs(this.getPosition(a,state) - state.arm);
+                return 1 + Math.abs(posA - state.arm);
             }
             else if(state.holding != null && state.holding== a){
-                return 1+ this.countOnTop(b,state,pddls)*4 + Math.abs(this.getPosition(b,state)-state.arm)*2;
+                return 1+ ontopB*4 + Math.abs(posB-state.arm)*2;
             }
-            if(this.getPosition(a,state) == this.getPosition(b,state) && this.countOnTop(b,state,pddls) < this.countOnTop(a,state,pddls))
+            if(posA == posB && ontopB < ontopA)
                 return 0;
             var z = cond.args[0];
             //traverse up through b;
@@ -695,7 +723,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 count += 3 + Math.abs(this.getPosition(b,state) - state.arm);
             else{
                 count += Math.abs(this.getPosition(b,state)-state.arm) + Math.abs(this.getPosition(a,state)-this.getPosition(b,state));
-            }
+            }*/
 
             return count;
         } 
@@ -755,21 +783,21 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
         }
         else if(cond.rel == "beside"){
-        	var possA = this.getPosition(a,state);
-        	var possB = this.getPosition(b,state);
+        	var posA = this.getPosition(a,state);
+        	var posB = this.getPosition(b,state);
         	
         	var ontopA = this.countOnTop(a,state,pddls);
         	var ontopB = this.countOnTop(b,state,pddls);
         	// if holding then 
             if(state.holding != null && state.holding== a){
-            	var dist = Math.abs(possB-state.arm);
+            	var dist = Math.abs(posB-state.arm);
             	if(dist == 0){
             		dist ++;
             	}
                 return dist; // currently not checking if stack next to b is full
             }
              else if(state.holding != null && state.holding== b){
-             	var dist = Math.abs(possA-state.arm);
+             	var dist = Math.abs(posA-state.arm);
             	if(dist == 0){
             		dist ++;
             	}
@@ -777,13 +805,13 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }
             if(ontopB > ontopA){
 
-                count = ontopB*4 + Math.abs(possB-state.arm) 
-                + (Math.abs(possA-possB)-1)+2;//+2 is for picking up and dropping b 
+                count = ontopB*4 + Math.abs(posB-state.arm) 
+                + (Math.abs(posA-posB)-1)+2;//+2 is for picking up and dropping b 
             }
             else{
                 //move A
-                count = ontopA * 4 + Math.abs(possA-state.arm)
-                 + (Math.abs(possA-possB)-1)+2;
+                count = ontopA * 4 + Math.abs(posA-state.arm)
+                 + (Math.abs(posA-posB)-1)+2;
             }
             // a on floor? #objects on top of b + #objects leftofA < rightofA
 
@@ -852,7 +880,18 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }return false;
         }
         else if(cond.rel == "under"){
-             for(var index = 0; index < pddls.length; index++){
+        	var litb = this.findObjLiteral(b, state);
+        	if(!litb){		// then the arm is holding it
+        		return false;
+        	}
+        	
+        	var above = this.containsObj(a, litb, state.pddl.toArray());
+        	if(above){
+        		return true;
+        	}
+        	return false
+        	
+            /* for(var index = 0; index < pddls.length; index++){
                 var pddl = pddls[index];
                 var x = pddl.args[0];
                 if(x==b){
@@ -866,7 +905,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                        index =-1;
                     }
                 }
-            }
+            }*/
             
         }
         else if((cond.rel == "beside" ) && !state.holding){
