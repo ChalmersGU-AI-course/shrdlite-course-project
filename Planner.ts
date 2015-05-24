@@ -540,7 +540,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         var cond = goal;
         var state = this._nodeValues[current];
         console.log("printing a: "+cond.args[0]+", b: " +cond.args[1] );
-        var ao = state.objects[cond.args[0]];
         var a = cond.args[0];
         var pddls = state.pddl.toArray();
         var count = 0;
@@ -553,9 +552,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         
         console.log("11armpos: "+state.arm + " , holding: " + state.holding);
         if(cond.rel == "hold"){
-            console.log("at hold1");
             if(state.holding != null){
-                console.log("at hold2");
                 if(state.holding == a){
                     return 0;
                 }
@@ -568,12 +565,10 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 return this.countOnTop(a,state,pddls) + Math.abs(this.getPosition(a,state)-state.arm);
             }
         }
-        console.log("after hold");
-        var bo = state.objects[cond.args[1]];
         var b = cond.args[1];
-        console.log("a: " + a + ", b: " + b + ", hold: " + state.holding);
-
+        
         if(cond.rel == "ontop" || cond.rel == "inside"){
+            
             //if a above b, take #objects on b * 4 + (ifnotinsamepile)#objects on a*4 + distancefromcrane to a + distancefromatob
             
             if(state.holding==a && this.countOnTop(b,state,pddls) == 0){//check if a's stack is full
@@ -582,7 +577,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             else if(state.holding != null && state.holding==b){
                 return 1+ this.countOnTop(a,state,pddls)*4 + Math.abs(this.getPosition(a,state)-state.arm)+2;
             }
-            
+            /*
             var z = b;
             //traverse up through b;
             for(var index = 0; index < pddls.length; index++){
@@ -602,10 +597,14 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                     }
                 }
 
-            }
+            }*/
             
             //if a is not in the same pile as b, check how many objects on top of a
-            if(!samePile){
+            if(this.getPosition(a,state) != this.getPosition(b,state)){
+                return Math.abs(this.getPosition(a, state)-this.getPosition(b,state)) +
+                Math.abs(this.getPosition(a,state)-state.arm) 
+                + this.countOnTop(b,state, pddls)*4+this.countOnTop(a,state,pddls)*4;
+                /*
                 z= a;//z ==a...
                 for(var index = 0; index < pddls.length; index++){
                     var pddl = pddls[index];
@@ -623,11 +622,15 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 count = count * 4 + Math.abs(this.getPosition(a,state)-state.arm) + Math.abs(this.getPosition(a,state)
                  - this.getPosition(b,state));
                 
-
+            */
             }
             else{
-               count = count*4 + Math.abs(this.getPosition(a,state) - state.arm) + 3;//if they are in the same pile but not finished, a will require 3 more moves to get back
+               return Math.abs(this.getPosition(a, state)-this.getPosition(b,state))+
+                Math.abs(this.getPosition(a,state)-state.arm) 
+                + this.countOnTop(b,state, pddls)*4;
+               //count = count*4 + Math.abs(this.getPosition(a,state) - state.arm) + 3;//if they are in the same pile but not finished, a will require 3 more moves to get back
             }
+            console.log("count: " + count)
             return count; 
 
         }
