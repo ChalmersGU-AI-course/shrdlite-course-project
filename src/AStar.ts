@@ -1,4 +1,4 @@
-/// <reference path="./MySet"/>
+///<reference path="./collections"/>
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Planner.ts"/>
 
@@ -10,16 +10,16 @@ module AStar {
      * @returns Node[] or null
      */
     export function astar(start: Node, goalConditions: Interpreter.Literal[], heuristic: THeuristicF) : Planner.Move[] {
-        var closedset = new MySet<string>(); // The set of nodes already evaluated. It contains the hash of the states.
-        var openset = new Map<string, Node>(); // The set of tentative nodes to be evaluated, initially containing the start node. It maps hash of states to the best corresponding Node.
+        var closedset = new collections.PriorityQueue<Node>(fScoreCompare); // The set of nodes already evaluated. It contains the hash of the states.
+        var openset = new collections.PriorityQueue<Node>(fScoreCompare); // The set of tentative nodes to be evaluated, initially containing the start node. It maps hash of states to the best corresponding Node.
 
         start.setScores(0,heuristic(start.content,goalConditions));
-        openset.set(start.content.hash, start);
-        
-        console.log("Début AStar !");
+        openset.enqueue(start);
+
+        console.log("Dï¿½but AStar !");
         console.dir(openset);
-        while (openset.size > 0) { // openset is not empty
-            var current: Node = lowestFScoreNode(openset);
+        while (!openset.isEmpty()) { // openset is not empty
+            var current: Node = openset.dequeue();
             if (current.f_score==current.g_score) { // <=> heuristic(current.content, goalConditions)==0 : SUCCESS !!
                 // In the case of holding objects.
                 var hold: string = null;
@@ -32,16 +32,16 @@ module AStar {
                 }
                 return current.content.moves;
             }
-            openset.delete(current.content.hash); // remove current from openset
-            closedset.add(current.content.hash); // add current to closedset
+            closedset.add(current); // add current to closedset
             current.computeNeighbors();
             current.neighbors.forEach((arc) => {
                 var neighbor = arc.destination;
                 var weight = arc.weight;
-                if (closedset.has(neighbor.content.hash)) return; // continue
-                if (!openset.has(neighbor.content.hash) || current.g_score+weight < openset.get(neighbor.content.hash).g_score) {
+                if (closedset.containsSetFunction(neighbor, hasSameState)) return; // continue
+                if (!openset.containsSetFunction(neighbor, hasSameState) ||
+                    current.g_score+weight < openset.getValue(neighbor.content.hash).g_score) {
                     neighbor.setScores(current.g_score+weight, heuristic(neighbor.content, goalConditions));
-                    openset.set(neighbor.content.hash, neighbor);
+                    openset.setValue(neighbor.content.hash, neighbor);
                 }
             });
         }
@@ -65,17 +65,17 @@ module AStar {
           this.g_score = -1;
           this.f_score = -1;
       }
-      
+
       setScores(g: number, h: number) {
           this.g_score = g;
           this.f_score = g+h;
       }
-      
+
       addNeighbor(node: Node, weight: number) : void {
         var arc = new Arc(node, weight);
         this.neighbors.push(arc);
       }
-      
+
       computeNeighbors() {
           var moves = Planner.CheckPhysics.possibleMoves(this.content.stacks);
           moves.forEach((m) => {
@@ -87,22 +87,18 @@ module AStar {
               this.addNeighbor(new Node(s), 1);
           });
       }
-      
+
       neighborNodes(): Node[] {
         return this.neighbors.map((arc) => arc.destination);
       }
+
     }
 
-    function lowestFScoreNode(set: Map<string, Node>) : Node {
-        // the node in openset having the lowest f_score value
-        var min_f = Number.POSITIVE_INFINITY;
-        var min_node: Node = null;
-        set.forEach((node) => {
-            if(node.f_score<min_f) {
-                min_f=node.f_score;
-                min_node=node;
-            }
-        });
-        return min_node;
+    function hasSameState(node1: Node, node2: Node): boolean {
+        return node1.content.hash == node2.content.hash;
+    }
+
+    function fScoreCompare(node1: Node, node2: Node): number {
+        return node1.f_score - node2.f_score;
     }
 }
