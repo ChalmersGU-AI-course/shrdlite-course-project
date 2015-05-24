@@ -90,7 +90,7 @@ module Shrdlite {
 	    }
 	});
 
-
+	
         world.printDebugInfo("Found " + interpretations.length + " interpretations");
         interpretations.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));

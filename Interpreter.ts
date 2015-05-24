@@ -246,8 +246,8 @@ module Interpreter {
     }
 
     function moveObjAbove(state : WorldState, intprt : Literal[][], locationRel : string, fromList : string[], toList : string[], exactlyAbove : boolean){
-        var supportiveAmbiguousTargets = [];
         for (var ix in fromList){
+            var supportiveAmbiguousTargets = [];
             for(var jx in toList){
                 var above = fromList[ix];
                 var below = toList[jx];
@@ -271,15 +271,18 @@ module Interpreter {
                         continue;
                     }
                 }
-                supportiveAmbiguousTargets.push(objB);
+                if(canSupport(objA, objB)){
+		    supportiveAmbiguousTargets.push(objB);
+		}
 
                 intprt.push( [
                     {pol: true, rel: locationRel, args: [above, below] }
                 ] );
             }
         }
-        if (state.ambiguousObjs.length >1){
-            state.ambiguousObjs.push(supportiveAmbiguousTargets);
+	// make sure supportiveAmbiguousTargets is not undefined and more than one
+	if (supportiveAmbiguousTargets && supportiveAmbiguousTargets.length >1){
+            state.ambiguousObjs = supportiveAmbiguousTargets;
         }
     }
 
@@ -409,7 +412,7 @@ module Interpreter {
                     console.log("found multiple objects fits description");
                     console.log(searchResult);
                     state.status.push("softambiguity");
-                    state.ambiguousObjs = (searchResult.ambiguousObjs);
+                    state.ambiguousObjs = searchResult.ambiguousObjs;
                     // not nessecary to stop whole program for this!
                     //throw new Interpreter.Error("There are several objects that fit the description");
                 }
