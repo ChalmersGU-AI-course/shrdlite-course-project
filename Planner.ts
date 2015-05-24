@@ -541,7 +541,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         var samePile:boolean = false;
         console.log("at heuristics");
         
-        if(this.checkGoal){
+        if(this.checkGoal(current, goal)){
             return 0;
         }
         
