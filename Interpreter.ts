@@ -23,11 +23,14 @@ module Interpreter {
             throw new Interpreter.AmbiguousError("Ambiguous result from the parses!", ambiguousInterpretations);
         }
         
+        //The parse is not ambiguous, interpret as normal
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
             interpretations.push(intprt);
         });
+        
+        //Check if any interpretations was found
         if (interpretations.length) {
             return interpretations;
         } else {
@@ -63,16 +66,21 @@ module Interpreter {
         public toString() {return this.name + ": " + this.message}
     }
     
+    /** Returns a string representation of the given object.
+     *  Will use as much information that is available */
     function findObject(object: Parser.Object){
         if(object == undefined) return "";
         
-        var hasSize = object.size != null;
+        var hasSize  = object.size  != null;
         var hasColor = object.color != null;
-        var hasForm = object.form != null;
+        var hasForm  = object.form  != null;
         
-        return (hasSize ? object.size + " ": "") + (hasColor ? object.color + " " : "") + (hasForm ? object.form : "");
+        var objectForm = hasForm ? object.form == "anyform" ? "object" : object.form : "";
+        
+        return (hasSize ? object.size + " ": "") + (hasColor ? object.color + " " : "") + objectForm;
     }
     
+    /** Returns a string representation of the given relationship. */
     function getRelation(rel: string){
         if(rel == undefined || rel == null) return "";
         
@@ -86,20 +94,24 @@ module Interpreter {
         }
     }
 
+    /** Interpret an ambiguous parse by extracting the parse to a sentence */
     function interpretCommandAmbiguous(cmd : Parser.Command, state : WorldState): string {
-        //console.log("--------------------- START INTERPRETER AMBIGUOUS ---------------------");
     
         var sentence: string[] = [];
     
+        // What is the command?  (Move, pick up, etc)
         var command = cmd.cmd;
         
+        // What is the quantifier?
         var quant = cmd.ent.quant;
         
+        //Get hold of the object refered to, either
+        // the objects object, or just the object itself
         var objectTemp = cmd.ent.obj;
         var objectToUse = objectTemp.obj == undefined ? objectTemp : objectTemp.obj;
         
+        //Extract the information about the object
         var objectStr = findObject(objectToUse);
-        objectStr = objectStr == "anyform" ? "object" : objectStr;
         var objectLocation = objectTemp.loc;
         var objectHasLocation = objectTemp.loc != undefined;
         var objectLocationRelation = objectHasLocation ? objectLocation.rel : "";
@@ -107,10 +119,12 @@ module Interpreter {
         var objectLocationStr = objectHasLocation ? findObject(objectLocation.ent.obj) : "";
         objectLocationStr = objectLocationQuant == "all" ? objectLocationStr + "s" : objectLocationStr;
         
+        //Push all the information to the final sentence
         sentence.push(command);
         sentence.push(quant);
         sentence.push(objectStr);
         
+        //If the object also has a location, add that.
         if(objectHasLocation){
             sentence.push("that is");
             sentence.push(objectLocationRelation);
@@ -118,6 +132,7 @@ module Interpreter {
             sentence.push(objectLocationStr);
         }
         
+        //Then do nearly everything again, but for the location
         var location = cmd.loc;
         
         var locationRelation = getRelation(location.rel);
@@ -144,8 +159,8 @@ module Interpreter {
             sentence.push(locationLocationQuant);
             sentence.push(locationLocationStr);
         }
-        
-        
+
+        //Join the list of words into a sentence
         return sentence.join(" ");
     
     }
@@ -153,11 +168,12 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        //console.log("--------------------- START INTERPRETER ---------------------");
         var intprt : Literal[][] = [];
         
         //All objects in the world
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
+        
+        //If the arm is holding something, add that too
         if(state.holding != null){
             objs.push(state.holding);
         }
@@ -165,17 +181,24 @@ module Interpreter {
         //The wanted object(s)
         var object = cmd.ent.obj;
         
-        //First check if the object is inside the world
+        //First check if the object is inside the world...
         var objectKeys = getObjectKey(object, objs, state.objects, state.stacks, true);
         
-        console.log("INTERPRETER: objectKeys " + objectKeys.toString());
-
-        //If this is not true, we did not find an object that matched
+        
+        console.log("INTERPRETER: 1 objectKeys " + objectKeys.toString());
+        console.log("INTERPRETER: 1 quantifier " + cmd.ent.quant);
+        console.log("INTERPRETER: 1 cmd " + cmd.cmd);
+        
+        //...if this is not true, we did not find an object that matched
         if(rightNumberOfResults(cmd.ent.quant, objectKeys.length)){
+        
+            //We found the right number of results, depending on the quantifier
             
             switch(cmd.cmd){
                 case "take":
                     
+                    //If the quantifier is "all", then push all the found object keys
+                    // to the interpreter list by using conjunction
                     if(cmd.ent.quant == "all"){
                         var temp: Literal[] = [];
                         objectKeys.forEach(
@@ -187,7 +210,8 @@ module Interpreter {
                         );
                         intprt.push(temp);
                     } else {
-                        //Just say that we should hold any of the found keys
+                        //Just say that we should hold any of the found keys by
+                        // pushing all the object keys using disjunction
                         objectKeys.forEach(
                             (key: string) => {
                                 intprt.push(
@@ -200,13 +224,19 @@ module Interpreter {
                     break;
                 case "move":
                     
-                    //Check the location
+                    //If we should move something, we need to know where to.
+                    //So get the location(s)
                     var foundLocationKey = getObjectKey(cmd.loc.ent.obj, objs, state.objects, state.stacks, true);
                     
-                    console.log("INTERPRETER foundLocationKey: " + foundLocationKey.toString());
+                    console.log("INTERPRETER: 2 locationKeys " + foundLocationKey.toString());
+                    console.log("INTERPRETER: 2 rightNumberOfResults " + rightNumberOfResults(cmd.loc.ent.quant, foundLocationKey.length));
                     
+                    //Just as before, check if we got enough results. Since we should move
+                    // something, we need to have found some location (depending on the quantifier)
                     if(rightNumberOfResults(cmd.loc.ent.quant, foundLocationKey.length)){
                         
+                        //If the quantifier is "all", we should push all combinations of 
+                        // object keys and location keys 
                         if(cmd.ent.quant == "all"){
                             
                             var locationLength = foundLocationKey.length;
@@ -230,6 +260,11 @@ module Interpreter {
                             }
                             
                         } else {
+                        
+                            console.log("INTERPRETER: objectKeys " + objectKeys.toString());
+                            console.log("INTERPRETER: locationKeys " + foundLocationKey.toString());
+                            console.log("INTERPRETER: quantifier " + cmd.ent.quant);
+                            console.log("INTERPRETER: cmd " + cmd.cmd);
                             
                             objectKeys.forEach(
                                 (key: string) => {
@@ -246,6 +281,19 @@ module Interpreter {
                             );
                         }
                         
+                    } else {
+                        //We did not get the right number of results regarding the locations
+                        console.log("INTERPRETER: 3 not right number of results for the locations");
+                        
+                        var locationStr = findObject(cmd.loc.ent.obj);
+                        
+                        switch(cmd.loc.ent.quant){
+                            case "the":
+                                throw new Error("The parse is ambiguous! There are several " + locationStr + " locations in the current world. Please specify which one you meant");
+                                break;
+                            default:
+                                break;
+                        }
                     }
                     
                     break;
@@ -253,15 +301,22 @@ module Interpreter {
             }
             
         } else {
-            //console.log("INTERPRETER: Found object was not in right place or not in the world");
+            //We did not get the right number of results regarding the objects
+            
+            var objectStr = findObject(object);
+            
+            switch(cmd.ent.quant){
+                case "the":
+                    throw new Error("The parse is ambiguous! There are several " + objectStr + "s in the current world. Please specify which one you meant");
+                    break;
+                default:
+                    break;
+            }
         }
         
-        
-        console.log("--------------------- END INTERPRETER ---------------------");
-        console.log("intPrt #" + intprt.length);
-        console.log("--------------------- END INTERPRETER ---------------------");
         return intprt;
     }
+    
     
     /** Goes through all the available objects (availableObjects), using the object definitions, to check if the wanted object (object)
     *    is inside the current world. If so, the key (character) for that object is added to the returnList and then returned */

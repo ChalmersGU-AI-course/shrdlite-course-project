@@ -58,7 +58,6 @@ function validPlacement(topObject: string, bottomObject: string, objects: {[s:st
 		return false;
 	}
     
-    
 	
 	//Small boxes cannot be supported by small bricks or pyramids.
 	if((objects[bottomObject].form == "brick" || objects[bottomObject].form == "pyramid") && objects[topObject].form == "box" && objects[topObject].size == "small"){
