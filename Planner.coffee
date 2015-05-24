@@ -81,9 +81,9 @@ heuristicFunction = (state, goalRep) ->
         if e1 isnt state.holding
           stack = state.stacks[si1]
           if stack.indexOf(e1) isnt 0
-            sum += 3*(stack.length-stack.indexOf(e1))
+            sum += 4*(stack.length-stack.indexOf(e1))
             # cost for items above e1  
-            sum += 3*(stack.length-stack.indexOf(e1) + 1)
+            sum += 4*(stack.length-stack.indexOf(e1) - 1)
             # cost for lifting e1, and dropping at new location
             sum += mindist
         else
@@ -101,15 +101,15 @@ heuristicFunction = (state, goalRep) ->
               if si1 is si2
                 stack = state.stacks[si1]
                 minPos = Math.min(stack.indexOf(e1), stack.indexOf(e2) )
-                sum = sum + 3*(state.stacks[si1].length - minPos)
+                sum = sum + 4*(state.stacks[si1].length - minPos - 1)
               # If they are in different stacks then add for both elements
               else # Add 3 for all items on top of e1 and e2
                 if e1 isnt state.holding
                   stack = state.stacks[si1]
-                  sum += 3*(stack.length - stack.indexOf(e1) - 1)
+                  sum += 4*(stack.length - stack.indexOf(e1) - 1)
                 if e2 isnt state.holding
                   stack = state.stacks[si2]
-                  sum += 3*(stack.length - stack.indexOf(e2) - 1)
+                  sum += 4*(stack.length - stack.indexOf(e2) - 1)
 
                 sum += 1 # add drop cost for the item to move
                 if e1 isnt state.holding # add pick up cost for the item
@@ -136,8 +136,8 @@ heuristicFunction = (state, goalRep) ->
               sum += Math.abs(1 - (si1 - state.arm)) + 1
             else
               # The distance should be 1 and +2 for pick and drop
-              costOver1 = 3*(state.stacks[si1].length-state.stacks[si1].indexOf(e1))
-              costOver2 = 3*(state.stacks[si2].length-state.stacks[si2].indexOf(e2))
+              costOver1 = 4*(state.stacks[si1].length-state.stacks[si1].indexOf(e1) - 1)
+              costOver2 = 4*(state.stacks[si2].length-state.stacks[si2].indexOf(e2) - 1)
               sum += Math.abs(1 - (si1-si2)) + 2 + Math.min(costOver1, costOver2)
           when "beside"
             if e1 is state.holding
@@ -148,7 +148,7 @@ heuristicFunction = (state, goalRep) ->
             if e1 is state.holding
               sum += Math.abs(state.arm - si2) + 1
             else if e2 is state.holding
-              costOver = 3*(state.stacks[si1].length-state.stacks[si1].indexOf(e1))
+              costOver = 4*(state.stacks[si1].length-state.stacks[si1].indexOf(e1) - 1)
               sum += Math.abs(state.arm - si1) + costOver + 1
             else
               # The height (position of item in list)
@@ -157,12 +157,12 @@ heuristicFunction = (state, goalRep) ->
               # If not e1 above e2
               if not (si1 is si2 and h1 > h2)
                 # Add work for all items above h1
-                sum += 3*(state.stacks[si1].length-h1);
+                sum += 4*(state.stacks[si1].length - h1 - 1);
                 # Add work for distance between them
                 sum += Math.abs(si1-si2)
           when "under"
             if e1 is state.holding
-              costOver = 3*(state.stacks[si2].length-state.stacks[si2].indexOf(e2))
+              costOver = 4*(state.stacks[si2].length-state.stacks[si2].indexOf(e2) - 1)
               sum += Math.abs(state.arm - si2) + costOver + 1
             else if e2 is state.holding
               sum += Math.abs(state.arm - si1) + 1
@@ -173,7 +173,7 @@ heuristicFunction = (state, goalRep) ->
               # If not e1 above e2
               if not (si1 is si2 and h1 < h2)
                 # Add work for all items above h2
-                sum += 3*(state.stacks[si2].length-h2);
+                sum += 4*(state.stacks[si2].length-h2 - 1);
                 # Add work for distance between them
                 sum += Math.abs(si1-si2)
   return sum
