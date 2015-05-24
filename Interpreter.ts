@@ -406,6 +406,11 @@ module Interpreter {
         	return [];
         }
         var pddls = state.pddl.toArray();
+        if(state.holding != null){
+            var hold : Literal;
+            hold = {pol : true, rel : "hold", args : [state.holding]};
+            pddls.push(hold);
+        }
         if(form == "floor" ){	// special case for floor
         	for (var index = 0; index < pddls.length; index++) {
         		var pddl = pddls[index];
