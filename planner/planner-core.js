@@ -232,17 +232,6 @@ SearchGraph.prototype.cost = function(from, to) {
 
 
 
-// If a constraint is satisfied for a given object
-SearchGraph.prototype.binds = function(constr, obj) {
-    if (typeof constr == 'string') {
-        return constr == obj;
-    }
-    var desc = this.objects[obj];
-    return (constr.form  === null || constr.form  == desc.form) &&
-           (constr.size  === null || constr.size  == desc.size) &&
-           (constr.color === null || constr.color == desc.color);
-};
-
 // If one PDDL rule is satisfied for a state
 SearchGraph.prototype.rule_satisfied = function(rule, state) {
     // Find the object
