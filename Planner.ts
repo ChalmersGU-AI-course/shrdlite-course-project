@@ -341,7 +341,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         if(lit.args[0] == obj){
         	return 0;
         }
-        return this.countOnTopHelper(0, lit, pddls);
+        return this.countOnTopHelper(1, lit, pddls);
     }
     
     countOnTopHelper(counter : number, lit : Interpreter.Literal, lits : Interpreter.Literal[] ):number{
@@ -439,6 +439,13 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     	if(state.holding == obj){
     		return state.arm;
     	}
+    	if(state.objects[obj].form == "floor"){	// find the floor pos (special case)
+    		for(var i = 0; i < this.getWorldWidth(state); i++){
+    			if(obj == "f"+i){
+    				return i;
+    			}
+    		}
+    	}
     	// Finde floor possition and the one ontop
     	for(var i = 0; i < pddls.length; i++){
     		//check if we found a floor relation
@@ -530,13 +537,18 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         var b = cond.args[1];
 
         if(cond.rel == "ontop" || cond.rel == "inside"){
+        	var posA = this.getPosition(a,state);
+        	var posB = this.getPosition(b,state);
+        	var ontopA = this.countOnTop(a,state,pddls);
+        	var ontopB = this.countOnTop(b,state,pddls);
+        	
             //if a above b, take #objects on b * 4 + (ifnotinsamepile)#objects on a*4 + distancefromcrane to a + distancefromatob
             
-            if(state.holding==a && this.countOnTop(b,state,pddls) == 0){//check if a's stack is full
-                return 1 + Math.abs(this.getPosition(b,state) - state.arm);
+            if(state.holding==a && ontopB == 0){//check if a's stack is full
+                return 1 + Math.abs(posB - state.arm);
             }
             else if(state.holding != null && state.holding==b){
-                return 1+ this.countOnTop(a,state,pddls)*4 + Math.abs(this.getPosition(a,state)-state.arm)+2;
+                return 1+ ontopA*4 + Math.abs(posA-state.arm)+2;
             }
             
             var z = b;
@@ -544,7 +556,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             for(var index = 0; index < pddls.length; index++){
                 var pddl = pddls[index];
                 var x = pddl.args[1];
-                if(x == z && pddl.rel == "ontop"){
+                if(x == z && (pddl.rel == "ontop" || pddl.rel == "inside")){
                     if(pddl.args[0]==a){
                         if(pddl.args[1]==b){
                             return 0;
@@ -557,7 +569,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                         count++;
                     }
                 }
-
             }
             
             //if a is not in the same pile as b, check how many objects on top of a
@@ -573,16 +584,13 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                         count++;
                     
                     }
-
                 }
                 //check distance from crane to a + distance from a to b, also multiply count by 4(number of moves for each object)
-                count = count * 4 + Math.abs(this.getPosition(a,state)-state.arm) + Math.abs(this.getPosition(a,state)
-                 - this.getPosition(b,state));
-                
+                count = count * 4 + Math.abs(posA-state.arm) + Math.abs(posA - posB);
 
             }
             else{
-               count = count*4 + Math.abs(this.getPosition(a,state) - state.arm) + 3;//if they are in the same pile but not finished, a will require 3 more moves to get back
+               count = count*4 + Math.abs(posA - state.arm) + 3;//if they are in the same pile but not finished, a will require 3 more moves to get back
             }
             return count; 
 
