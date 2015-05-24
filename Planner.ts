@@ -866,45 +866,23 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }
             
         }
-        else if(cond.rel == "beside"|| cond.rel == "rightof"|| cond.rel == "leftof"){
-            if(cond.rel == "beside"|| cond.rel == "rightof"){
-                //find floor (a is rightof b, so floor to left of floor and search upwards)
-                var floor = "f"+(this.getPosition(b, state)+1);
-
-                
-                for(var indexLeft = 0; indexLeft < pddls.length; indexLeft++){
-                    var pddl = pddls[indexLeft];
-                    var x = pddl.args[1];
-                    if(x==floor && pddl.rel == "ontop"){
-                        if(pddl.args[0]==a)
-                            return true;
-                        else{
-                            floor = pddl.args[0];
-                            indexLeft = -1;
-                        }
-                    }
-
-                }
-
+        else if(cond.rel == "beside"){
+        	var pos1 = this.getPosition(a, state);
+        	var pos2 = this.getPosition(b, state);
+        	
+        	if(pos1 == pos2 +1 || pos1 == pos2 -1){
+        		return true;	
+        	}
+        	return false;
+        }
+        else if( cond.rel == "rightof"|| cond.rel == "leftof"){
+        	var pos1 = this.getPosition(a, state);
+	        var pos2 = this.getPosition(b, state);
+            if( cond.rel == "rightof" && pos1 > pos2){
+	        	return true;	
             }
-            if(cond.rel == "beside"|| cond.rel == "leftof"){
-               
-                 var floor = "f"+(this.getPosition(b, state)-1);
-
-                
-                for(var indexLeft = 0; indexLeft < pddls.length; indexLeft++){
-                    var pddl = pddls[indexLeft];
-                    var x = pddl.args[1];
-                    if(x==floor && pddl.rel == "ontop"){
-                        if(pddl.args[0]==a)
-                            return true;
-                        else{
-                            floor = pddl.args[0];
-                            indexLeft = -1;
-                        }
-                    }
-
-                }
+            if( cond.rel == "leftof" && pos1 < pos2){
+               return true;
             }
             return false;
             
