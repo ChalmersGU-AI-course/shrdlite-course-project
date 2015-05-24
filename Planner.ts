@@ -855,6 +855,14 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         var b = cond.args[1];
 
         if(cond.rel == "above"){
+        	var litb = this.findObjLiteral(b, state);
+        	var under = this.containsObj(a, litb, state.pddl.toArray());
+        	if(under){
+        		return true;
+        	}
+        	return false
+        	
+        	/*
             for(var index = 0; index < pddls.length; index++){
                 var pddl = pddls[index];
                 var x = pddl.args[0];
@@ -869,7 +877,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                        index =-1;
                     }
                 }
-            }
+            }*/
         }
         else if(cond.rel == "ontop" || cond.rel == "inside"){
             for(var index = 0; index < pddls.length; index++){
