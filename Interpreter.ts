@@ -163,7 +163,6 @@ module Interpreter {
     export interface Result extends Parser.Result {intp:Literal[][]; amb? : boolean}
     export interface Literal {pol:boolean; rel:string; args:string[];}
 
-
     export function interpretationToString(res : Result) : string {
         return res.intp.map((lits) => {
             return lits.map((lit) => literalToString(lit)).join(" & ");
@@ -268,7 +267,7 @@ module Interpreter {
 			    or.push([p]);
 			}
 		    } else if (relation == "above") {
-			var p : Literal = {pol: true, rel: relation == "inside" ? "ontop" : relation, args: [key.name, target.name] };
+			var p : Literal = {pol: true, rel: relation, args: [key.name, target.name] };
 			or.push([p]);
 		    } else if(relation == "under") {
 			var p : Literal = {pol: true, rel: "above", args: [target.name, key.name] };
@@ -312,7 +311,6 @@ module Interpreter {
 				or.push(and);
 			    }
 			} else {
-			    and = [];
 			    var p1 : Literal = {pol: true, rel: "column", args: [key.name, "" + (target.pos.x)] };
 			    or.push([p1]);
 			}
