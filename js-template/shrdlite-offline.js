@@ -209,18 +209,16 @@ ExampleWorlds["medium"] = {
         "m": { "form": "box", "size": "small", "color": "blue" }
     },
     "examples": [
-        "put the small box on the plank on the floor", //X
-        "take the large box",
-        "put the brick that is to the left of a pyramid in a box",
-        "put the white ball in a box on the floor",
-        "move the large ball inside a yellow box on the floor",
-        "move the large ball inside a red box on the floor", //X
-        "take a red object", //X
-        "take the white ball", //X
-        "put all boxes on the floor",
-        "put the large plank under the blue brick", //X
-        "move all bricks on a table",
-        "move all balls inside a large box"
+	"put the brick that is to the left of a pyramid in a box",
+	"put the white ball in a box on the floor",
+	"move the large ball inside a yellow box on the floor",
+	"move the large ball inside a red box on the floor",
+	"take a red object",
+	"take the white ball",
+	"put all boxes on the floor",
+	"put the large plank under the blue brick",
+	"move all bricks on a table",
+	"move all balls inside a large box"
     ]
 };
 ExampleWorlds["small"] = {
@@ -243,7 +241,7 @@ ExampleWorlds["small"] = {
         "m": { "form": "box", "size": "small", "color": "blue" }
     },
     "examples": [
-        "put the white ball in a box on the floor",
+	"put the white ball in a box on the floor",
         "put the black ball in a box on the floor",
         "take a blue object",
         "take the white ball",
