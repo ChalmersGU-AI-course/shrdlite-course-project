@@ -362,6 +362,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         return counter;*/
         var lit = this.findObjLiteral(obj, state);
         // if obj is ontop then this is the top obj and no one is above
+        if(!lit){
+        	return 0;
+        }
         if(lit.args[0] == obj){
         	return 0;
         }
@@ -597,6 +600,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 }
 
             }
+            
             //if a is not in the same pile as b, check how many objects on top of a
             if(!samePile){
                 z= a;//z ==a...
@@ -691,7 +695,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }
 
             return count;
-        }
+        } 
         else if(cond.rel == "rightof"){//currently not handling if B is in holding
 
             if(state.holding != null && state.holding== a && this.getPosition(b,state) != this.amountOfTiles(b,state,pddls)){
