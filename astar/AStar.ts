@@ -100,7 +100,14 @@ module AStar {
         s.cost = 0;
         s.previous = null;
 
+        var startTime = new Date().getTime();
+
         while (!frontier.isEmpty()) {
+            
+            if(new Date().getTime() - startTime === 2000) {
+                return [];
+            }
+            
             var v = frontier.removeRoot();
 
             v.visited = true;
