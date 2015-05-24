@@ -10,6 +10,7 @@ module Planner {
     //TODO should this be moved somewhere? Argument och global parameter?
     var searchDepth = 10;
     var NUM_STACKS;
+    var WORLD_STATE;
 
     export function plan(interpretation : PddlLiteral[][], currentState : ExtendedWorldState) : string[] {
         var plan : string[] = planInterpretation(interpretation, currentState);
@@ -41,6 +42,7 @@ module Planner {
         console.log("goal", intprt);
         
         NUM_STACKS = state.stacks.length;
+        WORLD_STATE = state;
 
         // Update world state with 'attop' and 'arm'
         for(var i = 0; i<NUM_STACKS; i++) {
@@ -84,15 +86,16 @@ module Planner {
 
         // Create initial node
         var startNode:AStar.Node<PddlWorld> = new AStar.Node<PddlWorld>(state.pddlWorld, [], Infinity, null);
-        nodes[0].push(startNode);
+        getNeighbours(startNode);
 
         // If an action was possible in the current position, do it
         if (secNode) {
             var eSnd = new AStar.Edge<PddlWorld>(startNode, secNode, 1);
             startNode.neighbours.push(eSnd);
-            nodes[0].push(secNode);
+            getNeighbours(secNode);
         }
 
+        /*
         for(var i = 0; i<searchDepth; i++){
             nodes[i+1] = [];
             for(var n in nodes[i]){
@@ -136,8 +139,8 @@ module Planner {
                     }
                 }
             }
-        }
-        console.log("nodes",nodes);
+        }*/
+        //console.log("nodes",nodes);
 
         
         var searchResult = AStar.astar(startNode, createGoalFunction(intprt), createHeuristicFunction());
@@ -174,7 +177,45 @@ module Planner {
             return 0;
         }
     }
-
+    
+    export function getNeighbours(oldNode:AStar.Node<PddlWorld>) {
+        var oldNodeWorld  = oldNode.label
+            , armPos        = oldNodeWorld.arm;
+        for(var j = 0; j<NUM_STACKS; j++) {
+            if(armPos != j) {
+                var dir  :string = j>armPos ? "r" : "l"
+                  , cost :number = Math.abs(armPos-j)
+                  , newNodeWorld = moveArm(oldNodeWorld, j);
+            
+                var newNode = null;
+                // We can either -lift- or -putDown-
+                if(!isHolding(oldNodeWorld)) {
+                    // We can't always lift - not if we lack objects!
+                    var newerNodeWorld = liftObject(newNodeWorld, j);
+                    if (newerNodeWorld) {
+                        newNode = new AStar.Node<PddlWorld>(newerNodeWorld, [], Infinity, null, dir+cost+"p"+1);
+                    } else {
+                        //console.warn("breaking the first commandment");
+                    }
+                } else {
+                    // Try to putDown. Will fail if move is illegal
+                    var newerNodeWorld = putDownObject(newNodeWorld, j, WORLD_STATE);
+                    if (newerNodeWorld) {
+                        newNode = new AStar.Node<PddlWorld>(newerNodeWorld, [], Infinity, null, dir+cost+"d"+1);
+                    } else {
+                        //console.warn("breakin the laaw");
+                    }
+                }
+            
+                // Check if performing action at current column was legal
+                if (newNode) {
+                    var edge = new AStar.Edge<PddlWorld>(oldNode, newNode, cost);
+                    oldNode.neighbours.push(edge); // Note: we don't want a return edge
+                }
+            }
+        }               
+    }
+    
     function createGoalFunction(goalWorld:PddlLiteral[][]) {
         return function(node:AStar.Node<PddlWorld>) {
             var pddlWorld = node.label;

@@ -18,12 +18,14 @@ module AStar {
         cost:number;
         previous: Node<T>;
         action: string;
+        visited: boolean;
         constructor (label:T, neighbours:Edge<T>[]=[], cost:number=Infinity, previous:Node<T> = null, action:string="") {
             this.label = label;
             this.neighbours = neighbours;
             this.cost = cost;
             this.previous = previous;
             this.action = action;
+            this.visited = false;
         }
 
         // Convenience function for creating many nodes.
@@ -41,10 +43,12 @@ module AStar {
         start : Node<T>;
         end : Node<T>;
         cost: number;
+        
         constructor (start : Node<T>, end : Node<T>, cost : number) {
             this.start = start;
             this.end   = end;
             this.cost  = cost;
+            
         }
 
         // Creates a new edge which goes in the opposite direction of this one.
@@ -78,20 +82,20 @@ module AStar {
     //
     // Returns a path (array of nodes)
 
-    export function astar<T>(s: Node<T>, isGoal: (Node)=>boolean, heuristic: (Node)=>number) : Node<T>[] {
+    export function astar(s: Node<PddlWorld>, isGoal: (Node)=>boolean, heuristic: (Node)=>number) : Node<PddlWorld>[] {
 
         //Function that the heap uses to order itself
-        var compFunc : collections.ICompareFunction<Node<T>> = function(a:Node<T>, b: Node<T>){
+        var compFunc : collections.ICompareFunction<Node<PddlWorld>> = function(a:Node<PddlWorld>, b: Node<PddlWorld>){
             return (a.cost+heuristic(a))-(b.cost+heuristic(b));
         };
 
-        var frontier : Heap<Node<T>> = new Heap<Node<T>>(compFunc);
+        var frontier : Heap<Node<PddlWorld>> = new Heap<Node<PddlWorld>>(compFunc);
 
         frontier.add(s);
 
         var foundGoal = false;
 
-        var done     : Node<T>[]   = [];
+        var done     : Node<PddlWorld>[]   = [];
         // Start node's cost from start node is 0
         s.cost = 0;
         s.previous = null;
@@ -99,13 +103,17 @@ module AStar {
         while (!frontier.isEmpty()) {
             var v = frontier.removeRoot();
 
+            v.visited = true;
+            
+            Planner.getNeighbours(v);
+
             // Possibly update neighbours of node we're visiting now
             for (var eKey in v.neighbours) {
-                var edge : Edge<T> = v.neighbours[eKey]
-                 ,  n    : Node<T> = edge.end;
+                var edge : Edge<PddlWorld> = v.neighbours[eKey]
+                 ,  n    : Node<PddlWorld> = edge.end;
 
                 // Add to frontier if not already visited
-                if (done.indexOf(n) === -1)
+                if (!n.visited)
                     frontier.add(n);
 
                 // Update if path through v is better
