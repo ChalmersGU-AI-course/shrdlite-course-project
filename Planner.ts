@@ -510,7 +510,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     heuristic_cost(current:number, goal:Interpreter.Literal):number{//some parts can be improved
         var cond = goal;
         var state = this._nodeValues[current];
-        var ao = state.objects[cond.args[0]];
+
         var a = cond.args[0];
         var pddls = state.pddl.toArray();
         var count = 0;
@@ -533,8 +533,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 return this.countOnTop(a,state,pddls) + Math.abs(this.getPosition(a,state)-state.arm);
             }
         }
-        var bo = state.objects[cond.args[1]];
+
         var b = cond.args[1];
+
 
         if(cond.rel == "ontop" || cond.rel == "inside"){
         	var posA = this.getPosition(a,state);
@@ -542,13 +543,14 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         	var ontopA = this.countOnTop(a,state,pddls);
         	var ontopB = this.countOnTop(b,state,pddls);
         	
+
             //if a above b, take #objects on b * 4 + (ifnotinsamepile)#objects on a*4 + distancefromcrane to a + distancefromatob
             
-            if(state.holding==a && ontopB == 0){//check if a's stack is full
+            if(state.holding == a && ontopB == 0){//check if a's stack is full
                 return 1 + Math.abs(posB - state.arm);
             }
-            else if(state.holding != null && state.holding==b){
-                return 1+ ontopA*4 + Math.abs(posA-state.arm)+2;
+            else if(state.holding != null && state.holding == b){
+                return 1+ ontopA*4 + Math.abs(posA-state.arm) + 2;
             }
             
             var z = b;
@@ -572,25 +574,22 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }
             
             //if a is not in the same pile as b, check how many objects on top of a
-            if(!samePile){
+            if(!samePile){ 
                 z= a;//z ==a...
                 for(var index = 0; index < pddls.length; index++){
                     var pddl = pddls[index];
                     var x = pddl.args[1];
-                    if(x==z){
-                       
+                    if(x == z){
                         z = pddl.args[0];
                         index = -1;
                         count++;
-                    
                     }
                 }
                 //check distance from crane to a + distance from a to b, also multiply count by 4(number of moves for each object)
                 count = count * 4 + Math.abs(posA-state.arm) + Math.abs(posA - posB);
-
             }
             else{
-               count = count*4 + Math.abs(posA - state.arm) + 3;//if they are in the same pile but not finished, a will require 3 more moves to get back
+               count = count * 4 + Math.abs(posA - state.arm) + 3;//if they are in the same pile but not finished, a will require 3 more moves to get back
             }
             return count; 
 
