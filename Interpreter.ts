@@ -64,8 +64,6 @@ module Interpreter {
 	    }
 	    
 	    if(intprt.amb) {
-		var obj = state.objects[intprt.intp[0][0].args[0]];
-		//var res : Parser.Command = {cmd: "take", ent: {obj: {form: obj.form, color: obj.color, size: obj.size}, quant: "the"}};
 		var res : Parser.Command = {cmd: "take", ent: {obj: intprt.amb, quant: "the"}};
 	    } else {
 		var res : Parser.Command = fold (cmpCmd, intprt.prs, list);
@@ -195,12 +193,28 @@ module Interpreter {
 	var ambs : LitAmb[] = [];
 	if(cmd.cmd == "move") {
 	    var valids :ObjectInfo[] = findValid(cmd.ent.obj, state);
+	    var addAmbs = function(ambL) {
+		if(ambL.length == 1) {
+		    ambs.push({lits:ambL[0].lits});
+		} else {
+		    ambL.forEach(function(amb) {
+			ambs.push({lits:amb.lits, amb:amb.amb});
+		    });
+		}
+	    };
 	    if(cmd.ent.quant == "any") {
-		ambs.push({lits:convertGoalsToPDDL(valids, cmd.loc, state)[0].lits});
+		var ambL = convertGoalsToPDDL([valids[0]], cmd.loc, state); //Perm all goals from all valids?
+		addAmbs(ambL);
 	    } else if(cmd.ent.quant == "the") {
+		var lambs : LitAmb[] = [];
 		valids.forEach(function(val) {
-		    ambs.push({lits:convertGoalsToPDDL([val], cmd.loc, state)[0].lits, amb: val.obj});
+		    var ambL = convertGoalsToPDDL([val], cmd.loc, state);
+		    for(var i = 0; i < ambL.length; i++) {
+			if(!ambL[i].amb) {ambL[i] = {lits: ambL[i].lits, amb: val.obj}; }
+		    }
+		    lambs = lambs.concat(ambL);
 		});
+		addAmbs(lambs);
 	    } else if(cmd.ent.quant == "all") {
 		var ors  = convertGoalsToPDDL([valids[0]], cmd.loc, state)[0].lits;
 		for(var i = 1; i < valids.length; i++) {
@@ -234,8 +248,7 @@ module Interpreter {
 	    var o : Parser.Object = state.objects[state.holding];
 	    var pos : Position = findObject(state.holding, state);
 	    var obj2 : ObjectInfo = {obj: o, pos: pos, name : state.holding};
-	    ors = convertGoalsToPDDL([obj2],cmd.loc,state)[0].lits;
-	    ambs.push({lits:ors});
+	    ambs = convertGoalsToPDDL([obj2],cmd.loc,state);
 
 	} else {
 	    throw new Interpreter.Error("Error parsing command");
@@ -249,17 +262,43 @@ module Interpreter {
     function convertGoalsToPDDL(keys : ObjectInfo[], loc : Parser.Location, state: WorldState) : LitAmb[] 
     {
 	var ambs : LitAmb[]     = [];
-
+	var ors  : Literal[][]  = [];
         keys.forEach(function (key) {
 	    if(!loc) {
 		var p : Literal = {pol: true, rel : "holding", args: [key.name]};
-		ambs.push({lits:[[p]]});
+		ors = ors.concat([[p]]);
 	    } else {
 		var relation = loc.rel;
 		var value :ObjectInfo[]  = findValid(loc.ent.obj, state);
-		ambs.push({lits: getPddl(key, relation, value, state)});
+		if(loc.ent.quant == "the" && loc.ent.obj.form != "floor") 
+		{
+		    if(value.length == 1) {
+			ors = ors.concat(getPddl(key, relation, value, state));
+		    } else {
+			value.forEach(function(val) {
+			    ambs.push({lits: getPddl(key, relation, [val], state), amb: val.obj});
+			});
+		    }
+		} else if(loc.ent.quant == "all") {
+		    value.forEach(function(val) {
+			var orz = getPddl(key, relation, [val], state);
+			var perm = [];
+			for(var j = 0; j < ors.length; j++) {
+			    for(var k = 0; k < orz.length; k++) {
+				perm.push(ors[j].concat(orz[k]));
+			    }
+			}
+			ors = ors.length == 0 ? orz : perm;
+		    });
+		    ambs.push({lits:ors});
+		    ors = [];
+		} else {
+		    ors = ors.concat(getPddl(key, relation, value, state));
+		}
 	    }
 	});
+
+	if(ors.length != 0) {ambs.push({lits:ors});}
 	return ambs;
     }
 
