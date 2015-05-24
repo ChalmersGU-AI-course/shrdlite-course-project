@@ -463,10 +463,13 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     	}
     	return null;
     }
-    
+    // returns the position in dimention X.
     getPosition(obj : string, state : WorldState): number{
     	var pddls = state.pddl.toArray();
     	var counter = 0;
+    	if(state.holding == obj){
+    		return state.arm;
+    	}
     	// Finde floor possition and the one ontop
     	for(var i = 0; i < pddls.length; i++){
     		//check if we found a floor relation
@@ -866,7 +869,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }
             
         }
-        else if(cond.rel == "beside"){
+        else if((cond.rel == "beside" ) && !state.holding){
         	var pos1 = this.getPosition(a, state);
         	var pos2 = this.getPosition(b, state);
         	
@@ -875,10 +878,10 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         	}
         	return false;
         }
-        else if( cond.rel == "rightof"|| cond.rel == "leftof"){
+        else if(( cond.rel == "rightof"|| cond.rel == "leftof") && !state.holding){
         	var pos1 = this.getPosition(a, state);
 	        var pos2 = this.getPosition(b, state);
-            if( cond.rel == "rightof" && pos1 > pos2){
+            if( cond.rel == "rightof" && pos1 > pos2 ){
 	        	return true;	
             }
             if( cond.rel == "leftof" && pos1 < pos2){
@@ -887,7 +890,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             return false;
             
         }
-        return true;
+        return false;
     }
     
     getWorldWidth(state : WorldState):number{
