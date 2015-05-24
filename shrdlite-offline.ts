@@ -38,6 +38,8 @@ world.printWorld(() => {
     } catch (err) {
 	if (err instanceof Interpreter.Ambiguity){
 	    console.log("you've given an ambiguious sentence");
+	    console.log("Previous command was : ") ;
+	    console.log(world.currentState.previousCmd);
 	    var question = "Do you mean ";
 	    world.currentState.ambiguousObjs.forEach((obj) => {
 	       question = question + Parser.objToString(obj) + " ? ";

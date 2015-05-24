@@ -16,6 +16,7 @@ interface WorldState {
     examples: string[];
     status :string[];
     ambiguousObjs :Parser.Object[]; 
+    previousCmd : Parser.Result[];
 }
 
 interface World {

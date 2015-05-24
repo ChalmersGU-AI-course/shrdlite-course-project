@@ -39,6 +39,7 @@ ExampleWorlds["complex"] = {
     ]
     ,"status": []
     , "ambiguousObjs" :[]
+    , "previousCmd" : null
 };
 
 
@@ -75,6 +76,7 @@ ExampleWorlds["medium"] = {
     ]
     , "status": []
     , "ambiguousObjs" :[]
+    , "previousCmd" : null
 };
 
 
@@ -107,6 +109,7 @@ ExampleWorlds["small"] = {
     ]
     , "status": []
     , "ambiguousObjs" :[]
+    , "previousCmd" : null
 };
 
 
@@ -139,4 +142,5 @@ ExampleWorlds["impossible"] = {
     ]
     , "status": []
     , "ambiguousObjs" :[]
+    , "previousCmd" : null
 };

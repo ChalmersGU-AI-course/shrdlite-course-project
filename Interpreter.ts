@@ -17,6 +17,12 @@ module Interpreter {
             intprt.intp = interpretCommand(intprt.prs, currentState);
             interpretations.push(intprt);
         });
+	// enhanching extension
+	if (currentState.status[0] === "softambiguity") {
+	    currentState.previousCmd = parses;
+	} else {
+	    currentState.previousCmd = null;
+	}
 
         console.log("DEBUG: "+ interpretationToString(interpretations[0]));
 
@@ -28,8 +34,6 @@ module Interpreter {
                     validInterprets.push(inter);
                 }
             });
-            // check if validInterprets.length > 0 then ask clearification !
-            // throw new Interpreter.Ambiguity(); <- this wont work, we need to update worldstate
             if (validInterprets.length > 1) {
                 currentState.status.push("multiValidInterpret");
             }
@@ -170,7 +174,6 @@ module Interpreter {
                 target[0] = state.holding;
                 findMoveInterpretations(cmd, state, intprt, target);
                 break;
-            // Still no put yet
             default:
                 throw new Interpreter.Error("Interpreter: UNKNOWN cmd: " + cmd.cmd);
         }
@@ -184,27 +187,6 @@ module Interpreter {
 
         var location = cmd.loc;
         var locationTargets = findTargetEntities(location.ent, state).targets;
-        // var supportiveAmbiguousTargets = [];
-        // = findTargetEntities(location.ent, state).targets;
-        // not all location targets canSupport targets!
-        // findTargetEntities(location.ent, state).targets.forEach((t) => {
-        //     if (canSupport( findObjDef(state, tar[0])
-        //                     ,findObjDef(state, t)))
-        //     {
-        //         //locationTargets.push(t);
-        //         supportiveAmbiguousTargets.push(findObjDef(state, t));
-        //     }
-        // });
-        // if (locationTargets.length > 1 && state.ambiguousObjs.length >1){
-        //     state.ambiguousObjs.push(supportiveAmbiguousTargets);
-        // }
-
-        // var locationTargets = findTargetEntities(location.ent, state);
-        // if(locationTargets.length == 0){
-        //     throw new Interpreter.Error("Can't find such a place to move it to.");
-        // }
-
-        /// small bug found: should revisit targets again to eliminate impossible ones
 
         switch(location.rel){
             case "beside":
@@ -342,36 +324,11 @@ module Interpreter {
             var currentStack = state.stacks[stackNo];
             for(var heightNo in currentStack){
                 var objName = currentStack[heightNo];
-// <<<<<<< HEAD
                 if(testObject(state, objName, goalObj)){
                     var obj : ObjectDefinition = state.objects[objName];
                     result.push(objName);
                     searchResult.ambiguousObjs.push(obj);
                 }
-// =======
-//                 var obj : ObjectDefinition = state.objects[objName];
-//
-//                 if(goalObj.size != null){
-//                     if(goalObj.size != obj.size){
-//                         continue;
-//                     }
-//                     // else {com.add("Size");}
-//                 }
-//                 if(goalObj.color != null){
-//                     if(goalObj.color != obj.color){
-//                         continue;
-//                     }
-//                         // else {com.add("Color");}
-//                 }
-//                 if(goalObj.form != null){
-//                     if(goalObj.form != obj.form){
-//                         continue;
-//                     }
-//                     // else {com.add("Form");}
-//                 }
-//                 result.push(objName);
-//                 searchResult.ambiguousObjs.push(obj);
-// >>>>>>> solving_ambiguity
             }
         }
         return searchResult;

@@ -23,8 +23,6 @@ module Shrdlite {
                     }
 		} catch (err){
 		    if (err instanceof Interpreter.Ambiguity){
-			//world.printError("Found you!", "");
-			//world.printError("LISTS: ", world.currentState.ambiguousObjs.toString());
 			var question = "Do you mean ";
 			world.currentState.ambiguousObjs.forEach((obj) => {
 			    question = question + Parser.objToString(obj) + " ? ";
