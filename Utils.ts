@@ -1,6 +1,6 @@
 ///<reference path="Interpreter.ts"/>
 
-var pickDropCost=2;
+var pickDropCost=100;
 
 /** Generate new ID given a state */
 function generateID(state: string[][]):string{
@@ -35,8 +35,8 @@ function validPlacement(topObject: string, bottomObject: string, objects: {[s:st
         return true;
     }
     
-    console.log("Utils.validPlacement topObject: " + topObject);
-    console.log("Utils.validPlacement bottomObject: " + bottomObject);
+    //console.log("Utils.validPlacement topObject: " + topObject);
+    //console.log("Utils.validPlacement bottomObject: " + bottomObject);
     
     //Balls can't support anything
 	if (objects[bottomObject].form == "ball") {
@@ -81,9 +81,9 @@ function validPlacementAbove(first: string, second: string, objects: {[s:string]
     }
 
     //If second is a ball, then no
-    console.log("Utils.validPlacementAbove objects[second].form=" + objects[second].form);
+    //console.log("Utils.validPlacementAbove objects[second].form=" + objects[second].form);
     if(objects[second].form == "ball"){
-        console.log("Utils.validPlacementAbove THE SECOND OBJECT IS OF FORM BALL! Return false");
+        //console.log("Utils.validPlacementAbove THE SECOND OBJECT IS OF FORM BALL! Return false");
         return false;
     }
     
@@ -248,7 +248,7 @@ function check(first: string, rel: string, second: string, stacks: string[][]){
         case "holding":
             return holding(first, stacks);
         default:
-            //console.log("check no match");
+            ////console.log("check no match");
             return false;
     }
 }
@@ -273,26 +273,26 @@ function validInterpretation(int: Interpreter.Literal, objectDef: {[s:string]: O
             case "ontop":
             case "inside":
                 ret = validPlacement(int.args[0], int.args[1], objectDef);
-                console.log("Utils.validInterpretation ONTOP OR INSIDE RET:" + ret);
+                //console.log("Utils.validInterpretation ONTOP OR INSIDE RET:" + ret);
                 extra = " of ";
                 break;
             case "above":
                 ret = validPlacementAbove(int.args[0], int.args[1], objectDef);
-                console.log("Utils.validInterpretation ABOVE RET:" + ret);
+                //console.log("Utils.validInterpretation ABOVE RET:" + ret);
                 break;
             case "under":
                 //Same as above, just flipped order on the arguments
                 ret =  validPlacementAbove(int.args[1], int.args[0], objectDef);
-                console.log("Utils.validInterpretation UNDER RET:" + ret);
+                //console.log("Utils.validInterpretation UNDER RET:" + ret);
                 break;
             default:
                 ret = true;
-                console.log("Utils.validInterpretation DEFAULT RET:" + ret);
+                //console.log("Utils.validInterpretation DEFAULT RET:" + ret);
                 break;
         }
     }
     
-    console.log("Utils.validInterpretation ret: " + ret + ". first: " + int.args[0] + " sec: " + int.args[1]);
+    //console.log("Utils.validInterpretation ret: " + ret + ". first: " + int.args[0] + " sec: " + int.args[1]);
     if(!ret){
         throw new ValidInterpretationError("It is not possible to put the " + getObject(objectDef, int.args[0]) + " " + int.rel + extra + "the " + getObject(objectDef, int.args[1]));
     }
@@ -458,7 +458,7 @@ function heuristics(first: string, rel: string, second: string, stacks: string[]
         case "holding":
             return heuristicHold(first, stacks);
         default:
-            //console.log("heuristics no match");
+            ////console.log("heuristics no match");
             return 0;
     }
 }

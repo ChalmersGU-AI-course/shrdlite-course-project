@@ -64,49 +64,6 @@ module Planner {
     
         console.log("------------planInterpretation start------------");
         
-        var validInt = [];
-        //First go over all the interpretations and filter out non-valid interpretations
-        var numberOfOrs: number = intprt.length;
-        intprt.forEach(
-            (ints: Interpreter.Literal[]) => {
-                var wasValid = true;
-                numberOfOrs--;
-                
-                ints.forEach(
-                    (int: Interpreter.Literal) => {
-                        try{
-                            var validIntFlag = validInterpretation(int, state.objects);
-                        } catch(err){
-                            console.log("PLANNER CHECK VALID numberOfOrs: " + numberOfOrs);
-                            console.log("PLANNER CHECK VALID amount: " + validInt.length);
-                            //err instanceof ValidInterpretationError
-                            if(err instanceof ValidInterpretationError && numberOfOrs==0 && validInt.length == 0){
-                                throw err;
-                            }
-                        }
-                        
-                        
-                        
-                        if(!validIntFlag){
-                            wasValid = false;
-                        }
-                        return true;
-                    }
-                );
-                
-                
-                if(wasValid){
-                    validInt.push(ints);
-                }
-                
-                return true;
-            }
-        );
-        
-        intprt = validInt;
-        console.log("Filtered all interpretations, now have " + intprt.length);
-        
-        //TODO: Meddela VAD som gjorde tolkningen ej giltig
         if(intprt == undefined || intprt.length == 0){
             //No interpretation was found
             return ["! - No valid interpretation was found. Please try again"];
@@ -121,16 +78,12 @@ module Planner {
         
         var dropPlan: string[] = [];
        
-        //console.log("holding: " + holding);
-       
         var objectDropIndex: number = undefined;
         var armPositionWithoutDropPlan: number = state.arm;
        
         //Check if the arm is holding anything
         if(holding != null){
             //The arm holds something. "Drop" it at the first available place
-            //TODO: kanske är dumt att bara lägga ner den, kan förvärra slutresultatet
-            //console.log("starting to loop...");
             for(var i = 0; i < startStacks.length; i++){
                 //console.log("Looping: " + i);
                 var bottomElement: string = undefined;
@@ -138,10 +91,8 @@ module Planner {
                 if(startStacks[i].length > 0){
                     bottomElement = startStacks[i][startStacks[i].length-1];
                 }
-                //console.log("bottomElement: " + bottomElement);
                 
                 if(validPlacement(holding, bottomElement, state.objects)){
-                    console.log("drop plan to stack " + i);
                     dropPlan.push("dropping " + getObject(state.objects,holding));
                     moveArmTo(dropPlan, arm, i);
                     arm = i;
@@ -217,7 +168,6 @@ module Planner {
          
         if(path == undefined){
             plan.push("No path found. (ノ ゜Д゜)ノ ︵ ┻━┻");
-            //console.log("------------planInterpretation returns 2------------");
             return plan;
         } else if(path.isEmpty()) {
             //First we need to remove the object with ID objectID
@@ -299,7 +249,6 @@ module Planner {
             }
         }
         plan.push("Done");
-        //console.log("------------planInterpretation returns 3------------");
         return plan;
         
     }

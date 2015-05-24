@@ -71,6 +71,9 @@ module Shrdlite {
                 
                 
                 return;
+            } else if(err instanceof ValidInterpretationError){
+                world.printError("Interpretation error", err.message);
+                return;
             } else {
                 throw err;
             }

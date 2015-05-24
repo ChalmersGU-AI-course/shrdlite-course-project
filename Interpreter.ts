@@ -185,10 +185,6 @@ module Interpreter {
         var objectKeys = getObjectKey(object, objs, state.objects, state.stacks, true);
         
         
-        console.log("INTERPRETER: 1 objectKeys " + objectKeys.toString());
-        console.log("INTERPRETER: 1 quantifier " + cmd.ent.quant);
-        console.log("INTERPRETER: 1 cmd " + cmd.cmd);
-        
         //...if this is not true, we did not find an object that matched
         if(rightNumberOfResults(cmd.ent.quant, objectKeys.length)){
         
@@ -228,9 +224,6 @@ module Interpreter {
                     //So get the location(s)
                     var foundLocationKey = getObjectKey(cmd.loc.ent.obj, objs, state.objects, state.stacks, true);
                     
-                    console.log("INTERPRETER: 2 locationKeys " + foundLocationKey.toString());
-                    console.log("INTERPRETER: 2 rightNumberOfResults " + rightNumberOfResults(cmd.loc.ent.quant, foundLocationKey.length));
-                    
                     //Just as before, check if we got enough results. Since we should move
                     // something, we need to have found some location (depending on the quantifier)
                     if(rightNumberOfResults(cmd.loc.ent.quant, foundLocationKey.length)){
@@ -261,11 +254,6 @@ module Interpreter {
                             
                         } else {
                         
-                            console.log("INTERPRETER: objectKeys " + objectKeys.toString());
-                            console.log("INTERPRETER: locationKeys " + foundLocationKey.toString());
-                            console.log("INTERPRETER: quantifier " + cmd.ent.quant);
-                            console.log("INTERPRETER: cmd " + cmd.cmd);
-                            
                             objectKeys.forEach(
                                 (key: string) => {
                                     
@@ -283,7 +271,6 @@ module Interpreter {
                         
                     } else {
                         //We did not get the right number of results regarding the locations
-                        console.log("INTERPRETER: 3 not right number of results for the locations");
                         
                         var locationStr = findObject(cmd.loc.ent.obj);
                         
@@ -314,7 +301,42 @@ module Interpreter {
             }
         }
         
-        return intprt;
+        //Lastly, go over all the intepretations and filter out non valid ones
+        var validInt = [];
+        //First go over all the interpretations and filter out non-valid interpretations
+        var numberOfOrs: number = intprt.length;
+        intprt.forEach(
+            (ints: Interpreter.Literal[]) => {
+                var wasValid = true;
+                numberOfOrs--;
+                
+                ints.forEach(
+                    (int: Interpreter.Literal) => {
+                        try{
+                            var validIntFlag = validInterpretation(int, state.objects);
+                        } catch(err){
+                            //err instanceof ValidInterpretationError
+                            if(err instanceof ValidInterpretationError && numberOfOrs==0 && validInt.length == 0){
+                                throw err;
+                            }
+                        }
+                        
+                        if(!validIntFlag){
+                            wasValid = false;
+                        }
+                        return true;
+                    }
+                );
+                
+                if(wasValid){
+                    validInt.push(ints);
+                }
+                
+                return true;
+            }
+        );
+        
+        return validInt;
     }
     
     
