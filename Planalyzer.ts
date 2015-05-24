@@ -65,7 +65,9 @@ function SplitToActionPlans(plan: string[]): string[][] {
 			currentGroup.push(item);
 		}
 	}
-	actionPlans.push(currentGroup);
+	if (currentGroup.length > 0) {
+		actionPlans.push(currentGroup);
+	}
 	return actionPlans;
 }
 
