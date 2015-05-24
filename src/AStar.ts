@@ -11,15 +11,15 @@ module AStar {
      */
     export function astar(start: Node, goalConditions: Interpreter.Literal[], heuristic: THeuristicF) : Planner.Move[] {
         var closedset = new collections.PriorityQueue<Node>(fScoreCompare); // The set of nodes already evaluated. It contains the hash of the states.
-        var openset = new collections.PriorityQueue<Node>(fScoreCompare); // The set of tentative nodes to be evaluated, initially containing the start node. It maps hash of states to the best corresponding Node.
+        var openset = new collections.Dictionary<string, Node>(); // The set of tentative nodes to be evaluated, initially containing the start node. It maps hash of states to the best corresponding Node.
 
         start.setScores(0,heuristic(start.content,goalConditions));
-        openset.enqueue(start);
+        openset.setValue(start.content.hash, start);
 
         console.log("D�but AStar !");
         console.dir(openset);
         while (!openset.isEmpty()) { // openset is not empty
-            var current: Node = openset.dequeue();
+            var current: Node = lowestFScoreNode(openset);
             if (current.f_score==current.g_score) { // <=> heuristic(current.content, goalConditions)==0 : SUCCESS !!
                 // In the case of holding objects.
                 var hold: string = null;
@@ -32,13 +32,14 @@ module AStar {
                 }
                 return current.content.moves;
             }
+            openset.remove(current.content.hash); // remove current from openset
             closedset.add(current); // add current to closedset
             current.computeNeighbors();
             current.neighbors.forEach((arc) => {
                 var neighbor = arc.destination;
                 var weight = arc.weight;
                 if (closedset.containsSetFunction(neighbor, hasSameState)) return; // continue
-                if (!openset.containsSetFunction(neighbor, hasSameState) ||
+                if (!openset.containsKey(neighbor.content.hash) ||
                     current.g_score+weight < openset.getValue(neighbor.content.hash).g_score) {
                     neighbor.setScores(current.g_score+weight, heuristic(neighbor.content, goalConditions));
                     openset.setValue(neighbor.content.hash, neighbor);
@@ -96,6 +97,20 @@ module AStar {
 
     function hasSameState(node1: Node, node2: Node): boolean {
         return node1.content.hash == node2.content.hash;
+    }
+
+    function lowestFScoreNode(set: collections.Dictionary<string, Node>) : Node {
+        // the node in openset having the lowest f_score value
+        var min_f = Number.POSITIVE_INFINITY;
+        var min_node: Node = null;
+        set.forEach((key) => {
+            var node = set.getValue(key);
+            if(node.f_score<min_f) {
+                min_f = node.f_score;
+                min_node = node;
+            }
+        });
+        return min_node;
     }
 
     function fScoreCompare(node1: Node, node2: Node): number {
