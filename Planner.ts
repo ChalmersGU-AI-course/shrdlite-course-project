@@ -880,13 +880,10 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }return false;
         }
         else if(cond.rel == "under"){
-        	var litb = this.findObjLiteral(b, state);
-        	if(!litb){		// then the arm is holding it
-        		return false;
-        	}
+        	var lita = this.findObjLiteral(a, state);
         	
-        	var above = this.containsObj(a, litb, state.pddl.toArray());
-        	if(above){
+        	var under = this.containsObj(b, lita, state.pddl.toArray());
+        	if(under){
         		return true;
         	}
         	return false
