@@ -12,10 +12,54 @@ module Interpreter {
         // TODO remove, used for debugging
         this._ = _;
 
-        var cmds        : Parser.Command[]    = <Parser.Command[]> _.map(parses, 'prs')
+        var cmds        : Parser.Command[]    = <Parser.Command[]> _.map(parses, 'prs');
         //  , intpsPerCmd : PddlLiteral[][][][] = _.map(cmds, _.partial(interpretCommand, _, state))
-          , intpsPerCmd : PddlLiteral[][][][] = _.map(cmds, function(a) {return interpretCommand(a, state);})
-          , intps       : PddlLiteral[][][]   = concat(intpsPerCmd)
+        
+        // Handle ambiguity by recursively converting a command object to a string,
+        // with parentheses indicating precedence.
+        if(cmds.length > 1){
+            var promptStr = 'There are multiple ways to interpret that command:\n';
+            var cmdToStr = function(obj){
+                var str = '';
+                if(obj.cmd){
+                    str += obj.cmd + ' ';
+                }
+                if(obj.quant){
+                    str += obj.quant + ' ';
+                }   
+                if(obj.size){
+                    str += obj.size + ' ';
+                }
+                if(obj.color){
+                    str += obj.color + ' ';
+                }
+                if(obj.form){
+                    str += obj.form + ' ';
+                }
+                if(obj.rel){
+                    str += obj.rel + ' ';
+                }
+                if(obj.obj){
+                    str += cmdToStr(obj.obj) + ' ';
+                }
+                if(obj.ent){
+                    str += '(' + cmdToStr(obj.ent) + ') ';
+                }
+                if(obj.loc){
+                    str += '(' + cmdToStr(obj.loc) + ') ';
+                }
+                return str;
+            };
+
+            for(var c in cmds){
+                promptStr += c + '. ' + cmdToStr(cmds[c]) + '\n';
+            }
+            promptStr += 'Which one did you mean?';
+            var selected = Number(prompt(promptStr)); //TODO do something with the selected interpretation
+        }
+
+        var intpsPerCmd : PddlLiteral[][][][] = _.map(cmds, function(a) {return interpretCommand(a, state);});
+        var intps       : PddlLiteral[][][]   = concat(intpsPerCmd);
         if (intps.length) {
             return intps;
         } else {
