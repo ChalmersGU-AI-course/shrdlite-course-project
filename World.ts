@@ -15,7 +15,7 @@ interface WorldState {
     objects: { [s:string]: ObjectDefinition; };
     examples: string[];
     status :string[];
-    ambiguousObjs :Parser.Object[]; 
+    ambiguousObjs : [Parser.Object[]]; 
     previousCmd : Parser.Result[];
 }
 

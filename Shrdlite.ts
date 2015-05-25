@@ -24,13 +24,19 @@ module Shrdlite {
                 } catch (err){
                     if (err instanceof Interpreter.Ambiguity){
                         var question = "Do you mean ";
-                        world.currentState.ambiguousObjs.forEach((obj) => {
+			var index = world.currentState.ambiguousObjs.length-1;
+			if (index != 0){
+			    index = 1; // always refine from head !
+			    // since now refinement system doesn't really work on loc;
+			    // we want user to refine ent (which happened before loc) 
+			}
+			world.currentState.ambiguousObjs[index].forEach((obj) => {
                             question = question + Parser.objToString(obj) + " ? ";
                         });
 
                         // clear up status or we will always come back here
                         world.currentState.status = [];
-                        world.currentState.ambiguousObjs = [];
+                        world.currentState.ambiguousObjs = [[]];
                         nextInput = () => world.readUserInput(question, endlessLoop);
                     } else {
                         throw err;

@@ -38,7 +38,7 @@ ExampleWorlds["complex"] = {
         "put all yellow objects under a red object under an object"
     ]
     ,"status": []
-    , "ambiguousObjs" :[]
+    , "ambiguousObjs" :[[]]
     , "previousCmd" : null
 };
 
@@ -75,7 +75,7 @@ ExampleWorlds["medium"] = {
         "move all balls inside a large box"
     ]
     , "status": []
-    , "ambiguousObjs" :[]
+    , "ambiguousObjs" :[[]]
     , "previousCmd" : null
 };
 
@@ -108,7 +108,7 @@ ExampleWorlds["small"] = {
         "move all balls inside a large box"
     ]
     , "status": []
-    , "ambiguousObjs" :[]
+    , "ambiguousObjs" :[[]]
     , "previousCmd" : null
 };
 
@@ -141,6 +141,6 @@ ExampleWorlds["impossible"] = {
         "this is just an impossible world"
     ]
     , "status": []
-    , "ambiguousObjs" :[]
+    , "ambiguousObjs" :[[]]
     , "previousCmd" : null
 };

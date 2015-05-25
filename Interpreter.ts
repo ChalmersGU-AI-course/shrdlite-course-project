@@ -395,7 +395,7 @@ module Interpreter {
                     console.log("found multiple objects fits description");
                     console.log(searchResult);
                     state.status.push("softambiguity");
-                    state.ambiguousObjs = searchResult.ambiguousObjs;
+                    state.ambiguousObjs.push(searchResult.ambiguousObjs);
                     // not nessecary to stop whole program for this!
                     //throw new Interpreter.Error("There are several objects that fit the description");
                 }
