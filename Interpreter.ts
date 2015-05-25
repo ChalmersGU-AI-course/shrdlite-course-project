@@ -8,33 +8,48 @@ module Interpreter {
 
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
+        var ambiguities : string[] = [];
         parses.forEach((parseresult) => {
-          var intprt : Result = <Result>parseresult;
-          try {
-            intprt.intp = interpretCommand(intprt.prs, currentState);
-            console.log(intprt);
-            interpretations.push(intprt);
-          } catch (err) {
-            console.log(err);
-            if (err instanceof Ambiguity) {
-              var msg : string = "Ambiguous command. Please try again, while being more specific about the ";
-              msg = msg + err.message + ".";
-              throw new Interpreter.Error(msg);
+            var intprt : Result = <Result>parseresult;
+            try {
+                intprt.intp = interpretCommand(intprt.prs, currentState);
+                interpretations.push(intprt);
+            } catch (err) {
+                if (err instanceof Ambiguity) {
+                    var form = err.message;
+                    if (!contains(ambiguities, form)) {
+                        ambiguities.push(form);
+                    }
+                }
             }
-          }
         });
-        if (interpretations.length == 0) {
-          throw new Interpreter.Error("No valid interpretation found.");
-        } else if (interpretations.length > 1) {
-          // Scenario: the user used too many relative descriptors. We can't say
-          // what they were ambiguous about
-          var msg : string = "Ambiguous command. Please use fewer relative descriptions.";
-          throw new Interpreter.Error(msg);
+        if (interpretations.length == 1) {
+            return interpretations;
+        } else if (ambiguities.length > 0) {
+            var msg : string = "Possibly ambiguous command. Try being more specific about the following objects: ";
+            ambiguities.forEach((form) => {
+                msg = msg + form + " ";
+            });
+            throw new Interpreter.Error(msg);
+        } else if (interpretations.length == 0) {
+            throw new Interpreter.Error("No valid interpretation found.");
         } else {
-          console.log(interpretations);
-          return interpretations;
+            // Scenario: the user used too many relative descriptors. We can't say
+            // what they were ambiguous about
+            var msg : string = "Ambiguous command. Please use fewer relative descriptions.";
+            throw new Interpreter.Error(msg);
         }
-    } 
+        
+        
+        function contains(a, obj) : boolean {
+            for (var i = 0; i < a.length; i++) {
+                if (a[i] === obj) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
 
 
     export interface Result extends Parser.Result {intp:Literal[][];}
@@ -106,7 +121,7 @@ module Interpreter {
                 var cands1 : string[] = getCandidatesFromObj(obj.obj);
                 var cands2 : string[] = [];
                 cands1.forEach((c) => {
-                    if (isInLocation(c, obj.loc.rel, locationList)) {
+                    if (isInLocation(c, obj.loc.rel, locationList)) {                        
                         cands2.push(c);
                     }
                 });
@@ -143,25 +158,27 @@ module Interpreter {
         function isInLocation(candidate : string, relation : string, list : CandList) 
                  : boolean {
             var quant : string = list.quant;
-            
+            var result : boolean
             if (quant == "the" || quant == "any") {
                 // E.g. is the ball "inside any box".
                 // Check all boxes, if one is a match, return true.
+                result = false;
                 list.candidates.forEach((obj) => {
                     if (fulfilsCondition(relation, candidate, obj)) {
-                        return true;
+                        result = true;
                     }
                 });
-                return false;
+                return result;
             } else if (quant == "all") {
+                result = true;
                 // E.g. is the ball "left of all tables".
                 // Check all tables, if one does not match, return false.
                 list.candidates.forEach((obj) => {
                     if (!fulfilsCondition(relation, candidate, obj)) {
-                        return false;
+                        result = false;
                     }
                 });
-                return true;
+                return result;
             } else {
                 throw new Error("Quantifier \""+quant+"\" not implemented yet.");
             }
@@ -231,7 +248,9 @@ module Interpreter {
         
         function makeHoldingGoal(candList : CandList) : Literal[][] {
             var candidates : string[] = candList.candidates;
-            if (candList.quant == "all" && candidates.length > 1) {
+            if (candidates.length == 0) {
+                throw new Error("No objects of that description found.");
+            } else if (candList.quant == "all" && candidates.length > 1) {
                 throw new Error("Cannot hold more than one object.");
             } else if (candList.quant == "the" && candidates.length > 1) {
                 var form : string = state.objects[candidates[0]].form;
@@ -252,7 +271,7 @@ module Interpreter {
             var objCands : string[] = objList.candidates;
             var objQuant : string = objList.quant;
             var goals : Literal[][] = [];
-            if (subjCands.length == 0 && objCands.length == 0) {
+            if (subjCands.length == 0 || objCands.length == 0) {
                 throw new Error("No objects of that description found.");
             } else if (subjQuant == "the" && subjCands.length > 1) {
                     var form : string = state.objects[subjCands[0]].form;
@@ -335,9 +354,9 @@ module Interpreter {
                     });
                     return goals;
                 } else if (objQuant == "all") {
-                    // Put any ball left of all bricks
+                    // Put all balls left of all bricks
+                    andGoals = [];
                     subjCands.forEach((subject) => {
-                        andGoals = [];
                         objCands.forEach((object) => {
                             andGoals.push(makeGoal(relation, [subject, object]));
                         });
