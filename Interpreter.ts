@@ -345,9 +345,11 @@ module Interpreter {
 
             // AND part
             objs.forEach(function(obj: string) {
-                var lit = { pol: true, rel: relation, args: [firstObj, obj] };
+                if (firstObj != obj) {
+                    var lit = { pol: true, rel: relation, args: [firstObj, obj] };
 
-                andPart.push(lit);
+                    andPart.push(lit);
+                }
             });
 
             orPart.push(andPart);
@@ -363,9 +365,11 @@ module Interpreter {
         entities.forEach(function(objs: string[]) {
             // AND part
             objs.forEach(function(obj: string) {
-                var lit = { pol: true, rel: relation, args: [firstObj, obj] };
+                if (firstObj != obj) {
+                    var lit = { pol: true, rel: relation, args: [firstObj, obj] };
 
-                orPart.push([lit]);
+                    orPart.push([lit]);
+                }
             });
         });
 
@@ -381,9 +385,11 @@ module Interpreter {
 
             // AND part
             objs.forEach(function(obj: string) {
-                var lit = { pol: true, rel: relation, args: [obj, secondObj] };
+                if (secondObj != obj) {
+                    var lit = { pol: true, rel: relation, args: [obj, secondObj] };
 
-                andPart.push(lit);
+                    andPart.push(lit);
+                }
             });
 
             orPart.push(andPart);
