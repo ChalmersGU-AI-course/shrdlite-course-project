@@ -334,9 +334,9 @@ module Interpreter {
         // Define comparator function according to given relation we are looking for
         var f;
         if (rel === "leftof")
-            f = function(co1 : number[], co2 : number[]) {return co1[0] < co2[0] };
+            f = function(co1 : number[], co2 : number[]) {return (co1[0] < co2[0]) && co1[0] !== -1 && co2[0] !== -1 };
         else if(rel === "rightof")
-            f = function(co1 : number[], co2 : number[]) {return co1[0] > co2[0] };
+            f = function(co1 : number[], co2 : number[]) {return (co1[0] > co2[0]) && co1[0] !== -1 && co2[0] !== -1};
         else if(rel === "inside" || rel === "ontop")
             f = function(co1 : number[], co2 : number[]) {return co1[1] === (co2[1]+1) && co1[0] === co2[0] };
         else if(rel === "under")
