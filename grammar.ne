@@ -97,7 +97,7 @@ form --> "floor"    {% R("floor") %}
 
 take --> "take" | "grasp" | "pick" "up"
 move --> "move" | "put" | "drop"
-it --> "it" {% R("it") %} | "the" "left" {% R("left") %} | "the" "right" {% R("right") %} | "both" {% R("both") %}
+it --> "it" {% R("it") %} | "the" "left" {% R("left") %} | "the" "right" {% R("right") %} | "both" {% R("both") %} | "them" {% R("both") %}
 
 that_is  --> "that" "is"
 that_are --> "that" "are"

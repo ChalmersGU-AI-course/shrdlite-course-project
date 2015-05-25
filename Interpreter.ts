@@ -18,6 +18,7 @@ module Interpreter {
                 interpretations.push(intprt);
             }
         });
+
         //Filter out physically impossible interpretations
         interpretations = worldFilterInterpretations(interpretations,currentState);
 
@@ -76,7 +77,14 @@ module Interpreter {
             if (cmd.what == "both") {
                 // Handle both held objects
                 if (state.holding1 && state.holding2) {
-                    console.log("TODO: both");
+                    // "Put" the currently held objects in relation to the locations
+                    // specified
+                    var locEntities = interpretEntity(cmd.loc.ent, state);
+
+                    var orStatements = [createBiLiteralsSpecifyFirstAND(locEntities, cmd.loc.rel, state.holding1),
+                                        createBiLiteralsSpecifyFirstAND(locEntities, cmd.loc.rel, state.holding2)];
+
+                    intprt = flattenOrStatements(orStatements);
                 } else {
                     // TODO: Throw error
                 }
@@ -105,11 +113,7 @@ module Interpreter {
                     // specified
                     var locEntities = interpretEntity(cmd.loc.ent, state);
 
-                    var lits = createBiLiteralsSpecifyFirstAND(locEntities, cmd.loc.rel, obj);
-
-                    // TODO: Check if lits are allowed!
-                    intprt = lits;
-
+                    intprt = createBiLiteralsSpecifyFirstAND(locEntities, cmd.loc.rel, obj);
                 } else {
                     // TODO: Throw error
                 }

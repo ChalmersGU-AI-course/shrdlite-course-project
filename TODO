@@ -3,11 +3,11 @@
 
 * Interpreter
 	x Check world rules 
-		- Done, question about "on a box"
+		x Done, question about "on a box"
     - Add error messages
-	- Put it down: what if both arms hold something?
-        - Extend grammar with “put left/right object on the floor”
-        - Extend grammar with “put both objects on the floor”
+	x Put it down: what if both arms hold something?
+        x Extend grammar with “put left/right object on the floor”
+        x Extend grammar with “put both/them objects on the floor”
 
 * UI
 	x Animate right arm
@@ -34,4 +34,5 @@ pick up the yellow pyramid
 take all balls
 take all objects
 take all blue objects
+put them on the floor
 move all red objects to the left of all blue objects
