@@ -200,8 +200,11 @@ module Interpreter {
         var rule:number = locs[0].length * objs[0].length;
         //this works for everything but "put any object on all tables" and such queries.
         //and all loose relations of course. "above","below","leftof","rightof"
-        //objs = utils.transpose(objs );
-        if (locs.length === 1) {
+        var locs1ObjsMore : boolean = locs.length === 1 && locs[0][0] !== "floor" && objs.length >= 1;
+        if(locs1ObjsMore){
+            //Keep the array as it is
+        } else if (locs.length === 1 && locs[0][0] !== "floor") {
+            //Transpose objs to 
             objs = utils.transpose(objs);
         } else {
             locs = utils.transpose(locs);
@@ -244,8 +247,7 @@ module Interpreter {
         else {
             if (objs.length > 9 || locs.length > 9) {
                 //this will be a lot of permutations
-                throw new Interpreter.Error("You should be more specific. this will take too long to calculate");
-
+                throw new Interpreter.Error("You should be more specific. I'm too stupid to handle the permutations.");
             }
             var p1:string[][] = permute(objs, [], []);
             var p2:string[][] = permute(locs, [], []);
@@ -260,21 +262,6 @@ module Interpreter {
                     allRules.push(row);
                     console.log(row.length);
             }));
-        }
-        if (rel === "leftof" || rel === "rightof" || rel === "below" || rel === "above") {
-
-        } else {
-            if (objs.length > locs.length) {
-            } else {
-                var p1:string[][] = permute(locs, [], []);
-                p1.forEach(loc => {
-                    var row:objLocPair[] = [];
-                    for (var i = 0; i < objs.length; i++) {
-                        row.push({"obj": objs[i], "loc": loc[i]});
-                    }
-                    //allRules.push(row);
-                });
-            }
         }
         return allRules;
     }
