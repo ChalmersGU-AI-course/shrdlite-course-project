@@ -64,51 +64,37 @@ module Interpreter {
         //cmd.loc.ent.quant
 
         var intprt : Literal[][] = [];
-        var typ : string = cmd.loc.rel;
-        if(typ == 'inside')
-            typ = 'ontop';
+
+        var m_typ : string = cmd.loc.rel;
+        if(m_typ == 'inside')
+            m_typ = 'ontop';
+
+        if(constrained.whereTo == null)
+            return null;
+        if(constrained.whereTo.size() == 0)
+            return null;
+
         constrained.what.forEach((ele) => {
-            constrained.whereTo.domain.forEach((obj) => {
-                otherConditions(obj,
-                                intprt,
-                                constrained.whereTo.constrains,
-                                [{pol: true, rel: typ, args: [ele, obj]}]);
-                return true;
+          constrained.whereTo.first().variable1.domain.forEach((v) => {
+            var finalGoal : Literal[] = [{pol: true, rel: m_typ, args: [ele, v]}];
+            constrained.whereTo.forEach((arc) => {
+              var typ : string = arc.constrain.type;
+              if(typ == 'inside')
+                 typ = 'ontop';
+              if(arc.variable2 != null)
+                  arc.variable2.domain.forEach((obj) => {
+                      if(v != obj)
+                        finalGoal.push({pol: true, rel: typ, args: [v, obj]});
+                      return true;
+                  });
+              return true;
             });
+            intprt.push(finalGoal);
             return true;
+          });
+          return true;
         });
         return intprt;
-    }
-
-    function otherConditions(ele:string,
-                             intprt : Literal[][],
-                             constrains : collections.LinkedList<Constrains.ConstrainNode<string>>,
-                             finalGoal : Literal[]) {
-        var n : number = 0;
-        constrains.forEach((constrain) => {
-            var typ : string = constrain.type;
-            if(typ == 'inside')
-                typ = 'ontop';
-            if(constrain.variables.size() > 0) {
-                n++;
-                constrain.variables.forEach((variable) => {
-                    variable.domain.forEach((obj) => {
-                        var oneIntprt : Literal[] = Array.prototype.concat.apply(
-                                                        [{pol: true, rel: typ, args: [ele, obj]}],
-                                                        finalGoal);
-                        otherConditions(obj,
-                                 intprt,
-                                 variable.constrains,
-                                 oneIntprt)
-                        return true;
-                    })
-                    return true;
-                })
-            }
-            return true;
-        });
-        if(n == 0)
-            intprt.push(finalGoal);
     }
 
     function getRandomInt(max) {

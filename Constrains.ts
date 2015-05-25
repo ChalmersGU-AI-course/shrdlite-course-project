@@ -3,15 +3,14 @@
 module Constrains {
     export interface ConstrainNode<T> {type : string;
                                        stringParameter : string;
-                                       futureTense : boolean;
-                                       variables : collections.LinkedList<DomainNode<T>>;}
-    export interface DomainNode<T> {domain : collections.Set<T>;
-                                    constrains : collections.LinkedList<ConstrainNode<T>>;}
-    export interface ArcNode<T> {variable : DomainNode<T>;
-                                 constrain : ConstrainNode<T>;
-                                 reverseArc : boolean;}
+                                       futureTense : boolean;}
+    export interface VariableNode<T> {domain : collections.Set<T>;
+                                      name : string;}
+    export interface ArcNode<T> {variable1 : VariableNode<T>;
+                                 variable2 : VariableNode<T>;
+                                 constrain : ConstrainNode<T>;}
 
-    export interface Result<T> {what : collections.Set<T>; whereTo : DomainNode<T>;}
+    export interface Result<T> {what : collections.Set<T>; whereTo : collections.LinkedList<ArcNode<T>>;}
 
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
@@ -21,35 +20,33 @@ module Constrains {
                                  state : WorldState) : Result<T> {
         if((head == null) || (head.ent.obj == null) || (head.loc.ent.obj == null))
             return null;
-
         var arcs : collections.LinkedList<ArcNode<T>> = new collections.LinkedList<ArcNode<T>>();
-        var whereTo : DomainNode<T> = constructGraph<T>(fullDomain, head.loc.ent, arcs, true);
-        var what : DomainNode<T> = constructGraph<T>(fullDomain, head.ent, arcs, false);
+        var whereTo : VariableNode<T> = constructGraph<T>(fullDomain, head.loc.ent, arcs, true, 'whereTo');
+        var what : VariableNode<T> = constructGraph<T>(fullDomain, head.ent, arcs, false, 'what');
         if(head.loc.rel == "inside") {
             var constrain : ConstrainNode<T> = {type: "CanBeInside",
                                                 stringParameter: null,
-                                                variables: new collections.LinkedList<DomainNode<T>>(),
                                                 futureTense : true};
-            constrain.variables.add(whereTo);
-            what.constrains.add(constrain);
-            arcs.add({variable : what, constrain : constrain, reverseArc : false});
-            arcs.add({variable : what, constrain : constrain, reverseArc : true});
+            arcs.add({variable1 : what,
+                      constrain : {type: "CanBeInside",
+                                   stringParameter: null,
+                                   futureTense : true},
+                      variable2 : whereTo});
+            arcs.add({variable1 : whereTo,
+                      constrain : {type: "Reverse_CanBeInside",
+                                   stringParameter: null,
+                                   futureTense : true},
+                      variable2 : what});
         }
         var notActiveArcs : collections.LinkedList<ArcNode<T>> = new collections.LinkedList<ArcNode<T>>();
         do {
             var arc : ArcNode<T> = arcs.first();
             arcs.remove(arc);
             notActiveArcs.add(arc);
-
-            if((arc.reverseArc == null) || (arc.reverseArc == false)) {
-                if(reduceActiveVoice<T>(arc.variable, arc.constrain, state))
-                    reSheduleArcs<T>(arcs, arc.variable, notActiveArcs);
-            } else {
-                if(reducePasiveVoice<T>(arc.variable, arc.constrain, state))
-                    reSheduleArcs<T>(arcs, arc.variable, notActiveArcs);
-            }
+            if(reduceVoice<T>(arc, state))
+               reSheduleArcs<T>(arcs, arc, notActiveArcs);
         } while(arcs.size() > 0);
-        return {what : what.domain, whereTo : whereTo};
+        return {what : what.domain, whereTo : relatedArcs<T>(whereTo, notActiveArcs, true)};
     }
 
     export class Error implements Error {
@@ -58,84 +55,117 @@ module Constrains {
         public toString() {return this.name + ": " + this.message}
     }
 
+    function printArcs<T>(str: string, arcs : collections.LinkedList<ArcNode<T>>) {
+        arcs.forEach((obj) => {
+            var s : string = '<null>';
+            if(obj.variable2 != null)
+                s = obj.variable2.name;
+            console.log(str +  ' constrain type ' + obj.constrain.type + ', parameter ' + obj.constrain.stringParameter + ', tense ' + obj.constrain.futureTense
+                + ', variable1 ' + obj.variable1.name  + ', variable2 ' + s
+            );
+            return true;
+        })
+    }
+
     //////////////////////////////////////////////////////////////////////
     // private functions and classes
+    function relatedArcs<T>(variable : VariableNode<T>,
+                            arcs : collections.LinkedList<ArcNode<T>>,
+                            withFixProperties : boolean) : collections.LinkedList<ArcNode<T>> {
+        var res : collections.LinkedList<ArcNode<T>> = new collections.LinkedList<ArcNode<T>>();
+        var facts = {hasSize:false, hasColor:false, isA:false, CanBeInside:false,
+                     Reverse_hasSize:false, Reverse_hasColor:false, Reverse_isA:false, Reverse_CanBeInside:false};
+        arcs.forEach((obj) => {
+            if(obj.variable1 == variable) {
+                if(!withFixProperties) {
+                  var a = facts[obj.constrain.type.trim()];
+                  if((a == null) || (a))
+                    res.add(obj);
+                } else
+                    res.add(obj);
+            }
+            return true;
+        })
+        return res;
+    }
 
     function constructGraph<T>(fullDomain : collections.Set<T>,
                                node : Parser.Entity,
                                arcs : collections.LinkedList<ArcNode<T>>,
-                               futureTense : boolean) : DomainNode<T> {
+                               futureTense : boolean,
+                               namePrefix : string) : VariableNode<T> {
         if((node == null) || (node.obj == null))
             return null;
-        var variable : DomainNode<T> = {domain: copyDomain(fullDomain),
-                                        constrains: new collections.LinkedList<ConstrainNode<T>>()};
+        var variable : VariableNode<T> = {domain: copyDomain(fullDomain), name : namePrefix};
         if(node.obj.loc == null)
-            isAConstrains<T>(variable, node.obj, variable.constrains, arcs, futureTense);
+            isAConstrains<T>(variable, node.obj, arcs, futureTense);
         else {
-            isAConstrains<T>(variable, node.obj.obj, variable.constrains, arcs, futureTense);
-            var constrain : ConstrainNode<T> = constructRelation(fullDomain, node.obj.loc, arcs, futureTense);
-            variable.constrains.add(constrain);
-            arcs.add({variable : variable, constrain : constrain, reverseArc : true});
-            arcs.add({variable : variable, constrain : constrain, reverseArc : false});
+            isAConstrains<T>(variable, node.obj.obj, arcs, futureTense);
+            var arc : ArcNode<T> = constructRelation(fullDomain, variable, node.obj.loc, arcs, futureTense, namePrefix);
+            arcs.add(arc);
+            arcs.add({variable1 : arc.variable2,
+                      constrain : {type: "Reverse_" + arc.constrain.type,
+                                   stringParameter: arc.constrain.stringParameter,
+                                   futureTense : arc.constrain.futureTense},
+                      variable2 : arc.variable1});
         }
         return variable;
     }
 
     function constructRelation<T>(fullDomain : collections.Set<T>,
+                                  variable : VariableNode<T>,
                                   node : Parser.Location,
                                   arcs : collections.LinkedList<ArcNode<T>>,
-                                  futureTense : boolean) : ConstrainNode<T> {
+                                  futureTense : boolean,
+                                  namePrefix : string) : ArcNode<T> {
         var constrain : ConstrainNode<T> = {type: node.rel,
                                             stringParameter: null,
-                                            variables: new collections.LinkedList<DomainNode<T>>(),
                                             futureTense : futureTense};
-        constrain.variables.add(constructGraph<T>(fullDomain, node.ent, arcs, futureTense));
-        return constrain;
+        return {variable1 : variable,
+                variable2 : constructGraph<T>(fullDomain, node.ent, arcs, futureTense, namePrefix + '.' + node.rel),
+                constrain : constrain};
     }
 
-    function isAConstrains<T>(variable : DomainNode<T>,
+    function isAConstrains<T>(variable : VariableNode<T>,
                               obj : Parser.Object,
-                              intoCollection : collections.LinkedList<ConstrainNode<T>>,
                               arcs : collections.LinkedList<ArcNode<T>>,
                               futureTense : boolean) : void {
         if(obj.size)
             addArcAndConstrain<T>(variable,
-                                  {type:"hasSize", stringParameter:obj.size, variables:new collections.LinkedList<DomainNode<T>>(), futureTense : futureTense},
-                                  intoCollection,
+                                  null,
+                                  {type:"hasSize", stringParameter:obj.size, futureTense : futureTense},
                                   arcs);
         if(obj.color)
             addArcAndConstrain<T>(variable,
-                                  {type:"hasColor", stringParameter:obj.color, variables:new collections.LinkedList<DomainNode<T>>(), futureTense : futureTense},
-                                  intoCollection,
+                                  null,
+                                  {type:"hasColor", stringParameter:obj.color, futureTense : futureTense},
                                   arcs);
         if(obj.form)
             addArcAndConstrain<T>(variable,
-                                  {type:"isA", stringParameter:obj.form, variables:new collections.LinkedList<DomainNode<T>>(), futureTense : futureTense},
-                                  intoCollection,
+                                  null,
+                                  {type:"isA", stringParameter:obj.form, futureTense : futureTense},
                                   arcs);
     }
 
-    function addArcAndConstrain<T>(variable : DomainNode<T>,
+    function addArcAndConstrain<T>(variable1 : VariableNode<T>,
+                                   variable2 : VariableNode<T>,
                                    constrain : ConstrainNode<T>,
-                                   intoCollection : collections.LinkedList<ConstrainNode<T>>,
                                    arcs : collections.LinkedList<ArcNode<T>>) : void {
-        intoCollection.add(constrain);
-        arcs.add({variable : variable, constrain : constrain, reverseArc : false});
+        arcs.add({variable1 : variable1, constrain : constrain, variable2 : variable2});
     }
 
-    function reduceActiveVoice<T>(variable : DomainNode<T>,
-                                  constrain : ConstrainNode<T>,
-                                  state : WorldState) {
-        var a=getActiveVoiceAction<T>(constrain.type, constrain.futureTense);
+    function reduceVoice<T>(arc : ArcNode<T>,
+                            state : WorldState) {
+        var a = getVoiceAction<T>(arc.constrain.type, arc.constrain.futureTense);
         if(a == null)
             return false;
         var ret : boolean = false;
         var rep : boolean;
         do {
             rep = false;
-            variable.domain.forEach((ele) => {
-                if(a(state.objects[ele.toString()], constrain.stringParameter, constrain.variables, state) == false) {
-                    variable.domain.remove(ele);
+            arc.variable1.domain.forEach((ele) => {
+                if(a(state.objects[ele.toString()], arc.constrain.stringParameter, arc.variable2, state) == false) {
+                    arc.variable1.domain.remove(ele);
                     rep = true;
                     ret = true;
                 }
@@ -145,37 +175,12 @@ module Constrains {
         return ret;
     }
 
-    function reducePasiveVoice<T>(source : DomainNode<T>,
-                                  constrain : ConstrainNode<T>,
-                                  state : WorldState) {
-        var a=getPasiveVoiceAction<T>(constrain.type, constrain.futureTense);
-        if(a == null)
-            return false;
-        var ret : boolean = false;
-        var rep : boolean;
-        do {
-            rep = false;
-            constrain.variables.forEach((variable) => {
-                variable.domain.forEach((ele) => {
-                    if(a(source, constrain.stringParameter, ele, state) == false) {
-                        variable.domain.remove(ele);
-                        rep = true;
-                        ret = true;
-                    }
-                    return true;
-                });
-                return true;
-            });
-        } while (rep);
-        return ret;
-    }
-
-    function reSheduleArcs<T>(arcs : collections.LinkedList<ArcNode<T>>, variable : DomainNode<T>, notActiveArcs : collections.LinkedList<ArcNode<T>>) {
+    function reSheduleArcs<T>(arcs : collections.LinkedList<ArcNode<T>>, variable : ArcNode<T>, notActiveArcs : collections.LinkedList<ArcNode<T>>) {
         var rep : boolean;
         do {
             rep = false;
             notActiveArcs.forEach((arc) => {
-                if(arc.variable == variable) {
+                if(arc.variable2 == variable.variable1) {
                     notActiveArcs.remove(arc);
                     arcs.add(arc);
                     rep = true;
@@ -188,27 +193,27 @@ module Constrains {
 
     //////////////////////////////////////////////////////////////////////
     // Constrains
-    function getActiveVoiceAction<T>(act : string, futureTense : boolean) {
+    function getVoiceAction<T>(act : string, futureTense : boolean) {
         var actions = {hasSize:hasSize, hasColor:hasColor, isA:isA, inside:isInside, ontop:isOntop,
                        under:isUnder, above:isAbove, beside:isBeside, leftof:isLeftof, rightof:isRightof,
-                       CanBeInside:isCanBeInside
+                       CanBeInside:isCanBeInside,
+
+                       Reverse_inside:hasSomethingInside, Reverse_ontop:hasSomethingOntop,
+                       Reverse_under:hasSomethingUnder, Reverse_above:hasSomethingAbove, Reverse_beside:hasSomethingBeside,
+                       Reverse_leftof:hasSomethingLeftof, Reverse_rightof:hasSomethingRightof,
+                       Reverse_CanBeInside:hasCanBeInside
         };
-        var facts = {hasSize:hasSize, hasColor:hasColor, isA:isA, CanBeInside:isCanBeInside};
-        return !futureTense ? actions[act.trim()] : facts[act.trim()];
-    }
-    function getPasiveVoiceAction<T>(act : string, futureTense : boolean) {
-        var actions = {inside:hasSomethingInside, ontop:hasSomethingOntop,
-                       under:hasSomethingUnder, above:hasSomethingAbove, beside:hasSomethingBeside,
-                       leftof:hasSomethingLeftof, rightof:hasSomethingRightof,
-                       CanBeInside:hasCanBeInside};
-        var facts = {CanBeInside:hasCanBeInside};
+        var facts = {hasSize:hasSize, hasColor:hasColor, isA:isA, CanBeInside:isCanBeInside,
+
+                     Reverse_CanBeInside:hasCanBeInside
+        };
         return !futureTense ? actions[act.trim()] : facts[act.trim()];
     }
 
-    function hasSize<T>(obj:ObjectDefinition,
-                     stringParameter:string,
-                     variables:collections.LinkedList<DomainNode<T>>,
-                     state : WorldState) {
+    function hasSize<T>(obj : ObjectDefinition,
+                        stringParameter : string,
+                        variable : VariableNode<T>,
+                        state : WorldState) {
         if(obj==null)
             return true; //the floor has an unspecified size
         if(obj.size != stringParameter)
@@ -216,10 +221,10 @@ module Constrains {
         return true;
     }
 
-    function hasColor<T>(obj:ObjectDefinition,
-                      stringParameter:string,
-                      variables:collections.LinkedList<DomainNode<T>>,
-                      state : WorldState) {
+    function hasColor<T>(obj : ObjectDefinition,
+                         stringParameter : string,
+                         variable : VariableNode<T>,
+                         state : WorldState) {
         if(obj==null)
             return true; //the floor has an unspecified color
         if(obj.color != stringParameter)
@@ -227,9 +232,9 @@ module Constrains {
         return true;
     }
 
-    function isA<T>(obj:ObjectDefinition,
-                    stringParameter:string,
-                    variables:collections.LinkedList<DomainNode<T>>,
+    function isA<T>(obj : ObjectDefinition,
+                    stringParameter : string,
+                    variable : VariableNode<T>,
                     state : WorldState) {
         if(obj==null)
             return stringParameter == 'floor'; //the floor is something in particular
@@ -248,6 +253,7 @@ module Constrains {
                     return {stack:stack, row:row, what:state.stacks[stack][row]};
     }
 
+
     function CanBeInside(lhs : ObjectDefinition,
                          rhs : ObjectDefinition) : boolean {
         if((lhs == null) || (rhs == null))
@@ -264,37 +270,33 @@ module Constrains {
         return false;
     }
 
-    function isCanBeInside<T>(obj:ObjectDefinition,
-                 stringParameter:string,
-                 variables:collections.LinkedList<DomainNode<T>>,
-                 state : WorldState) {
+    function isCanBeInside<T>(obj : ObjectDefinition,
+                              stringParameter : string,
+                              variable : VariableNode<T>,
+                              state : WorldState) {
         var ret : boolean = false;
-        variables.forEach((variable) => {
-            variable.domain.forEach((ele) => {
+        variable.domain.forEach((ele) => {
                 ret = CanBeInside(obj, state.objects[ele.toString()]);
                 return !ret;
             });
-            return !ret;
-        });
         return ret;
     }
 
-    function hasCanBeInside<T>(variable:DomainNode<T>,
-                 stringParameter:string,
-                 objEle:T,
-                 state : WorldState) {
+    function hasCanBeInside<T>(obj : ObjectDefinition,
+                               stringParameter : string,
+                               variable : VariableNode<T>,
+                               state : WorldState) {
         var ret : boolean = false;
         variable.domain.forEach((ele) => {
-            ret = CanBeInside(state.objects[ele.toString()], state.objects[objEle.toString()]);
+            ret = CanBeInside(state.objects[ele.toString()], obj);
             return !ret;
         });
         return ret;
     }
 
     function inside(lhs : whereInTheWorld,
-                    ele : string,
+                    eleDefinition : ObjectDefinition,
                     state : WorldState) : boolean {
-        var eleDefinition : ObjectDefinition = state.objects[ele];
         if(eleDefinition.form == 'box') {
             var rhs : whereInTheWorld = findInWorld(eleDefinition, state);
             if((rhs.stack == lhs.stack) &&
@@ -304,34 +306,31 @@ module Constrains {
         return false;
     }
 
-    function isInside<T>(obj:ObjectDefinition,
-                 stringParameter:string,
-                 variables:collections.LinkedList<DomainNode<T>>,
-                 state : WorldState) {
+    function isInside<T>(obj : ObjectDefinition,
+                         stringParameter : string,
+                         variable : VariableNode<T>,
+                         state : WorldState) {
         if(obj==null)
             return false; //the floor cant be inside anything
         var objPos : whereInTheWorld = findInWorld(obj, state);
         var ret : boolean = false;
-        variables.forEach((variable) => {
-            variable.domain.forEach((ele) => {
-                ret = inside(objPos, ele.toString(), state);
-                return !ret;
-            });
-            return !ret;
+        variable.domain.forEach((ele) => {
+           ret = inside(objPos, state.objects[ele.toString()], state);
+           return !ret;
         });
         return ret;
     }
 
-    function hasSomethingInside<T>(variable:DomainNode<T>,
-                 stringParameter:string,
-                 objEle:T,
-                 state : WorldState) {
-        if(state.objects[objEle.toString()] == null)
+    function hasSomethingInside<T>(obj : ObjectDefinition,
+                                   stringParameter : string,
+                                   variable : VariableNode<T>,
+                                   state : WorldState) {
+        if(obj == null)
             return false; //the floor cant have anything inside
         var ret : boolean = false;
         variable.domain.forEach((ele) => {
             var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
-            ret = inside(objPos, objEle.toString(), state);
+            ret = inside(objPos, obj, state);
             return !ret;
         });
         return ret;
@@ -349,32 +348,29 @@ module Constrains {
         return false;
     }
 
-    function isOntop<T>(obj:ObjectDefinition,
-                        stringParameter:string,
-                        variables:collections.LinkedList<DomainNode<T>>,
+    function isOntop<T>(obj : ObjectDefinition,
+                        stringParameter : string,
+                        variable : VariableNode<T>,
                         state : WorldState) {
         if(obj==null)
             return false; //the floor cant be on top of anything
         var objPos : whereInTheWorld = findInWorld(obj, state);
         var ret : boolean = false;
-        variables.forEach((variable) => {
-            variable.domain.forEach((ele) => {
-                ret = ontop(objPos, state.objects[ele.toString()], state);
-                return !ret;
-            });
-            return !ret;
+        variable.domain.forEach((ele) => {
+           ret = ontop(objPos, state.objects[ele.toString()], state);
+           return !ret;
         });
         return ret;
     }
 
-    function hasSomethingOntop<T>(variable:DomainNode<T>,
-                         stringParameter:string,
-                         objEle:T,
-                         state : WorldState) {
+    function hasSomethingOntop<T>(obj : ObjectDefinition,
+                                  stringParameter : string,
+                                  variable : VariableNode<T>,
+                                  state : WorldState) {
         var ret : boolean = false;
         variable.domain.forEach((ele) => {
             var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
-            ret = ontop(objPos, state.objects[objEle.toString()], state);
+            ret = ontop(objPos, obj, state);
             return !ret;
         });
         return ret;
@@ -392,32 +388,29 @@ module Constrains {
         return false;
     }
 
-    function isUnder<T>(obj:ObjectDefinition,
-                        stringParameter:string,
-                        variables:collections.LinkedList<DomainNode<T>>,
+    function isUnder<T>(obj : ObjectDefinition,
+                        stringParameter : string,
+                        variable : VariableNode<T>,
                         state : WorldState) {
         if(obj==null)
             return true; //the floor is under everything
         var objPos : whereInTheWorld = findInWorld(obj, state);
         var ret : boolean = false;
-        variables.forEach((variable) => {
-            variable.domain.forEach((ele) => {
-                ret = under(objPos, state.objects[ele.toString()], state);
-                return !ret;
-            });
-            return !ret;
+        variable.domain.forEach((ele) => {
+           ret = under(objPos, state.objects[ele.toString()], state);
+           return !ret;
         });
         return ret;
     }
 
-    function hasSomethingUnder<T>(variable:DomainNode<T>,
-                         stringParameter:string,
-                         objEle:T,
-                         state : WorldState) {
+    function hasSomethingUnder<T>(obj : ObjectDefinition,
+                                  stringParameter : string,
+                                  variable : VariableNode<T>,
+                                  state : WorldState) {
         var ret : boolean = false;
         variable.domain.forEach((ele) => {
             var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
-            ret = under(objPos, state.objects[objEle.toString()], state);
+            ret = under(objPos, obj, state);
             return !ret;
         });
         return ret;
@@ -435,40 +428,37 @@ module Constrains {
         return false;
     }
 
-    function isAbove<T>(obj:ObjectDefinition,
-                        stringParameter:string,
-                        variables:collections.LinkedList<DomainNode<T>>,
+    function isAbove<T>(obj : ObjectDefinition,
+                        stringParameter : string,
+                        variable : VariableNode<T>,
                         state : WorldState) {
         if(obj==null)
             return false; //the floor cant be above of anything
         var objPos : whereInTheWorld = findInWorld(obj, state);
         var ret : boolean = false;
-        variables.forEach((variable) => {
-            variable.domain.forEach((ele) => {
-                ret = above(objPos, state.objects[ele.toString()], state);
-                return !ret;
-            });
-            return !ret;
+        variable.domain.forEach((ele) => {
+           ret = above(objPos, state.objects[ele.toString()], state);
+           return !ret;
         });
         return ret;
     }
 
-    function hasSomethingAbove<T>(variable:DomainNode<T>,
-                         stringParameter:string,
-                         objEle:T,
-                         state : WorldState) {
+    function hasSomethingAbove<T>(obj : ObjectDefinition,
+                                  stringParameter : string,
+                                  variable : VariableNode<T>,
+                                  state : WorldState) {
         var ret : boolean = false;
         variable.domain.forEach((ele) => {
             var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
-            ret = above(objPos, state.objects[objEle.toString()], state);
+            ret = above(objPos, obj, state);
             return !ret;
         });
         return ret;
     }
 
     function beside(lhs : whereInTheWorld,
-                   eleDefinition : ObjectDefinition,
-                   state : WorldState) : boolean {
+                    eleDefinition : ObjectDefinition,
+                    state : WorldState) : boolean {
         if(eleDefinition == null)
             return false; //the floor
         var rhs : whereInTheWorld = findInWorld(eleDefinition, state);
@@ -478,32 +468,29 @@ module Constrains {
         return false;
     }
 
-    function isBeside<T>(obj:ObjectDefinition,
-                        stringParameter:string,
-                        variables:collections.LinkedList<DomainNode<T>>,
-                        state : WorldState) {
+    function isBeside<T>(obj : ObjectDefinition,
+                         stringParameter : string,
+                         variable : VariableNode<T>,
+                         state : WorldState) {
         if(obj==null)
             return false; //the floor cant be beside of anything
         var objPos : whereInTheWorld = findInWorld(obj, state);
         var ret : boolean = false;
-        variables.forEach((variable) => {
-            variable.domain.forEach((ele) => {
-                ret = beside(objPos, state.objects[ele.toString()], state);
-                return !ret;
-            });
-            return !ret;
+        variable.domain.forEach((ele) => {
+           ret = beside(objPos, state.objects[ele.toString()], state);
+           return !ret;
         });
         return ret;
     }
 
-    function hasSomethingBeside<T>(variable:DomainNode<T>,
-                         stringParameter:string,
-                         objEle:T,
-                         state : WorldState) {
+    function hasSomethingBeside<T>(obj : ObjectDefinition,
+                                   stringParameter : string,
+                                   variable : VariableNode<T>,
+                                   state : WorldState) {
         var ret : boolean = false;
         variable.domain.forEach((ele) => {
             var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
-            ret = beside(objPos, state.objects[objEle.toString()], state);
+            ret = beside(objPos, obj, state);
             return !ret;
         });
         return ret;
@@ -520,40 +507,37 @@ module Constrains {
         return false;
     }
 
-    function isLeftof<T>(obj:ObjectDefinition,
-                        stringParameter:string,
-                        variables:collections.LinkedList<DomainNode<T>>,
-                        state : WorldState) {
+    function isLeftof<T>(obj : ObjectDefinition,
+                         stringParameter : string,
+                         variable : VariableNode<T>,
+                         state : WorldState) {
         if(obj==null)
             return false; //the floor cant be left of anything
         var objPos : whereInTheWorld = findInWorld(obj, state);
         var ret : boolean = false;
-        variables.forEach((variable) => {
-            variable.domain.forEach((ele) => {
-                ret = leftof(objPos, state.objects[ele.toString()], state);
-                return !ret;
-            });
-            return !ret;
+        variable.domain.forEach((ele) => {
+           ret = leftof(objPos, state.objects[ele.toString()], state);
+           return !ret;
         });
         return ret;
     }
 
-    function hasSomethingLeftof<T>(variable:DomainNode<T>,
-                         stringParameter:string,
-                         objEle:T,
-                         state : WorldState) {
+    function hasSomethingLeftof<T>(obj : ObjectDefinition,
+                                   stringParameter : string,
+                                   variable : VariableNode<T>,
+                                   state : WorldState) {
         var ret : boolean = false;
         variable.domain.forEach((ele) => {
             var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
-            ret = leftof(objPos, state.objects[objEle.toString()], state);
+            ret = leftof(objPos, obj, state);
             return !ret;
         });
         return ret;
     }
 
     function rightof(lhs : whereInTheWorld,
-                   eleDefinition : ObjectDefinition,
-                   state : WorldState) : boolean {
+                     eleDefinition : ObjectDefinition,
+                     state : WorldState) : boolean {
         if(eleDefinition == null)
             return false; //the floor
         var rhs : whereInTheWorld = findInWorld(eleDefinition, state);
@@ -562,32 +546,29 @@ module Constrains {
         return false;
     }
 
-    function isRightof<T>(obj:ObjectDefinition,
-                        stringParameter:string,
-                        variables:collections.LinkedList<DomainNode<T>>,
-                        state : WorldState) {
+    function isRightof<T>(obj : ObjectDefinition,
+                          stringParameter : string,
+                          variable : VariableNode<T>,
+                          state : WorldState) {
         if(obj==null)
             return false; //the floor cant be right of anything
         var objPos : whereInTheWorld = findInWorld(obj, state);
         var ret : boolean = false;
-        variables.forEach((variable) => {
-            variable.domain.forEach((ele) => {
-                ret = rightof(objPos, state.objects[ele.toString()], state);
-                return !ret;
-            });
-            return !ret;
+        variable.domain.forEach((ele) => {
+           ret = rightof(objPos, state.objects[ele.toString()], state);
+           return !ret;
         });
         return ret;
     }
 
-    function hasSomethingRightof<T>(variable:DomainNode<T>,
-                         stringParameter:string,
-                         objEle:T,
-                         state : WorldState) {
+    function hasSomethingRightof<T>(obj : ObjectDefinition,
+                                    stringParameter : string,
+                                    variable : VariableNode<T>,
+                                    state : WorldState) {
         var ret : boolean = false;
         variable.domain.forEach((ele) => {
             var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
-            ret = rightof(objPos, state.objects[objEle.toString()], state);
+            ret = rightof(objPos, obj, state);
             return !ret;
         });
         return ret;
