@@ -119,17 +119,18 @@ var TMP_currentState = {
   ]
 };
 
+var fail = {"cmd":"move","ent":{"quant":"all","obj":{"size":null,"color":null,"form":"ball"}},"loc":{"rel":"inside","ent":{"quant":"any","obj":{"size":"large","color":null,"form":"box"}}}};
 
 var Parser = require('./interpreter-core');
 
 var ex3 = {"cmd":"move","ent":{"quant":"all","obj":{"size":null,"color":null,"form":"ball"}},"loc":{"rel":"ontop","ent":{"quant":"the","obj":{"size":null,"color":null,"form":"floor"}}}};
 var ex4 = {"cmd":"move","ent":{"quant":"all","obj":{"size":null,"color":null,"form":"ball"}},"loc":{"rel":"beside","ent":{"quant":"all","obj":{"size":null,"color":null,"form":"ball"}}}};
 
-var p = new Parser(TMP_currentState, example1);
+// var p = new Parser(TMP_currentState, example1);
 // console.log(p.parse_object(example1.ent.obj.obj));
 // console.log(p.parse_entity(example2.ent));
-console.log(p.parse_cmd(example2));
-console.log(p.parse_cmd(ex4));
+// console.log(p.parse_cmd(example2));
+// console.log(p.parse_cmd(ex4));
 // console.log(p.location_filter(p.all, example2.loc));
 // console.log(p.parse_object(example2.loc.ent.obj.loc.ent.obj));
 // console.log(p.location_filter(p.all, example2.loc.ent.obj.loc));
@@ -140,3 +141,6 @@ console.log(p.parse_cmd(ex4));
 
 // }
 // console.log(objects_in_world(TMP_currentState));
+
+var parse = require('./interpreter-core.js');
+console.log(parse(TMP_currentState, fail));

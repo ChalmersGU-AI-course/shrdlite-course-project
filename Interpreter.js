@@ -3,12 +3,15 @@
 var Interpreter = {};
 
 Interpreter.interpret = function(parses, currentState) {
-    console.log("trolol");
     var ret = [];
-    for (var parseresult of parses) {
-        ret.push(window.interpreterCore(currentState, parseresult));
+    for (var x of parses) {
+        try {
+            ret.push(window.interpreterCore(currentState, x.prs));
+        } catch (err) {
+            console.log("Interpreter exception: " + err);
+        }
     }
-    return [ret];
+    return ret;
     // throw new Interpreter.Error("Found no interpretation");
     // return [[{rel: 'ontop', item: 'e', oneof: ['k']}]];
 };
