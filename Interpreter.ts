@@ -265,7 +265,7 @@ module Interpreter {
         }
 	// make sure supportiveAmbiguousTargets is not undefined and more than one
 	if (supportiveAmbiguousTargets && supportiveAmbiguousTargets.length >1){
-            state.ambiguousObjs.push(supportiveAmbiguousTargets);
+            state.ambiguousObjs = supportiveAmbiguousTargets;
         }
     }
 
@@ -298,6 +298,7 @@ module Interpreter {
 
     // Returns a list of Object names that fits the goal Object.
     function findTargetObjects(state : WorldState, goalObj : Parser.Object) : SearchingResult{
+	
         var result : string[] = [];
         var com = new collections.Set<string>();
         var searchResult : SearchingResult = {
@@ -309,7 +310,15 @@ module Interpreter {
             searchResult.targets = resolveObject(state, goalObj.obj, goalObj.loc);
             return searchResult;
         }
-
+	
+	if (goalObj.form === "anyform"){
+	    // TODO should search based on location for anyform
+	    // searchResult.targets = resolveObject(state, goalObj, goalObj.loc);
+            // return searchResult;
+	    console.log(goalObj);
+	    
+	}
+	
         if(goalObj.form === "floor"){
             result.push("floor");
         }
