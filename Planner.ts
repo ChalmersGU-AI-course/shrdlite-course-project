@@ -53,7 +53,7 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
+    function planInterpretation(topGoal : Interpreter.Goal, state : WorldState) : string[] {
         // This function returns an empty plan involving no random stack
         var plan : string[] = [];
         var statenr = 0;
@@ -133,18 +133,30 @@ module Planner {
         (1) - http://en.wikipedia.org/wiki/Planning_Domain_Definition_Language 
         */      
         function is_goalstate(astate : ActionState){
-            var or : boolean[] = []; 
-            for(var i = 0 ; i < intprt.length ; i++){
-                var and : boolean =  pddl[(intprt[i][0]).rel](astate,(intprt[i][0]).args)
-                for(var ii = 1; ii < intprt[i].length ; ii++){
-                    and = and && pddl[(intprt[i][ii]).rel](astate,(intprt[i][ii]).args)
+            return is_fulfilled(astate, topGoal);
+        }
+        
+        function is_fulfilled(astate : ActionState, goal : Interpreter.Goal) : boolean {
+            var lit : Interpreter.Literal = goal.goal;
+            if (lit != null) {
+                var condition = pddl[lit.rel](astate, lit.args);
+                return  lit.pol ? condition : !condition;
+            } else {
+                var result : boolean;
+                if (goal.isAnd) {
+                    result = true;
+                    goal.list.forEach((subGoal) => {
+                        result = result && is_fulfilled(astate, subGoal);
+                    });
+                } else {
+                    result = false;
+                    goal.list.forEach((subGoal) => {
+                        result = result || is_fulfilled(astate, subGoal);
+                    });                
                 }
-                or.push(and);
+                return result;
             }
-            var result : boolean = or[0];
-            or.forEach((a)=> { result = result || a });
-            return result;
-        } 
+        }
 
         var start =  new ActionState("start");
         start.arm = state.arm
@@ -316,28 +328,35 @@ module Planner {
         into breadth-first search.
         */
         function state_heur(a1 : ActionState) : number {
-            var or : number = MAX_STATES; 
-            for(var i = 0 ; i < intprt.length ; i++){
-                // "and" stores two values. The first is the (estimated) cost of
-                // moving to the closest goal; the second is the cost of performing
-                // that goal. The cost of several goals connected with && is the smallest
-                // move-to-position cost plus the sum of the actual task costs.
-                var rel = (intprt[i][0]).rel;
-                var args = (intprt[i][0]).args;
-                // The pddl call checks if this particular goal is already
-                // fulfilled. If it is, return 0; otherwise compute the heuristic.
-                var and : number[] =  pddl[rel](a1, args) ? [0,0] : heuristic[rel](a1,args);
-                var newVal;
-                for(var ii = 1; ii < intprt[i].length ; ii++){
-                    rel = (intprt[i][ii]).rel;
-                    args = (intprt[i][ii]).args;
-                    newVal = pddl[rel](a1, args) ? [0,0] : heuristic[rel](a1,args);
-                    and[0] = Math.min(and[0], newVal[0]);
-                    and[1] = and[1] + newVal[1];
+            var costTuple : number[] = goal_heur(a1, topGoal);
+            return costTuple[0] + costTuple[1];
+        }
+        
+        function goal_heur(a1 : ActionState, goal : Interpreter.Goal) : number[] {
+            var lit : Interpreter.Literal = goal.goal;
+            if (lit != null) {
+                return pddl[lit.rel](a1, lit.args) ? [0,0] : heuristic[lit.rel](a1, lit.args);
+            } else {
+                var newVal : number[];
+                var result : number[];
+                if (goal.isAnd) {
+                    result = [0,0];
+                    goal.list.forEach((subGoal) => {
+                        newVal = goal_heur(a1, subGoal);
+                        result[0] = Math.min(result[0], newVal[0]);
+                        result[1] = result[1] + newVal[1];
+                    });
+                } else {
+                    result = [MAX_STATES, MAX_STATES];
+                    goal.list.forEach((subGoal) => {
+                        newVal = goal_heur(a1, subGoal);
+                        if (result[0]+result[1] > newVal[0]+newVal[1]) {
+                            result = newVal;
+                        }
+                    });                
                 }
-                or = Math.min(or, and[0]+and[1]);
+                return result;
             }
-            return or;
         }
         
         var heuristic = {

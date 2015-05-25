@@ -52,27 +52,16 @@ module Interpreter {
     }
 
 
-    export interface Result extends Parser.Result {intp:Literal[][];}
+    export interface Goal {goal?:Literal; list?:Goal[]; isAnd?:boolean;}
+    export interface Result extends Parser.Result {intp:Goal;}
     export interface Literal {pol:boolean; rel:string; args:string[];}
     
-    
-    // TODO: a new definition of Literal, which allows for more flexibility
-    // i.e. not only OR-lists of AND-lists, but other structures as well.
-    // Both building and reading them will actually be easier in a more flexible
-    // framework, and some goals can only be expressed in the current format using
-    // loads of redundancy, which affects the heuristic computation and goal-checking.
+
 
 
     export function interpretationToString(res : Result) : string {
-        return res.intp.map((lits) => {
-            return lits.map((lit) => literalToString(lit)).join(" & ");
-        }).join(" | ");
+        return goalToString(res.intp);
     }
-
-    export function literalToString(lit : Literal) : string {
-        return (lit.pol ? "" : "-") + lit.rel + "(" + lit.args.join(",") + ")";
-    }
-
 
     export class Error implements Error {
         public name = "Interpreter.Error";
@@ -99,8 +88,29 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
     
+    
+    function goalToString(goal : Goal) : string {
+        if (goal.goal != null) {
+            return literalToString(goal.goal);
+        } else {
+            var goals = goal.list.slice();
+            var str : string = "(" + goals.pop();
+            var joiningSymbol : string = goal.isAnd ? "&" : "|";
+            goals.forEach((subGoal) => {
+                str = str + " " + joiningSymbol + " " + goalToString(subGoal);
+            });
+            str = str + ")";
+            return str;
+        }
+    }
 
-    function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
+    function literalToString(lit : Literal) : string {
+        return (lit.pol ? "" : "-") + lit.rel + "(" + lit.args.join(",") + ")";
+    }
+
+
+    // Main function
+    function interpretCommand(cmd : Parser.Command, state : WorldState) : Goal {
 
 
         function getCandListFromEnt(ent : Parser.Entity) : CandList {
@@ -242,11 +252,12 @@ module Interpreter {
           throw new Error("No such object");
         }
         
-        function makeGoal(relation : string, objects : string[]) : Literal {
-            return {pol: true, rel: relation, args: objects};
+        function makeGoal(relation : string, objects : string[]) : Goal {
+            var lit : Literal = {pol: true, rel: relation, args: objects};
+            return {goal:lit};            
         }
         
-        function makeHoldingGoal(candList : CandList) : Literal[][] {
+        function makeHoldingGoal(candList : CandList) : Goal {
             var candidates : string[] = candList.candidates;
             if (candidates.length == 0) {
                 throw new Error("No objects of that description found.");
@@ -256,21 +267,21 @@ module Interpreter {
                 var form : string = state.objects[candidates[0]].form;
                 throw new Ambiguity(form);
             } else {
-                var goals : Literal[][] = [];
+                var goals : Goal[] = [];
                 candList.candidates.forEach((c) => {
-                    goals.push([makeGoal("holding", [c])]);
+                    goals.push(makeGoal("holding", [c]));
                 });
-                return goals;
+                return {lis:goals, isAnd:false};
             }
         }
         
-        function makeMovingGoals(relation : string, subjList : CandList, objList : CandList)
-                 : Literal[][] {
+        function makeMovingGoal(relation : string, subjList : CandList, objList : CandList)
+                 : Goal {
             var subjCands : string[] = subjList.candidates;
             var subjQuant : string = subjList.quant;
             var objCands : string[] = objList.candidates;
             var objQuant : string = objList.quant;
-            var goals : Literal[][] = [];
+            var goals : Goal[] = [];
             if (subjCands.length == 0 || objCands.length == 0) {
                 throw new Error("No objects of that description found.");
             } else if (subjQuant == "the" && subjCands.length > 1) {
@@ -284,20 +295,19 @@ module Interpreter {
                 var subject : string = subjCands[0];
                 if (objQuant == "the") {
                     // Put the ball left of the brick
-                    return [[makeGoal(relation, [subject, objCands[0]])]];
+                    return makeGoal(relation, [subject, objCands[0]]);
                 } else if (objQuant == "any") {
                     // Put the ball left of any brick
                     objCands.forEach((object) => {
-                        goals.push([makeGoal(relation, [subject, object])]);
+                        goals.push(makeGoal(relation, [subject, object]));
                     });
-                    return goals;
+                    return {list:goals, isAnd:false};
                 } else if (objQuant == "all") {
                     // Put the ball left of all bricks
-                    var andGoals : Literal[] = [];
                     objCands.forEach((object) => {
-                        andGoals.push(makeGoal(relation, [subject, object]));
+                        goals.push(makeGoal(relation, [subject, object]));
                     });
-                    return [andGoals];
+                    return {list:goals, isAnd:true};
                 } else {
                     throw new Error("Quantifier \""+objQuant+"\" not implemented yet.");
                 }
@@ -307,34 +317,35 @@ module Interpreter {
                     // Put any ball left of the brick
                     var object = objCands[0];
                     subjCands.forEach((subject) => {
-                        goals.push([makeGoal(relation, [subject, object])]);
+                        goals.push(makeGoal(relation, [subject, object]));
                     });
-                    return goals;
+                    return {list:goals, isAnd:false};
                 } else if (objQuant == "any") {
                     // Put any ball left of any brick
                     objCands.forEach((object) => {
                         subjCands.forEach((subject) => {
-                            goals.push([makeGoal(relation, [subject, object])]);
+                            goals.push(makeGoal(relation, [subject, object]));
                         });
                     });
-                    return goals;
+                    return {list:goals, isAnd:false};
                 } else if (objQuant == "all") {
                     // Put any ball left of all bricks
-                    var andGoals : Literal[];
+                    var andGoals : Goal[];
+                    var orGoals : Goal[] = [];
                     subjCands.forEach((subject) => {
                         andGoals = [];
                         objCands.forEach((object) => {
                             andGoals.push(makeGoal(relation, [subject, object]));
                         });
-                        goals.push(andGoals);
+                        orGoals.push({list:andGoals, isAnd:true});
                     });
-                    return goals;
+                    return {list:orGoals, isAnd:false};
                 } else {
                     throw new Error("Quantifier \""+objQuant+"\" not implemented yet.");
                 }
             } else if (subjQuant == "all") {
                 // All balls
-                var andGoals : Literal[];
+                var andGoals : Goal[];
                 if (objQuant == "the") {
                     // Put all balls left of the brick
                     andGoals = [];
@@ -342,17 +353,19 @@ module Interpreter {
                     subjCands.forEach((subject) => {
                         andGoals.push(makeGoal(relation, [subject, object]));
                     });
-                    return [andGoals];
+                    return {list:andGoals, isAnd:true};
                 } else if (objQuant == "any") {
                     // Put all balls left of any brick
-                    objCands.forEach((object) => {
-                        andGoals = [];
-                        subjCands.forEach((subject) => {
-                            andGoals.push(makeGoal(relation, [subject, object]));
+                    var orGoals : Goal[];
+                    var andGoals : Goal[] = [];
+                    subjCands.forEach((subject) => {
+                        orGoals = [];
+                        objCands.forEach((object) => {
+                            orGoals.push(makeGoal(relation, [subject, object]));
                         });
-                        goals.push(andGoals);
+                        andGoals.push({list:orGoals, isAnd:false});
                     });
-                    return goals;
+                    return {list:andGoals, isAnd:true};
                 } else if (objQuant == "all") {
                     // Put all balls left of all bricks
                     andGoals = [];
@@ -361,7 +374,7 @@ module Interpreter {
                             andGoals.push(makeGoal(relation, [subject, object]));
                         });
                     });
-                    return [andGoals];
+                    return {list:andGoals, isAnd:true};
                 } else {
                     throw new Error("Quantifier \""+objQuant+"\" not implemented yet.");
                 }
@@ -383,14 +396,14 @@ module Interpreter {
         var object1 : string;
         var object2 : string;
         var objects : string[];
-        var goals : Literal[][];
+        var goal : Goal;
 
         
         if (verb == "take") {
         // we shall pick up something and hold it;
             ent = cmd.ent;
             subjectCands = getCandListFromEnt(ent);
-            goals = makeHoldingGoal(subjectCands);
+            goal = makeHoldingGoal(subjectCands);
        } else if (verb == "put") {
        // we are holding something, and shall place it somewhere
             if (state.holding == null) {
@@ -401,7 +414,7 @@ module Interpreter {
             goalEntity = loc.ent;
             goalCands = getCandListFromEnt(goalEntity);
             var holdCands : CandList = {candidates : [state.holding], quant : "the"};
-            goals = makeMovingGoals(relation, holdCands, goalCands);
+            goal = makeMovingGoal(relation, holdCands, goalCands);
        } else if (verb == "move") { 
        // we shall move something
             ent = cmd.ent;
@@ -410,10 +423,9 @@ module Interpreter {
             relation = loc.rel;
             goalEntity = loc.ent;
             goalCands = getCandListFromEnt(goalEntity);
-            goals = makeMovingGoals(relation, subjectCands, goalCands);
+            goal = makeMovingGoal(relation, subjectCands, goalCands);
         }
-           
-        return goals;
+        return goal;
         
     }
 
