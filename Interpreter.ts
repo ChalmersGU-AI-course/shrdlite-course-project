@@ -70,16 +70,13 @@ module Interpreter {
         if (cmd.cmd === "put") {
             if (state.holding === null) {
                 //No knowledge of "it"
-                console.log("No knowledge of 'it'");
-                return null;
+                throw new Interpreter.Error("No knowledge of 'it'");
             }
             var possibleTargets = getTargetObjects(cmd, state);
             if (possibleTargets.length < 1) {
-                console.log("No target found");
-                return null;
+                throw new Interpreter.Error("No target found");
             } else if (possibleTargets.length > 1 && cmd.loc.ent.quant === "the") {
-                console.log("Please be more specific with the target location");
-                return null;
+                throw new Interpreter.Error("Please be more specific with the target location");
             }
             pobjs.push(state.holding);
             intprt = convertToPDDL(cmd, pobjs, possibleTargets);
@@ -92,14 +89,14 @@ module Interpreter {
         pobjs = getPrimaryObjects(cmd, state); 
         //  Abort if no object found, if ambiguity and the quantifier is 'the', ask for clarification
         if (pobjs.length === 0) {
-            console.log("Can't pickup something does not exist in the world");
+            console.log("You've asked for an object that doesn't exist in this world");
             return null;
         } else if (cmd.ent.quant === "the" && pobjs.length > 1) {
-            console.log("Please be more specific");
-            //Possible extension to save the current data and ask a clarification question      <---TODO?
+            console.log("Ambiguous interpretation, please be more specific");
             return null;
-        } else if(pobjs[0] === "_"){
-            console.log("the floor cannot be a primary object");
+            //Possible extension to save the current data and ask a clarification question      <---TODO?
+        } else if (pobjs[0] === "_") {
+            console.log("The floor can't be a primary object");
             return null;
         }
 
@@ -117,8 +114,10 @@ module Interpreter {
             //Can't hold more than one object
             if (cmd.ent.quant === "all") {
                 //CHANGE IF ADDING ANOTHER ARM
-                console.log("Can't hold more than one object");
-                return null;
+                if (pobjs.length > 1)
+                    throw new Interpreter.Error("There is not enough arms!");
+                else
+                    cmd.ent.quant = "the";
             }
             intprt = convertToPDDL(cmd, pobjs, null);
         }
@@ -145,8 +144,7 @@ module Interpreter {
             intprt = convertToPDDL(cmd, pobjs, possibleTargets);
             //----------------------------SAME AS "PUT"
         } else {
-            console.log("Found no valid command");
-            return null;
+            throw new Interpreter.Error("Found no valid command!");
         }
         return intprt;
     }
@@ -208,6 +206,8 @@ module Interpreter {
         var possibleObjects:string[] = [];
         // Loop through the world and look for possible items
         var objs: string[] = Array.prototype.concat.apply([], state.stacks);
+        if (state.holding !== null)
+            objs.push(state.holding);
         for (var s:number = 0; s < objs.length; s++) {
             var otemp:ObjectDefinition = state.objects[objs[s]];
             var stemp:collections.Set<string> = new collections.Set<string>();
