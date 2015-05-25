@@ -83,33 +83,29 @@ module Interpreter {
             var physics:objLocPair[][] = buildRules(true, objs, locs, state);
 
             //objs = physics.keys;
-            physics.forEach(or => {
+            physics.map(or => {
                 var andList:Literal[] = [];
-                or.forEach(and => {
+                or.map(and => {
                     var order:Literal = {pol: true, rel: locs.rel, args: [and.obj, and.loc]};
                     andList.push(order);
-                    return true;
                 });
                 if (andList.length > 0) {
                     lit.push(andList);
                 }
-                return true;
             });
             //Only place we know which object to put where
 
         } else {
             var objs:string[][] = interpretEntity(cmd.ent, state);
-            objs.forEach(objList => {   // obj or 
+            objs.map(objList => {   // obj or 
                 var andList:Literal[] = [];
-                objList.forEach(obj => {    //obj and
+                objList.map(obj => {    //obj and
                     var order:Literal = {pol: true, rel: "holding", args: [obj]};
                     andList.push(order);
-                    return true;
                 });
                 if (andList.length > 0) {
                     lit.push(andList);
                 }
-                return true;
             });
         }
         return lit;
@@ -131,13 +127,7 @@ module Interpreter {
         if (ent.quant === "all") {
             var newObjs:string[][] = [];
             var l:string[] = [];
-            objs.forEach(o1 => {
-                o1.forEach(o2 => {
-                    l.push(o2);
-                    return true;
-                });
-                return true;
-            });
+            objs.map(o1 => o1.map(o2 => l.push(o2)));
             newObjs.push(l);
             return newObjs;
         }
@@ -153,16 +143,11 @@ module Interpreter {
             var physics:objLocPair[][] = buildRules(false, objs, locs, state);
 
             objs = [];
-            physics.forEach(l => {
+            physics.map(l => {
                 var r:string[] = [];
-                l.forEach(p => {
-                    r.push(p.obj);
-                    return true;
-                });
+                l.map(p => r.push(p.obj));
                 objs.push(r);
-                return true;
             });
-            //e = physics.keys;
             return objs;
         } else {
             var objsindexes:string[] = Array.prototype.concat.apply([], state.stacks);
@@ -181,7 +166,7 @@ module Interpreter {
                 objsindexes.push("floor");
             }
             var newObjs:string[][] = [];
-            objsindexes.forEach(o => {
+            objsindexes.map(o => {
                 var l:string[] = [];
                 l.push(o);
                 newObjs.push(l);
@@ -249,18 +234,15 @@ module Interpreter {
                 //this will be a lot of permutations
                 throw new Interpreter.Error("You should be more specific. I'm too stupid to handle the permutations.");
             }
-            var p1:string[][] = permute(objs, [], []);
-            var p2:string[][] = permute(locs, [], []);
-            console.log("hello. man." + p1.length);
-            p1.forEach(obj =>
+            var p1:string[][] = utils.permute(objs, [], []);
+            var p2:string[][] = utils.permute(locs, [], []);
+            p1.map(obj =>
                 p2.map(loc => {
                     var row:objLocPair[] = [];
                     for (var i = 0; i < ruleLength; i++) {
                         row.push({"obj": obj[i % objs.length], "loc": loc[i % locs.length]});
-                        console.log("obj " + obj[i % objs.length] + " loc " + loc[i % locs.length]);
                     }
                     allRules.push(row);
-                    console.log(row.length);
             }));
         }
         return allRules;
@@ -268,8 +250,8 @@ module Interpreter {
 
     function controlRuleSet(futureState:boolean, rules:objLocPair[], rel:string, state:WorldState):boolean {
         return futureState ?
-            rules.every(r => state.validPlacement(r.obj, r.loc, rel)) :
-            rules.every(r => state.relationExists(r.obj, r.loc, rel));
+            rules.every(r => r.obj !== r.loc && state.validPlacement(r.obj, r.loc, rel)) :
+            rules.every(r => r.obj !== r.loc && state.relationExists(r.obj, r.loc, rel));
     }
 
 
@@ -284,17 +266,14 @@ module Interpreter {
         if (rules.length === 0) {
             return grid;
         }
-        console.log("rules: " + grid.length);
         // filter physical
         var filtered:objLocPair[][] = rules.filter(row => controlRuleSet(futureState, row, locs.rel, state));
         if (filtered.length === 0) {
             return grid;
         }
-        console.log(filtered.length)
         //remove duplicates
-
         filtered.map(row => {
-            var contains:boolean = grid.some(r => row.every(p => rowContainsPair(r, p.obj, p.loc, locs.rel)));
+            var contains:boolean = grid.some(r => ruleSetEquals(r,row)); 
             if (!contains) {
                 grid.push(row);
             }
@@ -303,45 +282,8 @@ module Interpreter {
 
     }
 
-    function validRuleSet(row:objLocPair[]):boolean {
-        for (var i = 0; i < row.length; i++) {
-            for (var j = 0; j < row.length; j++) {
-                if (i !== j) {
-                    if (row[j].loc !== "floor" || row[i].loc !== "floor") {
-                        if (row[i].obj === row[j].obj || (row[i].loc === row[j].loc)) {
-                            7
-                            console.log(row[j].obj + row[j].loc + "  spaces-- " + row[i].obj + row[i].loc);
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    function rowContainsPair(row:objLocPair[], obj:string, loc:string, rel:string):boolean {
-        console.log("comparing with : " + row.map(o => "o: " + o.obj + " l: " + o.loc + "\t"));
-        console.log("obj : " + obj + "\t loc : " + loc + "\t value: " + row.every(o => (o.obj === obj && o.loc === loc)
-                //||
-            ));//(o.obj === obj && o.loc !== loc && loc === "floor")));
-        return row.every(o => (o.obj === obj && o.loc === loc)// ||
-        );//(o.obj === obj && o.loc !== loc && loc === "floor"));
-    }
-
-    function permute(input:string[], usedChars:string[], permArr:string[][]) {
-        var i:number, ch:string;
-        for (i = 0; i < input.length; i++) {
-            ch = input.splice(i, 1)[0];
-            usedChars.push(ch);
-            if (input.length == 0) {
-                permArr.push(usedChars.slice());
-            }
-            permute(input, usedChars, permArr);
-            input.splice(i, 0, ch);
-            usedChars.pop();
-        }
-        return permArr;
+    function ruleSetEquals(row:objLocPair[], newRow:objLocPair[]){
+        return row.every(o1 => newRow.some(o2 => o1.obj === o2.obj && o1.loc === o2.loc));
     }
 }
 
