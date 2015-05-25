@@ -206,47 +206,33 @@ module Planner {
     		for(var x =0; x<state.stacks.length; x++ ){
 				var stackTar = Interpreter.searchStack(state.stacks[x], goal[i][0].args[0]);
 				var stackLoc = Interpreter.searchStack(state.stacks[x], goal[i][0].args[1]);
-				if(stackTar != -1 && stackLoc != -1 ){
-					tar = (state.stacks[x].length-1) - stackTar;
-					loc = (state.stacks[x].length-1) - stackLoc;
-					
-					if(tar>loc){
-						tarIndex = x;
-						locIndex = x;
+				
+				if( goal[i][0].args[0] == state.holding){
+					tar =0 ; 
+					tarIndex = state.arm; 
+				}
+				
+				if( goal[i][0].args[1] == state.holding){
+					loc =0 ;
+					locIndex = state.arm; 
+				}
 
-						tar = tar*4-1;
-						loc = loc*4-1;
-					}
-					else{
-						tar = (state.stacks[x].length-1) - stackTar;
-						tarIndex = x;
-						loc = (state.stacks[x].length-1) - stackLoc;
-						locIndex = x;
-					}
+				if(stackTar != -1){
+					tar = ((state.stacks[x].length-1) - stackTar)*4-1;
+					tarIndex = x;
 				}
-					else{
-					 if(stackTar != -1){
-						tar = (state.stacks[x].length-1) - stackTar;
-						tarIndex = x;
-					} if(stackLoc != -1){
-						loc = (state.stacks[x].length-1) - stackLoc;
-						locIndex = x;
-					}
+				
+				if(stackLoc != -1){
+					loc = ((state.stacks[x].length-1) - stackLoc)*4-1;
+					locIndex = x;
 				}
-//				var tmpTot = tar + loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex);
-//				if(minimum > tmpTot){
-//					minimum = tmpTot;
-//				}
 			}
 
-			//var tmpTot = tar + loc + Math.max(tarIndex - locIndex, locIndex - tarIndex);
 			
 			var tmpTot = tar + loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex) ;
-			if(state.holding == null){
-				tmpTot +=  (Math.max (tarIndex,  state.arm) - Math.min (tarIndex,  state.arm)) 
-			}else{
-				//tmpTot += ;
-			}
+			//if(state.holding == null){
+				tmpTot +=  (Math.max (tarIndex,  state.arm) - Math.min (tarIndex,  state.arm));
+			//}
 			if(minimum > tmpTot){
 				minimum = tmpTot;
 			}
