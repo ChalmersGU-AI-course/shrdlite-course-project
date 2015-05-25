@@ -107,6 +107,8 @@ module Planner {
             }
         }
 
+        console.log("färdig", startNode);
+
         if(searchResult.length === 0) {
             plan.push("What you are asking is simply impossible!");
         }
@@ -161,7 +163,7 @@ module Planner {
             
                 // Check if performing action at current column was legal
                 if (newNode) {
-                    var edge = new AStar.Edge<PddlWorld>(oldNode, newNode, cost);
+                    var edge = new AStar.Edge<PddlWorld>(oldNode, newNode, cost+1);
                     oldNode.neighbours.push(edge); // Note: we don't want a return edge
                 }
             }
