@@ -56,7 +56,7 @@ module Astar{
             public f : Astar.Neighbours<T>,
             public h : Astar.Heuristic<T>,
             public isGoal : Astar.Goal<T>,
-            public maxIter : number = 25000,
+            public maxIter : number = 50000,
             public multiPathPruning : boolean = true
         ){
             this.prioQueue = new collections.PriorityQueue<Astar.Vertex<T>>(( (a, b) => {
