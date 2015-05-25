@@ -346,7 +346,6 @@ module Planner {
                 var topPosX : number =
                     a.holding == top ? a.arm : find_obj(top, a.stacks)[0];
                 var toFreeTop = heurFree(a,top);
-                
                 var bottom = args[1];
                 var botPosX : number;
                 var toFreeBottom : number;
@@ -357,25 +356,27 @@ module Planner {
                     botPosX = a.holding == bottom ? a.arm : find_obj(bottom, a.stacks)[0];
                     toFreeBottom = heurFree(a, bottom);
                 }
-
                 if (toFreeTop == 0) {
                     return [heurMoveArmToPOI(a,[topPosX]),
                             toFreeBottom + heurMoveObject(a,top,botPosX)];
                 } else if (toFreeBottom == 0) {
                     return [heurMoveArmToPOI(a,[botPosX]),
                             toFreeTop + heurMoveObject(a,top,botPosX)];
+                } else if (botPosX == topPosX) {
+                    // In the case of the objects being in the same stack, then 
+                    // adding the free heuristcs wont allways provide an underestimate
+                    return [heurMoveArmToPOI(a,[topPosX]),Math.max(toFreeTop,toFreeBottom)];
                 } else {
                     return [heurMoveArmToFreeBoth(a, topPosX, botPosX),
                             toFreeTop + toFreeBottom + heurMoveObject(a,top,botPosX)];
                 }
-                // TODO: special case when the objects are in the same stack
             },
             inside : function(a:ActionState, args:string[]) : number[] {
                 return heuristic["ontop"](a,args);
             },
             holding : function(a:ActionState, args:string[]) : number[] {
+                
                 return [0.0];
-                //TODO: this
             },
             above : function(a:ActionState, args:string[]) : number[] {
                 var top = args[0];
