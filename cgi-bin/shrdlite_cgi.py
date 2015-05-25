@@ -3,10 +3,6 @@
 import interpreter
 
 def main(state):
-    # # Write to log for testing purposes
-    # pretty_state = json.dumps(state, sort_keys=True, indent=2, separators=(',', ': '))
-    # writeToLog(pretty_state)
-
     try:
         intprt = interpreter.interpret(**state)
     except interpreter.InterpreterException as err:
@@ -29,7 +25,7 @@ def writeToLog(string):
 
 def planner(intprt, stacks, holding, arm, objects, utterance, parses):
     """
-    This function creates a dummy plan involving a random stack
+    run the astar planner!
     """
 
     import simple_planner
@@ -44,10 +40,6 @@ def planner(intprt, stacks, holding, arm, objects, utterance, parses):
             heuristic.heuristic)
 
     return AStar.algorithm.getPlan(goal, came_from, actions_so_far,objects)
-
-
-
-######################################################################
 
 if __name__ == '__main__':
     import cgi

@@ -3,7 +3,8 @@
 def check_physics(pred, objects):
     (rel, x, y) = pred
     return {'ontop':  check_ontop,
-            'inside': check_ontop}.get(rel, lambda x, y, o: True)(x, y, objects)
+            'inside': check_ontop,
+            'beside': check_beside}.get(rel, lambda x, y, o: True)(x, y, objects)
 
 def check_ontop(t, b, objects):
     top = objects[t]
@@ -20,16 +21,17 @@ def check_ontop(t, b, objects):
         and not (is_box(bot)
                  and is_form(top, {'pyramid', 'plank', 'box'})
                  and is_same(top, bot, 'size'))
-        # Small boxes cannot be supported by small bricks
+        # Small boxes cannot be supported by small bricks or pyramids.
         and not (is_small(top) and is_box(top)
                  and is_small(bot)
-                 and is_brick(bot))
-        # or pyramids.
-        and not (is_small(top) and is_box(top)
-                 and is_pyramid(bot))
+                 and is_form(bot, {'brick', 'pyramid'}))
         # Large boxes cannot be supported by large pyramids.
         and not (is_large(top) and is_box(top)
                  and is_large(bot) and is_pyramid(bot)))
+
+def check_beside(t, b, objects):
+    """an object cannot be beside itself"""
+    return not t == b
 
 def is_form(o, s):
     return o['form'] in s
