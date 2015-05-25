@@ -149,21 +149,7 @@ module Interpreter {
             });
             return objs;
         } else {
-            var objsindexes:string[] = Array.prototype.concat.apply([], state.stacks);
-            if (obj.form === "floor") {
-                return [["floor"]];
-            }
-            if (obj.size !== null) {
-                objsindexes = objsindexes.filter(e=> state.objects[e].size === obj.size);
-            }
-            if (obj.color !== null) {
-                objsindexes = objsindexes.filter(e=> state.objects[e].color === obj.color);
-            }
-            if (obj.form !== "anyform") {
-                objsindexes = objsindexes.filter(e=> state.objects[e].form === obj.form);
-            } else if (obj.size === null && obj.color === null) {
-                objsindexes.push("floor");
-            }
+            var objsindexes:string[] = state.getObjectByDefinition(obj.form, obj.size, obj.color);
             var newObjs:string[][] = [];
             objsindexes.map(o => {
                 var l:string[] = [];

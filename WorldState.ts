@@ -54,6 +54,32 @@ class WorldState {
     }
 
     /**
+     * Returns a list of object names that fits the given description.
+     * @returns {string[]} list of objects that fit the description in this world.
+     */
+    getObjectByDefinition(form : string, size : string, color : string) : string[]{
+        if (form === "floor") {
+            return ["floor"];
+        }
+        var objectsNames:string[] = Array.prototype.concat.apply([], this.stacks);
+        if (this.holding !== null && this.holding !== undefined){
+            objectsNames[objectsNames.length] = this.holding;
+        }
+        if (size !== null) {
+            objectsNames = objectsNames.filter(e=> this.objects[e].size === size);
+        }
+        if (color !== null) {
+            objectsNames = objectsNames.filter(e=> this.objects[e].color === color);
+        }
+        if (form !== "anyform") {
+            objectsNames = objectsNames.filter(e=> this.objects[e].form === form);
+        } else if (size === null && color === null) {
+            objectsNames.push("floor");
+        }
+        return objectsNames;
+    }
+
+    /**
      * Returns the object that the arm is currently holding. Does not verify that the arm is holding something.
      * @returns {ObjectDefinition} Object that the arm is currently holding.
      */
