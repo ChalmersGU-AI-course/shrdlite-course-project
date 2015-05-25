@@ -462,10 +462,10 @@ module Planner {
             cost = calculateHolding(primary, state);
 
         } else if (literal.rel === "ontop" || literal.rel === "inside") {
-            if (state.holding === primary) {
-                cost = calculateHolding(target, state) - 1 + 4; //-1 since no picking up then move primary on target
-            } else if (state.holding === target || target === "_") {
+            if (state.holding === target || target === "_") {
                 cost = calculateHolding(primary, state) + 2; //sidestep + drop
+            } else if (state.holding === primary) {
+                cost = calculateHolding(target, state) - 1 + 4; //-1 since no picking up then move primary on target
             } else if (findStack(primary, state.stacks) === findStack(target, state.stacks)) {
                 var indexA: number = findStack(primary, state.stacks);
                 var indexB: number = findStack(target, state.stacks);
@@ -534,13 +534,13 @@ module Planner {
         // The least amount of moves in horizontal position is added to the cost (# of 'l' or 'r')
         var position: number = findStack(primary, state.stacks);
         if (position !== -1)
-            cost = + Math.abs(position - state.arm);
+            cost = cost + Math.abs(position - state.arm);
         else
-            return Number.MAX_VALUE; //The object doesn't exist in the world or is the floor
+            return Number.MAX_VALUE-10000; //The object doesn't exist in the world or is the floor
 
         // When the arm is positioned above the correct stack, it takes at least 4 moves 
         // to move each item above the goal object (p + l|r + d + r|l)
-        cost = + howManyAbove(primary, state.stacks[position]) * 4;
+        cost = cost + howManyAbove(primary, state.stacks[position]) * 4;
         // It costs one move to pick up the goal ('p')
         cost++;
 
@@ -584,17 +584,11 @@ module Planner {
 		    //Move the object to the side
             cost = calculateHolding(obj, state) + 2; //(r|l,d)
         }
-        //A is being held by the arm
-        else if (indexA == -1) {
-            var dist = Math.abs(state.arm - indexB);
-            cost = cost + dist + 2; //(l,d)
+        //A or B is being held by the arm, minimum cost is 1 (d)
+        else if (indexA == -1 || indexB == -1) {
+            cost++;
         }
-        //B is being held by the arm
-        else if (indexB == -1) {
-            var dist = Math.abs(state.arm - indexA);
-            cost = cost + dist + 2; //(r,d)
-        }
-        //Else b is left of a
+        //Else B is left of A
         else {
             cost = Math.min(calculateHolding(a, state), calculateHolding(b, state));
             var dist = Math.abs(indexA - indexB);
