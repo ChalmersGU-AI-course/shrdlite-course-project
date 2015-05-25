@@ -16,13 +16,12 @@ module Planner {
             plans.push(plan);
         });
         if (plans.length) {
-            //TODO: sort for shortest plan, error handling(null)?
-            return plans;
+            //Sort the plans for the "shortest"
+            return plans.sort(compare);
         } else {
             throw new Planner.Error("Found no plans");
         }
     }
-
 
     export interface Result extends Interpreter.Result { plan: string[]; }
 
@@ -83,10 +82,10 @@ module Planner {
 
         //Check if an intended move is valid
         export function validPosition(topObj: ObjectDefinition, bottomObj: ObjectDefinition): boolean {
-            console.log("Top object: ");
-            console.log(topObj);
-            console.log("Bottom object: ");
-            console.log(bottomObj);
+            //console.log("Top object: ");
+            //console.log(topObj);
+            //console.log("Bottom object: ");
+            //console.log(bottomObj);
             if (bottomObj.form === "ball")
                 return false;
             if (topObj.size === "large" && bottomObj.size === "small")
@@ -176,12 +175,15 @@ module Planner {
         start.states = cloneWorldstate(state);
         //start.states.holding = undefined; // This is a bad call! REMOVE WHEN BETA GOES LIVE
         var stats = { nodesVisited: 0, nodesAdded: 0 }
+
         var h: Search.Heuristic<Nworld> = allMovesCountsHeuristic(validInterps);
         var goalFunc: (node: Nworld) => boolean = goalFuncHandle(validInterps);
 
         var search = Search.aStar<Nworld>(h, keyFunc, stats);
         var visitedNodes = search(getNeighbours, start, goalFunc);
-        console.log(visitedNodes);
+        console.log("\nStats:");
+        console.log("  nodes visited: " + stats.nodesVisited);
+        console.log("  nodes added to queue: " + stats.nodesAdded);
 
         var path: string[] = [];
         path = buildPath(visitedNodes);
@@ -198,8 +200,7 @@ module Planner {
     }
     
     function keyFunc(n : Nworld){
-        console.log("keyFunc input: ");
-        console.log(n);
+        //console.log("keyFunc input: " + n);
         var res = String(n.states.arm);
         var state = n.states;
         if(state.holding !== undefined){
@@ -211,7 +212,7 @@ module Planner {
               res = res + state.stacks[i][j];
           } 
       }
-      console.log(res);
+      //console.log(res);
       return res;
     }
 
@@ -292,8 +293,8 @@ module Planner {
         return (function foundGoal(currentWorld: Nworld): boolean {
             var intps = intrps;
             var stacks = currentWorld.states.stacks;
-            console.log("Inside goal function with state: ");
-            console.log(currentWorld);
+            //console.log("Inside goal function with state: ");
+            //console.log(currentWorld);
             for (var i = 0; i < intrps.length; i++) {
                 // Check if interpretation i holds in the current world
                 var goal = true;
@@ -404,10 +405,10 @@ module Planner {
             else {
                 switch (path[i]) {
                     case "d":
-                        plan.push("Dropping the " + "SOME FORM", "d");
+                        plan.push("Dropping", "d");
                         break;
                     case "p":
-                        plan.push("Picking up the " + "SOME FORM", "p");
+                        plan.push("Picking up", "p");
                         break;
                     case "l":
                         plan.push("Moving left", "l");
@@ -421,6 +422,7 @@ module Planner {
             }
             prev = path[i];
         }
+        plan.push("Actions performed: " + path.length);
         return plan;
     }
 
@@ -475,7 +477,7 @@ module Planner {
                 var indexA: number = findStack(primary, state.stacks);
                 var indexB: number = findStack(target, state.stacks);
                 var dist: number = Math.abs(findStack(primary, state.stacks) - indexB);
-                if (howManyAbove(target, state.stacks[indexB]) !== 0) {
+                if (howManyAbove(target, state.stacks[indexB]) !== 0) { //check if the target is on top of its stack
                     cost = howManyAbove(target, state.stacks[indexB]) * 4 - 2; //no picking up or moving back to the stack
                     dist = 2 * dist - Math.abs(state.arm - indexA) + Math.abs(state.arm - indexB);
                 }
@@ -603,7 +605,7 @@ module Planner {
 
     //Returns the index of the stack in stacks where the obj is
     function findStack(obj: string, stacks: string[][]): number {
-        for (var i; i < stacks.length; i++) {
+        for (var i = 0; i < stacks.length; i++) {
             if (stacks[i].lastIndexOf(obj) !== -1)
                 return i;
         }
@@ -640,6 +642,17 @@ module Planner {
         }
 
         return temp;
+    }
+
+    function compare(a: Result, b: Result) {
+        if (a.plan.length < b.plan.length) {
+            return -1;
+        }
+        if (a.plan.length > b.plan.length) {
+            return 1;
+        }
+        // a must be equal to b
+        return 0;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
