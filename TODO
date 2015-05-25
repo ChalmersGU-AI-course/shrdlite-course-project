@@ -1,10 +1,12 @@
 * Planner
-	- Add Timeout
 	- Improve Heuristic
 
 * Interpreter
 	- Check world rules
+    - Add error messages
 	- Put it down: what if both arms hold something?
+        - Extend grammar with “put left/right object on the floor”
+        - Extend grammar with “put both objects on the floor”
 
 * UI
 	- Animate right arm
@@ -12,3 +14,17 @@
 * Maybe???
 	- Implement polarity
 
+
+
+* Presentation
+
+- Simple world
+
+put the white ball in a box on the floor
+move the white ball left of all blue objects
+move the white ball right of all blue objects
+move all large boxes to the left of all blue objects
+
+- Complex
+
+pick up the yellow pyramid
