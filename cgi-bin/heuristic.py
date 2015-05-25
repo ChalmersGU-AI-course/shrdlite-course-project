@@ -1,6 +1,10 @@
-PLACE_IN_STACK_PENALTY = 17 # cost of picking up + moving once + putting down
-CLOSE_TO_EDGE_PENALTY = 17 # cost of picking up + moving once + putting down
-NOT_HOLDING_PENALTY = 8 # cost of picking up
+from simple_planner import COST_MOVE, COST_PICK 
+
+PLACE_IN_STACK_PENALTY = \
+    COST_PICK * 2 + COST_MOVE # cost of picking up + moving once + putting down
+CLOSE_TO_EDGE_PENALTY = \
+    COST_PICK * 2 + COST_MOVE # cost of picking up + moving once + putting down
+NOT_HOLDING_PENALTY = COST_PICK # cost of picking up
 
 
 def heuristic(intprt, stacks, holding, arm, objects):
