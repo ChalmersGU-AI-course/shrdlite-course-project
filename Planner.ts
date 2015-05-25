@@ -127,14 +127,6 @@ module Planner {
 
     function createHeuristicFunction(goalWorld:PddlLiteral[][]) { 
         return function (node:AStar.Node<PddlWorld>) {
-            var cost = [];
-            for(var i in goalWorld) {
-                for(var j in goalWorld[i]) {
-                    if(goalWorld[i][j].rel === "ontop") {
-                        
-                    }
-                }
-            }
             
             return 0;
         }
