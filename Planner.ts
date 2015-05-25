@@ -82,10 +82,6 @@ module Planner {
 
         //Check if an intended move is valid
         export function validPosition(topObj: ObjectDefinition, bottomObj: ObjectDefinition): boolean {
-            //console.log("Top object: ");
-            //console.log(topObj);
-            //console.log("Bottom object: ");
-            //console.log(bottomObj);
             if (bottomObj.form === "ball")
                 return false;
             if (topObj.size === "large" && bottomObj.size === "small")
@@ -161,9 +157,9 @@ module Planner {
         var validInterps: Interpreter.Literal[][] = [];
         for (var i = 0; i < intprt.length; i++) {
             if (checkSpatialRelations(intprt[i], state.objects) && PhysicalLaws.checkInterp(intprt[i], state)) {
-                console.log("Added!");
+                console.log("Added " + intprt[i]);
                 validInterps.push(intprt[i]);
-                console.log(validInterps.length);
+                console.log("No. of accepted interpretations: " + validInterps.length);
             }
         }
 
@@ -192,9 +188,11 @@ module Planner {
 
     function buildPath(list : Nworld[]) : string[]{
         var res = [];
-        for(var i = 0; i < list.length; i++){
-          if(list[i].step !== undefined)
-              res.push(list[i].step);
+        if (list === undefined) 
+            throw new Planner.Error("Found no plans");
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].step !== undefined)
+                res.push(list[i].step);
         }
         return res;
     }
@@ -222,6 +220,13 @@ module Planner {
         // Inside
         // Ontop
         var rel = intp[0].rel;
+
+        //An object can't be related to itself
+        for (var i = 0; i < intp.length; i++) {
+            if (intp[i].args[0] === intp[i].args[1])
+                return false;
+        }
+
         if (rel === "inside") {
             // * Several things cannot be in one box
             // * Target is a box 
@@ -232,16 +237,12 @@ module Planner {
 
                 // Check that target is a box.
                 if (objects[target].form !== 'box') {
-                    console.log("Removed interpretation: ");
-                    console.log(intp[i]);
-                    console.log("Due to target is not a box.");
+                    console.log("Removed interpretation: " + intp[i] + " due to target is not a box.");
                     return false;
                 }
 
                 if (stateSet.contains(target)) {
-                    console.log("Removed interpretation: ");
-                    console.log(intp[i]);
-                    console.log("Due to bad spatial inside relation");
+                    console.log("Removed interpretation: " + intp[i] + " due to bad spatial inside relation");
                     return false; // Two things cannot be inside the same box
                 } else {
                     stateSet.add(target); // Add the target so we know that it is occupied.
@@ -362,13 +363,13 @@ module Planner {
             var state = cloneWorldstate(currentWorld.states);
             var topObject = state.objects[state.holding];
             var bottomObject = state.objects[stacks[arm][stacks[arm].length-1]];
-                console.log("Trying to put on stack with length: " + stacks[arm].length);
+            //console.log("Trying to put on stack with length: " + stacks[arm].length);
             
             if(stacks[arm].length === 0 || PhysicalLaws.validPosition(topObject, bottomObject)){
                 var worldstate = new Nworld();
                 var state = cloneWorldstate(currentWorld.states);
                 state.stacks[state.arm].push(state.holding);
-                console.log("Pushed: " + state.holding + " to position " + state.arm);
+                //console.log("Pushed: " + state.holding + " to position " + state.arm);
                 state.holding = null;
                 worldstate.states = state;
                 worldstate.step = 'd';
