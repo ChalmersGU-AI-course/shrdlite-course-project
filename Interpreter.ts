@@ -155,7 +155,7 @@ module Interpreter {
         var possibleObjs:string[] = getPossibleObjects(priObj, state);
         if(secObj !== null && rel != null){
             var secondaryObjs:string[] = getPossibleObjects(secObj, state);
-            possibleObjs = getRelation(possibleObjs, secondaryObjs, rel, state.stacks);
+            possibleObjs = getRelation(possibleObjs, secondaryObjs, rel, state);
         }
         //Anything more?
         
@@ -305,7 +305,8 @@ module Interpreter {
      * returns 'none' if there is no relation
      * possible relations: left, right, inside, under, above (beside = left or right)
      */
-   export function getRelation(o1s : string[], o2s : string[], rel : string, stacks : string[][]) : string[]{
+   export function getRelation(o1s : string[], o2s : string[], rel : string, world : WorldState) : string[]{
+        var stacks = world.stacks;
         var correct = new collections.Set<string>();
         
         // Special case when O2 is the floor. Floor has character "_"
@@ -315,6 +316,18 @@ module Interpreter {
                 if(coo1[1] === 0)
                   correct.add(o1s[i]);         
             }
+            return correct.toArray();
+        }
+
+        // Special case holding
+        if(rel === "holding"){
+            for(var i = 0; i < o1s.length; i++){
+                if(o1s[i] === world.holding){
+                    correct.add(o1s[i]);
+                }
+            }
+            console.log("holding relation");
+            console.log(correct);
             return correct.toArray();
         }
         
@@ -332,7 +345,6 @@ module Interpreter {
             f = function(co1 : number[], co2 : number[]) {return (co1[0] === (co2[0]-1)) || (co1[0] === (co2[0]+1)) };
         else if(rel === "above")
             f = function(co1 : number[], co2 : number[]) {return co1[1] > co2[1] && co1[0] === co2[0]};
-        
         // Run through all objects and check if the relation holds, then store.
         for(var i = 0; i < o1s.length; i++){
             var coo1 = getStackIndex(o1s[i],stacks);
