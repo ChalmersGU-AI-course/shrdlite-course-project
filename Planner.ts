@@ -375,8 +375,17 @@ module Planner {
                 return heuristic["ontop"](a,args);
             },
             holding : function(a:ActionState, args:string[]) : number[] {
-                
-                return [0.0];
+                var top = args[0];
+                var toFreeTop;
+                //if its allready holding obj a then the heuristics should equal 0,0
+                if (a.holding  == top) { return [0,0] }; 
+                var topPosX = find_obj(top, a.stacks)[0];
+                // if im on top of the stack then 
+                var ontopOfStack = (heurMoveArmToPOI(a,[topPosX]) == 0);
+                // if its holding anything other than a, then it will have to put it down.
+                var toPick =  1 ; 
+                toFreeTop = heurFree(a,top) + toPick;
+                return [heurMoveArmToPOI(a,[topPosX]),toFreeTop] 
             },
             above : function(a:ActionState, args:string[]) : number[] {
                 var top = args[0];
