@@ -46,7 +46,9 @@ ExampleWorlds["medium"] = {
     "stacks": [["e"],["a","l"],[],[],["i","h","j"],[],[],["k","g","c","b"],[],["d","m","f"]],
     "arms": [
                 {"holding": null, "pos": 0},
-                {"holding": null, "pos": 4}
+                {"holding": null, "pos": 2},
+                {"holding": null, "pos": 5},
+                {"holding": null, "pos": 7}
             ],
     "objects": {
         "a": { "form":"brick",   "size":"large",  "color":"green" },

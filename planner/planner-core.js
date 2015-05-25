@@ -351,7 +351,35 @@ function putOnTopOf(obj, state) {
 }
 
 SearchGraph.prototype.h = function (state) {
-    return 0;
+    var estimate = 0;
+
+    for(var rule of this.pddl) {
+        if(this.rule_satisfied(rule, state)) {
+            continue;
+        }
+
+        // Find the object
+        var i = 0;
+        var j = -1;
+        for (var stack of state.stacks) {
+            j = stack.indexOf(rule.item);
+            if (j !== -1) {
+                break;
+            }
+            i++;
+        }
+
+        switch(rule.rel) {
+            case "holding":
+                // Calculate the average distance from each arm
+                estimate += state.arms.reduce(function(acc, arm) {
+                    return acc + Math.abs(arm.pos - i) + 4 * (stack.length-j);
+                }, 0) / state.arms.length;
+                break;
+
+        }
+    }
+    return estimate;
 };
 /*
 SearchGraph.prototype.h = function (state) {
@@ -480,7 +508,9 @@ module.exports = function(currentState, pddl) {
     if (!g.isPossible(g.startNode)) {
         return undefined;
     }
+    console.time("A*");
     var res = astar(g, g.startNode);
+    console.timeEnd("A*");
     if (res === undefined) {
         return undefined;
     } else {
