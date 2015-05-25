@@ -14,6 +14,11 @@ module Shrdlite {
                 if (!plan) {
                     plan = parseUtteranceIntoPlan(world, utterance);
                 }
+								if (plan[0] == "ambi") {
+									var askQuestion = () => world.printPickList(plan, endlessLoop); 
+									askQuestion();
+									return;
+								}
                 if (plan) {
                     world.printDebugInfo("Plan: " + plan.join(", "));
                     world.performPlan(plan, nextInput);
@@ -47,35 +52,28 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
         });
 
-        //todo: ambiguity check!
-        while (true) {
-            try {
-                var interpretations: Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
-            } catch (err) {
-                if (err instanceof Interpreter.Error) {
-                    world.printError("Interpretation error", err.message);
-                    return;
-                } else {
-                    throw err;
-                }
+        try {
+            var interpretations: Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
+        } catch (err) {
+            if (err instanceof Interpreter.Error) {
+                world.printError("Interpretation error", err.message);
+                return;
+            } else {
+                throw err;
             }
-            world.printDebugInfo("Found " + interpretations.length + " interpretations");
-            interpretations.forEach((res, n) => {
-                world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
-            });
+        }
+        world.printDebugInfo("Found " + interpretations.length + " interpretations");
+        interpretations.forEach((res, n) => {
+            world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
+        });
 
-            if (interpretations.length > 1) {
-                world.printSystemOutput("The utterance is ambiguous.\nCan you please clarify ...");
-                var s: string[] = [];
-                interpretations.forEach((res, n) => {
-                    s.push(Interpreter.interpretationToString(res));
-                });
-                world.printPickList(s);
-                break;
-            }
-            else {
-                break;
-            }
+        if (interpretations.length > 1) {
+            world.printSystemOutput("The utterance is ambiguous.\nCan you please clarify ...");
+            var s: string[] = [];
+            interpretations.forEach((res, n) => {
+                s.push(Interpreter.interpretationToSentence(res, world.currentState));
+            });
+						return ["ambi"].concat(s);
         }
 
         try {

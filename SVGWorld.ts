@@ -67,15 +67,19 @@ class SVGWorld implements World {
         this.inputCallback = callback;
     }
 
-		public printPickList(elements : string[]) {
-			$('<select>').attr("class", "system")
+		public printPickList(elements : string[], callback) {
+			$('<select>').attr("class", "pick")
 					//.attr('style', 'box-shadow: black 0.1em 0.1em 0.1em; border: solid blue; border-radius: 0.05em' )
-          //.append(elements[0])
-					.append(new Option(elements[0], "option1"))
-          .insertBefore(this.containers.inputform);
-					//.click(function() {
-					//	alert("something was clicked.");
-					//});
+					.insertBefore(this.containers.inputform)
+					.change(function() {
+						//alert("something was clicked.");
+						var optionSelected = $(this).find("option:selected");
+						callback(optionSelected.text());
+						$(this).prop('disabled',true);
+					});
+			for (var i = 0; i < elements.length; i++) {
+				$( ".pick" ).append(new Option(elements[i], "option"+i))
+			}
 			var dialogue = this.containers.dialogue;
 			dialogue.scrollTop(dialogue.prop("scrollHeight"));
 		}
