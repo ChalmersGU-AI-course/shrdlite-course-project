@@ -5,7 +5,8 @@ module WorldRules {
     export function checkRelation(rel:String, topObj:ObjectDefinition, bottomObj:ObjectDefinition):boolean{
         var relationOk = true;
         if (rel == "ontop") {
-            relationOk = canBeOntop(topObj, bottomObj);
+            var bottomIsNotABox = bottomObj.form != "box";
+            relationOk = bottomIsNotABox && canBeOntop(topObj, bottomObj);
         } else if (rel == "inside") {
             relationOk = canBeInside(topObj, bottomObj);
         } else if (rel == "under") {
