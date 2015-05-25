@@ -3,6 +3,7 @@
 /// <reference path="graph/graph.ts" />
 /// <reference path="graph/astar.ts" />
 /// <reference path="graph/permutate.ts"/>
+/// <reference path="heuristic/Heuristic.ts"/>
 ///<reference path="Utils.ts"/>
 
 module Planner {
@@ -150,9 +151,9 @@ module Planner {
                     for(var j=0; j<intprt[i].length; j++){
                         var int = intprt[i][j];
                         if(int.rel == "holding"){
-                            totalH += heuristics(int.args[0], int.rel, int.args[0], node);
+                            totalH += heuristics.heuristics(int.args[0], int.rel, int.args[0], node);
                         }
-                        totalH += heuristics(int.args[0], int.rel, int.args[1], node);
+                        totalH += heuristics.heuristics(int.args[0], int.rel, int.args[1], node);
                     }
                     minH = Math.min(minH,totalH);
                 }
