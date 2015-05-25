@@ -83,7 +83,10 @@ module Planner {
 
         //Check if an intended move is valid
         export function validPosition(topObj: ObjectDefinition, bottomObj: ObjectDefinition): boolean {
-
+            console.log("Top object: ");
+            console.log(topObj);
+            console.log("Bottom object: ");
+            console.log(bottomObj);
             if (bottomObj.form === "ball")
                 return false;
             if (topObj.size === "large" && bottomObj.size === "small")
@@ -161,54 +164,44 @@ module Planner {
         }
 
         //Remove when done
-        testCloning(state);
+        //testCloning(state);
 
-        // This function returns a dummy plan involving a random stac
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
-        var plan: string[] = [];
-
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
-            }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
-            }
-        }
-
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length - 1];
-        plan.push("Picking up the " + state.objects[obj].form,
-            "p");
-
-        if (pickstack < state.stacks.length - 1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length - 1; i++) {
-                plan.push("r");
-            }
-
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length - 1; i > pickstack; i--) {
-                plan.push("l");
-            }
-        }
-
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-            "d");
-
-        return plan;
-
+        // Make A-star call!
+        var start = new Nworld();
+        start.states = state;
+        start.states.holding = undefined; // This is a bad call!
+        var goalFunc = goalFuncHandle(validInterps);
+        var astarwrapper = Search.aStar<Nworld>(null, keyFunc);
+        var searcher = astarwrapper(getNeighbours, start, goalFunc);
+        console.log(searcher);
+        return buildPath(searcher);
     }
 
+    function buildPath(list : Nworld[]) : string[]{
+        var res = [];
+        for(var i = 0; i < list.length; i++){
+            res.push(list[i].step);
+        }
+        return res;
+    }
+    
+    function keyFunc(n : Nworld){
+        console.log("keyFunc input: ");
+        console.log(n);
+        var res = String(n.states.arm);
+        var state = n.states;
+        if(state.holding !== undefined){
+            res = res+state.holding;
+        }
+        res = res + "!";
+      for(var i = 0; i < state.stacks.length; i++){
+          for(var j = 0; j < state.stacks[i].length; j++){
+              res = res + state.stacks[i][j];
+          } 
+      }
+      console.log(res);
+      return res;
+    }
 
     function checkSpatialRelations(intp: Interpreter.Literal[], objects: { [s: string]: ObjectDefinition }): boolean {
         // Check so that each spatial relation holds between the elements
@@ -285,6 +278,8 @@ module Planner {
         return (function foundGoal(currentWorld: Nworld): boolean {
             var intps = intrps;
             var stacks = currentWorld.states.stacks;
+            console.log("Inside goal function with state: ");
+            console.log(currentWorld);
             for (var i = 0; i < intrps.length; i++) {
                 // Check if interpretation i holds in the current world
                 var goal = true;
@@ -305,7 +300,9 @@ module Planner {
             return false;
         });
     }
-
+//###################################################################
+//###################################################################
+//###################################################################
     function getNeighbours(currentWorld: Nworld): [Nworld, number][]{
         // Return all possible moves as corresponing Nworlds, with actual cost (?)
         var arm     = currentWorld.states.arm;
@@ -317,50 +314,56 @@ module Planner {
             //Move left possible
             var worldstate    = new Nworld();
             var state         = cloneWorldstate(currentWorld.states);
+            state.arm = arm - 1;
             worldstate.states = state;
             worldstate.step = 'l';
             currentWorld.neighbours.push([worldstate, 1]);
         }
-        if(arm < stacks.length){
+        if(arm < stacks.length-1){
             // Move right possible
             var worldstate = new Nworld();
             var state = cloneWorldstate(currentWorld.states);
+            state.arm = arm + 1;
             worldstate.states = state;
             worldstate.step = 'r';
             currentWorld.neighbours.push([worldstate, 1]);
         }
         // Not hodling an object and object exist at arm position
-        if(holding === null && currentWorld.states[arm].length > 0){ 
+        if(holding === undefined && stacks[arm].length > 0){ 
             // Pick up is possible
             var worldstate = new Nworld();
-            var state = cloneWorldstate(currentWorld.states);
-            var holding = state.stacks[arm][state.stacks.length-1];
-            state.stacks[arm][state.stacks.length-1] = null;
-            state.holding = holding;          
+            var state     = cloneWorldstate(currentWorld.states);
+            state.holding = state.stacks[arm].pop();
             worldstate.states = state;
             worldstate.step = 'p';
             currentWorld.neighbours.push([worldstate, 1]);
 
         }
-        if(holding !== null){
+        if(holding !== undefined){
             // Drop is possible (if all other if-cases holds e.g. physical laws)
             // Check all laws
             // If all laws is OK
+            var state = cloneWorldstate(currentWorld.states);
             var topObject = state.objects[holding];
             var bottomObject = state.objects[stacks[arm][stacks[arm].length-1]];
-            if(PhysicalLaws.validPosition(topObject, bottomObject)){
+                console.log("Trying to put on stack with length: " + stacks[arm].length);
+            
+            if(stacks[arm].length === 0 || PhysicalLaws.validPosition(topObject, bottomObject)){
                 var worldstate = new Nworld();
                 var state = cloneWorldstate(currentWorld.states);
                 state.stacks[arm][state.stacks[arm].length] = holding;
-                state.holding = null;
+                console.log("Pushed: " + holding + " to position " + arm);
+                state.holding = undefined;
                 worldstate.states = state;
                 worldstate.step = 'd';
                 currentWorld.neighbours.push([worldstate, 1]);
             }
         }
-        return moves;
+        return currentWorld.neighbours;
     }
-
+//################################################################################
+//################################################################################
+//################################################################################
     function getStackIndex(o1: string, stacks: string[][]): number[] {
         var cords: number[] = [-1, -1];
         for (var i = 0; i < stacks.length; i++) {
@@ -642,6 +645,6 @@ module Planner {
         value: string;
         x: number;
         y: number;
-        neighbours: [Nworld, number][];
+        neighbours: [Nworld, number][] = [];
     }
 }
