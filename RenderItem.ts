@@ -1,7 +1,7 @@
 ﻿///<reference path="lib/gl-matrix.d.ts" />>
 ///<reference path="camera.ts" />>
 
-class GlObject {
+class RenderItem {
     public pos: Float32Array;
     public rot: Float32Array;
 
@@ -10,8 +10,9 @@ class GlObject {
     private textureCoordBuffer: WebGLBuffer;
     private vertexIndexBuffer: WebGLBuffer;
     private mvMatrix: Float32Array;
+    private items;
 
-    public constructor(private gl, vertices, vertexIndices, texture: string, textureCoords) {
+    public constructor(private gl: WebGLRenderingContext, vertices, vertexIndices, texture: string, textureCoords) {
         this.pos = vec3.create();
 
         this.mvMatrix = mat4.create();
@@ -33,6 +34,7 @@ class GlObject {
 
         this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertexIndices), this.gl.STATIC_DRAW);
 
+        this.items = vertices.length / 2;
 
         this.texture = this.gl.createTexture();
         var image: HTMLImageElement = new Image();
@@ -43,6 +45,8 @@ class GlObject {
         this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, image);
         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_NEAREST);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.REPEAT);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.REPEAT);
         this.gl.generateMipmap(this.gl.TEXTURE_2D);
         this.gl.bindTexture(this.gl.TEXTURE_2D, null);
 
@@ -71,7 +75,7 @@ class GlObject {
 
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
         this.setMatrixUniforms(pMatrix, this.mvMatrix, cam);
-        this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
+        this.gl.drawElements(this.gl.TRIANGLES, this.items, this.gl.UNSIGNED_SHORT, 0);
     }
 
     private setMatrixUniforms(pMatrix: Float32Array, mvMatrix: Float32Array, cam: Camera) {

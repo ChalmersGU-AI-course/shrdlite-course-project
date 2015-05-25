@@ -2,7 +2,7 @@
 ///<reference path="World.ts"/>
 ///<reference path="lib/jquery.d.ts" />
 ///<reference path="lib/gl-matrix.d.ts" />>
-///<reference path="GlObject" />>
+///<reference path="RenderItem" />>
 
 class GLGWorld implements World {
     protected gl: WebGLRenderingContext;
@@ -12,9 +12,9 @@ class GLGWorld implements World {
 
     protected cam: Camera;
 
-    private scene: Array<GlObject>;
-    private floor: GlObject;
-
+    private scene: Array<RenderItem>;
+    private floor: RenderItem;
+    private arm: RenderItem;
 
     constructor(
         public currentState: WorldState,
@@ -26,18 +26,22 @@ class GLGWorld implements World {
             alert(e);
             this.gl = undefined;
         }
-        this.scene = new Array<GlObject>();
+        this.scene = new Array<RenderItem>();
+        this.cam = new Camera(this.gl, canvas);
+        this.cam.setPosition(0, -3, -10);
 
-        this.floor = new GlObject(this.gl, Assets.Floor.vertices, Assets.Floor.vertexIndices, Assets.Floor.texture, Assets.Floor.textureCoords);
 
+        this.floor = new RenderItem(this.gl, Assets.Floor.vertices, Assets.Floor.vertexIndices, Assets.Floor.texture, Assets.Floor.textureCoords);
         this.floor.setPosition(0, 0, -3);
-
         this.scene.push(this.floor);
 
-        this.cam = new Camera(this.gl, canvas);
-        this.cam.setPosition(0, -1, 0);
+        this.arm = new RenderItem(this.gl, Assets.Arm.vertices, Assets.Arm.vertexIndices, Assets.Arm.texture, Assets.Arm.textureCoords);
+        this.arm.setPosition(0, 2, 0);
+        this.scene.push(this.arm);
 
-        this.gl.clearColor(0.0, 0.0, 0.2, 1.0);
+
+
+        this.gl.clearColor(0.8, 0.8, 1.0, 1.0);
         this.gl.clearDepth(1.0);
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);
@@ -109,7 +113,7 @@ class GLGWorld implements World {
 
         //View
         this.cam.Setup();
-
+        this.arm.setPosition(this.currentState.arm - 3, 2, 0);
 
         //var translation = vec3.create();
         //vec3.set(translation, 0.0, 0.0, -6.0);
