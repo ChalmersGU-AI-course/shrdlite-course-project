@@ -200,52 +200,53 @@ module Planner {
     	var loc : number = -1;
     	var locIndex : number =  -1;
     	var minimum : number = Number.MAX_VALUE; // 999999999; 
+    	var list : number[] = [];
     	
     	for(var i =0; i<goal.length; i++ ){
     		for(var x =0; x<state.stacks.length; x++ ){
 				var stackTar = Interpreter.searchStack(state.stacks[x], goal[i][0].args[0]);
 				var stackLoc = Interpreter.searchStack(state.stacks[x], goal[i][0].args[1]);
-				if(stackTar != -1 && stackTar != -1 )
-				{
+				if(stackTar != -1 && stackLoc != -1 ){
 					tar = (state.stacks[x].length-1) - stackTar;
 					loc = (state.stacks[x].length-1) - stackLoc;
 					
-					if(stackTar>stackLoc)
-					{
+					if(tar>loc){
 						tarIndex = x;
-						locIndex =x;
+						locIndex = x;
 
-						tar = tar*2;
-						loc =loc*2;
+						tar = tar*4-1;
+						loc = loc*4-1;
 					}
-					else
-					{
-						tarIndex = x+tar;
-						locIndex =x-loc;
-
-						tar = tar*2;
-						loc =loc*2;
+					else{
+						tar = (state.stacks[x].length-1) - stackTar;
+						tarIndex = x;
+						loc = (state.stacks[x].length-1) - stackLoc;
+						locIndex = x;
 					}
-					
-					
 				}
-				else if(stackTar != -1){
-					//tar = state.stacks.length -1 + stackTar;
-					tar = (state.stacks[x].length-1) - stackTar;
-					tarIndex = x;
-				}else if(stackTar != -1){
-					//loc = state.stacks.length -1 + stackLoc;
-					loc = (state.stacks[x].length-1) - stackLoc;
-					locIndex =x;
+					else{
+					 if(stackTar != -1){
+						tar = (state.stacks[x].length-1) - stackTar;
+						tarIndex = x;
+					} if(stackLoc != -1){
+						loc = (state.stacks[x].length-1) - stackLoc;
+						locIndex = x;
+					}
 				}
-				var tmpTot = tar + loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex);
-				if(minimum > tmpTot){
-				minimum = tmpTot;
-			}
+//				var tmpTot = tar + loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex);
+//				if(minimum > tmpTot){
+//					minimum = tmpTot;
+//				}
 			}
 
 			//var tmpTot = tar + loc + Math.max(tarIndex - locIndex, locIndex - tarIndex);
-			var tmpTot = tar + loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex);
+			
+			var tmpTot = tar + loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex) ;
+			if(state.holding == null){
+				tmpTot +=  (Math.max (tarIndex,  state.arm) - Math.min (tarIndex,  state.arm)) 
+			}else{
+				//tmpTot += ;
+			}
 			if(minimum > tmpTot){
 				minimum = tmpTot;
 			}
@@ -260,12 +261,13 @@ module Planner {
 		if(intprt.length == 0){
 			return ["no matching objects"];
 		}else if(!AStar.checkGoal(worldToPPDL(state), intprt )){
-			plan2 = AStar.runAStar([], new AStar.Nod("",state,""), intprt , function ret(){return true;} );
+			//plan2 = AStar.runAStar([], new AStar.Nod("",state,""), intprt , function ret(){return true;} );
 			//var n = plan2.search(",");
-			var s = plan2[0].slice(23,plan2[0].length-1);	
+			//var s = plan2[0].slice(23,plan2[0].length-1);	
 
 			plan = AStar.runAStar([], new AStar.Nod("",state,""), intprt , heuristicFunc);
-			plan[0]="Number of node without Heuristics " + s + " , \n" + plan[0];		}else{
+		//	plan[0]="Number of node without Heuristics " + s + " , \n" + plan[0];		
+		}else{
 			plan = ["Goal already found"];
 			console.log("error-------------------------------------");
 		}
