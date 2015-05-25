@@ -63,7 +63,8 @@ module Heuristics{
             return function( a : WorldState) : number
             {
                 var points = 0;
-                for(var row = overPos.y + 1; row < a.stacks[overPos.x].length; row++) {
+                for(var row = overPos.y + 1; row < a.stacks[overPos.x].length; row++)
+                {
                     points += 10;
                 }
             
@@ -77,14 +78,14 @@ module Heuristics{
                 var points = 0;
                                         
                 //We begin by penalizing objects ontop of the under and over objects.
-                for(var row = underPos.y + 1; row < a.stacks[underPos.x].length; row++) {
+                for(var row = underPos.y + 1; row < a.stacks[underPos.x].length; row++) 
+                {
                     if(a.stacks[underPos.x][row] !== over)
-                    {
                         points += 10;
-                    }
                 }
                             
-                for(var row = overPos.y + 1; row < a.stacks[overPos.x].length; row++) {
+                for(var row = overPos.y + 1; row < a.stacks[overPos.x].length; row++) 
+                {
                     points += 10;
                 }
                 
@@ -92,9 +93,7 @@ module Heuristics{
                 if(a.holding === over)
                 {
                     if(underPos.y + 1 == a.stacks[underPos.x].length)
-                    {
-                        points -= 10; //We want to encurage that the algorithm picked up the over object.
-                    } 
+                        points -= 10; //We want to encurage that algorithm to pick up the over object.
                 }
                 else if(a.holding === under)
                 {
@@ -114,7 +113,7 @@ module Heuristics{
         {
             var points = 0;
             
-            //We don't want the algorithm to move the stationary object.
+            //We really don't want the algorithm to move the stationary object.
             if(a.holding === stationary)
                 points += 100; 
                 
@@ -123,7 +122,8 @@ module Heuristics{
                 points -= 5;
             
             //We need to remove potential items ontop of the movable object.
-            for(var row = movePos.y + 1; row < a.stacks[movePos.x].length; row++) {
+            for(var row = movePos.y + 1; row < a.stacks[movePos.x].length; row++) 
+            {
                 points += 10;
             }
                                 

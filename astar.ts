@@ -17,15 +17,13 @@ module Astar
 		}
 	}
 	
-
-	/**
-	 * Finds the shortest path between start and end if such a path exists.
-	 * @param start 	- The starting point
-	 * @param end		- The target destination
-	 * @param gen   	- function used to generate all adjacent nodes of a node.
-	 * @param heuristic - a guess for how close a node is to the end node.
-	 * @param maxIterations - the maximal number of nodes the algorithm visits.
-	 */
+	
+	//Finds the shortest path between start and end if such a path exists.
+	//@param start 	- The starting point
+	//@param end		- The target destination
+	//@param gen   	- function used to generate all adjacent nodes of a node.
+	//@param heuristic - a guess for how close a node is to the end node.
+	//@param maxIterations - the maximal number of nodes the algorithm visits.
 	export function findPath<T>(start : T, 
 								gen : (t : T) => T[],
 								heuristic : (t : T) => number,
@@ -35,9 +33,7 @@ module Astar
 	{
 		//Simple case:
 		if(goal(start)) 
-		{
 			return new SearchResult<T>([start, start], 0);
-		}
 
 		var known  = new collections.Dictionary<T, number>(strFun);
 		var dist:number[]   = [];
@@ -78,9 +74,7 @@ module Astar
 		}
 
 		if(pQueue.isEmpty())
-		{
 			return new SearchResult<T>();
-		}
 
 		var iterations: number    = 1;
 		var node : T = pQueue.dequeue();
