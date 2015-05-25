@@ -51,14 +51,7 @@ def getAction(state):
 def goalWrapper(intprt, stacks, holding, arm, objects):
     """    Passed as a parameter to A*, check if a state satisfied a goal.
     """
-    for disjunctive_goal in intprt:
-        goal_achieved = True
-        for conjunctive_goal in disjunctive_goal:
-            goal_achieved = (goal_achieved and 
-                satisfy_pred(conjunctive_goal, stacks, holding))
-        if goal_achieved:
-            return True
-    return False 
+    return any([all([satisfy_pred(conj, stacks, holding) for conj in disj]) for disj in intprt])
 
 def _changeStack(newStack,index,stacks):
     """    Helperfunction to change a stack in stacks given an index
