@@ -961,14 +961,14 @@ module collections {
     //  * @return {boolean} true if this dictionary is equal to the given dictionary.
     //  */
     // collections.Dictionary.prototype.equals = function(other,valuesEqualFunction) {
-    // 	var eqF = valuesEqualFunction || collections.defaultEquals;
-    // 	if(!(other instanceof collections.Dictionary)){
-    // 		return false;
-    // 	}
-    // 	if(this.size() !== other.size()){
-    // 		return false;
-    // 	}
-    // 	return this.equalsAux(this.firstNode,other.firstNode,eqF);
+    //         var eqF = valuesEqualFunction || collections.defaultEquals;
+    //         if(!(other instanceof collections.Dictionary)){
+    //                 return false;
+    //         }
+    //         if(this.size() !== other.size()){
+    //                 return false;
+    //         }
+    //         return this.equalsAux(this.firstNode,other.firstNode,eqF);
     // }
 
 

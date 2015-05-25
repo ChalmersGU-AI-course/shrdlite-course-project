@@ -38,17 +38,17 @@ module Parser {
                              size?:string; color?:string; form?:string;}
 
     export function objToString (obj : Object) : string {
-	var description = "";
-	if (obj.size) {
-	    description = description + obj.size + " ";
-	}
-	if (obj.color) {
-	    description = description + obj.color + " ";
-	}
-	if (obj.form) {
-	    description = description + obj.form;
-	}
-	return description;
+        var description = "";
+        if (obj.size) {
+            description = description + obj.size + " ";
+        }
+        if (obj.color) {
+            description = description + obj.color + " ";
+        }
+        if (obj.form) {
+            description = description + obj.form;
+        }
+        return description;
     }
 
     export function parseToString(res : Result) : string {

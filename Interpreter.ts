@@ -17,13 +17,13 @@ module Interpreter {
             intprt.intp = interpretCommand(intprt.prs, currentState);
             interpretations.push(intprt);
         });
-	// enhanching extension
-	if (currentState.status[0] === "softambiguity") {
-	    currentState.previousCmd = parses;
-	} else {
-	    // cleaning it up
-	    currentState.previousCmd = null;
-	}
+        // enhanching extension
+        if (currentState.status[0] === "softambiguity") {
+            currentState.previousCmd = parses;
+        } else {
+            // cleaning it up
+            currentState.previousCmd = null;
+        }
 
         console.log("DEBUG: "+ interpretationToString(interpretations[0]));
 
@@ -261,16 +261,16 @@ module Interpreter {
                     }
                 }
                 if(canSupport(objA, objB)){
-		    supportiveAmbiguousTargets.push(objB);
-		}
+                    supportiveAmbiguousTargets.push(objB);
+                }
 
                 intprt.push( [
                     {pol: true, rel: locationRel, args: [above, below] }
                 ] );
             }
         }
-	// make sure supportiveAmbiguousTargets is not undefined and more than one
-	if (supportiveAmbiguousTargets && supportiveAmbiguousTargets.length >1){
+        // make sure supportiveAmbiguousTargets is not undefined and more than one
+        if (supportiveAmbiguousTargets && supportiveAmbiguousTargets.length >1){
             state.ambiguousObjs = supportiveAmbiguousTargets;
         }
     }
@@ -317,13 +317,13 @@ module Interpreter {
             return searchResult;
         }
 
-	if (goalObj.form === "anyform"){
-	    // TODO should search based on location for anyform
-	    // searchResult.targets = resolveObject(state, goalObj, goalObj.loc);
+        if (goalObj.form === "anyform"){
+            // TODO should search based on location for anyform
+            // searchResult.targets = resolveObject(state, goalObj, goalObj.loc);
             // return searchResult;
-	    console.log(goalObj);
+            console.log(goalObj);
 
-	}
+        }
 
         if(goalObj.form === "floor"){
             result.push("floor");

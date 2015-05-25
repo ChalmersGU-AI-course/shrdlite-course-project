@@ -10,35 +10,35 @@ module Shrdlite {
             var inputPrompt = "What can I do for you today? ";
             var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
             if (utterance.trim()) {
-		//world.printSystemOutput(utterance);
-		try {
+                //world.printSystemOutput(utterance);
+                try {
                     var plan : string[] = splitStringIntoPlan(utterance);
                     if (!plan) {
-			plan = parseUtteranceIntoPlan(world, utterance);
+                        plan = parseUtteranceIntoPlan(world, utterance);
                     }
                     if (plan) {
-			world.printDebugInfo("Plan: " + plan.join(", "));
-			world.performPlan(plan, nextInput);
-			return;
+                        world.printDebugInfo("Plan: " + plan.join(", "));
+                        world.performPlan(plan, nextInput);
+                        return;
                     }
-		} catch (err){
-		    if (err instanceof Interpreter.Ambiguity){
-			var question = "Do you mean ";
-			world.currentState.ambiguousObjs.forEach((obj) => {
-			    question = question + Parser.objToString(obj) + " ? ";
-			});
-			
-			// clear up status or we will always come back here
-			world.currentState.status = [];
-			world.currentState.ambiguousObjs = [];
-			nextInput = () => world.readUserInput(question, endlessLoop);
-		    } else {
-			throw err;
-		    }
-		} 
+                } catch (err){
+                    if (err instanceof Interpreter.Ambiguity){
+                        var question = "Do you mean ";
+                        world.currentState.ambiguousObjs.forEach((obj) => {
+                            question = question + Parser.objToString(obj) + " ? ";
+                        });
+
+                        // clear up status or we will always come back here
+                        world.currentState.status = [];
+                        world.currentState.ambiguousObjs = [];
+                        nextInput = () => world.readUserInput(question, endlessLoop);
+                    } else {
+                        throw err;
+                    }
+                }
             }
             nextInput();
-	}
+        }
         world.printWorld(endlessLoop);
     }
 
@@ -49,65 +49,65 @@ module Shrdlite {
     // - then it creates plan(s) for the interpretation(s)
 
     function mergeCmd(world : World, previousCmd : Parser.Result[], utterance : string ) : Parser.Result[] {
-	try {
-	    var parses : Parser.Result[] = Parser.parse(utterance);
-	} catch (err) {
-		if (err instanceof Parser.Error) {
-		   var newInfo = utterance.toLowerCase().replace(/\W/g, "");
-		    var newResult : Parser.Result[] = [];
-		    switch (newInfo){
-		    case "small":
-		    case "tiny" :{
-			previousCmd[0].prs.ent.obj.size = "small";
-			newResult.push(previousCmd[0]);
-			return newResult;
-		    }
-		    case "large":
-		    case "big" :{
-			previousCmd[0].prs.ent.obj.size = "large";
-			newResult.push(previousCmd[0]);
-			return newResult;
-		    }
-		    case "black" :
-		    case "white" :
-		    case "green" :
-		    case "yellow" :
-		    case "red" :
-		    case "blue" :{
-			previousCmd[0].prs.ent.obj.color = newInfo;
-			newResult.push(previousCmd[0]);
-			return newResult;
-		    }
+        try {
+            var parses : Parser.Result[] = Parser.parse(utterance);
+        } catch (err) {
+                if (err instanceof Parser.Error) {
+                   var newInfo = utterance.toLowerCase().replace(/\W/g, "");
+                    var newResult : Parser.Result[] = [];
+                    switch (newInfo){
+                    case "small":
+                    case "tiny" :{
+                        previousCmd[0].prs.ent.obj.size = "small";
+                        newResult.push(previousCmd[0]);
+                        return newResult;
+                    }
+                    case "large":
+                    case "big" :{
+                        previousCmd[0].prs.ent.obj.size = "large";
+                        newResult.push(previousCmd[0]);
+                        return newResult;
+                    }
+                    case "black" :
+                    case "white" :
+                    case "green" :
+                    case "yellow" :
+                    case "red" :
+                    case "blue" :{
+                        previousCmd[0].prs.ent.obj.color = newInfo;
+                        newResult.push(previousCmd[0]);
+                        return newResult;
+                    }
 
-		    default: 
-			return previousCmd;
-		    }
-		} else {
+                    default:
+                        return previousCmd;
+                    }
+                } else {
                     throw err;
-		}
-	}
-	return parses;
+                }
+        }
+        return parses;
 }
 
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
-	if (world.currentState.previousCmd !== null) {
-	    world.printSystemOutput("I've remembered you said: " 
-				+ world.currentState.previousCmd[0].input);
-	    var parses = mergeCmd(world, world.currentState.previousCmd, utterance);
-	}
-	else {
+        if (world.currentState.previousCmd !== null) {
+            world.printSystemOutput("I've remembered you said: "
+                                + world.currentState.previousCmd[0].input);
+            var parses = mergeCmd(world, world.currentState.previousCmd, utterance);
+        }
+        else {
             try {
-		var parses : Parser.Result[] = Parser.parse(utterance);
+                var parses : Parser.Result[] = Parser.parse(utterance);
             } catch(err) {
-		if (err instanceof Parser.Error) {
+                if (err instanceof Parser.Error) {
                     world.printError("Parsing error", err.message);
                     return;
-		} else {
+                } else {
                     throw err;
-		}
+                }
             }
-	}
+        }
         world.printDebugInfo("Found " + parses.length + " parses");
         parses.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
@@ -123,20 +123,20 @@ module Shrdlite {
                 throw err;
             }
         }
-	//world.printDebugInfo(world.currentState.status);
-	world.currentState.status.forEach((status) => {
-	    if (status === "softambiguity"){
-		throw new Interpreter.Ambiguity(); // throw sth-else!
-	    }
-	    if (status === "multiValidInterpret"){
-		world.printSystemOutput("There're multiple valid interpretation");
-		world.printSystemOutput("But Im lazy and only performs minimum plan");
-		// clean up for multiValidInterpret
-		world.currentState.status = [];
-	    }
-	});
+        //world.printDebugInfo(world.currentState.status);
+        world.currentState.status.forEach((status) => {
+            if (status === "softambiguity"){
+                throw new Interpreter.Ambiguity(); // throw sth-else!
+            }
+            if (status === "multiValidInterpret"){
+                world.printSystemOutput("There're multiple valid interpretation");
+                world.printSystemOutput("But Im lazy and only performs minimum plan");
+                // clean up for multiValidInterpret
+                world.currentState.status = [];
+            }
+        });
 
-	
+
         world.printDebugInfo("Found " + interpretations.length + " interpretations");
         interpretations.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
@@ -153,19 +153,19 @@ module Shrdlite {
             }
         }
         world.printDebugInfo("Found " + plans.length + " plans");
-	var shortestPlan = plans[0].plan;
+        var shortestPlan = plans[0].plan;
         plans.forEach((res, n) => {
-	    if (res.plan.length < shortestPlan.length){
-	    	shortestPlan = res.plan;
-	    };
+            if (res.plan.length < shortestPlan.length){
+                    shortestPlan = res.plan;
+            };
             world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
         });
 
         //var plan : string[] = plans[0].plan;
         //world.printDebugInfo("Final plan: " + plan.join(", "));
         //return plan;
-	world.printDebugInfo("Final plan: " + shortestPlan.join(", "));
-	return shortestPlan;
+        world.printDebugInfo("Final plan: " + shortestPlan.join(", "));
+        return shortestPlan;
     }
 
 
