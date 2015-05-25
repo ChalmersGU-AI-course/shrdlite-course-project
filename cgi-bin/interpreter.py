@@ -19,31 +19,31 @@ def interpret(stacks, holding, objects, parses, **_): # fancy way of ignoring al
 
     # find all possible goals
     goals = []
-    excs = []
+    exc = []
     for parse in parses:
         try:
             goal = interp_cmd(parse['prs'], objects, stacks, holding)
-            ok_goal = filter(physics_ok, interp) # filter out impossible disj. gaols
+            ok_goal = [g for g in goal if physics_ok(g)] # filter out impossible disj. gaols
 
             if len(ok_goal) < 1:
                 # whooops
                 raise InterpreterException('Physics do not allow me to do as you want.')
 
             goals.append(ok_goal)
-        except InterpreterException:
+        except InterpreterException as e:
             # stash the exception for later use
-            exc = sys.exc_info()
-            excs.append(exc)
+            et, ei, tb = sys.exc_info()
+            exc = ei.with_traceback(tb)
 
 
     if len(goals) < 1:
         # no possible goals left -- something strange happened, rethrow last exception
-        raise excs[-1][0], excs[-1][1], excs[-1][2]
+        raise exc
     elif not len(goals) == 1:
         # more than one parse was successful
         raise InterpreterException('Ambiguous parse')
 
-    return ok_goals[0]
+    return goals[0]
 
 def interp_cmd(cmd, objects, stacks, holding):
     """from command to disjunctive PDDL goal, list of pddl goals"""
