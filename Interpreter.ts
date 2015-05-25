@@ -22,9 +22,12 @@ module Interpreter {
 
         if (interpretations.length > 0) { //&& interpretations[0].intp.length > 0
             //return interpretations; //Aha found the place for disolving HARD ambiguity!
+
+            var existSolution : boolean = false;
             var validInterprets : Result [] = [];
             interpretations.forEach((inter) => {
                 if (inter.intp.length > 0){
+                    existSolution = true;
                     validInterprets.push(inter);
                 }
             });
@@ -33,10 +36,11 @@ module Interpreter {
             if (validInterprets.length > 1) {
                 currentState.status.push("multiValidInterpret");
             }
-            return interpretations;
-        } else {
-            throw new Interpreter.Error("Found no legal interpretation");
+            if(existSolution){
+                return interpretations;
+            }
         }
+        throw new Interpreter.Error("Found no legal interpretation");
     }
 
 
@@ -159,7 +163,6 @@ module Interpreter {
                 break;
             case "move":
                 var targets = findTargetEntities(cmd.ent, state).targets;
-                console.log("TARGETS: "+targets.length);
                 findMoveInterpretations(cmd, state, intprt, targets);
                 break;
             case "put":
@@ -178,7 +181,7 @@ module Interpreter {
     }
 
     function findMoveInterpretations(cmd : Parser.Command, state : WorldState, intprt : Literal[][], tar : string[]) {
-        // if(targets.length == 0){
+        // if(tar.length == 0){
         //     throw new Interpreter.Error("Can't find such an object to move.");
         // }
 
@@ -240,7 +243,7 @@ module Interpreter {
                 var objA = findObjDef(state, above);
                 var objB = findObjDef(state, below);
                 if(exactlyAbove){
-                    if(!canSupport(objA, objB)){
+                    if(! canSupport(objA, objB)){
                         continue;
                     }
                 } else { // somewhere above.
