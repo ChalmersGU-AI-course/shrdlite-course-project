@@ -51,8 +51,12 @@ def getAction(state):
 def goalWrapper(intprt, stacks, holding, arm, objects):
     """    Passed as a parameter to A*, check if a state satisfied a goal.
     """
-    for goal in intprt:
-        if satisfy_pred(goal,stacks,holding):
+    for disjunctive_goal in intprt:
+        goal_achieved = True
+        for conjunctive_goal in disjunctive_goal:
+            goal_achieved = (goal_achieved and 
+                satisfy_pred(conjunctive_goal, stacks, holding))
+        if goal_achieved:
             return True
     return False 
 
