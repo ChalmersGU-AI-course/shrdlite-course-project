@@ -22,6 +22,9 @@
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="assets\0815_d.png" />
+    <Content Include="assets\0815_n.png" />
+    <Content Include="assets\0815_s.png" />
     <Content Include="grammar.js" />
     <Content Include="lib\gl-matrix-min.js" />
     <Content Include="lib\jquery-1.11.0.min.js" />
@@ -40,7 +43,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="assets.ts" />
+    <TypeScriptCompile Include="camera.ts" />
     <TypeScriptCompile Include="ExampleWorlds.ts" />
+    <TypeScriptCompile Include="globject.ts" />
     <TypeScriptCompile Include="Graph.ts" />
     <TypeScriptCompile Include="Interpreter.ts" />
     <TypeScriptCompile Include="lib\gl-matrix.d.ts" />

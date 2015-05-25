@@ -254,7 +254,7 @@ class SVGWorld implements World {
             path: path,
             dur: duration + "s",
         }).appendTo(object);
-        animation.beginElementAt(timeout);
+        //animation.beginElementAt(timeout);
         return animation;
     }
 

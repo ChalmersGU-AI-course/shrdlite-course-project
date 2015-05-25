@@ -33,7 +33,6 @@ class ShrdliteNode implements GraphNode<number> {
                 }
         }
         else {
-                
             //put down object
             for (var i = 0; i < this.state.stacks.length; ++i) {
                 if (this.isPhysicallyPossible(i)) {
@@ -49,13 +48,6 @@ class ShrdliteNode implements GraphNode<number> {
         return path;
     }
 
-//Some strange encodingerror with the comment
-    /**
-	* Check if the transition is physically possible
-	*
-	* @param {number} number of the stack you want to check
-	* @return {boolean} true if it is possible
-	*/
     isPhysicallyPossible(n: number): boolean {
         //which object is on top?
         var topPos: number = this.state.stacks[n].length - 1;
