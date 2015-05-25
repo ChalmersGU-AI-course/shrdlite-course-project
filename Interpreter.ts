@@ -278,7 +278,10 @@ module Interpreter {
         }
         // make sure supportiveAmbiguousTargets is not undefined and more than one
         if (supportiveAmbiguousTargets && supportiveAmbiguousTargets.length >1){
-            state.ambiguousObjs = supportiveAmbiguousTargets;
+            state.ambiguousObjs.push(supportiveAmbiguousTargets);
+	    // this fix issue #26; however reopening issue #15
+	    // i've found the reason for these two conjugating bugs; more extensive care must be done!
+	    // hopefully can fix this by Wednesday; if not, we will use this approach (not as elegant but at lease sensible!)
         }
     }
 
