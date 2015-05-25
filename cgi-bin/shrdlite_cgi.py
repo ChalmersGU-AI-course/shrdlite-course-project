@@ -29,17 +29,19 @@ def writeToLog(string):
 
 def planner(intprt, stacks, holding, arm, objects, utterance, parses):
     """
-    This function craetes a dummy plan involving a random stack
+    This function creates a dummy plan involving a random stack
     """
 
     import simple_planner
     import AStar.algorithm, heuristic
 
 
-    came_from, cost_so_far, actions_so_far, goal = AStar.algorithm.a_star_search_new(simple_planner.getAction,
-                        (intprt, stacks, holding, arm, objects),
-                        simple_planner.goalWrapper,
-                        heuristic.heuristic)
+    came_from, cost_so_far, actions_so_far, goal = \
+      AStar.algorithm.a_star_search(
+            simple_planner.getAction,
+            (intprt, stacks, holding, arm, objects),
+            simple_planner.goalWrapper,
+            heuristic.heuristic)
 
     return AStar.algorithm.getPlan(goal, came_from, actions_so_far,objects)
 

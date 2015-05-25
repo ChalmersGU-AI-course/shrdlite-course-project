@@ -32,7 +32,7 @@ class TestMain(unittest.TestCase):
         self.assertFalse(simple_planner.goalWrapper(*self.state))
 
     def test_AStar(self):
-        came_from, cost_so_far, actions_so_far, goal = AStar.algorithm.a_star_search_new(   simple_planner.getAction,
+        came_from, cost_so_far, actions_so_far, goal = AStar.algorithm.a_star_search(   simple_planner.getAction,
                                                             self.state,
                                                             simple_planner.goalWrapper,
                                                             heuristic.heuristic)
@@ -78,7 +78,7 @@ class TestAStar(unittest.TestCase):
         self.state = (self.intprt,self.stacks,self.holding,self.arm,self.objects)
 
     def test_AStar(self):
-        came_from, cost_so_far, actions_so_far, goal = AStar.algorithm.a_star_search_new(   simple_planner.getAction,
+        came_from, cost_so_far, actions_so_far, goal = AStar.algorithm.a_star_search(   simple_planner.getAction,
                                                             self.state,
                                                             simple_planner.goalWrapper,
                                                             heuristic.heuristic)

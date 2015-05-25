@@ -6,7 +6,7 @@
 from AStar.structures import PriorityQueue
 from AStar.structures import GridWithWeights
 
-def a_star_search_new(getActions, startState, isGoal, heuristic):
+def a_star_search(getActions, startState, isGoal, heuristic):
     """Find a good path to a goal node using a-star.
     
     Keyword arguments:
