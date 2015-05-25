@@ -18,60 +18,56 @@ module Planner {
                 case 'ontop':
                 case 'inside':
                     for (var i = 0; i < node.state.stacks.length; ++i) {
-                        for (var j = 0; j < node.state.stacks[i].length; ++j) {
-                            if (node.state.stacks[i][j] == this.intptr.args[0] && node.state.stacks[i][j+1]==this.intptr.args[1])
-                                return 0;
-                        }
+                        var below = node.state.stacks[i].indexOf(this.intptr.args[1]);
+                        var onTop = node.state.stacks[i].indexOf(this.intptr.args[0]);
+
+                        if ((below != -1 || this.intptr.args[1] == 'floor') && onTop != -1 && below + 1 == onTop)
+                            return 0;
                     }
                     break;
                 case 'above':
                     for (var i = 0; i < node.state.stacks.length; ++i) {
-                        for (var j = 0; j < node.state.stacks[i].length; ++j) {
-                            for (var k = j; k < node.state.stacks[i].length; ++k ) { //some redundant chacks here
-                                if (node.state.stacks[i][j] == this.intptr.args[0] && node.state.stacks[i][j+k]==this.intptr.args[1])
-                                    return 0;
-                            }
-                        }
+                        var below = node.state.stacks[i].indexOf(this.intptr.args[1]);
+                        var onTop = node.state.stacks[i].indexOf(this.intptr.args[1]);
+
+                        if ((below != -1 || this.intptr.args[1] == 'floor') && onTop != -1 && below < onTop)
+                            return 0;
                     }
                     break;
                 case 'beside':
                     for (var i = 0; i < node.state.stacks.length; ++i) {
-                        for (var j = 0; j < node.state.stacks[i].length; ++j) {
-                            for (var k = 0; k < node.state.stacks[i].length; ++k){
-                                if (node.state.stacks[i][j] == this.intptr.args[0] && node.state.stacks[i + 1][k] == this.intptr.args[1])
-                                    return 0;                      
-                            }
-                        }
+                        var below = node.state.stacks[i].indexOf(this.intptr.args[1]);
+                        var onTop = node.state.stacks[i].indexOf(this.intptr.args[0]);
+
+                        //leftof or rightoff
+
+                        if ((below != -1 || this.intptr.args[1] == 'floor') && onTop != -1 && below + 1 == onTop)
+                            return 0;
                     }
                     break;
                 case 'leftof':
-                    for (var i = 0; i < node.state.stacks.length; ++i) {
-                        for (var j = 0; j < node.state.stacks[i].length; ++j) {
-                            for (var k = 0; k < node.state.stacks[i].length; ++k){
-                                if (node.state.stacks[i][j] == this.intptr.args[0] && node.state.stacks[i+1][k]==this.intptr.args[1])
-                                    return 0;                      
-                            }
-                        }
+                    for (var i = 1; i < node.state.stacks.length; ++i) {
+                        var leftObject: boolean = node.state.stacks[i-1].indexOf(this.intptr.args[0]) != -1;
+                        var rightObject: boolean = node.state.stacks[i].indexOf(this.intptr.args[1]) != -1;
+                        if (leftObject && rightObject)
+                            return 0;
                     }
                     break;
                 case 'rightof':
-                    for (var i = 0; i < node.state.stacks.length; ++i) {
-                        for (var j = 0; j < node.state.stacks[i].length; ++j) {
-                            for (var k = 0; k < node.state.stacks[i].length; ++k){
-                                if (node.state.stacks[i][j] == this.intptr.args[1] && node.state.stacks[i + 1][k] == this.intptr.args[0])
-                                    return 0;                      
-                            }
-                        }
+                    for (var i = 1; i < node.state.stacks.length; ++i) {
+                        var leftObject: boolean = node.state.stacks[i - 1].indexOf(this.intptr.args[1]) != -1;
+                        var rightObject: boolean = node.state.stacks[i].indexOf(this.intptr.args[0]) != -1;
+                        if (leftObject && rightObject)
+                            return 0;
                     }
                     break;
                 case 'under':
                     for (var i = 0; i < node.state.stacks.length; ++i) {
-                        for (var j = 0; j < node.state.stacks[i].length; ++j) {
-                            for (var k = j; k < node.state.stacks[i].length; ++k){
-                                if (node.state.stacks[i][j] == this.intptr.args[1] && node.state.stacks[i][k] == this.intptr.args[0])
-                                    return 0;                      
-                            }
-                        }
+                        var below = node.state.stacks[i].indexOf(this.intptr.args[1]);
+                        var onTop = node.state.stacks[i].indexOf(this.intptr.args[1]);
+
+                        if ((below != -1 || this.intptr.args[1] == 'floor') && onTop != -1 && below < onTop)
+                            return 0;
                     }
                     break;
                 default:
@@ -94,7 +90,7 @@ module Planner {
 
 
         costTo(to: ShrdliteNode): number {
-            return Math.abs(to.state.arm - this.state.arm);
+            return (Math.abs(to.state.arm - this.state.arm) + 1);
         }
 
         neighbours(): { node: ShrdliteNode; edge: number }[] {
@@ -260,8 +256,12 @@ module Planner {
         // This function returns a dummy plan involving a random stack
         var plan: Array<string> = [];
 
+        //TODO: maybe empty
         if (picks == undefined)
-            return ['r', 'l'];
+            if (state.arm < state.stacks.length - 2)
+                return ['r', 'l'];
+            else
+                return ['l', 'r'];
 
 
         while (picks.length > 0) {
