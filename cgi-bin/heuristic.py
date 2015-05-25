@@ -74,6 +74,8 @@ def _placeScore(obj, stacks, pred):
                     return _stackScore(obj, stacks) + CLOSE_TO_EDGE_PENALTY
                 else:
                     return 0
+    #If obj was not found in any stack, assume that the arm is holding it
+    return 0
 
 # Returns a good score if we are currently holding the object, else add penalty
 def _holdingScore(obj, holding):
