@@ -55,7 +55,11 @@ module Interpreter {
                 promptStr += c + '. ' + cmdToStr(cmds[c]) + '\n';
             }
             promptStr += 'Which one did you mean?';
-            var selected = Number(prompt(promptStr)); //TODO do something with the selected interpretation
+            var selected;
+            while(!(selected >= 0 && selected < cmds.length)){
+                selected = Number(prompt(promptStr));
+            }
+            cmds = [cmds[selected]];
         }
 
         var intpsPerCmd : PddlLiteral[][][][] = _.map(cmds, function(a) {return interpretCommand(a, state);});
