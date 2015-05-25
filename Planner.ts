@@ -75,7 +75,7 @@ module Planner {
 
                     for (var i = moveIndex; i < path.size(); i++) {
                         // If this is last move, we wont drop it.
-                        if (i === path.size()-1) {
+                        if (moveIndex === path.size()-1) {
                             returnString += "Picking up the "
                             if (nrSameForm === 1) {
                                 returnString += pickObj.form;
@@ -85,7 +85,7 @@ module Planner {
                                 returnString += pickObj.size + " " + pickObj.color + " " + pickObj.form;
                             }
                         } else {
-                            if (path.elementAtIndex(i).getCommand() == "d") {
+                            if (path.elementAtIndex(i).getCommand() === "d") {
                                 returnString += "Moving the ";
                                 if (nrSameForm === 1) {
                                     returnString += pickObj.form;
@@ -98,10 +98,15 @@ module Planner {
                                 var stackHeightDropIndex = path.elementAtIndex(i).getFromNode().state.stackHeight(path.elementAtIndex(i).getFromNode().state.arm);
 
                                 if (stackHeightDropIndex > 0) {
-                                    returnString += " on top of the ";
-
                                     var dropOnObjName = path.elementAtIndex(i).getFromNode().state.stacks[path.elementAtIndex(i).getFromNode().state.arm][stackHeightDropIndex-1];
                                     var dropOnObj = path.elementAtIndex(i).getFromNode().state.objects[dropOnObjName];
+
+                                    if(dropOnObj.form === "box") {
+                                        returnString += " inside the ";
+                                    } else {
+                                        returnString += " on top of the ";
+                                    }
+
 
                                     var nrSameFormDropObj     = move.getFromNode().state.getNrOfObjects(dropOnObj.form, "any", "any");
                                     var nrSameFormSizeDropObj = move.getFromNode().state.getNrOfObjects(dropOnObj.form, dropOnObj.size, "any");

@@ -32,6 +32,35 @@ class WorldState {
         this.objects[name] = object;
     }
 
+    /**
+     * Returns how many objects exists with the properties defined. If we don't care
+     * about a property call it with "any".
+     *
+     * @param form          Form to count.
+     * @param size          Sizes to count.
+     * @param color         Color to count.
+     * @returns {number}    Amount of objects with properties.
+     */
+    getNrOfObjects(form : string, size : string, color : string) : number {
+        var count = 0;
+        for(var key in this.objects) {
+            if( (form === "any"     || this.objects[key].form === form) &&
+                (size === "any"     || this.objects[key].size === size) &&
+                (color === "any"    || this.objects[key].color === color)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Returns the object that the arm is currently holding. Does not verify that the arm is holding something.
+     * @returns {ObjectDefinition} Object that the arm is currently holding.
+     */
+    getHoldingObj() : ObjectDefinition {
+        return this.objects[this.holding];
+    }
+
     toString() : string {
         return "S: " + this.stacksToString() + ", A: " + this.arm.toString() + ", H: "  + this.holding;
     }
@@ -436,7 +465,7 @@ class WorldState {
         return this.stacks[stackIndex].length;
     }
 
-    private isHolding() : boolean {
+    isHolding() : boolean {
         return this.holding !== null;
     }
 
