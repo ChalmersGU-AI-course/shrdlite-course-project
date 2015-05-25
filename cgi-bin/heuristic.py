@@ -27,7 +27,7 @@ def heuristic(intprt, stacks, holding, arm, objects):
             # add penalty the further down obj1/obj2 is in their respective stack,
             #   depending if we are to put them above/under something else.
             elif pred in ('under', 'above'):
-                score += _placescore(obj2 if pred is 'under' else obj1, stacks, pred)
+                score += _placeScore(obj2 if pred is 'under' else obj1, stacks, pred)
 
             elif pred == 'beside':
                 objectscores = []
