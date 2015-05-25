@@ -207,6 +207,8 @@ module Planner {
 				var stackTar = Interpreter.searchStack(state.stacks[x], goal[i][0].args[0]);
 				var stackLoc = Interpreter.searchStack(state.stacks[x], goal[i][0].args[1]);
 				
+				//console.log("ddddddddddddddddd", goal[i][0].args[0]);
+				
 				if( goal[i][0].args[0] == state.holding){
 					tar =0 ; 
 					tarIndex = state.arm; 
@@ -218,21 +220,27 @@ module Planner {
 				}
 
 				if(stackTar != -1){
-					tar = ((state.stacks[x].length-1) - stackTar)*4-1;
+					tar = (((state.stacks[x].length-1) - stackTar)*4)-1;
+					tar = tar < 0 ? 0 : tar;
 					tarIndex = x;
 				}
 				
 				if(stackLoc != -1){
-					loc = ((state.stacks[x].length-1) - stackLoc)*4-1;
+					loc = (((state.stacks[x].length-1) - stackLoc)*4)-1;
+					loc = loc < 0 ? 0 : loc;
 					locIndex = x;
 				}
 			}
-
+			var tmpTot = 0;
+			if(goal[i][0].rel == "holding"){
+				tmpTot = tar;
+				
+			}else{
+				tmpTot = tar + loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex);
+			}
 			
-			var tmpTot = tar + loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex) ;
-			//if(state.holding == null){
 				tmpTot +=  (Math.max (tarIndex,  state.arm) - Math.min (tarIndex,  state.arm));
-			//}
+				
 			if(minimum > tmpTot){
 				minimum = tmpTot;
 			}

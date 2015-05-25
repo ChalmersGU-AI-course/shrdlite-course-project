@@ -106,7 +106,7 @@ module Interpreter {
 		if(obj.obj || obj.loc){
 			
 			if(obj.obj){path += getRestOfPath(obj.obj, path);}
-			if (obj.loc){		
+			if (obj.loc){
 				path += " " + obj.loc.rel + " " + obj.loc.ent.quant;
 				path+= getRestOfPath(obj.loc.ent.obj, "");
 			}
@@ -162,9 +162,7 @@ module Interpreter {
     }
     
     function checkHolding(obj : Parser.Object, holding : Parser.Object){
-    	if((obj.form == null  || obj.form == holding.form)   && 
-           (obj.color == null || obj.color == holding.color) && 
-           (obj.size == null  || obj.size == holding.size )){
+    	if((obj.form == null || obj.form == holding.form) && (obj.color == null || obj.color == holding.color) && (obj.size == null  || obj.size == holding.size)){
     		return true
     	}else{
     		return false;
@@ -177,8 +175,10 @@ module Interpreter {
     function goalsToPDDL(ent : Parser.Entity , loc : Parser.Location , state : WorldState) : Literal[][] {
     	var lits : Literal[][] = [];
     	var posList : position[] = [];
+    	
     	if(ent.quant == "holding" || state.holding !=null && checkHolding(ent.obj, state.objects[state.holding])){
-    		posList =  [new position(0,0,{form: ent.obj.form, color: ent.obj.color, size: ent.obj.size}, state.holding)];
+    		var object1 = state.objects[state.holding];
+    		posList =  [new position(0,0,{form: object1.form, color: object1.color, size: object1.size}, state.holding)];
     	}else{
     		posList = checkStm (ent.obj, state);
     	}
@@ -188,7 +188,16 @@ module Interpreter {
     			var hold : Literal = {pol : true, rel : "holding", args : [posList[i].name]};
     			lits.push([hold]);
     		}else{
-    			var goal = checkStm (loc.ent.obj, state);
+    			var goal = [];
+    			if (state.holding !=null && checkHolding(loc.ent.obj, state.objects[state.holding])){
+    				var object2 = state.objects[state.holding];
+    				goal.push(new position(0,0,{form: object2.form, color: object2.color, size: object2.size}, state.holding));
+    			}else{
+    				goal = checkStm (loc.ent.obj, state);	
+    			}
+    			
+    			
+    			
     			console.log("Location-----------", goal);
     			for(var j =0; j< goal.length;  j++){
     				if(loc.rel == "ontop"){
