@@ -48,3 +48,5 @@ ambiguity: shrdlite-offline.js
 
 bug: shrdlite-offline.js
 	node shrdlite-offline.js complex "put the white ball above a table above a brick"
+	# node shrdlite-offline.js complex "put the ball that is on a box on a brick"
+	# node shrdlite-offline.js complex "put the white ball on a box on a brick"
