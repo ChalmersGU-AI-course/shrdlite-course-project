@@ -191,7 +191,8 @@ module Planner {
     function buildPath(list : Nworld[]) : string[]{
         var res = [];
         for(var i = 0; i < list.length; i++){
-            res.push(list[i].step);
+          if(list[i].step !== undefined)
+              res.push(list[i].step);
         }
         return res;
     }
@@ -264,8 +265,8 @@ module Planner {
                 }
 
             }
-            return true;
         }
+        return true;
     }
 
 
@@ -300,7 +301,7 @@ module Planner {
                     var pObj = intrps[i][j].args[0];
                     var tObj = intrps[i][j].args[1];
                     var rel = intrps[i][j].rel;
-                    var holds = Interpreter.getRelation([pObj], [tObj], rel, stacks); // In this pObj & tObj might need to switch, can't figure out how getRelation does it right now.
+                    var holds = Interpreter.getRelation([pObj], [tObj], rel, currentWorld.states); // In this pObj & tObj might need to switch, can't figure out how getRelation does it right now.
 
                     if (!holds.length) {
                         goal = false;
