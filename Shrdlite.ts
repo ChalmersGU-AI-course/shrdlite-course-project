@@ -51,41 +51,69 @@ module Shrdlite {
     function mergeCmd(world : World, previousCmd : Parser.Result[], utterance : string ) : Parser.Result[] {
         try {
             var parses : Parser.Result[] = Parser.parse(utterance);
-        } catch (err) {
-                if (err instanceof Parser.Error) {
-                   var newInfo = utterance.toLowerCase().replace(/\W/g, "");
-                    var newResult : Parser.Result[] = [];
-                    switch (newInfo){
-                    case "small":
-                    case "tiny" :{
-                        previousCmd[0].prs.ent.obj.size = "small";
-                        newResult.push(previousCmd[0]);
-                        return newResult;
-                    }
-                    case "large":
-                    case "big" :{
-                        previousCmd[0].prs.ent.obj.size = "large";
-                        newResult.push(previousCmd[0]);
-                        return newResult;
-                    }
-                    case "black" :
-                    case "white" :
-                    case "green" :
-                    case "yellow" :
-                    case "red" :
-                    case "blue" :{
-                        previousCmd[0].prs.ent.obj.color = newInfo;
-                        newResult.push(previousCmd[0]);
-                        return newResult;
-                    }
+	} catch (err) {
+		if (err instanceof Parser.Error) {
+		    // TODO findout if we should be updating loc or ent?
+		   var newInfo = utterance.toLowerCase().replace(/\W/g, "");
+		    var newResult : Parser.Result[] = [];
+		    switch (newInfo){
+		    case "small":
+		    case "tiny" :{
+			if (!previousCmd[0].prs.ent.obj.size){
+			    previousCmd[0].prs.ent.obj.size = "small";
+			    newResult.push(previousCmd[0]);
+			    return newResult;
+                        } else {
+			    return previousCmd;
+			}
+		    }
+		    case "large":
+		    case "big" :{
+			if (!previousCmd[0].prs.ent.obj.size){
+			    previousCmd[0].prs.ent.obj.size = "large";
+			    newResult.push(previousCmd[0]);
+			    return newResult;
+                        } else {
+			    return previousCmd;
+			}
 
-                    default:
-                        return previousCmd;
-                    }
-                } else {
+		    }
+		    case "black" :
+		    case "white" :
+		    case "green" :
+		    case "yellow" :
+		    case "red" :
+		    case "blue" :{
+			if (!previousCmd[0].prs.ent.obj.color){
+			    previousCmd[0].prs.ent.obj.color = newInfo;
+			    newResult.push(previousCmd[0]);
+			    return newResult;
+                        } else {
+			    return previousCmd;
+			}
+		    }
+                    // Experimental
+		    case "brick":
+		    case "plank":
+		    case "pyramid":
+		    case "table":
+                    case "ball" :{
+			if (!previousCmd[0].prs.ent.obj.form){
+			    previousCmd[0].prs.ent.obj.form = newInfo;
+			    newResult.push(previousCmd[0]);
+			    return newResult;
+                        } else {
+			    return previousCmd;
+			}
+		    }
+
+		    default:
+			return previousCmd;
+		    }
+		} else {
                     throw err;
-                }
-        }
+		}
+	}
         return parses;
 }
 
