@@ -119,16 +119,21 @@ module Planner {
             for (var i = 0; i < intp.length; i++) {
                 var target = intp[i].args[1];
                 var primary = intp[i].args[0];
+
+                if (target === "_") {
+                    return (rel === "ontop") ? true : false;
+                }
+
                 var targetObject = state.objects[target];
                 var primaryObject = state.objects[primary];
 
                 if (rel === 'ontop' || rel === 'above' || rel === 'inside') {
-                    if (validPosition(primaryObject, targetObject) === false) {
+                    if (!validPosition(primaryObject, targetObject)) {
                         console.log("Removed interpretation in physical check");
                         return false;
                     }
                 } else if (rel === 'under') {
-                    if (validPosition(targetObject, primaryObject) === false) {
+                    if (!validPosition(targetObject, primaryObject)) {
                         console.log("Removed interpretation in physical check");
                         return false;
                     }
@@ -166,15 +171,21 @@ module Planner {
         //Remove when done
         //testCloning(state);
 
-        // Make A-star call!
+        // Prepare for A* call
         var start = new Nworld();
-        start.states = state;
-        start.states.holding = undefined; // This is a bad call!
-        var goalFunc = goalFuncHandle(validInterps);
-        var astarwrapper = Search.aStar<Nworld>(null, keyFunc);
-        var searcher = astarwrapper(getNeighbours, start, goalFunc);
-        console.log(searcher);
-        return buildPath(searcher);
+        start.states = cloneWorldstate(state);
+        //start.states.holding = undefined; // This is a bad call! REMOVE WHEN BETA GOES LIVE
+        var stats = { nodesVisited: 0, nodesAdded: 0 }
+        var h: Search.Heuristic<Nworld> = allMovesCountsHeuristic(validInterps);
+        var goalFunc: (node: Nworld) => boolean = goalFuncHandle(validInterps);
+
+        var search = Search.aStar<Nworld>(h, keyFunc, stats);
+        var visitedNodes = search(getNeighbours, start, goalFunc);
+        console.log(visitedNodes);
+
+        var path: string[] = [];
+        path = buildPath(visitedNodes);
+        return pathToPlan(path);
     }
 
     function buildPath(list : Nworld[]) : string[]{
@@ -241,6 +252,8 @@ module Planner {
             for (var i = 0; i < intp.length; i++) {
                 var target = intp[i].args[1];
                 var obj = intp[i].args[0];
+                if (target === "_")
+                    return true;
                 if (objects[target].form === 'box') {
                     return false; // Things are inside a box, not ontop. Or is this too harsh?
                 }
@@ -329,7 +342,7 @@ module Planner {
             currentWorld.neighbours.push([worldstate, 1]);
         }
         // Not hodling an object and object exist at arm position
-        if(holding === undefined && stacks[arm].length > 0){ 
+        if(holding === null && stacks[arm].length > 0){ 
             // Pick up is possible
             var worldstate = new Nworld();
             var state     = cloneWorldstate(currentWorld.states);
@@ -339,21 +352,21 @@ module Planner {
             currentWorld.neighbours.push([worldstate, 1]);
 
         }
-        if(holding !== undefined){
+        if(holding !== null){
             // Drop is possible (if all other if-cases holds e.g. physical laws)
             // Check all laws
             // If all laws is OK
             var state = cloneWorldstate(currentWorld.states);
-            var topObject = state.objects[holding];
+            var topObject = state.objects[state.holding];
             var bottomObject = state.objects[stacks[arm][stacks[arm].length-1]];
                 console.log("Trying to put on stack with length: " + stacks[arm].length);
             
             if(stacks[arm].length === 0 || PhysicalLaws.validPosition(topObject, bottomObject)){
                 var worldstate = new Nworld();
                 var state = cloneWorldstate(currentWorld.states);
-                state.stacks[arm][state.stacks[arm].length] = holding;
-                console.log("Pushed: " + holding + " to position " + arm);
-                state.holding = undefined;
+                state.stacks[state.arm].push(state.holding);
+                console.log("Pushed: " + state.holding + " to position " + state.arm);
+                state.holding = null;
                 worldstate.states = state;
                 worldstate.step = 'd';
                 currentWorld.neighbours.push([worldstate, 1]);
@@ -405,6 +418,7 @@ module Planner {
                         plan.push("INITIATING SEQUENCE, PLEASE STAND BACK");
                 }
             }
+            prev = path[i];
         }
         return plan;
     }
@@ -417,7 +431,7 @@ module Planner {
         - The different relations has different minimum costs
 
     */
-    function allMovesCountsHeuristic(goals: Interpreter.Literal[][]): Search.Heuristic<N> {
+    function allMovesCountsHeuristic(goals: Interpreter.Literal[][]): Search.Heuristic<Nworld> {
         return function (node: Nworld): number {
             var cost: number = Number.MAX_VALUE;
 
@@ -447,7 +461,7 @@ module Planner {
         } else if (literal.rel === "ontop" || literal.rel === "inside") {
             if (state.holding === primary) {
                 cost = calculateHolding(target, state) - 1 + 4; //-1 since no picking up then move primary on target
-            } else if (state.holding === target) {
+            } else if (state.holding === target || target === "_") {
                 cost = calculateHolding(primary, state) + 2; //sidestep + drop
             } else if (findStack(primary, state.stacks) === findStack(target, state.stacks)) {
                 var indexA: number = findStack(primary, state.stacks);
@@ -456,7 +470,7 @@ module Planner {
                     cost = calculateHolding(target, state) - 1 + 4; //-1 since no picking up then move primary on target
                 else //target is above
                     cost = calculateHolding(primary, state) + 2; //sidestep + drop
-            } else { //primary and taret is in different stacks
+            } else { //primary and target is in different stacks
                 var indexA: number = findStack(primary, state.stacks);
                 var indexB: number = findStack(target, state.stacks);
                 var dist: number = Math.abs(findStack(primary, state.stacks) - indexB);
@@ -519,7 +533,7 @@ module Planner {
         if (position !== -1)
             cost = + Math.abs(position - state.arm);
         else
-            return Number.MAX_VALUE; //The object doesn't exist in the world
+            return Number.MAX_VALUE; //The object doesn't exist in the world or is the floor
 
         // When the arm is positioned above the correct stack, it takes at least 4 moves 
         // to move each item above the goal object (p + l|r + d + r|l)
