@@ -70,10 +70,12 @@ module Interpreter {
 
             var maxEntitiesConsidered = maxNumberOfEntitiesConsidered(entities);
 
-            if (maxEntitiesConsidered >= 1 && maxEntitiesConsidered <= 2) {
-                intprt = createUnLiterals(entities, "holding");
-            } else {
-                throw new Interpreter.Error("The arms can only hold a maximum of 2 objects!");
+            if (maxEntitiesConsidered >= 1) {
+                if (maxEntitiesConsidered <= 2) {
+                    intprt = createUnLiterals(entities, "holding");
+                } else {
+                    throw new Interpreter.Error("The arms can only hold a maximum of 2 objects!");
+                }
             }
         } else if (cmd.cmd == "put") {
             // "Put" the currently held object(s) in relation to the locations
@@ -352,7 +354,9 @@ module Interpreter {
                 }
             });
 
-            orPart.push(andPart);
+            if (andPart.length > 0) {
+                orPart.push(andPart);
+            }
         });
 
         return orPart;
@@ -392,7 +396,9 @@ module Interpreter {
                 }
             });
 
-            orPart.push(andPart);
+            if (andPart.length > 0) {
+                orPart.push(andPart);
+            }
         });
 
         return orPart;
