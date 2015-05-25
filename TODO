@@ -2,14 +2,15 @@
 	- Improve Heuristic
 
 * Interpreter
-	- Check world rules
+	x Check world rules 
+		- Done, question about "on a box"
     - Add error messages
 	- Put it down: what if both arms hold something?
         - Extend grammar with “put left/right object on the floor”
         - Extend grammar with “put both objects on the floor”
 
 * UI
-	- Animate right arm
+	x Animate right arm
 
 * Maybe???
 	- Implement polarity

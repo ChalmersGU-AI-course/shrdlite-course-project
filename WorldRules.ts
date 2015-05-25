@@ -2,6 +2,38 @@
 
 module WorldRules {
 
+    export function checkRelation(rel:String, topObj:ObjectDefinition, bottomObj:ObjectDefinition):boolean{
+        var relationOk = true;
+        if (rel == "ontop") {
+            relationOk = canBeOntop(topObj, bottomObj);
+        } else if (rel == "inside") {
+            relationOk = canBeInside(topObj, bottomObj);
+        } else if (rel == "under") {
+            relationOk = canBeUnder(topObj, bottomObj);
+        } else if (rel == "above") {
+            relationOk = canBeAbove(topObj, bottomObj);
+        }
+        return relationOk;
+    }
+
+    export function canBeAbove(topObject: ObjectDefinition, bottomObject: ObjectDefinition) : boolean {
+        var bottomNotABall = (bottomObject.form != "ball");
+        var bottomIsABox = bottomObject.form == "box";
+        var okSmallRules = smallObjectRules(topObject, bottomObject);
+        return (bottomNotABall && okSmallRules);
+    }
+
+    export function canBeUnder(topObject: ObjectDefinition, bottomObject: ObjectDefinition) : boolean {
+        return canBeAbove(bottomObject, topObject);
+    }
+
+    export function canBeInside(topObject: ObjectDefinition, bottomObject: ObjectDefinition) : boolean {
+        var bottomIsABox = bottomObject.form == "box";
+        var okSmallRules = smallObjectRules(topObject, bottomObject);
+        var okBoxRules = boxRules(topObject, bottomObject);
+        return (bottomIsABox && okSmallRules && okBoxRules);
+    }
+
     export function canBeOntop(topObject: ObjectDefinition, bottomObject: ObjectDefinition) : boolean {
         var okBallRules = ballRules(topObject, bottomObject);
         var okSmallRules = smallObjectRules(topObject, bottomObject);

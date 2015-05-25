@@ -1,6 +1,7 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
 ///<reference path="LiteralHelpers.ts"/>
+///<reference path="WorldRules.ts"/>
 
 module Interpreter {
 
@@ -14,11 +15,13 @@ module Interpreter {
             intprt.intp = interpretCommand(intprt.prs, currentState);
 
             if (intprt.intp.length > 0) {
-                // && checkWorldRules(intprt.intp)
                 interpretations.push(intprt);
             }
         });
+        //Filter out physically impossible interpretations
+        interpretations = worldFilterInterpretations(interpretations,currentState);
 
+        //Handle interpretations
         if (interpretations && interpretations.length > 0) {
             if (interpretations.length == 1) {
                 return interpretations;
@@ -378,9 +381,40 @@ module Interpreter {
         return orPart;
     }
 
-    /*function checkWorldRules(literal: Literal[][]): boolean {
-        literal.forEach(function());
-    }*/
+    function worldFilterInterpretations(interpretations: Result[], state: WorldState): Result[]{
+        var newInterpretation: Result[] = [];
+        if(interpretations && interpretations.length != 0){
+            interpretations.forEach(function(res: Result) {
+                var lits : Literal[][] = res.intp;
+                var newLits: Literal[][] = [];
+                lits.forEach(function(andLit: Literal[]) {
+                    var litIsLegal = checkWorldRulesOnLit(andLit,state);
+                    if(litIsLegal){
+                        newLits.push(andLit);
+                    }
+                });
+                if(newLits.length!=0){
+                    res.intp = newLits;
+                    newInterpretation.push(res);
+                }
+            });
+            if(newInterpretation.length==0){
+                throw new Interpreter.Error("This does not work in our world!");
+            }
+        }
+        return newInterpretation;
+    }
+
+    function checkWorldRulesOnLit(andLit:Literal[], state:WorldState): boolean{
+        var andLitIsOk:boolean = true;
+        andLit.forEach(function(lit: Literal){
+            var topObj = state.objects[lit.args[0]]
+            var bottomObj = state.objects[lit.args[1]]
+            var litIsOk = WorldRules.checkRelation(lit.rel, topObj, bottomObj);
+            andLitIsOk = andLitIsOk && litIsOk;
+        });
+        return andLitIsOk;
+    }
 }
 
 
