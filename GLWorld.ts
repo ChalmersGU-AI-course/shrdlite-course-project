@@ -28,18 +28,44 @@ class GLGWorld implements World {
         }
         this.scene = new Array<RenderItem>();
         this.cam = new Camera(this.gl, canvas);
-        this.cam.setPosition(0, -3, -10);
+        var middle = this.currentState.stacks.length / 2;
+        this.cam.setPosition(-middle, -3, -10);
 
 
-        this.floor = new RenderItem(this.gl, Assets.Floor.vertices, Assets.Floor.vertexIndices, Assets.Floor.texture, Assets.Floor.textureCoords);
+        this.floor = new RenderItem(this.gl, Assets.Floor, Assets.floorTexture);
         this.floor.setPosition(0, 0, -3);
         this.scene.push(this.floor);
 
-        this.arm = new RenderItem(this.gl, Assets.Arm.vertices, Assets.Arm.vertexIndices, Assets.Arm.texture, Assets.Arm.textureCoords);
+        this.arm = new RenderItem(this.gl, Assets.Arm, Assets.woodTexture);
         this.arm.setPosition(0, 2, 0);
         this.scene.push(this.arm);
 
 
+        for (var i = 0; i < currentState.stacks.length; ++i) {
+            for (var j = 0; j < currentState.stacks[i].length; ++j) {
+                var obj = currentState.objects[currentState.stacks[i][j]];
+                if (obj.form == "box") {
+                    var c = Assets.woodTexture;
+
+                    var size = obj.size == "large" ? Assets.BoxLarge : Assets.BoxSmall;
+
+                    switch (obj.color) {
+                        case "yellow":
+                            c = Assets.yellowWood;
+                            break;
+                        case "red":
+                            c = Assets.redWood;
+                            break;
+                        case "blue":
+                            c = Assets.blueWood;
+                            break;
+                    }
+                    var box = new RenderItem(this.gl, size, c);
+                    box.setPosition(i, j, 0);
+                    this.scene.push(box);
+                }
+            }
+        }
 
         this.gl.clearColor(0.8, 0.8, 1.0, 1.0);
         this.gl.clearDepth(1.0);
@@ -113,7 +139,7 @@ class GLGWorld implements World {
 
         //View
         this.cam.Setup();
-        this.arm.setPosition(this.currentState.arm - 3, 2, 0);
+        this.arm.setPosition(this.currentState.arm, 5, 0);
 
         //var translation = vec3.create();
         //vec3.set(translation, 0.0, 0.0, -6.0);

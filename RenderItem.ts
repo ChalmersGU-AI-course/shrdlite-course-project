@@ -1,5 +1,6 @@
 ﻿///<reference path="lib/gl-matrix.d.ts" />>
 ///<reference path="camera.ts" />>
+///<reference path="assets.ts" />>
 
 class RenderItem {
     public pos: Float32Array;
@@ -10,9 +11,11 @@ class RenderItem {
     private textureCoordBuffer: WebGLBuffer;
     private vertexIndexBuffer: WebGLBuffer;
     private mvMatrix: Float32Array;
-    private items;
+    private itemNo;
 
-    public constructor(private gl: WebGLRenderingContext, vertices, vertexIndices, texture: string, textureCoords) {
+    public constructor(private gl: WebGLRenderingContext, asset: AssetData, texture: string) {
+        this.itemNo = asset.itemNo;
+
         this.pos = vec3.create();
 
         this.mvMatrix = mat4.create();
@@ -20,21 +23,19 @@ class RenderItem {
 
         this.vertexBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
+        
 
-
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(asset.vertices), this.gl.STATIC_DRAW);
 
         this.textureCoordBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.textureCoordBuffer);
 
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(textureCoords), this.gl.STATIC_DRAW);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(asset.textureCoords), this.gl.STATIC_DRAW);
 
         this.vertexIndexBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
 
-        this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertexIndices), this.gl.STATIC_DRAW);
-
-        this.items = vertices.length / 2;
+        this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(asset.vertexIndices), this.gl.STATIC_DRAW);
 
         this.texture = this.gl.createTexture();
         var image: HTMLImageElement = new Image();
@@ -75,7 +76,7 @@ class RenderItem {
 
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
         this.setMatrixUniforms(pMatrix, this.mvMatrix, cam);
-        this.gl.drawElements(this.gl.TRIANGLES, this.items, this.gl.UNSIGNED_SHORT, 0);
+        this.gl.drawElements(this.gl.TRIANGLES, this.itemNo, this.gl.UNSIGNED_SHORT, 0);
     }
 
     private setMatrixUniforms(pMatrix: Float32Array, mvMatrix: Float32Array, cam: Camera) {
