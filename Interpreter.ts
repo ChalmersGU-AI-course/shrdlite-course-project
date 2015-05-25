@@ -93,7 +93,6 @@ module Interpreter {
                     lit.push(andList);
                 }
             });
-            //Only place we know which object to put where
 
         } else {
             var objs:string[][] = interpretEntity(cmd.ent, state);
@@ -182,14 +181,16 @@ module Interpreter {
     function buildStates(futureState:boolean, rel:string, objs:string[][], locs:string[][], state:WorldState):objLocPair[][] {
         var toomanydims:objLocPair[][][] = [];
         if (objs.length === 0 || locs.length === 0) return [];
-        var rule:number = locs[0].length * objs[0].length;
-        //this works for everything but "put any object on all tables" and such queries.
-        //and all loose relations of course. "above","below","leftof","rightof"
+        var rule:number = locs[0].length * objs[0].length;        
         var locs1ObjsMore : boolean = locs.length === 1 && locs[0][0] !== "floor" && objs.length >= 1;
         if(locs1ObjsMore){
-            //Keep the array as it is
+            if(rel === "ontop" || rel === "inside"){
+                objs = utils.transpose(objs);    
+            }
+            else{    
+                //Keep the array as it is
+            }
         } else if (locs.length === 1 && locs[0][0] !== "floor") {
-            //Transpose objs to 
             objs = utils.transpose(objs);
         } else {
             locs = utils.transpose(locs);
@@ -217,7 +218,6 @@ module Interpreter {
             result = result.concat.apply(result, toomanydims);
             return result;
         }
-
         return [];
     }
 
