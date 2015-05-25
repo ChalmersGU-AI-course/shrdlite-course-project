@@ -155,10 +155,10 @@ module Interpreter {
 
         var intprt : Literal[][] = [];
         
-        if (cmd.ent.obj.form === "floor") {
+        if (!(cmd.cmd === "put") && cmd.ent.obj.form === "floor") {
             throw new Interpreter.Error("You cannot move the floor");
         }
-        if (cmd.loc.ent.obj.form === "floor" && !(cmd.loc.rel === "ontop" || cmd.loc.rel === "inside")) {
+        if (!(cmd.cmd === "take") && cmd.loc.ent.obj.form === "floor" && !(cmd.loc.rel === "ontop" || cmd.loc.rel === "inside")) {
             throw new Interpreter.Error("You can only put objects ON the floor");
         }
 
