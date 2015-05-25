@@ -3,10 +3,6 @@
 import interpreter
 
 def main(state):
-    # # Write to log for testing purposes
-    # pretty_state = json.dumps(state, sort_keys=True, indent=2, separators=(',', ': '))
-    # writeToLog(pretty_state)
-
     try:
         intprt = interpreter.interpret(**state)
     except interpreter.InterpreterException as err:
@@ -29,7 +25,7 @@ def writeToLog(string):
 
 def planner(intprt, stacks, holding, arm, objects, utterance, parses):
     """
-    This function craetes a dummy plan involving a random stack
+    run the astar planner!
     """
 
     import simple_planner
@@ -42,41 +38,6 @@ def planner(intprt, stacks, holding, arm, objects, utterance, parses):
                         heuristic.heuristic)
 
     return AStar.algorithm.getPlan(goal, came_from, actions_so_far)
-
-    import random
-    while True:
-        pickstack = random.randrange(len(stacks))
-        if stacks[pickstack]:
-            break
-    plan = []
-
-    # First move the arm to the selected stack
-    if pickstack < arm:
-        plan += ["Moving left"]
-        plan += ["l"] * (arm - pickstack)
-    elif pickstack > arm:
-        plan += ["Moving right"]
-        plan += ["r"] * (pickstack - arm)
-
-    # Then pick up the object
-    #obj = stacks[pickstack][-1];
-    #plan += ["Picking up the " + objects[obj]['form'],
-    #         "p"]
-
-    if pickstack < len(stacks) - 1:
-        # Then move to the rightmost stack
-        plan += ["Moving as far right as possible"]
-        plan += ["r"] * (len(stacks) - pickstack - 1)
-
-        # Then move back
-        plan += ["Moving back"]
-        plan += ["l"] * (len(stacks) - pickstack - 1)
-
-    # Finally put it down again
-    #plan += ["Dropping the " + objects[obj]['form'],
-    #         "d"]
-
-    return plan
 
 
 ######################################################################
