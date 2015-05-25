@@ -399,7 +399,7 @@ module Interpreter {
                 }
             });
             if(newInterpretation.length==0){
-                throw new Interpreter.Error("This does not work in our world!");
+                throw new Interpreter.Error("This is not possible in our world!");
             }
         }
         return newInterpretation;
