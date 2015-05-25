@@ -8,7 +8,7 @@ def main(state):
     except interpreter.InterpreterException as err:
         return {'plan': [str(err)]}
 
-    plan = planner(wrapped_intprt, **state)
+    plan = planner(intprt, **state)
 
     return {'int': intprt,
             'plan': plan,
