@@ -55,7 +55,6 @@ module Planner {
         state.pddlWorld.arm = state.arm;
         state.pddlWorld.holding = state.holding;
 
-
         var secNode;
         if(state.holding) {
             // Update state with 'holding' (if any)
@@ -95,7 +94,7 @@ module Planner {
             getNeighbours(secNode);
         }
         
-        var searchResult = AStar.astar(startNode, createGoalFunction(intprt), createHeuristicFunction());
+        var searchResult = AStar.astar(startNode, createGoalFunction(intprt), createHeuristicFunction(intprt));
         
         console.log("Search result:",searchResult);
 
@@ -126,11 +125,79 @@ module Planner {
         }
     }
 
-    function createHeuristicFunction() {
-        return function () {
+    function createHeuristicFunction(goalWorld:PddlLiteral[][]) { 
+        return function (node:AStar.Node<PddlWorld>) {
+            var cost = [];
+            for(var i in goalWorld) {
+                for(var j in goalWorld[i]) {
+                    if(goalWorld[i][j].rel === "ontop") {
+                        
+                    }
+                }
+            }
+            
             return 0;
         }
     }
+    
+    function countObjectsOnTop(world:PddlWorld, obj:string) {
+        var notDone = true;
+        var i = 0;
+        var currObj = obj;
+        while(notDone) {
+            for(var j in world.rels){
+                if((world.rels[j].rel === "ontop" || world.rels[j].rel === "inside") && world.rels[j].args[1] === currObj) {
+                    i++;
+                    currObj = world.rels[j].args[0];
+                    console.log("hej",currObj);
+                    break;
+                }
+                
+                if(world.rels[j].rel === "attop") {
+                    console.log(world.rels[j].rel);
+                    if(world.rels[j].args[0] === currObj)
+                        notDone = false;
+                }
+            }
+        }
+        
+        return i;
+    }
+    
+    function createGoalFunction(goalWorld:PddlLiteral[][]) {
+        return function(node:AStar.Node<PddlWorld>) {
+            var pddlWorld = node.label;
+            var world = pddlWorld.rels;
+            var done = false;
+            // Here begins new code
+            for (var i in goalWorld) {
+                var conjunction = true;
+                for (var j in goalWorld[i]) {
+                    var atom = false;
+                    // For each 'and', check all rels in world.
+                    for (var n in world) {
+                        if ((goalWorld[i][j].rel === 'holding' && 
+                            goalWorld[i][j].args[0] === pddlWorld.holding) ||
+                            world[n].rel === goalWorld[i][j].rel &&
+                            world[n].args[0] === goalWorld[i][j].args[0] &&
+                            world[n].args[1] === goalWorld[i][j].args[1]) {
+                            atom = true;
+                            break;
+                        }
+                    }
+                    if (!atom) {
+                        conjunction = false;
+                        break;
+                    }
+                }
+                if (conjunction) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
     
     export function getNeighbours(oldNode:AStar.Node<PddlWorld>) {
         var oldNodeWorld  = oldNode.label
@@ -170,40 +237,7 @@ module Planner {
         }               
     }
     
-    function createGoalFunction(goalWorld:PddlLiteral[][]) {
-        return function(node:AStar.Node<PddlWorld>) {
-            var pddlWorld = node.label;
-            var world = pddlWorld.rels;
-            var done = false;
-            // Here begins new code
-            for (var i in goalWorld) {
-                var conjunction = true;
-                for (var j in goalWorld[i]) {
-                    var atom = false;
-                    // For each 'and', check all rels in world.
-                    for (var n in world) {
-                        if ((goalWorld[i][j].rel === 'holding' && 
-                            goalWorld[i][j].args[0] === pddlWorld.holding) ||
-                            world[n].rel === goalWorld[i][j].rel &&
-                            world[n].args[0] === goalWorld[i][j].args[0] &&
-                            world[n].args[1] === goalWorld[i][j].args[1]) {
-                            atom = true;
-                            break;
-                        }
-                    }
-                    if (!atom) {
-                        conjunction = false;
-                        break;
-                    }
-                }
-                if (conjunction) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
-
+    
     //Returns the first of the given relation in a Pddlworld
     //DEPRECATED
     function getRel(world:PddlLiteral[], rel:string):PddlLiteral {

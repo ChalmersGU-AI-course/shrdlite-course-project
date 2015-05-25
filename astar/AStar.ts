@@ -104,7 +104,7 @@ module AStar {
 
         while (!frontier.isEmpty()) {
             
-            if(new Date().getTime() - startTime === 2000) {
+            if(new Date().getTime() - startTime > 2000) {
                 return [];
             }
             
