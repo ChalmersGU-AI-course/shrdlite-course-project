@@ -40,6 +40,12 @@ module Interpreter {
     export interface Result extends Parser.Result {intp:Literal[][];}
     export interface Literal {pol:boolean; rel:string; args:string[];}
     
+    
+    // TODO: a new definition of Literal, which allows for more flexibility
+    // i.e. not only OR-lists of AND-lists, but other structures as well.
+    // Both building and reading them will actually be easier in a more flexible
+    // framework, and some goals can only be expressed in the current format using
+    // loads of redundancy, which affects the heuristic computation and goal-checking.
 
 
     export function interpretationToString(res : Result) : string {
