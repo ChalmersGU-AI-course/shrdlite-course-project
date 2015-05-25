@@ -51,6 +51,8 @@
     <TypeScriptCompile Include="shrdlite-html.ts" />
     <TypeScriptCompile Include="Shrdlite.ts" />
     <TypeScriptCompile Include="GLWorld.ts" />
+    <TypeScriptCompile Include="ShrdliteNode.ts" />
+    <TypeScriptCompile Include="ShrdliteNodeFilter.ts" />
     <TypeScriptCompile Include="SVGWorld.ts" />
     <TypeScriptCompile Include="World.ts" />
   </ItemGroup>
