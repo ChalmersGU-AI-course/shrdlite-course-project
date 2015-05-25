@@ -64,23 +64,53 @@ module Interpreter {
             // considers at most one object in each OR-part
             var entities = interpretEntity(cmd.ent, state);
 
-            if (maxNumberOfEntitiesConsidered(entities) == 1) {
+            if (maxNumberOfEntitiesConsidered(entities) == 2) {
                 intprt = createUnLiterals(entities, "holding");
             }
-        }
-        else if (cmd.cmd == "put") {
-            if (state.holding1) {
-                // "Put" the currently held object in relation to the locations
-                // specified
-                var locEntities = interpretEntity(cmd.loc.ent, state);
+        } else if (cmd.cmd == "put") {
+            if (cmd.what == "both") {
+                // Handle both held objects
+                if (state.holding1 && state.holding2) {
+                    console.log("TODO: both");
+                } else {
+                    // TODO: Throw error
+                }
+            } else {
+                // Only 1 object
+                var obj = null;
 
-                var lits = createBiLiteralsSpecifyFirstAND(locEntities, cmd.loc.rel, state.holding1);
+                if (cmd.what == "it") {
+                    if (state.holding1 && !state.holding2) {
+                        obj = state.holding1;
+                    }
+                    else if (!state.holding1 && state.holding2) {
+                        obj = state.holding2;
+                    }
+                } else if (cmd.what == "left") {
+                    if (state.holding1) {
+                        obj = state.holding1;
+                    }
+                } else if (cmd.what == "right") {
+                    if (state.holding2) {
+                        obj = state.holding2;
+                    }
+                }
 
-                // TODO: Check if lits are allowed!
-                intprt = lits;
+                if (obj) {
+                    // "Put" the currently held object in relation to the locations
+                    // specified
+                    var locEntities = interpretEntity(cmd.loc.ent, state);
+
+                    var lits = createBiLiteralsSpecifyFirstAND(locEntities, cmd.loc.rel, obj);
+
+                    // TODO: Check if lits are allowed!
+                    intprt = lits;
+
+                } else {
+                    // TODO: Throw error
+                }
             }
-        }
-        else if (cmd.cmd == "move") {
+        } else if (cmd.cmd == "move") {
             // Make a literal for each object and possible
             // location to move it to, and combine the results
 
