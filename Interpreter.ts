@@ -56,8 +56,11 @@ module Interpreter {
             }
             promptStr += 'Which one did you mean?';
             var selected;
-            while(!(selected >= 0 && selected < cmds.length)){
+            while(!cmds[selected]){
                 selected = Number(prompt(promptStr));
+                if(!cmds[selected]){
+                    alert("Unfortunately, I didn't quite grasp that. Try again.");
+                }
             }
             cmds = [cmds[selected]];
         }
