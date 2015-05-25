@@ -27,6 +27,23 @@ module Interpreter {
 	export interface Position {x:number; y:number;}
 	export interface PosNode {pos:Position[]; rel:string;}
 
+	export function interpretationToSentence(res : Result, state : WorldState) : string {
+		//var l : string[];
+		//for (var i = 0; i < res.intp.length; i++) {
+			var s : string = "";
+			var oS : string = res.intp[0][0].args[0];
+			var dS : string = res.intp[0][0].args[1];
+			var rel : string = res.intp[0][0].rel;
+			var o = state.objects[oS];
+			var d = state.objects[dS];
+			if (rel == "ontop") {
+				rel = "ontop of";
+			}
+			return s + res.prs.cmd + " the " + o.size + " " + o.color + " " + o.form + " " + rel + " the " + d.size + " " + d.color + " " + d.form;
+			//l.append(s + "the " + o.size + " " + o.color + " " + o.form + " shall be " + rel + "the " + d.size + " " + d.color + " " + d.form);
+		//}
+		//return l;
+	}
 
 	export function interpretationToString(res : Result) : string {
 		return res.intp.map((lits) => {
