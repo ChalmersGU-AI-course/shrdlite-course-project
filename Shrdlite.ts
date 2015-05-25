@@ -56,12 +56,17 @@ module Shrdlite {
 		    // TODO findout if we should be updating loc or ent?
 		   var newInfo = utterance.toLowerCase().replace(/\W/g, "");
 		    var newResult : Parser.Result[] = [];
+		    var index = previousCmd.length - 1; 
+		    // if(previousCmd[index].prs.ent){
+		    // 	world.printSystemOutput(
+		    // 	    Parser.objToString(previousCmd[index].prs.ent.obj));
+		    // } // for DEBUG 
 		    switch (newInfo){
 		    case "small":
 		    case "tiny" :{
-			if (!previousCmd[0].prs.ent.obj.size){
-			    previousCmd[0].prs.ent.obj.size = "small";
-			    newResult.push(previousCmd[0]);
+			if (!previousCmd[index].prs.ent.obj.size){
+			    previousCmd[index].prs.ent.obj.size = "small";
+			    newResult.push(previousCmd[index]);
 			    return newResult;
                         } else {
 			    return previousCmd;
@@ -69,9 +74,9 @@ module Shrdlite {
 		    }
 		    case "large":
 		    case "big" :{
-			if (!previousCmd[0].prs.ent.obj.size){
-			    previousCmd[0].prs.ent.obj.size = "large";
-			    newResult.push(previousCmd[0]);
+			if (!previousCmd[index].prs.ent.obj.size){
+			    previousCmd[index].prs.ent.obj.size = "large";
+			    newResult.push(previousCmd[index]);
 			    return newResult;
                         } else {
 			    return previousCmd;
@@ -84,9 +89,9 @@ module Shrdlite {
 		    case "yellow" :
 		    case "red" :
 		    case "blue" :{
-			if (!previousCmd[0].prs.ent.obj.color){
-			    previousCmd[0].prs.ent.obj.color = newInfo;
-			    newResult.push(previousCmd[0]);
+			if (!previousCmd[index].prs.ent.obj.color){
+			    previousCmd[index].prs.ent.obj.color = newInfo;
+			    newResult.push(previousCmd[index]);
 			    return newResult;
                         } else {
 			    return previousCmd;
@@ -94,13 +99,14 @@ module Shrdlite {
 		    }
                     // Experimental
 		    case "brick":
+		    case "box":
 		    case "plank":
 		    case "pyramid":
 		    case "table":
                     case "ball" :{
-			if (!previousCmd[0].prs.ent.obj.form){
-			    previousCmd[0].prs.ent.obj.form = newInfo;
-			    newResult.push(previousCmd[0]);
+			if ( previousCmd[index].prs.ent.obj.form == "anyform"){
+			    previousCmd[index].prs.ent.obj.form = newInfo;
+			    newResult.push(previousCmd[index]);
 			    return newResult;
                         } else {
 			    return previousCmd;
@@ -120,8 +126,10 @@ module Shrdlite {
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         if (world.currentState.previousCmd !== null) {
+	    var index = world.currentState.previousCmd.length -1 ;
             world.printSystemOutput("I've remembered you said: "
-                                + world.currentState.previousCmd[0].input);
+                                + world.currentState.previousCmd[index].input);
+	    // since .input never gets updated; now seems bit silly 
             var parses = mergeCmd(world, world.currentState.previousCmd, utterance);
         }
         else {
