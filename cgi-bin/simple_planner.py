@@ -1,6 +1,9 @@
 from physics import check_ontop
 from PDDL import satisfy_pred
 
+COST_MOVE = 1
+COST_PICK = 8
+
 # actions
 
 def _left(intprt, stacks, holding, arm, objects):
@@ -36,14 +39,11 @@ def getAction(state):
     """    Returns a list of triple tuples, with avavible actions from given state.
            (command, new state, cost - required for A*)
     """
-    costMove = 1
-    costPick = 8
-
     actions =  [
-                    ('l',_left(*state),costMove),
-                    ('r',_right(*state),costMove),
-                    ('d',_ungrasp(*state),costPick),
-                    ('p',_grasp(*state),costPick)
+                    ('l',_left(*state),COST_MOVE),
+                    ('r',_right(*state),COST_MOVE),
+                    ('d',_ungrasp(*state),COST_PICK),
+                    ('p',_grasp(*state),COST_PICK)
                 ]
     return [(l,x,c) for (l,x,c) in actions if x is not None]
 

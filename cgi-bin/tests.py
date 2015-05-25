@@ -397,7 +397,7 @@ class TestHeuristic(unittest.TestCase):
 
     def test_heuristic_beside_bad(self):
         self.assertEqual(heuristic.heuristic([('beside', 'a', 'b')],[['a','e','f','g'], [], ['b','c','d']], 
-            self.holding, self.arm, self.objects),10)
+            self.holding, self.arm, self.objects), heuristic.PLACE_IN_STACK_PENALTY*2)
 
     # We assume the stackScore function to return zero if the arm is holding the object.
     def test_stackScore_zero(self):

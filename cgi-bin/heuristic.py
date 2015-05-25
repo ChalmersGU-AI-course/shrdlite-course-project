@@ -1,6 +1,6 @@
-PLACE_IN_STACK_PENALTY = 5
-CLOSE_TO_EDGE_PENALTY = 20
-NOT_HOLDING_PENALTY = 2
+PLACE_IN_STACK_PENALTY = 17 # cost of picking up + moving once + putting down
+CLOSE_TO_EDGE_PENALTY = 17 # cost of picking up + moving once + putting down
+NOT_HOLDING_PENALTY = 8 # cost of picking up
 
 
 def heuristic(intprt, stacks, holding, arm, objects):
@@ -71,6 +71,8 @@ def _placeScore(obj, stacks, pred):
                     return _stackScore(obj, stacks) + CLOSE_TO_EDGE_PENALTY
                 else:
                     return 0
+    # object not found: probably the arm is holding it
+    return 0
 
 # Returns a good score if we are currently holding the object, else add penalty
 def _holdingScore(obj, holding):
