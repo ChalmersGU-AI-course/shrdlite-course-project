@@ -409,9 +409,14 @@ module Interpreter {
     function checkWorldRulesOnLit(andLit:Literal[], state:WorldState): boolean{
         var andLitIsOk:boolean = true;
         andLit.forEach(function(lit: Literal){
-            var topObj = state.objects[lit.args[0]]
-            var bottomObj = state.objects[lit.args[1]]
-            var litIsOk = WorldRules.checkRelation(lit.rel, topObj, bottomObj);
+            var litIsOk = true;
+            if (lit.args[0] == "floor" || lit.args[1] == "floor") {
+                litIsOk = true;
+            } else {
+                var topObj = state.objects[lit.args[0]]
+                var bottomObj = state.objects[lit.args[1]]
+                litIsOk = WorldRules.checkRelation(lit.rel, topObj, bottomObj);
+            }
             andLitIsOk = andLitIsOk && litIsOk;
         });
         return andLitIsOk;
