@@ -107,16 +107,30 @@ module Interpreter {
             var locationsIntrprt = findEntities(cmd.loc.ent, objects, pddlWorld.rels)
             // How entity will be positioned on location (ontop, inside, ...)
                     , rel = cmd.loc.rel;
-            entitiesIntrprt = resolveAmb(entitiesIntrprt, 'objects', 'move');
-            locationsIntrprt = resolveAmb(locationsIntrprt, 'locations', 'move to');
-                
-            // Add all possible combinations of interpretations 
-            interpretations = combineStuff(toIds(entitiesIntrprt), toIds(locationsIntrprt), rel);
-            
+
+            // If either is empty, this interpretation is invalid. Return no interpretations
+            if (entitiesIntrprt.length === 0 || locationsIntrprt.length === 0) {
+                interpretations = [];
+            }
+            else {
+                entitiesIntrprt = resolveAmb(entitiesIntrprt, 'objects', 'move');
+                locationsIntrprt = resolveAmb(locationsIntrprt, 'locations', 'move to');
+
+                // Add all possible combinations of interpretations
+                interpretations = combineStuff(toIds(entitiesIntrprt), toIds(locationsIntrprt), rel);
+            }
+
+
         } else if (cmd.cmd === 'take') {
             entitiesIntrprt = findEntities(cmd.ent, objects, pddlWorld.rels);
-            entitiesIntrprt = resolveAmb(entitiesIntrprt, 'objects', 'pick up');
-            interpretations = combineStuff(toIds(entitiesIntrprt), null, 'holding');
+
+            // If either is empty, this interpretation is invalid. Return no interpretations
+            if (entitiesIntrprt.length === 0) {
+                interpretations = [];
+            } else {
+                entitiesIntrprt = resolveAmb(entitiesIntrprt, 'objects', 'pick up');
+                interpretations = combineStuff(toIds(entitiesIntrprt), null, 'holding');
+            }
         }
 
         else {
