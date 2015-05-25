@@ -9,13 +9,13 @@ import physics
 import heuristic
 
 class TestMain(unittest.TestCase):
-    
+
     def setUp(self):
         self.stacks = [['floor0','a'],['floor1','b']]
         self.objects = {'a': {'size': 'large', 'form': 'ball', 'color': 'blue'},
                         'b': {'size': 'large', 'form': 'box', 'color': 'red'},
                         'floor0': {'color': None, 'form': 'floor', 'size': None},
-                        'floor1': {'color': None, 'form': 'floor', 'size': None}}        
+                        'floor1': {'color': None, 'form': 'floor', 'size': None}}
         self.arm = 0
         self.holding = None
         self.costPick = 8
@@ -40,7 +40,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(stacks,[['floor0'],['floor1','b','a']])
 
         self.assertEqual(
-                        AStar.algorithm.getPlan(goal, came_from, actions_so_far,self.objects), 
+                        AStar.algorithm.getPlan(goal, came_from, actions_so_far,self.objects),
                         ['Started on solution','Pick up the large blue ball','p','r',"Drop it like it's hot",'d']
                         )
 
@@ -63,7 +63,7 @@ class TestMain(unittest.TestCase):
 
 
 class TestAStar(unittest.TestCase):
-    
+
     def setUp(self):
         self.stacks = [['floor0','a'],['floor1'],['floor2','b'],['floor3']]
         self.objects = {'a': {'size': 'large', 'form': 'ball', 'color': 'blue'},
@@ -71,7 +71,7 @@ class TestAStar(unittest.TestCase):
                         'floor0': {'color': None, 'form': 'floor', 'size': None},
                         'floor1': {'color': None, 'form': 'floor', 'size': None},
                         'floor2': {'color': None, 'form': 'floor', 'size': None},
-                        'floor3': {'color': None, 'form': 'floor', 'size': None}}        
+                        'floor3': {'color': None, 'form': 'floor', 'size': None}}
         self.arm = 0
         self.holding = None
         self.intprt = [[('inside','a','b')]]
@@ -94,7 +94,7 @@ class TestActions(unittest.TestCase):
                         'b': {'size': 'large', 'form': 'box', 'color': 'red'},
                         'floor0': {'color': None, 'form': 'floor', 'size': None},
                         'floor1': {'color': None, 'form': 'floor', 'size': None}
-                        }        
+                        }
         self.arm = 1
         self.holding = 'b'
         self.intprt = ('inside','a','b')
@@ -121,7 +121,7 @@ class TestActions(unittest.TestCase):
 
     def test_left(self):
         self.assertEqual(simple_planner._left(*self.state),
-            (self.intprt, [['floor0','a'],['floor1']], 'b', 0, self.objects)) 
+            (self.intprt, [['floor0','a'],['floor1']], 'b', 0, self.objects))
 
     def test_left_None(self):
         self.assertEqual(simple_planner._left(
@@ -140,7 +140,7 @@ class TestActions(unittest.TestCase):
 class TestPhysics(unittest.TestCase):
 
     def setUp(self):
-        self.stacks  = [[],[]] 
+        self.stacks  = [[],[]]
         self.holding = None
         self.arm     = 0
         self.objects = {'lba': {'size': 'large', 'form': 'ball', 'color': 'blue'},
@@ -184,7 +184,7 @@ class TestPhysics(unittest.TestCase):
                 ('ontop','sbo','spy'),self.objects
                 ))
     def test_support_smallBox_largePyramid(self):
-        self.assertFalse(physics.check_physics(
+        self.assertTrue(physics.check_physics(
                 ('ontop','sbo','lpy'),self.objects
                 ))
 
@@ -264,10 +264,10 @@ class TestGoal(unittest.TestCase):
         self.stacks = [[],['b','a']]
         self.objects = {'a': {'size': 'large', 'form': 'ball', 'color': 'blue'},
                         'b': {'size': 'large', 'form': 'box', 'color': 'red'},
-                        'c': {'size': 'large', 'form': 'pyramid', 'color': 'green'}}        
+                        'c': {'size': 'large', 'form': 'pyramid', 'color': 'green'}}
         self.arm = 0
         self.holding = None
-        
+
         self.state = (self.stacks,self.holding,self.arm,self.objects)
 
 
@@ -336,7 +336,7 @@ class TestGoal(unittest.TestCase):
 
     def test_beside_true2(self):
         self.assertTrue(PDDL.satisfy_beside(
-            'a','b',[[],['a'],['b'],[]], None))        
+            'a','b',[[],['a'],['b'],[]], None))
 
     def test_beside_false(self):
         self.assertFalse(simple_planner.goalWrapper(
@@ -378,7 +378,7 @@ class TestHeuristic(unittest.TestCase):
                         'f': {'size': 'large', 'form': 'brick', 'color': 'red'},
                         'floor0': {'color': None, 'form': 'floor', 'size': None},
                         'floor1': {'color': None, 'form': 'floor', 'size': None}
-                        }        
+                        }
         self.arm = 0
         self.holding = None
         self.intprt = [[('ontop','a','b')]]
@@ -392,11 +392,11 @@ class TestHeuristic(unittest.TestCase):
             0+heuristic.NOT_HOLDING_PENALTY)
 
     def test_heuristic_beside(self):
-        self.assertEqual(heuristic.heuristic([[('beside', 'a', 'b')]],[['a'], ['b','c','d']], 
+        self.assertEqual(heuristic.heuristic([[('beside', 'a', 'b')]],[['a'], ['b','c','d']],
             self.holding, self.arm, self.objects),0)
 
     def test_heuristic_beside_bad(self):
-        self.assertEqual(heuristic.heuristic([[('beside', 'a', 'b')]],[['a','e','f','g'], [], ['b','c','d']], 
+        self.assertEqual(heuristic.heuristic([[('beside', 'a', 'b')]],[['a','e','f','g'], [], ['b','c','d']],
             self.holding, self.arm, self.objects), heuristic.PLACE_IN_STACK_PENALTY*2)
 
     # We assume the stackScore function to return zero if the arm is holding the object.
@@ -410,7 +410,7 @@ class TestHeuristic(unittest.TestCase):
         self.assertEqual(heuristic._placeScore('b', [['b'],['a'],['c']], 'leftof'), heuristic.CLOSE_TO_EDGE_PENALTY)
 
     def test_placeScore_huge(self):
-        self.assertEqual(heuristic._placeScore('b', [['c'],['a'],['b','d','e','f','g']], 'rightof'), 
+        self.assertEqual(heuristic._placeScore('b', [['c'],['a'],['b','d','e','f','g']], 'rightof'),
             heuristic.CLOSE_TO_EDGE_PENALTY+heuristic.PLACE_IN_STACK_PENALTY*4)
 
     def test_holdingTest(self):
