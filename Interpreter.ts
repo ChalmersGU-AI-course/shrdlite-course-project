@@ -136,21 +136,7 @@ module Interpreter {
         }
         else return null;
 
-        // if(intprt.length > 1){
-        //     for(var i = 0 ; i < objects.length ; i++){
-        //         var c = confirm("Ambiguous: Did you mean " + objectToDescription(objects[i], state));
-        //         if (c == true){
 
-        //             result.push(objects[i]);
-        //             break;
-        //         }
-        //     }
-
-        // }
-
-        // Pair { litertals : Literal[][]; speech : string[]}
-
-        // return intprt;
     }
 
 
@@ -284,26 +270,7 @@ module Interpreter {
             var allGoals : Literal[][] = [];
             var allQuantGoals : Literal[] = [];
 
-            // for(var i = 0 ;i < objB.length; i++){
 
-            //     if(checkLaws(objA,objB[i],sRel,state)){
-            //         if(objB[i] == "z"){
-            //             // return [{pol:true, rel:sRel, args:[objA,"floor"]}];
-            //             allGoals.push([{pol:true, rel:sRel, args:[objA,"floor"]}]);
-            //         }
-            //         else{
-            //             // return [{pol:true, rel:sRel, args:[objA,objB[i]]}];
-            //             allGoals.push([{pol:true, rel:sRel, args:[objA,objB[i]]}]);
-            //         }
-            //     }
-            // }
-
-            // if(allGoals.length > 0)
-            //     return allGoals;
-            // else
-            //     throw new Interpreter.Error("Physical Laws error.");
-
-            ////////////
             for(var i = 0 ;i < objB.length; i++){
 
                 if(checkLaws(objA,objB[i],sRel,state)){
@@ -613,8 +580,16 @@ module Interpreter {
 
     function checkValidObject(objs : string[], rels : string[], state : WorldState) : boolean {
         var numberOfLoop = rels.length;
+        //old version
+        console.log(objs);
+        // for(var i = 0;i< numberOfLoop; i++){
+        //     if(!checkPredicate(objs[i],objs[i+1],rels[i],state)){
+        //         return false;
+        //     }
+        // }
+        //new version with human sense
         for(var i = 0;i< numberOfLoop; i++){
-            if(!checkPredicate(objs[i],objs[i+1],rels[i],state)){
+            if(!checkPredicate(objs[0],objs[i+1],rels[i],state)){
                 return false;
             }
         }
@@ -638,11 +613,6 @@ module Interpreter {
     function checkPredicate(obj1 : string, obj2 : string, rel : string, state : WorldState) : boolean {
         var a_loc = getStackLocation(obj1,state);
         var b_loc = getStackLocation(obj2,state);
-
-        // console.log(obj1);
-        // console.log(obj2);
-        // console.log(rel);
-
 
         //special case for "floor"
         if(obj2 == "z"){
