@@ -37,7 +37,8 @@ module Interpreter {
                 currentState.status.push("multiValidInterpret");
             }
             if(existSolution){
-                return interpretations;
+                // return interpretations;
+                return validInterprets;
             }
         }
         throw new Interpreter.Error("Found no legal interpretation");
