@@ -46,6 +46,8 @@ var SearchGraph = function (currentState, pddl) {
                        arms: currentState.arms
                      };
     this.pddl = pddl;
+    console.log("pddl");
+    console.log(this.pddl);
 };
 
 // If top can be placed on bottom
