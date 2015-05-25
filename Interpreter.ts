@@ -145,6 +145,43 @@ module Interpreter {
         //Then do nearly everything again, but for the location
         var location = cmd.loc;
         
+        sentence.push(getLocationStr(cmd.loc));
+        
+        /*
+        var locationRelation = getRelation(location.rel);
+        var locationQuant = location.ent.quant;
+        
+        var locationTemp = location.ent.obj;
+        var locationToUse = locationTemp.obj == undefined ? locationTemp : locationTemp.obj;
+        
+        var locationStr = findObject(locationToUse);
+        locationStr = locationQuant == "all" ? locationStr + "s" : locationStr;
+        var locationLocation = locationTemp.loc;
+        var locationHasLocation = locationTemp.loc != undefined;
+        var locationLocationRelation = locationHasLocation ? getRelation(locationLocation.rel) : "";
+        var locationLocationQuant = locationHasLocation ? locationLocation.ent.quant : "";
+        var locationLocationStr = locationHasLocation ? findObject(locationLocation.ent.obj) : "";
+        
+        sentence.push(locationRelation);
+        sentence.push(locationQuant);
+        sentence.push(locationStr);
+        
+        if(locationHasLocation){
+            sentence.push("that is");
+            sentence.push(locationLocationRelation);
+            sentence.push(locationLocationQuant);
+            sentence.push(locationLocationStr);
+        }
+        */
+
+        //Join the list of words into a sentence
+        return sentence.join(" ");
+    
+    }
+    
+    function getLocationStr(location: Parser.Location): string{
+        var sentence: string[] = [];
+    
         var locationRelation = getRelation(location.rel);
         var locationQuant = location.ent.quant;
         
@@ -172,7 +209,29 @@ module Interpreter {
 
         //Join the list of words into a sentence
         return sentence.join(" ");
+    }
     
+    function getNoObjectFoundMessage(object: Parser.Object){
+        var msg = "There is no " + findObject(object.obj ? object.obj : object);
+        //Check if the object should have a location
+        if(object.loc){
+            msg += " " + getLocationStr(object.loc);
+        }
+        msg += " within the current world";
+        return msg;
+    }
+    
+    function getNoLocactionFoundMessage(object: Parser.Object){
+        //Get which object the user wanted
+        var msg = "There is no " + findObject(object);
+        //Check if the object should have a location
+        /*
+        if(object.loc){
+            msg += " " + object.loc.rel + " " + findObject(object.loc);
+        }
+        */
+        msg += " location within the current world";
+        return msg;
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -193,6 +252,9 @@ module Interpreter {
         
         //First check if the object is inside the world...
         var objectKeys = getObjectKey(object, objs, state.objects, state.stacks, true);
+        
+        console.log("Object keys: " + objectKeys.toString());
+        console.log("Quant: " + cmd.ent.quant);
         
         //...if this is not true, we did not find an object that matched
         if(rightNumberOfResults(cmd.ent.quant, objectKeys.length)){
@@ -278,7 +340,7 @@ module Interpreter {
                             );
                         }
                         
-                    } else {
+                    } else if(foundLocationKey.length > 0) {
                         //We did not get the right number of results regarding the locations
                         
                         var locationStr = findObject(cmd.loc.ent.obj);
@@ -290,13 +352,16 @@ module Interpreter {
                             default:
                                 break;
                         }
+                    } else {
+                        //No matching locations found in the world
+                        throw new Error(getNoLocactionFoundMessage(cmd.loc.ent.obj));
                     }
                     
                     break;
             
             }
             
-        } else {
+        } else if(objectKeys.length > 0) {
             //We did not get the right number of results regarding the objects
             
             var objectStr = findObject(object);
@@ -308,6 +373,10 @@ module Interpreter {
                 default:
                     break;
             }
+        } else {
+            //No matching objects found in the world
+            //Generate Error message
+            throw new Error(getNoObjectFoundMessage(object));
         }
         
         //Lastly, go over all the intepretations and filter out non valid ones
