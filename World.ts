@@ -44,6 +44,7 @@ interface ExtendedWorldState extends WorldState {
 
 interface PddlWorld {
     rels: PddlLiteral[];
+    stacks: string[][];
     arm: number;
     holding: string;
 }
@@ -126,7 +127,7 @@ function extendWorldState(state: WorldState) : ExtendedWorldState {
         objStacks: objStacks,
         objectsWithId: objectsWithId,
         objectsByForm: objectsByForm,
-        pddlWorld: {rels: pddlWorld, arm: 0, holding: null},
+        pddlWorld: {rels: pddlWorld, arm: 0, holding: null, stacks:state.stacks},
         stacks: state.stacks,
         holding: state.holding,
         arm: state.arm,

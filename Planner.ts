@@ -54,6 +54,7 @@ module Planner {
         }
         state.pddlWorld.arm = state.arm;
         state.pddlWorld.holding = state.holding;
+        state.pddlWorld.stacks = cloneStacks(state.stacks);
 
         var secNode;
         if(state.holding) {
@@ -115,6 +116,17 @@ module Planner {
         return plan;
     }
 
+    function cloneStacks(oldStacks: string[][]) {
+        var stacks = [];
+        for(var i in oldStacks) {
+            for(var j in oldStacks[i]) {
+                stacks[i][j] = oldStacks[i][j];
+            }
+        }
+        
+        return stacks;
+    }
+
     function isHolding(world:PddlWorld):boolean {
         return world.holding !== null;
     }
@@ -125,43 +137,66 @@ module Planner {
         }
     }
 
-    function createHeuristicFunction(goalWorld:PddlLiteral[][]) { 
-        return function (node:AStar.Node<PddlWorld>) {
+    function relExist(world:PddlLiteral[], rel:PddlLiteral) {
+        for(var i in world) {
+            if(world[i].rel === rel.rel && 
+            world[i].pol === rel.pol && 
+            world[i].args[0] === rel.args[0] && 
+            world[i].args[1] === rel.args[1]) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    function createHeuristicFunction(goalWorld:PddlLiteral[][]) {
+        //console.log("create heuristic"); 
+        return function(node:AStar.Node<PddlWorld>) {
+          //  console.log("run heuristic");
             var cost = [];
+            var h = 0;
             for(var i in goalWorld) {
+                var max = 0;
+                var min = Infinity;
                 for(var j in goalWorld[i]) {
-                    if(goalWorld[i][j].rel === "ontop") {
+                    if(goalWorld[i][j].rel === "ontop" || goalWorld[i][j].rel === "inside") {
+                        var count = countObjectsOnTop(node.label, goalWorld[i][j].args[0])
+                        if(max < count) {
+                            max = count;
+                        }
                         
+                        if(relExist(node.label.rels, goalWorld[i][j])) {
+                            max = 0;
+                        }
                     }
+                }
+                if(min > max) {
+                    min = max;
                 }
             }
             
-            return 0;
+            return min;
         }
     }
     
     function countObjectsOnTop(world:PddlWorld, obj:string) {
-        var notDone = true;
-        var i = 0;
-        var currObj = obj;
-        while(notDone) {
-            for(var j in world.rels){
-                if((world.rels[j].rel === "ontop" || world.rels[j].rel === "inside") && world.rels[j].args[1] === currObj) {
-                    i++;
-                    currObj = world.rels[j].args[0];
-                    console.log("hej",currObj);
-                    break;
-                }
-                
-                if(world.rels[j].rel === "attop") {
-                    console.log(world.rels[j].rel);
-                    if(world.rels[j].args[0] === currObj)
-                        notDone = false;
+        
+        var count = 0;
+        
+        if(world.holding === obj) {
+            return 0;
+        }
+        
+        for(var i in world.stacks) {
+            for(var j in world.stacks[i]) {
+                if(world.stacks[i][j] === obj) {
+                    count = world.stacks[i].length-1-j;
                 }
             }
         }
         
-        return i;
+        return count;
     }
     
     function createGoalFunction(goalWorld:PddlLiteral[][]) {
@@ -250,13 +285,15 @@ module Planner {
 
     //TODO put in PddlWorld interface in some way or other?
     function clonePddlWorld(pddlWorld:PddlWorld):PddlWorld {
-        var newWorld: PddlWorld = {rels: [], arm: 0, holding: null}
+        var newWorld: PddlWorld = {rels: [], arm: 0, holding: null, stacks : []}
          ,  world = pddlWorld.rels;
 
         //TODO move to a clone-method somewhere
         for(var w in world) {
             newWorld.rels.push({pol: world[w].pol, rel: world[w].rel, args: [world[w].args[0], world[w].args[1]]});
         }
+
+        newWorld.stacks = cloneStacks(pddlWorld.stacks);
 
         newWorld.arm = pddlWorld.arm;
         newWorld.holding = pddlWorld.holding;
@@ -370,6 +407,7 @@ module Planner {
 
         newWorld.rels.push({pol:true, rel:rel, args:[object, topObject]});
         newWorld.rels.push({pol:true, rel:"attop", args:[object, "floor-"+floor]});
+        newWorld.stacks[floor].push(object);
         return newWorld;
     }
 
@@ -441,6 +479,8 @@ module Planner {
         if(!foundObject) {
             return null;
         }
+        
+        world.stacks[floor].pop();
         
         return world;
     }
