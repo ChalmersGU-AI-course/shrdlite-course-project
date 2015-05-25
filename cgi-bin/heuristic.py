@@ -7,46 +7,49 @@ def heuristic(intprt, stacks, holding, arm, objects):
     """    Passed as a parameter to A*, The heuristicfunciton for this problem.
     """
     scoreList = []
-    for goal in intprt:
-        score = 0
-        (pred, obj1, obj2) = goal
-        # If we are to put something ontop or inside something else,
-        # we give it a better score if either of the objects are higher up in the stacks
-        if pred in ('ontop','inside'):
-            score += _stackScore(obj1, stacks)
-            score += _stackScore(obj2, stacks)
+    for disjunctive_goal in intprt:
+        addedScore = 0
 
-            # Adds penalty if we are not holding obj1
-            score += _holdingScore(obj1, holding)
+        for conjunctive_goal in disjunctive_goal:
+            score = 0
+            (pred, obj1, obj2) = conjunctive_goal
+            # if we are to put something ontop or inside something else,
+            # we give it a better score if either of the objects are higher up in the stacks
+            if pred in ('ontop','inside'):
+                score += _stackScore(obj1, stacks)
+                score += _stackScore(obj2, stacks)
 
-            scoreList.append(score)
+                # adds penalty if we are not holding obj1
+                score += _holdingScore(obj1, holding)
 
-        # Add penalty the further down obj1/obj2 is in their respective stack,
-        #   depending if we are to put them above/under something else.
-        elif pred in ('under', 'above'):
-            score += _placeScore(obj2 if pred is 'under' else obj1, stacks, pred)
+                addedScore += score
 
-        elif pred == 'beside':
-            objectScores = []
-            objectScores.append(_stackScore(obj1, stacks))
-            objectScores.append(_stackScore(obj2, stacks))
-            score += min(objectScores)
-            scoreList.append(score)
+            # add penalty the further down obj1/obj2 is in their respective stack,
+            #   depending if we are to put them above/under something else.
+            elif pred in ('under', 'above'):
+                score += _placescore(obj2 if pred is 'under' else obj1, stacks, pred)
 
-        # If we are to put something left/right of something else,
-        # we add penalty if obj2 are to the far left/right
-        elif pred in ('leftof','rightof'):
-            score += _placeScore(obj2, stacks, pred)
-            score += _placeScore(obj1, stacks, 'leftof' if pred is 'rightof' else 'rightof')
-            scoreList.append(score)
+            elif pred == 'beside':
+                objectscores = []
+                objectscores.append(_stackScore(obj1, stacks))
+                objectscores.append(_stackScore(obj2, stacks))
+                score += min(objectscores)
+                addedScore += score
 
-        # Add penalty if object is further down
-        elif pred == 'holding':
-            score += _stackScore(obj1, stacks)
-            scoreList.append(score)
+            # If we are to put something left/right of something else,
+            # we add penalty if obj2 are to the far left/right
+            elif pred in ('leftof','rightof'):
+                score += _placeScore(obj2, stacks, pred)
+                score += _placeScore(obj1, stacks, 'leftof' if pred is 'rightof' else 'rightof')
+                addedScore += score
 
-        else:
-            scoreList.append(0)            
+            # Add penalty if object is further down
+            elif pred == 'holding':
+                score += _stackScore(obj1, stacks)
+                addedScore += score
+
+        scoreList.append(addedScore)
+
     return min(scoreList)
 
 # Function for deciding the position of a object given the stacks of the world
@@ -71,8 +74,6 @@ def _placeScore(obj, stacks, pred):
                     return _stackScore(obj, stacks) + CLOSE_TO_EDGE_PENALTY
                 else:
                     return 0
-    # object not found: probably the arm is holding it
-    return 0
 
 # Returns a good score if we are currently holding the object, else add penalty
 def _holdingScore(obj, holding):

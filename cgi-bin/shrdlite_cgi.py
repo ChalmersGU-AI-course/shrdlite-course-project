@@ -8,7 +8,7 @@ def main(state):
     except interpreter.InterpreterException as err:
         return {'plan': [str(err)]}
 
-    plan = planner(intprt, **state)
+    plan = planner(wrapped_intprt, **state)
 
     return {'int': intprt,
             'plan': plan,
@@ -31,15 +31,18 @@ def planner(intprt, stacks, holding, arm, objects, utterance, parses):
     import simple_planner
     import AStar.algorithm, heuristic
 
-
     came_from, cost_so_far, actions_so_far, goal = \
       AStar.algorithm.a_star_search(
-            simple_planner.getAction,
-            (intprt, stacks, holding, arm, objects),
-            simple_planner.goalWrapper,
-            heuristic.heuristic)
+            simple_planner.getAction, # successor method
+            (intprt, stacks, holding, arm, objects), # initial state & world
+            simple_planner.goalWrapper, # goal test method
+            heuristic.heuristic) # heuristic function
 
     return AStar.algorithm.getPlan(goal, came_from, actions_so_far,objects)
+
+# for testing purposes
+def no_heuristic(*_): # discard all arguments
+    return 0
 
 if __name__ == '__main__':
     import cgi
