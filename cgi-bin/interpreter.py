@@ -2,6 +2,8 @@ from PDDL import satisfy_pred
 import physics
 import sys
 
+from helpers import *
+
 class InterpreterException(Exception):
     def __init__(self, descr):
         self.descr = descr
@@ -132,7 +134,7 @@ def find_ent(ent, objects, stacks, holding):
     quant = ent['quant']
     simple = not 'obj' in ent['obj']
     descr = ent['obj'] if simple else ent['obj']['obj']
-    domain = find_objs(descr, objects, stacks)
+    domain = find_objs(descr, objects)
 
     if not simple:
         # we need to check the PDDL predicates going out from this node
@@ -161,14 +163,6 @@ def find_ent(ent, objects, stacks, holding):
 
 def obj_str(o):
     return 'the ' + ' '.join([o['size'], o['color'], o['form']])
-
-def find_objs(obj, objects, stacks):
-    """Find all possible objects fitting properties obj
-    aka domain consistency
-    """
-
-    return set([name for name, props in objects.items()
-                if matches_obj(obj, props)])
 
 def matches_obj(a, b):
     """Does object a match object b, where b is a 'complete' object
