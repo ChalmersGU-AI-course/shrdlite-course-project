@@ -17,8 +17,16 @@ module utils {
      * @param max           Maximum of returned integer.
      * @returns {number}    Integer between 0 and max.
      */
-    function getRandomInt(max) {
+    export function getRandomInt(max) {
         return Math.floor(Math.random() * max);
 
+    }
+
+    export function transpose(arrays) {
+        return arrays[0].map(function (_, i) {
+            return arrays.map(function (array) {
+                return array[i]
+            })
+        });
     }
 }
