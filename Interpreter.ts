@@ -67,7 +67,9 @@ module Interpreter {
             // considers at most one object in each OR-part
             var entities = interpretEntity(cmd.ent, state);
 
-            if (maxNumberOfEntitiesConsidered(entities) == 2) {
+            var maxEntitiesConsidered = maxNumberOfEntitiesConsidered(entities);
+
+            if (maxEntitiesConsidered >= 1 && maxEntitiesConsidered <= 2) {
                 intprt = createUnLiterals(entities, "holding");
             }
         } else if (cmd.cmd == "put") {
@@ -85,8 +87,7 @@ module Interpreter {
                 if (cmd.what == "it") {
                     if (state.holding1 && !state.holding2) {
                         obj = state.holding1;
-                    }
-                    else if (!state.holding1 && state.holding2) {
+                    } else if (!state.holding1 && state.holding2) {
                         obj = state.holding2;
                     }
                 } else if (cmd.what == "left") {
