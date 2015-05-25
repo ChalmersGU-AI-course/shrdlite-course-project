@@ -342,7 +342,7 @@ module Interpreter {
         else if(rel === "under")
             f = function(co1 : number[], co2 : number[]) {return co1[1] < co2[1] && co1[0] === co2[0]};
         else if(rel === "beside")
-            f = function(co1 : number[], co2 : number[]) {return (co1[0] === (co2[0]-1)) || (co1[0] === (co2[0]+1)) };
+            f = function(co1 : number[], co2 : number[]) {return ((co1[0] === (co2[0]-1)) || (co1[0] === (co2[0]+1))) && co1[0] !== -1 && co2[0] !== -1};
         else if(rel === "above")
             f = function(co1 : number[], co2 : number[]) {return co1[1] > co2[1] && co1[0] === co2[0]};
         // Run through all objects and check if the relation holds, then store.
