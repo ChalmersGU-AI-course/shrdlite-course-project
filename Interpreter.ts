@@ -46,7 +46,7 @@ module Interpreter {
                     str += '(' + cmdToStr(obj.ent) + ') ';
                 }
                 if(obj.loc){
-                    str += '(' + cmdToStr(obj.loc) + ') ';
+                    str += cmdToStr(obj.loc) + ' ';
                 }
                 return str;
             };
