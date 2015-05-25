@@ -210,7 +210,8 @@ module Planner {
       for(var i = 0; i < state.stacks.length; i++){
           for(var j = 0; j < state.stacks[i].length; j++){
               res = res + state.stacks[i][j];
-          } 
+          }
+          res = res + "-";
       }
       //console.log(res);
       return res;
