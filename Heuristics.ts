@@ -102,10 +102,13 @@ module Heuristics {
         var moveA = heuristicMoveToStack(s, a, b.stackNo-1);
         var moveB = heuristicMoveToStack(s, b, a.stackNo+1);
 
-        // Move one of the the other.
+        // Move one of them to the other?
         return min(moveA, moveB);
     }
 
+    /**
+    * The heuristic cost of moving object `a` to the top of stackNo `stack`.
+    */
     function heuristicMoveToStack(s : State, a : ObjectPosition, stack : number) : number {
         if(stack < 0 || stack >= s.stacks.length){
             return Infinity;
@@ -114,18 +117,25 @@ module Heuristics {
             return 0;
         }
 
-        var aboveCost = a.objectsAbove * 4; // clear the way so can grab the object.
+        // clear the way so can grab the object.
+        var aboveCost = a.objectsAbove * 4;
 
-        var armCost = abs(a.stackNo - s.arm); // move the arm
+        // move the arm to `a`
+        var armCost = abs(a.stackNo - s.arm);
+
+        // then move the arm to the correct stack
+        armCost = armCost + abs(a.stackNo - stack);
         if(! a.isHeld){
-            armCost = armCost + 1; // to pick up the object
+            // pick up the object
+            armCost = armCost + 1;
         }
-        // TODO also +1 for dropping the object?
 
         var stackObj : ObjectPosition = {stackNo : stack, heightNo : -1,
                        objectsAbove : 0, isHeld : false, isFloor : false};
+
+        // +1 for dropping the object or
+        // if holding something else, drop that first.
         var dropC = dropCost(s, a, stackObj, false);
-        // if holding something else, drop that.
 
         return aboveCost + armCost + dropC;
     }

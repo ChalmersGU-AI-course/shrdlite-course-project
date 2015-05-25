@@ -47,6 +47,6 @@ ambiguity: shrdlite-offline.js
 	node shrdlite-offline.js medium "put a ball that is on the floor beside the green plank"
 
 bug: shrdlite-offline.js
-	node shrdlite-offline.js complex "put the white ball above a table above a brick"
+	node shrdlite-offline.js medium "put the green plank left of the green brick"
 	# node shrdlite-offline.js complex "put the ball that is on a box on a brick"
 	# node shrdlite-offline.js complex "put the white ball on a box on a brick"
