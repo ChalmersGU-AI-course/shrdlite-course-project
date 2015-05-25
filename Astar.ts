@@ -86,7 +86,10 @@ class Astar <T>{
         while (!openset.isEmpty()){
         	var path = this.reconstruct_path(came_from, current, false);
         	if(bestsofar < path.length){
-        		return path;
+        		return path;	// no point in exporing a path which is worse than the one we have already got
+        	}
+        	if(closedset.length > 3000){
+        		//return [];	// the search is too long
         	}
             var current = openset.dequeue().getIndex();
             openset_ids.remove(current);
@@ -95,6 +98,9 @@ class Astar <T>{
                 console.log("Number of nodes visited " + counter);
                 return this.reconstruct_path(came_from, current, true);//changed to current, since goal will be literals
             } //needs to be adjusted
+            if(closedset.indexOf(current) != -1){	// do not gather neighbors if we have already vissited current
+            	continue;
+            }
             closedset.push(current);
             var currentNeighbors = this.neighbor_nodes(current);
             for(var i = 0; i < currentNeighbors.length; i++){

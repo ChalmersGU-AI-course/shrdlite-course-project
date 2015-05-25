@@ -65,7 +65,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		var neig :WorldState[] = [];
 		// max 3 possible states
 		// move arm left
-		if(currentstate.arm > 0){
+		if(currentstate.arm > 0 ){
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// reduce arm poss
 			possiblestate.arm -= 1;
@@ -73,7 +73,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			neig.push(possiblestate);
 		}
 		// move arm right
-		if(currentstate.arm < this.getWorldWidth(currentstate)){
+		if(currentstate.arm < this.getWorldWidth(currentstate) ){
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// increase arm poss
 			possiblestate.arm += 1;
@@ -82,7 +82,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		}
 		// pick up
 		var topLit = Planner.getTopLiteral(currentstate, currentstate.arm);
-		if(!currentstate.holding && topLit){	
+		if(!currentstate.holding && topLit ){	
 			// if it is not holding anything and ther is something on the floor
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			var topobj = this.getTopObj(currentstate, currentstate.pddl.toArray());
@@ -92,14 +92,13 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			possiblestate.pddl.remove(topLit);
 			possiblestate.planAction = "p";
 			neig.push(possiblestate);
-		}else if(currentstate.holding){ // drop
+		}else if(currentstate.holding ){ // drop
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// get top obj
-			var topl = Planner.getTopLiteral(currentstate, currentstate.arm);
 			var topobj :string;
 			var relation : string = "ontop";
-			if(topl){
-				topobj = topl.args[0];
+			if(topLit){
+				topobj = topLit.args[0];
 				// check if there is a box (ontop or inside relation)
 				if(possiblestate.objects[topobj].form == "box"){
 					relation = "inside";	
@@ -153,13 +152,15 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     	if(state1.holding != state2.holding || state1.arm != state2.arm){
     		return false;
     	}
+    	if(state1.pddl.size() != state2.pddl.size()){
+    		return false;
+    	}
     	var pddls1 = state1.pddl.toArray();
     	for(var i = 0; i < pddls1.length; i++){
     		if(!state2.pddl.contains(pddls1[i])){
     			return false;
     		}
     	}
-    	
     	return true;
     }
     
@@ -362,6 +363,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     // recursive function to follow a literal to find the one on the top
     containsObj(obj : string, lit : Interpreter.Literal, lits : Interpreter.Literal[] ): boolean{
     	var result : Interpreter.Literal;
+    	if(!lit){
+    		return false;
+    	}
     	if(lit.args[0] == obj){
     		return true;
     	}
