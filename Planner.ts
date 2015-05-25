@@ -131,7 +131,6 @@ module Planner {
                 if (topObj.size === "large" && bottomObj.form === "pyramid" && bottomObj.size === "large")
                     return false;
             }
-
             return true;
         }
 
@@ -189,9 +188,9 @@ module Planner {
                 console.log("No. of accepted interpretations: " + validInterps.length);
             }
         }
-
-        //Remove when done
-        //testCloning(state);
+        // If no valid interpretations is found, we abort.
+        if(validInterps.length < 1)
+            throw new Planner.Error("No valid interpretations");
 
         // Prepare for A* call
         var start = new Nworld();
