@@ -162,7 +162,9 @@ module Interpreter {
     }
     
     function checkHolding(obj : Parser.Object, holding : Parser.Object){
-    	if(obj.form == holding.form || obj.color == holding.color || obj.size == holding.size){
+    	if((obj.form == null  || obj.form == holding.form)   && 
+           (obj.color == null || obj.color == holding.color) && 
+           (obj.size == null  || obj.size == holding.size )){
     		return true
     	}else{
     		return false;
