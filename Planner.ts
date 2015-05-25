@@ -164,6 +164,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     	return true;
     }
     
+    // Gets the object at the top of the column under the arm
     getTopObj(state:WorldState, pddls:Interpreter.Literal[]):string{
         var ind :number= -1;
         var obj = "f" + state.arm;
@@ -179,23 +180,21 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         return obj;
     }
     
-    getTopRelation(state:WorldState, pddls:Interpreter.Literal[]):Interpreter.Literal{
-        var ind :number= -1;
-        var fln = state.arm;
-        var z = "f" + fln.toString();
+    getTopRelation(pos : number ,state:WorldState):Interpreter.Literal{
+        var z = "f" + pos;
         var pd;
+        var pddls = state.pddl.toArray();
         for(var index = 0; index < pddls.length; index++){
             var pddl = pddls[index];
             var x = pddl.args[1];
             if(pddl.args[0] == null){}
             else if((pddl.rel == "ontop" || pddl.rel == "inside") && x==z){
                 z = pddl.args[0];
-                ind=index;
                 index = -1;
                 pd = pddl;
             }
         }
-        return pddl;
+        return pd;
     }
 
     getTopObjInd(state:WorldState, pddls:Interpreter.Literal[]):number{
@@ -308,23 +307,46 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		return position;//should never happen
     }
     
+    findObjLiteralUnder(obj : string, state : WorldState): Interpreter.Literal{
+    	var pddls = state.pddl.toArray();
+    	for(var i = 0; i < pddls.length; i++){
+    		// second try to find the litterl where obj is arg 0 
+    		//(means that it is on the top or at the edge of the world if floor.)
+    		if(pddls[i].args[0] == obj && (pddls[i].rel == "ontop" || pddls[i].rel == "inside")){
+    			return pddls[i];
+    		}
+    	}
+    	return null;
+    }
+    
     findObjLiteral(obj : string, state : WorldState): Interpreter.Literal{
     	var pddls = state.pddl.toArray();
     	for(var i = 0; i < pddls.length; i++){
     		// first try to find the litterl where obj is arg 1
-    		if(pddls[i].args[1] == obj){
+    		if(pddls[i].args[1] == obj  && (pddls[i].rel == "ontop" || pddls[i].rel == "inside")){
     			return pddls[i];
     		}
     	}
     	for(var i = 0; i < pddls.length; i++){
     		// second try to find the litterl where obj is arg 0 
     		//(means that it is on the top or at the edge of the world if floor.)
-    		if(pddls[i].args[0] == obj){
+    		if(pddls[i].args[0] == obj && (pddls[i].rel == "ontop" || pddls[i].rel == "inside")){
     			return pddls[i];
     		}
     	}
     	return null;
     }
+    findNewPositionCounter(obj : string, column : number, state : WorldState):number{
+    	var count = 0;
+    	var worldwidth = this.getWorldWidth(state);
+    	for(var i = 1; i < worldwidth ; i++){
+    		
+    	}
+    	
+    	
+    	return count;
+    }
+    
     // returns the position in dimention X.
     getPosition(obj : string, state : WorldState): number{
     	var pddls = state.pddl.toArray();
@@ -439,22 +461,42 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         	
             //if a above b, take #objects on b * 4 + (ifnotinsamepile)#objects on a*4 + distancefromcrane to a + distancefromatob
             
-            if(state.holding == a && ontopB == 0){//check if a's stack is full
+            if(state.holding == a && ontopB == 0){// if we are holding the objective
                 return 1 + Math.abs(posB - state.arm);
             }
-            else if(state.holding != null && state.holding == b){
+            else if(state.holding == b){// if we are holding the wrong objective
                 return 1+ ontopA*4 + Math.abs(posA-state.arm) + 2;
             }
+            // if anything is ontop of b, then count object on top and predict cost for placeing the top obj at another spot
+            if(ontopB > 0){
+            	count += ontopB*4 + Math.abs(posA-state.arm);
+            	// find shortest path to a possition to place the obj at the top
+            	var ontopColB = this.getTopRelation(posB , state);
+	            count += this.costToClosestLegalNewPos(ontopColB.args[0], a, posB, state);
+            	if(posA == posB){
+            		//count += 4;	// if they are in same column, then we have to move away an then back again min 4.
+            	}
+            	
+            }
+            // if anything is ontop of a, then count object on top and predict cost for placeing the top obj at another spot
+            if(ontopA > 0 && posA != posB){ 	// we dont need to go here if they are in the same column
+            	count += ontopA*4 +Math.abs(posA-state.arm);
+            	// find shortest path to a possition to place the obj at the top
+            	var ontopColA = this.getTopRelation(posA , state);
+            	count += this.costToClosestLegalNewPos(ontopColA.args[0], b, posA, state);
+            }
             
-            var z = b;
+        /*   var z = b;
             //traverse up through b;
             for(var index = 0; index < pddls.length; index++){
                 var pddl = pddls[index];
                 var x = pddl.args[1];
+                // find the literal ontop of this one
                 if(x == z && (pddl.rel == "ontop" || pddl.rel == "inside")){
-                    if(pddl.args[0]==a){
+                    if(pddl.args[0]==a){	// if pddl ??
                         if(pddl.args[1]==b){
-                            return 0;
+                            count =0 ;
+                            break; 	// if b
                         }
                         samePile = true;
                     }
@@ -483,7 +525,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }
             else{
                count = count * 4 + Math.abs(posA - state.arm) + 3;//if they are in the same pile but not finished, a will require 3 more moves to get back
-            }
+            }*/
             return count; 
 
         }
@@ -658,6 +700,57 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             
         }
         return true;
+    }
+    
+    costToClosestLegalNewPos(obj : string, exptobj : string, pos : number, state : WorldState): number{
+    	var bsfcount = 100000;
+    	var worldwidth : number= this.getWorldWidth(state);
+    	var newlit : Interpreter.Literal;
+    	for(var k = 1; k >= -1;){		// check first to the right + , then to the left -
+	    	for(var i = pos + k; i < worldwidth && i > 0; i += k){
+	    		var count = Math.abs(pos - i); // for each step add 1 to counter
+	    		
+	    		newlit = this.getTopRelation( i, state);
+	    		var newpos = "f"+i;
+	    		if(newlit){
+	    			newpos = newlit.args[0];
+	    		}
+	    		var found = false
+	    		while(newpos != "f"+i && ! found){
+	    			if(this.checkLegalLit(obj, newpos, state) && newpos != exptobj){	// check one step right
+		    			found = true;
+		    		}
+		    		// for each object ontop a possible new position add alteast 4 to counter
+		    		newlit = this.findObjLiteralUnder(newlit.args[1], state);	// go down one step in column
+		    		if(!newlit){	// no obj under
+		    			found = true;
+		    		}else{
+		    			count += 4;
+		    			newpos = newlit.args[1];
+		    		}
+		    		
+	    		}
+	    		if(count < bsfcount){
+	    			bsfcount = count;
+	    		}
+	    	}
+	    	k -= 2;
+	    }
+
+    	return bsfcount;
+    }
+    
+    checkLegalLit(obja : string, objb : string, state : WorldState):boolean{
+    	var relation : string = "ontop";
+		// check if there is a box (ontop or inside relation)
+		if(state.objects[obja].form == "box"){
+			relation = "inside";	
+		}
+		var templiteral = {pol: true, rel : relation, args : [obja, objb]};
+		if(Interpreter.checkIllegal(templiteral, state)){
+			return true;
+		}
+		return false;
     }
 
     checkGoal(current:number, goal:Interpreter.Literal):boolean {
@@ -834,12 +927,32 @@ module Planner {
 
         var temp : number[];
         var tempNodevalues = [];
-        var sp1 : Shortestpath;
+        var sp1 : Shortestpath = new Shortestpath(1);
+        sp1._nodeValues.push(state);
         var results = new collections.PriorityQueue<number[]>(
         					function (a : number[], b : number[]){
         						return b.length - a.length;
         					});
+        					
+        // sort intprt after the heuristic cost for the literals
+        var sortedIntrpt = new collections.PriorityQueue<Interpreter.Literal[]>(
+        					function (a : Interpreter.Literal[], b : Interpreter.Literal[]){
+        						var costA = 0;
+        						for(var i = 0; i < a.length; i++){
+        							costA += sp1.heuristic_cost(0,a[i]);
+        						}
+        						var costB = 0;
+        						for(var i = 0; i < b.length; i++){
+        							costB += sp1.heuristic_cost(0,b[i]);
+        						}
+        						return costB - costA;
+        					});
         for(var i = 0; i < intprt.length; i++){
+        	console.log("Lit: " + intprt[i][0].args.toString() + " cost: " + sp1.heuristic_cost(0,intprt[i][0]));
+        	sortedIntrpt.enqueue(intprt[i]);
+        }
+        
+        while(!sortedIntrpt.isEmpty()){
             var sp = new Shortestpath(1);
             var as = new Astar<number[]>(sp);
             sp._nodeValues.push(state);
@@ -849,7 +962,7 @@ module Planner {
 				bestsofarlength = bestsofar.length;
 			}
 			
-            temp = as.star(0, intprt[i], bestsofarlength);
+            temp = as.star(0, sortedIntrpt.dequeue(), bestsofarlength);
             
             if(temp && temp.length > 0 && temp.length <= bestsofarlength){
             	results.enqueue(temp);

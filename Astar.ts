@@ -86,10 +86,12 @@ class Astar <T>{
         while (!openset.isEmpty()){
         	var path = this.reconstruct_path(came_from, current, false);
         	if(bestsofar < path.length){
+        		console.log("Number of nodes visited " + counter);
         		return path;	// no point in exporing a path which is worse than the one we have already got
         	}
-        	if(closedset.length > 3000){
-        		//return [];	// the search is too long
+        	if(closedset.length > 5000){
+        		console.log("Too long search: Number of nodes visited " + counter);
+        		return [];	// the search is too long
         	}
             var current = openset.dequeue().getIndex();
             openset_ids.remove(current);
