@@ -381,6 +381,34 @@ module Planner {
         return Math.floor(Math.random() * max);
     }
 
+    function pathToPlan(path : string[]): string[] {
+        var plan: string[] = [];
+        var prev: string = "";
+        for (var i = 0; i < path.length; i++) {
+            if (path[i] === prev)
+                plan.push(path[i]);
+            else {
+                switch (path[i]) {
+                    case "d":
+                        plan.push("Dropping the " + "SOME FORM", "d");
+                        break;
+                    case "p":
+                        plan.push("Picking up the " + "SOME FORM", "p");
+                        break;
+                    case "l":
+                        plan.push("Moving left", "l");
+                        break;
+                    case "r":
+                        plan.push("Moving right", "r");
+                        break;
+                    default:
+                        plan.push("INITIATING SEQUENCE, PLEASE STAND BACK");
+                }
+            }
+        }
+        return plan;
+    }
+
     /*
         Costs for the heuristic:
         - The heuristic aim to return the number of moves that at least are needed
@@ -610,33 +638,54 @@ module Planner {
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     function testCloning(state: WorldState) {
+        console.log("------------TEST FOR CLONING------------");
         var cloned: WorldState = cloneWorldstate(state);
         if (cloned.arm == state.arm)
             console.log("STATES ARMS ARE EQUAL");
-        if (cloned.examples == state.examples)
-            console.log("STATES EXAMPLES ARE EQUAL");
         if (cloned.holding == state.holding)
             console.log("STATES HOLDING ARE EQUAL");
-        if (cloned.objects == state.objects)
-            console.log("STATES OBJECTS ARE EQUAL");
-        if (cloned.stacks == state.stacks)
-            console.log("STATES STACKS ARE EQUAL");
 
         state.stacks = null;
-        state.examples = null;
+        if (state.stacks === null)
+            console.log("STACKS ARE NOW NULL " + state.stacks);
+
         state.objects = null;
-        console.log("Current state: " + state.arm);
-        console.log("Current state: " + state.examples);
-        console.log("Current state: " + state.holding);
-        console.log("Current state: " + state.objects);
-        console.log("Current state: " + state.stacks);
-        console.log("Cloned state: " + cloned.arm);
-        console.log("Cloned state: " + cloned.examples);
-        console.log("Cloned state: " + cloned.holding);
+        if (state.objects === null)
+            console.log("OBJECTS ARE NOW " + state.objects);
+
         console.log("Cloned state: " + cloned.objects);
         console.log("Cloned state: " + cloned.stacks);
+
+        console.log("Cloning back to original");
         state.stacks = cloneObject(cloned.stacks);
         state.objects = cloneObject(cloned.objects);
+        console.log("Original state: " + state.objects);
+        console.log("Original state: " + state.stacks);
+        
+        //Testing the equality for the stacks
+        var equal = true;
+        for (var i = 0; i < state.stacks.length; i++) {
+            for (var j = 0; j < state.stacks[i].length; j++) {
+                if (!(state.stacks[i][j] === cloned.stacks[i][j])) {
+                    equal = false;
+                }
+            }
+        }
+
+        //Testing the equality for objects
+        var l: string;
+        for (l in state.objects) {
+            if (!(cloned.objects[l].color === state.objects[l].color))
+                equal = false;
+            if (!(cloned.objects[l].form === state.objects[l].form))
+                equal = false;
+            if (!(cloned.objects[l].size === state.objects[l].size))
+                equal = false;
+        }
+        
+
+        console.log("Success of cloning is " + equal);
+        console.log("---------------TEST DONE----------------");
     }
 
     export class Nworld implements N{
