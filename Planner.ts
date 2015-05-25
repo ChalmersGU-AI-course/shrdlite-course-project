@@ -401,7 +401,18 @@ module Planner {
             // Add one move to drop the picked up object, add one more sidestep if they shared stack 
             cost = findStack(primary, state.stacks) === findStack(target, state.stacks) ? cost + 2 : cost + 1;
         } else if (literal.rel === "beside") {
-            //TODO
+            var indexA = findStack(primary, state.stacks);
+            var indexB = findStack(target, state.stacks);
+            if (indexA === indexB) {
+                //If a & b share stack, pick up the one highest in the stack and add 2 (l|r, d)
+                var obj = howManyAbove(primary, state.stacks[indexA]) < howManyAbove(target, state.stacks[indexB]) ? primary : target;
+                cost = calculateHolding(obj, state) + 2;
+            } else { // a & b are several stacks apart
+                var costA = calculateHolding(primary, state);
+                var costB = calculateHolding(target, state);
+                cost = costA < costB ? costA : costB; //pickup the cheapest one
+                cost = cost + Math.abs(indexA - indexB); // add the distance, subtract 1 since less (l|r) and add 1 because (d)
+            }
         } else if (literal.rel === "leftof") {
             cost = calculateLeftOf(primary, target, state);
         } else if (literal.rel === "rightof") {
