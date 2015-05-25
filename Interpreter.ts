@@ -72,13 +72,15 @@ module Interpreter {
 
             if (maxEntitiesConsidered >= 1 && maxEntitiesConsidered <= 2) {
                 intprt = createUnLiterals(entities, "holding");
+            } else {
+                throw new Interpreter.Error("The arms can only hold a maximum of 2 objects!");
             }
         } else if (cmd.cmd == "put") {
+            // "Put" the currently held object(s) in relation to the locations
+            // specified
             if (cmd.what == "both") {
                 // Handle both held objects
                 if (state.holding1 && state.holding2) {
-                    // "Put" the currently held objects in relation to the locations
-                    // specified
                     var locEntities = interpretEntity(cmd.loc.ent, state);
 
                     var orStatements = [createBiLiteralsSpecifyFirstAND(locEntities, cmd.loc.rel, state.holding1),
@@ -86,7 +88,7 @@ module Interpreter {
 
                     intprt = flattenOrStatements(orStatements);
                 } else {
-                    // TODO: Throw error
+                    throw new Interpreter.Error("\"" + cmd.what + "\"? Arms do not hold 2 objects!");
                 }
             } else {
                 // Only 1 object
@@ -109,13 +111,18 @@ module Interpreter {
                 }
 
                 if (obj) {
-                    // "Put" the currently held object in relation to the locations
-                    // specified
                     var locEntities = interpretEntity(cmd.loc.ent, state);
 
                     intprt = createBiLiteralsSpecifyFirstAND(locEntities, cmd.loc.rel, obj);
                 } else {
-                    // TODO: Throw error
+                    // No object found
+                    if (!state.holding1 && !state.holding2) {
+                        throw new Interpreter.Error("\"" + cmd.what + "\"? The arms do not hold anything!");
+                    } else if (state.holding1 && state.holding2) {
+                        throw new Interpreter.Error("\"" + cmd.what + "\"? Which one?");
+                    } else {
+                        throw new Interpreter.Error("\"" + cmd.what + "\"? The arm does not hold anything!");
+                    }
                 }
             }
         } else if (cmd.cmd == "move") {
@@ -136,8 +143,7 @@ module Interpreter {
                     // Create a set of literals for moving the current obj(s) to
                     // all of the location requirements
                     var lits = createBiLiteralsSpecifyFirstAND(locEntities, cmd.loc.rel, obj);
-
-                    // TODO: Check if lits are allowed!
+                    
                     orStatements.push(lits);
                 });
 
