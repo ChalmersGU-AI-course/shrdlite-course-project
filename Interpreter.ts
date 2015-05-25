@@ -23,8 +23,10 @@ module Interpreter {
         }
     }
 
+
     export interface Result extends Parser.Result { intp: Literal[][]; }
     export interface Literal { pol: boolean; rel: string; args: string[]; }
+
 
     export function interpretationToString(res: Result): string {
         return res.intp.map((lits) => {
@@ -67,13 +69,17 @@ module Interpreter {
         */
         if (cmd.cmd === "put") {
             if (state.holding === null) {
-                throw new Interpreter.Error("No knowledge of 'it'");
+                //No knowledge of "it"
+                console.log("No knowledge of 'it'");
+                return null;
             }
             var possibleTargets = getTargetObjects(cmd, state);
             if (possibleTargets.length < 1) {
-                throw new Interpreter.Error("No target found");
+                console.log("No target found");
+                return null;
             } else if (possibleTargets.length > 1 && cmd.loc.ent.quant === "the") {
-                throw new Interpreter.Error("Please be more specific with the target location");
+                console.log("Please be more specific with the target location");
+                return null;
             }
             pobjs.push(state.holding);
             intprt = convertToPDDL(cmd, pobjs, possibleTargets);
@@ -86,12 +92,15 @@ module Interpreter {
         pobjs = getPrimaryObjects(cmd, state); 
         //  Abort if no object found, if ambiguity and the quantifier is 'the', ask for clarification
         if (pobjs.length === 0) {
-            throw new Interpreter.Error("You've asked for an object that doesn't exist in this world");
+            console.log("Can't pickup something does not exist in the world");
+            return null;
         } else if (cmd.ent.quant === "the" && pobjs.length > 1) {
-            throw new Interpreter.Error("Ambiguous interpretation, please be more specific");
+            console.log("Please be more specific");
             //Possible extension to save the current data and ask a clarification question      <---TODO?
-        } else if (pobjs[0] === "_") {
-            throw new Interpreter.Error("The floor can't be a primary object");
+            return null;
+        } else if(pobjs[0] === "_"){
+            console.log("the floor cannot be a primary object");
+            return null;
         }
 
         /*
@@ -108,7 +117,8 @@ module Interpreter {
             //Can't hold more than one object
             if (cmd.ent.quant === "all") {
                 //CHANGE IF ADDING ANOTHER ARM
-                throw new Interpreter.Error("There is not enough arms!");
+                console.log("Can't hold more than one object");
+                return null;
             }
             intprt = convertToPDDL(cmd, pobjs, null);
         }
@@ -126,14 +136,17 @@ module Interpreter {
             //----------------------------SAME AS "PUT"
             var possibleTargets = getTargetObjects(cmd, state);
             if (possibleTargets.length < 1) {
-                throw new Interpreter.Error("No target found");
+                console.log("No target found");
+                return null;
             } else if (possibleTargets.length > 1 && cmd.loc.ent.quant === "the") {
-                throw new Interpreter.Error("Please be more specific with the target location");
+                console.log("Please be more specific with the target location");
+                return null;
             }
             intprt = convertToPDDL(cmd, pobjs, possibleTargets);
             //----------------------------SAME AS "PUT"
         } else {
-            throw new Interpreter.Error("Found no valid command!");
+            console.log("Found no valid command");
+            return null;
         }
         return intprt;
     }
@@ -143,7 +156,9 @@ module Interpreter {
         if(secObj !== null && rel != null){
             var secondaryObjs:string[] = getPossibleObjects(secObj, state);
             possibleObjs = getRelation(possibleObjs, secondaryObjs, rel, state);
-        }        
+        }
+        //Anything more?
+        
         return possibleObjs;
     }
 
@@ -193,8 +208,6 @@ module Interpreter {
         var possibleObjects:string[] = [];
         // Loop through the world and look for possible items
         var objs: string[] = Array.prototype.concat.apply([], state.stacks);
-        if (state.holding !== null)
-            objs.push(state.holding);
         for (var s:number = 0; s < objs.length; s++) {
             var otemp:ObjectDefinition = state.objects[objs[s]];
             var stemp:collections.Set<string> = new collections.Set<string>();
@@ -283,6 +296,7 @@ module Interpreter {
                 }
             }
         }
+
         return interpretations;
     }
 
@@ -360,4 +374,9 @@ module Interpreter {
         }
         return cords;
     }
+
+    function getRandomInt(max):number {
+        return Math.floor(Math.random() * max);
+    }
+
 }
