@@ -315,7 +315,7 @@ class SVGWorld implements World {
         return function (callback?) {
             var duration2 = a2.call();
             var duration1 = a1.call();
-            if (callback) setTimeout(callback.bind(this), (duration1 + duration2 + this.animationPause) * 1000);
+            if (callback) setTimeout(callback.bind(this), (duration1 + duration2) * 1000);
         }
     } 
 
@@ -405,7 +405,7 @@ class SVGWorld implements World {
         }
         this.currentState.arm1 = newArm;
         if (callback) setTimeout(callback, (duration + this.animationPause) * 1000);
-        return duration;
+        return (duration + this.animationPause);
     }
 
     private verticalMove(action, callback?) {
@@ -431,7 +431,7 @@ class SVGWorld implements World {
             this.animateMotion(object, path3, 0, duration)
         }
         if (callback) setTimeout(callback, 2*(duration + this.animationPause) * 1000);
-        return duration;
+        return 2*(duration + this.animationPause);
     }
 
 private horizontalMove2(newArm, callback?) {
@@ -450,7 +450,7 @@ private horizontalMove2(newArm, callback?) {
         }
         this.currentState.arm2 = newArm;
         if (callback) setTimeout(callback, (duration + this.animationPause) * 1000);
-        return duration;
+        return (duration + this.animationPause);
     }
 
     private verticalMove2(action, callback?) {
@@ -476,7 +476,7 @@ private horizontalMove2(newArm, callback?) {
             this.animateMotion(object, path3, 0, duration)
         }
         if (callback) setTimeout(callback, 2*(duration + this.animationPause) * 1000);
-        return duration;
+        return 2*(duration + this.animationPause);
     }
 
     //////////////////////////////////////////////////////////////////////
