@@ -82,9 +82,6 @@ module Interpreter {
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
 
 
-    
-    
-    
         function getCandListFromEnt(ent : Parser.Entity) : CandList {
             var cands : string[] = getCandidatesFromObj(ent.obj);
             return {candidates : cands, quant : ent.quant};
@@ -211,73 +208,6 @@ module Interpreter {
             }
         }
         
-        function findObjectFromEnt(ent : Parser.Entity) : string {
-          var obj : Parser.Object = ent.obj;
-          var quant : string = ent.quant;
-          
-          if ((quant != "any") && (quant != "the")) {
-            throw new Error("Quantifier not implemented yet; use \"the\" or \"any\"");
-            //TODO: handle "any" differently from "the"
-          }
-          
-          var candidates : string[];
-          
-          candidates = findObjectsFromObject(obj);
-          
-          if (candidates.length == 0) {
-            throw new Interpreter.Error("Object cannot be found");
-          } else if (candidates.length > 1) {
-            var form : string = state.objects[candidates[0]].form;
-            throw new Ambiguity(form);
-          } else {
-            return candidates[0];
-          }
-          
-        }
-       
-          // Takes a Parser.Object, return a list of all objects it could refer to
-          function findObjectsFromObject(obj : Parser.Object) : string[] {
-          
-          var form : string = obj.form;
-          var color : string = obj.color;
-          var size : string = obj.size;
-          
-          var candidates : string[];
-          
-          if (form != null) {
-            // Simple case: size and colour are optional
-
-            
-          } else {
-            // Complex case: no size, colour or form;
-            // Only another object and location:
-            // e.g. [blue ball] [[left of] [any red box]]
-            // i.e. [obj2] [location: [rel] [ent]]
-            var obj2 = obj.obj;
-            var loc = obj.loc;
-            var candidatesForObject = findObjectsFromObject(obj2);
-            candidates =
-              candidatesWhichSatisfyRelation(candidatesForObject, loc);
-            return candidates;
-          }
-        }
-        
-        function candidatesWhichSatisfyRelation(cands : string[], loc : Parser.Location) : string[] {
-            var rel : string = loc.rel;
-            var ent : Parser.Entity = loc.ent;
-            // Then find the entity it's defined in relation to:
-            var otherObject : string = findObjectFromEnt(ent);
-            
-            var results : string[] = [];
-            cands.forEach((candidate) => {
-              if (fulfilsCondition(rel, candidate, otherObject)) {
-                  results.push(candidate);
-                }
-            });
-            return results;
-        }
-        
-        
         function find_obj(stacks : string[][], obj : string) {
           for (var i = 0 ; i < stacks.length; i++){
             for (var ii = 0 ; ii < stacks[i].length ; ii++){
@@ -287,22 +217,6 @@ module Interpreter {
             } 
           }
           throw new Error("No such object");
-        }
-            
-       
-
-        function findRelFromLoc(loc : Parser.Location) : string {
-          return loc.rel;
-          // Possible results: leftof, rightof, ontop, under, above, beside, inside
-        }
-        
-        function findObjectFromLoc(loc : Parser.Location) : string {
-          var ent : Parser.Entity = loc.ent;
-          return findObjectFromEnt(ent);
-        }
-        
-        function whatAreWeHolding() : string {
-          return state.holding;
         }
         
         function makeGoal(relation : string, objects : string[]) : Literal {
