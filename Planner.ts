@@ -101,40 +101,10 @@ module Planner {
             var doubleArmMovementCost = 1.5;
 
 
-            // pure arm use
-            var useArm1State = this.useArms(this.state, true, false);
-            if (useArm1State) {
-                n.push(new astar.Neighbor(useArm1State, singleArmMovementCost));
-            }
 
-            var useArm2State = this.useArms(this.state, false, true);
-            if (useArm2State) {
-                n.push(new astar.Neighbor(useArm2State, singleArmMovementCost));
-            }
             var useArmsState = this.useArms(this.state, true, true);
             if (useArmsState) {
                 n.push(new astar.Neighbor(useArmsState, doubleArmMovementCost));
-            }
-
-
-            // right arm
-            var moveArm1rState = this.moveArms(this.state, 1, 0);
-            if (moveArm1rState) {
-                n.push(new astar.Neighbor(moveArm1rState, singleArmMovementCost));
-            }
-            var moveArm1lState = this.moveArms(this.state, -1, 0);
-            if (moveArm1lState) {
-                n.push(new astar.Neighbor(moveArm1lState, singleArmMovementCost));
-            }
-
-            // left arm
-            var moveArm2rState = this.moveArms(this.state, 0, 1);
-            if (moveArm2rState) {
-                n.push(new astar.Neighbor(moveArm2rState, singleArmMovementCost));
-            }
-            var moveArm2lState = this.moveArms(this.state, 0, -1);
-            if (moveArm2lState) {
-                n.push(new astar.Neighbor(moveArm2lState, singleArmMovementCost));
             }
 
             // both arms, same direction
@@ -155,6 +125,17 @@ module Planner {
             var moveArmsInState = this.moveArms(this.state, +1, -1);
             if (moveArmsInState) {
                 n.push(new astar.Neighbor(moveArmsInState, doubleArmMovementCost));
+            }
+
+            // pure arm use
+            var useArm1State = this.useArms(this.state, true, false);
+            if (useArm1State) {
+                n.push(new astar.Neighbor(useArm1State, singleArmMovementCost));
+            }
+
+            var useArm2State = this.useArms(this.state, false, true);
+            if (useArm2State) {
+                n.push(new astar.Neighbor(useArm2State, singleArmMovementCost));
             }
 
             // mix states
@@ -194,6 +175,27 @@ module Planner {
                     andMoveArm1Right.actionMessage[1] = message2;
                     n.push(new astar.Neighbor(andMoveArm1Right, doubleArmMovementCost));
                 }
+            }
+
+
+            // right arm
+            var moveArm1rState = this.moveArms(this.state, 1, 0);
+            if (moveArm1rState) {
+                n.push(new astar.Neighbor(moveArm1rState, singleArmMovementCost));
+            }
+            var moveArm1lState = this.moveArms(this.state, -1, 0);
+            if (moveArm1lState) {
+                n.push(new astar.Neighbor(moveArm1lState, singleArmMovementCost));
+            }
+
+            // left arm
+            var moveArm2rState = this.moveArms(this.state, 0, 1);
+            if (moveArm2rState) {
+                n.push(new astar.Neighbor(moveArm2rState, singleArmMovementCost));
+            }
+            var moveArm2lState = this.moveArms(this.state, 0, -1);
+            if (moveArm2lState) {
+                n.push(new astar.Neighbor(moveArm2lState, singleArmMovementCost));
             }
 
             return n;
@@ -543,10 +545,10 @@ module Planner {
                 // we need to move to the according stack
                 // we need to pick up the desired object
                 if(state.holding1 && state.holding2) {
-                    return depth * 2 + distance + 2;
+                    return depth * 2 * 1.5 + distance + 2 * 1.5;
                 }
                 else {
-                    return depth * 2 + distance + 1;
+                    return depth * 2 * 1.5 + distance + 1 * 1.5;
                 }
             }
             return 0;
@@ -554,24 +556,14 @@ module Planner {
 
         getOntopEstimate(lit: Interpreter.Literal, state: WorldState): number {
             var positionTopObject = LiteralHelpers.getPositionOfObject(lit.args[0], state);
-            var positionBottomObject = LiteralHelpers.getPositionOfObject(lit.args[1], state);
 
-            if (positionTopObject && positionBottomObject) {
+            if (positionTopObject) {
                 var depthTop = state.stacks[positionTopObject [0]].length - positionTopObject[1] - 1;
-                var depthBottom = state.stacks[positionBottomObject [0]].length - positionBottomObject[1] - 1;
                 var distanceTop = Math.min(Math.abs(positionTopObject[0] - state.arm1), Math.abs(positionTopObject[0] - state.arm2));
-                var distanceBottom = Math.min(Math.abs(positionBottomObject[0] - state.arm1), Math.abs(positionBottomObject[0] - state.arm2));
-                var distanceBetweenObjects = Math.abs(positionTopObject[0] - positionBottomObject[0]);
-                var distance = Math.min(distanceTop, distanceBottom) + distanceBetweenObjects;
                 // to get away an object on top requires four actions
                 // we need to move to the according stack
                 // we need to pick up the desired object, move it, drop it
-                if (positionTopObject[0] == positionBottomObject[0]) {
-                    return depthBottom * 2 + distance + 2;
-                }
-                else {
-                    return depthTop * 2 + depthBottom * 2 + distance + 2;
-                }
+                return depthTop * 2 * 1.5 + distanceTop + 3;
             }
             return 0;
         }
