@@ -155,7 +155,7 @@ module Planner {
     }
 
     function distanceHeuristic(target: Interpreter.Literal[], world: WorldNode): number {
-        var distances = [];
+        var distances = [0];
 
         for (var i = 0; i < target.length; ++i) {
             var literal = target[i];
