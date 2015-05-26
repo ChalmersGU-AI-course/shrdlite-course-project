@@ -405,22 +405,29 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
     heuristic_cost_estimate(current:number, goal:Interpreter.Literal[]):number{
         var count = 0;
+        var morethanone : boolean = goal.length > 1;
         for(var i = 0; i < goal.length; i++ ){
             if(goal[i] != null){
-                count += this.heuristic_cost(current, goal[i]);
+                count += this.heuristic_cost(current, goal[i], morethanone);
             }
         }
         return count;
     }
 
-    heuristic_cost(current:number, goal:Interpreter.Literal):number{//some parts can be improved
+    heuristic_cost(current:number, goal:Interpreter.Literal, morethanone : boolean):number{//some parts can be improved
         var cond = goal;
         var state = this._nodeValues[current];
 
         var a = cond.args[0];
+        var b = cond.args[1];
         var pddls = state.pddl.toArray();
         var count = 0;
         var samePile:boolean = false;
+        
+        var posA = this.getPosition(a,state);
+    	var posB = this.getPosition(b,state);
+    	var ontopA = this.countOnTop(a,state,pddls);
+    	var ontopB = this.countOnTop(b,state,pddls);
         
         if(this.checkGoal(current, goal)){
             return 0;
@@ -432,23 +439,16 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                     return 0;
                 }
                 else{
-                    return this.countOnTop(a,state,pddls)*4 + Math.abs(this.getPosition(a,state)-state.arm-1) +1;//should maybe be +2..
+                    return ontopA*4 + Math.abs(posA-state.arm-1) +1;//should maybe be +2..
                 }
             }
             else{
-                return this.countOnTop(a,state,pddls) + Math.abs(this.getPosition(a,state)-state.arm);
+                return ontopA + Math.abs(posA-state.arm);
             }
         }
 
-        var b = cond.args[1];
-
-
         if(cond.rel == "ontop" || cond.rel == "inside"){
-        	var posA = this.getPosition(a,state);
-        	var posB = this.getPosition(b,state);
-        	var ontopA = this.countOnTop(a,state,pddls);
-        	var ontopB = this.countOnTop(b,state,pddls);
-        	
+
             //if a above b, take #objects on b * 4 + (ifnotinsamepile)#objects on a*4 + distancefromcrane to a + distancefromatob
             
             if(state.holding == a && ontopB == 0){// if we are holding the objective
@@ -458,7 +458,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             	count += ontopA*4 + Math.abs(posA-state.arm) + 3;
             	if(this.getTopRelation(state.arm, state) && this.checkLegalLit(b, this.getTopRelation(state.arm,state).args[0], state)){
             		count += 1;
-            	}else{
+            	}else if(!morethanone){
             		count += this.costToClosestLegalNewPos(b, a, state.arm, state);
             	}
             	
@@ -470,7 +470,11 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             	count += (ontopB-1)*4 + Math.abs(posB-state.arm);
             	// find shortest path to a possition to place the obj at the top
             	var ontopColB = this.getTopRelation(posB , state);
-	            count += this.costToClosestLegalNewPos(ontopColB.args[0], a, posB, state);
+            	if(!morethanone){
+	            	count += this.costToClosestLegalNewPos(ontopColB.args[0], a, posB, state);
+	            }else{
+	            	count += 4;
+	            }
             	if(posA == posB){
             		//count += 4;	// if they are in same column, then we have to move away an then back again min 4.
             	}
@@ -483,7 +487,11 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             	count += (ontopA-1)*4 +Math.abs(posA-state.arm);
             	// find shortest path to a possition to place the obj at the top
             	var ontopColA = this.getTopRelation(posA , state);
-            	count += this.costToClosestLegalNewPos(ontopColA.args[0], b, posA, state);
+            	if(!morethanone){
+            		count += this.costToClosestLegalNewPos(ontopColA.args[0], b, posA, state);
+            	}else{
+	            	count += 4;
+	            }
             }else{
             	count += Math.abs(posA-state.arm);
             }
@@ -492,58 +500,17 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }else{
             	count += 2;
             }
-            
-        /*   var z = b;
-            //traverse up through b;
-            for(var index = 0; index < pddls.length; index++){
-                var pddl = pddls[index];
-                var x = pddl.args[1];
-                // find the literal ontop of this one
-                if(x == z && (pddl.rel == "ontop" || pddl.rel == "inside")){
-                    if(pddl.args[0]==a){	// if pddl ??
-                        if(pddl.args[1]==b){
-                            count =0 ;
-                            break; 	// if b
-                        }
-                        samePile = true;
-                    }
-                    else{
-                        z = pddl.args[0];
-                        index = -1;
-                        count++;
-                    }
-                }
-            }
-            
-            //if a is not in the same pile as b, check how many objects on top of a
-            if(!samePile){ 
-                z= a;//z ==a...
-                for(var index = 0; index < pddls.length; index++){
-                    var pddl = pddls[index];
-                    var x = pddl.args[1];
-                    if(x == z){
-                        z = pddl.args[0];
-                        index = -1;
-                        count++;
-                    }
-                }
-                //check distance from crane to a + distance from a to b, also multiply count by 4(number of moves for each object)
-                count = count * 4 + Math.abs(posA-state.arm) + Math.abs(posA - posB);
-            }
-            else{
-               count = count * 4 + Math.abs(posA - state.arm) + 3;//if they are in the same pile but not finished, a will require 3 more moves to get back
-            }*/
             return count; 
 
         }
         else if(cond.rel == "above"){
             if(state.holding != null && state.holding == a){
-                return 1 + Math.abs(this.getPosition(b,state) - state.arm);
+                return 1 + Math.abs(posB - state.arm);
             }
             else if(state.holding != null && state.holding== b){
-                return 1+ this.countOnTop(a,state,pddls)*4 + Math.abs(this.getPosition(a,state)-state.arm)*2;
+                return 1+ ontopA*4 + Math.abs(posA-state.arm)*2;
             }
-            if(this.getPosition(a,state) == this.getPosition(b,state) && this.getPosition(b,state) > this.countOnTop(a,state,pddls))//check if completed
+            if(posA == posB && ontopB > ontopA)//check if completed
                 return 0;
             var z = a;
             //traverse up through a;
@@ -562,19 +529,15 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
             }
             count = count*4;
-            if(this.getPosition(a,state) == this.getPosition(b,state))
-                   count += 3 + Math.abs(this.getPosition(b,state) - state.arm);
+            if(posA == posB)
+                   count += 3 + Math.abs(posB - state.arm);
             else{
-                count += Math.abs(this.getPosition(a,state)-state.arm) + Math.abs(this.getPosition(a,state)-this.getPosition(b,state));
+                count += Math.abs(posA-state.arm) + Math.abs(posA-posB);
             }
 
             return count;
         }
         else if(cond.rel == "under"){
-        	var posA = this.getPosition(a,state);
-        	var posB = this.getPosition(b,state);
-        	var ontopA = this.countOnTop(a,state,pddls);
-        	var ontopB = this.countOnTop(b,state,pddls);
         	
         	// check number of objs above b 
         	count += (this.countOnTop(b, state, state.pddl.toArray()) * 4);
@@ -601,65 +564,58 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         } 
         else if(cond.rel == "rightof"){//currently not handling if B is in holding
 
-            if(state.holding != null && state.holding== a && this.getPosition(b,state) != this.amountOfTiles(b,state,pddls)){
-                return Math.abs(this.getPosition(b,state)-state.arm+1); // currently not checking if stack next to b is full
+            if(state.holding != null && state.holding== a && posB != this.amountOfTiles(b,state,pddls)){
+                return Math.abs(posB-state.arm+1); // currently not checking if stack next to b is full
 
             }
             else if(state.holding != null && state.holding== b){
-                return 1+ this.countOnTop(a,state,pddls)*4 + Math.abs(this.getPosition(a,state)-state.arm)*2;
+                return 1+ ontopA*4 + Math.abs(posA-state.arm)*2;
             }
 
-            if(this.getPosition(b,state) == this.amountOfTiles(b,state,pddls)){//not perfect
-                count = this.countOnTop(a,state,pddls)*4 + this.countOnTop(b,state,pddls) + Math.abs(this.getPosition(b,state)-state.arm) 
-                + (Math.abs(this.getPosition(a,state)-this.getPosition(b,state)-1))+2;//not working if both in the last stack?
+            if(posB == this.amountOfTiles(b,state,pddls)){//not perfect
+                count = ontopA*4 + ontopB + Math.abs(posB-state.arm) 
+                + (Math.abs(posA-posB-1))+2;//not working if both in the last stack?
             }
 
-            if(this.countOnTop(b,state,pddls)>this.countOnTop(a,state,pddls)){
+            if(ontopB>ontopA){
 
-                count = this.countOnTop(b,state,pddls)*4 + Math.abs(this.getPosition(b,state)-state.arm) + (Math.abs(this.getPosition(a,state)
-                -this.getPosition(b,state)+1))+2;//+2 is for picking up and dropping b 
+                count = ontopB*4 + Math.abs(ontopB-state.arm) + (Math.abs(posA-posB+1))+2;//+2 is for picking up and dropping b 
             }
             else{
                 //move A
-                count = this.countOnTop(a,state,pddls)*4 + Math.abs(this.getPosition(a,state)-state.arm) + (Math.abs(this.getPosition(a,state)
-                    -this.getPosition(b,state)+1))+2;
+                count = ontopA*4 + Math.abs(posA-state.arm) + (Math.abs(posA-posB+1))+2;
             }
 
         }
         else if(cond.rel == "leftof"){
-            if(state.holding != null && state.holding== a && this.getPosition(b,state) != 0){
-                return Math.abs(this.getPosition(b,state)-state.arm-1); // currently not checking if stack next to b is full
+            if(state.holding != null && state.holding== a && posB != 0){
+                return Math.abs(posB-state.arm-1); // currently not checking if stack next to b is full
 
             }
             else if(state.holding != null && state.holding== b){
                 if(this.amountOfTiles(a,state,pddls) == state.arm)
-                    return 2+ this.countOnTop(a,state,pddls)*4 + Math.abs(this.getPosition(a,state)-state.arm)*2;
-                return 1+ this.countOnTop(a,state,pddls)*4 + Math.abs(this.getPosition(a,state)-state.arm)*2;
+                    return 2+ ontopA*4 + Math.abs(posA-state.arm)*2;
+                return 1+ ontopA*4 + Math.abs(posA-state.arm)*2;
             }
 
             if(this.getPosition(b,state) == 0){//not perfect
-                count = this.countOnTop(a,state,pddls)*4 + this.countOnTop(b,state,pddls) + Math.abs(this.getPosition(b,state)-state.arm) 
-                + (Math.abs(this.getPosition(a,state)-this.getPosition(b,state)-1))+2;
+                count = ontopA*4 + ontopB + Math.abs(posB-state.arm) 
+                + (Math.abs(posA-posB-1))+2;
             }
 
-            else if(this.countOnTop(b,state,pddls)>this.countOnTop(a,state,pddls)){
+            else if(ontopB>ontopA){
 
-                count = this.countOnTop(a,state,pddls)*4 + Math.abs(this.getPosition(a,state)-state.arm) 
-                + (Math.abs(this.getPosition(a,state)-this.getPosition(b,state)-1))+2;//+2 is for picking up and dropping b 
+                count = ontopA*4 + Math.abs(posA-state.arm) 
+                + (Math.abs(posA-posB-1))+2;//+2 is for picking up and dropping b 
             }
             else{
                 //move B
-                count = this.countOnTop(b,state,pddls)*4 + Math.abs(this.getPosition(b,state)-state.arm) 
-                + (Math.abs(this.getPosition(a,state)-this.getPosition(b,state)-1))+2;
+                count = ontopB*4 + Math.abs(posB-state.arm) 
+                + (Math.abs(posA-posB-1))+2;
             }
 
         }
         else if(cond.rel == "beside"){
-        	var posA = this.getPosition(a,state);
-        	var posB = this.getPosition(b,state);
-        	
-        	var ontopA = this.countOnTop(a,state,pddls);
-        	var ontopB = this.countOnTop(b,state,pddls);
         	// if holding then 
             if(state.holding== a){
             	var dist = Math.abs(posB-state.arm);
@@ -956,26 +912,28 @@ module Planner {
         					function (a : number[], b : number[]){
         						return b.length - a.length;
         					});
-        					
+        var morethanone : boolean = intprt[0].length > 1;
         // sort intprt after the heuristic cost for the literals
         var sortedIntrpt = new collections.PriorityQueue<Interpreter.Literal[]>(
         					function (a : Interpreter.Literal[], b : Interpreter.Literal[]){
         						var costA = 0;
+        						
         						for(var i = 0; i < a.length; i++){
-        							costA += sp1.heuristic_cost(0,a[i]);
+        							costA += sp1.heuristic_cost(0,a[i], morethanone);
         						}
         						var costB = 0;
         						for(var i = 0; i < b.length; i++){
-        							costB += sp1.heuristic_cost(0,b[i]);
+        							costB += sp1.heuristic_cost(0,b[i], morethanone);
         						}
         						return costB - costA;
         					});
         for(var i = 0; i < intprt.length; i++){
+        	morethanone = intprt[i].length > 1;
         	var debugcost = 0;
         	var debugprint = "";
         	for(var k = 0; k < intprt[i].length; k++){
         		debugprint += intprt[i][k].args.toString() + " ";
-        		debugcost += sp1.heuristic_cost(0,intprt[i][k]);
+        		debugcost += sp1.heuristic_cost(0,intprt[i][k],morethanone);
         	}
         	console.log("Lit: " + debugprint + " cost: " + debugcost);
         	sortedIntrpt.enqueue(intprt[i]);
