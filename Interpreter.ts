@@ -296,7 +296,28 @@ module Interpreter {
                 }
             }
         }
-
+        //The following snippet allows for handling of "any" obj related to "all" without counting itself.
+        //When the relation is 'leftof', 'rightof' or 'beside', the objects doesn't try to relate to themselves.
+        //However, for any other relation we purposely don't remove such interpretations.  
+        if (cmd.loc !== undefined) {
+            if (cmd.ent.quant === "all" || cmd.loc.ent.quant === "all") {
+                    var validInterpretations: Literal[][] = [];
+                    for (var i = 0; i < interpretations.length; i++) {
+                        var conjunction: Literal[] = [];
+                        for (var j = 0; j < interpretations[i].length; j++) {
+                            var rel = interpretations[i][j].rel;
+                            if (rel === "leftof" || rel === "rightof" || rel === "beside") {
+                                if (interpretations[i][j].args[0] !== interpretations[i][j].args[1])
+                                    conjunction.push(interpretations[i][j]);
+                            } else
+                                conjunction.push(interpretations[i][j]);
+                        }
+                        if (conjunction.length > 0)
+                            validInterpretations.push(conjunction);
+                    }
+                interpretations = validInterpretations;
+            }
+        }
         return interpretations;
     }
 
