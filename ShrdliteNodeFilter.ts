@@ -92,6 +92,18 @@ class ShrdliteNodeFilter implements GraphFilter {
                         return 0;
                 }
                 break;
+            case 'stack':
+                var max = 0;
+                for (var i = 0; i < node.state.stacks.length; ++i) {
+                    var no = 0;
+                    for (var j = 0; j < this.intptr.args.length; ++j)
+                        if (node.state.stacks[i].indexOf(this.intptr.args[j]) != -1)
+                            ++no;
+                    if (no > max)
+                        max = no;
+                }
+                return this.intptr.args.length - max;
+                break;
             default:
                 alert('no');
                 return 0;
