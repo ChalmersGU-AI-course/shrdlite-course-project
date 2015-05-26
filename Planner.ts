@@ -302,7 +302,7 @@ module Planner {
                     var height = (stack.length);
                     var objectToHold = stack[height-1];
                     stack.pop();
-                    newstate.holding = objectToHold;//Alt stack[height-1]
+                    newstate.holding = objectToHold;
                     newstate.stacks = astate.stacks.slice();
                     newstate.stacks[astate.arm] = stack.slice();
                     newstate.msg = ("Picking up the "+ state.objects[objectToHold].form);
@@ -316,7 +316,7 @@ module Planner {
                     newstate.stacks[astate.arm] = stack;
                     newstate.arm = astate.arm;
                     newstate.msg = ("Dropping the "+ state.objects[objectToDrop].form) ;
-                    return newstate; //&& (state.stacks[state.arm])
+                    return newstate; 
             }
                     //Alternative: returns always false
                     throw new Error("not yet implemented");
@@ -590,10 +590,35 @@ module Planner {
         } catch (err) {
             throw new Error("Impossible problem.");
         }
-        for (var p = 1; p < path.length; p++){
-            plan.push((<ActionState>path[p]).msg);
-            plan.push((<ActionState>path[p]).action.command);            
+        { // Extra block to prevent variable confusion - limits the scope.
+            var state_stack = [];
+            var current;
+            var message;
+            for (var p = 1; p < path.length; p++){
+                plan.push((<ActionState>path[p]).action.command);
+                current = (<ActionState> path[p]);
+                if ((current.action.command == "d") &&  (state_stack.length != 0) 
+                    && ((state_stack[state_stack.length - 1]).action.command == "p")){
+                    var obj = state_stack.pop();
+                    var color = (state.objects[obj.holding].color != "anyform") ? (" " + (state.objects[obj.holding].color)) : "" ;
+                    var form  = (state.objects[obj.holding].form) ? (" " + (state.objects[obj.holding].form)) : "";
+                    message = "Moving a " + color + form;    
+                    plan.push(message);
+                    
+                } else if (current.action.command == "p" ){
+                    if (p == (path.length - 1)){
+                        plan.push(current.msg);
+                    }
+                    state_stack.push(current); 
+                } else if ((current.action.command == "d") && (p == 1)){
+                        plan.push(current.msg);
+                }
+            }
         }
+        // for (var p = 1; p < path.length; p++){
+        //     plan.push((<ActionState>path[p]).msg);
+        //     plan.push((<ActionState>path[p]).action.command);            
+        // }
         return plan;
     }
 }
