@@ -165,7 +165,7 @@ module Planner {
 
             var argDistances = literal.args.map(function(arg) {
                 var position = world.GetObjectColumn(arg);
-                if (position) {
+                if (position !== null) {
                     return Math.abs(position - world.State.arm);
                 }
                 return 0;
@@ -177,7 +177,7 @@ module Planner {
                 for (var j = 1; j < literal.args.length; ++j) {
                     var firstPos = world.GetObjectColumn(literal.args[j - 1]);
                     var secondPos = world.GetObjectColumn(literal.args[j]);
-                    if (firstPos && secondPos) {
+                    if (firstPos !== null && secondPos !== null) {
                         distance += Math.abs(firstPos - secondPos);
                     }
                 }
@@ -347,7 +347,7 @@ module Planner {
 
         GetBlockingObjects(object: string): string[] {
             var position = this.FindObjectPosition(object);
-            if (!position) {
+            if (position === null) {
                 return [];
             }
 
