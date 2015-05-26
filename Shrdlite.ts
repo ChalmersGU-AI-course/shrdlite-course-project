@@ -171,8 +171,8 @@ module Shrdlite {
                 throw new Interpreter.Ambiguity(); // throw sth-else!
             }
             if (status === "multiValidInterpret"){
-                world.printSystemOutput("There're multiple valid interpretation");
-                world.printSystemOutput("But Im lazy and only performs minimum plan");
+                world.printSystemOutput("There are multiple valid interpretation");
+                world.printSystemOutput("But I am lazy and only performs minimum plan");
                 // clean up for multiValidInterpret
                 world.currentState.status = [];
             }
