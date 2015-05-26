@@ -11,7 +11,12 @@ module Planner {
         var plans : Result[] = [];
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
-            plan.plan = planInterpretation(plan.intp, currentState);
+            try {
+                plan.plan = planInterpretation(plan.intp, currentState);
+            }
+            catch(err) {
+                return;
+            }
             if (plan.plan) {
                 plans.push(plan);
             }
