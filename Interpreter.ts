@@ -8,6 +8,7 @@ module Interpreter {
 
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
+        var differentParseStrings = [];
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
@@ -18,6 +19,13 @@ module Interpreter {
         if (interpretations.length == 1) {
             return interpretations;
         } else if (interpretations.length > 1) {
+            //world.printDebugInfo("Ambiguous statement, wich of the following did you mean?");
+            //Print claryfied statements in a loop
+            parses.forEach((parseresult) => {
+                var clarification = clarifyParseTree(parseresult);
+                throw new Interpreter.Error(clarification);
+            });
+
             throw new Interpreter.Error("Ambiguous statement");
         } else  {
             throw new Interpreter.Error("Found no interpretation");
@@ -49,6 +57,25 @@ module Interpreter {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
+
+
+
+
+
+    //Action
+    //Find nested description
+    function clarifyParseTree(parse : Parser.Result) : string{
+        //If entety and target location is defined?
+        var output = "";
+        if(parse.prs.ent && parse.prs.loc){
+            output = ""+parse.prs.ent +" that is " + parse.prs.loc;
+        }else if(parse.prs-ent){
+            output = ""+parse.prs.ent.obj +"that is" parse.prs.ent.loc;
+        }
+
+        return (output);
+        
+    }
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         var matching: string[];
