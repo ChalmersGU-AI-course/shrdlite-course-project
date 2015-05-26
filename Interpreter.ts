@@ -621,6 +621,7 @@ module Interpreter {
 		//todo: ambigous stuff like "move the ball on the floor" currently produces two PDDL goals when there are two balls present
 		//solution (maybe): quantifier is "the" and we receive more than 1 PDDL goal -> ambiguous!
 		//todo: put all balls in a box on the floor
+		//todo: pruning maybe only for origins? because the destination you can create!
 		//todo: move a ball inside a box
 		//todo: move command when you are already holding sth
 		public getInterpretation() : Literal[][] {

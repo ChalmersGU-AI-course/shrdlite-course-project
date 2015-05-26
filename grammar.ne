@@ -68,7 +68,7 @@ relation --> ("on" | "on" "top" "of")    {% R("ontop") %}
 relation --> ("under" | "below")         {% R("under") %}
 relation --> ("beside")                  {% R("beside") %}
 relation --> ("above")                   {% R("above") %}
-relation --> ("behind" | "behind of")    {% R("behind") %}
+relation --> ("behind" | "behind" "of")    {% R("behind") %}
 relation --> ("in" "front" "of" | "in front")    {% R("infront") %}
 
 size --> ("small" | "tiny")  {% R("small") %}

@@ -170,6 +170,7 @@ ExampleWorlds["3D"] = {
         "take the white ball",
         "put all boxes on the floor",
         "move all balls inside a large box",
+        "move the white ball in front of the yellow box on the floor",
         "move the black ball in a yellow box on a blue table"
     ],
     rowLength: 3

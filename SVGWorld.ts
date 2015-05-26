@@ -69,7 +69,8 @@ class SVGWorld implements World {
 
 		public printPickList(elements : string[], callback) {
 			$('<select>').attr("class", "pick")
-					//.attr('style', 'box-shadow: black 0.1em 0.1em 0.1em; border: solid blue; border-radius: 0.05em' )
+					.attr('style', 'padding: 0.1em' ) 
+					//; border: solid blue; border-radius: 0.05em' )
 					.insertBefore(this.containers.inputform)
 					.change(function() {
 						//alert("something was clicked.");

@@ -14,11 +14,14 @@ module Shrdlite {
                 if (!plan) {
                     plan = parseUtteranceIntoPlan(world, utterance);
                 }
-								//if (plan[0] == "ambi") {
-							//		var askQuestion = () => world.printPickList(plan, endlessLoop); 
-							//		askQuestion();
-							//		return;
-							//	}
+								//TODO: this is ugly ;)
+								if (plan) {
+									if (plan[0] == "Please select ...") {
+										var askQuestion = () => world.printPickList(plan, endlessLoop); 
+										askQuestion();
+										return;
+									}
+								}
                 if (plan) {
                     world.printDebugInfo("Plan: " + plan.join(", "));
                     world.performPlan(plan, nextInput);
@@ -73,7 +76,8 @@ module Shrdlite {
             interpretations.forEach((res, n) => {
                 s.push(Interpreter.interpretationToSentence(res, world.currentState));
             });
-						return ["ambi"].concat(s);
+						//TODO: very ugly ;)
+						return ["Please select ..."].concat(s);
         }
 
         try {
