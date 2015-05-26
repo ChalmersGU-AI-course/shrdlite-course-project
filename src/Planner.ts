@@ -165,11 +165,15 @@ module Planner {
         for(var i=0; i<intprt.length; i++) { // Plan each interpretation.
             var plan = new Plan(state.arm);
             var moves = solveByAStar(new State(state.stacks,[]), intprt[i]);
-            if(state.holding && moves.length!=0) { // If the arm was holding something
-                if(moves[0].pick==state.arm) {
-                    var drop=moves.shift().drop;
-                    if(drop!=-1) { // In the stupid case where the arm already holds the object.
-                        plan.move(drop);
+            if(state.holding) { // If the arm was holding something
+                if(moves.length!=0) {
+                    if(moves[0].pick==state.arm) {
+                        var drop=moves.shift().drop;
+                        if(drop!=-1) { // In the stupid case where the arm already holds the object.
+                            plan.move(drop);
+                            plan.drop();
+                        }
+                    } else {
                         plan.drop();
                     }
                 } else {

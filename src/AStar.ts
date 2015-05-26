@@ -1,4 +1,4 @@
-///<reference path="./collections"/>
+///<reference path="collections.ts"/>
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Planner.ts"/>
 
@@ -15,8 +15,7 @@ module AStar {
 
         start.setScores(0,heuristic(start.content,goalConditions));
         openset.setValue(start.content.hash, start);
-
-        console.log("D�but AStar !");
+        
         console.dir(openset);
         while (!openset.isEmpty()) { // openset is not empty
             var current: Node = lowestFScoreNode(openset);
