@@ -72,17 +72,15 @@ heuristicFunction = (state, goalRep) ->
         mindist = 10000 #INF
         for stack,i in state.stacks
           if si1 is i
-            mindist = Math.min(mindist, 6 + 3*stack.indexOf(e1))
+            mindist = Math.min(mindist, 6 + 4*stack.indexOf(e1))
           else
             if e1 isnt state.holding
-              mindist = Math.min(mindist, 2 + Math.abs(i-si1) + 3*state.stacks[i].length)
+              mindist = Math.min(mindist, 2 + Math.abs(i-si1) + 4*state.stacks[i].length)
             else
-              mindist = Math.min(mindist, 1 + Math.abs(i-state.arm) + 3*state.stacks[i].length)
+              mindist = Math.min(mindist, 1 + Math.abs(i-state.arm) + 4*state.stacks[i].length)
         if e1 isnt state.holding
           stack = state.stacks[si1]
           if stack.indexOf(e1) isnt 0
-            sum += 4*(stack.length-stack.indexOf(e1))
-            # cost for items above e1  
             sum += 4*(stack.length-stack.indexOf(e1) - 1)
             # cost for lifting e1, and dropping at new location
             sum += mindist
@@ -127,7 +125,9 @@ heuristicFunction = (state, goalRep) ->
               sum += Math.abs(1 - (state.arm - si1)) + 1
             else
               # The distance should be 1 and +2 for pick and drop
-              sum += Math.abs(1 - (si2-si1)) + 2
+              costOver1 = 4*(state.stacks[si1].length - state.stacks[si1].indexOf(e1) - 1)
+              costOver2 = 4*(state.stacks[si2].length - state.stacks[si2].indexOf(e2) - 1)
+              sum += Math.abs(1 - (si2-si1)) + 2 + Math.min(costOver1, costOver2)
           when "rightof"
             if e1 is state.holding
               # The distance should be 1 and +1 for drop
@@ -136,14 +136,21 @@ heuristicFunction = (state, goalRep) ->
               sum += Math.abs(1 - (si1 - state.arm)) + 1
             else
               # The distance should be 1 and +2 for pick and drop
-              costOver1 = 4*(state.stacks[si1].length-state.stacks[si1].indexOf(e1) - 1)
-              costOver2 = 4*(state.stacks[si2].length-state.stacks[si2].indexOf(e2) - 1)
+              costOver1 = 4*(state.stacks[si1].length - state.stacks[si1].indexOf(e1) - 1)
+              costOver2 = 4*(state.stacks[si2].length - state.stacks[si2].indexOf(e2) - 1)
               sum += Math.abs(1 - (si1-si2)) + 2 + Math.min(costOver1, costOver2)
           when "beside"
             if e1 is state.holding
               sum += Math.abs(state.arm - si2) + 1
             else if e2 is state.holding
               sum += Math.abs(state.arm - si1) + 1
+            else
+              dist = Math.abs(Math.abs(si1 - si2) - 1)
+              sum += dist + if dist > 1 then Math.min(Math.abs(state.arm - si1), Math.abs(state.arm - si2)) + 2 else 0
+              costOver1 = 4*(state.stacks[si1].length - state.stacks[si1].indexOf(e1) - 1)
+              costOver2 = 4*(state.stacks[si2].length - state.stacks[si2].indexOf(e2) - 1)
+              sum += if state.holding isnt null then 1 else 0
+              sum += Math.min(costOver1, costOver2)
           when "above"
             if e1 is state.holding
               sum += Math.abs(state.arm - si2) + 1
