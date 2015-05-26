@@ -8,6 +8,9 @@ module Shrdlite {
     export function interactive(world : World) : void {
         function endlessLoop(utterance : string = "") : void {
             var inputPrompt = "What can I do for you today? ";
+	    // Clear up after this prompt
+	    world.currentState.status = [];
+            world.currentState.ambiguousObjs = [[]];
             var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
             if (utterance.trim()) {
                 //world.printSystemOutput(utterance);
