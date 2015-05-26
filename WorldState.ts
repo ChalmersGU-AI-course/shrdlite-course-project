@@ -262,7 +262,7 @@ class WorldState {
      */
     objectsOnTop(obj : string) : number {
         if (obj == "floor") {
-            return this.stacks[this.getLowestStackIndex()-1].length;
+            return this.stacks[this.getLowestStackIndex()].length;
         } else {
             var objectsOnTop = -1;
 
@@ -412,14 +412,33 @@ class WorldState {
      */
     getLowestStackIndex() : number {
         var min = 10000;
-        var ix = 1;
+        var ix = 0;
         var minStack = ix;
 
         this.stacks.forEach((stack) => {
-            if(stack.length < min) {
+            if(stack.length <= min) {
                 min = stack.length;
-                minStack = ix++;
+                minStack = ix;
             }
+            ix++;
+        });
+
+        return minStack;
+    }
+
+    getLowestStackIndexNearby(obj : string) : number {
+        var objStackIx = this.holding === obj ? this.arm : this.getStackIndex(obj);
+        var min = 10000;
+        var dist = 10000;
+        var ix = 0;
+        var minStack = ix;
+
+        this.stacks.forEach((stack) => {
+            if(stack.length <= min && Math.abs(ix-objStackIx) < dist) {
+                min = stack.length;
+                minStack = ix;
+            }
+            ix++;
         });
 
         return minStack;
