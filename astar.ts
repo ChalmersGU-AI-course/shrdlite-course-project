@@ -71,7 +71,7 @@ module astar {
         }
 
         searchPath(start: INode): Result {
-            var TIMEOUT = 100000;
+            var TIMEOUT = 500000//100000;
 
             var queue = new collections.PriorityQueue<QueueElement>(entryCompare);
             var visited = new collections.Dictionary<INode,number>(function(node: INode) { return node.getUniqueId(); });
