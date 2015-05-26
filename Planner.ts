@@ -83,31 +83,7 @@ module Planner {
         return Interpreter.isRelativeMatch(firstObject, literal.rel, secondObject, state);
     }
 
-    function getHeuristicFunction(targetLiteral : Interpreter.Literal[][]) {
-        return function numberOfMismatches(fromWorld : WorldNode, world : WorldNode) : number {
-            var minCost = Infinity;
-            for (var i=0; i < targetLiteral.length; ++i) {
-                var relTarget : Interpreter.Literal[] = targetLiteral[i]
-                var mismatches : number = 0;
-                //var objectList : string[] = [];
-                for (var j=0; j< relTarget.length; ++j) {
-                    if (!stateSatisfiesLiteral(world.State, relTarget[j])) {
-                        ++mismatches;
-                    }
-                    //objectList.concat(relTarget[j]);
-                }
-                //var objects = new Set(objectList);
-                //var numBlockingObjects : number = GetBlockingObjects(world.State, objects);
-                var currentCost : number = mismatches;// + numBlockingObjects;
-                if (currentCost < minCost){
-                    minCost = currentCost;
-                }
-            }
-            return minCost;
-        };
-    }
-
-    function getHeuristicFunction2(targetLiteral: Interpreter.Literal[][]) {
+    function getHeuristicFunction(targetLiteral: Interpreter.Literal[][]) {
         var heuristicSubFunctions = [numBlockingObjectsHeuristic, distanceHeuristic];
 
         return function(fromWorld: WorldNode, world: WorldNode): number {
@@ -411,6 +387,7 @@ module Planner {
             }
             return true;
         }
+        
         toString() : string {
             var stacksString = this.State.stacks.map(function(v) { return "[" + v.toString() + "]"});
             return stacksString + ";" + this.State.holding + ";" + this.State.arm;
@@ -424,7 +401,7 @@ module Planner {
             }
 
             var goalFunc = getGoalFunc(intprt);
-            var heuristicFunc = getHeuristicFunction2(intprt);
+            var heuristicFunc = getHeuristicFunction(intprt);
             var world = new WorldNode(state)
             var astarResult = Astar(world, goalFunc, heuristicFunc, 5000);
 

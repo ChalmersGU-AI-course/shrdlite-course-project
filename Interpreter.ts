@@ -83,11 +83,13 @@ module Interpreter {
                         var tempLiteral : Literal[] = previousLiterals[k].slice();
                         var matchLiteral : Literal[] = matchLiterals[j].slice();
                         var newestLiterals = concatLiterals(tempLiteral, matchLiteral);
+                        newestLiterals = newestLiterals.filter(function(l){return isLegalLiteral(l, state);});
                         if (!listContainsList(newLiterals, newestLiterals)) {
                             newLiterals.push(newestLiterals);
                         }
                     }
                 }
+
                 literals = newLiterals.slice();
             }
             else{
@@ -95,6 +97,32 @@ module Interpreter {
             }
         }
         return literals;
+    }
+
+    function isLegalLiteral(literal : Literal, state : WorldState) : boolean {
+        if(literal.args) {
+            var first = lookupLiteralArg(literal.args[0], state);
+            var second = lookupLiteralArg(literal.args[1], state);
+            if (literal.rel === "ontop") {
+                return CanPutObjectOntop(first, second);
+            }
+
+            if (literal.rel === "above") {
+               return first.size >= second.size;
+            }
+
+            if (literal.rel === "under") {
+                return first.size <= second.size;
+            }
+        }
+        return true;
+    }
+
+    function lookupLiteralArg(arg : string, state : WorldState) : ObjectDefinition {
+        if (arg === "floor") {
+            return null;
+        }
+        return state.objects[arg];
     }
 
     function concatLiterals(literals1: Literal[], literals2 : Literal[]) : Literal[] {
