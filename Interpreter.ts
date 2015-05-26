@@ -39,10 +39,10 @@ module Interpreter {
 			if (rel == "ontop") {
 				rel = "ontop of";
 			}
+			if (rel == "infront") {
+				rel = "in front of";
+			}
 			return s + res.prs.cmd + " the " + o.size + " " + o.color + " " + o.form + " " + rel + " the " + d.size + " " + d.color + " " + d.form;
-			//l.append(s + "the " + o.size + " " + o.color + " " + o.form + " shall be " + rel + "the " + d.size + " " + d.color + " " + d.form);
-		//}
-		//return l;
 	}
 
 	export function interpretationToString(res : Result) : string {
@@ -79,7 +79,7 @@ module Interpreter {
 		 * add PosNode to the array of all PosNodes
 		 *
 		 * @param {object} node object
-		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof)
+		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof, behind, infront)
 		 * @return {void}
 		 */
 		public addNode(o, rel : string) : void {
@@ -234,7 +234,7 @@ module Interpreter {
 		 *
 		 * @param {Position} Position of the origin
 		 * @param {Position} Position of the destination
-		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof)
+		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof, behind, infront)
 		 * @return {boolean} Does the relation hold?
 		 */
 		private isReachable(orig : Position, dest : Position, rel : string) : boolean {
@@ -274,7 +274,17 @@ module Interpreter {
 					}
 					break;
 				case "beside": //as in "directly beside"
-					if (orig.x == (dest.x - 1) || orig.x == (dest.x + 1)) {
+					if (orig.x == (dest.x - 1) || orig.x == (dest.x + 1) || orig.x == (dest.x - this.state.rowLength) || orig.x == (dest.x + this.state.rowLength)) {
+						return true;
+					}
+					break;
+				case "behind": //as in "directly behind"
+					if (orig.x == (dest.x + this.state.rowLength)) {
+						return true;
+					}
+					break;
+				case "infront": //as in "directly in front of"
+					if (orig.x == (dest.x - this.state.rowLength)) {
 						return true;
 					}
 					break;
@@ -344,7 +354,14 @@ module Interpreter {
 			//a quick check for the "take" command
 			if (goal == "holding" && quantOrig == "all" && origs.length > 1) {
 				throw new Interpreter.Error("Only one object can be held by the arm at the same time.");
-			} else if (goal == "holding"){
+			} else if (goal == "holding") {
+				return true;
+			}
+
+			//a quick check for the "stack" command
+			if (goal == "stack" && quantOrig != "all") {
+				throw new Interpreter.Error("The stack command needs to be used with the 'all' quantifier.");
+			} else if (goal == "stack") {
 				return true;
 			}
 
@@ -408,16 +425,24 @@ module Interpreter {
 							continue;
 						}
 
-						if (quantOrig == "all" && nO > 1) {
+						if (quantOrig == "all" && nO > 1 && quantDest == "all" && nD > 1) {
 							origChecker[i] = origChecker[i] - 1;
 							destChecker[j] = destChecker[j] - 1;
 							error = "Only one thing can be inside another thing.";
 							continue;
 						}
+
+						if ((formO == "pyramid" || formO == "box" || formO == "plank") && (sizeO == sizeD) && (formD == "box")) {
+							origChecker[i] = origChecker[i] - 1;
+							destChecker[j] = destChecker[j] - 1;
+							error = "Boxes cannot contain pyramids, planks or boxes of the same size.";
+							continue;
+						}
 					}
 
+					//todo: check what actually is valid for above AND ontop and what is only for ontop
 					if (rel == "ontop" || rel == "above") {
-						if (formO == "ball" &&  formD != "floor") {
+						if (rel == "ontop" && formO == "ball" &&  formD != "floor") {
 							origChecker[i] = origChecker[i] - 1;
 							destChecker[j] = destChecker[j] - 1;
 							error = "Balls must be in boxes or on the floor.";
@@ -431,17 +456,10 @@ module Interpreter {
 							continue;
 						}
 
-						if ((sizeO == "small" && formO == "box") && (sizeD == "small" && (formD == "pyramid" || formD == "brick"))) {
+						if (rel == "ontop" && (sizeO == "small" && formO == "box") && (sizeD == "small" && (formD == "pyramid" || formD == "brick"))) {
 							origChecker[i] = origChecker[i] - 1;
 							destChecker[j] = destChecker[j] - 1;
 							error = "Small boxes cannot be supported by small bricks or pyramids.";
-							continue;
-						}
-
-						if ((formO == "pyramid" || formO == "box" || formO == "plank") && (sizeO == sizeD) && (formD == "box")) {
-							origChecker[i] = origChecker[i] - 1;
-							destChecker[j] = destChecker[j] - 1;
-							error = "Boxes cannot contain pyramids, planks or boxes of the same size.";
 							continue;
 						}
 
@@ -466,7 +484,7 @@ module Interpreter {
 							continue;
 						}
 
-						if (quantOrig == "all" && rel == "ontop" && nO > 1 && formD != "floor") {
+						if (quantOrig == "all" && rel == "ontop" && nO > 1 && formD != "floor" && quantDest == "all" && nD > 1) {
 							origChecker[i] = origChecker[i] - 1;
 							destChecker[j] = destChecker[j] - 1;
 							error = "Only one thing can be ontop of another thing.";
@@ -505,6 +523,18 @@ module Interpreter {
 		 */
 		private buildLiteral(goal : string, quantOrig : string, quantDest : string, origs : string[], dests : string[]) {
 			var intprt : Literal[][] = [[]];
+
+			if (goal == "stack") {
+				var argList : string[] = [];
+				for (var i = 0; i < origs.length; i++) {
+					argList.push(origs[i]);
+				}
+				var lit : Literal =  {pol:true, rel:goal, args:argList};
+				intprt[0] = [];
+				intprt[0].push(lit);
+				return intprt;
+			}
+
 			var n : number = 0;
 			//++n is like "or", n stays unchanged is like "and"
 
@@ -541,6 +571,44 @@ module Interpreter {
 				n = (quantOrig == "all" || quantOrig == "the") ? n : ++n;
 			}
 
+			//var l : Literal[][] = [[]];
+
+			//for (var i = 0; i < origs.length; i++) {
+			//	l[i] = [];
+			//	for (var j = 0; j < dests.length; j++) {
+			//		var lit : Literal =  {pol:true, rel:goal, args:[origs[i], dests[j]]};
+			//		l[i].push(lit);
+			//	}
+			//}
+
+			////todo: if ontop or inside, prune all those combinations that have the same destination
+			//if (quantOrig == "all") {
+			//	for (var i = 0; i < l.length; i++) {
+			//		for (var j = 0; j < l[i].length; j++) {
+			//			if (i == 0) {
+			//				intprt[j] = [];
+			//			}
+			//			intprt[j] = combinations(l[0], l[1]);
+			//		}
+			//	}
+			//}
+
+			//function combinations(arg : any[]) {
+			//	var r = [], arg = arguments, max = arg.length-1;
+			//	function helper(arr, i) {
+			//		for (var j=0, l=arg[i].length; j<l; j++) {
+			//			var a = arr.slice(0); // clone arr
+			//			a.push(arg[i][j]);
+			//			if (i==max) {
+			//				r.push(a);
+			//			} else
+			//				helper(a, i+1);
+			//		}
+			//	}
+			//	helper([], 0);
+			//	return r;
+			//}
+
 			return intprt;
 		}
 
@@ -552,11 +620,25 @@ module Interpreter {
 		 */
 		//todo: ambigous stuff like "move the ball on the floor" currently produces two PDDL goals when there are two balls present
 		//solution (maybe): quantifier is "the" and we receive more than 1 PDDL goal -> ambiguous!
+		//todo: put all balls in a box on the floor
+		//todo: move a ball inside a box
+		//todo: move command when you are already holding sth
+		//todo: stack up all objects
 		public getInterpretation() : Literal[][] {
 			//typeof this.cmd.ent !== "undefined"
 			//typeof this.cmd.loc !== "undefined"
 
 			var cmdS : string = this.cmd.cmd;
+
+			//for a stack command
+			if (cmdS == "stack") {
+				//check objects
+				var ent = this.cmd.ent;
+				var objects : string[] = this.checkExistence(ent);
+				if (objects.length && this.isPhysicallyPossible(cmdS, ent.quant, "", objects, [])) {
+					return this.buildLiteral(cmdS, ent.quant, "", objects, []);
+				}
+			}
 
 			//for a take/grasp/pick up command
 			if (cmdS == "take") {
