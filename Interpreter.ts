@@ -271,7 +271,7 @@ module Interpreter {
                 candList.candidates.forEach((c) => {
                     goals.push(makeGoal("holding", [c]));
                 });
-                return {lis:goals, isAnd:false};
+                return {list:goals, isAnd:false};
             }
         }
         
