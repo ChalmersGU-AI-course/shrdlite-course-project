@@ -10,8 +10,8 @@ module Interpreter {
     		currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
         clairifyingparse = clairifyparse;
-        parses.forEach((parseresult) => {
-            var intprt : Result = <Result>parseresult;
+        for(var i = 0; i < parses.length; i++) {
+            var intprt : Result = <Result>parses[i];
         	if(intprt.prs.cmd){
     			intprt.intp = interpretCommand(intprt.prs, currentState);
 			}else{
@@ -21,7 +21,7 @@ module Interpreter {
 			if(intprt.intp.length){
             	interpretations.push(intprt);
             }
-        });
+        };
         if(interpretations){
         	interpretations = filterEquality(interpretations);
         }

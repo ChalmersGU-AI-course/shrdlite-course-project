@@ -106,18 +106,64 @@ var smallobjects : { [s:string]: ObjectDefinition; } = {
         "f4": { "form":"floor",    "size":"large",  "color":"" }
     };
 ExampleWorlds["small"] = { 
-    "stacks": [["e"],["g","l"],[],["k","m","f"],[]],
-    "holding": "a",
+    "stacks": [["e"],["g","l"],[],["k","m","f"],["a"]],
+    "holding": null,
     "arm": 0,
     "planAction":"start",
     "objects": smallobjects,
-    "pddl": stacksToPDDL([["e"],["g","l"],[],["k","m","f"],[]], smallobjects),
+    "pddl": stacksToPDDL([["e"],["g","l"],[],["k","m","f"],["a"]], smallobjects),
     "examples": [
         "put the white ball in a box on the floor",
         "put the black ball in a box on the floor",
         "take a blue object",
         "take the white ball",
         "put all boxes on the floor",
+        "move all balls inside a large box"
+    ]
+};
+
+var mediumObjects : { [s:string]: ObjectDefinition; } ={
+        "a": { "form":"brick",   "size":"large",  "color":"green" },
+        "b": { "form":"brick",   "size":"small",  "color":"white" },
+        "c": { "form":"plank",   "size":"large",  "color":"red"   },
+        "d": { "form":"plank",   "size":"small",  "color":"green" },
+        "e": { "form":"ball",    "size":"large",  "color":"white" },
+        "f": { "form":"ball",    "size":"small",  "color":"black" },
+        "g": { "form":"table",   "size":"large",  "color":"blue"  },
+        "h": { "form":"table",   "size":"small",  "color":"red"   },
+        "i": { "form":"pyramid", "size":"large",  "color":"yellow"},
+        "j": { "form":"pyramid", "size":"small",  "color":"red"   },
+        "k": { "form":"box",     "size":"large",  "color":"yellow"},
+        "l": { "form":"box",     "size":"large",  "color":"red"   },
+        "m": { "form":"box",     "size":"small",  "color":"blue"  },
+        "f0": { "form":"floor",    "size":"large",  "color":"" },
+        "f1": { "form":"floor",    "size":"large",  "color":"" },
+        "f2": { "form":"floor",    "size":"large",  "color":"" },
+        "f3": { "form":"floor",    "size":"large",  "color":"" },
+        "f4": { "form":"floor",    "size":"large",  "color":"" },
+        "f5": { "form":"floor",    "size":"large",  "color":"" },
+        "f6": { "form":"floor",    "size":"large",  "color":"" },
+        "f7": { "form":"floor",    "size":"large",  "color":"" },
+        "f8": { "form":"floor",    "size":"large",  "color":"" },
+        "f9": { "form":"floor",    "size":"large",  "color":"" }
+    };
+ExampleWorlds["medium"] = {
+    "stacks": [["e"],["a","l"],[],[],["i","h","j"],[],[],["k","g","c","b"],[],["d","m","f"]],
+    "holding": null,
+    "arm": 0,
+    "planAction":"start",
+    "pddl": stacksToPDDL([["e"],["a","l"],[],[],["i","h","j"],[],[],["k","g","c","b"],[],["d","m","f"]], mediumObjects),
+    "objects": mediumObjects,
+    "examples": [
+        "put the brick that is to the left of a pyramid in a box",
+        "put the white ball in a box on the floor",
+        "move the large ball inside a yellow box on the floor",
+        "move the large ball inside a red box on the floor",
+        "take a red object",
+        "take the white ball",
+        "put all boxes on the floor",
+        "put the large plank under the blue brick",
+        "move all bricks on a table",
         "move all balls inside a large box"
     ]
 };
