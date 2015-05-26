@@ -6,25 +6,46 @@ module Parser {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
-    export function parse(input:string) : Result[] {
-        var nearleyParser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart);
-        var parsestr = input.toLowerCase().replace(/\W/g, "");
-        try {
-            var results : Command[] = nearleyParser.feed(parsestr).results;
-        } catch(err) {
-            if ('offset' in err) {
-                throw new Parser.Error(
-                    'Parsing failed after ' + err.offset + ' characters', err.offset);
-                // parsestr.slice(0, err.offset) + '<HERE>' + parsestr.slice(err.offset);
-            } else {
-                throw err;
-            }
+    export function parse(input:string) : Result[][][] {
+        //var nearleyParser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart);
+        // Handle several propositions linked by "or" and "and" logical keywords. Priority on "and" (as usual in boolean algebra).
+        var orProp = input.split(new RegExp(" or ")).map((andProp) => {return andProp.split(new RegExp(" and "))});
+        var chars = 0;
+        var incomplete = false;
+        // parsings <=> parsings for propositions "or" ; parsings[i] <=> parsings for propositions "and" ; parsings[i][j] <=> parsing of one proposition.
+        console.log("PARSING!");
+        var parsings = orProp.map((andProp) => {
+            var andParse = andProp.map((prop) => {
+                console.log(prop);
+                try {
+                    var parsestr = prop.toLowerCase().replace(/\W/g, "");
+                    var results : Command[] = (new nearley.Parser(grammar.ParserRules, grammar.ParserStart)).feed(parsestr).results;
+                    chars+=parsestr.length+3;
+                    console.log(chars);
+                    incomplete = !results.length;
+                    return results;
+                } catch(err) {
+                    if ('offset' in err) {
+                        throw new Parser.Error(
+                            'Parsing failed after ' + (chars+err.offset) + ' characters', (chars+err.offset));
+                        // parsestr.slice(0, err.offset) + '<HERE>' + parsestr.slice(err.offset);
+                    } else {
+                        throw err;
+                    }
+                }
+            });
+            chars+=2;
+            return andParse;
+        });
+        if (incomplete) {
+            throw new Parser.Error('Incomplete input', chars);
         }
-        if (!results.length) {
-            throw new Parser.Error('Incomplete input', parsestr.length);
-        }
-        return results.map((c) => {
-            return {input: input, prs: clone(c)};
+        return parsings.map((andProp) => {
+            return andProp.map((prop) => {
+                return prop.map((c) => {
+                    return {input: input, prs: clone(c)};
+                });
+            });
         });
     }
 

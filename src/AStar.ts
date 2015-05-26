@@ -4,7 +4,7 @@
 
 module AStar {
 
-    type THeuristicF = (state: Planner.State, goalConditions: Interpreter.Literal[]) => number;
+    type THeuristicF = (stacks: string[][], goalConditions: Interpreter.Literal[]) => number;
 
     /*
      * @returns Node[] or null
@@ -13,7 +13,7 @@ module AStar {
         var closedset = new collections.PriorityQueue<Node>(fScoreCompare); // The set of nodes already evaluated. It contains the hash of the states.
         var openset = new collections.Dictionary<string, Node>(); // The set of tentative nodes to be evaluated, initially containing the start node. It maps hash of states to the best corresponding Node.
 
-        start.setScores(0,heuristic(start.content,goalConditions));
+        start.setScores(0,heuristic(start.content.stacks,goalConditions));
         openset.setValue(start.content.hash, start);
         
         console.dir(openset);
@@ -40,7 +40,7 @@ module AStar {
                 if (closedset.containsSetFunction(neighbor, hasSameState)) return; // continue
                 if (!openset.containsKey(neighbor.content.hash) ||
                     current.g_score+weight < openset.getValue(neighbor.content.hash).g_score) {
-                    neighbor.setScores(current.g_score+weight, heuristic(neighbor.content, goalConditions));
+                    neighbor.setScores(current.g_score+weight, heuristic(neighbor.content.stacks, goalConditions));
                     openset.setValue(neighbor.content.hash, neighbor);
                 }
             });

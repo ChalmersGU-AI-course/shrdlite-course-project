@@ -7,15 +7,11 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
-    export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
-        var plans : Result[] = [];
-        interpretations.forEach((intprt) => {
-            var plan : Result = <Result>intprt;
-            plan.plan = planInterpretation(plan.intp, currentState);
-            plans.push(plan);
-        });
-        if (plans.length) {
-            return plans;
+    export function plan(interpretations : Interpreter.Result, currentState : WorldState) : Result {
+        var plan : Result = <Result>interpretations;
+        plan.plan = planInterpretation(plan.intp, currentState);
+        if (plan!=null) {
+            return plan;
         } else {
             throw new Planner.Error("Found no plans");
         }
@@ -234,14 +230,14 @@ module Planner {
      * It basically relies on the number of objects piled over the concerned objects.
      * The calculation depends on the relation used for each goal.
      */
-    function heuristic(state: Planner.State, goalConditions: Interpreter.Literal[]) : number {
+    export function heuristic(stacks: string[][], goalConditions: Interpreter.Literal[]) : number {
         var score = 0;
         for (var goal=0; goal<goalConditions.length; goal++) {
             var g = goalConditions[goal];
             if (g.rel == "ontop" || g.rel == "inside") {
-                var top : number[] = Planner.getLocation(g.args[0], state.stacks);
+                var top : number[] = Planner.getLocation(g.args[0], stacks);
                 if(!(top[1]==0 && g.args[1]=="floor")) {
-                    var bottom : number[] = Planner.getLocation(g.args[1], state.stacks);
+                    var bottom : number[] = Planner.getLocation(g.args[1], stacks);
                     if(top[0]!=bottom[0]) {
                         score+=top[2]+bottom[2]+1;
                     } else if(top[1]!=bottom[1]+1) {
@@ -249,33 +245,33 @@ module Planner {
                     }
                 }
             } else if(g.rel == "beside") {
-                var o1 : number[] = Planner.getLocation(g.args[0], state.stacks);
-                var o2 : number[] = Planner.getLocation(g.args[1], state.stacks);
+                var o1 : number[] = Planner.getLocation(g.args[0], stacks);
+                var o2 : number[] = Planner.getLocation(g.args[1], stacks);
                 if(Math.abs(o1[0]-o2[0])!=1) {
                     score+=Math.min(o1[2],o2[2])+1;
                 }
             } else if(g.rel == "above" || g.rel == "under") {
-                var top : number[] = Planner.getLocation(g.args[(g.rel=="above") ? 0 : 1], state.stacks);
-                var bottom : number[] = Planner.getLocation(g.args[(g.rel=="above") ? 1 : 0], state.stacks);
+                var top : number[] = Planner.getLocation(g.args[(g.rel=="above") ? 0 : 1], stacks);
+                var bottom : number[] = Planner.getLocation(g.args[(g.rel=="above") ? 1 : 0], stacks);
                 if(!(top[0]==bottom[0] && bottom[1]<top[1])) {
                     score+=top[2]+1;
                 }
             } else if(g.rel == "rightof" || g.rel == "leftof") {
-                var right : number[] = Planner.getLocation(g.args[(g.rel=="rightof") ? 0 : 1], state.stacks);
-                var left : number[] = Planner.getLocation(g.args[(g.rel=="rightof") ? 1 : 0], state.stacks);
+                var right : number[] = Planner.getLocation(g.args[(g.rel=="rightof") ? 0 : 1], stacks);
+                var left : number[] = Planner.getLocation(g.args[(g.rel=="rightof") ? 1 : 0], stacks);
                 if(!(right[0]>left[0])) {
                     if(right[0]==0) {
                         score+=right[2]+1;
                     }
-                    if(left[0]==state.stacks.length-1) {
+                    if(left[0]==stacks.length-1) {
                         score+=left[2]+1;
                     }
-                    if(right[0]!=0 && left[0]!=state.stacks.length-1) {
+                    if(right[0]!=0 && left[0]!=stacks.length-1) {
                         score+=Math.min(right[2],left[2])+1;
                     }
                 }
             } else if(g.rel == "holding") {
-                var obj : number[] = Planner.getLocation(g.args[0], state.stacks);
+                var obj : number[] = Planner.getLocation(g.args[0], stacks);
                 score+=obj[2];
             }
         }
