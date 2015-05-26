@@ -9,12 +9,14 @@ module Planner {
 
     export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
         var plans : Result[] = [];
+        var error = null;
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
             try {
                 plan.plan = planInterpretation(plan.intp, currentState);
             }
             catch(err) {
+                error = err;
                 return;
             }
             if (plan.plan) {
@@ -24,6 +26,10 @@ module Planner {
         if (plans.length) {
             return plans;
         } else {
+            if(error) {
+                throw error;
+            }
+
             throw new Planner.Error("Found no plans");
         }
     }
@@ -120,7 +126,7 @@ module Planner {
         var numBlocking = 0;
 
         var unsatisfied: Interpreter.Literal[] = target.filter(function(literal) {
-            return stateSatisfiesLiteral(world.State, literal);
+            return !stateSatisfiesLiteral(world.State, literal);
         })
 
         var relevantObjects: string[] = getAllArgs(unsatisfied);
@@ -149,7 +155,7 @@ module Planner {
     }
 
     function distanceHeuristic(target: Interpreter.Literal[], world: WorldNode): number {
-        var distances = [];
+        var distances = [0];
 
         for (var i = 0; i < target.length; ++i) {
             var literal = target[i];
