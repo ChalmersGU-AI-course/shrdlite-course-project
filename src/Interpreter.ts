@@ -8,8 +8,11 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
+   var worldSize;
+
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
+        worldSize=currentState.stacks.length;
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
@@ -91,28 +94,73 @@ module Interpreter {
             case "drop":
             case "move":
                 var sourcesBranches : Key[][];
+                var targetBraches  : Key[][];
                 if (cmd.ent) sourcesBranches = find(cmd.ent, worldLit, objectMap)
                 else sourcesBranches = [[getHolding()]]
-                var targetBraches = find(cmd.loc.ent, worldLit, objectMap);
+                targetBraches = find(cmd.loc.ent, worldLit, objectMap);
                 var literals : Literal[] = [];
 
-                product(sourcesBranches, targetBraches).forEach((param) => {
-                    var sources = param[0], targets = param[1];
-                    var literals : Literal[] = [];
-                    // TODO var possibleMatches : Literal [][];
-                    sources.forEach((source) => {
-                        // TODO var possibleLits: Literal [] = [];
-                        targets.forEach((target) => {
-                            var newLit = { pol: true, rel: cmd.loc.rel, args: [source, target] };
-                            if (checkLiteral(objectMap, newLit).val) literals.push(newLit); //TODO takeout
-                            // TODO if (checkLiteral(objectMap, newLit).val) possibleLits.push(newLit);
-                        });
-                        // TODO possibleMatches.push(possibleLits);
-                    });
-                    
-                    // TODO if ( findMatch(possibleMatches[0],possibleMatches.slice(1),literals) && literals.length ) intprt.push(literals); //should end up with valid list of literals if such exists;
-                    if (literals.length && checkList(literals).val) intprt.push(literals);
-                });
+                switch (cmd.loc.ent.quant) {
+                    case "all":
+                                    var sourceBranchesReviewed:Key[]=[];
+                                    for(var i = 0 ; i<sourcesBranches.length; i ++){ sourceBranchesReviewed=sourceBranchesReviewed.concat(sourcesBranches[i]);}
+                                    sourcesBranches=[sourceBranchesReviewed];
+                                      product(sourcesBranches, targetBraches).forEach((param) => {
+						                              var sources = param[0], targets = param[1];
+						                              var literals : Literal[] = [];
+						                              var possibleMatches : Literal [][] =[]; //TODO ADDED
+						                              debugger;
+						                              targets.forEach((target)=> {
+						                                  var possibleLits: Literal [] = []; //TODO ADDED
+						                                  sources.forEach((source) => {
+						                                          var newLit = { pol: true, rel: cmd.loc.rel, args: [source, target] };
+						                                           //  if (checkLiteral(objectMap, newLit).val) literals.push(newLit); //TODO REMOVED
+						                                          if (checkLiteral(objectMap, newLit).val) possibleLits.push(newLit); //TODO ADDED
+						                                      });      
+						                                      if(possibleLits.length) possibleMatches.push(possibleLits); //TODO ADDED
+						                                  });
+						                          
+						                                  if ( possibleMatches.length && 
+						                                       findMatch(possibleMatches[0],possibleMatches.slice(1),literals) &&
+						                                       literals.length ) intprt.push(literals); //should end up with valid list of literals if such exists;//TODO ADDED
+						                                   //if (literals.length && checkList(literals).val) intprt.push(literals);//TODO REMOVE
+						                             });
+                                    // THIS IS THE ONLY DIFFERENT CASE, THE OTHERS CAN USE THE FOLLOWING
+                                    break;
+                    default:            
+						             switch (cmd.ent.quant) {
+						                  case "all":var targetBrachesReviewed:Key[]=[];
+						                                  for(var i = 0 ; i<targetBraches.length; i ++){ targetBrachesReviewed=targetBrachesReviewed.concat(targetBraches[i]);}
+						                                  targetBraches=[targetBrachesReviewed];
+									  	  default: 
+											        product(sourcesBranches, targetBraches).forEach((param) => {
+						                              var sources = param[0], targets = param[1];
+						                              var literals : Literal[] = [];
+						                              var possibleMatches : Literal [][] =[]; //TODO ADDED
+						                              debugger;
+						                              sources.forEach((source) => {
+						                                  var possibleLits: Literal [] = []; //TODO ADDED
+						                                  targets.forEach((target) => {
+						                                          var newLit = { pol: true, rel: cmd.loc.rel, args: [source, target] };
+						                                           //  if (checkLiteral(objectMap, newLit).val) literals.push(newLit); //TODO REMOVED
+						                                          if (checkLiteral(objectMap, newLit).val) possibleLits.push(newLit); //TODO ADDED
+						                                      });      
+						                                      if(possibleLits.length) possibleMatches.push(possibleLits); //TODO ADDED
+						                                  });
+						                          
+						                                  if ( possibleMatches.length && 
+						                                       findMatch(possibleMatches[0],possibleMatches.slice(1),literals) &&
+						                                       literals.length ) intprt.push(literals); //should end up with valid list of literals if such exists;//TODO ADDED
+						                                   //if (literals.length && checkList(literals).val) intprt.push(literals);//TODO REMOVE
+						                             });
+										             break;                    
+						                }
+									    break;                    
+              }
+                
+  
+                
+                
                 break;
 
             case "grasp":
@@ -132,34 +180,35 @@ module Interpreter {
         return intprt;
     }
     
-    // TODO
-    // // The recursion will test out every combination of literals that satisfy the existence of one literal per 
-    // // source;
-    //
-    //function findMatch( currentSet: Literal[] , remainingSets: Literal[][] , lits: Literal[] ) : Boolean
-    //  {
-    //    var testLiteral: Literal ;
-    //
-    //    for(var j=0 , j < currentSet.length , j++)
-    //      {
-    //        testLiteral=currentSet[j];
-    //        lits.push(testLiteral);
-    //
-    //        if(next.length) flag=findMatch( remainingSets[0] , remainingSets.slice(1) , lits);
-    //        else flag=checkList(lits);    
-    //
-    //        if(flag) return flag;
-    //        else  lits.pop();  //remove the literal that didn't work to try another
-    //      }
-    //    return false;
-    //  }
-    //
+   
+    // The recursion will test out every combination of literals that satisfy the existence of one literal per 
+    // source; //TODO ADDED
+    
+    function findMatch( currentSet: Literal[] , remainingSets: Literal[][] , lits: Literal[] ) : boolean
+      {
+        var testLiteral: Literal ;
+        var flag=false;
+        debugger;
+        for(var j=0 ; j < currentSet.length ; j++)
+          {
+            testLiteral=currentSet[j];
+            lits.push(testLiteral);
+    
+            if(remainingSets.length) flag = findMatch( remainingSets[0] , remainingSets.slice(1) , lits);
+            else flag = checkList(lits).val;    
+    
+            if(flag) return flag;
+            else  lits.pop();  //remove the literal that didn't work to try another
+          }
+        return flag;
+      }
+    
     
     function find(ent : Parser.Entity, literals : Literal[], objects : ObjectMap) : Key[][] {
         switch (ent.quant) {
             case "the": return [findThe(ent.obj, literals, objects)];
             case "any": return findAny(ent.obj, literals, objects);
-            case "all": debugger;return [findAll(ent.obj, literals, objects)];
+            case "all": return [findAll(ent.obj, literals, objects)];
             default:    throw new Interpreter.Error("Entity unknown");
         }
     }
@@ -169,7 +218,13 @@ module Interpreter {
         switch (results.length) {
             case 0:
             case 1: return results;
-            default: throw new Interpreter.Error("found multiple"); // TODO
+            default: 
+                      var msg="";
+                      if(obj.size) msg+=obj.size+" ";
+                      if(obj.color) msg+=obj.color+" ";
+                      if(obj.form!="anyform") msg+=obj.form+"s found;";
+                      else msg+="objects found;";
+                      throw new Interpreter.Error(" found multiple objects matching description: "+ results.length + " "+msg); // TODO
         }
     }
 
@@ -183,25 +238,29 @@ module Interpreter {
             var relatedObjKeysBranches = find(obj.loc.ent, allLiterals, objects);
             // TODO this picks the first possible path
             // the find should always result in an arrays of branches
+            if(relatedObjKeysBranches.length == 0) return[]; //TODO ADDED
+            
+            var targetObjKeys = searchObjects(obj.obj, objects);
+            if (targetObjKeys.length == 0) return [];  //TODO took this out of the loop since it did not depend on anything from inside the loop
+           
+            var matchingAll: Literal[] = [];
             for(var i in relatedObjKeysBranches) {
                 var relatedObjKeys : Key[] = relatedObjKeysBranches[i];
-                if (relatedObjKeys.length == 0) return []; //TODO takeout
-
-                var targetObjKeys = searchObjects(obj.obj, objects);
-                if (targetObjKeys.length == 0) return [];  //TODO takeout
-
-                var matchingLiterals = allLiterals.filter((lit) => {
-                    return (
-                        lit.rel == obj.loc.rel &&
-                        contains(targetObjKeys, lit.args[0]) &&
-                        contains(relatedObjKeys, lit.args[1])
-                    );
-                });
-
-                return matchingLiterals.map((lit) => lit.args[0]);
+                if (relatedObjKeys.length != 0) //return []; //TODO REMOVED
+                  {
+                     var matchingLiterals = allLiterals.filter((lit) => {
+                       return (
+                         lit.rel == obj.loc.rel &&
+                         contains(targetObjKeys, lit.args[0]) &&
+                         contains(relatedObjKeys, lit.args[1])
+                       );
+                     });
+                     //return matchingLiterals.map((lit) => lit.args[0]); //TODO REMOVED
+                     matchingAll=matchingAll.concat(matchingLiterals);//TODO ADDED
+                  }
                 // TODO litList=litList.concat(matchingLiterals.map((lit) => lit.args[0]));
             }
-            return [];
+            return matchingAll.map((lit) => lit.args[0]); //TODO ADDED
             // TODO return litList;
         } else {
             return searchObjects(obj, objects);
@@ -416,17 +475,17 @@ module Interpreter {
                   
                   // Check that for a pair a,b (or b,a) of objects, we don't have conflict relations 
 
-                  if( !checkRelationsPairs(pairList.map((lit) => lit.rel) ) ) { flag=false; str+=objA+";"+objB+":";}
-                  if( !checkRelationsPairs(pairListInv.map((lit) => lit.rel) ) ) { flag=false; str+=objB+";"+objA+":";}
+                  if( !checkRelationsPairs(pairList.map((lit) => lit.rel) ) ) { flag=false; str+=objA+" and "+objB+";";}
+                  if( !checkRelationsPairs(pairListInv.map((lit) => lit.rel) ) ) { flag=false; str+=objB+" and "+objA+";";}
                        
                   
                   // Check that an object (A or B) doesn't have conflict relations
-                  if( ! checkRelationsObj( objA0List.map((lit) => lit.rel) ) ) { flag=false; str+=objA+":"; }
-                  if( ! checkRelationsObj( objA1List.map((lit) => lit.rel) ) ) { flag=false; str+=objA+":"; }
+                  if( ! checkRelationsObj( objA0List.map((lit) => lit.rel) ) ) { flag=false; str+=objA+" ; "; }
+                  if( ! checkRelationsObj( objA1List.map((lit) => lit.rel) ) ) { flag=false; str+=objA+" ; "; }
                   if(objB!="floor"){
-	                  if( ! checkRelationsObj( objB0List.map((lit) => lit.rel) ) ) { flag=false; str+=objB+":"; }
-    	              if( ! checkRelationsObj( objB1List.map((lit) => lit.rel) ) ) { flag=false; str+=objB+":"; }
-    			}
+	                  if( ! checkRelationsObj( objB0List.map((lit) => lit.rel) ) ) { flag=false; str+=objB+" ; "; }
+    	              if( ! checkRelationsObj( objB1List.map((lit) => lit.rel) ) ) { flag=false; str+=objB+" ; "; }
+    			}else{ if( !checkFloor(objB1List.map((lit) => lit.rel) ) ){flag=false; str="The floor can not support that many objects ; "} }
     			              
                 checked.push(objA);
                 checked.push(objB);
@@ -434,11 +493,18 @@ module Interpreter {
                 return;
             });
     
-      if(!flag) return {val:false , str: str+"Impossible request" };
+      if(!flag) return {val:false , str: "Impossible request: " + str};
       else return { val:true , str: " " };
     
     }
     
+   function checkFloor(rel: String[]): Boolean {
+   
+     if(rel.length>worldSize) return false;
+     else return true;
+     
+   }
+
 
    function checkRelationsPairs(rel: String[]): Boolean {
 
