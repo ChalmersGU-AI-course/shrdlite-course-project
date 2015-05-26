@@ -51,7 +51,7 @@ def a_star_search(getActions, startState, isGoal, heuristic):
 
 def getPlan(goal, came_from, actions_so_far, objects):
     current = _getKey(goal)
-    plan = []
+    plan = ['Give me another command. Meatbag']
     while current in came_from:
         next    = came_from[current]
         command = actions_so_far[current]
@@ -61,7 +61,7 @@ def getPlan(goal, came_from, actions_so_far, objects):
             plan += ['p',
                      'Picking up ' + stringify_descr(simplify_descr(obj, objects))]
         elif command is 'd':
-            plan += ['d','Dropping it like it\'s hot!']
+            plan += ['d','Drop it like it\'s hot!']
         else:
             plan += [command]
 
