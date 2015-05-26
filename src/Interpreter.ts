@@ -79,7 +79,8 @@ module Interpreter {
        var test2 = checkList( [ {pol:true , rel:"ontop", args:['a','b']} , {pol:true, rel:"under", args:['a','b']}] );
 
         var getHolding = () => {
-          if (!state.holding) throw "Not holding anything.";
+          if (!state.holding) throw new Interpreter.Error("Not holding anything.")
+          debugger;
           return state.holding;
         }
 
@@ -126,7 +127,7 @@ module Interpreter {
                     });
                 });
                 break;
-            default: throw "Command not found: " + cmd.cmd;
+            default: throw new Interpreter.Error("Command not found: " + cmd.cmd);
         };
         return intprt;
     }
@@ -159,7 +160,7 @@ module Interpreter {
             case "the": return [findThe(ent.obj, literals, objects)];
             case "any": return findAny(ent.obj, literals, objects);
             case "all": return [findAll(ent.obj, literals, objects)];
-            default:    throw "Entity unknown";
+            default:    throw new Interpreter.Error("Entity unknown");
         }
     }
 
@@ -168,7 +169,7 @@ module Interpreter {
         switch (results.length) {
             case 0:
             case 1: return results;
-            default: debugger; throw "found multiple"; // TODO
+            default: debugger; throw new Interpreter.Error("found multiple"); // TODO
         }
     }
 
@@ -493,10 +494,18 @@ module Interpreter {
 
     interface ObjectMap {[s:string]: ObjectDefinition;};
     function getWorldObjectsMap(state : WorldState) : ObjectMap {
-      return state.stacks.reduce((akk, stack) => {
+    var holding : string [][];
+    var stacks : string [][];
+    if(state.holding){
+         holding=[[state.holding]];
+         stacks = state.stacks.concat(holding);
+    }else stacks=state.stacks;
+   
+      return stacks.reduce((akk, stack) => {
         stack.forEach((key) => akk[key] = state.objects[key]);
         return akk;
       }, <{[s:string]: ObjectDefinition;}>{});
+
     }
 
 }
