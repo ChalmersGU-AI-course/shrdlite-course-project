@@ -61,6 +61,8 @@ module Searcher {
             } else
                 space.printDebugInfo('no children');
         } while(frontier.frontierSize() > 0);
+        if(space.isGoalCurrentState())
+           return true;
         space.printDebugInfo('No more frontier to traverse');
         return false;
     }
