@@ -8,6 +8,9 @@ def main(state):
     except interpreter.InterpreterException as err:
         return {'plan': [str(err)]}
 
+    writeToLog(str(intprt))
+    writeToLog(str(state['stacks']))
+
     plan = planner(intprt, **state)
 
     return {'int': intprt,

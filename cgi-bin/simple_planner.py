@@ -19,19 +19,19 @@ def _right(intprt, stacks, holding, arm, objects):
 def _grasp(intprt, stacks, holding, arm, objects):
 
     if not holding and len(stacks[arm]) > 1:
-        return (intprt, 
+        return (intprt,
                 _changeStack(stacks[arm][:-1], arm, stacks),
-                stacks[arm][-1], 
-                arm, 
-                objects)    
+                stacks[arm][-1],
+                arm,
+                objects)
     return None
 
 def _ungrasp(intprt, stacks, holding, arm, objects):
     if holding and physics(holding, stacks[arm][-1:], objects):
-        return (intprt, 
+        return (intprt,
                 _changeStack(stacks[arm]+[holding],arm,stacks),
-                None, 
-                arm, 
+                None,
+                arm,
                 objects)
     return None
 

@@ -1,10 +1,18 @@
 """make sure that we don't break the physics!"""
 
+def check_physics_all(preds, objects):
+    ontops = filter(lambda p: p[0] == 'inside' or p[0] == 'ontop', preds)
+    # check that no two things are inside/ontop of eachother
+
+
+    return all(check_physics(pred, objects) for pred in preds)
+
 def check_physics(pred, objects):
     (rel, x, y) = pred
-    return {'ontop':  check_ontop,
-            'inside': check_ontop,
-            'beside': check_beside}.get(rel, lambda x, y, o: True)(x, y, objects)
+    return (not x == y
+            and {'ontop':  check_ontop,
+                 'inside': check_ontop}.get(rel, lambda x, y, o: True)(x, y, objects))
+
 
 def check_ontop(t, b, objects):
     top = objects[t]
@@ -12,7 +20,7 @@ def check_ontop(t, b, objects):
 
     return (
         # Balls must be in boxes or on the floor, otherwise they roll away.
-        not (is_ball(top) and not is_form(bot, {'box', 'floor'})) # TODO: verify
+        not (is_ball(top) and not is_form(bot, {'box', 'floor'}))
         # Balls cannot support anything.
         and not (is_ball(bot))
         # Small objects cannot support large objects.
@@ -28,10 +36,6 @@ def check_ontop(t, b, objects):
         # Large boxes cannot be supported by large pyramids.
         and not (is_large(top) and is_box(top)
                  and is_large(bot) and is_pyramid(bot)))
-
-def check_beside(t, b, objects):
-    """an object cannot be beside itself"""
-    return not t == b
 
 def is_form(o, s):
     return o['form'] in s

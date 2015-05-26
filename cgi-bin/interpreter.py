@@ -1,6 +1,7 @@
 from PDDL import satisfy_pred
 import physics
 import sys
+import itertools
 
 from helpers import *
 
@@ -16,16 +17,14 @@ def interpret(stacks, holding, objects, parses, **_): # fancy way of ignoring al
     [[a, b], [c, d]] === (a and b) or (c and d)
     """
 
-    def physics_ok(goals):
-        return all(physics.check_physics(goal, objects) for goal in goals)
-
     # find all possible goals
     goals = []
     exc = []
     for parse in parses:
         try:
             goal = interp_cmd(parse['prs'], objects, stacks, holding)
-            ok_goal = [g for g in goal if physics_ok(g)] # filter out impossible disj. gaols
+            # filter out impossible disj. gaols
+            ok_goal = [g for g in goal if physics.check_physics_all(g, objects)]
 
             if len(ok_goal) < 1:
                 # whooops
@@ -104,7 +103,8 @@ def interp_cmd_move(ent, loc, objects, stacks, holding):
             return [[(rel, a, b) for a in what for b in where]]
         else:
             # all balls to the left of any table
-            return [[(rel, a, b) for a in what] for b in where]
+            alll = [[(rel, a, b) for b in where] for a in what]
+            return [list(goal) for goal in itertools.product(*alll)]
     else:
         if where_quant == 'all':
             # any ball to the left of all tables
