@@ -26,8 +26,8 @@ class GLGWorld implements World {
         }
         this.scene = new Array<RenderItem>();
         this.cam = new Camera(this.gl, canvas);
-        var middle = this.currentState.stacks.length / 2;
-        this.cam.setPosition(-middle, -3, -7);
+        var middle = this.currentState.rowLength / 2;
+        this.cam.setPosition(-middle, -4, -5);
 
 
         var floor = new RenderItem(this.gl, Assets.Floor, Assets.floorTexture);
@@ -35,7 +35,7 @@ class GLGWorld implements World {
         this.scene.push(floor);
 
         this.arm = new RenderItem(this.gl, Assets.Arm, Assets.woodTexture);
-        this.arm.setPosition(0, 2, 0);
+        //this.arm.setPosition(0, 2, 0);
         this.scene.push(this.arm);
 
 
@@ -109,7 +109,7 @@ class GLGWorld implements World {
 
 
 
-        //this.test();
+        this.test();
         //this.test2();
 
         //Now draw!
@@ -172,32 +172,34 @@ class GLGWorld implements World {
         //Update logic
 
         for (var i = 0; i < this.currentState.stacks.length; ++i) {
-            var h = 0;
+            var h = Assets.Floor.stackHeight;
             for (var j = 0; j < this.currentState.stacks[i].length; ++j) {
                 var name: string = this.currentState.stacks[i][j];
                 if (this.objects.containsKey(name)) {
                     var ri: RenderItem = this.objects.getValue(name);
-                    ri.setPosition(i * 1.1, h, 0);
+                    var x = i % this.currentState.rowLength;
+                    var y = Math.floor(i / this.currentState.rowLength);
+                    ri.setPosition(x * 1.1, h, -y * 1.1);
                     h += ri.height;
                 }
             }
         }
         //Holding
+        var x = this.currentState.arm % this.currentState.rowLength;
+        var y = Math.floor(this.currentState.arm / this.currentState.rowLength);
+        this.arm.setPosition(x * 1.1, 4, -y * 1.1);
+
         if (this.objects.containsKey(this.currentState.holding)) {
             var ri = this.objects.getValue(this.currentState.holding);
-            ri.setPosition(this.currentState.arm, 4, 0);
+            ri.setPosition(x * 1.1, 3, -y * 1.1);
         }
-
-
-
-
 
 
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
         //View
         this.cam.Setup();
-        this.arm.setPosition(this.currentState.arm, 5, 0);
+        
 
         //var translation = vec3.create();
         //vec3.set(translation, 0.0, 0.0, -6.0);
@@ -209,6 +211,23 @@ class GLGWorld implements World {
         }
 
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private test2() {
         var vertices = [
@@ -284,9 +303,9 @@ class GLGWorld implements World {
     }
 
     private test() {
-        var radius = 0.35;
-        var latitudeBands = 30;
-        var longitudeBands = 30;
+        var radius = 0.15;
+        var latitudeBands = 12;
+        var longitudeBands = 12;
         var vertexPositionData = [];
         var normalData = [];
         var textureCoordData = [];
@@ -333,8 +352,8 @@ class GLGWorld implements World {
         }
 
         var k: string = "";
-        for (var i = 0; i < vertexPositionData.length; ++i) {
-            k += ',' + vertexPositionData[i].toFixed(5);
+        for (var i = 0; i < textureCoordData.length; ++i) {
+            k += ',' + textureCoordData[i].toFixed(5);
         }
     }
 

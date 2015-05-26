@@ -13,6 +13,7 @@ interface WorldState {
     arm: number;
     objects: { [s:string]: ObjectDefinition; };
     examples: string[];
+    rowLength: number;
 }
 
 interface World {
