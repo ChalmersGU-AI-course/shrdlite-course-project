@@ -73,7 +73,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			neig.push(possiblestate);
 		}
 		// move arm right
-		if(currentstate.arm < this.getWorldWidth(currentstate) ){
+		if(currentstate.arm < this.getWorldWidth(currentstate)-2 ){
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// increase arm poss
 			possiblestate.arm += 1;
@@ -336,16 +336,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     	}
     	return null;
     }
-    findNewPositionCounter(obj : string, column : number, state : WorldState):number{
-    	var count = 0;
-    	var worldwidth = this.getWorldWidth(state);
-    	for(var i = 1; i < worldwidth ; i++){
-    		
-    	}
-    	
-    	
-    	return count;
-    }
     
     // returns the position in dimention X.
     getPosition(obj : string, state : WorldState): number{
@@ -470,7 +460,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             // if anything is ontop of b, then count object on top and predict cost for placeing the top obj at another spot
             
             if(ontopB > 0){
-            	count += ontopB*4 + Math.abs(posB-state.arm);
+            	count += (ontopB-1)*4 + Math.abs(posB-state.arm);
             	// find shortest path to a possition to place the obj at the top
             	var ontopColB = this.getTopRelation(posB , state);
 	            count += this.costToClosestLegalNewPos(ontopColB.args[0], a, posB, state);
@@ -483,7 +473,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }
             // if anything is ontop of a, then count object on top and predict cost for placeing the top obj at another spot
             if(ontopA > 0 && posA != posB){ 	// we dont need to go here if they are in the same column
-            	count += ontopA*4 +Math.abs(posA-state.arm);
+            	count += (ontopA-1)*4 +Math.abs(posA-state.arm);
             	// find shortest path to a possition to place the obj at the top
             	var ontopColA = this.getTopRelation(posA , state);
             	count += this.costToClosestLegalNewPos(ontopColA.args[0], b, posA, state);
