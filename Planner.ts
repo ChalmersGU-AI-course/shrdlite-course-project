@@ -411,27 +411,24 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 count += this.heuristic_cost(current, goal[i], morethanone);
             }
         }
+        count = count;
         return count;
     }
 
     heuristic_cost(current:number, goal:Interpreter.Literal, morethanone : boolean):number{//some parts can be improved
+        if(this.checkGoal(current, goal)){
+            return 0;
+        }
         var cond = goal;
-        var state = this._nodeValues[current];
-
-        var a = cond.args[0];
-        var b = cond.args[1];
+        var state = this._nodeValues[current]; 
+        
         var pddls = state.pddl.toArray();
         var count = 0;
         var samePile:boolean = false;
         
+        var a = cond.args[0];
         var posA = this.getPosition(a,state);
-    	var posB = this.getPosition(b,state);
     	var ontopA = this.countOnTop(a,state,pddls);
-    	var ontopB = this.countOnTop(b,state,pddls);
-        
-        if(this.checkGoal(current, goal)){
-            return 0;
-        }
         
         if(cond.rel == "hold"){
             if(state.holding != null){
@@ -446,7 +443,10 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 return ontopA + Math.abs(posA-state.arm);
             }
         }
-
+		var b = cond.args[1];
+		var posB = this.getPosition(b,state);
+		var ontopB = this.countOnTop(b,state,pddls);
+		
         if(cond.rel == "ontop" || cond.rel == "inside"){
 
             //if a above b, take #objects on b * 4 + (ifnotinsamepile)#objects on a*4 + distancefromcrane to a + distancefromatob
@@ -455,7 +455,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 return 1 + Math.abs(posB - state.arm);
             }
             else if(state.holding == b){// if we are holding the wrong objective
-            	count += ontopA*4 + Math.abs(posA-state.arm) + 3;
+            	count += (ontopA-1)*4 + Math.abs(posA-state.arm) + 3;
             	if(this.getTopRelation(state.arm, state) && this.checkLegalLit(b, this.getTopRelation(state.arm,state).args[0], state)){
             		count += 1;
             	}else if(!morethanone){
@@ -480,7 +480,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             	}
             	
             }else{
-            	count += Math.abs(posB-state.arm);
+            	count += 1; // for droping a on b
             }
             // if anything is ontop of a, then count object on top and predict cost for placeing the top obj at another spot
             if(ontopA > 0 && posA != posB){ 	// we dont need to go here if they are in the same column
@@ -493,12 +493,10 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 	            	count += 4;
 	            }
             }else{
-            	count += Math.abs(posA-state.arm);
+            	count += Math.abs(posA-state.arm) + 1;	// +1 for picking it up
             }
             if(state.holding ){
-            	count +=3; //if holding then +1 to drop it 
-            }else{
-            	count += 2;
+            	count += 1; //if holding then +1 to drop it 
             }
             return count; 
 
@@ -526,12 +524,11 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                         count++;
                     }
                 }
-
             }
             count = count*4;
-            if(posA == posB)
-                   count += 3 + Math.abs(posB - state.arm);
-            else{
+            if(posA == posB){
+                count += 3 + Math.abs(posB - state.arm);
+            }else{
                 count += Math.abs(posA-state.arm) + Math.abs(posA-posB);
             }
 
@@ -660,7 +657,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             // a on floor? #objects on top of b + #objects leftofA < rightofA
 
         }
-        console.log("Path length: " + count);
         return count;
 
     }
@@ -687,7 +683,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     	var newlit : Interpreter.Literal;
     	for(var k = 1; k >= -1;){		// check first to the right + , then to the left -
 	    	for(var i = pos + k; i < worldwidth && i > 0; i += k){
-	    		var count = Math.abs(pos - i); // for each step add 1 to counter
+	    		var count = Math.abs(pos - i) +2; // for each step add 1 to counter
 	    		
 	    		newlit = this.getTopRelation( i, state);
 	    		var newpos = "f"+i;
