@@ -192,11 +192,12 @@ module Interpreter {
             // "The" can only refer to one object, so return nothing
             // if we find several matching objects. Else, return the
             // object as an AND-part array (inner array).
-            if (objs.length != 1) {
-                return [];
-            }
-            else{
+            if (objs.length > 1) {
+                throw new Interpreter.Error("the? Which one do you mean?");
+            } else if (objs.length == 1) {
                 return [objs];
+            } else {
+                return [];
             }
         }
         else if (ent.quant == "all") {

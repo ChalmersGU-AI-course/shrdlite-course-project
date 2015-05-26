@@ -33,6 +33,7 @@ put both right of all balls
 
 put a table above a ball
 put a box inside a table
+pick up the ball
 
 move all large boxes to the left of all blue objects
 
@@ -50,4 +51,5 @@ take all balls
 take all objects
 take all blue objects
 put them on the floor
+move all balls left of all red objects
 move all red objects to the left of all blue objects
