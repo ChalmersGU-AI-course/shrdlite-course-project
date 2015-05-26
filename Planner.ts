@@ -468,8 +468,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 return 1+ ontopA*4 + Math.abs(posA-state.arm) + 2;
             }
             // if anything is ontop of b, then count object on top and predict cost for placeing the top obj at another spot
+            
             if(ontopB > 0){
-            	count += ontopB*4 + Math.abs(posA-state.arm);
+            	count += ontopB*4 + Math.abs(posB-state.arm);
             	// find shortest path to a possition to place the obj at the top
             	var ontopColB = this.getTopRelation(posB , state);
 	            count += this.costToClosestLegalNewPos(ontopColB.args[0], a, posB, state);
@@ -477,6 +478,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             		//count += 4;	// if they are in same column, then we have to move away an then back again min 4.
             	}
             	
+            }else{
+            	count += Math.abs(posB-state.arm);
             }
             // if anything is ontop of a, then count object on top and predict cost for placeing the top obj at another spot
             if(ontopA > 0 && posA != posB){ 	// we dont need to go here if they are in the same column
@@ -484,6 +487,11 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             	// find shortest path to a possition to place the obj at the top
             	var ontopColA = this.getTopRelation(posA , state);
             	count += this.costToClosestLegalNewPos(ontopColA.args[0], b, posA, state);
+            }else{
+            	count += Math.abs(posA-state.arm);
+            }
+            if(state.holding){
+            	count ++; //if holding then +1 to drop it 
             }
             
         /*   var z = b;
@@ -948,7 +956,13 @@ module Planner {
         						return costB - costA;
         					});
         for(var i = 0; i < intprt.length; i++){
-        	console.log("Lit: " + intprt[i][0].args.toString() + " cost: " + sp1.heuristic_cost(0,intprt[i][0]));
+        	var debugcost = 0;
+        	var debugprint = "";
+        	for(var k = 0; k < intprt[i].length; k++){
+        		debugprint += intprt[i][k].args.toString() + " ";
+        		debugcost += sp1.heuristic_cost(0,intprt[i][k]);
+        	}
+        	console.log("Lit: " + debugprint + " cost: " + debugcost);
         	sortedIntrpt.enqueue(intprt[i]);
         }
         

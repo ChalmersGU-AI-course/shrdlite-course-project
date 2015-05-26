@@ -488,13 +488,17 @@ module Interpreter {
     	}
     	return false;
     }
-    
+    // retruns true if it is illegal
     function checkillegalcombi(lits : Literal[], state : WorldState):boolean{
     	for(var i = 0; i < lits.length; i ++){
     		var templit = lits[i];
     		for(var j = 0; j < lits.length; j++){
 	    		var templit2 = lits[j];
 	    		if(templit2.rel == templit.rel && i != j){
+	    			if((templit2.rel != "hold") && (!templit.args[1] || !templit2.args[1]
+	    					|| !templit.args[0] || !templit2.args[0])){
+						return true;
+	    			}
 	    			if((templit2.rel == "ontop" || templit2.rel == "inside" || true) && 
 	    					(templit2.args[0] == templit.args[0] || 
 	    					 templit2.args[1] == templit.args[1] //||
@@ -514,6 +518,7 @@ module Interpreter {
 	    					&& state.objects[templit.args[0]].form == "ball" && templit2.args[1] == templit.args[1])){
 	    				return true;
 	    			}
+	    			
 	    			if(templit2.rel == "under" && (state.objects[templit2.args[1]].form == "ball"
 	    					&& state.objects[templit.args[1]].form == "ball" && 
 	    					(templit2.args[0] == templit.args[0] || templit2.args[1] == templit.args[1]))){
@@ -614,7 +619,7 @@ module Interpreter {
     		}
     	}
     	
-    	if(!checkillegalcombi(lits, state)){
+    	if(!checkillegalcombi(cleared, state)){
     		return cleared;
     	}else{
     		return [];
