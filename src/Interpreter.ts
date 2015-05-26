@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
+///<reference path="Planner.ts"/>
 
 interface Window { state: any; }
 
@@ -8,23 +9,39 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
+
    var worldSize;
 
-    export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
-        var interpretations : Result[] = [];
-        worldSize=currentState.stacks.length;
-        parses.forEach((parseresult) => {
-            var intprt : Result = <Result>parseresult;
-            intprt.intp = interpretCommand(intprt.prs, currentState);
-            if (intprt.intp.length) interpretations.push(intprt);
+    export function interpret(parses : Parser.Result[][][], currentState : WorldState) : Result {
+        var inter : Result = <Result>parses[0][0][0];
+        inter.intp = [];
+        parses.forEach((andProp) => {
+            inter.intp.push([]);
+            andProp.forEach((prop) => {
+                var lits : Literal[] = chooseBest(interpretCommand(prop[0].prs, currentState), currentState.stacks);
+                lits.forEach((l) => {inter.intp[inter.intp.length-1].push(l)});
+            });
+
         });
-        if (interpretations.length) {
-            return interpretations;
+        if (inter) {
+            return inter;
         } else {
             throw new Interpreter.Error("Found no interpretation");
         }
     }
-
+    
+    function chooseBest(lits : Literal[][], stacks : string[][]) : Literal[] {
+        var score = Number.POSITIVE_INFINITY;
+        var index = 0;
+        for(var i=0; i<lits.length; i++) {
+            var s = Planner.heuristic(stacks,lits[i]);
+            if(s<score) {
+                index=i;
+                score=s;
+            }
+        }
+        return lits[index];
+    }
 
     export interface Result extends Parser.Result {intp:Literal[][];}
     export interface Literal {pol:boolean; rel:string; args:string[];}
