@@ -623,7 +623,6 @@ module Interpreter {
 		//todo: put all balls in a box on the floor
 		//todo: move a ball inside a box
 		//todo: move command when you are already holding sth
-		//todo: stack up all objects
 		public getInterpretation() : Literal[][] {
 			//typeof this.cmd.ent !== "undefined"
 			//typeof this.cmd.loc !== "undefined"
