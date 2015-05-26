@@ -118,6 +118,6 @@ class ShrdliteNode implements GraphNode<number> {
                 stackcopy[i][j] = this.state.stacks[i][j];
         }
 
-        return {arm: this.state.arm, examples: this.state.examples, holding: this.state.holding, objects: this.state.objects, stacks: stackcopy };
+        return { arm: this.state.arm, examples: this.state.examples, holding: this.state.holding, objects: this.state.objects, stacks: stackcopy, rowLength: this.state.rowLength };
     }
 }

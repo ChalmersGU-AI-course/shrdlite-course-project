@@ -31,13 +31,21 @@ class ShrdliteNodeFilter implements GraphFilter {
                 }
                 break;
             case 'beside':
-                for (var i = 0; i < node.state.stacks.length; ++i) {
-                    var below = node.state.stacks[i].indexOf(this.intptr.args[1]);
-                    var onTop = node.state.stacks[i].indexOf(this.intptr.args[0]);
+                for (var i = 1; i < node.state.stacks.length; ++i) {
+
+                    var arg0 = this.intptr.args[0];
+                    var arg1 = this.intptr.args[1];
+
+                    var obj11 = node.state.stacks[i-1].indexOf(arg0);
+                    var obj21 = node.state.stacks[i].indexOf(arg1);
+
+                    var obj12 = node.state.stacks[i - 1].indexOf(arg1);
+                    var obj22 = node.state.stacks[i].indexOf(arg0);
+
 
                     //leftof or rightoff
 
-                    if ((below != -1 || this.intptr.args[1] == 'floor') && onTop != -1 && below + 1 == onTop)
+                    if ((obj11 != -1 && obj21 != -1) || (obj12 != -1 && obj22 != -1))
                         return 0;
                 }
                 break;

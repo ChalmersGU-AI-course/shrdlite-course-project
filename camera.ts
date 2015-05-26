@@ -24,6 +24,8 @@ class Camera {
 
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
         mat4.perspective(this.pMatrix, 1.04, this.canvas.width / this.canvas.height, 0.1, 100.0);
+        mat4.rotateX(this.pMatrix, this.pMatrix, 0.3);
         mat4.translate(this.pMatrix, this.pMatrix, this.pos);
+        
     }
 }

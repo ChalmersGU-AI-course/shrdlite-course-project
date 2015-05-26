@@ -37,7 +37,8 @@ ExampleWorlds["complex"] = {
         "put a box beside all objects",
         "put all red objects above a yellow object on the floor",
         "put all yellow objects under a red object under an object"
-    ]
+    ],
+    rowLength: 5
 };
 
 
@@ -72,7 +73,8 @@ ExampleWorlds["medium"] = {
         "put the large plank under the blue brick",
         "move all bricks on a table",
         "move all balls inside a large box"
-    ]
+    ],
+    rowLength: 10
 };
 
 
@@ -105,7 +107,8 @@ ExampleWorlds["small"] = {
         "move all balls inside a large box",
 		"move the black ball in a yellow box on a blue table",
 		"stack up all blue objects"
-    ]
+    ],
+    rowLength: 5
 };
 
 
@@ -136,5 +139,38 @@ ExampleWorlds["impossible"] = {
     },
     "examples": [
         "this is just an impossible world"
-    ]
+    ],
+    rowLength: 5
+};
+
+ExampleWorlds["3D"] = {
+    "stacks": [["e"], ["g"], ["b"], ["k", "f"], [], [], ["l"], ["m"], []],
+    "holding": "a",
+    "arm": 0,
+    "objects": {
+        "floor": { "form": "floor", "size": "", "color": "" },
+        "a": { "form": "brick", "size": "large", "color": "green" },
+        "b": { "form": "brick", "size": "small", "color": "white" },
+        "c": { "form": "plank", "size": "large", "color": "red" },
+        "d": { "form": "plank", "size": "small", "color": "green" },
+        "e": { "form": "ball", "size": "large", "color": "white" },
+        "f": { "form": "ball", "size": "small", "color": "black" },
+        "g": { "form": "table", "size": "large", "color": "blue" },
+        "h": { "form": "table", "size": "small", "color": "red" },
+        "i": { "form": "pyramid", "size": "large", "color": "yellow" },
+        "j": { "form": "pyramid", "size": "small", "color": "red" },
+        "k": { "form": "box", "size": "large", "color": "yellow" },
+        "l": { "form": "box", "size": "large", "color": "red" },
+        "m": { "form": "box", "size": "small", "color": "blue" }
+    },
+    "examples": [
+        "put the white ball in a box on the floor",
+        "put the black ball in a box on the floor",
+        "take a blue object",
+        "take the white ball",
+        "put all boxes on the floor",
+        "move all balls inside a large box",
+        "move the black ball in a yellow box on a blue table"
+    ],
+    rowLength: 3
 };
