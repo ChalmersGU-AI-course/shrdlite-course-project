@@ -6,14 +6,9 @@
 
 class GLGWorld implements World {
     protected gl: WebGLRenderingContext;
-
-    //protected pMatrix: Float32Array;
-    //protected mvMatrix: Float32Array;
-
     protected cam: Camera;
 
     private scene: Array<RenderItem>;
-    private floor: RenderItem;
     private arm: RenderItem;
     private objects: collections.Dictionary<string, RenderItem>;
 
@@ -35,9 +30,9 @@ class GLGWorld implements World {
         this.cam.setPosition(-middle, -3, -7);
 
 
-        this.floor = new RenderItem(this.gl, Assets.Floor, Assets.floorTexture);
-        this.floor.setPosition(0, -0.1, 0);
-        this.scene.push(this.floor);
+        var floor = new RenderItem(this.gl, Assets.Floor, Assets.floorTexture);
+        floor.setPosition(0, -0.1, 0);
+        this.scene.push(floor);
 
         this.arm = new RenderItem(this.gl, Assets.Arm, Assets.woodTexture);
         this.arm.setPosition(0, 2, 0);
@@ -66,6 +61,9 @@ class GLGWorld implements World {
                     case "black":
                         tex = Assets.blackWood;
                         break;
+                    case "green":
+                        tex = Assets.greenWood;
+                        break;
                     default:
                         break;
                 }
@@ -78,7 +76,16 @@ class GLGWorld implements World {
                         asset = obj.size == "large" ? Assets.Balllarge : Assets.BallSmall;
                         break;
                     case "table":
-                        asset = Assets.TableLarge;
+                        asset = obj.size == "large" ? Assets.TableLarge : Assets.TableSmall;
+                        break;
+                    case "brick":
+                        asset = obj.size == "large" ? Assets.BrickLarge : Assets.BrickSmall;
+                        break;
+                    case "plank":
+                        asset = obj.size == "large" ? Assets.PlankLarge : Assets.PlankSmall;
+                        break;
+                    case "pyramid":
+                        asset = obj.size == "large" ? Assets.PyramidLarge : Assets.PyramidSmall;
                         break;
                     default:
                         break;
@@ -97,7 +104,7 @@ class GLGWorld implements World {
         this.gl.clearDepth(1.0);
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);
-
+        this.gl.hint(this.gl.GENERATE_MIPMAP_HINT, this.gl.NICEST);
         this.initShader();
 
 
@@ -205,40 +212,41 @@ class GLGWorld implements World {
 
     private test2() {
         var vertices = [
-            // Front face
-            -0.5, 0.35, 0.5,
-            0.5, 0.35, 0.5,
-            0.5, 0.4, 0.5,
-            -0.5, 0.4, 0.5,
 
-            -0.5, 0.35, -0.5,
-            -0.5, 0.4, -0.5,
-            0.5, 0.4, -0.5,
-            0.5, 0.35, -0.5,
+            // Front face
+            -0.1, 0, 0.1,
+            0.1, 0, 0.1,
+            0.1, 0.35, 0.1,
+            -0.1, 0.35, 0.1,
+
+            -0.1, 0, -0.1,
+            -0.1, 0.35, -0.1,
+            0.1, 0.35, -0.1,
+            0.1, 0, -0.1,
 
             // Top face
-            -0.5, 0.4, -0.5,
-            -0.5, 0.4, 0.5,
-            0.5, 0.4, 0.5,
-            0.5, 0.4, -0.5,
+            -0.1, 0.35, -0.1,
+            -0.1, 0.35, 0.1,
+            0.1, 0.35, 0.1,
+            0.1, 0.35, -0.1,
 
             // Bottom face
-            -0.5, 0.35, -0.5,
-            0.5, 0.35, -0.5,
-            0.5, 0.35, 0.5,
-            -0.5, 0.35, 0.5,
+            -0.1, 0, -0.1,
+            0.1, 0, -0.1,
+            0.1, 0, 0.1,
+            -0.1, 0, 0.1,
 
         // Right face
-            0.5, 0.35, -0.5,
-            0.5, 0.4, -0.5,
-            0.5, 0.4, 0.5,
-            0.5, 0.35, 0.5,
+            0.1, 0, -0.1,
+            0.1, 0.35, -0.1,
+            0.1, 0.35, 0.1,
+            0.1, 0, 0.1,
 
             // Left face
-            -0.5, 0.35, -0.5,
-            -0.5, 0.35, 0.5,
-            -0.5, 0.4, 0.5,
-            -0.5, 0.4, -0.5
+            -0.1, 0, -0.1,
+            -0.1, 0, 0.1,
+            -0.1, 0.35, 0.1,
+            -0.1, 0.35, -0.1
         ];
 
         var vertexIndices = [
@@ -249,25 +257,25 @@ class GLGWorld implements World {
             16, 17, 18, 16, 18, 19,   // right
             20, 21, 22, 20, 22, 23    // left
         ];
-        /*
+        
         for (var i = 0; i < vertices.length; i += 3) {
-            vertices[i] += 0.3;
+            vertices[i] -= 0.3;
         }
         for (var i = 1; i < vertices.length; i += 3) {
 
         }
         for (var i = 2; i < vertices.length; i += 3) {
-            vertices[i] -= 0.3;
-        }*/
+            vertices[i] += 0.3;
+        }
 
         for (var i = 0; i < vertexIndices.length; ++i) {
-            vertexIndices[i] += 24 * 4;
+            vertexIndices[i] += 24 * 0;
         }
 
         var k = "";
         var l = "";
         for (var i = 0; i < vertices.length; ++i) {
-            k += ',' + vertices[i].toFixed(1);
+            k += ',' + vertices[i].toFixed(2);
         }
 
         for (var i = 0; i < vertexIndices.length; ++i) {
