@@ -28,7 +28,7 @@ class GLGWorld implements World {
 
         this.scene = new Array<RenderItem>();
         this.cam = new Camera(this.gl, canvas);
-        var middle = this.currentState.rowLength / 2;
+        var middle = (this.currentState.rowLength - 0.5) * 1.1 / 2;
         this.cam.setPosition(-middle, -4, -5);
 
 
@@ -37,9 +37,7 @@ class GLGWorld implements World {
         this.scene.push(floor);
 
         this.arm = new RenderItem(this.gl, Assets.Arm, Assets.woodTexture);
-        //this.arm.setPosition(0, 2, 0);
         this.scene.push(this.arm);
-
 
         for (var i = 0; i < currentState.stacks.length; ++i) {
             for (var j = 0; j < currentState.stacks[i].length; ++j) {
@@ -189,11 +187,11 @@ class GLGWorld implements World {
         //Holding
         var x = this.currentState.arm % this.currentState.rowLength;
         var y = Math.floor(this.currentState.arm / this.currentState.rowLength);
-        this.arm.setPosition(x * 1.1, 4, -y * 1.1);
+        this.arm.setPosition(x * 1.1, 3, -y * 1.1);
 
         if (this.objects.containsKey(this.currentState.holding)) {
             var ri = this.objects.getValue(this.currentState.holding);
-            ri.setPosition(x * 1.1, 3, -y * 1.1);
+            ri.setPosition(x * 1.1, 2.5, -y * 1.1);
         }
 
 

@@ -8,8 +8,15 @@ var defaultWorld = 'small';
 var defaultSpeech = false;
 
 //When document is ready
-$(function(){
+$(function () {
+
+
     var current = getURLParameter('world');
+    if (current != '3D')
+        $('#theworld3d').hide();
+    else
+        $('#theworld').hide();
+
     if (!(current in ExampleWorlds)) {
         current = defaultWorld;
     }
@@ -36,6 +43,7 @@ $(function(){
     var world = new SVGWorld(ExampleWorlds[current], useSpeech);
     var glworld = new GLGWorld(ExampleWorlds[current], <HTMLCanvasElement> document.getElementById('glcanvas'));
     Shrdlite.interactive(world, glworld);
+
 });
 
 

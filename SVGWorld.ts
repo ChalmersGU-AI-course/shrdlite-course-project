@@ -262,7 +262,7 @@ class SVGWorld implements World {
     // The basic actions: left, right, pick, drop
 
     private getAction(act) {
-        var actions = {p:this.pick, d:this.drop, l:this.left, r:this.right};
+        var actions = { p: this.pick, d: this.drop, l: this.left, r: this.right, f: this.forward, b: this.backward };
         return actions[act.toLowerCase()];
     }
 
@@ -297,6 +297,20 @@ class SVGWorld implements World {
         this.verticalMove('pick', callback);
     }
 
+    private forward(callback?) {
+        if (this.currentState.arm < this.currentState.rowLength) {
+            throw "Already at the front edge!";
+        }
+        this.horizontalMove(this.currentState.arm - this.currentState.rowLength, callback);
+    }
+
+    private backward(callback?) {
+        if (this.currentState.arm + this.currentState.rowLength >= this.currentState.stacks.length) {
+            throw "Already at the back edge!";
+        }
+        this.horizontalMove(this.currentState.arm + this.currentState.rowLength, callback);
+    }
+
     //////////////////////////////////////////////////////////////////////
     // Moving around
 
@@ -318,6 +332,11 @@ class SVGWorld implements World {
         if (callback) setTimeout(callback, (duration + this.animationPause) * 1000);
         return 
     }
+
+    /*
+    private forwardMove(newArm, callback?) {
+        this.currentState.arm = newArm;
+    }*/
 
     private verticalMove(action, callback?) {
         var altitude = this.getAltitude(this.currentState.arm);
@@ -343,6 +362,8 @@ class SVGWorld implements World {
         }
         if (callback) setTimeout(callback, 2*(duration + this.animationPause) * 1000);
     }
+
+
 
     //////////////////////////////////////////////////////////////////////
     // Methods for getting information about objects 

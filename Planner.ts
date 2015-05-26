@@ -61,10 +61,7 @@ module Planner {
 
         //TODO: maybe empty
         if (picks == undefined)
-            if (state.arm < state.stacks.length - 2)
-                return ['r', 'l'];
-            else
-                return ['l', 'r'];
+            throw new Error('That is an impossible move');
 
 
         while (picks.length > 0) {
@@ -74,14 +71,32 @@ module Planner {
 
 
             //Move arm!
-            if (pickstack < currentNode.state.arm) {
+            var arm_row = Math.floor(currentNode.state.arm / currentNode.state.rowLength);
+            var pick_row = Math.floor(pickstack / currentNode.state.rowLength);
+            var arm_col = currentNode.state.arm % currentNode.state.rowLength;
+            var pick_col = pickstack % currentNode.state.rowLength;
+
+            if (pick_row < arm_row) {
+                plan.push("Moving forward");
+                for (var i = arm_row; i > pick_row; --i) {
+                    plan.push("f");
+                }
+            }
+            if (pick_row > arm_row) {
+                plan.push("Moving backward");
+                for (var i = arm_row; i < pick_row; ++i) {
+                    plan.push("b");
+                }
+            }
+
+            if (pick_col < arm_col) {
                 plan.push("Moving left");
-                for (var i = currentNode.state.arm; i > pickstack; i--) {
+                for (var i = arm_col; i > pick_col; --i) {
                     plan.push("l");
                 }
-            } else if (pickstack > currentNode.state.arm) {
+            } else if (pick_col > arm_col) {
                 plan.push("Moving right");
-                for (var i = currentNode.state.arm; i < pickstack; i++) {
+                for (var i = arm_col; i < pick_col; ++i) {
                     plan.push("r");
                 }
             }

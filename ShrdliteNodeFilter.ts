@@ -74,7 +74,27 @@ class ShrdliteNodeFilter implements GraphFilter {
                         return 0;
                 }
                 break;
+            case 'infront':
+                for (var i = node.state.rowLength; i < node.state.stacks.length; ++i) {
+                    var behind = node.state.stacks[i].indexOf(this.intptr.args[1]);
+                    var infront = node.state.stacks[i - + node.state.rowLength].indexOf(this.intptr.args[0]);
+
+                    if (infront != -1 && behind != -1)
+                        return 0;
+                }
+                break;
+            case 'behind':
+                for (var i = node.state.rowLength; i < node.state.stacks.length; ++i) {
+                    var behind = node.state.stacks[i].indexOf(this.intptr.args[0]);
+                    var infront = node.state.stacks[i - + node.state.rowLength].indexOf(this.intptr.args[1]);
+
+                    if (infront != -1 && behind != -1)
+                        return 0;
+                }
+                break;
             default:
+                alert('no');
+                return 0;
                 break;
         }
         return 1;

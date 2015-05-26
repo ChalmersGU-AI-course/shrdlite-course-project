@@ -14,7 +14,12 @@ class ShrdliteNode implements GraphNode<number> {
 
 
     costTo(to: ShrdliteNode): number {
-        return (Math.abs(to.state.arm - this.state.arm) + 1);
+        var from_row = Math.floor(this.state.arm / this.state.rowLength);
+        var to_row = Math.floor(to.state.arm / this.state.rowLength);
+        var from_col = this.state.arm % this.state.rowLength;
+        var to_col = to.state.arm % this.state.rowLength;
+
+        return (Math.abs(from_col - to_col) + Math.abs(from_row - to_row) + 1);
     }
 
     neighbours(): { node: ShrdliteNode; edge: number }[] {
