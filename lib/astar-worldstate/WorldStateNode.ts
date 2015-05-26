@@ -67,10 +67,10 @@ class WorldStateNode{
 		var heuristic = 0;
 
         if(sndObj === "floor") {
-            // TODO: Not completed, needs to be thought through.
-
-            // Remove each object on top of the first object.
-            heuristic += this.state.objectsOnTop(fstObj) * 4;
+            if(fstObj !== this.state.holding) {
+                // Remove each object on top of the first object.
+                heuristic += this.state.objectsOnTop(fstObj) * 4;
+            }
 
             // Move to lowest stack.
             heuristic += Math.abs(this.state.arm - this.state.getLowestStackIndex());
@@ -80,8 +80,10 @@ class WorldStateNode{
         } else {
             var distance = this.state.getDistance(fstObj,sndObj);
 
-            // If they arent in the same stack, remove each object on top of fstObj (min 4 moves per).
-            if (distance != 0) {
+            if(fstObj !== this.state.holding && distance != 0) {
+                // If we have not yet picked up the object,
+                // and they aren't in the same stack,
+                // remove each object on top of fstObj (min 4 moves per object).
                 heuristic += this.state.objectsOnTop(fstObj) * 4;
             }
 
