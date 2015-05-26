@@ -3,16 +3,17 @@
 ///<reference path="ExampleWorlds.ts"/>
 
 // Extract command line arguments:
-var nodename = process.argv[0];
-var jsfile = process.argv[1].replace(/^.*\//, "");
-var worldname = process.argv[2];
-var utterance = process.argv[3];
+var nodename    = process.argv[0];
+var jsfile      = process.argv[1].replace(/^.*\//, "");
+var worldname   = process.argv[2];
+var utterance   = process.argv[3];
+var searchStrat = process.argv[4];
 
 var usage = "Usage: " + nodename + " " + jsfile + 
     " (" + Object.keys(ExampleWorlds).join(" | ") + ")" +
-    " (utterance | example no.)";
+    " (utterance | example no.) (DFS | BFS | star | BestFS ) ";
 
-if (process.argv.length != 4 || !ExampleWorlds[worldname]) {
+if (process.argv.length != 5 || !ExampleWorlds[worldname]) {
     console.error(usage);
     process.exit(1);
 } 
@@ -29,7 +30,7 @@ if (!isNaN(example)) {
 }
 
 world.printWorld(() => {
-    var plan = Shrdlite.parseUtteranceIntoPlan(world, utterance);
+    var plan = Shrdlite.parseUtteranceIntoPlan(world, utterance, searchStrat);
     console.log();
     world.performPlan(plan, () => {
         world.printWorld();

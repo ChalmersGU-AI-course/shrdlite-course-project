@@ -6,6 +6,7 @@
 var nodename = process.argv[0];
 var jsfile = process.argv[1].replace(/^.*\//, "");
 var worldname = process.argv[2];
+var searchStrat = process.argv[3];
 
 var usage = "Usage: " + nodename + " " + jsfile + 
     " (" + Object.keys(ExampleWorlds).join(" | ") + ")";
@@ -17,4 +18,4 @@ if (process.argv.length != 3 || !ExampleWorlds[worldname]) {
 
 var world = new ANSIWorld(ExampleWorlds[worldname]);
 
-Shrdlite.interactive(world);
+Shrdlite.interactive(world, searchStrat);

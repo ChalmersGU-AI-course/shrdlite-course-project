@@ -5,6 +5,7 @@
 
 var defaultWorld = 'small';
 var defaultSpeech = false;
+var defaultStrategy = 'star';
 
 $(function(){
     var current = getURLParameter('world');
@@ -14,25 +15,42 @@ $(function(){
     var speech = (getURLParameter('speech') || "").toLowerCase();
     var useSpeech = (speech == 'true' || speech == '1' || defaultSpeech);
 
+    var SearchStrategies = ['DFS', 'BFS', 'star', 'BestFS'];
+
+    var searchStrategy = getURLParameter('searchStrategy');
+    if(SearchStrategies.indexOf(searchStrategy) === -1) {
+        searchStrategy = defaultStrategy;
+    }
+
     $('#currentworld').text(current);
     $('<a>').text('reset')
-        .attr('href', '?world=' + current + '&speech=' + useSpeech)
+        .attr('href', '?world=' + current + '&speech=' + useSpeech + '&searchStrategy=' + searchStrategy)
         .appendTo($('#resetworld'));
+
     $('#otherworlds').empty();
     for (var wname in ExampleWorlds) {
         if (wname !== current) {
             $('<a>').text(wname)
-                .attr('href', '?world=' + wname + '&speech=' + useSpeech)
+                .attr('href', '?world=' + wname + '&speech=' + useSpeech + '&searchStrategy=' + searchStrategy)
                 .appendTo($('#otherworlds'))
                 .after(' ');
         }
     }
+
     $('<a>').text(useSpeech ? 'turn off' : 'turn on')
-        .attr('href', '?world=' + current + '&speech=' + (!useSpeech))
+        .attr('href', '?world=' + current + '&speech=' + (!useSpeech) + '&searchStrategy=' + searchStrategy)
         .appendTo($('#togglespeech'));
 
+    $('#searchStrategy').empty();
+    SearchStrategies.forEach(strat => {
+        $('<a>').text(strat)
+        .attr('href', '?world=' + current + '&speech=' + useSpeech + '&searchStrategy=' + strat)
+        .appendTo($('#searchStrategy'))
+        .after(' ');
+    });
+
     var world = new SVGWorld(ExampleWorlds[current], useSpeech);
-    Shrdlite.interactive(world);
+    Shrdlite.interactive(world, searchStrategy);
 });
 
 

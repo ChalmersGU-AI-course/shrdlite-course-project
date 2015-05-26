@@ -8,11 +8,11 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
-    export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
+    export function plan(interpretations : Interpreter.Result[], currentState : WorldState, searchStrategy : string) : Result[] {
         var plans : Result[] = [];
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
-            plan.plan = planInterpretation(plan.intp, currentState);
+            plan.plan = planInterpretation(plan.intp, currentState, searchStrategy);
             plans.push(plan);
         });
         if (plans.length) {
@@ -41,34 +41,27 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
+    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState, searchStrategy : string) : string[] {
+        var moves = [];
+        moves.push("Perform search with strategy: " + searchStrategy + ".");
 
-        var start = new Date().getTime();
-        var solution = search.search(new WorldStateNode(state), intprt, search.compareBFS);
-        var end = new Date().getTime();
-        var time = end - start;
-        console.log("BSF:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
+        switch(searchStrategy) {
+            case 'DFS':
+                var solution = search.search(new WorldStateNode(state), intprt, search.compareDFS);
+                break;
+            case 'BFS':
+                var solution = search.search(new WorldStateNode(state), intprt, search.compareBFS);
+                break;
+            case 'star':
+                var solution = search.search(new WorldStateNode(state), intprt, search.compareStar);
+                break;
+            case 'BestFS':
+                var solution = search.search(new WorldStateNode(state), intprt, search.compareBestFirst);
+                break;
+        }
 
-        var start = new Date().getTime();
-        var solution = search.search(new WorldStateNode(state), intprt, search.compareStar);
-        var end = new Date().getTime();
-        var time = end - start;
-        console.log("aStar:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
-
-        var start = new Date().getTime();
-        var solution = search.search(new WorldStateNode(state), intprt, search.compareDFS);
-        var end = new Date().getTime();
-        var time = end - start;
-        console.log("DFS:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
-
-        var start = new Date().getTime();
-        var solution = search.search(new WorldStateNode(state), intprt, search.compareBestFirst);
-        var end = new Date().getTime();
-        var time = end - start;
-        console.log("BestFS:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
 
         if(solution !== null ) {
-            var moves = [];
             var path = solution.getPath();
 
             for(var moveIx = 0; moveIx < path.size(); moveIx++) {

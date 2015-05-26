@@ -6,14 +6,14 @@
 
 module Shrdlite {
 
-    export function interactive(world : World) : void {
+    export function interactive(world : World, searchStrategy : string) : void {
         function endlessLoop(utterance : string = "") : void {
             var inputPrompt = "What can I do for you today? ";
             var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
             if (utterance.trim()) {
                 var plan : string[] = splitStringIntoPlan(utterance);
                 if (!plan) {
-                    plan = parseUtteranceIntoPlan(world, utterance);
+                    plan = parseUtteranceIntoPlan(world, utterance, searchStrategy);
                 }
                 if (plan) {
                     world.printDebugInfo("Plan: " + plan.join(", "));
@@ -32,7 +32,7 @@ module Shrdlite {
     // - then it interprets the parse(s)
     // - then it creates plan(s) for the interpretation(s)
 
-    export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
+    export function parseUtteranceIntoPlan(world : World, utterance : string, searchStrategy : string) : string[] {
         runTests();
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
@@ -66,7 +66,7 @@ module Shrdlite {
         });
 
         try {
-            var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
+            var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState, searchStrategy);
         } catch(err) {
             if (err instanceof Planner.Error) {
                 world.printError("Planning error", err.message);
