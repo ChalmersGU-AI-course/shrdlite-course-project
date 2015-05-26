@@ -497,6 +497,16 @@ module.exports = Heap;
 /*jslint node: true, esnext: true */
 "use strict";
 
+function objects_in_world(state) {
+    var list = state.stacks.flatten();
+    for (var arm of state.arms) {
+        if (arm.holding !== null) {
+            list.push(arm.holding);
+        }
+    }
+    return list;
+}
+
 /// Reinventing a decent standard library /////////////////////////////////////////////////////////
 
 Array.prototype.contains = function(e) {
@@ -960,11 +970,7 @@ SearchGraph.prototype.state_hash = function(state) {
 
 //TODO
 SearchGraph.prototype.isPossible = function(state) {
-    var elems = state.stacks.flatten();
-    if (state.holding !== null) {
-        elems.push(state.holding);
-    }
-
+    var elems = objects_in_world(state);
     //Check that each element exists, and that the rule is possible.
     for (var rule of this.pddl) {
         if (!elems.contains(rule.item)) {
@@ -973,14 +979,19 @@ SearchGraph.prototype.isPossible = function(state) {
         if (rule.rel == "holding" || rule.rel == "floor") {
             continue;
         }
+        var newOneof = [];
         for (var sub of rule.oneof) {
             if (!elems.contains(sub)) {
                 return false;
             }
-            if (rule.rel == "ontop" && !this.can_place(rule.item, [sub])){
-                return false;
+            if (rule.rel == "ontop" && this.can_place(rule.item, [sub])){
+                return newOneof.push(sub);
             }
         }
+        if (newOneof.length === 0) {
+            return false;
+        }
+        rule.oneof = newOneof;
     }
     return true;
 };
@@ -1004,6 +1015,7 @@ var astar = require("./astar.js");
 module.exports = function(currentState, pddl) {
     var g = new SearchGraph(currentState, pddl);
     if (!g.isPossible(g.startNode)) {
+        console.log("impossible");
         return undefined;
     }
     console.time("A*");

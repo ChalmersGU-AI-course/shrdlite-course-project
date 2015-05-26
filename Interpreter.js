@@ -3,6 +3,7 @@
 var Interpreter = {};
 
 Interpreter.interpret = function(parses, currentState) {
+    console.log(JSON.stringify(currentState, null, 2));
     var ret = [];
     for (var x of parses) {
         try {
