@@ -1,16 +1,32 @@
 declare var _:any;
 
-function PlanalyzeActions(plan: string[], world: WorldState): string[] {
+function PlanalyzeActions(plan: string[], world: WorldState, literals: Interpreter.Literal[][]): string[] {
 	var result: string[] = [];
 	var actionPlans = SplitToActionPlans(plan);
 	var currentWorld = world;
+	var allLiterals = _.flatten(literals);
+	var unsatisfiedLiterals = GetUnsatisfiedLiterals(allLiterals, world);
+
 	for (var i = 0; i < actionPlans.length; ++i) {
 		var actionPlan = actionPlans[i];
-		result.push(DescribeActionPlan(actionPlan, currentWorld));
+		var nextWorld = ApplyPlanToWorld(actionPlan, currentWorld);
+		var nextUnsatisfiedLiterals = GetUnsatisfiedLiterals(unsatisfiedLiterals, nextWorld);
+		var satisfiedLiterals = _.difference(unsatisfiedLiterals, nextUnsatisfiedLiterals);
+
+		var description = DescribeActionPlan(actionPlan, currentWorld, satisfiedLiterals);
+		result.push(description);
 		result = result.concat(actionPlan);
-		currentWorld = ApplyPlanToWorld(actionPlan, currentWorld);
+		currentWorld = nextWorld;
+		unsatisfiedLiterals = nextUnsatisfiedLiterals;
 	}
 	return result;
+}
+
+function GetUnsatisfiedLiterals(literals: Interpreter.Literal[], world: WorldState): Interpreter.Literal[] {
+	var unsatisfiedLiterals = literals.filter(function(l) {
+		return !Planner.stateSatisfiesLiteral(world, l);
+	});
+	return unsatisfiedLiterals;
 }
 
 function ApplyPlanToWorld(plan: string[], world: WorldState): WorldState {
@@ -71,11 +87,13 @@ function SplitToActionPlans(plan: string[]): string[][] {
 	return actionPlans;
 }
 
-function DescribeActionPlan(plan: string[], world: WorldState): string {
+function DescribeActionPlan(plan: string[], world: WorldState, satisfiedLiterals: Interpreter.Literal[]): string {
 	var relevantObject = FindRelevantObject(plan, world);
-	var actionDescription = DescribeAction(plan, world);
+	var actionDescription = DescribeAction(plan, world, satisfiedLiterals);
 	var objectDescription = DescribeObject(relevantObject, world);
-	return actionDescription + " the " + objectDescription;
+	var relevantLiteral = FindRelevantLiteral(relevantObject, satisfiedLiterals);
+	var targetDescription = DescribeTarget(relevantLiteral, world);
+	return actionDescription + " the " + objectDescription + targetDescription;
 }
 
 function FindRelevantObject(plan: string[], world: WorldState): string {
@@ -93,6 +111,16 @@ function FindRelevantObject(plan: string[], world: WorldState): string {
 	var newWorld = ApplyPlanToWorld(plan, world);
 	var currentStack = newWorld.stacks[newWorld.arm];
 	return currentStack[currentStack.length - 1];
+}
+
+function FindRelevantLiteral(relevantObject: string, literals: Interpreter.Literal[]): Interpreter.Literal {
+	for (var i = 0; i < literals.length; ++i) {
+		var literal = literals[i];
+		if (literal.args[0] == relevantObject) {
+			return literal;
+		}
+	}
+	return null;
 }
 
 function DescribeObject(objectId: string, world: WorldState): string {
@@ -116,17 +144,28 @@ function DescribeObject(objectId: string, world: WorldState): string {
 	}
 }
 
-function DescribeAction(plan: string[], world: WorldState): string {
+function DescribeAction(plan: string[], world: WorldState, satisfiedLiterals: Interpreter.Literal[]): string {
 	var pickUpIndex = plan.indexOf("p");
 	var dropIndex = plan.indexOf("d");
 
 	if (pickUpIndex >= 0 && dropIndex >= 0) {
-		return "Moving";
+		if (satisfiedLiterals.length == 0) {
+			return "Moving away";
+		} else {
+			return "Moving";
+		}
 	} else if (pickUpIndex >= 0) {
 		return "Picking up";
 	} else {
 		return "Dropping";
 	}
+}
+
+function DescribeTarget(literal: Interpreter.Literal, world: WorldState): string {
+	if (!literal || literal.args.length <= 1) {
+		return "";
+	}
+	return " to the " + DescribeObject(literal.args[1], world);
 }
 
 function FindInWorldByProperty(property: string, value: string, world: WorldState): string[] {
@@ -139,6 +178,12 @@ function FindInWorldByProperty(property: string, value: string, world: WorldStat
 			if (definition[property] === value) {
 				objects.push(object);
 			}
+		}
+	}
+	if (world.holding) {
+		var definition = world.objects[world.holding];
+		if (definition[property] === value) {
+			objects.push(world.holding);
 		}
 	}
 	return objects;

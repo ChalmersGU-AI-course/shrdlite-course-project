@@ -98,10 +98,80 @@ module Interpreter {
         for (var i=0; i < matching.length; ++i)
         {
             var matchLiterals = buildRelativeLiterals(matching[i], cmd.loc, state);
-            literals = literals.concat(matchLiterals);
+            var previousLiterals = literals.slice();
+            if (cmd.ent.quant == "all") {
+                var newLiterals : Literal[][] = [];
+                for (var j=0; j<matchLiterals.length; ++j) {
+                    if (previousLiterals.length == 0) {
+                        newLiterals = matchLiterals.slice();
+                        continue;
+                    }
+                    for (var k = 0; k < previousLiterals.length; ++k) {
+                        var tempLiteral : Literal[] = previousLiterals[k].slice();
+                        var matchLiteral : Literal[] = matchLiterals[j].slice();
+                        var newestLiterals = concatLiterals(tempLiteral, matchLiteral);
+                        if (!listContainsList(newLiterals, newestLiterals)) {
+                            newLiterals.push(newestLiterals);
+                        }
+                    }
+                }
+                literals = newLiterals.slice();
+            }
+            else{
+                literals = literals.concat(matchLiterals);
+            }
         }
         return literals;
     }
+
+    function concatLiterals(literals1: Literal[], literals2 : Literal[]) : Literal[] {
+        var literals = literals1.slice();
+        for (var i = 0; i < literals1.length; ++i) {
+            for (var j=0; j < literals2.length; ++j) {
+                if (literals1[i] === literals2[j]) {
+                    continue;
+                }
+                literals.push(literals2[j]);
+            }
+        }
+        return stripDuplicates(literals);
+    }
+
+    function stripDuplicates(literals : Literal[]) : Literal[] {
+        var newLiterals : Literal[] = [];
+        for (var i=0; i<literals.length; ++i) {
+            if (!listContainsObject(newLiterals, literals[i]))
+            {
+                newLiterals.push(literals[i]);
+            }
+        }
+        return newLiterals;
+    }
+
+    function listContainsObject(list, obj) : boolean {
+        for (var i=0; i<list.length; ++i) {
+            if (list[i] === obj) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function listContainsList(listlist, list) : boolean {
+        for (var i=0; i<listlist.length; ++i) {
+            var isEqual = true;
+            for (var j=0; j<list.length; ++j) {
+                if(!listContainsObject(listlist[i], list[j])) {
+                    isEqual = false;
+                }
+            }
+            if (isEqual) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     function buildRelativeLiterals(object: string, location: Parser.Location, world: WorldState): Literal[][] {
         var matching: string[];
@@ -132,8 +202,17 @@ module Interpreter {
             return result;
         } else {
             var result: Literal[][] = [];
-            for (var m = 0; m < matching.length; ++m) {
-                result.push([{pol: true, rel: location.rel, args: [object, matching[m]]}]);
+            if (location.ent.quant !== "all"){
+                for (var m = 0; m < matching.length; ++m) {
+                    result.push([{pol: true, rel: location.rel, args: [object, matching[m]]}]);
+                }
+            }
+            else {
+                var res = [];
+                for (var m = 0; m < matching.length; ++m) {
+                    res.push({pol: true, rel: location.rel, args: [object, matching[m]]});
+                }
+                result.push(res);
             }
             return result;
         }
@@ -207,7 +286,15 @@ module Interpreter {
         var matchingEntities = findObjects(location.ent.obj, world);
         for (var matchingNr = 0; matchingNr < matchingEntities.length; ++matchingNr) {
             if (isRelativeMatch(objectId, location.rel, matchingEntities[matchingNr], world)) {
-                return true;
+                if(location.ent.quant !== "all") {
+                    return true;
+                }
+            }
+            else {
+                if (location.ent.quant === "all")
+                {
+                    return false;
+                }
             }
         }
         return false;

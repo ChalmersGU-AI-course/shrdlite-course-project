@@ -11,7 +11,12 @@ module Planner {
         var plans : Result[] = [];
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
-            plan.plan = planInterpretation(plan.intp, currentState);
+            try {
+                plan.plan = planInterpretation(plan.intp, currentState);
+            }
+            catch(err) {
+                return;
+            }
             if (plan.plan) {
                 plans.push(plan);
             }
@@ -61,7 +66,8 @@ module Planner {
         }
     }
 
-    function stateSatisfiesLiteral(state: WorldState, literal: Interpreter.Literal) : boolean {
+    //TODO: refactor
+    export function stateSatisfiesLiteral(state: WorldState, literal: Interpreter.Literal) : boolean {
         if (literal.rel === "holding") {
             return state.holding === literal.args[0];
         }
@@ -418,7 +424,9 @@ module Planner {
             if (!astarResult || !astarResult.Path){
                 return null;
             }
-            return astarResult.Path.Steps;
+            var steps = astarResult.Path.Steps;
+            var analyzedPlan = PlanalyzeActions(steps, state, intprt);
+            return analyzedPlan;
         } catch (err) {
             if (err instanceof TimeoutException) {
                 throw new Error("timeout");
