@@ -199,15 +199,13 @@ module Planner {
     	var tarIndex : number =  -1;
     	var loc : number = -1;
     	var locIndex : number =  -1;
-    	var minimum : number = Number.MAX_VALUE; // 999999999; 
+    	var minimum : number = Number.MAX_VALUE;
     	var list : number[] = [];
     	
     	for(var i =0; i<goal.length; i++ ){
     		for(var x =0; x<state.stacks.length; x++ ){
 				var stackTar = Interpreter.searchStack(state.stacks[x], goal[i][0].args[0]);
 				var stackLoc = Interpreter.searchStack(state.stacks[x], goal[i][0].args[1]);
-				
-				//console.log("ddddddddddddddddd", goal[i][0].args[0]);
 				
 				if( goal[i][0].args[0] == state.holding){
 					tar =0 ; 
@@ -220,7 +218,8 @@ module Planner {
 				}
 
 				if(stackTar != -1){
-					tar = (((state.stacks[x].length-1) - stackTar)*4)-1;
+					// It takes atleast four times of the number of objects over an object minus one get it highest in the stack
+					tar = (((state.stacks[x].length-1) - stackTar)*4)-1; 
 					tar = tar < 0 ? 0 : tar;
 					tarIndex = x;
 				}
@@ -239,7 +238,7 @@ module Planner {
 				tmpTot = tar + loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex);
 			}
 			
-				tmpTot +=  (Math.max (tarIndex,  state.arm) - Math.min (tarIndex,  state.arm));
+			//	tmpTot +=  (Math.max (tarIndex,  state.arm) - Math.min (tarIndex,  state.arm));
 				
 			if(minimum > tmpTot){
 				minimum = tmpTot;
