@@ -92,7 +92,6 @@ ExampleWorlds["small"] = {
     "examples": [
         "put the ball on the floor",
         "put the small ball in a box on the floor",
-        "put the white ball in a box on the floor",
         "put the black ball in a box on the floor",
         "take a blue object",
         "take the white ball"
