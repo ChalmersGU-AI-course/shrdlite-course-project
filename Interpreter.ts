@@ -21,10 +21,11 @@ module Interpreter {
         } else if (interpretations.length > 1) {
             //world.printDebugInfo("Ambiguous statement, wich of the following did you mean?");
             //Print claryfied statements in a loop
+            var allClarifications = "";
             parses.forEach((parseresult) => {
-                var clarification = clarifyParseTree(parseresult);
-                throw new Interpreter.Error(clarification);
+                allClarifications = allClarifications + " NEW PARSE TREE " + clarifyParseTree(parseresult);
             });
+            throw new Interpreter.Error(allClarifications);
 
             throw new Interpreter.Error("Ambiguous statement");
         } else  {
@@ -61,20 +62,44 @@ module Interpreter {
 
 
 
-
+    //TODO
     //Action
     //Find nested description
     function clarifyParseTree(parse : Parser.Result) : string{
         //If entety and target location is defined?
+        return parse.prs.cmd +" "+ parse.prs.ent.quant +" "+ 
+               clarifyRecursive(parse.prs.ent.obj) +" to " + clarifyRecursive(parse.prs.loc.ent.obj); //Add destination /other half of tree? this should be recirsive?
+    }
+    //TODO
+    //recursive add "that is"
+    function clarifyRecursive(object: Parser.Object) : string{
         var output = "";
-        if(parse.prs.ent && parse.prs.loc){
-            output = ""+parse.prs.ent +" that is " + parse.prs.loc;
-        }else if(parse.prs-ent){
-            output = ""+parse.prs.ent.obj +"that is" parse.prs.ent.loc;
+        //if object is relative to something
+        if(object.loc){
+            return printObject(object.obj) + " that is " + object.loc.rel + " " + clarifyRecursive(object.loc.ent.obj);
+            //add object "that is " clarifyRecursive(location.entity.object)
+        }else if(object.obj){
+            return clarifyRecursive(object);
+        }else if(object){
+            return printObject(object);
         }
-
-        return (output);
-        
+    }
+    //Returns a nice formated string of an object
+    function printObject(object: Parser.Object) : string{
+        var output = "";
+        if(object.size){
+            output = output + object.size +" ";
+        }
+        if(object.color){
+            output = output + object.color +" ";
+        }
+        if(object.form){
+         output = output + object.form +" ";
+        }
+        if(object.loc){
+            output = output + object.loc.rel +" ";
+        }
+        return output;
     }
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
