@@ -39,6 +39,9 @@ module Interpreter {
 			if (rel == "ontop") {
 				rel = "ontop of";
 			}
+			if (rel == "infront") {
+				rel = "in front of";
+			}
 			return s + res.prs.cmd + " the " + o.size + " " + o.color + " " + o.form + " " + rel + " the " + d.size + " " + d.color + " " + d.form;
 	}
 
@@ -76,7 +79,7 @@ module Interpreter {
 		 * add PosNode to the array of all PosNodes
 		 *
 		 * @param {object} node object
-		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof)
+		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof, behind, infront)
 		 * @return {void}
 		 */
 		public addNode(o, rel : string) : void {
@@ -231,7 +234,7 @@ module Interpreter {
 		 *
 		 * @param {Position} Position of the origin
 		 * @param {Position} Position of the destination
-		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof)
+		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof, behind, infront)
 		 * @return {boolean} Does the relation hold?
 		 */
 		private isReachable(orig : Position, dest : Position, rel : string) : boolean {
@@ -271,7 +274,17 @@ module Interpreter {
 					}
 					break;
 				case "beside": //as in "directly beside"
-					if (orig.x == (dest.x - 1) || orig.x == (dest.x + 1)) {
+					if (orig.x == (dest.x - 1) || orig.x == (dest.x + 1) || orig.x == (dest.x - this.state.rowLength) || orig.x == (dest.x + this.state.rowLength)) {
+						return true;
+					}
+					break;
+				case "behind": //as in "directly behind"
+					if (orig.x == (dest.x + this.state.rowLength)) {
+						return true;
+					}
+					break;
+				case "infront": //as in "directly in front of"
+					if (orig.x == (dest.x - this.state.rowLength)) {
 						return true;
 					}
 					break;
