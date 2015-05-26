@@ -8,6 +8,7 @@ module Interpreter {
 
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
+        var differentParseStrings = [];
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
@@ -18,7 +19,15 @@ module Interpreter {
         if (interpretations.length == 1) {
             return interpretations;
         } else if (interpretations.length > 1) {
-            throw new Interpreter.Error("Ambiguous statement");
+            //world.printDebugInfo("Ambiguous statement, wich of the following did you mean?");
+            //Print claryfied statements in a loop
+            var allClarifications = "";
+            var i = 1;
+            parses.forEach((parseresult) => {
+                allClarifications = allClarifications + " Interpertation " + i +": "+ clarifyParseTree(parseresult)+"\n";
+                i++
+            });
+            throw new Interpreter.Error(allClarifications);
         } else  {
             throw new Interpreter.Error("Found no interpretation");
         }
@@ -49,6 +58,43 @@ module Interpreter {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
+
+    //Split
+    function clarifyParseTree(parse : Parser.Result) : string{
+        //If entety and target location is defined?
+        return parse.prs.cmd +" "+ parse.prs.ent.quant +" "+ 
+               clarifyRecursive(parse.prs.ent.obj) +" TO " + parse.prs.ent.quant +" "+ clarifyRecursive(parse.prs.loc.ent.obj); //Add destination /other half of tree? this should be recirsive?
+    }
+    function clarifyRecursive(object: Parser.Object) : string{
+        var output = "";
+        //if object is relative to something
+        if(object.loc){
+            return printObject(object.obj) + " THAT IS " + object.loc.rel + " " +
+                   object.loc.ent.quant + " " + clarifyRecursive(object.loc.ent.obj);
+            //add object "that is " clarifyRecursive(location.entity.object)
+        }else if(object.obj){
+            return clarifyRecursive(object);
+        }else if(object){
+            return printObject(object);
+        }
+    }
+    //Returns a nice formated string of an object
+    function printObject(object: Parser.Object) : string{
+        var output = "";
+        if(object.size){
+            output = output + object.size +" ";
+        }
+        if(object.color){
+            output = output + object.color +" ";
+        }
+        if(object.form){
+         output = output + object.form +" ";
+        }
+        if(object.loc){
+            output = output + object.loc.rel +" ";
+        }
+        return output;
+    }
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         var matching: string[];
