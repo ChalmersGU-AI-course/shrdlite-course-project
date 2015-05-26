@@ -24,7 +24,7 @@ ExampleWorlds["complex"] = {
     },
     "examples": [
         "put the green plank left of the large brick",
-        "put the red plank above the yellow box",
+        "put the red plank above the red box",
         "put the box beside a pyramid",
         "put a box in a box",
         "take the yellow box",
