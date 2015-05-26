@@ -412,7 +412,8 @@ module Planner {
             return true;
         }
         toString() : string {
-            return this.State.stacks.toString() + this.State.holding + this.State.arm;
+            var stacksString = this.State.stacks.map(function(v) { return "[" + v.toString() + "]"});
+            return stacksString + ";" + this.State.holding + ";" + this.State.arm;
         }
     }
 
