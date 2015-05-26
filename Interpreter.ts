@@ -114,6 +114,8 @@ module Interpreter {
         var objs:string[][] = interpretObject(ent.obj, state);
         if (ent.quant === "the") {
             if (objs.length > 1) {
+            	console.log(objs);
+            	
                 throw new Interpreter.Error("There are more than one object that matches that description");
                 return objs;
             } else {
@@ -144,8 +146,12 @@ module Interpreter {
             objs = [];
             physics.map(l => {
                 var r:string[] = [];
-                l.map(p => r.push(p.obj));
-                objs.push(r);
+                l.map(p => {if(r.indexOf(p.obj)<0){ r.push(p.obj);}});
+                // Check if there is any array with the same objects inside as the new one.
+                // in short terms: objs.contains(r)
+                if(!objs.some(and => and.every(o1 => r.some(o2 => o1===o2)))){            	
+	                objs.push(r);
+	            }
             });
             return objs;
         } else {
