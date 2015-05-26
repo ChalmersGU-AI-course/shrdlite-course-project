@@ -24,13 +24,13 @@ module Shrdlite {
                 } catch (err){
                     if (err instanceof Interpreter.Ambiguity){
                         var question = "Do you mean ";
-			var index = world.currentState.ambiguousObjs.length-1;
-			if (index != 0){
-			    index = 1; // always refine from head !
-			    // since now refinement system doesn't really work on loc;
-			    // we want user to refine ent (which happened before loc) 
-			}
-			world.currentState.ambiguousObjs[index].forEach((obj) => {
+                        var index = world.currentState.ambiguousObjs.length-1;
+                        if (index != 0){
+                            index = 1; // always refine from head !
+                            // since now refinement system doesn't really work on loc;
+                            // we want user to refine ent (which happened before loc)
+                        }
+                        world.currentState.ambiguousObjs[index].forEach((obj) => {
                             question = question + Parser.objToString(obj) + " ? ";
                         });
 
@@ -57,85 +57,85 @@ module Shrdlite {
     function mergeCmd(world : World, previousCmd : Parser.Result[], utterance : string ) : Parser.Result[] {
         try {
             var parses : Parser.Result[] = Parser.parse(utterance);
-	} catch (err) {
-		if (err instanceof Parser.Error) {
-		    // TODO findout if we should be updating loc or ent?
-		   var newInfo = utterance.toLowerCase().replace(/\W/g, "");
-		    var newResult : Parser.Result[] = [];
-		    var index = previousCmd.length - 1; 
-		    // if(previousCmd[index].prs.ent){
-		    // 	world.printSystemOutput(
-		    // 	    Parser.objToString(previousCmd[index].prs.ent.obj));
-		    // } // for DEBUG 
-		    switch (newInfo){
-		    case "small":
-		    case "tiny" :{
-			if (!previousCmd[index].prs.ent.obj.size){
-			    previousCmd[index].prs.ent.obj.size = "small";
-			    newResult.push(previousCmd[index]);
-			    return newResult;
+        } catch (err) {
+                if (err instanceof Parser.Error) {
+                    // TODO findout if we should be updating loc or ent?
+                   var newInfo = utterance.toLowerCase().replace(/\W/g, "");
+                    var newResult : Parser.Result[] = [];
+                    var index = previousCmd.length - 1;
+                    // if(previousCmd[index].prs.ent){
+                    //         world.printSystemOutput(
+                    //             Parser.objToString(previousCmd[index].prs.ent.obj));
+                    // } // for DEBUG
+                    switch (newInfo){
+                    case "small":
+                    case "tiny" :{
+                        if (!previousCmd[index].prs.ent.obj.size){
+                            previousCmd[index].prs.ent.obj.size = "small";
+                            newResult.push(previousCmd[index]);
+                            return newResult;
                         } else {
-			    return previousCmd;
-			}
-		    }
-		    case "large":
-		    case "big" :{
-			if (!previousCmd[index].prs.ent.obj.size){
-			    previousCmd[index].prs.ent.obj.size = "large";
-			    newResult.push(previousCmd[index]);
-			    return newResult;
+                            return previousCmd;
+                        }
+                    }
+                    case "large":
+                    case "big" :{
+                        if (!previousCmd[index].prs.ent.obj.size){
+                            previousCmd[index].prs.ent.obj.size = "large";
+                            newResult.push(previousCmd[index]);
+                            return newResult;
                         } else {
-			    return previousCmd;
-			}
+                            return previousCmd;
+                        }
 
-		    }
-		    case "black" :
-		    case "white" :
-		    case "green" :
-		    case "yellow" :
-		    case "red" :
-		    case "blue" :{
-			if (!previousCmd[index].prs.ent.obj.color){
-			    previousCmd[index].prs.ent.obj.color = newInfo;
-			    newResult.push(previousCmd[index]);
-			    return newResult;
+                    }
+                    case "black" :
+                    case "white" :
+                    case "green" :
+                    case "yellow" :
+                    case "red" :
+                    case "blue" :{
+                        if (!previousCmd[index].prs.ent.obj.color){
+                            previousCmd[index].prs.ent.obj.color = newInfo;
+                            newResult.push(previousCmd[index]);
+                            return newResult;
                         } else {
-			    return previousCmd;
-			}
-		    }
+                            return previousCmd;
+                        }
+                    }
                     // Experimental
-		    case "brick":
-		    case "box":
-		    case "plank":
-		    case "pyramid":
-		    case "table":
+                    case "brick":
+                    case "box":
+                    case "plank":
+                    case "pyramid":
+                    case "table":
                     case "ball" :{
-			if ( previousCmd[index].prs.ent.obj.form == "anyform"){
-			    previousCmd[index].prs.ent.obj.form = newInfo;
-			    newResult.push(previousCmd[index]);
-			    return newResult;
+                        if ( previousCmd[index].prs.ent.obj.form == "anyform"){
+                            previousCmd[index].prs.ent.obj.form = newInfo;
+                            newResult.push(previousCmd[index]);
+                            return newResult;
                         } else {
-			    return previousCmd;
-			}
-		    }
+                            return previousCmd;
+                        }
+                    }
 
-		    default:
-			return previousCmd;
-		    }
-		} else {
+                    default:
+                        return previousCmd;
+                    }
+                } else {
                     throw err;
-		}
-	}
+                }
+        }
         return parses;
 }
 
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         if (world.currentState.previousCmd !== null) {
-	    var index = world.currentState.previousCmd.length -1 ;
+            var index = world.currentState.previousCmd.length -1 ;
             world.printSystemOutput("I've remembered you said: "
                                 + world.currentState.previousCmd[index].input);
-	    // since .input never gets updated; now seems bit silly 
+            // since .input never gets updated; now seems bit silly
             var parses = mergeCmd(world, world.currentState.previousCmd, utterance);
         }
         else {
