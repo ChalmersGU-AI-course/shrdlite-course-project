@@ -42,7 +42,38 @@ module Planner {
     // private functions
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState, searchStrategy : string) : string[] {
+        var testPerformance = false;
+        if(testPerformance) {
+            console.log("\n--- Performance comparison ---");
+            var start = new Date().getTime();
+            var solution = search.search(new WorldStateNode(state), intprt, search.compareBFS);
+            var end = new Date().getTime();
+            var time = end - start;
+            console.log("BSF:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
+
+            var start = new Date().getTime();
+            var solution = search.search(new WorldStateNode(state), intprt, search.compareStar);
+            var end = new Date().getTime();
+            var time = end - start;
+            console.log("aStar:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
+
+            var start = new Date().getTime();
+            var solution = search.search(new WorldStateNode(state), intprt, search.compareDFS);
+            var end = new Date().getTime();
+            var time = end - start;
+            console.log("DFS:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
+
+            var start = new Date().getTime();
+            var solution = search.search(new WorldStateNode(state), intprt, search.compareBestFirst);
+            var end = new Date().getTime();
+            var time = end - start;
+            console.log("BestFS:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
+
+            console.log("------------------------------\n");
+        }
+
         var moves = [];
+
         moves.push("Perform search with strategy: " + searchStrategy + ".");
 
         switch(searchStrategy) {
@@ -59,7 +90,6 @@ module Planner {
                 var solution = search.search(new WorldStateNode(state), intprt, search.compareBestFirst);
                 break;
         }
-
 
         if(solution !== null ) {
             var path = solution.getPath();
