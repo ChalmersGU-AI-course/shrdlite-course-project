@@ -32,6 +32,7 @@ function R(obj) {
 var grammar = {
     ParserRules: [
     {"name": "main", "symbols": [" ebnf$1", " ebnf$2", "command", " ebnf$3"], "postprocess":  R(2) },
+    {"name": "command", "symbols": ["stack", "entity"], "postprocess":  R({cmd:"stack", ent:1}) },
     {"name": "command", "symbols": ["take", "entity"], "postprocess":  R({cmd:"take", ent:1}) },
     {"name": "command", "symbols": ["move", "it", "location"], "postprocess":  R({cmd:"put", loc:2}) },
     {"name": "command", "symbols": ["move", "entity", "location"], "postprocess":  R({cmd:"move", ent:1, loc:2}) },
@@ -114,59 +115,66 @@ var grammar = {
         return d.join('');
     }},
     {"name": "form", "symbols": [" string$37"], "postprocess":  R("floor") },
-    {"name": " string$38", "symbols": [{"literal":"t"}, {"literal":"a"}, {"literal":"k"}, {"literal":"e"}], "postprocess": function joiner(d) {
+    {"name": " string$38", "symbols": [{"literal":"s"}, {"literal":"t"}, {"literal":"a"}, {"literal":"c"}, {"literal":"k"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": "take", "symbols": [" string$38"]},
-    {"name": " string$39", "symbols": [{"literal":"g"}, {"literal":"r"}, {"literal":"a"}, {"literal":"s"}, {"literal":"p"}], "postprocess": function joiner(d) {
+    {"name": " string$39", "symbols": [{"literal":"u"}, {"literal":"p"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": "take", "symbols": [" string$39"]},
-    {"name": " string$40", "symbols": [{"literal":"p"}, {"literal":"i"}, {"literal":"c"}, {"literal":"k"}], "postprocess": function joiner(d) {
+    {"name": "stack", "symbols": [" string$38", " string$39"]},
+    {"name": " string$40", "symbols": [{"literal":"t"}, {"literal":"a"}, {"literal":"k"}, {"literal":"e"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " string$41", "symbols": [{"literal":"u"}, {"literal":"p"}], "postprocess": function joiner(d) {
+    {"name": "take", "symbols": [" string$40"]},
+    {"name": " string$41", "symbols": [{"literal":"g"}, {"literal":"r"}, {"literal":"a"}, {"literal":"s"}, {"literal":"p"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": "take", "symbols": [" string$40", " string$41"]},
-    {"name": " string$42", "symbols": [{"literal":"m"}, {"literal":"o"}, {"literal":"v"}, {"literal":"e"}], "postprocess": function joiner(d) {
+    {"name": "take", "symbols": [" string$41"]},
+    {"name": " string$42", "symbols": [{"literal":"p"}, {"literal":"i"}, {"literal":"c"}, {"literal":"k"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": "move", "symbols": [" string$42"]},
-    {"name": " string$43", "symbols": [{"literal":"p"}, {"literal":"u"}, {"literal":"t"}], "postprocess": function joiner(d) {
+    {"name": " string$43", "symbols": [{"literal":"u"}, {"literal":"p"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": "move", "symbols": [" string$43"]},
-    {"name": " string$44", "symbols": [{"literal":"d"}, {"literal":"r"}, {"literal":"o"}, {"literal":"p"}], "postprocess": function joiner(d) {
+    {"name": "take", "symbols": [" string$42", " string$43"]},
+    {"name": " string$44", "symbols": [{"literal":"m"}, {"literal":"o"}, {"literal":"v"}, {"literal":"e"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
     {"name": "move", "symbols": [" string$44"]},
-    {"name": " string$45", "symbols": [{"literal":"i"}, {"literal":"t"}], "postprocess": function joiner(d) {
+    {"name": " string$45", "symbols": [{"literal":"p"}, {"literal":"u"}, {"literal":"t"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": "it", "symbols": [" string$45"]},
-    {"name": " string$46", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"a"}, {"literal":"t"}], "postprocess": function joiner(d) {
+    {"name": "move", "symbols": [" string$45"]},
+    {"name": " string$46", "symbols": [{"literal":"d"}, {"literal":"r"}, {"literal":"o"}, {"literal":"p"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " string$47", "symbols": [{"literal":"i"}, {"literal":"s"}], "postprocess": function joiner(d) {
+    {"name": "move", "symbols": [" string$46"]},
+    {"name": " string$47", "symbols": [{"literal":"i"}, {"literal":"t"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": "that_is", "symbols": [" string$46", " string$47"]},
+    {"name": "it", "symbols": [" string$47"]},
     {"name": " string$48", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"a"}, {"literal":"t"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " string$49", "symbols": [{"literal":"a"}, {"literal":"r"}, {"literal":"e"}], "postprocess": function joiner(d) {
+    {"name": " string$49", "symbols": [{"literal":"i"}, {"literal":"s"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": "that_are", "symbols": [" string$48", " string$49"]},
-    {"name": " string$51", "symbols": [{"literal":"y"}, {"literal":"o"}, {"literal":"u"}], "postprocess": function joiner(d) {
+    {"name": "that_is", "symbols": [" string$48", " string$49"]},
+    {"name": " string$50", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"a"}, {"literal":"t"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": "will_you", "symbols": [" subexpression$50", " string$51"]},
-    {"name": " string$52", "symbols": [{"literal":"p"}, {"literal":"l"}, {"literal":"e"}, {"literal":"a"}, {"literal":"s"}, {"literal":"e"}], "postprocess": function joiner(d) {
+    {"name": " string$51", "symbols": [{"literal":"a"}, {"literal":"r"}, {"literal":"e"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": "please", "symbols": [" string$52"]},
+    {"name": "that_are", "symbols": [" string$50", " string$51"]},
+    {"name": " string$53", "symbols": [{"literal":"y"}, {"literal":"o"}, {"literal":"u"}], "postprocess": function joiner(d) {
+        return d.join('');
+    }},
+    {"name": "will_you", "symbols": [" subexpression$52", " string$53"]},
+    {"name": " string$54", "symbols": [{"literal":"p"}, {"literal":"l"}, {"literal":"e"}, {"literal":"a"}, {"literal":"s"}, {"literal":"e"}], "postprocess": function joiner(d) {
+        return d.join('');
+    }},
+    {"name": "please", "symbols": [" string$54"]},
     {"name": " ebnf$1", "symbols": ["will_you"], "postprocess": id},
     {"name": " ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": " ebnf$2", "symbols": ["please"], "postprocess": id},
@@ -185,149 +193,149 @@ var grammar = {
     {"name": " ebnf$8", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": " ebnf$9", "symbols": ["color"], "postprocess": id},
     {"name": " ebnf$9", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": " string$53", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"y"}], "postprocess": function joiner(d) {
+    {"name": " string$55", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"y"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$10", "symbols": [" string$53"]},
-    {"name": " string$54", "symbols": [{"literal":"a"}, {"literal":"n"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$10", "symbols": [" string$55"]},
+    {"name": " string$56", "symbols": [{"literal":"a"}, {"literal":"n"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$10", "symbols": [" string$54"]},
+    {"name": " subexpression$10", "symbols": [" string$56"]},
     {"name": " subexpression$10", "symbols": [{"literal":"a"}]},
-    {"name": " string$55", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {
+    {"name": " string$57", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$11", "symbols": [" string$55"]},
-    {"name": " string$56", "symbols": [{"literal":"e"}, {"literal":"v"}, {"literal":"e"}, {"literal":"r"}, {"literal":"y"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$11", "symbols": [" string$57"]},
+    {"name": " string$58", "symbols": [{"literal":"e"}, {"literal":"v"}, {"literal":"e"}, {"literal":"r"}, {"literal":"y"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$12", "symbols": [" string$56"]},
-    {"name": " string$57", "symbols": [{"literal":"a"}, {"literal":"l"}, {"literal":"l"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$12", "symbols": [" string$58"]},
+    {"name": " string$59", "symbols": [{"literal":"a"}, {"literal":"l"}, {"literal":"l"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$13", "symbols": [" string$57"]},
-    {"name": " string$58", "symbols": [{"literal":"l"}, {"literal":"e"}, {"literal":"f"}, {"literal":"t"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$13", "symbols": [" string$59"]},
+    {"name": " string$60", "symbols": [{"literal":"l"}, {"literal":"e"}, {"literal":"f"}, {"literal":"t"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " string$59", "symbols": [{"literal":"o"}, {"literal":"f"}], "postprocess": function joiner(d) {
+    {"name": " string$61", "symbols": [{"literal":"o"}, {"literal":"f"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$14", "symbols": [" string$58", " string$59"]},
-    {"name": " string$60", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$14", "symbols": [" string$60", " string$61"]},
+    {"name": " string$62", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " string$61", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {
+    {"name": " string$63", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " string$62", "symbols": [{"literal":"l"}, {"literal":"e"}, {"literal":"f"}, {"literal":"t"}], "postprocess": function joiner(d) {
-        return d.join('');
-    }},
-    {"name": " string$63", "symbols": [{"literal":"o"}, {"literal":"f"}], "postprocess": function joiner(d) {
-        return d.join('');
-    }},
-    {"name": " subexpression$14", "symbols": [" string$60", " string$61", " string$62", " string$63"]},
-    {"name": " string$64", "symbols": [{"literal":"r"}, {"literal":"i"}, {"literal":"g"}, {"literal":"h"}, {"literal":"t"}], "postprocess": function joiner(d) {
+    {"name": " string$64", "symbols": [{"literal":"l"}, {"literal":"e"}, {"literal":"f"}, {"literal":"t"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
     {"name": " string$65", "symbols": [{"literal":"o"}, {"literal":"f"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$15", "symbols": [" string$64", " string$65"]},
-    {"name": " string$66", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$14", "symbols": [" string$62", " string$63", " string$64", " string$65"]},
+    {"name": " string$66", "symbols": [{"literal":"r"}, {"literal":"i"}, {"literal":"g"}, {"literal":"h"}, {"literal":"t"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " string$67", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {
+    {"name": " string$67", "symbols": [{"literal":"o"}, {"literal":"f"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " string$68", "symbols": [{"literal":"r"}, {"literal":"i"}, {"literal":"g"}, {"literal":"h"}, {"literal":"t"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$15", "symbols": [" string$66", " string$67"]},
+    {"name": " string$68", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " string$69", "symbols": [{"literal":"o"}, {"literal":"f"}], "postprocess": function joiner(d) {
+    {"name": " string$69", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$15", "symbols": [" string$66", " string$67", " string$68", " string$69"]},
-    {"name": " string$70", "symbols": [{"literal":"i"}, {"literal":"n"}, {"literal":"s"}, {"literal":"i"}, {"literal":"d"}, {"literal":"e"}], "postprocess": function joiner(d) {
+    {"name": " string$70", "symbols": [{"literal":"r"}, {"literal":"i"}, {"literal":"g"}, {"literal":"h"}, {"literal":"t"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$16", "symbols": [" string$70"]},
-    {"name": " string$71", "symbols": [{"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {
+    {"name": " string$71", "symbols": [{"literal":"o"}, {"literal":"f"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$16", "symbols": [" string$71"]},
-    {"name": " string$72", "symbols": [{"literal":"i"}, {"literal":"n"}, {"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$15", "symbols": [" string$68", " string$69", " string$70", " string$71"]},
+    {"name": " string$72", "symbols": [{"literal":"i"}, {"literal":"n"}, {"literal":"s"}, {"literal":"i"}, {"literal":"d"}, {"literal":"e"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
     {"name": " subexpression$16", "symbols": [" string$72"]},
-    {"name": " string$73", "symbols": [{"literal":"o"}, {"literal":"n"}], "postprocess": function joiner(d) {
+    {"name": " string$73", "symbols": [{"literal":"i"}, {"literal":"n"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$17", "symbols": [" string$73"]},
-    {"name": " string$74", "symbols": [{"literal":"o"}, {"literal":"n"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$16", "symbols": [" string$73"]},
+    {"name": " string$74", "symbols": [{"literal":"i"}, {"literal":"n"}, {"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " string$75", "symbols": [{"literal":"t"}, {"literal":"o"}, {"literal":"p"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$16", "symbols": [" string$74"]},
+    {"name": " string$75", "symbols": [{"literal":"o"}, {"literal":"n"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " string$76", "symbols": [{"literal":"o"}, {"literal":"f"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$17", "symbols": [" string$75"]},
+    {"name": " string$76", "symbols": [{"literal":"o"}, {"literal":"n"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$17", "symbols": [" string$74", " string$75", " string$76"]},
-    {"name": " string$77", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"d"}, {"literal":"e"}, {"literal":"r"}], "postprocess": function joiner(d) {
+    {"name": " string$77", "symbols": [{"literal":"t"}, {"literal":"o"}, {"literal":"p"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$18", "symbols": [" string$77"]},
-    {"name": " string$78", "symbols": [{"literal":"b"}, {"literal":"e"}, {"literal":"l"}, {"literal":"o"}, {"literal":"w"}], "postprocess": function joiner(d) {
+    {"name": " string$78", "symbols": [{"literal":"o"}, {"literal":"f"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$18", "symbols": [" string$78"]},
-    {"name": " string$79", "symbols": [{"literal":"b"}, {"literal":"e"}, {"literal":"s"}, {"literal":"i"}, {"literal":"d"}, {"literal":"e"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$17", "symbols": [" string$76", " string$77", " string$78"]},
+    {"name": " string$79", "symbols": [{"literal":"u"}, {"literal":"n"}, {"literal":"d"}, {"literal":"e"}, {"literal":"r"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$19", "symbols": [" string$79"]},
-    {"name": " string$80", "symbols": [{"literal":"a"}, {"literal":"b"}, {"literal":"o"}, {"literal":"v"}, {"literal":"e"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$18", "symbols": [" string$79"]},
+    {"name": " string$80", "symbols": [{"literal":"b"}, {"literal":"e"}, {"literal":"l"}, {"literal":"o"}, {"literal":"w"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$20", "symbols": [" string$80"]},
-    {"name": " string$81", "symbols": [{"literal":"s"}, {"literal":"m"}, {"literal":"a"}, {"literal":"l"}, {"literal":"l"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$18", "symbols": [" string$80"]},
+    {"name": " string$81", "symbols": [{"literal":"b"}, {"literal":"e"}, {"literal":"s"}, {"literal":"i"}, {"literal":"d"}, {"literal":"e"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$21", "symbols": [" string$81"]},
-    {"name": " string$82", "symbols": [{"literal":"t"}, {"literal":"i"}, {"literal":"n"}, {"literal":"y"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$19", "symbols": [" string$81"]},
+    {"name": " string$82", "symbols": [{"literal":"a"}, {"literal":"b"}, {"literal":"o"}, {"literal":"v"}, {"literal":"e"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$21", "symbols": [" string$82"]},
-    {"name": " string$83", "symbols": [{"literal":"l"}, {"literal":"a"}, {"literal":"r"}, {"literal":"g"}, {"literal":"e"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$20", "symbols": [" string$82"]},
+    {"name": " string$83", "symbols": [{"literal":"s"}, {"literal":"m"}, {"literal":"a"}, {"literal":"l"}, {"literal":"l"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$22", "symbols": [" string$83"]},
-    {"name": " string$84", "symbols": [{"literal":"b"}, {"literal":"i"}, {"literal":"g"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$21", "symbols": [" string$83"]},
+    {"name": " string$84", "symbols": [{"literal":"t"}, {"literal":"i"}, {"literal":"n"}, {"literal":"y"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$22", "symbols": [" string$84"]},
-    {"name": " string$85", "symbols": [{"literal":"o"}, {"literal":"b"}, {"literal":"j"}, {"literal":"e"}, {"literal":"c"}, {"literal":"t"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$21", "symbols": [" string$84"]},
+    {"name": " string$85", "symbols": [{"literal":"l"}, {"literal":"a"}, {"literal":"r"}, {"literal":"g"}, {"literal":"e"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$31", "symbols": [" string$85"]},
-    {"name": " string$86", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"i"}, {"literal":"n"}, {"literal":"g"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$22", "symbols": [" string$85"]},
+    {"name": " string$86", "symbols": [{"literal":"b"}, {"literal":"i"}, {"literal":"g"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$31", "symbols": [" string$86"]},
-    {"name": " string$87", "symbols": [{"literal":"f"}, {"literal":"o"}, {"literal":"r"}, {"literal":"m"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$22", "symbols": [" string$86"]},
+    {"name": " string$87", "symbols": [{"literal":"o"}, {"literal":"b"}, {"literal":"j"}, {"literal":"e"}, {"literal":"c"}, {"literal":"t"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
     {"name": " subexpression$31", "symbols": [" string$87"]},
-    {"name": " string$88", "symbols": [{"literal":"w"}, {"literal":"i"}, {"literal":"l"}, {"literal":"l"}], "postprocess": function joiner(d) {
+    {"name": " string$88", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"i"}, {"literal":"n"}, {"literal":"g"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$50", "symbols": [" string$88"]},
-    {"name": " string$89", "symbols": [{"literal":"c"}, {"literal":"a"}, {"literal":"n"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$31", "symbols": [" string$88"]},
+    {"name": " string$89", "symbols": [{"literal":"f"}, {"literal":"o"}, {"literal":"r"}, {"literal":"m"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$50", "symbols": [" string$89"]},
-    {"name": " string$90", "symbols": [{"literal":"c"}, {"literal":"o"}, {"literal":"u"}, {"literal":"l"}, {"literal":"d"}], "postprocess": function joiner(d) {
+    {"name": " subexpression$31", "symbols": [" string$89"]},
+    {"name": " string$90", "symbols": [{"literal":"w"}, {"literal":"i"}, {"literal":"l"}, {"literal":"l"}], "postprocess": function joiner(d) {
         return d.join('');
     }},
-    {"name": " subexpression$50", "symbols": [" string$90"]}
+    {"name": " subexpression$52", "symbols": [" string$90"]},
+    {"name": " string$91", "symbols": [{"literal":"c"}, {"literal":"a"}, {"literal":"n"}], "postprocess": function joiner(d) {
+        return d.join('');
+    }},
+    {"name": " subexpression$52", "symbols": [" string$91"]},
+    {"name": " string$92", "symbols": [{"literal":"c"}, {"literal":"o"}, {"literal":"u"}, {"literal":"l"}, {"literal":"d"}], "postprocess": function joiner(d) {
+        return d.join('');
+    }},
+    {"name": " subexpression$52", "symbols": [" string$92"]}
 ]
   , ParserStart: "main"
 }

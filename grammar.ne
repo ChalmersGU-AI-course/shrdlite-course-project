@@ -37,6 +37,7 @@ function R(obj) {
 
 main --> will_you:? please:? command please:?  {% R(2) %}  
 
+command --> stack entity           {% R({cmd:"stack", ent:1}) %}
 command --> take entity           {% R({cmd:"take", ent:1}) %}
 command --> move  it    location  {% R({cmd:"put", loc:2}) %}
 command --> move entity location  {% R({cmd:"move", ent:1, loc:2}) %}
@@ -95,6 +96,7 @@ form --> "floor"    {% R("floor") %}
 
 ## Lexicon (without semantic content)
 
+stack --> "stack" "up"
 take --> "take" | "grasp" | "pick" "up"
 move --> "move" | "put" | "drop"
 it --> "it"
