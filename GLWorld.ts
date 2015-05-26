@@ -24,6 +24,8 @@ class GLGWorld implements World {
             alert(e);
             this.gl = undefined;
         }
+        this.gl.hint(this.gl.GENERATE_MIPMAP_HINT, this.gl.NICEST);
+
         this.scene = new Array<RenderItem>();
         this.cam = new Camera(this.gl, canvas);
         var middle = this.currentState.rowLength / 2;
@@ -104,12 +106,12 @@ class GLGWorld implements World {
         this.gl.clearDepth(1.0);
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);
-        this.gl.hint(this.gl.GENERATE_MIPMAP_HINT, this.gl.NICEST);
+        
         this.initShader();
 
 
 
-        this.test();
+        //this.test();
         //this.test2();
 
         //Now draw!
