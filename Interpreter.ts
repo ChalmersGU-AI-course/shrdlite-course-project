@@ -418,10 +418,18 @@ module Interpreter {
 							error = "Only one thing can be inside another thing.";
 							continue;
 						}
+
+						if ((formO == "pyramid" || formO == "box" || formO == "plank") && (sizeO == sizeD) && (formD == "box")) {
+							origChecker[i] = origChecker[i] - 1;
+							destChecker[j] = destChecker[j] - 1;
+							error = "Boxes cannot contain pyramids, planks or boxes of the same size.";
+							continue;
+						}
 					}
 
+					//todo: check what actually is valid for above AND ontop and what is only for ontop
 					if (rel == "ontop" || rel == "above") {
-						if (formO == "ball" &&  formD != "floor") {
+						if (rel == "ontop" && formO == "ball" &&  formD != "floor") {
 							origChecker[i] = origChecker[i] - 1;
 							destChecker[j] = destChecker[j] - 1;
 							error = "Balls must be in boxes or on the floor.";
@@ -435,17 +443,10 @@ module Interpreter {
 							continue;
 						}
 
-						if ((sizeO == "small" && formO == "box") && (sizeD == "small" && (formD == "pyramid" || formD == "brick"))) {
+						if (rel == "ontop" && (sizeO == "small" && formO == "box") && (sizeD == "small" && (formD == "pyramid" || formD == "brick"))) {
 							origChecker[i] = origChecker[i] - 1;
 							destChecker[j] = destChecker[j] - 1;
 							error = "Small boxes cannot be supported by small bricks or pyramids.";
-							continue;
-						}
-
-						if ((formO == "pyramid" || formO == "box" || formO == "plank") && (sizeO == sizeD) && (formD == "box")) {
-							origChecker[i] = origChecker[i] - 1;
-							destChecker[j] = destChecker[j] - 1;
-							error = "Boxes cannot contain pyramids, planks or boxes of the same size.";
 							continue;
 						}
 

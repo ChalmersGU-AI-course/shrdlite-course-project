@@ -14,11 +14,11 @@ module Shrdlite {
                 if (!plan) {
                     plan = parseUtteranceIntoPlan(world, utterance);
                 }
-								if (plan[0] == "ambi") {
-									var askQuestion = () => world.printPickList(plan, endlessLoop); 
-									askQuestion();
-									return;
-								}
+								//if (plan[0] == "ambi") {
+							//		var askQuestion = () => world.printPickList(plan, endlessLoop); 
+							//		askQuestion();
+							//		return;
+							//	}
                 if (plan) {
                     world.printDebugInfo("Plan: " + plan.join(", "));
                     world.performPlan(plan, nextInput);
