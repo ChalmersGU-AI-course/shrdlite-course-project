@@ -154,22 +154,15 @@ module Interpreter {
             matching = findObjectsByDescription(location.ent.obj, world) || [];
         }
 
-        var childLiterals: Literal[][] = [];
+        var result: Literal[][] = [];
 
         if (location.ent.obj.loc) {
             for (var i = 0; i < matching.length; ++i) {
                 var literals = buildRelativeLiterals(matching[i], location.ent.obj.loc, world);
-                childLiterals = childLiterals.concat(literals);
-            }
-
-            var result: Literal[][] = [];
-            for (var i = 0; i < childLiterals.length; ++i) {
-                for (var m = 0; m < matching.length; ++m) {
-                    var childLiteral = childLiterals[i].slice();
-                    var match = matching[m];
-                    childLiteral.splice(0, 0, {pol: true, rel: location.rel, args: [object, match]});
-                    result.push(childLiteral);
+                for (var j = 0; j < literals.length; ++j) {
+                    literals[j].splice(0, 0, {pol: true, rel: location.rel, args: [object, matching[i]]});
                 }
+                result = result.concat(literals);
             }
 
             return result;
