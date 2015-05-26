@@ -24,6 +24,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     		"holding": this.clone<string>(world.holding),
     		"arm": this.clone<number>(world.arm),
     		"planAction": this.clone<string>(world.planAction),
+    		"description":"",
     		"objects": world.objects,
 			"examples": world.examples};
 		return newworld;
@@ -82,7 +83,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		}
 		// pick up
 		var topLit = Planner.getTopLiteral(currentstate, currentstate.arm);
-		if(!currentstate.holding && topLit ){	
+		if((!currentstate.holding || currentstate.holding.length == 0)&& topLit ){	
 			// if it is not holding anything and ther is something on the floor
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			var topobj = this.getTopObj(currentstate, currentstate.pddl.toArray());
@@ -91,6 +92,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			// remove top literal
 			possiblestate.pddl.remove(topLit);
 			possiblestate.planAction = "p";
+			// add info to description
+			var descObj = possiblestate.objects[topobj];
+			possiblestate.description = " " + descObj.size + " " + descObj.color + " " + descObj.form;
 			neig.push(possiblestate);
 		}else if(currentstate.holding ){ // drop
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
@@ -959,13 +963,47 @@ module Planner {
         var plan : string[] = [];
         if(!results.isEmpty()){
         	var path : number[]= results.dequeue();
-        	state = sp1._nodeValues[path[path.length-1]];
+        	var pa : string ;
+        	var descCounter = 0;
+        	var descStr : string;
+        	var descStrs = getAllDescriptions(sp1._nodeValues, path);
         	for(var i = path.length-1; i >= 0 ; i--){ // travers backwards
-        		plan.push(sp1._nodeValues[ path[i] ].planAction);
+        		pa = sp1._nodeValues[ path[i] ].planAction;
+        		descStr = sp1._nodeValues[ path[i] ].description;
+        		if(descStr.length > 0){
+        			descStr = editDescription(descStr, descCounter, descStrs.length-1);
+        			plan.push(descStr);
+        			descCounter++;
+        		}
+        		plan.push(pa);
         	}
         }
 
         return plan;
+    }
+    
+    function getAllDescriptions(states :WorldState[], path : number[]):string[]{
+    	var descs : string[] = [];
+    	for(var i = 0; i < path.length; i++){
+    		if(states[path[i]].description.length > 0){
+    			descs.push(states[i].description);
+    		}
+    	}
+    	return descs;
+    }
+    
+    function editDescription(descStr : string, count : number, max : number):string{
+    	if(count == 0){
+    		descStr = "First I move the" + descStr;
+    	}else if(count == max){
+    		descStr = "Finally I move the" + descStr + "! :)";
+    	}else if(count == 1){
+    		descStr = "Then I move the" + descStr;
+    	}else{
+    		descStr = "Moving the" + descStr;
+    	}
+    	
+    	return descStr;
     }
 
 

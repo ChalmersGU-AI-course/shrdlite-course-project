@@ -63,6 +63,7 @@ ExampleWorlds["complex"] = {
     "holding": null,
     "arm": 0,
     "planAction":"start",
+    "description":"",
     "objects": complexobjs,
     "pddl": stacksToPDDL([["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]], complexobjs),
     "examples": [
@@ -110,6 +111,7 @@ ExampleWorlds["small"] = {
     "holding": null,
     "arm": 0,
     "planAction":"start",
+    "description":"",
     "objects": smallobjects,
     "pddl": stacksToPDDL([["e"],["g","l"],[],["k","m","f"],["a"]], smallobjects),
     "examples": [
@@ -152,6 +154,7 @@ ExampleWorlds["medium"] = {
     "holding": null,
     "arm": 0,
     "planAction":"start",
+    "description":"",
     "pddl": stacksToPDDL([["e"],["a","l"],[],[],["i","h","j"],[],[],["k","g","c","b"],[],["d","m","f"]], mediumObjects),
     "objects": mediumObjects,
     "examples": [

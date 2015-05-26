@@ -182,17 +182,7 @@ module Interpreter {
 	        		}
 	        		
 	        		intprt = clearedcombi;
-	        	}else /*if(cmd.loc.ent.quant == "all"){
-	        		var combi = combine(possibleLits, startLocs[i].length, cmd.loc.rel, state);
-	        		for(var c = 0; c < combi.length; c ++){
-	        			var tempc = clearIlligal(combi[c], state);
-	        			if(tempc.length > 0){
-	        				clearedcombi.push(tempc);
-	        			}
-	        		}
-	        		
-	        		intprt = clearedcombi;
-	        	}*/
+	        	}else 
 	        	// booth obj and location singular
 	        	// if the or any, then pick all leagal and put them i separete lists.
 	        	if(cmd.loc.ent.quant != "all" && cmd.loc.ent.quant != "all" 
@@ -209,7 +199,6 @@ module Interpreter {
 		        						index = l;
 		        					}
 		        				}
-		        				
 		        			}
 		        			if(index != -1){
 		        				lits = append(lits,locs[index]);
@@ -281,13 +270,15 @@ module Interpreter {
     		// ambigous interpet, use clairifying parse
     		if(unqObjs.length > 1){
 				if(!clairifyingparse){
+					var discription :string = getIdentifyingString(ent.obj);
 					throw new Interpreter.ErrorInput("Could you tell me which " + 
-						state.objects[result[0]].form + " I should move?");
+						discription + " I am to interact with?");
 				}
 				var objs : string[]= solveAmbiguity(ent.obj,unqObjs, state);
 				if(objs.length > 1){
+					var discription :string = getIdentifyingString(ent.obj);
 					throw new Interpreter.ErrorInput("Could you tell me which " + 
-						state.objects[result[0]].form + " I should move?");
+						 discription + " I am to interact with?");
 				}
 				result = objs;
     		}
@@ -298,13 +289,15 @@ module Interpreter {
     			ent.obj.size, state);
     		if(unqObjs.length != totalUnqObjs.length){
     			if(!clairifyingparse){
+    				var discription :string = getIdentifyingString(ent.obj);
 					throw new Interpreter.ErrorInput("Could you tell me which " + 
-						state.objects[result[0]].form + " I should move? all");
+						discription + " I should move? all");
 				}
 				var objs : string[] = solveAmbiguity(ent.obj,unqObjs, state);
 				if(objs.length > 1){
+					var discription :string = getIdentifyingString(ent.obj);
 					throw new Interpreter.ErrorInput("Could you tell me which " + 
-						state.objects[result[0]].form + " I should move? all");
+						discription + " I should move? all");
 				}
 				result = objs;
     		}
@@ -356,12 +349,28 @@ module Interpreter {
     	return intrpt;
     }
     
+    function getIdentifyingString(obj : Parser.Object):string{
+    	var description = "";
+    	if(obj.size && obj.size.length > 0){
+    		description += obj.size + " ";
+    	}
+    	if(obj.color && obj.color.length > 0){
+    		description += obj.color +" ";
+    	}
+    	if(obj.form && obj.form != "anyform"){
+    		description += obj.form ;
+    	}else{
+    		description += "object";
+    	}
+    	return description;
+    }
+    
     function identifyLocation(loc : Parser.Location, state : WorldState):Literal[][]{
     	try {
         	var result : Literal[][] = identifyEnt(loc.ent, null, null,state);
 		} catch (err) {
 			if(err instanceof Interpreter.ErrorInput){
-				err.message = err.message.substring(0, err.message.length-1) + " to?";
+				err.message = err.message.substring(0, err.message.length-1) ;
 				throw err;
 				//TODO write a better error message !! 
 			}else{
@@ -671,9 +680,6 @@ module Interpreter {
     	return true;
     }
     
-    
-    
-    
     function findstartliterals(lits : Literal []): string[]{
     	var temp : Literal [] = [];
     	var start : string[] = [];
@@ -740,9 +746,7 @@ module Interpreter {
     	
     	objs = identifyObj(obj.form, obj.color, obj.size, state);
     	return objs;
-    }
-    
-       
+    } 
         
     function findAllObjsWith(form : string, color : string, size : string, state : WorldState):string[]{
     	var objs = identifyObj(form, color, size, state);
