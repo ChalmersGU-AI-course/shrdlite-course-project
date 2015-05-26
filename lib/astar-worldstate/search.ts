@@ -4,62 +4,110 @@
 /// <reference path="WorldStateEdge.ts" />
 /// <reference path="../utils.ts" />
 
-var logging = false;
+module search {
 
-module aStar {
-    export function aStar(start : WorldStateNode, goals : Interpreter.Literal[][]) : Path {
+    /**
+     *
+     * @param start
+     * @param goals
+     * @param compareStrategy
+     * @returns {any}
+     */
+    export function search(start : WorldStateNode,
+                           goals : Interpreter.Literal[][],
+                           compareStrategy : (p1 : Path, p2 : Path) => number,
+                           cycleChecking : boolean = true) : Path {
         var evaluatedPaths = new collections.Set<Path>(p => p.getNode().toString() + p.getNode().state.arm);
-        var pathsToEvaluate = new collections.PriorityQueue<Path>(comparePaths);
+        var pathsToEvaluate = new collections.PriorityQueue<Path>(compareStrategy);
 
         pathsToEvaluate.add(new Path(start, 0, start.heuristicTo(goals), new collections.LinkedList<WorldStateEdge>()));
-        if(logging) {
-            console.log("======== Starting ========");
-        }
 
         while(!pathsToEvaluate.isEmpty()) {
             var currentPath : Path = pathsToEvaluate.dequeue();
 
-            //console.log(currentPath.getNode().state.toString());
-            //utils.sleep(200);
-            if(logging) {
-                console.log("evaluating " + currentPath.toString());
-                console.log("Distance is  " + currentPath.getDistance());
-                console.log("Heuristic is " + currentPath.getHeuristicDistance());
-                console.log("Their sum is " + currentPath.getTotalDistance());
-            }
-            
             evaluatedPaths.add(currentPath);
-            if(logging)
-                console.log("Evaluated nodes: " + evaluatedPaths.size());
 
             if(currentPath.getNode().isSatisfied(goals)) {
-                if(logging)
-                    console.log("found goal! " + currentPath.toString());
                 return currentPath;
             }
 
-            if(logging)
-                console.log("======== Adding neighbors to frontier ========");
+            currentPath.getEdges().forEach((edge) => {
+                var newPath = currentPath.newPath(edge,goals);
+
+                if(cycleChecking) {
+                    if(!evaluatedPaths.contains(newPath)) {
+                        pathsToEvaluate.add(newPath);
+                    }
+                } else {
+                    pathsToEvaluate.add(newPath);
+                }
+
+            });
+        }
+        return null;
+    }
+
+    /**
+     *
+     * @returns {number} Always return 1.
+     */
+    export function compareDFS(fst : Path , snd : Path){
+        return -1;
+    }
+
+    /**
+     *
+     * @returns {number} Always return -1.
+     */
+    export function compareBFS(fst: Path, snd: Path) {
+        return 1;
+    }
+
+    /**
+     *
+     * @param fst
+     * @param snd
+     * @returns {number}
+     */
+    export function compareBestFirst(fst : Path , snd : Path){
+        return snd.getHeuristicDistance() - fst.getHeuristicDistance();
+    }
+
+    /**
+     *
+     * @param fst
+     * @param snd
+     * @returns {number}
+     */
+    export function compareStar(fst : Path , snd : Path){
+        return snd.getTotalDistance() - fst.getTotalDistance();
+    }
+
+    export function DFS(start : WorldStateNode, goals : Interpreter.Literal[][]) : Path {
+        var evaluatedPaths = new collections.Set<Path>(p => p.getNode().toString() + p.getNode().state.arm);
+        var pathsToEvaluate = new collections.Stack<Path>();
+
+        pathsToEvaluate.add(new Path(start, 0, start.heuristicTo(goals), new collections.LinkedList<WorldStateEdge>()));
+
+        while(!pathsToEvaluate.isEmpty()) {
+            var currentPath : Path = pathsToEvaluate.pop();
+
+            evaluatedPaths.add(currentPath);
+
+            if(currentPath.getNode().isSatisfied(goals)) {
+                return currentPath;
+            }
 
             currentPath.getEdges().forEach((edge) => {
                 var newPath = currentPath.newPath(edge,goals);
 
                 if(!evaluatedPaths.contains(newPath)) {
-                    pathsToEvaluate.add(newPath);
-                    if(logging)
-                        console.log(newPath.getNode().state.toString() + ". Total distance: " + newPath.getTotalDistance());
+                    pathsToEvaluate.push(newPath);
                 }
             });
-
-            if(logging)
-                console.log("======= Evaluating next node ========");
         }
 
         return null;
-    }
-
-    function comparePaths(fst : Path , snd : Path){
-    	return snd.getTotalDistance() - fst.getTotalDistance();
     }
 
     class Path {
@@ -112,7 +160,8 @@ module aStar {
             });
 
             return edges;
-        }
+
+      }
 
         getDistance():number {
             return this.distanceSoFar;
@@ -123,7 +172,7 @@ module aStar {
         }
 
         getTotalDistance():number {
-            return this.distanceSoFar + this.heuristicDistance;
+          return  this.getDistance() + this.getHeuristicDistance();
         }
     }
 }

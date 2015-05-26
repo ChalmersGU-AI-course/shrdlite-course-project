@@ -1,7 +1,7 @@
 /// <reference path="lib/typescript-collections/collections.ts" />
 /// <reference path="ObjectDefinition.ts" />
 /// <reference path="Interpreter.ts" />
-/// <reference path="lib/astar-worldstate/astar.ts" />
+/// <reference path="lib/astar-worldstate/search.ts" />
 /// <reference path="lib/utils.ts" />
 
 class WorldState {

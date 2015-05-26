@@ -1,6 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
-///<reference path="lib/astar-worldstate/astar.ts"/>
+///<reference path="lib/astar-worldstate/search.ts"/>
 ///<reference path="lib/utils.ts" />
 
 module Planner {
@@ -43,7 +43,29 @@ module Planner {
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
 
-        var solution = aStar.aStar(new WorldStateNode(state), intprt);
+        var start = new Date().getTime();
+        var solution = search.search(new WorldStateNode(state), intprt, search.compareBFS);
+        var end = new Date().getTime();
+        var time = end - start;
+        console.log("BSF:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
+
+        var start = new Date().getTime();
+        var solution = search.search(new WorldStateNode(state), intprt, search.compareStar);
+        var end = new Date().getTime();
+        var time = end - start;
+        console.log("aStar:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
+
+        var start = new Date().getTime();
+        var solution = search.search(new WorldStateNode(state), intprt, search.compareDFS);
+        var end = new Date().getTime();
+        var time = end - start;
+        console.log("DFS:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
+
+        var start = new Date().getTime();
+        var solution = search.search(new WorldStateNode(state), intprt, search.compareBestFirst);
+        var end = new Date().getTime();
+        var time = end - start;
+        console.log("BestFS:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
 
         if(solution !== null ) {
             var moves = [];

@@ -97,10 +97,53 @@ class WorldStateNode{
     private aboveHeuristic(fstObj : string, sndObj : string) : number {
 		var heuristic = 0;
 
-        // Move each object on top of fstObj;
-		heuristic += this.state.objectsOnTop(fstObj) * 4;
+        var distance = this.state.getDistance(fstObj,sndObj);
 
-		heuristic += 2 + this.state.getDistance(fstObj,sndObj);
+        // If they are in the same pile.
+        if(distance != 0) {
+            if(this.state.holding === fstObj) {
+                // Move arm between its place and sndObj stack
+                heuristic += Math.abs(this.state.getStackIndex(sndObj) - this.state.arm);
+
+                // Drop fstObj
+                heuristic += 1;
+            } else if(this.state.holding === sndObj) {
+                // Drop sndObj
+                heuristic += 1;
+
+                // Move arm between its place and fstObj stack
+                heuristic += Math.abs(this.state.getStackIndex(fstObj) - this.state.arm);
+
+                // Move all objects on top of fstObj
+                heuristic += this.state.objectsOnTop(fstObj) * 4;
+
+                // Move arm between fstObj stack and where we dropped sndObj
+                heuristic += Math.abs(this.state.getStackIndex(fstObj) - this.state.arm);
+            } else {
+                // Move all objects on top of fstObj
+                heuristic += this.state.objectsOnTop(fstObj) * 4;
+
+                // Pick up fstObj
+                heuristic += 1;
+
+                // Move first object on top of sndObj (min sndObj is on top of another pile)
+                heuristic += Math.abs(this.state.getStackIndex(fstObj) - this.state.getStackIndex(sndObj));
+
+                // Drop fstObj on top of sndObj stack
+                heuristic += 1;
+            }
+        } else {
+            var fstObjIx = this.state.stacks[this.state.getStackIndex(fstObj)].indexOf(fstObj);
+            var sndObjIx = this.state.stacks[this.state.getStackIndex(sndObj)].indexOf(sndObj);
+
+            if(fstObjIx < sndObjIx) {
+                // Move all objects on top of fstObj
+                heuristic += this.state.objectsOnTop(fstObj) * 4;
+                // Move first object on top of sndObj (min sndObj is on top of another pile)
+                heuristic += 2;
+            }
+
+        }
 
 		return heuristic;
 	}
