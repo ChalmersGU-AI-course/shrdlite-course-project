@@ -124,6 +124,10 @@ function FindRelevantLiteral(relevantObject: string, literals: Interpreter.Liter
 }
 
 function DescribeObject(objectId: string, world: WorldState): string {
+	if (objectId === "floor") {
+		return "floor";
+	}
+
 	var objectDefinition = world.objects[objectId];
 
 	var objectsBySize = FindInWorldByProperty("size", objectDefinition.size, world);
@@ -165,7 +169,15 @@ function DescribeTarget(literal: Interpreter.Literal, world: WorldState): string
 	if (!literal || literal.args.length <= 1) {
 		return "";
 	}
-	return " to the " + DescribeObject(literal.args[1], world);
+	return " " + DescribeRel(literal.rel) + " the " + DescribeObject(literal.args[1], world);
+}
+
+function DescribeRel(rel: string): string {
+	switch (rel) {
+		case "ontop":
+		return "ontop of";
+	}
+	return rel;
 }
 
 function FindInWorldByProperty(property: string, value: string, world: WorldState): string[] {
