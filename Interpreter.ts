@@ -72,7 +72,7 @@ module Interpreter {
         {
             var matchLiterals = buildRelativeLiterals(matching[i], cmd.loc, state);
             var previousLiterals = literals.slice();
-            if (cmd.ent.quant == "all") {
+            if (cmd.ent && cmd.ent.quant == "all") {
                 var newLiterals : Literal[][] = [];
                 for (var j=0; j<matchLiterals.length; ++j) {
                     if (previousLiterals.length == 0) {
@@ -264,11 +264,13 @@ module Interpreter {
                 }
             }
             else {
-                if (location.ent.quant === "all")
-                {
+                if (location.ent.quant === "all") {
                     return false;
                 }
             }
+        }
+        if (location.ent.quant === "all") {
+            return true;
         }
         return false;
     }
