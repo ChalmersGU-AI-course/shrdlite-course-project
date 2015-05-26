@@ -456,8 +456,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }
             else if(state.holding == b){// if we are holding the wrong objective
             	count += ontopA*4 + Math.abs(posA-state.arm) + 3;
-            	if(this.checkLegalLit(b, 
-            			this.getTopRelation(state.arm,state).args[0], state)){
+            	if(this.getTopRelation(state.arm, state) && this.checkLegalLit(b, this.getTopRelation(state.arm,state).args[0], state)){
             		count += 1;
             	}else{
             		count += this.costToClosestLegalNewPos(b, a, state.arm, state);
