@@ -24,6 +24,7 @@ module Interpreter {
             }
         });
         if (interpretations.length == 1) {
+            console.log(interpretations);
             return interpretations;
         } else if (ambiguities.length > 0) {
             var msg : string = "Possibly ambiguous command. Try being more specific about the following objects: ";
@@ -34,9 +35,10 @@ module Interpreter {
         } else if (interpretations.length == 0) {
             throw new Interpreter.Error("No valid interpretation found.");
         } else {
-            // Scenario: the user used too many relative descriptors. We can't say
-            // what they were ambiguous about
-            var msg : string = "Ambiguous command. Please use fewer relative descriptions.";
+            // Scenario: the user used too many relative descriptors.
+            // We can't say what they were ambiguous about.
+            var msg : string = "Ambiguous command; " +
+                interpretations.length + " interpretations found. Please use fewer relative descriptions.";
             throw new Interpreter.Error(msg);
         }
         
@@ -90,11 +92,12 @@ module Interpreter {
     
     
     function goalToString(goal : Goal) : string {
+        console.log(goal);
         if (goal.goal != null) {
             return literalToString(goal.goal);
         } else {
             var goals = goal.list.slice();
-            var str : string = "(" + goals.pop();
+            var str : string = "(" + goalToString(goals.pop());
             var joiningSymbol : string = goal.isAnd ? "&" : "|";
             goals.forEach((subGoal) => {
                 str = str + " " + joiningSymbol + " " + goalToString(subGoal);
@@ -254,7 +257,7 @@ module Interpreter {
         
         function makeGoal(relation : string, objects : string[]) : Goal {
             var lit : Literal = {pol: true, rel: relation, args: objects};
-            return {goal:lit};            
+            return {goal:lit};
         }
         
         function makeHoldingGoal(candList : CandList) : Goal {

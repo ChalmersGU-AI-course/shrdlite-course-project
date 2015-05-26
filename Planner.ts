@@ -57,7 +57,7 @@ module Planner {
         // This function returns an empty plan involving no random stack
         var plan : string[] = [];
         var statenr = 0;
-        var MAX_STATES = 20000;
+        var MAX_STATES = 10000;
 
         var left : Action = {command : "l"};
         var right : Action = {command : "r"};
@@ -278,7 +278,6 @@ module Planner {
         message to go with it. 
         */ 
         function calculate_state(action : Action, astate : ActionState) : ActionState {
-            //TODO: calculates the next state given a action.
             statenr++;
             if (statenr > MAX_STATES) {
                 throw new Error("Search tree too big; no solution found.");
@@ -589,8 +588,7 @@ module Planner {
                 is_goalNode: is_goalstate
               });
         } catch (err) {
-            //throw new Error("Impossible problem.");
-            throw err;
+            throw new Error("Impossible problem.");
         }
         for (var p = 1; p < path.length; p++){
             plan.push((<ActionState>path[p]).msg);

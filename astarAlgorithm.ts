@@ -23,7 +23,6 @@ module Astar {
   }
 /*
 Implementation: Strongly inspired by the wikipedia pseduocode
-TODO: config priority que to sort by f(x) 
 
 AStar :: Graph -> Path
 */
