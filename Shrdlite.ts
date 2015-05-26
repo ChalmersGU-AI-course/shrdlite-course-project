@@ -86,8 +86,7 @@ module Shrdlite {
 
         var plan : string[] = plans[0].plan;
         world.printDebugInfo("Final plan: " + plan.join(", "));
-        var analyzedPlan = PlanalyzeActions(plan, world.currentState);
-        return analyzedPlan;
+        return plan;
     }
 
 
