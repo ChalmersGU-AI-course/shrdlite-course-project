@@ -158,15 +158,15 @@ ExampleWorlds["medium"] = {
     "pddl": stacksToPDDL([["e"],["a","l"],[],[],["i","h","j"],[],[],["k","g","c","b"],[],["d","m","f"]], mediumObjects),
     "objects": mediumObjects,
     "examples": [
-        "put the brick that is to the left of a pyramid in a box",
+     //   "put the brick that is to the left of a pyramid in a box",
         "put the white ball in a box on the floor",
         "move the large ball inside a yellow box on the floor",
         "move the large ball inside a red box on the floor",
         "take a red object",
         "take the white ball",
-        "put all boxes on the floor",
+     //   "put all boxes on the floor",
         "put the large plank under the blue brick",
-        "move all bricks on a table",
+     //   "move all bricks on a table",
         "move all balls inside a large box"
     ]
 };

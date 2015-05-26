@@ -450,40 +450,42 @@ module Interpreter {
     
     function combineLiterals(litss : Literal[][], lits : Literal[], num : number, 
     		ks : number[], rel : string, state : WorldState):Literal[][]{
-    	var k = ks[0];
-    	if(k == Math.pow(lits.length,  num)){
-    		return litss;
-    	}
-		if(!checkequal(ks,rel)){
-			for(var i = 1; i < ks.length; i ++){
-				if(lits[ks[i]]){
-					if(!litss[k]){
-						litss[k] = [];
+    	while(true){
+	    	var k = ks[0];
+	    	if(k == Math.pow(lits.length,  num)){
+	    		return litss;
+	    	}
+			if(!checkequal(ks,rel)){
+				for(var i = 1; i < ks.length; i ++){
+					if(lits[ks[i]]){
+						if(!litss[k]){
+							litss[k] = [];
+						}
+						litss[k].push(lits[ks[i]]);
 					}
-					litss[k].push(lits[ks[i]]);
 				}
 			}
-		}
-		for(var i = ks.length-1; i > 0 ; i--){
-			if(i == ks.length-1){
-				if(ks[i]== lits.length-1 ){
+			for(var i = ks.length-1; i > 0 ; i--){
+				if(i == ks.length-1){
+					if(ks[i]== lits.length-1 ){
+						ks[i] = 0;
+						if(i > 1){
+							ks[i-1] = ks[i-1] +1;
+						}
+					}else{
+						ks[i] = ks[i] + 1; 
+					}
+				}else if(ks[i] > lits.length-1 ){
 					ks[i] = 0;
 					if(i > 1){
 						ks[i-1] = ks[i-1] +1;
 					}
-				}else{
-					ks[i] = ks[i] + 1; 
-				}
-			}else if(ks[i] > lits.length-1 ){
-				ks[i] = 0;
-				if(i > 1){
-					ks[i-1] = ks[i-1] +1;
-				}
-			} 
+				} 
+			}
+				
+			ks[0] = k+1;
 		}
-			
-		ks[0] = k+1;
-		return combineLiterals(litss, lits, num, ks, rel, state);
+		//return combineLiterals(litss, lits, num, ks, rel, state);
     }
     
     function checkequal(ks : number[], rel : string):boolean{
