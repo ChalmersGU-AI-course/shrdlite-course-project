@@ -15,11 +15,14 @@ class GLGWorld implements World {
     private scene: Array<RenderItem>;
     private floor: RenderItem;
     private arm: RenderItem;
+    private objects: collections.Dictionary<string, RenderItem>;
 
     constructor(
         public currentState: WorldState,
         canvas: HTMLCanvasElement
         ) {
+        this.objects = new collections.Dictionary<string, RenderItem>();
+
         try {
             this.gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
         } catch (e) {
@@ -29,11 +32,11 @@ class GLGWorld implements World {
         this.scene = new Array<RenderItem>();
         this.cam = new Camera(this.gl, canvas);
         var middle = this.currentState.stacks.length / 2;
-        this.cam.setPosition(-middle, -3, -10);
+        this.cam.setPosition(-middle, -3, -7);
 
 
         this.floor = new RenderItem(this.gl, Assets.Floor, Assets.floorTexture);
-        this.floor.setPosition(0, 0, -3);
+        this.floor.setPosition(0, -0.1, 0);
         this.scene.push(this.floor);
 
         this.arm = new RenderItem(this.gl, Assets.Arm, Assets.woodTexture);
@@ -44,25 +47,48 @@ class GLGWorld implements World {
         for (var i = 0; i < currentState.stacks.length; ++i) {
             for (var j = 0; j < currentState.stacks[i].length; ++j) {
                 var obj = currentState.objects[currentState.stacks[i][j]];
-                if (obj.form == "box") {
-                    var c = Assets.woodTexture;
+                var tex = undefined;
+                var asset = undefined;
 
-                    var size = obj.size == "large" ? Assets.BoxLarge : Assets.BoxSmall;
+                switch (obj.color) {
+                    case "yellow":
+                        tex = Assets.yellowWood;
+                        break;
+                    case "red":
+                        tex = Assets.redWood;
+                        break;
+                    case "blue":
+                        tex = Assets.blueWood;
+                        break;
+                    case "white":
+                        tex = Assets.whiteWood;
+                        break;
+                    case "black":
+                        tex = Assets.blackWood;
+                        break;
+                    default:
+                        break;
+                }
 
-                    switch (obj.color) {
-                        case "yellow":
-                            c = Assets.yellowWood;
-                            break;
-                        case "red":
-                            c = Assets.redWood;
-                            break;
-                        case "blue":
-                            c = Assets.blueWood;
-                            break;
-                    }
-                    var box = new RenderItem(this.gl, size, c);
+                switch (obj.form) {
+                    case "box":
+                        asset = obj.size == "large" ? Assets.BoxLarge : Assets.BoxSmall;
+                        break;
+                    case "ball":
+                        asset = obj.size == "large" ? Assets.Balllarge : Assets.BallSmall;
+                        break;
+                    case "table":
+                        asset = Assets.TableLarge;
+                        break;
+                    default:
+                        break;
+                }
+
+                if (asset != undefined && tex != undefined) {
+                    var box = new RenderItem(this.gl, asset, tex);
                     box.setPosition(i, j, 0);
                     this.scene.push(box);
+                    this.objects.setValue(currentState.stacks[i][j], box);
                 }
             }
         }
@@ -76,7 +102,8 @@ class GLGWorld implements World {
 
 
 
-
+        //this.test();
+        //this.test2();
 
         //Now draw!
         setInterval(() => this.drawScene(), 15);
@@ -135,6 +162,30 @@ class GLGWorld implements World {
     }
 
     private drawScene(): void {
+        //Update logic
+
+        for (var i = 0; i < this.currentState.stacks.length; ++i) {
+            var h = 0;
+            for (var j = 0; j < this.currentState.stacks[i].length; ++j) {
+                var name: string = this.currentState.stacks[i][j];
+                if (this.objects.containsKey(name)) {
+                    var ri: RenderItem = this.objects.getValue(name);
+                    ri.setPosition(i * 1.1, h, 0);
+                    h += ri.height;
+                }
+            }
+        }
+        //Holding
+        if (this.objects.containsKey(this.currentState.holding)) {
+            var ri = this.objects.getValue(this.currentState.holding);
+            ri.setPosition(this.currentState.arm, 4, 0);
+        }
+
+
+
+
+
+
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
         //View
@@ -150,6 +201,133 @@ class GLGWorld implements World {
             this.scene[i].draw(this.cam);
         }
 
+    }
+
+    private test2() {
+        var vertices = [
+            // Front face
+            -0.5, 0.35, 0.5,
+            0.5, 0.35, 0.5,
+            0.5, 0.4, 0.5,
+            -0.5, 0.4, 0.5,
+
+            -0.5, 0.35, -0.5,
+            -0.5, 0.4, -0.5,
+            0.5, 0.4, -0.5,
+            0.5, 0.35, -0.5,
+
+            // Top face
+            -0.5, 0.4, -0.5,
+            -0.5, 0.4, 0.5,
+            0.5, 0.4, 0.5,
+            0.5, 0.4, -0.5,
+
+            // Bottom face
+            -0.5, 0.35, -0.5,
+            0.5, 0.35, -0.5,
+            0.5, 0.35, 0.5,
+            -0.5, 0.35, 0.5,
+
+        // Right face
+            0.5, 0.35, -0.5,
+            0.5, 0.4, -0.5,
+            0.5, 0.4, 0.5,
+            0.5, 0.35, 0.5,
+
+            // Left face
+            -0.5, 0.35, -0.5,
+            -0.5, 0.35, 0.5,
+            -0.5, 0.4, 0.5,
+            -0.5, 0.4, -0.5
+        ];
+
+        var vertexIndices = [
+            0, 1, 2, 0, 2, 3,    // front
+            4, 5, 6, 4, 6, 7,    // back
+            8, 9, 10, 8, 10, 11,   // top
+            12, 13, 14, 12, 14, 15,   // bottom
+            16, 17, 18, 16, 18, 19,   // right
+            20, 21, 22, 20, 22, 23    // left
+        ];
+        /*
+        for (var i = 0; i < vertices.length; i += 3) {
+            vertices[i] += 0.3;
+        }
+        for (var i = 1; i < vertices.length; i += 3) {
+
+        }
+        for (var i = 2; i < vertices.length; i += 3) {
+            vertices[i] -= 0.3;
+        }*/
+
+        for (var i = 0; i < vertexIndices.length; ++i) {
+            vertexIndices[i] += 24 * 4;
+        }
+
+        var k = "";
+        var l = "";
+        for (var i = 0; i < vertices.length; ++i) {
+            k += ',' + vertices[i].toFixed(1);
+        }
+
+        for (var i = 0; i < vertexIndices.length; ++i) {
+            l += ',' + vertexIndices[i];
+        }
+    }
+
+    private test() {
+        var radius = 0.35;
+        var latitudeBands = 30;
+        var longitudeBands = 30;
+        var vertexPositionData = [];
+        var normalData = [];
+        var textureCoordData = [];
+        for (var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
+            var theta = latNumber * Math.PI / latitudeBands;
+            var sinTheta = Math.sin(theta);
+            var cosTheta = Math.cos(theta);
+
+            for (var longNumber = 0; longNumber <= longitudeBands; longNumber++) {
+                var phi = longNumber * 2 * Math.PI / longitudeBands;
+                var sinPhi = Math.sin(phi);
+                var cosPhi = Math.cos(phi);
+
+                var x = cosPhi * sinTheta;
+                var y = cosTheta + radius;
+                var z = sinPhi * sinTheta;
+                var u = 1 - (longNumber / longitudeBands);
+                var v = 1 - (latNumber / latitudeBands);
+
+                normalData.push(x);
+                normalData.push(y);
+                normalData.push(z);
+                textureCoordData.push(u);
+                textureCoordData.push(v);
+                vertexPositionData.push(radius * x);
+                vertexPositionData.push(radius * y);
+                vertexPositionData.push(radius * z);
+            }
+        }
+
+        var indexData = [];
+        for (var latNumber = 0; latNumber < latitudeBands; latNumber++) {
+            for (var longNumber = 0; longNumber < longitudeBands; longNumber++) {
+                var first = (latNumber * (longitudeBands + 1)) + longNumber;
+                var second = first + longitudeBands + 1;
+                indexData.push(first);
+                indexData.push(second);
+                indexData.push(first + 1);
+
+                indexData.push(second);
+                indexData.push(second + 1);
+                indexData.push(first + 1);
+            }
+        }
+
+        var k: string = "";
+        for (var i = 0; i < vertexPositionData.length; ++i) {
+            k += ',' + vertexPositionData[i].toFixed(5);
+        }
     }
 
     printWorld(callback?: () => void): void {

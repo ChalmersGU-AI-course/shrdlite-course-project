@@ -12,9 +12,11 @@ class RenderItem {
     private vertexIndexBuffer: WebGLBuffer;
     private mvMatrix: Float32Array;
     private itemNo;
+    public height;
 
     public constructor(private gl: WebGLRenderingContext, asset: AssetData, texture: string) {
-        this.itemNo = asset.itemNo;
+        this.itemNo = asset.vertexIndices.length;
+        this.height = asset.stackHeight;
 
         this.pos = vec3.create();
 
