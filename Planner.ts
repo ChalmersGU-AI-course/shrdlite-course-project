@@ -93,8 +93,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			possiblestate.pddl.remove(topLit);
 			possiblestate.planAction = "p";
 			// add info to description
-			var descObj = possiblestate.objects[topobj];
-			possiblestate.description = " " + descObj.size + " " + descObj.color + " " + descObj.form;
+			//var descObj = possiblestate.objects[topobj];
+			possiblestate.description = this.getMinimumDescription(topobj, possiblestate); //" " + descObj.size + " " + descObj.color + " " + descObj.form;
 			neig.push(possiblestate);
 		}else if(currentstate.holding ){ // drop
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
@@ -134,6 +134,24 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		}
         
         return neigNumbers;
+    }
+    
+    getMinimumDescription(obj : string, state : WorldState): string{
+    	var descObj = state.objects[obj];
+    	var minDesc : string[]= Interpreter.identifyObj(descObj.form, "", "", state);
+    	if( minDesc.length == 1){// only form is nessicary
+    		return " "+ descObj.form;
+    	}
+    	minDesc = Interpreter.identifyObj(descObj.form, descObj.color, "", state);
+		if(minDesc.length == 1){	
+    		return " " + descObj.color + " " + descObj.form;
+		}
+		minDesc = Interpreter.identifyObj(descObj.form, "", descObj.size, state);
+		if(minDesc.length == 1){	
+    		return " " + descObj.size + " " + descObj.form;
+		}
+
+    	return " " + descObj.size + " " + descObj.color + " " + descObj.form;
     }
     
     filterVissited(states : WorldState[]):WorldState[]{
@@ -967,11 +985,12 @@ module Planner {
         	var descCounter = 0;
         	var descStr : string;
         	var descStrs = getAllDescriptions(sp1._nodeValues, path);
+        	var istake = isTake(sp1._nodeValues, path);
         	for(var i = path.length-1; i >= 0 ; i--){ // travers backwards
         		pa = sp1._nodeValues[ path[i] ].planAction;
         		descStr = sp1._nodeValues[ path[i] ].description;
         		if(descStr.length > 0){
-        			descStr = editDescription(descStr, descCounter, descStrs.length-1);
+        			descStr = editDescription(descStr, descCounter, descStrs.length-1, istake);
         			plan.push(descStr);
         			descCounter++;
         		}
@@ -980,6 +999,20 @@ module Planner {
         }
 
         return plan;
+    }
+    
+    function isTake(states :WorldState[], path : number[]):boolean{
+    	var foundfirst : string = "";
+    	for(var i = 0; i < path.length; i++){
+    		if(states[path[i]].planAction == "p" || states[path[i]].planAction == "d"){
+    			foundfirst = states[path[i]].planAction;
+    			break;
+    		}
+    	}
+    	if(foundfirst == "p"){
+    		return true;
+    	}
+    	return false;
     }
     
     function getAllDescriptions(states :WorldState[], path : number[]):string[]{
@@ -992,11 +1025,15 @@ module Planner {
     	return descs;
     }
     
-    function editDescription(descStr : string, count : number, max : number):string{
+    function editDescription(descStr : string, count : number, max : number, take : boolean):string{
     	if(count == 0){
     		descStr = "First I move the" + descStr;
     	}else if(count == max){
-    		descStr = "Finally I move the" + descStr + "! :)";
+    		if(take){
+    			descStr = "Picking up the" + descStr;
+    		}else{
+    			descStr = "Finally I move the" + descStr + "! :)";
+    		}	
     	}else if(count == 1){
     		descStr = "Then I move the" + descStr;
     	}else{

@@ -108,6 +108,56 @@ module Interpreter {
     	
     	return true;
     }
+    
+    export function identifyObj(form :string, color :string, size :string, state : WorldState):string[]{
+    	var objs : collections.Set<string> = new collections.Set<string>(function (x){return x});
+        if(!form){
+        	return [];
+        }
+        var pddls = state.pddl.toArray();
+        if(state.holding != null){
+            var hold : Literal;
+            hold = {pol : true, rel : "hold", args : [state.holding]};
+            pddls.push(hold);
+        }
+        if(form == "floor" ){	// special case for floor
+        	for (var index = 0; index < pddls.length; index++) {
+        		var pddl = pddls[index];
+        		
+        		if((pddl.rel == "leftof" || pddl.rel == "rightof") && pddl.args){
+        			var a = state.objects[pddl.args[0]];
+        			objs.add(pddl.args[0]);	
+        		}
+        	}
+        }else{
+	        for (var index = 0; index < pddls.length; index++) {
+	        	var pddl = pddls[index];
+	        	//check the first arg for form, color and size if it matches, add it to possibel objs
+	        	var a = state.objects[pddl.args[0]];
+	        	if(a.form != form && form != "anyform"){
+	        		continue;
+	        	}
+	        	if(a.form == "floor" && form == "anyform"){
+	        		continue;
+	        	}
+	        	if(!a){
+	        		continue;
+	        	}
+	        	if(!(color == null || color.length == 0 )){
+	        		if(a.color != color){
+	        			continue;
+	        		}
+	        	}
+	        	if(!(size == null || size.length == 0)){
+	        		if(a.size != size){
+	        			continue;
+	        		}
+	        	}
+	        	objs.add(pddl.args[0]);
+			}
+		}
+        return objs.toArray();
+    }
 
 
     //////////////////////////////////////////////////////////////////////
@@ -381,55 +431,7 @@ module Interpreter {
     	return result;
     }
     
-    function identifyObj(form :string, color :string, size :string, state : WorldState):string[]{
-    	var objs : collections.Set<string> = new collections.Set<string>(function (x){return x});
-        if(!form){
-        	return [];
-        }
-        var pddls = state.pddl.toArray();
-        if(state.holding != null){
-            var hold : Literal;
-            hold = {pol : true, rel : "hold", args : [state.holding]};
-            pddls.push(hold);
-        }
-        if(form == "floor" ){	// special case for floor
-        	for (var index = 0; index < pddls.length; index++) {
-        		var pddl = pddls[index];
-        		
-        		if((pddl.rel == "leftof" || pddl.rel == "rightof") && pddl.args){
-        			var a = state.objects[pddl.args[0]];
-        			objs.add(pddl.args[0]);	
-        		}
-        	}
-        }else{
-	        for (var index = 0; index < pddls.length; index++) {
-	        	var pddl = pddls[index];
-	        	//check the first arg for form, color and size if it matches, add it to possibel objs
-	        	var a = state.objects[pddl.args[0]];
-	        	if(a.form != form && form != "anyform"){
-	        		continue;
-	        	}
-	        	if(a.form == "floor" && form == "anyform"){
-	        		continue;
-	        	}
-	        	if(!a){
-	        		continue;
-	        	}
-	        	if(!(color == null || color.length == 0 )){
-	        		if(a.color != color){
-	        			continue;
-	        		}
-	        	}
-	        	if(!(size == null || size.length == 0)){
-	        		if(a.size != size){
-	        			continue;
-	        		}
-	        	}
-	        	objs.add(pddl.args[0]);
-			}
-		}
-        return objs.toArray();
-    }
+    
     
     //////////////////////////////////////////////////////////////////////
     // util functions
