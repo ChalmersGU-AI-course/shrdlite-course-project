@@ -14,14 +14,16 @@ module Interpreter {
             var intprt:Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
             if (intprt.intp.length > 0) {
-                interpretations.push(intprt);
+            	if(!interpretationListContains(interpretations, intprt)){
+                	interpretations.push(intprt);
+            	}
             }
         });
 
         if (interpretations.length) {
             if (interpretations.length > 1) {
 
-                throw new Interpreter.Error("Found ambiguous interpretations");
+                //throw new Interpreter.Error("Found ambiguous interpretations");
             }
 
             return interpretations;
@@ -29,6 +31,8 @@ module Interpreter {
             throw new Interpreter.Error("Found no interpretation");
         }
     }
+
+
 
 
     export interface Result extends Parser.Result {intp:Literal[][];
@@ -274,8 +278,25 @@ module Interpreter {
 
     }
 
-    function ruleSetEquals(row:objLocPair[], newRow:objLocPair[]){
+    function ruleSetEquals(row:objLocPair[], newRow:objLocPair[]) : boolean{
         return row.every(o1 => newRow.some(o2 => o1.obj === o2.obj && o1.loc === o2.loc));
+    }
+
+    function interpretationListContains(list : Result[], intrprt : Result) : boolean {
+    	return list.some(intp => interpretationEquals(intp,intrprt));
+    }
+
+    function interpretationEquals(intrprt1 : Result, intrprt2 : Result) : boolean{
+    	return intrprt1.intp.every(and1 => intrprt2.intp.some(and2 => andSetEquals(and1,and2)));
+    }
+    function andSetEquals(and1 : Literal[], and2 : Literal[]) : boolean{
+    	return and1.every(o1 => and2.some(o2 => literalEquals(o1,o2)));
+    }
+
+    function literalEquals(lit1 : Literal, lit2 : Literal) : boolean {
+    	return lit1.pol === lit2.pol && lit1.rel === lit2.rel && 
+    		((lit1.args[0] === lit2.args[0]) && 
+    		(lit1.rel==="holding" || lit1.args[1] === lit2.args[1]));
     }
 }
 
