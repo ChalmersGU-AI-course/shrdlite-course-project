@@ -5,8 +5,10 @@ var ExampleWorlds : {[s:string]: WorldState} = {};
 
 ExampleWorlds["complex"] = {
     "stacks": [["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]],
-    "holding": null,
-    "arm": 0,
+    "arms": [
+                {"holding": null, "pos": 0},
+                {"holding": null, "pos": 4}
+            ],
     "objects": {
         "a": { "form":"brick",   "size":"large",  "color":"yellow" },
         "b": { "form":"brick",   "size":"small",  "color":"white" },
@@ -42,8 +44,12 @@ ExampleWorlds["complex"] = {
 
 ExampleWorlds["medium"] = {
     "stacks": [["e"],["a","l"],[],[],["i","h","j"],[],[],["k","g","c","b"],[],["d","m","f"]],
-    "holding": null,
-    "arm": 0,
+    "arms": [
+                {"holding": null, "pos": 0},
+                {"holding": null, "pos": 2},
+                {"holding": null, "pos": 5},
+                {"holding": null, "pos": 7}
+            ],
     "objects": {
         "a": { "form":"brick",   "size":"large",  "color":"green" },
         "b": { "form":"brick",   "size":"small",  "color":"white" },
@@ -76,8 +82,10 @@ ExampleWorlds["medium"] = {
 
 ExampleWorlds["small"] = { 
     "stacks": [["e"],["g","l"],[],["k","m","f"],[]],
-    "holding": "a",
-    "arm": 0,
+    "arms": [
+                {"holding": null, "pos": 0},
+                {"holding": null, "pos": 4}
+            ],
     "objects": {
         "a": { "form":"brick",   "size":"large",  "color":"green" },
         "b": { "form":"brick",   "size":"small",  "color":"white" },
@@ -108,8 +116,10 @@ ExampleWorlds["impossible"] = {
     "stacks": [["lbrick1","lball1","sbrick1"], [],
                ["lpyr1","lbox1","lplank2","sball2"], [],
                ["sbrick2","sbox1","spyr1","ltable1","sball1"]],
-    "holding": null,
-    "arm": 0,
+    "arms": [
+                {"holding": null, "pos": 0},
+                {"holding": null, "pos": 4}
+            ],
     "objects": {
         "lbrick1": { "form":"brick",   "size":"large",  "color":"green" },
         "sbrick1": { "form":"brick",   "size":"small",  "color":"yellow" },

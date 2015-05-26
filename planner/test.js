@@ -18,8 +18,8 @@ var TMP_currentState = {
     ],
     []
   ],
-  "holding": null,
-  "arm": 0,
+  "arms": [{holding: null, pos: 0}, {holding: null, pos: 4}],
+
   "objects": {
     "a": {
       "form": "brick",
@@ -110,5 +110,13 @@ var TMP_rules = [{rel: "ontop", item: "e", oneof: ["k"]},
 // var TMP_rules = [{rel: 'beside', item: 'e', oneof:['e', 'g']}];
 
 var planner = require("./planner-core.js");
-
-console.log(planner(TMP_currentState, TMP_rules));
+var fail1 = [
+  {
+    "rel": "ontop",
+    "item": "e",
+    "oneof": [
+      "l"
+    ]
+  }
+];
+console.log(planner(TMP_currentState, fail1));

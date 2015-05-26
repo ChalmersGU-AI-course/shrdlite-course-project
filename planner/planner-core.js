@@ -1,52 +1,21 @@
 /*jslint node: true, esnext: true */
 "use strict";
 
-/// Reinventing a decent standard library /////////////////////////////////////////////////////////
-
-Array.prototype.contains = function(e) {
-    return this.indexOf(e) !== -1;
-};
-
-Array.prototype.intersects = function(other) {
-    for (var elem of this) {
-        if (other.indexOf(elem) !== -1) {
-            return true;
-        }
-    }
-    return false;
-};
-
-Array.prototype.last = function() {
-    return this[this.length-1];
-};
-
-Array.prototype.max = function() {
-  return Math.max.apply(null, this);
-};
-
-Array.prototype.min = function() {
-  return Math.min.apply(null, this);
-};
-
-Array.prototype.flatten = function() {
-    var ret = [];
-    for (var sub of this) {
-        for (var nest of sub) {
-            ret.push(nest);
-        }
-    }
-    return ret;
-};
+var stdlib = require('./stdlib');
 
 /// A-star required prototype function  ///////////////////////////////////////////////////////////
 
 var SearchGraph = function (currentState, pddl) {
     this.objects = currentState.objects;
-    this.startNode = {stacks: currentState.stacks,
-                      holding: currentState.holding,
-                      arm: currentState.arm
-                 };
+    this.startNode = { stacks: currentState.stacks,
+                       arms: currentState.arms
+                     };
     this.pddl = pddl;
+    if (currentState.arms.length === 1) {
+        this.h = this.h_1arm;
+    } else {
+        this.h = this.h_general;
+    }
 };
 
 // If top can be placed on bottom
@@ -75,31 +44,118 @@ SearchGraph.prototype.can_place = function(top, stack) {
 };
 
 
+function collision(arr) {
+    var look = {};
+    for (var e of arr) {
+        if (typeof e == 'string') {
+            continue;
+        }
+        if (e in look) {
+            return true;
+        }
+        look[e] = true;
+    }
+    return false;
+}
+
+SearchGraph.prototype.internal_neighbours =  function(state) {
+    var combs = [];
+
+    // Things that depend only on the arm itself
+    for (var arm of state.arms) {
+        var actions = ['-'];
+        if (arm.holding === null) {
+            if (state.stacks[arm.pos].length > 0) {
+              actions.push('p');
+            }
+        } else {
+            if (this.can_place(arm.holding, state.stacks[arm.pos])) {
+                actions.push('d');
+            }
+        }
+        if (arm.pos !== 0) {
+            actions.push(-1);
+        }
+        if (arm.pos !== state.stacks.length-1) {
+            actions.push(1);
+        }
+        combs.push(actions);
+    }
+    var candidates = stdlib.cartesian(combs);
+
+
+    // Invalidating dependent actions
+    var valid = [];
+    outer: for (var cand of candidates) {
+        // Candidate arm posisiton
+        var next_armpos = new Array(cand.length);
+        for (var i = 0; i < cand.length; i++) {
+            if (typeof(cand[i]) == 'number') {
+                next_armpos[i] = cand[i] + state.arms[i].pos;
+            } else {
+                next_armpos[i] = state.arms[i].pos;
+            }
+        }
+
+        // No doing nothing
+        if (cand.every(function(x) { return x == '-';})) {
+            continue;
+        }
+
+        // Never arms on the same spot
+        if (collision(next_armpos)) {
+            continue;
+        }
+
+        // No crossing other arms
+        // permutations :)
+        for (var i=0; i<next_armpos.length; i++) {
+            for (var j=0; j<next_armpos.length; j++) {
+                if (next_armpos[i] > next_armpos[j] && state.arms[i].pos < state.arms[j].pos) {
+                    continue outer;
+                }
+            }
+        }
+
+        valid.push(cand);
+    }
+    return valid;
+};
+
+
 
 // Move left or right, or put up or down
 SearchGraph.prototype.neighbours = function* (state) {
-    // Move left
-    if (state.arm !== 0) {
-        yield {arm: state.arm-1, holding: state.holding, stacks: state.stacks};
-    }
-    // Move right
-    if (state.arm !== state.stacks.length-1) {
-        yield {arm: state.arm+1, holding: state.holding, stacks: state.stacks};
-    }
+    var internal = this.internal_neighbours(state);
 
-    // Lower if possible
-    if (state.holding !== null) {
-        if (this.can_place(state.holding, state.stacks[state.arm])){
-            var new_stacks = state.stacks.slice();
-            new_stacks[state.arm] = new_stacks[state.arm].slice();
-            new_stacks[state.arm].push(state.holding);
-            yield {arm: state.arm, holding: null, stacks: new_stacks};
+
+    for (var outer of internal) {
+        var new_state = stdlib.clone(state);
+        //injecting backlink
+        new_state.backlink = [];
+        for (var i=0; i < outer.length; i++) {
+            switch (outer[i]) {
+                case -1: new_state.arms[i].pos -= 1;
+                    new_state.backlink[i] = 'l';
+                    break;
+                case +1: new_state.arms[i].pos += 1;
+                    new_state.backlink[i] = 'r';
+                    break;
+                case 'p':
+                    new_state.arms[i].holding = new_state.stacks[new_state.arms[i].pos].pop();
+                    new_state.backlink[i] = 'p';
+                    break;
+                case 'd':
+                    new_state.stacks[new_state.arms[i].pos].push(new_state.arms[i].holding);
+                    new_state.arms[i].holding = null;
+                    new_state.backlink[i] = 'd';
+                    break;
+                default:
+                    new_state.backlink[i] = '-';
+                    break; // This captures the '-'
+            }
         }
-    } else if (state.stacks[state.arm].length > 0) {
-        // Pick up if possible
-        var new_stacks = state.stacks.slice();
-        new_stacks[state.arm] = new_stacks[state.arm].slice();
-        yield {arm: state.arm, holding: new_stacks[state.arm].pop(), stacks: new_stacks};
+        yield new_state;
     }
 };
 
@@ -109,17 +165,6 @@ SearchGraph.prototype.cost = function(from, to) {
 };
 
 
-
-// If a constraint is satisfied for a given object
-SearchGraph.prototype.binds = function(constr, obj) {
-    if (typeof constr == 'string') {
-        return constr == obj;
-    }
-    var desc = this.objects[obj];
-    return (constr.form  === null || constr.form  == desc.form) &&
-           (constr.size  === null || constr.size  == desc.size) &&
-           (constr.color === null || constr.color == desc.color);
-};
 
 // If one PDDL rule is satisfied for a state
 SearchGraph.prototype.rule_satisfied = function(rule, state) {
@@ -136,7 +181,10 @@ SearchGraph.prototype.rule_satisfied = function(rule, state) {
 
     switch (rule.rel) {
         case "holding":
-            return state.holding == rule.item;
+            var res = state.arms.some(function(arm) {
+                return arm.holding === rule.item;
+            });
+            return res;
 
         case "floor":
             return j === 0;
@@ -176,12 +224,70 @@ SearchGraph.prototype.isgoal = function(state) {
 
 
 
+
+// Cost to put an element on top of obj
+function putOnTopOf(obj, state) {
+    // Find the object
+    var i = 0;
+    var j = -1;
+    for (var stack of state.stacks) {
+        j = stack.indexOf(obj);
+        if (j !== -1) {
+            break;
+        }
+        i++;
+    }
+    if (j === -1) {
+        return 1; // Arm is holding it, can just put it down (maybe :)
+    }
+    // Move the arm to the stack, put it down. (Plus remove all above objects if needed)
+    return Math.abs(state.arm - i) + 1 + 4*(stack.length-j);
+}
+
+
+
+SearchGraph.prototype.h_general = function (state) {
+    var estimate = 0;
+
+    for(var rule of this.pddl) {
+        if(this.rule_satisfied(rule, state)) {
+            continue;
+        }
+
+        // Find the object
+        var i = 0;
+        var j = -1;
+        for (var stack of state.stacks) {
+            j = stack.indexOf(rule.item);
+            if (j !== -1) {
+                break;
+            }
+            i++;
+        }
+
+        switch(rule.rel) {
+            case "holding":
+                // Calculate the average distance from each arm
+                estimate += state.arms.reduce(function(acc, arm) {
+                    return acc + Math.abs(arm.pos - i) + 4 * (stack.length-j);
+                }, 0) / state.arms.length;
+                break;
+
+        }
+    }
+    return estimate;
+};
+
+
+/// Specialized H for 1 arm ///////////////////////////////////////////////////////////////////////
+
 SearchGraph.prototype.closest_legal_putdown = function(obj, state) {
+    var arm = state.arms[0].pos;
     var dist = state.stacks.length;
     var i = 0;
     for (var stack of state.stacks) {
         if (this.can_place(obj, state.stacks[i])) {
-            dist = Math.min(dist, Math.abs(i-state.arm));
+            dist = Math.min(dist, Math.abs(i-arm));
         }
         i++;
     }
@@ -217,27 +323,11 @@ function closest_floor(armpos, state) {
     return candidate;
 }
 
-// Cost to put an element on top of obj
-function putOnTopOf(obj, state) {
-    // Find the object
-    var i = 0;
-    var j = -1;
-    for (var stack of state.stacks) {
-        j = stack.indexOf(obj);
-        if (j !== -1) {
-            break;
-        }
-        i++;
-    }
-    if (j === -1) {
-        return 1; // Arm is holding it, can just put it down (maybe :)
-    }
-    // Move the arm to the stack, put it down. (Plus remove all above objects if needed)
-    return Math.abs(state.arm - i) + 1 + 4*(stack.length-j);
-}
 
-SearchGraph.prototype.h = function (state) {
-    // return 0;
+SearchGraph.prototype.h_1arm = function (state) {
+    var arm = state.arms[0].pos;
+    var holding = state.arms[0].holding;
+
     var estimate = 0;
     for (var rule of this.pddl) {
         if (this.rule_satisfied(rule, state)) {
@@ -256,17 +346,17 @@ SearchGraph.prototype.h = function (state) {
         switch (rule.rel) {
             case "holding":
                 // Move the arm to object, and pick up. Plus remove elements above (4 each naive estimate)
-                estimate += Math.abs(state.arm - i) + 1 + 4*(stack.length-j);
+                estimate += Math.abs(arm - i) + 1 + 4*(stack.length-j);
                 break;
 
             case "floor":
                 // 10 theoretically smallest to rearange stack instead of finding closest free floor
-                if (state.holding == rule.item) {
+                if (holding == rule.item) {
                     // Find closest floor and put down
-                    estimate += closest_floor(state.arm, state) + 1;
+                    estimate += closest_floor(arm, state) + 1;
                 } else {
                     // Move to object, take, move to closest floor, put down
-                    estimate += Math.abs(state.arm - i) + 2 +  closest_floor(i, state);
+                    estimate += Math.abs(arm - i) + 2 +  closest_floor(i, state);
                 }
                 break;
 
@@ -275,8 +365,8 @@ SearchGraph.prototype.h = function (state) {
                 for (var obj of rule.oneof) {
                     least = Math.min(least, putOnTopOf(obj,state));
                 }
-                if (state.holding != rule.item) {
-                    estimate += Math.abs(state.arm - i) + 1; // Go pick it up.
+                if (holding != rule.item) {
+                    estimate += Math.abs(arm - i) + 1; // Go pick it up.
                 }
                 estimate += least;
                 break;
@@ -309,17 +399,14 @@ SearchGraph.prototype.h = function (state) {
     return estimate;
 };
 
+
 SearchGraph.prototype.state_hash = function(state) {
-    return JSON.stringify(state.stacks) + state.arm + state.holding;
+    return JSON.stringify([state.stacks, state.arms]);
 };
 
-//TODO
+//This one is still buggy
 SearchGraph.prototype.isPossible = function(state) {
-    var elems = state.stacks.flatten();
-    if (state.holding !== null) {
-        elems.push(state.holding);
-    }
-
+    var elems = stdlib.objects_in_world(state);
     //Check that each element exists, and that the rule is possible.
     for (var rule of this.pddl) {
         if (!elems.contains(rule.item)) {
@@ -328,14 +415,19 @@ SearchGraph.prototype.isPossible = function(state) {
         if (rule.rel == "holding" || rule.rel == "floor") {
             continue;
         }
+        var newOneof = [];
         for (var sub of rule.oneof) {
             if (!elems.contains(sub)) {
                 return false;
             }
-            if (rule.rel == "ontop" && !this.can_place(rule.item, [sub])){
-                return false;
+            if (rule.rel == "ontop" && this.can_place(rule.item, [sub])){
+                return newOneof.push(sub);
             }
         }
+        if (newOneof.length === 0) {
+            return false;
+        }
+        rule.oneof = newOneof;
     }
     return true;
 };
@@ -347,14 +439,8 @@ SearchGraph.prototype.isPossible = function(state) {
 // r right
 function backlink(path) {
     var link = [];
-    for (var i =0; i < path.length-1; i++) {
-        var a = path[i];
-        var b = path[i+1];
-        if (a.arm == b.arm) {
-            link.push(a.holding === null ? 'p' : 'd');
-        } else {
-            link.push(a.arm < b.arm ? 'r' : 'l');
-        }
+    for (var i = 1; i < path.length; i++) {
+        link.push(path[i].backlink);
     }
 
     return link;
@@ -365,9 +451,12 @@ var astar = require("./astar.js");
 module.exports = function(currentState, pddl) {
     var g = new SearchGraph(currentState, pddl);
     if (!g.isPossible(g.startNode)) {
+        console.log("impossible:" + pddl);
         return undefined;
     }
+    console.time("A*");
     var res = astar(g, g.startNode);
+    console.timeEnd("A*");
     if (res === undefined) {
         return undefined;
     } else {

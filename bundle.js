@@ -1,6 +1,275 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /*jslint node: true, esnext: true */
 "use strict";
+require('./../planner/planner-core.js');
+
+function objects_in_world(state) {
+    var list = state.stacks.flatten();
+    for (var arm of state.arms) {
+        if (arm.holding !== null) {
+            list.push(arm.holding);
+        }
+    }
+    return list;
+}
+
+// If a constraint is satisfied for a given object
+Parser.prototype.binds = function(constr, world_object) {
+    var desc = this.state.objects[world_object];
+    return (constr.form  === null || constr.form == "anyform" || constr.form  == desc.form) &&
+           (constr.size  === null || constr.size  == desc.size) &&
+           (constr.color === null || constr.color == desc.color);
+};
+
+
+
+function Parser(state) {
+    this.state = state;
+    this.all = objects_in_world(state);
+    // this.interpretation = interpretation;
+}
+
+// Returns a list of objects matching or "floor"
+Parser.prototype.parse_object = function(obj) {
+    console.log("P: obj");
+    // Simple object
+    if (obj.size !== undefined) {
+        if (obj.size === null && obj.color === null && obj.form == "floor") {
+            return "floor";
+        }
+        var desc = this.state.objects[obj];
+        var tmp = this;
+        return this.all.filter(function (x){
+           return tmp.binds(obj, x) ;
+        });
+    }
+    // Complex object
+    var candidates = this.parse_object(obj.obj);
+    if (candidates == "floor") {
+        throw "Floor cannot be in some other object";
+    }
+    return this.location_filter(candidates, obj.loc);
+};
+
+
+// True if item is on top of one of oneof
+Parser.prototype.test_ontop = function(item, oneof) {
+    // Find the object
+    var i = 0;
+    var j = -1;
+    for (var stack of this.state.stacks) {
+        j = stack.indexOf(item);
+        if (j !== -1) {
+            break;
+        }
+        i++;
+    }
+    if (j === -1) {
+        return false;
+    }
+    if (j === 0) {
+        return oneof == "floor";
+    }
+
+    return oneof.contains(stack[j-1]);
+};
+
+// True if item is beside one of oneof
+Parser.prototype.test_beside = function(item, oneof) {
+    if (oneof == "floor") {
+        throw "Cannot be beside the floor";
+    }
+    // Find the object
+    var i = 0;
+    var j = -1;
+    for (var stack of this.state.stacks) {
+        j = stack.indexOf(item);
+        if (j !== -1) {
+            break;
+        }
+        i++;
+    }
+    if (j === -1) {
+        return false;
+    }
+
+    return  (i !== 0 && oneof.intersects(this.state.stacks[i-1])) ||
+        (i !== this.state.stacks.length && oneof.intersects(this.state.stacks[i+1]));
+
+};
+
+Parser.prototype.test_left = function(item, oneof) {
+    if (oneof == "floor") {
+        throw "Cannot be left of the floor";
+    }
+    // Find the object
+    var i = 0;
+    var j = -1;
+    for (var stack of this.state.stacks) {
+        j = stack.indexOf(item);
+        if (j !== -1) {
+            break;
+        }
+        i++;
+    }
+    if (j === -1) {
+        return false;
+    }
+    return (j !== -1) && this.state.stacks.slice(i+1).flatten().intersects(oneof);
+};
+
+Parser.prototype.test_right = function(item, oneof) {
+    if (oneof == "floor") {
+        throw "Cannot be right of the floor";
+    }
+    // Find the object
+    var i = 0;
+    var j = -1;
+    for (var stack of this.state.stacks) {
+        j = stack.indexOf(item);
+        if (j !== -1) {
+            break;
+        }
+        i++;
+    }
+    if (j === -1) {
+        return false;
+    }
+    return (j !== -1) && this.state.stacks.slice(i-1).flatten().intersects(oneof);
+};
+
+// candidate object <on top/etc> of loc.obj. Returns the candidates for which this is true
+Parser.prototype.location_filter = function(candidates, loc) {
+    // var obs = this.parse_object(loc.obj);
+    var obs = this.parse_entity(loc.ent);
+    console.log("loc cand:" + candidates + " on " + obs);
+    var ret = [];
+    for (var cand of candidates) {
+        switch (loc.rel) {
+            case "inside":
+            case "ontop":
+                if (this.test_ontop(cand, obs)) {
+                    ret.push(cand);
+                }
+                break;
+            case "beside":
+                if (this.test_beside(cand, obs)) {
+                    ret.push(cand);
+                }
+                break;
+            case "left":
+                if (this.test_left(cand, obs)) {
+                    ret.push(cand);
+                }
+                break;
+            case "right":
+                if (this.test_right(cand, obs)) {
+                    ret.push(cand);
+                }
+                break;
+            default:
+            throw "Unknown relation: " + loc.rel;
+        }
+    }
+    return ret;
+};
+
+//Returns a list of objects matching or "floor"
+Parser.prototype.parse_entity = function(entity) {
+    console.log("P: entity1" + entity.quant);
+    var obs = this.parse_object(entity.obj);
+    console.log("P: entity2: " + obs);
+    if (obs == "floor") {
+        if (entity.quant != "the") {
+            throw "It must be quantified 'the floor'";
+        }
+        return "floor";
+    }
+    if (entity.quant == "the") {
+        if (obs.length == 1) {
+            return obs;
+        } else {
+            throw "Not exactly one object" + obs;
+        }
+    } else if (entity.quant == "any") {
+        if (obs.length < 1) {
+            throw "No objects matching";
+        } else {
+            return obs;
+        }
+    } else if (entity.quant == "all") {
+        return obs;
+    }
+    throw "Invalid quantifier: " + entity.quant;
+};
+
+
+function filterArray(elem, arr) {
+    var arr2 = [];
+    for (var e of arr) {
+        if (e != elem) {
+            arr2.push(e);
+        }
+    }
+    return arr2;
+}
+
+Parser.prototype.parse_cmd = function(o) {
+    var move = this.parse_entity(o.ent);
+    if (o.cmd == "take") {
+        if (move.length !== 1) {
+            throw "Can only take exactly one element";
+        }
+        return [{rel: 'holding', item: move[0]}];
+    }
+    var oneof = this.parse_entity(o.loc.ent);
+    // var oneof = this.location_filter(this.all, o.loc);
+
+    console.log(o.cmd);
+    console.log("move " + move);
+    console.log("oneof: " + oneof);
+
+
+
+    if (move.length === 0) {
+        throw "No objects matching";
+    } else if (move.length > 1 && o.ent.quant == "any") {
+        move = [move[Math.floor(Math.random()*move.length)]];
+    }
+
+    var rules = [];
+    for (var m of move) {
+        var oneof2 = filterArray(m, oneof);
+        if (oneof == "floor") {
+            if (o.loc.rel != "ontop") {
+                throw "Objects must be put on top of the floor";
+            }
+            rules.push({rel: 'floor', item: m});
+        } else if (o.loc.rel == "ontop" || o.loc.rel == "inside") {
+            rules.push({rel: 'ontop', item: m, oneof: oneof2});
+        } else if (o.loc.rel == "beside" || o.loc.rel == "left" || o.loc.rel == "right") {
+            rules.push({rel: o.loc.rel, item: m, oneof: oneof2});
+        } else {
+            throw "Unknown relation" + o.loc.rel;
+        }
+    }
+    return rules;
+
+};
+
+function all(state, parse) {
+    console.log("PARSING" + JSON.stringify(parse, null, 2));
+    var p = new Parser(state);
+    var ret = p.parse_cmd(parse);
+    console.log("GOT " + JSON.stringify(ret, null, 2));
+    return ret;
+}
+
+module.exports = all;
+
+},{"./../planner/planner-core.js":4}],2:[function(require,module,exports){
+/*jslint node: true, esnext: true */
+"use strict";
 
 function Set(tostring) {
     this.tostring = tostring;
@@ -108,7 +377,7 @@ module.exports = function (G, start) {
     return undefined;
 };
 
-},{"./binary-heap-hash/binary-heap-hash":2}],2:[function(require,module,exports){
+},{"./binary-heap-hash/binary-heap-hash":3}],3:[function(require,module,exports){
 /*jslint node: true */
 "use strict";
 
@@ -224,9 +493,19 @@ Heap.prototype.bubbleDown = function (pos) {
 
 module.exports = Heap;
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /*jslint node: true, esnext: true */
 "use strict";
+
+function objects_in_world(state) {
+    var list = state.stacks.flatten();
+    for (var arm of state.arms) {
+        if (arm.holding !== null) {
+            list.push(arm.holding);
+        }
+    }
+    return list;
+}
 
 /// Reinventing a decent standard library /////////////////////////////////////////////////////////
 
@@ -269,11 +548,12 @@ Array.prototype.flatten = function() {
 
 var SearchGraph = function (currentState, pddl) {
     this.objects = currentState.objects;
-    this.startNode = {stacks: currentState.stacks,
-                      holding: currentState.holding,
-                      arm: currentState.arm
-                 };
+    this.startNode = { stacks: currentState.stacks,
+                       arms: currentState.arms
+                     };
     this.pddl = pddl;
+    console.log("pddl");
+    console.log(this.pddl);
 };
 
 // If top can be placed on bottom
@@ -301,32 +581,155 @@ SearchGraph.prototype.can_place = function(top, stack) {
     );
 };
 
+function cartesian(lst) {
+    function addTo(curr, args) {
+        var i, copy;
+        var rest = args.slice(1);
+        var last = !rest.length;
+        var result = [];
+
+        for (i = 0; i < args[0].length; i++) {
+            copy = curr.slice();
+            copy.push(args[0][i]);
+            if (last) {
+                result.push(copy);
+            } else {
+                result = result.concat(addTo(copy, rest));
+            }
+        }
+
+        return result;
+    }
+    return addTo([], Array.prototype.slice.call(lst));
+}
+
+function collision(arr) {
+    var look = {};
+    for (var e of arr) {
+        if (typeof e == 'string') {
+            continue;
+        }
+        if (e in look) {
+            return true;
+        }
+        look[e] = true;
+    }
+    return false;
+}
+
+SearchGraph.prototype.internal_neighbours =  function(state) {
+    var combs = [];
+
+    // Things that depend only on the arm itself
+    for (var arm of state.arms) {
+        var actions = ['-'];
+        if (arm.holding === null) {
+            if (state.stacks[arm.pos].length > 0) {
+              actions.push('p');
+            }
+        } else {
+            if (this.can_place(arm.holding, state.stacks[arm.pos])) {
+                actions.push('d');
+            }
+        }
+        if (arm.pos !== 0) {
+            actions.push(-1);
+        }
+        if (arm.pos !== state.stacks.length-1) {
+            actions.push(1);
+        }
+        combs.push(actions);
+    }
+    var candidates = cartesian(combs);
+
+
+    // Invalidating dependent actions
+    var valid = [];
+    outer: for (var cand of candidates) {
+        // Candidate arm posisiton
+        var next_armpos = new Array(cand.length);
+        for (var i = 0; i < cand.length; i++) {
+            if (typeof(cand[i]) == 'number') {
+                next_armpos[i] = cand[i] + state.arms[i].pos;
+            } else {
+                next_armpos[i] = state.arms[i].pos;
+            }
+        }
+
+        // No doing nothing
+        if (cand.every(function(x) { return x == '-';})) {
+            continue;
+        }
+
+        // Never arms on the same spot
+        if (collision(next_armpos)) {
+            continue;
+        }
+
+        // No crossing other arms
+        // permutations :)
+        for (var i=0; i<next_armpos.length; i++) {
+            for (var j=0; j<next_armpos.length; j++) {
+                if (next_armpos[i] > next_armpos[j] && state.arms[i].pos < state.arms[j].pos) {
+                    continue outer;
+                }
+            }
+        }
+
+        valid.push(cand);
+    }
+    return valid;
+};
+
+
+
+function clone(obj) {
+    if(obj === null || typeof(obj) !== 'object')
+        return obj;
+
+    var temp = obj.constructor(); // changed
+
+    for(var key in obj) {
+        if(Object.prototype.hasOwnProperty.call(obj, key)) {
+            temp[key] = clone(obj[key]);
+        }
+    }
+    return temp;
+}
 
 
 // Move left or right, or put up or down
 SearchGraph.prototype.neighbours = function* (state) {
-    // Move left
-    if (state.arm !== 0) {
-        yield {arm: state.arm-1, holding: state.holding, stacks: state.stacks};
-    }
-    // Move right
-    if (state.arm !== state.stacks.length-1) {
-        yield {arm: state.arm+1, holding: state.holding, stacks: state.stacks};
-    }
+    var internal = this.internal_neighbours(state);
 
-    // Lower if possible
-    if (state.holding !== null) {
-        if (this.can_place(state.holding, state.stacks[state.arm])){
-            var new_stacks = state.stacks.slice();
-            new_stacks[state.arm] = new_stacks[state.arm].slice();
-            new_stacks[state.arm].push(state.holding);
-            yield {arm: state.arm, holding: null, stacks: new_stacks};
+
+    for (var outer of internal) {
+        var new_state = clone(state);
+        //injecting backlink
+        new_state.backlink = [];
+        for (var i=0; i < outer.length; i++) {
+            switch (outer[i]) {
+                case -1: new_state.arms[i].pos -= 1;
+                    new_state.backlink[i] = 'l';
+                    break;
+                case +1: new_state.arms[i].pos += 1;
+                    new_state.backlink[i] = 'r';
+                    break;
+                case 'p':
+                    new_state.arms[i].holding = new_state.stacks[new_state.arms[i].pos].pop();
+                    new_state.backlink[i] = 'p';
+                    break;
+                case 'd':
+                    new_state.stacks[new_state.arms[i].pos].push(new_state.arms[i].holding);
+                    new_state.arms[i].holding = null;
+                    new_state.backlink[i] = 'd';
+                    break;
+                default:
+                    new_state.backlink[i] = '-';
+                    break; // This captures the '-'
+            }
         }
-    } else if (state.stacks[state.arm].length > 0) {
-        // Pick up if possible
-        var new_stacks = state.stacks.slice();
-        new_stacks[state.arm] = new_stacks[state.arm].slice();
-        yield {arm: state.arm, holding: new_stacks[state.arm].pop(), stacks: new_stacks};
+        yield new_state;
     }
 };
 
@@ -336,17 +739,6 @@ SearchGraph.prototype.cost = function(from, to) {
 };
 
 
-
-// If a constraint is satisfied for a given object
-SearchGraph.prototype.binds = function(constr, obj) {
-    if (typeof constr == 'string') {
-        return constr == obj;
-    }
-    var desc = this.objects[obj];
-    return (constr.form  === null || constr.form  == desc.form) &&
-           (constr.size  === null || constr.size  == desc.size) &&
-           (constr.color === null || constr.color == desc.color);
-};
 
 // If one PDDL rule is satisfied for a state
 SearchGraph.prototype.rule_satisfied = function(rule, state) {
@@ -363,7 +755,10 @@ SearchGraph.prototype.rule_satisfied = function(rule, state) {
 
     switch (rule.rel) {
         case "holding":
-            return state.holding == rule.item;
+            var res = state.arms.some(function(arm) {
+                return arm.holding === rule.item;
+            });
+            return res;
 
         case "floor":
             return j === 0;
@@ -464,6 +859,38 @@ function putOnTopOf(obj, state) {
 }
 
 SearchGraph.prototype.h = function (state) {
+    var estimate = 0;
+
+    for(var rule of this.pddl) {
+        if(this.rule_satisfied(rule, state)) {
+            continue;
+        }
+
+        // Find the object
+        var i = 0;
+        var j = -1;
+        for (var stack of state.stacks) {
+            j = stack.indexOf(rule.item);
+            if (j !== -1) {
+                break;
+            }
+            i++;
+        }
+
+        switch(rule.rel) {
+            case "holding":
+                // Calculate the average distance from each arm
+                estimate += state.arms.reduce(function(acc, arm) {
+                    return acc + Math.abs(arm.pos - i) + 4 * (stack.length-j);
+                }, 0) / state.arms.length;
+                break;
+
+        }
+    }
+    return estimate;
+};
+/*
+SearchGraph.prototype.h = function (state) {
     // return 0;
     var estimate = 0;
     for (var rule of this.pddl) {
@@ -535,18 +962,15 @@ SearchGraph.prototype.h = function (state) {
     }
     return estimate;
 };
+*/
 
 SearchGraph.prototype.state_hash = function(state) {
-    return JSON.stringify(state.stacks) + state.arm + state.holding;
+    return JSON.stringify([state.stacks, state.arms]);
 };
 
 //TODO
 SearchGraph.prototype.isPossible = function(state) {
-    var elems = state.stacks.flatten();
-    if (state.holding !== null) {
-        elems.push(state.holding);
-    }
-
+    var elems = objects_in_world(state);
     //Check that each element exists, and that the rule is possible.
     for (var rule of this.pddl) {
         if (!elems.contains(rule.item)) {
@@ -555,14 +979,19 @@ SearchGraph.prototype.isPossible = function(state) {
         if (rule.rel == "holding" || rule.rel == "floor") {
             continue;
         }
+        var newOneof = [];
         for (var sub of rule.oneof) {
             if (!elems.contains(sub)) {
                 return false;
             }
-            if (rule.rel == "ontop" && !this.can_place(rule.item, [sub])){
-                return false;
+            if (rule.rel == "ontop" && this.can_place(rule.item, [sub])){
+                return newOneof.push(sub);
             }
         }
+        if (newOneof.length === 0) {
+            return false;
+        }
+        rule.oneof = newOneof;
     }
     return true;
 };
@@ -574,14 +1003,8 @@ SearchGraph.prototype.isPossible = function(state) {
 // r right
 function backlink(path) {
     var link = [];
-    for (var i =0; i < path.length-1; i++) {
-        var a = path[i];
-        var b = path[i+1];
-        if (a.arm == b.arm) {
-            link.push(a.holding === null ? 'p' : 'd');
-        } else {
-            link.push(a.arm < b.arm ? 'r' : 'l');
-        }
+    for (var i = 1; i < path.length; i++) {
+        link.push(path[i].backlink);
     }
 
     return link;
@@ -592,9 +1015,12 @@ var astar = require("./astar.js");
 module.exports = function(currentState, pddl) {
     var g = new SearchGraph(currentState, pddl);
     if (!g.isPossible(g.startNode)) {
+        console.log("impossible");
         return undefined;
     }
+    console.time("A*");
     var res = astar(g, g.startNode);
+    console.timeEnd("A*");
     if (res === undefined) {
         return undefined;
     } else {
@@ -602,7 +1028,8 @@ module.exports = function(currentState, pddl) {
     }
 };
 
-},{"./astar.js":1}],4:[function(require,module,exports){
-window.plannerCore = require('./planner-core.js');
+},{"./astar.js":2}],5:[function(require,module,exports){
+window.plannerCore = require('./planner/planner-core.js');
+window.interpreterCore = require('./interpreter/interpreter-core.js');
 
-},{"./planner-core.js":3}]},{},[4]);
+},{"./interpreter/interpreter-core.js":1,"./planner/planner-core.js":4}]},{},[5]);
