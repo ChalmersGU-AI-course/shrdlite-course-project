@@ -159,7 +159,7 @@ module Interpreter {
         switch (ent.quant) {
             case "the": return [findThe(ent.obj, literals, objects)];
             case "any": return findAny(ent.obj, literals, objects);
-            case "all": return [findAll(ent.obj, literals, objects)];
+            case "all": debugger;return [findAll(ent.obj, literals, objects)];
             default:    throw new Interpreter.Error("Entity unknown");
         }
     }
@@ -169,7 +169,7 @@ module Interpreter {
         switch (results.length) {
             case 0:
             case 1: return results;
-            default: debugger; throw new Interpreter.Error("found multiple"); // TODO
+            default: throw new Interpreter.Error("found multiple"); // TODO
         }
     }
 
@@ -423,9 +423,11 @@ module Interpreter {
                   // Check that an object (A or B) doesn't have conflict relations
                   if( ! checkRelationsObj( objA0List.map((lit) => lit.rel) ) ) { flag=false; str+=objA+":"; }
                   if( ! checkRelationsObj( objA1List.map((lit) => lit.rel) ) ) { flag=false; str+=objA+":"; }
-                  if( ! checkRelationsObj( objB0List.map((lit) => lit.rel) ) ) { flag=false; str+=objB+":"; }
-                  if( ! checkRelationsObj( objB1List.map((lit) => lit.rel) ) ) { flag=false; str+=objB+":"; }
-                  
+                  if(objB!="floor"){
+	                  if( ! checkRelationsObj( objB0List.map((lit) => lit.rel) ) ) { flag=false; str+=objB+":"; }
+    	              if( ! checkRelationsObj( objB1List.map((lit) => lit.rel) ) ) { flag=false; str+=objB+":"; }
+    			}
+    			              
                 checked.push(objA);
                 checked.push(objB);
 
