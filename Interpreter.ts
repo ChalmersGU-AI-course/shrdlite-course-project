@@ -589,7 +589,7 @@ module Interpreter {
     }
     
     function literalEquals(lit1 : Literal, lit2 : Literal):boolean{
-    	if(lit1.rel != lit2.rel || lit1.pol != lit2.pol){
+    	if(lit1.rel != lit2.rel ){
     		return false;
     	}else{
     		if(lit1.rel == "beside" && ((lit1.args[0] == lit2.args[0]
@@ -614,7 +614,7 @@ module Interpreter {
     		return cleared;
     	}
     	for(var i = 0; i < lits.length;i++){
-    		if(checkIllegal(lits[i], state)){
+    		if(checkIllegal(lits[i], state) && checkBesideCombination(lits[i], cleared)){
     			cleared.push(lits[i]);
     		}
     	}
@@ -624,6 +624,24 @@ module Interpreter {
     	}else{
     		return [];
     	}
+    }
+    
+    function checkBesideCombination(lit : Literal, lits : Literal[]):boolean{
+    	if(lit.rel != "beside"){
+    		return true;
+    	}
+    	
+    	for(var i = 0; i < lits.length; i ++){
+    		
+			if(lit.rel == lits[i].rel && (
+    				lit.args[0] == lits[i].args[1]
+    				&& lit.args[1] == lits[i].args[0]) ){
+				return false;
+			}
+    	}
+    		
+    	
+    	return true;
     }
     
     

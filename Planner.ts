@@ -73,7 +73,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			neig.push(possiblestate);
 		}
 		// move arm right
-		if(currentstate.arm < this.getWorldWidth(currentstate)-2 ){
+		if(currentstate.arm < this.getWorldWidth(currentstate)-1 ){
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// increase arm poss
 			possiblestate.arm += 1;
@@ -455,7 +455,15 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                 return 1 + Math.abs(posB - state.arm);
             }
             else if(state.holding == b){// if we are holding the wrong objective
-                return 1+ ontopA*4 + Math.abs(posA-state.arm) + 2;
+            	count += ontopA*4 + Math.abs(posA-state.arm) + 3;
+            	if(this.checkLegalLit(b, 
+            			this.getTopRelation(state.arm,state).args[0], state)){
+            		count += 1;
+            	}else{
+            		count += this.costToClosestLegalNewPos(b, a, state.arm, state);
+            	}
+            	
+                return count; 
             }
             // if anything is ontop of b, then count object on top and predict cost for placeing the top obj at another spot
             
@@ -480,8 +488,10 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
             }else{
             	count += Math.abs(posA-state.arm);
             }
-            if(state.holding){
-            	count ++; //if holding then +1 to drop it 
+            if(state.holding ){
+            	count +=3; //if holding then +1 to drop it 
+            }else{
+            	count += 2;
             }
             
         /*   var z = b;
@@ -652,20 +662,36 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         	var ontopA = this.countOnTop(a,state,pddls);
         	var ontopB = this.countOnTop(b,state,pddls);
         	// if holding then 
-            if(state.holding != null && state.holding== a){
+            if(state.holding== a){
             	var dist = Math.abs(posB-state.arm);
             	if(dist == 0){
             		dist ++;
             	}
+            	if(posA == posB){
+            		dist = 2; 
+            	}
                 return dist; // currently not checking if stack next to b is full
             }
-             else if(state.holding != null && state.holding== b){
+            else if(state.holding== b){
              	var dist = Math.abs(posA-state.arm);
             	if(dist == 0){
             		dist ++;
             	}
+            	if(posA == posB){
+            		dist = 2; 
+            	}
                 return dist;
             }
+            if(ontopB == ontopA){
+            	var test1 = ontopB*4 + Math.abs(posB-state.arm) 
+                + (Math.abs(posA-posB)-1)+2;
+                var test2 = ontopA * 4 + Math.abs(posA-state.arm)
+                 + (Math.abs(posA-posB)-1)+2;
+                 count = test1;
+                 if(test1 > test2){
+                 	count = test2;
+                 }
+            }else
             if(ontopB > ontopA){
 
                 count = ontopB*4 + Math.abs(posB-state.arm) 
@@ -758,7 +784,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         var pddls = state.pddl.toArray();
 
         if(cond.rel == "hold"){
-            if(state.holding && state.holding == a){
+            if( state.holding == a){
                 return true;
             }
             return false;
@@ -790,7 +816,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         	}
         	return false
         }
-        else if((cond.rel == "beside" ) && !state.holding){
+        else if(cond.rel == "beside" && !state.holding){
         	var pos1 = this.getPosition(a, state);
         	var pos2 = this.getPosition(b, state);
         	
