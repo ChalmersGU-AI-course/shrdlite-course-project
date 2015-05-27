@@ -35,7 +35,10 @@ module Interpreter {
             return this.name + ": " + this.message
         }
     }
-
+    /**
+     * Returns a list of interpretations given a list of parse results and a world state
+     * @returns {Result[]}, a list of different valid interpretations.
+     */
     export function interpret(parses:Parser.Result[], currentState:WorldState):Result[] {
         var interpretations:Result[] = [];
 
@@ -64,6 +67,11 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+    
+    /**
+     * Returns a complete interpretation given a parse command and a world state
+     * @returns {Literal[][]}, A conjunction of disjunct literals.
+     */
     function interpretCommand(cmd:Parser.Command, state:WorldState):Literal[][] {
         var lit:Literal[][] = [];
         if (cmd.cmd === "move" || cmd.cmd === "put") {
@@ -92,6 +100,10 @@ module Interpreter {
         return lit;
     }
 
+    /**
+     * Returns a disjunction of conjunct object strings depending on the content of {Parser.Entity}. 
+     * @returns {String[][]}, A conjunction of disjunct strings. 
+     */
     function interpretEntity(ent:Parser.Entity, state:WorldState):string[][] {
         var objs:string[][] = interpretObject(ent.obj, state);
         if (ent.quant === "the") {
@@ -152,8 +164,10 @@ module Interpreter {
         if (rules.length === 0) {
             return finalSet;
         }
+        //remove duplicates
+        var noDups : objLocPair[][] = rules.filter(disj => !containsDuplicateObjLocPair(disj));  
         // filter physical
-        var filtered:objLocPair[][] = rules.filter(row => controlRuleSet(futureState, row, locs.rel, state));
+        var filtered:objLocPair[][] = noDups.filter(row => controlRuleSet(futureState, row, locs.rel, state));
         if (filtered.length === 0) {
             return finalSet;
         }
@@ -250,8 +264,8 @@ module Interpreter {
 
     function controlRuleSet(futureState:boolean, rules:objLocPair[], rel:string, state:WorldState):boolean {
         return futureState ?
-            rules.every(r => r.obj !== r.loc && state.validPlacement(r.obj, r.loc, rel)) :
-            rules.every(r => r.obj !== r.loc && state.relationExists(r.obj, r.loc, rel));
+        rules.every(r => r.obj !== r.loc && state.validPlacement(r.obj, r.loc, rel)) :
+        rules.every(r => r.obj !== r.loc && state.relationExists(r.obj, r.loc, rel));
     }
 
     function stringListListContains(list : string[][], sl : string[]) : boolean {
@@ -259,11 +273,19 @@ module Interpreter {
     }
     
     function objLocPairListListContains(list:objLocPair[][], olpl : objLocPair[]) : boolean {
-    	return list.some(l => objLocPairEquals(l,olpl))
+    	return list.some(l => objLocPairListEquals(l,olpl))
     }
 
-    function objLocPairEquals(row:objLocPair[], newRow:objLocPair[]) : boolean{
-        return row.every(o1 => newRow.some(o2 => o1.obj === o2.obj && o1.loc === o2.loc));
+    function containsDuplicateObjLocPair(disj : objLocPair[]) : boolean{
+    	return disj.some(o1 => disj.some(o2 => (o1!==o2 && objLocPairEquals(o1,o2))));
+    }
+
+    function objLocPairListEquals(row:objLocPair[], newRow:objLocPair[]) : boolean{
+        return row.every(o1 => newRow.some(o2 => objLocPairEquals(o1,o2)));
+    }
+
+    function objLocPairEquals(o1 : objLocPair, o2 : objLocPair) : boolean {
+    	return o1.obj === o2.obj && o1.loc === o2.loc;
     }
 
     function interpretationListContains(list : Result[], intrprt : Result) : boolean {
