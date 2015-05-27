@@ -12,7 +12,6 @@ module Interpreter {
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             try {
-                intprt.intp = interpretCommand(intprt.prs, currentState);
                 interpretations.push(intprt);
             } catch (err) {
                 if (err instanceof Ambiguity) {
@@ -24,7 +23,6 @@ module Interpreter {
             }
         });
         if (interpretations.length == 1) {
-            console.log(interpretations);
             return interpretations;
         } else if (ambiguities.length > 0) {
             var msg : string = "Possibly ambiguous command. Try being more specific about the following objects: ";
@@ -92,7 +90,6 @@ module Interpreter {
     
     
     function goalToString(goal : Goal) : string {
-        console.log(goal);
         if (goal.goal != null) {
             return literalToString(goal.goal);
         } else {

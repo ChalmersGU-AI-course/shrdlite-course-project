@@ -305,7 +305,7 @@ module Planner {
                     newstate.holding = objectToHold;
                     newstate.stacks = astate.stacks.slice();
                     newstate.stacks[astate.arm] = stack.slice();
-                    newstate.msg = ("Picking up the "+ state.objects[objectToHold].form);
+                    newstate.msg = ("Taking the "+ getUniqueDescription(objectToHold));
                     return newstate;
             }else if (action == drop){
                     var stack = astate.stacks[astate.arm].slice();
@@ -315,11 +315,56 @@ module Planner {
                     newstate.stacks = astate.stacks.slice();
                     newstate.stacks[astate.arm] = stack;
                     newstate.arm = astate.arm;
-                    newstate.msg = ("Dropping the "+ state.objects[objectToDrop].form) ;
+                    newstate.msg = ("Dropping "+ getUniqueDescription(objectToDrop));
                     return newstate; 
             }
                     //Alternative: returns always false
                     throw new Error("not yet implemented");
+        }
+        
+        function getUniqueDescription(index : string) {
+            var objectDef = state.objects[index];
+            var formCount : number = 0;
+            var formAndColorCount  : number = 0;
+            var formAndSizeCount  : number = 0;
+            var duplicateCount  : number = 0;
+            // A function for counting each object in the world, to find uniqueness
+            function increaseCounts(ind : string) {
+                var def = state.objects[ind];
+                if (def.form == objectDef.form) {
+                    formCount++;
+                    if (def.size == objectDef.size) {
+                        formAndSizeCount++;
+                    }
+                    if (def.color == objectDef.color) {
+                        formAndColorCount++;
+                    }
+                }
+                if (ind == index) {
+                    duplicateCount++;
+                }
+            }
+            // Count all objects in stacks
+            state.stacks.forEach((stack) => {
+                stack.forEach((ind) => {
+                    increaseCounts(ind);
+                });
+            });
+            // Count the held object
+            if (state.holding != null) {
+                increaseCounts(state.holding);
+            }
+            if (duplicateCount > 1) {
+                return "a "+objectDef.size+" "+objectDef.color+" "+objectDef.form;
+            } else if (formCount == 1) {
+                return "the "+objectDef.form;
+            } else if (formAndColorCount == 1) {
+                return "the "+objectDef.color+" "+objectDef.form;
+            } else if (formAndSizeCount == 1) {
+                return "the "+objectDef.size+" "+objectDef.form;
+            } else {
+                return "the "+objectDef.size+" "+objectDef.color+" "+objectDef.form;
+            }
         }
         
         /*
@@ -595,23 +640,29 @@ module Planner {
             var current;
             var message;
             for (var p = 1; p < path.length; p++){
-                plan.push((<ActionState>path[p]).action.command);
+                // Always include the action
                 current = (<ActionState> path[p]);
-                if ((current.action.command == "d") &&  (state_stack.length != 0) 
-                    && ((state_stack[state_stack.length - 1]).action.command == "p")){
-                    var obj = state_stack.pop();
-                    var color = (state.objects[obj.holding].color != "anyform") ? (" " + (state.objects[obj.holding].color)) : "" ;
-                    var form  = (state.objects[obj.holding].form) ? (" " + (state.objects[obj.holding].form)) : "";
-                    message = "Moving a " + color + form;    
-                    plan.push(message);
-                    
+                plan.push(current.action.command);                
+                if (current.action.command == "d") {
+                    // We're dropping something:
+                    if (state_stack.length == 0) {
+                        // We haven't picked anything up since we last dropped anything;
+                        // i.e. we held it when we started
+                        plan.push(current.msg);
+                    } else {
+                        // We have picked something up during this plan, which means
+                        // that we're moving it
+                        var dropState = state_stack.pop();
+                        message = "Moving "+getUniqueDescription(dropState.holding);
+                        plan.push(message);
+                    }
                 } else if (current.action.command == "p" ){
+                    // We're picking something up
                     if (p == (path.length - 1)){
+                        // This is the last step, so we're not moving it; only taking it
                         plan.push(current.msg);
                     }
-                    state_stack.push(current); 
-                } else if ((current.action.command == "d") && (p == 1)){
-                        plan.push(current.msg);
+                    state_stack.push(current);
                 }
             }
         }
