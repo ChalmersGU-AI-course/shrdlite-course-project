@@ -137,16 +137,4 @@ module Astar{
         return result;
     }
 
-    /**
-    * returns an ordered list of explored states. They do not form a path
-    * but shows in which order the states were explored, starting with the inital state.
-    */
-    function showVisited<T>(order : Array<Vertex<T>>) : T[]{
-        var result = [];
-        for (var n in order){
-            result.push(order[n].state);
-        }
-        return result;
-    }
-
 }
