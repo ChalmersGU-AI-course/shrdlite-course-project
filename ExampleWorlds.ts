@@ -102,6 +102,7 @@ ExampleWorlds["small"] = {
         "put the yellow box ontop of a table",
         "put a brick in a box on the floor",
         "stack up all blue objects",
+				"move the black ball in a box on the floor"
     ],
     rowLength: 5
 };

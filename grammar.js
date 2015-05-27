@@ -44,7 +44,7 @@ var grammar = {
     {"name": "objectSG", "symbols": [" ebnf$6", " ebnf$7", "formSG"], "postprocess":  R({size:0, color:1, form:2}) },
     {"name": "objectPL", "symbols": [" ebnf$8", " ebnf$9", "formPL"], "postprocess":  R({size:0, color:1, form:2}) },
     {"name": "quantifierSG", "symbols": [" subexpression$10"], "postprocess":  R("any") },
-    {"name": "quantifierSG", "symbols": [" subexpression$11"], "postprocess":  R("the") },
+    {"name": "quantifierSG", "symbols": [" subexpression$11"], "postprocess":  R("any") },
     {"name": "quantifierSG", "symbols": [" subexpression$12"], "postprocess":  R("all") },
     {"name": "quantifierPL", "symbols": [" subexpression$13"], "postprocess":  R("all") },
     {"name": "relation", "symbols": [" subexpression$14"], "postprocess":  R("leftof") },

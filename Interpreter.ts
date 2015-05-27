@@ -17,7 +17,7 @@ module Interpreter {
 		if (interpretations.length) {
 			return interpretations;
 		} else {
-			throw new Interpreter.Error("The spatial relations do not work out");
+			throw new Interpreter.Error("The described spatial relations do not exist.");
 		}
 	}
 
@@ -305,7 +305,7 @@ module Interpreter {
 		 * @param {Entity} Entity of an object pattern in the parse tree
 		 * @return {string[]} array of string for the trunk object pattern that represent the existing objects in the current world state
 		 */
-		private checkExistence(ent) : string[] {
+		private checkExistence(ent, isOrig : boolean) : string[] {
 			//object to check the spatial relations
 			var checker : ShrdliteWorldChecker = new ShrdliteWorldChecker(this.state);
 
@@ -332,8 +332,10 @@ module Interpreter {
 			}
 
 			//removing the spatial relations that don't work in the current world state
-			while(checker.prune()) {
-				continue;
+			if (isOrig) {
+				while(checker.prune()) {
+					continue;
+				}
 			}
 
 			//return the array of matching trunk objects
@@ -440,7 +442,6 @@ module Interpreter {
 						}
 					}
 
-					//todo: check what actually is valid for above AND ontop and what is only for ontop
 					if (rel == "ontop" || rel == "above") {
 						if (rel == "ontop" && formO == "ball" &&  formD != "floor") {
 							origChecker[i] = origChecker[i] - 1;
@@ -618,10 +619,8 @@ module Interpreter {
 		 *
 		 * @return {Literal[][]} Literal describing the PDDL goals
 		 */
-		//todo: ambigous stuff like "move the ball on the floor" currently produces two PDDL goals when there are two balls present
-		//solution (maybe): quantifier is "the" and we receive more than 1 PDDL goal -> ambiguous!
-		//todo: put all balls in a box on the floor
 		//todo: pruning maybe only for origins? because the destination you can create!
+		//todo: for several interpretations we fail already once the first of them is not working
 		//todo: move a ball inside a box
 		//todo: move command when you are already holding sth
 		public getInterpretation() : Literal[][] {
@@ -634,7 +633,7 @@ module Interpreter {
 			if (cmdS == "stack") {
 				//check objects
 				var ent = this.cmd.ent;
-				var objects : string[] = this.checkExistence(ent);
+				var objects : string[] = this.checkExistence(ent, true);
 				if (objects.length && this.isPhysicallyPossible(cmdS, ent.quant, "", objects, [])) {
 					return this.buildLiteral(cmdS, ent.quant, "", objects, []);
 				}
@@ -644,7 +643,7 @@ module Interpreter {
 			if (cmdS == "take") {
 				//check origin
 				var ent = this.cmd.ent;
-				var origs : string[] = this.checkExistence(ent);
+				var origs : string[] = this.checkExistence(ent, true);
 				if (origs.length && this.isPhysicallyPossible("holding", ent.quant, "", origs, [])) {
 					return this.buildLiteral("holding", ent.quant, "", origs, []);
 				}
@@ -655,7 +654,7 @@ module Interpreter {
 				//check destination
 				var ent = this.cmd.loc.ent;
 				var origs : string[] = [this.state.holding];
-				var dests : string[] = this.checkExistence(ent);
+				var dests : string[] = this.checkExistence(ent, false);
 				if (dests.length && this.isPhysicallyPossible(this.cmd.loc.rel, entO.quant, entD.quant, origs, dests)) {
 					return this.buildLiteral(this.cmd.loc.rel, "the", ent.quant, origs, dests); 
 				}
@@ -665,11 +664,11 @@ module Interpreter {
 			if (cmdS == "move") {
 				//check origin
 				var entO = this.cmd.ent;
-				var origs : string[] = this.checkExistence(entO);
+				var origs : string[] = this.checkExistence(entO, true);
 
 				//check destination
 				var entD = this.cmd.loc.ent;
-				var dests : string[] = this.checkExistence(entD);
+				var dests : string[] = this.checkExistence(entD, false);
 
 				if (origs.length && dests.length && this.isPhysicallyPossible(this.cmd.loc.rel, entO.quant, entD.quant, origs, dests)) {
 					return this.buildLiteral(this.cmd.loc.rel, entO.quant, entD.quant, origs, dests); 
