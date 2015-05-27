@@ -40,8 +40,13 @@ Quantifier handling of any, all and the. All can not be interpreted as any.
 The planner writes what it is doing in each step and what object it is handling.
 How much it says about an object depends on how many there exits. If there is only one ball it just says "the ball"
 
+### Different search strategies
+We have implemented different search strategies to compare them to A\* and they are:
+ - Depth first search
+ - Breadth first search
+ - Best first search
 
-## Our implementation of A and its heuristic 
+## Our implementation of A\* and its heuristic 
 
 ## Strange or half-finished behaviour
 Our interpreter is stupid. It is a risk when we make permutations that we create to many before filtering depending on physical rules and their actual relation. This means that it would take to long to compute and we throw an error instead.
