@@ -35,7 +35,10 @@ module Interpreter {
             return this.name + ": " + this.message
         }
     }
-
+    /**
+     * Returns a list of interpretations given a list of parse results and a world state
+     * @returns {Result[]}, a list of different valid interpretations.
+     */
     export function interpret(parses:Parser.Result[], currentState:WorldState):Result[] {
         var interpretations:Result[] = [];
 
@@ -64,6 +67,11 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+    
+    /**
+     * Returns a complete interpretation given a parse command and a world state
+     * @returns {Literal[][]}, A conjunction of disjunct literals.
+     */
     function interpretCommand(cmd:Parser.Command, state:WorldState):Literal[][] {
         var lit:Literal[][] = [];
         if (cmd.cmd === "move" || cmd.cmd === "put") {
@@ -92,6 +100,10 @@ module Interpreter {
         return lit;
     }
 
+    /**
+     * Returns a disjunction of conjunct object strings depending on the content of {Parser.Entity}. 
+     * @returns {String[][]}, A conjunction of disjunct strings. 
+     */
     function interpretEntity(ent:Parser.Entity, state:WorldState):string[][] {
         var objs:string[][] = interpretObject(ent.obj, state);
         if (ent.quant === "the") {
@@ -152,13 +164,10 @@ module Interpreter {
         if (rules.length === 0) {
             return finalSet;
         }
-        console.log("rules: "+rules.length);
         //remove duplicates
         var noDups : objLocPair[][] = rules.filter(disj => !containsDuplicateObjLocPair(disj));  
-        console.log("nuDup: "+rules.length);
         // filter physical
         var filtered:objLocPair[][] = noDups.filter(row => controlRuleSet(futureState, row, locs.rel, state));
-        console.log("phys: "+rules.length);
         if (filtered.length === 0) {
             return finalSet;
         }
@@ -254,8 +263,6 @@ module Interpreter {
     }
 
     function controlRuleSet(futureState:boolean, rules:objLocPair[], rel:string, state:WorldState):boolean {
-        console.log(rules.length);
-        console.log(rules.length);
         return futureState ?
         rules.every(r => r.obj !== r.loc && state.validPlacement(r.obj, r.loc, rel)) :
         rules.every(r => r.obj !== r.loc && state.relationExists(r.obj, r.loc, rel));
