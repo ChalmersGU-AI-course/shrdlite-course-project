@@ -182,16 +182,20 @@ module Interpreter {
         if (rules.length === 0) {
             return finalSet;
         }
+        console.log("rules : " + rules.length);
+        
         //remove duplicates
         var noDups : objLocPair[][] = rules.filter(conj => !containsDuplicateObjLocPair(conj));  
         if (noDups.length === 0) {
             return finalSet;
         }
+
         // filter physical
         var filtered:objLocPair[][] = noDups.filter(row => controlRuleSet(futureState, row, locs.rel, state));
         if (filtered.length === 0) {
             return finalSet;
         }
+        console.log("filtered : " + filtered.length);
         //remove duplicates between conjunctive rules
         filtered.map(row => {
             if (!objLocPairListListContains(finalSet, row)) {
@@ -212,12 +216,13 @@ module Interpreter {
      	}
         var result:objLocPair[][] = [];
         var ruleLength:number = locs[0].length * objs[0].length;      
-        
         //Transpose depending on relation of objects and locations
-        if(locs.length === 1 && locs[0][0] !== "floor" && (rel === "ontop" || rel === "inside")){
-    		objs = utils.transpose(objs); 
+        if(locs.length === 1 && locs[0][0] !== "floor"){
+        	if(rel === "ontop" || rel === "inside"){
+	    		objs = utils.transpose(objs); 
+        	}
     	} else {
-    		locs = utils.transpose(locs);
+	    	locs = utils.transpose(locs);
     	}
 
         objs.map(x => locs.map(y => {
@@ -285,9 +290,15 @@ module Interpreter {
      * @returns true if all rules are possible individually.
      */
     function controlRuleSet(futureState:boolean, rules:objLocPair[], rel:string, state:WorldState):boolean {
-        return futureState ?
-        rules.every(r => r.obj !== r.loc && state.validPlacement(r.obj, r.loc, rel)) :
-        rules.every(r => r.obj !== r.loc && state.relationExists(r.obj, r.loc, rel));
+        var valid : boolean =  futureState ?
+	        rules.every(r => r.obj !== r.loc && state.validPlacement(r.obj, r.loc, rel)) :
+	        rules.every(r => r.obj !== r.loc && state.relationExists(r.obj, r.loc, rel));
+	    var doubleRef : boolean = rules.some(p1=> rules.some(p2 => (p1!==p2 && p1.obj ===p2.loc && p1.loc === p2.obj)));
+	    var b : boolean = rel === "leftof" || rel === "rightof";
+	    if(b){
+	    	return valid && !doubleRef;
+	    }
+	    return valid;
     }
 
     /**
