@@ -1,23 +1,5 @@
 ///<reference path="../World.ts"/>
 
-
-/*
-We do not have a goal worldstate, but want to have a function which takes the current
-worldstate and this (below) and checks if it is true.
-Example: "put the white ball that is in a box on the floor"
-Gives:
-{cmd: "move",
-  ent: {quant: "the",
-        obj: {obj: {size: null, color: "white", form: "ball"},
-              loc: {rel: "inside",
-                    ent: {quant: "any",
-                          obj: {size: null, color: null, form: "box"}}}}},
-  loc: {rel: "ontop",
-        ent: {quant: "the",
-              obj: {size: null, color: null, form: "floor"}}}}
-
-*/
-
 module heuristics {
 
     function heuristicOntop(first: string, second: string, stacks: string[][]){

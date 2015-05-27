@@ -2374,15 +2374,32 @@ var graphmodule;
             }
         }
         Path.prototype.toString = function () {
-            return "Path [" + this.cost + "] = " + this.path.toString();
+            return "Path [" + this.cost + "] = " + this.printPath();
+        };
+        Path.prototype.isEmpty = function () {
+            return this.path.size() == 0;
+        };
+        Path.prototype.printPath = function () {
+            console.log("graph.Path.printPath: length=" + this.path.size());
+            if (this.path.size() == 0) {
+                return "NO PATH";
+            }
+            var retString = "";
+            this.path.forEach(function (edge) {
+                retString += edge.from.toString() + " ➔ ";
+                return true;
+            });
+            console.log("graph.Path.printPath: last=" + this.path.last());
+            retString += this.path.last().to.toString();
+            return retString;
         };
         return Path;
     })();
     graphmodule.Path = Path;
     /** Function to compare two paths. Needs to know the goal node in order to use heuristics */
-    function comparePath(first, second, goal, hFun) {
+    function comparePath(first, second, hFun) {
         //returns cost of: second - first in regard of reaching the goal
-        return (second.cost + hFun(second.path.last().to.data, goal.data)) - (first.cost + hFun(first.path.last().to.data, goal.data));
+        return (second.cost + hFun(second.path.last().to.data)) - (first.cost + hFun(first.path.last().to.data)); //, goal.data
     }
     graphmodule.comparePath = comparePath;
     /** Graph holding nodes and edges */
@@ -2393,8 +2410,9 @@ var graphmodule;
             this.edges = new collections.Set();
         }
         Graph.prototype.addNode = function (node) {
-            this.nodes.add(node);
+            var ret = this.nodes.add(node);
             this.adjacencyMap.setValue(node.id, new Adjacency(node));
+            return ret;
         };
         Graph.prototype.addEdge = function (startId, endId, cost, bidirectional) {
             if (bidirectional === void 0) { bidirectional = false; }
@@ -2426,7 +2444,16 @@ var graphmodule;
             this.nodes.forEach(callback);
         };
         Graph.prototype.toString = function () {
-            return "---Graph<T>---\nNodes: " + this.nodes.toString() + "\nEdges: " + this.edges.toString() + "\n----------";
+            return "---Graph<T>---\nNodes: " + this.arrayToString() + "\nEdges: " + this.edges.toString() + "\n----------";
+        };
+        Graph.prototype.arrayToString = function () {
+            var retString = "[";
+            this.nodes.forEach(function (node) {
+                retString += node.toString() + "|";
+                return true;
+            });
+            retString += "]";
+            return retString;
         };
         return Graph;
     })();
@@ -2436,43 +2463,59 @@ var graphmodule;
 /// <reference path="graph.ts" />
 var astar;
 (function (astar) {
+    var MAXIMUM_ASTAR_RUNTIME = 3000;
     /** Compute the a path from the given start node to the given end node and the given graph */
-    function compute(graph, startID, endID, hFun) {
-        var goalNodeAd = graph.adjacencyMap.getValue(endID);
+    function compute(graph, startID, isEndState, hFun, generateNeighbours) {
+        //var goalNodeAd = graph.adjacencyMap.getValue(endID);
         var currentAd = graph.adjacencyMap.getValue(startID);
-        if (goalNodeAd === undefined || currentAd === undefined) {
+        if (currentAd === undefined) {
             return undefined;
         }
-        var goalNode = goalNodeAd.node;
+        //var goalNode = goalNodeAd.node;
         var pq = new collections.PriorityQueue(function comparePath(first, second) {
             //first: first path
             //second: second path
             //goalNode: The goal node
             //hFun: The heuristic function that should be used
-            return graphmodule.comparePath(first, second, goalNode, hFun);
+            return graphmodule.comparePath(first, second, hFun); //goalNode, 
         });
         var visited = new collections.Set();
         var currentPath = new graphmodule.Path();
         var currentAd = graph.adjacencyMap.getValue(startID);
         var currentNode = currentAd.node;
+        var previousNode;
         visited.add(currentNode);
-        while (currentNode != goalNode) {
+        var startTime = new Date().getTime();
+        while (!isEndState(currentNode)) {
+            var nowTime = new Date().getTime();
+            if ((nowTime - startTime) > MAXIMUM_ASTAR_RUNTIME) {
+                //Not allowed to run any longer
+                console.log("A* IS NOT ALLOWED TO RUN ANY LONGER!!");
+                return undefined;
+            }
+            //Create next states
+            generateNeighbours(currentNode, previousNode);
             currentAd.neighbours.forEach(function addEdge(edge) {
-                if (!visited.contains(edge.to)) {
+                var neighbour = edge.to;
+                if (!visited.contains(neighbour)) {
                     var newPath = new graphmodule.Path(edge, currentPath);
                     pq.enqueue(newPath);
                 }
                 return true;
             });
             currentPath = pq.dequeue();
-            if (currentPath === undefined) {
+            //console.log("astar.comparePath: " + currentPath);
+            if (currentPath == undefined) {
                 //No path to the goal
+                ////console.log("astar.comparePath: No path found to the goal");
                 return undefined;
             }
             currentNode = currentPath.path.last().to;
+            previousNode = currentPath.path.last().from;
             visited.add(currentNode);
             currentAd = graph.adjacencyMap.getValue(currentNode.id);
         }
+        ////console.log("astar.comparePath:  *********************** End of astar ***********************");
         return currentPath;
     }
     astar.compute = compute;
@@ -2542,7 +2585,9 @@ var GridGraph = (function () {
         }
     }
     GridGraph.prototype.computePath = function (startPos, endPos, hFun) {
-        return astar.compute(this.graph, startPos, endPos, hFun);
+        return astar.compute(this.graph, startPos, endPos, hFun, function generateNodes(basedOn) {
+            return [];
+        });
     };
     GridGraph.prototype.euclidianDistance = function (startNode, goalNode) {
         var x1 = startNode.first;

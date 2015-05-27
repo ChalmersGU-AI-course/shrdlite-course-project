@@ -2376,6 +2376,9 @@ var graphmodule;
         Path.prototype.toString = function () {
             return "Path [" + this.cost + "] = " + this.printPath();
         };
+        Path.prototype.isEmpty = function () {
+            return this.path.size() == 0;
+        };
         Path.prototype.printPath = function () {
             console.log("graph.Path.printPath: length=" + this.path.size());
             if (this.path.size() == 0) {
@@ -2460,6 +2463,7 @@ var graphmodule;
 /// <reference path="graph.ts" />
 var astar;
 (function (astar) {
+    var MAXIMUM_ASTAR_RUNTIME = 3000;
     /** Compute the a path from the given start node to the given end node and the given graph */
     function compute(graph, startID, isEndState, hFun, generateNeighbours) {
         //var goalNodeAd = graph.adjacencyMap.getValue(endID);
@@ -2479,18 +2483,18 @@ var astar;
         var currentPath = new graphmodule.Path();
         var currentAd = graph.adjacencyMap.getValue(startID);
         var currentNode = currentAd.node;
+        var previousNode;
         visited.add(currentNode);
+        var startTime = new Date().getTime();
         while (!isEndState(currentNode)) {
+            var nowTime = new Date().getTime();
+            if ((nowTime - startTime) > MAXIMUM_ASTAR_RUNTIME) {
+                //Not allowed to run any longer
+                console.log("A* IS NOT ALLOWED TO RUN ANY LONGER!!");
+                return undefined;
+            }
             //Create next states
-            var neighbours = generateNeighbours(currentNode);
-            //Add next states to the graph
-            neighbours.forEach(function addNode(neighbour) {
-                //Add the neighbour to the graph
-                graph.addNode(neighbour);
-                //Add edge between current node and neighbour
-                graph.addEdge(currentNode.id, neighbour.id, 1, true);
-                return true;
-            });
+            generateNeighbours(currentNode, previousNode);
             currentAd.neighbours.forEach(function addEdge(edge) {
                 var neighbour = edge.to;
                 if (!visited.contains(neighbour)) {
@@ -2503,19 +2507,529 @@ var astar;
             //console.log("astar.comparePath: " + currentPath);
             if (currentPath == undefined) {
                 //No path to the goal
-                //console.log("astar.comparePath: No path found to the goal");
+                ////console.log("astar.comparePath: No path found to the goal");
                 return undefined;
             }
             currentNode = currentPath.path.last().to;
+            previousNode = currentPath.path.last().from;
             visited.add(currentNode);
             currentAd = graph.adjacencyMap.getValue(currentNode.id);
         }
-        //console.log("astar.comparePath:  *********************** End of astar ***********************");
+        ////console.log("astar.comparePath:  *********************** End of astar ***********************");
         return currentPath;
     }
     astar.compute = compute;
 })(astar || (astar = {}));
 // Interface definitions for worlds
+///<reference path="World.ts"/>
+///<reference path="lib/node.d.ts"/>
+var Parser;
+(function (Parser) {
+    //////////////////////////////////////////////////////////////////////
+    // exported functions, classes and interfaces/types
+    function parse(input) {
+        var nearleyParser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart);
+        var parsestr = input.toLowerCase().replace(/\W/g, "");
+        try {
+            var results = nearleyParser.feed(parsestr).results;
+        }
+        catch (err) {
+            if ('offset' in err) {
+                throw new Parser.Error('Parsing failed after ' + err.offset + ' characters', err.offset);
+            }
+            else {
+                throw err;
+            }
+        }
+        if (!results.length) {
+            throw new Parser.Error('Incomplete input', parsestr.length);
+        }
+        return results.map(function (c) {
+            return { input: input, prs: clone(c) };
+        });
+    }
+    Parser.parse = parse;
+    function parseToString(res) {
+        return JSON.stringify(res.prs);
+    }
+    Parser.parseToString = parseToString;
+    var Error = (function () {
+        function Error(message, offset) {
+            this.message = message;
+            this.offset = offset;
+            this.name = "Parser.Error";
+        }
+        Error.prototype.toString = function () {
+            return this.name + ": " + this.message;
+        };
+        return Error;
+    })();
+    Parser.Error = Error;
+    //////////////////////////////////////////////////////////////////////
+    // Utilities
+    function clone(obj) {
+        if (obj != null && typeof obj == "object") {
+            var result = obj.constructor();
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    result[key] = clone(obj[key]);
+                }
+            }
+            return result;
+        }
+        else {
+            return obj;
+        }
+    }
+})(Parser || (Parser = {}));
+if (typeof require !== 'undefined') {
+    // Node.JS way of importing external modules
+    // In a browser, they must be included from the HTML file
+    var nearley = require('./lib/nearley.js');
+    var grammar = require('./grammar.js');
+}
+///<reference path="World.ts"/>
+///<reference path="Parser.ts"/>
+///<reference path="Utils.ts"/>
+var Interpreter;
+(function (Interpreter) {
+    //////////////////////////////////////////////////////////////////////
+    // exported functions, classes and interfaces/types
+    function interpret(parses, currentState) {
+        var interpretations = [];
+        //Check if ambiguous
+        if (parses.length > 1) {
+            var ambiguousInterpretations = [];
+            //The utterance is ambiguous, find out the different interpretations
+            parses.forEach(function (parseresult) {
+                var intprt = parseresult;
+                var sentence = interpretCommandAmbiguous(intprt.prs, currentState);
+                ambiguousInterpretations.push(sentence);
+            });
+            throw new Interpreter.AmbiguousError("Ambiguous result from the parses!", ambiguousInterpretations);
+        }
+        //The parse is not ambiguous, interpret as normal
+        parses.forEach(function (parseresult) {
+            var intprt = parseresult;
+            intprt.intp = interpretCommand(intprt.prs, currentState);
+            interpretations.push(intprt);
+        });
+        //Check if any interpretations was found
+        if (interpretations.length) {
+            return interpretations;
+        }
+        else {
+            throw new Interpreter.Error("Found no interpretation");
+        }
+    }
+    Interpreter.interpret = interpret;
+    function interpretationToString(res) {
+        return res.intp.map(function (lits) {
+            return lits.map(function (lit) { return literalToString(lit); }).join(" & ");
+        }).join(" | ");
+    }
+    Interpreter.interpretationToString = interpretationToString;
+    function literalToString(lit) {
+        return (lit.pol ? "" : "-") + lit.rel + "(" + lit.args.join(",") + ")";
+    }
+    Interpreter.literalToString = literalToString;
+    var Error = (function () {
+        function Error(message) {
+            this.message = message;
+            this.name = "Interpreter.Error";
+        }
+        Error.prototype.toString = function () {
+            return this.name + ": " + this.message;
+        };
+        return Error;
+    })();
+    Interpreter.Error = Error;
+    var AmbiguousError = (function () {
+        function AmbiguousError(message, sentences) {
+            this.message = message;
+            this.sentences = sentences;
+            this.name = "Interpreter.AmbiguousError";
+        }
+        AmbiguousError.prototype.toString = function () {
+            return this.name + ": " + this.message;
+        };
+        return AmbiguousError;
+    })();
+    Interpreter.AmbiguousError = AmbiguousError;
+    /** Returns a string representation of the given object.
+     *  Will use as much information that is available */
+    function findObject(object) {
+        if (object == undefined)
+            return "";
+        var hasSize = object.size != null;
+        var hasColor = object.color != null;
+        var hasForm = object.form != null;
+        var objectForm = hasForm ? object.form == "anyform" ? "object" : object.form : "";
+        return (hasSize ? object.size + " " : "") + (hasColor ? object.color + " " : "") + objectForm;
+    }
+    /** Returns a string representation of the given relationship. */
+    function getRelation(rel) {
+        if (rel == undefined || rel == null)
+            return "";
+        switch (rel) {
+            case "ontop":
+            case "right":
+            case "left":
+                return rel + " of";
+            default:
+                return rel;
+        }
+    }
+    /** Interpret an ambiguous parse by extracting the parse to a sentence */
+    function interpretCommandAmbiguous(cmd, state) {
+        var sentence = [];
+        // What is the command?  (Move, pick up, etc)
+        var command = cmd.cmd;
+        // What is the quantifier?
+        var quant = cmd.ent.quant;
+        //Get hold of the object refered to, either
+        // the objects object, or just the object itself
+        var objectTemp = cmd.ent.obj;
+        var objectToUse = objectTemp.obj == undefined ? objectTemp : objectTemp.obj;
+        console.log("objectToUse: " + objectToUse);
+        console.log("quant: " + quant);
+        //Extract the information about the object
+        var objectStr = findObject(objectToUse);
+        objectStr = (objectToUse.form == "anyform" && quant == "all") ? (objectStr + "s") : objectStr;
+        var objectLocation = objectTemp.loc;
+        var objectHasLocation = objectTemp.loc != undefined;
+        var objectLocationRelation = objectHasLocation ? objectLocation.rel : "";
+        var objectLocationQuant = objectHasLocation ? objectLocation.ent.quant : "";
+        var objectLocationStr = objectHasLocation ? findObject(objectLocation.ent.obj) : "";
+        objectLocationStr = objectLocationQuant == "all" ? objectLocationStr + "s" : objectLocationStr;
+        //Push all the information to the final sentence
+        sentence.push(command);
+        sentence.push(quant);
+        sentence.push(objectStr);
+        //If the object also has a location, add that.
+        if (objectHasLocation) {
+            if (quant == "all") {
+                sentence.push("that are");
+            }
+            else {
+                sentence.push("that is");
+            }
+            sentence.push(objectLocationRelation);
+            sentence.push(objectLocationQuant);
+            sentence.push(objectLocationStr);
+        }
+        //Then do nearly everything again, but for the location
+        var location = cmd.loc;
+        sentence.push(getLocationStr(cmd.loc));
+        /*
+        var locationRelation = getRelation(location.rel);
+        var locationQuant = location.ent.quant;
+        
+        var locationTemp = location.ent.obj;
+        var locationToUse = locationTemp.obj == undefined ? locationTemp : locationTemp.obj;
+        
+        var locationStr = findObject(locationToUse);
+        locationStr = locationQuant == "all" ? locationStr + "s" : locationStr;
+        var locationLocation = locationTemp.loc;
+        var locationHasLocation = locationTemp.loc != undefined;
+        var locationLocationRelation = locationHasLocation ? getRelation(locationLocation.rel) : "";
+        var locationLocationQuant = locationHasLocation ? locationLocation.ent.quant : "";
+        var locationLocationStr = locationHasLocation ? findObject(locationLocation.ent.obj) : "";
+        
+        sentence.push(locationRelation);
+        sentence.push(locationQuant);
+        sentence.push(locationStr);
+        
+        if(locationHasLocation){
+            sentence.push("that is");
+            sentence.push(locationLocationRelation);
+            sentence.push(locationLocationQuant);
+            sentence.push(locationLocationStr);
+        }
+        */
+        //Join the list of words into a sentence
+        return sentence.join(" ");
+    }
+    function getLocationStr(location) {
+        var sentence = [];
+        var locationRelation = getRelation(location.rel);
+        var locationQuant = location.ent.quant;
+        var locationTemp = location.ent.obj;
+        var locationToUse = locationTemp.obj == undefined ? locationTemp : locationTemp.obj;
+        var locationStr = findObject(locationToUse);
+        locationStr = locationQuant == "all" ? locationStr + "s" : locationStr;
+        var locationLocation = locationTemp.loc;
+        var locationHasLocation = locationTemp.loc != undefined;
+        var locationLocationRelation = locationHasLocation ? getRelation(locationLocation.rel) : "";
+        var locationLocationQuant = locationHasLocation ? locationLocation.ent.quant : "";
+        var locationLocationStr = locationHasLocation ? findObject(locationLocation.ent.obj) : "";
+        sentence.push(locationRelation);
+        sentence.push(locationQuant);
+        sentence.push(locationStr);
+        if (locationHasLocation) {
+            sentence.push("that is");
+            sentence.push(locationLocationRelation);
+            sentence.push(locationLocationQuant);
+            sentence.push(locationLocationStr);
+        }
+        //Join the list of words into a sentence
+        return sentence.join(" ");
+    }
+    function getNoObjectFoundMessage(object) {
+        var msg = "There is no " + findObject(object.obj ? object.obj : object);
+        //Check if the object should have a location
+        if (object.loc) {
+            msg += " " + getLocationStr(object.loc);
+        }
+        msg += " within the current world";
+        return msg;
+    }
+    function getNoLocactionFoundMessage(object) {
+        //Get which object the user wanted
+        var msg = "There is no " + findObject(object);
+        //Check if the object should have a location
+        /*
+        if(object.loc){
+            msg += " " + object.loc.rel + " " + findObject(object.loc);
+        }
+        */
+        msg += " location within the current world";
+        return msg;
+    }
+    //////////////////////////////////////////////////////////////////////
+    // private functions
+    function interpretCommand(cmd, state) {
+        var intprt = [];
+        //All objects in the world
+        var objs = Array.prototype.concat.apply([], state.stacks);
+        //If the arm is holding something, add that too
+        if (state.holding != null) {
+            objs.push(state.holding);
+        }
+        //The wanted object(s)
+        var object = cmd.ent.obj;
+        //First check if the object is inside the world...
+        var objectKeys = getObjectKey(object, objs, state.objects, state.stacks, true);
+        console.log("Object keys: " + objectKeys.toString());
+        console.log("Quant: " + cmd.ent.quant);
+        //...if this is not true, we did not find an object that matched
+        if (rightNumberOfResults(cmd.ent.quant, objectKeys.length)) {
+            switch (cmd.cmd) {
+                case "take":
+                    //If the quantifier is "all", then push all the found object keys
+                    // to the interpreter list by using conjunction
+                    if (cmd.ent.quant == "all") {
+                        var temp = [];
+                        objectKeys.forEach(function (key) {
+                            temp.push({ pol: true, rel: "holding", args: [key] });
+                        });
+                        intprt.push(temp);
+                    }
+                    else {
+                        //Just say that we should hold any of the found keys by
+                        // pushing all the object keys using disjunction
+                        objectKeys.forEach(function (key) {
+                            intprt.push([{ pol: true, rel: "holding", args: [key] }]);
+                        });
+                    }
+                    break;
+                case "move":
+                    //If we should move something, we need to know where to.
+                    //So get the location(s)
+                    var foundLocationKey = getObjectKey(cmd.loc.ent.obj, objs, state.objects, state.stacks, true);
+                    //Just as before, check if we got enough results. Since we should move
+                    // something, we need to have found some location (depending on the quantifier)
+                    if (rightNumberOfResults(cmd.loc.ent.quant, foundLocationKey.length)) {
+                        //If the quantifier is "all", we should push all combinations of 
+                        // object keys and location keys 
+                        if (cmd.ent.quant == "all") {
+                            var locationLength = foundLocationKey.length;
+                            for (var objectIndex = 0; objectIndex < objectKeys.length; objectIndex++) {
+                                for (var locationIndex = 0; locationIndex < locationLength; locationIndex++) {
+                                    var locationIndex2 = (locationIndex + objectIndex) % locationLength;
+                                    var row = intprt[locationIndex];
+                                    var lit = { pol: true, rel: cmd.loc.rel, args: [objectKeys[objectIndex], foundLocationKey[locationIndex2]] };
+                                    if (row == undefined) {
+                                        row = [lit];
+                                    }
+                                    else {
+                                        row.push(lit);
+                                    }
+                                    intprt[locationIndex] = row;
+                                }
+                            }
+                        }
+                        else {
+                            objectKeys.forEach(function (key) {
+                                foundLocationKey.forEach(function (locationKey) {
+                                    intprt.push([{ pol: true, rel: cmd.loc.rel, args: [key, locationKey] }]);
+                                });
+                            });
+                        }
+                    }
+                    else if (foundLocationKey.length > 0) {
+                        //We did not get the right number of results regarding the locations
+                        var locationStr = findObject(cmd.loc.ent.obj);
+                        switch (cmd.loc.ent.quant) {
+                            case "the":
+                                throw new Error("The parse is ambiguous! There are several " + locationStr + " locations in the current world. Please specify which one you meant");
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    else {
+                        throw new Error(getNoLocactionFoundMessage(cmd.loc.ent.obj));
+                    }
+                    break;
+            }
+        }
+        else if (objectKeys.length > 0) {
+            //We did not get the right number of results regarding the objects
+            var objectStr = findObject(object);
+            switch (cmd.ent.quant) {
+                case "the":
+                    throw new Error("The parse is ambiguous! There are several " + objectStr + "s in the current world. Please specify which one you meant");
+                    break;
+                default:
+                    break;
+            }
+        }
+        else {
+            throw new Error(getNoObjectFoundMessage(object));
+        }
+        //Lastly, go over all the intepretations and filter out non valid ones
+        var validInt = [];
+        //First go over all the interpretations and filter out non-valid interpretations
+        var numberOfOrs = intprt.length;
+        intprt.forEach(function (ints) {
+            var wasValid = true;
+            numberOfOrs--;
+            ints.forEach(function (int) {
+                try {
+                    var validIntFlag = validInterpretation(int, state.objects);
+                }
+                catch (err) {
+                    //err instanceof ValidInterpretationError
+                    if (err instanceof ValidInterpretationError && numberOfOrs == 0 && validInt.length == 0) {
+                        throw err;
+                    }
+                }
+                if (!validIntFlag) {
+                    wasValid = false;
+                }
+                return true;
+            });
+            if (wasValid) {
+                validInt.push(ints);
+            }
+            return true;
+        });
+        return validInt;
+    }
+    /** Goes through all the available objects (availableObjects), using the object definitions, to check if the wanted object (object)
+    *    is inside the current world. If so, the key (character) for that object is added to the returnList and then returned */
+    function getObjectKeysWithoutObject(object, availableObjects, objects) {
+        //Array to return in the end
+        var returnList = [];
+        //Number which will be 2 if an object has form, size and color right
+        var checked = 0;
+        //Flag if we want to find something of a specific size
+        var hasSize = object.size != null;
+        //Flag if we want to find something of a specific color
+        var hasColor = object.color != null;
+        //Flags that says if an object (available in the world) has the right property
+        var currentHasColor = false;
+        var currentHasSize = false;
+        availableObjects.forEach(function (availableObject) {
+            //Get the properties of the current available object
+            var availableObjectDef = objects[availableObject];
+            if (object.form == availableObjectDef.form || object.form == "anyform") {
+                if (hasSize && object.size == availableObjectDef.size) {
+                    checked++;
+                    currentHasSize = true;
+                }
+                if (hasColor && object.color == availableObjectDef.color) {
+                    checked++;
+                    currentHasColor = true;
+                }
+                if (checked == 2) {
+                    returnList = [];
+                    returnList.push(availableObject);
+                    return false;
+                }
+                else {
+                    if (hasColor && hasSize) {
+                        returnList.push(availableObject);
+                    }
+                    else if (hasColor && currentHasColor && !currentHasSize) {
+                        returnList.push(availableObject);
+                    }
+                    else if (hasSize && currentHasSize && !currentHasColor) {
+                        returnList.push(availableObject);
+                    }
+                    else if (!hasColor && !hasSize) {
+                        returnList.push(availableObject);
+                    }
+                }
+            }
+            else if (object.form == "floor") {
+                //Check if the location is the floor
+                returnList = [];
+                returnList.push("floor");
+                return false;
+            }
+            currentHasColor = false;
+            currentHasSize = false;
+            checked = 0;
+            return true;
+        });
+        return returnList;
+    }
+    function getObjectKey(object, availableObjects, objects, stacks, filter) {
+        //First check if the object contains any object
+        if (object.obj) {
+            var foundKeys = getObjectKeysWithoutObject(object.obj, availableObjects, objects);
+            if (foundKeys.length > 0 && filter) {
+                //Now, check which of all the objectKeys returned, fulfils
+                // the location criteria.
+                return filterOnLocation(foundKeys, object.loc, availableObjects, objects, stacks);
+            }
+            else {
+                return foundKeys;
+            }
+        }
+        else {
+            return getObjectKeysWithoutObject(object, availableObjects, objects);
+        }
+        return [];
+    }
+    function filterOnLocation(foundKeys, loc, availableObjects, objects, worldStacks) {
+        var returnList = [];
+        //Get the object associated with the location
+        var locationObjects = getObjectKeysWithoutObject(loc.ent.obj, availableObjects, objects);
+        if (rightNumberOfResults(loc.ent.quant, locationObjects.length)) {
+            locationObjects.forEach(function (locationObject) {
+                foundKeys.forEach(function (foundKey) {
+                    if (check(foundKey, loc.rel, locationObject, worldStacks)) {
+                        returnList.push(foundKey);
+                    }
+                    return true;
+                });
+                return true;
+            });
+        }
+        return returnList;
+    }
+    function rightNumberOfResults(quant, amount) {
+        return quant == "the" && amount == 1 || quant != "the" && amount > 0;
+    }
+    function getRandomInt(max) {
+        return Math.floor(Math.random() * max);
+    }
+})(Interpreter || (Interpreter = {}));
+///<reference path="Interpreter.ts"/>
+var pickDropCost = 100;
 /** Generate new ID given a state */
 function generateID(state) {
     return prettyMat(state);
@@ -2537,6 +3051,243 @@ function prettyMat(mat) {
     }
     prettyString += "]";
     return prettyString;
+}
+/** Checks if the world (worldstate) is valid, given the top object, bottom object and the list of different objects */
+function validPlacement(topObject, bottomObject, objects) {
+    //Everything can be placed on the floor
+    if (bottomObject == undefined || bottomObject == "floor") {
+        return true;
+    }
+    //console.log("Utils.validPlacement topObject: " + topObject);
+    //console.log("Utils.validPlacement bottomObject: " + bottomObject);
+    //Balls can't support anything
+    if (objects[bottomObject].form == "ball") {
+        return false;
+    }
+    //Small objects can't support large objects
+    if (objects[bottomObject].size == "small" && objects[topObject].size == "large") {
+        return false;
+    }
+    // Boxes cannot contain pyramids, planks or boxes of the same size.
+    if (objects[bottomObject].form == "box" && (objects[topObject].form == "pyramid" || objects[topObject].form == "plank" || objects[topObject].form == "box") && objects[bottomObject].size == objects[topObject].size) {
+        return false;
+    }
+    //balls should be in boxes or on the floor
+    if (objects[topObject].form == "ball" && objects[bottomObject].form != "box") {
+        return false;
+    }
+    //Small boxes cannot be supported by small bricks or pyramids.
+    if ((objects[bottomObject].form == "brick" || objects[bottomObject].form == "pyramid") && objects[topObject].form == "box" && objects[topObject].size == "small") {
+        return false;
+    }
+    //Large boxes cannot be supported by large pyramids.
+    if (objects[bottomObject].form == "pyramid" && objects[bottomObject].size == "large" && objects[topObject].form == "box" && objects[topObject].size == "large") {
+        return false;
+    }
+    return true;
+}
+/** Checks if first is allowed to be placed on top of second */
+function validPlacementAbove(first, second, objects) {
+    if (second == "floor") {
+        return true;
+    }
+    //If second is a ball, then no
+    //console.log("Utils.validPlacementAbove objects[second].form=" + objects[second].form);
+    if (objects[second].form == "ball") {
+        //console.log("Utils.validPlacementAbove THE SECOND OBJECT IS OF FORM BALL! Return false");
+        return false;
+    }
+    //second är small, så måste first vara small
+    if (objects[second].size == "small" && objects[first].size != "small") {
+        return false;
+    }
+    //om first är en ball, så måste det finnas en motsvarande box i rätt storlek
+    if (objects[first].form == "ball") {
+        if (objects[first].size == "large") {
+        }
+        else {
+            //Nånstans i världen måste det finnas en box (valfri storlek)
+            //boxElement
+            var foundElement = null;
+            for (var element in objects) {
+                if (objects[element].form == "box") {
+                    foundElement = element;
+                    break;
+                }
+            }
+            if (foundElement == null) {
+                return false;
+            }
+            if (objects[second].size == "small") {
+                //boxElement måste vara litet
+                if (objects[foundElement].size != "small") {
+                    return false;
+                }
+            }
+            else {
+            }
+        }
+    }
+    //Om stor boll, så stor boxes
+    //Om liten boll så måste det finnas en box. NEJ, är det undre elementet nått litet, så måste det vara en liten box
+    return true;
+}
+function copyStack(original) {
+    var newStack = [];
+    for (var i = 0; i < original.length; i++) {
+        newStack.push([]);
+        for (var j = 0; j < original[i].length; j++) {
+            var elementIJ = original[i][j];
+            newStack[i].push(elementIJ);
+        }
+    }
+    return newStack;
+}
+function ontop(first, second, stacks) {
+    for (var i = 0; i < stacks.length; i++) {
+        if (second == "floor") {
+            if (stacks[i][0] == first) {
+                return true;
+            }
+        }
+        else {
+            for (var j = 0; j < stacks[i].length; j++) {
+                if (j < stacks[i].length - 1 && stacks[i][j + 1] == first && stacks[i][j] == second) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+function above(first, second, stacks) {
+    var bool = false;
+    for (var i = 0; i < stacks.length; i++) {
+        for (var j = 0; j < stacks[i].length; j++) {
+            if (bool && stacks[i][j] == first) {
+                return true;
+            }
+            if (j < stacks.length - 1 && stacks[i][j] == second) {
+                bool = true;
+            }
+        }
+        if (bool) {
+            return false;
+        }
+    }
+    return false;
+}
+function under(first, second, stacks) {
+    return above(second, first, stacks);
+}
+function beside(first, second, stacks) {
+    for (var i = 0; i < stacks.length; i++) {
+        for (var j = 0; j < stacks[i].length; j++) {
+            if ((stacks[i][j] == first || stacks[i][j] == second) && i < stacks.length - 1) {
+                for (var k = 0; k < stacks[i + 1].length; k++) {
+                    if (stacks[i + 1][k] == first || stacks[i + 1][k] == second) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+    }
+    return false;
+}
+function left(first, second, stacks) {
+    for (var i = 0; i < stacks.length; i++) {
+        for (var j = 0; j < stacks[i].length; j++) {
+            if (stacks[i][j] == first && i < stacks.length - 1) {
+                for (var k = 0; k < stacks[i + 1].length; k++) {
+                    if (stacks[i + 1][k] == second) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+    }
+    return false;
+}
+function right(first, second, stacks) {
+    return left(second, first, stacks);
+}
+function holding(first, stacks) {
+    for (var i = 0; i < stacks.length; i++) {
+        for (var j = 0; j < stacks[i].length; j++) {
+            if (stacks[i][j] == first) {
+                return j == stacks[i].length - 1;
+            }
+        }
+    }
+    return false;
+}
+function check(first, rel, second, stacks) {
+    switch (rel) {
+        case "ontop":
+            return ontop(first, second, stacks);
+        case "inside":
+            return ontop(first, second, stacks);
+        case "above":
+            return above(first, second, stacks);
+        case "under":
+            return under(first, second, stacks);
+        case "beside":
+            return beside(first, second, stacks);
+        case "leftof":
+            return left(first, second, stacks);
+        case "rightof":
+            return right(first, second, stacks);
+        case "holding":
+            return holding(first, stacks);
+        default:
+            ////console.log("check no match");
+            return false;
+    }
+}
+var ValidInterpretationError = (function () {
+    function ValidInterpretationError(message) {
+        this.message = message;
+        this.name = "Utils.ValidInterpretationError";
+    }
+    ValidInterpretationError.prototype.toString = function () {
+        return this.name + ": " + this.message;
+    };
+    return ValidInterpretationError;
+})();
+function getObject(objectDef, id) {
+    var object = objectDef[id];
+    return object.size + " " + object.color + " " + object.form;
+}
+function validInterpretation(int, objectDef) {
+    var ret = false;
+    var extra = " ";
+    if (int.args[0] != int.args[1]) {
+        switch (int.rel) {
+            case "ontop":
+            case "inside":
+                ret = validPlacement(int.args[0], int.args[1], objectDef);
+                //console.log("Utils.validInterpretation ONTOP OR INSIDE RET:" + ret);
+                extra = " of ";
+                break;
+            case "above":
+                ret = validPlacementAbove(int.args[0], int.args[1], objectDef);
+                break;
+            case "under":
+                //Same as above, just flipped order on the arguments
+                ret = validPlacementAbove(int.args[1], int.args[0], objectDef);
+                break;
+            default:
+                ret = true;
+                break;
+        }
+    }
+    //console.log("Utils.validInterpretation ret: " + ret + ". first: " + int.args[0] + " sec: " + int.args[1]);
+    if (!ret) {
+        throw new ValidInterpretationError("It is not possible to put the " + getObject(objectDef, int.args[0]) + " " + int.rel + extra + "the " + getObject(objectDef, int.args[1]));
+    }
+    return ret;
 }
 /// <reference path="../World.ts" />
 /// <reference path="graph.ts" />
@@ -2592,13 +3343,12 @@ function permutate(initWorld: WorldState):graphmodule.Graph<string[][]>{
 
 }
 */
-function permutateBasedOn(baseOn, objects) {
+function permutateBasedOn(baseOn, prevNode, objects, graph) {
     //Get the data that the given node contains
     var baseOnState = baseOn.data;
     //Get the number of columns within this world
     var columns = baseOnState.length;
-    //Initialize a return list
-    var returnList = [];
+    console.log("permutate.permutateBasedOn starting permutation----------------------------");
     for (var i = 0; i < columns; i++) {
         //Copy the given state (given)
         var newState = copyStack(baseOnState);
@@ -2628,107 +3378,204 @@ function permutateBasedOn(baseOn, objects) {
                     //In case that lastElementInStack is undefined, it means that the stack j
                     // is empty and the topObject should be able to be put to that column.
                     //This is also checked by the length == 0
-                    if (newState2[j].length == 0 || validWorld(topObject, lastElementInStack, objects)) {
+                    if (newState2[j].length == 0 || validPlacement(topObject, lastElementInStack, objects)) {
                         //Push the topObject to the column (putting it there)
                         newState2[j].push(topObject);
                         //Add the state to the return list as a new valid state
                         var newId = generateID(newState2);
                         var newNode = new graphmodule.GraphNode(newId, newState2);
-                        returnList.push(newNode);
+                        //Add the neighbour to the graph
+                        graph.addNode(newNode);
+                        //arm possition
+                        var arm = i;
+                        if (prevNode != undefined) {
+                            arm = movedTo(prevNode.data, baseOnState);
+                        }
+                        //Add edge between current node and neighbour
+                        graph.addEdge(baseOn.id, newNode.id, Math.abs(j - i) + pickDropCost + Math.abs(arm - i), true);
                     }
                 }
             }
         }
     }
-    return returnList;
 }
-/** Checks if the world (worldstate) is valid, given the top object, bottom object and the list of different objects */
-function validWorld(topObject, bottomObject, objects) {
-    //TODO: Must check if the variables should be checked against "null" or "undefined"
-    ////console.log("permutate.validWorld 4: " + topObject);
-    ////console.log("permutate.validWorld 5: " + bottomObject);
-    //Everything can be placed on the floor
-    if (bottomObject == undefined) {
-        return true;
-    }
-    //balls should be in boxes or on the floor
-    if (objects[topObject].form == "ball" && objects[bottomObject].form != "box") {
-        return false;
-    }
-    //Balls can't support anything
-    if (objects[bottomObject].form == "ball") {
-        return false;
-    }
-    //Small objects can't support large objects
-    if (objects[bottomObject].size == "small" && objects[topObject].size == "large") {
-        return false;
-    }
-    // Boxes cannot contain pyramids, planks or boxes of the same size.
-    if (objects[bottomObject].form == "box" && (objects[topObject].form == "pyramid" || objects[topObject].form == "plank" || objects[topObject].form == "box") && objects[bottomObject].size == objects[topObject].size) {
-        return false;
-    }
-    //Small boxes cannot be supported by small bricks or pyramids.
-    if (objects[bottomObject].form == "brick" || objects[bottomObject].form == "pyramid" && objects[topObject].form == "box" && objects[topObject].size == "small") {
-        return false;
-    }
-    //Large boxes cannot be supported by large pyramids.
-    if (objects[bottomObject].form == "pyramid" && objects[bottomObject].size == "large" && objects[topObject].form == "box" && objects[topObject].size == "large") {
-        return false;
-    }
-    return true;
-}
-function copyStack(original) {
-    var newStack = [];
-    for (var i = 0; i < original.length; i++) {
-        newStack.push([]);
-        for (var j = 0; j < original[i].length; j++) {
-            var elementIJ = original[i][j];
-            newStack[i].push(elementIJ);
+function movedTo(from, to) {
+    for (var i = 0; i < from.length; i++) {
+        if (to[i].length > from[i].length) {
+            return i;
         }
     }
-    return newStack;
+    return undefined;
 }
 ///<reference path="../World.ts"/>
-/*
-We do not have a goal worldstate, but want to have a function which takes the current
-worldstate and this (below) and checks if it is true.
-Example: "put the white ball that is in a box on the floor"
-Gives:
-{cmd: "move",
-  ent: {quant: "the",
-        obj: {obj: {size: null, color: "white", form: "ball"},
-              loc: {rel: "inside",
-                    ent: {quant: "any",
-                          obj: {size: null, color: null, form: "box"}}}}},
-  loc: {rel: "ontop",
-        ent: {quant: "the",
-              obj: {size: null, color: null, form: "floor"}}}}
-
-*/
 var heuristics;
-(function (heuristics) {
-    /** Takes two stacks (world states) and calculates and returns the heuristic */
-    function worldHeuristics(stack1, stack2) {
-        var heuristic = 0;
-        for (var i = 0; i < stack1.length; i++) {
-            for (var j = 0; j < stack1.length; j++) {
-                var elem1 = stack1[j];
-                //Check if the second stack has any elements at the current position
-                if (j < stack2.length) {
-                    var elem2 = stack2[j];
-                    if (elem1 != elem2) {
-                        heuristic++;
-                    }
-                }
-                else {
-                    //We know that the elements does not match at the current index
-                    heuristic++;
+(function (_heuristics) {
+    function heuristicOntop(first, second, stacks) {
+        var foundF = -1;
+        var foundS = -1;
+        var h = 0;
+        if (second == "floor") {
+            h = Number.POSITIVE_INFINITY;
+            for (var i = 0; i < stacks.length; i++) {
+                if (stacks[i].length < h) {
+                    foundS = i;
+                    h = stacks[i].length * (pickDropCost + 1);
                 }
             }
         }
-        return heuristic;
+        for (var i = 0; i < stacks.length; i++) {
+            for (var j = 0; j < stacks[i].length; j++) {
+                if (stacks[i][j] == second) {
+                    foundS = i;
+                    if (stacks[i].length - 1 > j && stacks[i][j + 1] == first) {
+                        return 0;
+                    }
+                    h += (stacks[i].length - 1 - j) * (pickDropCost + 1);
+                }
+                if (stacks[i][j] == first) {
+                    if (j == 0 && second == "floor") {
+                        return 0;
+                    }
+                    foundF = i;
+                    h += (stacks[i].length - 1 - j) * (pickDropCost + 1);
+                }
+                if (foundF != -1 && foundS != -1) {
+                    return h + Math.abs(foundS - foundF) + pickDropCost;
+                }
+            }
+        }
+        return h + Math.abs(foundS - foundF) + pickDropCost;
     }
-    heuristics.worldHeuristics = worldHeuristics;
+    function heuristicAbove(first, second, stacks) {
+        var foundF = -1;
+        var foundS = -1;
+        var h = 0;
+        for (var i = 0; i < stacks.length; i++) {
+            for (var j = 0; j < stacks[i].length; j++) {
+                if (stacks[i][j] == second) {
+                    foundS = i;
+                    for (var k = j; k < stacks[i].length; k++) {
+                        if (stacks[i][k] == first) {
+                            return 0;
+                        }
+                    }
+                }
+                if (stacks[i][j] == first) {
+                    foundF = i;
+                    h = (stacks[i].length - 1 - j) * (pickDropCost + 1);
+                }
+                if (foundF != -1 && foundS != -1) {
+                    return h + Math.abs(foundS - foundF) + pickDropCost;
+                }
+            }
+        }
+        return h + Math.abs(foundS - foundF) + pickDropCost;
+    }
+    function heuristicUnder(first, second, stacks) {
+        return heuristicAbove(second, first, stacks);
+    }
+    function heuristicBeside(first, second, stacks) {
+        var foundF = -1;
+        var foundS = -1;
+        var hF = 0;
+        var hS = 0;
+        for (var i = 0; i < stacks.length; i++) {
+            for (var j = 0; j < stacks[i].length; j++) {
+                if (stacks[i][j] == second) {
+                    foundS = i;
+                    if (!foundF && stacks.length - 1 > i) {
+                        for (var k = 0; k < stacks[i + 1].length; k++) {
+                            if (stacks[i + 1][k] == first) {
+                                return 0;
+                            }
+                        }
+                    }
+                    hS = (stacks[i].length - 1 - j) * (pickDropCost + 1);
+                }
+                if (stacks[i][j] == first) {
+                    foundF = i;
+                    if (!foundS && stacks.length - 1 > i) {
+                        for (var k = 0; k < stacks[i + 1].length; k++) {
+                            if (stacks[i + 1][k] == first) {
+                                return 0;
+                            }
+                        }
+                    }
+                    hF = (stacks[i].length - 1 - j) * (pickDropCost + 1);
+                }
+                if (foundF && foundS) {
+                    return Math.min(hF, hS) + Math.abs(foundS - foundF) + pickDropCost;
+                }
+            }
+        }
+        return Math.min(hF, hS) + Math.abs(foundS - foundF) + pickDropCost;
+    }
+    function heuristicLeft(first, second, stacks) {
+        var foundF = -1;
+        var foundS = -1;
+        var hF = 0;
+        var hS = 0;
+        for (var i = 0; i < stacks.length; i++) {
+            for (var j = 0; j < stacks[i].length; j++) {
+                if (stacks[i][j] == second) {
+                    foundS = i;
+                    hS = (stacks[i].length - 1 - j) * (pickDropCost + 1);
+                }
+                if (stacks[i][j] == first) {
+                    foundF = i;
+                    if (!foundS) {
+                        for (var k = 0; k < stacks[i + 1].length; k++) {
+                            if (stacks.length - 1 > i && stacks[i + 1][k] == first) {
+                                return 0;
+                            }
+                        }
+                    }
+                    hF = (stacks[i].length - 1 - j) * (pickDropCost + 1);
+                }
+                if (foundF && foundS) {
+                    return Math.min(hF, hS) + Math.abs(foundS - foundF) + pickDropCost;
+                }
+            }
+        }
+        return Math.min(hF, hS) + Math.abs(foundS - foundF) + pickDropCost;
+    }
+    function heuristicRight(first, second, stacks) {
+        return heuristicLeft(second, first, stacks);
+    }
+    function heuristicHold(first, stacks) {
+        for (var i = 0; i < stacks.length; i++) {
+            for (var j = 0; j < stacks[i].length; j++) {
+                if (stacks[i][j] == first) {
+                    return (stacks[i].length - 1 - j) * (pickDropCost + 1);
+                }
+            }
+        }
+        return 0;
+    }
+    function heuristics(first, rel, second, stacks) {
+        switch (rel) {
+            case "ontop":
+                return heuristicOntop(first, second, stacks);
+            case "inside":
+                return heuristicOntop(first, second, stacks);
+            case "above":
+                return heuristicAbove(first, second, stacks);
+            case "under":
+                return heuristicUnder(first, second, stacks);
+            case "beside":
+                return heuristicBeside(first, second, stacks);
+            case "leftof":
+                return heuristicLeft(first, second, stacks);
+            case "rightof":
+                return heuristicRight(first, second, stacks);
+            case "holding":
+                return heuristicHold(first, stacks);
+            default:
+                ////console.log("heuristics no match");
+                return 0;
+        }
+    }
+    _heuristics.heuristics = heuristics;
 })(heuristics || (heuristics = {}));
 /// <reference path="../../lib/typescript-collections/collections.ts" />
 /// <reference path="../graph.ts" />
