@@ -10,7 +10,7 @@ For more information, see the course webpages:
 This is an implementation of the project developed by Team Dandelion (#2) constisting of:
  
  - Gabriel Andersson 
- - Gustav Mörtberg,
+ - Gustav Mörtberg
  - Jack Petterson
  - Niklas Wärvik 
 
@@ -24,6 +24,10 @@ Interesting example utterances
 
 Implemented extension
 -----------------
+Quantifier handling of any, all and the. All can not be interpreted as any.
+
+Verbose planner 
+
 
 Our implementation of A* and its heuristic
 --------------------------------------
