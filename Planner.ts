@@ -23,7 +23,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
     		"pddl": this.cloneSet(world.pddl),
     		"holding": this.clone<string>(world.holding),
     		"arm": this.clone<number>(world.arm),
-    		"planAction": this.clone<string>(world.planAction),
+    		"planAction": "",
     		"description":"",
     		"objects": world.objects,
 			"examples": world.examples};
@@ -66,7 +66,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		var neig :WorldState[] = [];
 		// max 3 possible states
 		// move arm left
-		if(currentstate.arm > 0 ){
+		if(currentstate.arm > 0 && currentstate.planAction != "r"){
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// reduce arm poss
 			possiblestate.arm -= 1;
@@ -74,7 +74,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			neig.push(possiblestate);
 		}
 		// move arm right
-		if(currentstate.arm < this.getWorldWidth(currentstate)-1 ){
+		if(currentstate.arm < this.getWorldWidth(currentstate)-1 && currentstate.planAction != "l" ){
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// increase arm poss
 			possiblestate.arm += 1;
@@ -957,8 +957,8 @@ module Planner {
         	console.log("Lit: " + debugprint + " cost: " + debugcost);
         	sortedIntrpt.enqueue(intprt[i]);
         }
-        
-        while(!sortedIntrpt.isEmpty()){
+        var counter = 0;
+        while(!sortedIntrpt.isEmpty() && counter < 20){
             var sp = new Shortestpath(1);
             var as = new Astar<number[]>(sp);
             sp._nodeValues.push(state);
@@ -975,6 +975,7 @@ module Planner {
             	tempNodevalues = sp._nodeValues;
             	sp1= sp;
             }
+            counter++;
         }
         this._nodeValues = tempNodevalues;
 
