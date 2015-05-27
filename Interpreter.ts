@@ -10,8 +10,14 @@ module Interpreter {
     }
     export interface Literal {pol:boolean; rel:string; args:string[];
     }
+    /**
+	 * A type used to hold both the relation to the objects and a disjunct list of the objects.
+	 */
     interface Sayings {rel:string; objs:string[][]
     }
+    /**
+    * A type used to have a tuple with the object and location relation. 
+    */
     interface objLocPair {obj:string; loc:string
     }
 
@@ -70,18 +76,22 @@ module Interpreter {
     
     /**
      * Returns a complete interpretation given a parse command and a world state
-     * @returns {Literal[][]}, A conjunction of disjunct literals.
+     * @returns {Literal[][]}, A disjunction between conjunct literals.
      */
     function interpretCommand(cmd:Parser.Command, state:WorldState):Literal[][] {
         var lit:Literal[][] = [];
         if (cmd.cmd === "move" || cmd.cmd === "put") {
             var objs:string[][];
+            // The objects to move
             objs = (cmd.cmd === "move" || state.holding === null) 
             	? interpretEntity(cmd.ent, state) : [[state.holding]];
+            // The objects to put the objects on.
             var locs:Sayings = interpretLocation(cmd.loc, state);
-            var disjunct:objLocPair[][] = buildRules(true, objs, locs, state);
+            // Build all viable rules to give the planner
+            var conjunct:objLocPair[][] = buildRules(true, objs, locs, state);
 
-            disjunct.map(or => {
+            //Build move or put list
+            conjunct.map(or => {
                 var list:Literal[] = or.map(and => {return {pol: true, rel: locs.rel, args: [and.obj, and.loc]};});
                 if (list.length > 0) {
                     lit.push(list);
@@ -89,42 +99,42 @@ module Interpreter {
             });
 
         } else {
+        	//the objects to take
             var objs:string[][] = interpretEntity(cmd.ent, state);
-            objs.map(or => {   // obj or 
-                var list:Literal[] = or.map(obj => {return {pol: true, rel: "holding", args: [obj]};});
-                if (list.length > 0) {
-                    lit.push(list);
-                }
-            });
+        	//build the take list
+            objs.map(or => or.map(obj => {
+    			if(obj !== "floor"){
+        			lit.push([{pol: true, rel: "holding", args: [obj]}]);
+        		}
+    		}));
         }
         return lit;
     }
 
     /**
      * Returns a disjunction of conjunct object strings depending on the content of {Parser.Entity}. 
-     * @returns {String[][]}, A conjunction of disjunct strings. 
+     * @returns {string[][]}, A disjunction between conjunct strings. 
      */
     function interpretEntity(ent:Parser.Entity, state:WorldState):string[][] {
         var objs:string[][] = interpretObject(ent.obj, state);
         if (ent.quant === "the") {
-            if (objs.length > 1) {
-                throw new Interpreter.Error("There are more than one object that matches that description.");
-            } else {
+            if (objs.length === 1) {
                 return objs;
-            }
-        }
-        if (ent.quant === "any") {
-            return objs;
+            }   
+            throw new Interpreter.Error("There are more than one object that matches that description.");
         }
         if (ent.quant === "all") {
-            var disj:string[][] = [];
-            var conj:string[] = Array.prototype.concat.apply([], objs);
-            disj.push(conj);
+            var disj:string[][] = [Array.prototype.concat.apply([], objs)];
             return disj;
         }
+        //any
         return objs;
     }
 
+    /**
+     * Returns a disjunction of conjunct object strings depending on the content of {Parser.Object}. 
+     * @returns {string[][]}, A disjunction of {string[]} with one {string} in each. 
+     */
     function interpretObject(obj:Parser.Object, state:WorldState):string[][] {
         var objs:string[][] = [];
         if (obj.obj != null) {
@@ -149,10 +159,18 @@ module Interpreter {
         return objs;
     }
 
+    /**
+     * Returns a {Saying} build up depending on the information in {Parser.Location}. 
+     * @returns {Saying}, A disjunction between conjunct strings and what the relation is supposed to be to them. 
+     */
     function interpretLocation(loc:Parser.Location, state:WorldState):Sayings {
         return {rel: loc.rel, objs: interpretEntity(loc.ent, state)};
     }
 
+    /**
+     * Constructs all valid pairs of objects given objs, locs, futureState and a worldState.
+     * @returns {objLocPair[][]}, A disjunction between conjunct objLocPairs. 
+     */
     function buildRules(futureState:boolean, objs:string[][], locs:Sayings, state:WorldState):objLocPair[][] {
         var finalSet:objLocPair[][] = [];
         if (objs.length === 0 || locs.objs.length === 0) {
@@ -160,18 +178,21 @@ module Interpreter {
         }
 
         //all rules
-        var rules:objLocPair[][] = buildStates(futureState, locs.rel, objs, locs.objs, state);
+        var rules:objLocPair[][] = buildAllDisjunctions(futureState, locs.rel, objs, locs.objs, state);
         if (rules.length === 0) {
             return finalSet;
         }
         //remove duplicates
-        var noDups : objLocPair[][] = rules.filter(disj => !containsDuplicateObjLocPair(disj));  
+        var noDups : objLocPair[][] = rules.filter(conj => !containsDuplicateObjLocPair(conj));  
+        if (noDups.length === 0) {
+            return finalSet;
+        }
         // filter physical
         var filtered:objLocPair[][] = noDups.filter(row => controlRuleSet(futureState, row, locs.rel, state));
         if (filtered.length === 0) {
             return finalSet;
         }
-        //remove duplicates
+        //remove duplicates between conjunctive rules
         filtered.map(row => {
             if (!objLocPairListListContains(finalSet, row)) {
                 finalSet.push(row);
@@ -181,29 +202,26 @@ module Interpreter {
 
     }
 
-    function buildStates(futureState:boolean, rel:string, objs:string[][], locs:string[][], state:WorldState):objLocPair[][] {
+    /**
+     * Given two disjunct lists of strings a new disjunct list of {objLocPair} is created.
+     * @returns {objLocPair[][]}, A disjunction between conjunct objLocPairs. 
+     */
+    function buildAllDisjunctions(futureState:boolean, rel:string, objs:string[][], locs:string[][], state:WorldState):objLocPair[][] {
         if (objs.length === 0 || locs.length === 0){
          	return [];
      	}
-        var toomanydims:objLocPair[][][] = [];
+        var result:objLocPair[][] = [];
         var ruleLength:number = locs[0].length * objs[0].length;      
-
-        var locs1ObjsMore : boolean = locs.length === 1 && locs[0][0] !== "floor" && objs.length >= 1;
-        var locsConjunctive : boolean = locs.length === 1 && locs[0][0] !== "floor";
-        if(locs1ObjsMore){
-            if(rel === "ontop" || rel === "inside"){
-                objs = utils.transpose(objs);    
-            }
-            else{    
-                //Keep the array as it is
-            }
-        } else if (locsConjunctive) {
-            objs = utils.transpose(objs);
-        } else {
-            locs = utils.transpose(locs);
-        }
+        
+        //Transpose depending on relation of objects and locations
+        if(locs.length === 1 && locs[0][0] !== "floor" && (rel === "ontop" || rel === "inside")){
+    		objs = utils.transpose(objs); 
+    	} else {
+    		locs = utils.transpose(locs);
+    	}
 
         objs.map(x => locs.map(y => {
+            // filter objects that are not possible
             var fx:string[];
             var fy:string[];
             if (futureState) {
@@ -214,19 +232,18 @@ module Interpreter {
                 fy = y.filter(l => x.some(o => state.relationExists(o, l, rel)));
             }
             if (fx.length !== 0 && fy.length !== 0) {
+            	//Create the conjunctions
                 var disjs:objLocPair[][] = combineConj(fx, fy, rel, ruleLength);
-                toomanydims.push(disjs);
+                disjs.map(conj => result.push(conj));
             }
         }));
-
-        if (toomanydims.length > 0) {
-            var result:objLocPair[][] = [];
-            result = result.concat.apply(result, toomanydims);
-            return result;
-        }
-        return [];
+        return result;
     }
 
+    /**
+     * Creates all permutations of the conjunctions between the two parameters objs and locs {string[]}
+     * @returns {objLocPair[][]}, 
+     */
     function combineConj(objs:string[], locs:string[], rel:string, ruleLength:number):objLocPair[][] {
         var allRules:objLocPair[][] = [];
         if (locs.length === 1 && locs[0] === "floor") {
@@ -240,6 +257,7 @@ module Interpreter {
             var p2:string[][] = [];
             if(objs.length > 9){
                 //this will be a lot of permutations
+                //n = 10 : 10*9*8*...*2*1 different arrays
   				throw new Interpreter.Error("You should be more specific. I'm too stupid to handle the object permutations.");
         	} else{
             	p1 = utils.permute(objs, [], []);
@@ -262,43 +280,83 @@ module Interpreter {
         return allRules;
     }
 
+    /**
+     * Controls the conjunctive rules with the worldstate. 
+     * @returns true if all rules are possible individually.
+     */
     function controlRuleSet(futureState:boolean, rules:objLocPair[], rel:string, state:WorldState):boolean {
         return futureState ?
         rules.every(r => r.obj !== r.loc && state.validPlacement(r.obj, r.loc, rel)) :
         rules.every(r => r.obj !== r.loc && state.relationExists(r.obj, r.loc, rel));
     }
 
+    /**
+     * A contains method where the objects are {string[]}
+     * @returns true if there is one such list where all {string} objects has a match.
+     */
     function stringListListContains(list : string[][], sl : string[]) : boolean {
     	return list.some(and => and.every(o1 => sl.some(o2 => o1===o2)));
     }
     
+    /**
+     * A contains method where the objects are {objLocPair[]}
+     * @returns true if there is one such list where all {objLocPair} objects has a match.
+     */
     function objLocPairListListContains(list:objLocPair[][], olpl : objLocPair[]) : boolean {
     	return list.some(l => objLocPairListEquals(l,olpl))
     }
 
-    function containsDuplicateObjLocPair(disj : objLocPair[]) : boolean{
-    	return disj.some(o1 => disj.some(o2 => (o1!==o2 && objLocPairEquals(o1,o2))));
+    /**
+     * A verification method used to see if there is a duplicate rule in a conjunction
+     * @returns true if there is two or more rules that are the same.
+     */
+    function containsDuplicateObjLocPair(conj : objLocPair[]) : boolean{
+    	return conj.some(o1 => conj.some(o2 => (o1!==o2 && objLocPairEquals(o1,o2))));
     }
 
-    function objLocPairListEquals(row:objLocPair[], newRow:objLocPair[]) : boolean{
-        return row.every(o1 => newRow.some(o2 => objLocPairEquals(o1,o2)));
+    /**
+     * An equals method for the object {objLocPair[]}
+     * @returns true if all rules in the first list exists in the second.
+     */
+    function objLocPairListEquals(conj:objLocPair[], newConj:objLocPair[]) : boolean{
+        return conj.every(o1 => newConj.some(o2 => objLocPairEquals(o1,o2)));
     }
 
+    /**
+     * An equals method for the object {objLocPair}
+     * @returns true if the objLocPairs match.
+     */
     function objLocPairEquals(o1 : objLocPair, o2 : objLocPair) : boolean {
     	return o1.obj === o2.obj && o1.loc === o2.loc;
     }
 
+    /**
+     * An contains method for the object {Result}
+     * @returns true if the second argument already is in the list.
+     */
     function interpretationListContains(list : Result[], intrprt : Result) : boolean {
     	return list.some(intp => interpretationEquals(intp,intrprt));
     }
 
+    /**
+     * An equals method for the object {Result}
+     * @returns true if the disjunctive list of rules exists in the second.
+     */
     function interpretationEquals(intrprt1 : Result, intrprt2 : Result) : boolean{
     	return intrprt1.intp.every(and1 => intrprt2.intp.some(and2 => andSetEquals(and1,and2)));
     }
+    /**
+     * An equals method for the object {Literal[]}
+     * @returns true if the conjunctive list of rules exists in the second.
+     */
     function andSetEquals(and1 : Literal[], and2 : Literal[]) : boolean{
     	return and1.every(o1 => and2.some(o2 => literalEquals(o1,o2)));
     }
 
+    /**
+     * An equals method for the object {Literal}
+     * @returns true if the conjunctive list of rules exists in the second.
+     */
     function literalEquals(lit1 : Literal, lit2 : Literal) : boolean {
     	return lit1.pol === lit2.pol && lit1.rel === lit2.rel && 
     		((lit1.args[0] === lit2.args[0]) && 
