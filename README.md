@@ -58,10 +58,22 @@ The other type of ambiguity comes from a shift/reduce conflict in the grammar. T
 
 ### Known issues/bugs
 
-xxx
+There are currently two unsolved issues, both of which has to do with resolving ambiguity:
 
 **complex world: `put the pyramid under a table on the large table`**  
-This gives a parse ambiguity but for some reason the list of suggestions is empty. However, `put the red pyramid under a table on the large table` works just fine.
+This one has a parse ambiguity but the system seems to pick the wrong one. We would want it to interpret it as
+
+```
+put the pyramid (that is under a table) on the large table
+```
+
+which has a valid interpretation, instead of
+
+```
+put the pyramid under a table (that is on the large table)
+```
+
+which have no valid interpretation no matter which pyramid you choose.
 
 **small world: `put the ball in the box`**  
 This produces an infinite loop, the ball is first resolved but then it never accepts a valid description of the box (if there are several to choose from).
