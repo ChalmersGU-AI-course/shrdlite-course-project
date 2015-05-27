@@ -62,7 +62,6 @@ module Heuristics {
                 var below = atom.args[1];
 
                 if(atom.pol){
-                    // return 0;
                     return heuristicDifference(s, target, below, atom.rel != "above");
                 }
                 // Same heuristic as for grabbing the target.
@@ -140,7 +139,7 @@ module Heuristics {
         return aboveCost + armCost + dropC;
     }
 
-    export function heuristicDifference(s : State, above : String, below : String, exactlyOntop : boolean) : number {
+    function heuristicDifference(s : State, above : String, below : String, exactlyOntop : boolean) : number {
         var somewhereAbove : boolean = !exactlyOntop;
         var a = computeObjectPosition(s, above);
         var b = computeObjectPosition(s, below);
@@ -183,15 +182,6 @@ module Heuristics {
         // ...and come back?
         return 3;
     }
-
-    // function moveCost(s : State, a : ObjectPosition, b : ObjectPosition, exactlyOntop : boolean) : number{
-    //     return abs(s.arm - a.stackNo) + abs(a.stackNo - b.stackNo);
-    //     // return abs(a.stackNo - b.stackNo) +
-    //     //        min(abs(s.arm - a.stackNo), abs(s.arm - b.stackNo));
-    // }
-
-    ////////////////////////////////////////////////
-    // Other method...
 
     // Computes the expected number of actions to grab an object
     function heuristicDistance(s : State, target : String) : number {
