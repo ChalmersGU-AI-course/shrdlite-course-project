@@ -152,8 +152,13 @@ module Interpreter {
         if (rules.length === 0) {
             return finalSet;
         }
+        console.log("rules: "+rules.length);
+        //remove duplicates
+        var noDups : objLocPair[][] = rules.filter(disj => !containsDuplicateObjLocPair(disj));  
+        console.log("nuDup: "+rules.length);
         // filter physical
-        var filtered:objLocPair[][] = rules.filter(row => controlRuleSet(futureState, row, locs.rel, state));
+        var filtered:objLocPair[][] = noDups.filter(row => controlRuleSet(futureState, row, locs.rel, state));
+        console.log("phys: "+rules.length);
         if (filtered.length === 0) {
             return finalSet;
         }
@@ -249,9 +254,11 @@ module Interpreter {
     }
 
     function controlRuleSet(futureState:boolean, rules:objLocPair[], rel:string, state:WorldState):boolean {
+        console.log(rules.length);
+        console.log(rules.length);
         return futureState ?
-            rules.every(r => r.obj !== r.loc && state.validPlacement(r.obj, r.loc, rel)) :
-            rules.every(r => r.obj !== r.loc && state.relationExists(r.obj, r.loc, rel));
+        rules.every(r => r.obj !== r.loc && state.validPlacement(r.obj, r.loc, rel)) :
+        rules.every(r => r.obj !== r.loc && state.relationExists(r.obj, r.loc, rel));
     }
 
     function stringListListContains(list : string[][], sl : string[]) : boolean {
@@ -259,11 +266,19 @@ module Interpreter {
     }
     
     function objLocPairListListContains(list:objLocPair[][], olpl : objLocPair[]) : boolean {
-    	return list.some(l => objLocPairEquals(l,olpl))
+    	return list.some(l => objLocPairListEquals(l,olpl))
     }
 
-    function objLocPairEquals(row:objLocPair[], newRow:objLocPair[]) : boolean{
-        return row.every(o1 => newRow.some(o2 => o1.obj === o2.obj && o1.loc === o2.loc));
+    function containsDuplicateObjLocPair(disj : objLocPair[]) : boolean{
+    	return disj.some(o1 => disj.some(o2 => (o1!==o2 && objLocPairEquals(o1,o2))));
+    }
+
+    function objLocPairListEquals(row:objLocPair[], newRow:objLocPair[]) : boolean{
+        return row.every(o1 => newRow.some(o2 => objLocPairEquals(o1,o2)));
+    }
+
+    function objLocPairEquals(o1 : objLocPair, o2 : objLocPair) : boolean {
+    	return o1.obj === o2.obj && o1.loc === o2.loc;
     }
 
     function interpretationListContains(list : Result[], intrprt : Result) : boolean {
