@@ -26,14 +26,17 @@ Implemented extension
 -----------------
 Quantifier handling of any, all and the. All can not be interpreted as any.
 
-Verbose planner 
+Verbose planner. The planner writes what it is doing in each step and what object it is handling.
+How much it says about an object depends on how many there exits. If there is only one ball it just says "the ball"
 
 
-Our implementation of A* and its heuristic
+Our implementation of A and its heuristic 
 --------------------------------------
 
 Strange or half-finished behaviour
 -----------------------
+Our interpreter is stupid. It is a risk that we create to many permutations before filtering depending on physical rules and their actual relation
+
 
 Miscellaneous
 --------------
