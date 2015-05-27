@@ -25,45 +25,39 @@ and it can be run in several different modes:
 - as an offline text application, where input is provided at the command line
   (requires that Node.JS is installed, but nothing of the terminal)
 
-To be able to run the system you need to install Node.JS and TypeScript.
-
-
-What is already implemented and what is missing
-------------------------------------------------
-
-The natural language parser is already implemented using the
-[Nearley parsing library] (https://github.com/Hardmath123/nearley).
-
-Furthermore, there are three different implementations of the blocks
-world: the SVGWorld, the ANSIWorld and the simple TextWorld.
-
-What is not implemented correctly is the natural language interpreter
-and the robot planner. What you are given are stubs that return
-a dummy interpretation resp. a dummy plan. Your goal is to implement
-the interpreter and the planner so that the robot behaves as it should.
-
-
-Compiling to Javascript or using Ajax CGI
-------------------------------------------
-
-The preferred way to implement this is to write your programs in a
-language that can be compiled directly into Javascript, such as
-TypeScript. The advantage with this is that you can use
-all three ways of interacting (web, text and offline), and that there's
-much less overhead when running. The (possible) disadvantage is that
-you cannot use any programming language.
-
-
-Additional information
+How to compile
 -----------------------
 
-There is a Makefile if you want to use the GNU Make system. Here's what it can do:
+To be able to run the system you need Node.JS and TypeScript.
+
+You can build the different targets in the project using the provided Makefile:
 
 - `make clean`: Removes all auto-generated Javascript files
 - `make all`: Calls TypeScript and Closure for each target
 - `make html | ajax | ansi | offline`:
   Calls TypeScript and Closure for the given target,
   i.e., it compiles the file `shrdlite-X.ts` into `shrdlite-X.js`
+
+Implemented features
+------------------------------------------------
+xxx
+
+## Improved heuristics
+
+xxx
+
+## IDA\*
+
+xxx
+
+## Clarification questions on ambiguity
+
+xxx
+
+Known issues/bugs
+------------------------------------------------
+xxx
+
 
 
 List of files

@@ -1,6 +1,8 @@
 Overview
 ------------------------------------------------
 
+***OBS, the implementation of Astar has since been changed and the old folder has been removed. This README is outdated.***
+
 The A* implementation is located in the `Astar/` folder. The implementation is explained below.
 
 Compile the typescript file by running `make` in the `Astar` directory.
