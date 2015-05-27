@@ -18,16 +18,21 @@ module Interpreter {
         parses.forEach((andProp) => {
             inter.intp.push([]);
             andProp.forEach((prop) => {
-                var lits : Literal[] = chooseBest(interpretCommand(prop[0].prs, currentState), currentState.stacks);
-                lits.forEach((l) => {inter.intp[inter.intp.length-1].push(l)});
+                var litPars : Literal[][] = [];
+                prop.forEach((res) => {
+                    var lits : Literal[] = chooseBest(interpretCommand(res.prs, currentState), currentState.stacks);
+                    if(lits) {
+                        litPars.push(lits);
+                    }
+                });
+                if(litPars.length==0) {
+                    throw new Interpreter.Error("Found no interpretation");
+                }
+                chooseBest(litPars, currentState.stacks).forEach((l) => {inter.intp[inter.intp.length-1].push(l)});
             });
 
         });
-        if (inter) {
-            return inter;
-        } else {
-            throw new Interpreter.Error("Found no interpretation");
-        }
+        return inter;
     }
     
     function chooseBest(lits : Literal[][], stacks : string[][]) : Literal[] {
