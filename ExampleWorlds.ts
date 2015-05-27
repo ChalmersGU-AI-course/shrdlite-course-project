@@ -67,21 +67,22 @@ ExampleWorlds["complex"] = {
     "objects": complexobjs,
     "pddl": stacksToPDDL([["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]], complexobjs),
     "examples": [
-    	"put a box on a floor",
+    	//"put a box on a floor",
     	"put a box in the box",
         "put a box in a box",
         "put all balls on the floor",
         "take the yellow box",
+        "put all tables on the floor",
         "put any object under all tables",
-        "put any object under all tables on the floor",
-        "put a ball in a small box in a large box",
+      //  "put any object under all tables on the floor",
+      //  "put a ball in a small box in a large box",
         "put all balls in a large box",
         "put all balls left of a ball",
         "put all balls beside a ball",
         "put all balls beside every ball",
         "put a box beside all objects",
-        "put all red objects above a yellow object on the floor",
-        "put all yellow objects under a red object under an object"
+       // "put all red objects above a yellow object on the floor",
+       // "put all yellow objects under a red object under an object"
     ]
 };	
 

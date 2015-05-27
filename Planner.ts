@@ -83,7 +83,8 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		}
 		// pick up
 		var topLit = Planner.getTopLiteral(currentstate, currentstate.arm);
-		if((!currentstate.holding || currentstate.holding.length == 0)&& topLit ){	
+		if((!currentstate.holding || currentstate.holding.length == 0)&& topLit 
+				&& currentstate.planAction !="p"){	
 			// if it is not holding anything and ther is something on the floor
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			var topobj = this.getTopObj(currentstate, currentstate.pddl.toArray());
@@ -96,7 +97,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			//var descObj = possiblestate.objects[topobj];
 			possiblestate.description = this.getMinimumDescription(topobj, possiblestate); //" " + descObj.size + " " + descObj.color + " " + descObj.form;
 			neig.push(possiblestate);
-		}else if(currentstate.holding ){ // drop
+		}else if(currentstate.holding && currentstate.planAction !="d"){ // drop
 			var possiblestate : WorldState = this.cloneWorld(currentstate);
 			// get top obj
 			var topobj :string;
