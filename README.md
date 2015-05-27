@@ -50,6 +50,8 @@ xxx (what extensions you have implemented, and where in the code they are)
 
 xxx (how your A* planning heuristics work, and where in the code we can find it)
 
+The implementations of all heuristics can be found in the file `Heuristic.ts`.
+
 ### IDA\*
 
 Iterative Deepening A\* was also implemented. It does take longer time but still finds the optimal solution. The advantage lies in using less memory. In order to use IDA\* instead of A\*, one has to change it in `Planner.ts` at line 62.
@@ -59,6 +61,8 @@ Iterative Deepening A\* was also implemented. It does take longer time but still
 There are two types of ambiguity. The first one is with the `the` quantifier, for example `grasp the object`. In this case, the system prints a list of possible candidates to choose from. The user can then add more information such as `red`, if the new information is not sufficient he can provide more information such as `small` or `ball`.
 
 The other type of ambiguity comes from a shift/reduce conflict in the grammar. The typical example would be `put the small ball in a box on the floor`. The box in this sentence can either be parsed as the current location of the ball or as the target location for the ball. Our system investigates both possibilities and rules out any that is inconsistent with the current state of the world. If both have valid interpretations, the system calculates both and picks the shortest one.
+
+xxx (where in the code is the ambiguity stuff?)
 
 ### Known issues/bugs
 
