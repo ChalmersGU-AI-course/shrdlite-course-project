@@ -38,7 +38,7 @@ The project implements a few different additions to the original project descrip
 
 ### Quantifiers
 We handle the quantifiers any, all and the. All can not be interpreted as any.
-This code starts around line 112 in Interpreter.ts in the function intepretEntity.
+The code is in Interpreter.ts in the function intepretEntity. The disjunctions is made in the function "buildAllDisjunctions"
 
 ### Verbose planner
 The planner describes what is during in an intelligent fashion during execution, depending on the current world it describes the objects it are handling more or less. If there is only one ball it simply says `Moving the ball..`, but if there would be two balls it could say `Moving the black ball..` instead.
@@ -65,6 +65,6 @@ As it should, A\* looks at the combined value of the cost so far and the heurist
 All of our heuristics are based on the question "What is the minimum amount of work needed to achieve the goals?"For each new state added to the frontier, we calculate the heuristic for each of the conjuctive goals and choose the one which has the lowest combined heuristic.
 
 ## Strange or half-finished behaviour
-Our interpreter is stupid. It is a risk when we make permutations that we create to many before filtering depending on physical rules and their actual relation. This means that it would take to long to compute and we throw an error instead.
+Our interpreter is stupid. It is a risk when we make permutations that we create to many before filtering depending on physical rules and their actual relation. This means that it would take to long to compute and we throw an error instead. This can be seen around line 264 in Interpreter.ts
 
 The program have mainly been tested using the HTML and console versions, ANSI is supported but it haven't been tested thoroughly.
