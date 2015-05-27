@@ -37,8 +37,9 @@ In order:
 The project implements a few different additions to the original project description.
 
 ### Quantifiers
-We handle the quantifiers any, all and the. All can not be interpreted as any.
-The code is in Interpreter.ts in the function intepretEntity. The disjunctions is made in the function "buildAllDisjunctions"
+The Interpreter handles quantifiers any, all and the. `All` is interpreted as exactly that, all of the objects which fit the description. We have made the choice not the fallback on any other interpretation, such as any.
+
+The code is in `Interpreter.ts` in the function `interpretEntity()`. The disjunctions is made in the function `buildAllDisjunctions()`.
 
 ### Verbose planner
 The planner describes what is during in an intelligent fashion during execution, depending on the current world it describes the objects it are handling more or less. If there is only one ball it simply says `Moving the ball..`, but if there would be two balls it could say `Moving the black ball..` instead.
@@ -62,7 +63,7 @@ Our implementation of the search is a version of the generic search algorithm, w
 As it should, A\* looks at the combined value of the cost so far and the heuristic to the goal state to decide which part of the frontier to expand.
 
 ### Heuristics
-All of our heuristics are based on the question "What is the minimum amount of work needed to achieve the goals?"For each new state added to the frontier, we calculate the heuristic for each of the conjuctive goals and choose the one which has the lowest combined heuristic.
+All of our heuristics are based on the question "What is the minimum amount of work needed to achieve the goals?". For each new state added to the frontier, we calculate the heuristic for each of the conjuctive goals and choose the one which has the lowest combined heuristic.
 
 ## Strange or half-finished behaviour
 Our interpreter is stupid. It is a risk when we make permutations that we create to many before filtering depending on physical rules and their actual relation. This means that it would take to long to compute and we throw an error instead. This can be seen around line 264 in Interpreter.ts
