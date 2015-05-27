@@ -100,26 +100,22 @@ class Astar <T>{
                 console.log("Number of nodes visited " + counter);
                 return this.reconstruct_path(came_from, current, true);//changed to current, since goal will be literals
             } //needs to be adjusted
-            if(closedset.indexOf(current) != -1){	// do not gather neighbors if we have already vissited current
-            	continue;
-            }
+
             closedset.push(current);
             var currentNeighbors = this.neighbor_nodes(current);
             for(var i = 0; i < currentNeighbors.length; i++){
                 var neighbor = currentNeighbors[i];
-                if(closedset.indexOf(neighbor) == -1){
-                    var tentative_g_score : number = g_score[current] + this.cost(current,neighbor); // distance between c and n
-                    var neighborNode = new NodeScore(neighbor, f_score[neighbor]);
-                    var containsNode = !(openset.contains(neighborNode));
-                    
-                	if(containsNode ||tentative_g_score < g_score[neighbor]){
-                        came_from[neighbor] = current;
-                        g_score[neighbor] = tentative_g_score;
-                        f_score[neighbor] = g_score[neighbor] + this.mGraph.heuristic_cost_estimate(neighbor, goal);
-                        neighborNode.setFscore(f_score[neighbor]);
-                        if(containsNode){
-                        	openset.add(neighborNode);
-                        }
+                var tentative_g_score : number = g_score[current] + this.cost(current,neighbor); // distance between c and n
+                var neighborNode = new NodeScore(neighbor, f_score[neighbor]);
+                var containsNode = !(openset.contains(neighborNode));
+                
+            	if(containsNode ||tentative_g_score < g_score[neighbor]){
+                    came_from[neighbor] = current;
+                    g_score[neighbor] = tentative_g_score;
+                    f_score[neighbor] = g_score[neighbor] + this.mGraph.heuristic_cost_estimate(neighbor, goal);
+                    neighborNode.setFscore(f_score[neighbor]);
+                    if(containsNode){
+                    	openset.add(neighborNode);
                     }
                 }
             }
