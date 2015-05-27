@@ -8,8 +8,8 @@ module Shrdlite {
     export function interactive(world : World) : void {
         function endlessLoop(utterance : string = "") : void {
             var inputPrompt = "What can I do for you today? ";
-	    // Clear up after this prompt
-	    world.currentState.status = [];
+            // Clearing up after this prompt
+            world.currentState.status = [];
             world.currentState.ambiguousObjs = [[]];
             var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
             if (utterance.trim()) {
@@ -174,8 +174,8 @@ module Shrdlite {
                 throw new Interpreter.Ambiguity(); // throw sth-else!
             }
             if (status === "multiValidInterpret"){
-                world.printSystemOutput("There're multiple valid interpretation");
-                world.printSystemOutput("But Im lazy and only performs minimum plan");
+                world.printSystemOutput("There are multiple valid interpretation");
+                world.printSystemOutput("But I am lazy and only performs minimum plan");
                 // clean up for multiValidInterpret
                 world.currentState.status = [];
             }
