@@ -176,7 +176,8 @@ class WorldState {
                  case "above":
                      return snd === "floor" || (sndObj.form !== "ball" && !fstObj.largerThan(sndObj));
                  case "under":
-                     return snd !== "floor" || (fstObj.form !== "ball" && !sndObj.largerThan(fstObj)); //TODO second operand of || will crash sometimes
+                     if(snd === "floor"){ return false; }
+                     return (fstObj.form !== "ball" && !sndObj.largerThan(fstObj)); //TODO second operand of || will crash sometimes
                  case "beside":
                  case "leftof":
                  case "rightof":
