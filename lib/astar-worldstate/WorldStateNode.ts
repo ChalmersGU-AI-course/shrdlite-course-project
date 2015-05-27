@@ -23,7 +23,7 @@ class WorldStateNode{
      * @returns {number} Smallest heuristic possible based on the goals.
      */
     heuristicTo(goal : Interpreter.Literal[][]) {
-        var returnValue = 100000;
+        var returnValue = 1000000000;
         goal.forEach((intrprt) => {
             var newHeuristic = 0;
 
@@ -56,7 +56,6 @@ class WorldStateNode{
                         break;
                 }
             });
-
             returnValue = newHeuristic < returnValue ? newHeuristic : returnValue;
         });
 
@@ -64,33 +63,37 @@ class WorldStateNode{
     }
 
 	private onTopHeuristic(fstObj : string, sndObj : string) : number {
-		var heuristic = 0;
+        var heuristic = 0;
 
         if(sndObj === "floor") {
-            if(fstObj !== this.state.holding) {
-                // Remove each object on top of the first object.
-                heuristic += this.state.objectsOnTop(fstObj) * 4;
-            }
+            console.log("floor");
+            // TODO: Not completed, needs to be thought through.
+            // TODO: If fstObj.index is 0 then dont do everything.
+
+            // Remove each object on top of the first object.
+            heuristic += this.state.objectsOnTop(fstObj) * 4;
 
             // Move to lowest stack.
-            heuristic += Math.abs(this.state.arm - this.state.getLowestStackIndexNearby(fstObj));
+            heuristic += Math.abs(this.state.arm - this.state.getLowestStackIndex());
 
             // Remove each object from lowest stack.
-            heuristic += this.state.stackHeight(this.state.getLowestStackIndexNearby(fstObj)) * 4;
+            heuristic += this.state.stackHeight(this.state.getLowestStackIndex()) * 4;
         } else {
             var distance = this.state.getDistance(fstObj,sndObj);
 
-            if(fstObj !== this.state.holding && distance != 0) {
-                // If we have not yet picked up the object,
-                // and they aren't in the same stack,
-                // remove each object on top of fstObj (min 4 moves per object).
-                heuristic += this.state.objectsOnTop(fstObj) * 4;
+            var distanceToFst   = Math.abs(this.state.getStackIndex(fstObj) - this.state.arm);
+            var distanceToSnd   = Math.abs(this.state.getStackIndex(sndObj) - this.state.arm);
+
+            heuristic += distanceToFst + distanceToSnd;
+
+            if (distance !== 0) {
+                // If they arent in the same stack, remove each object on top of fstObj (min 4 moves per).
+                heuristic += this.state.objectsOnTop(fstObj);
+                heuristic += distance;
             }
 
             // Remove each object on top of sndObj (min 4 moves per).
-            heuristic += this.state.objectsOnTop(sndObj) * 4;
-
-            heuristic += 2 + distance;
+            heuristic += this.state.objectsOnTop(sndObj);
         }
 
 		return heuristic;
@@ -99,53 +102,10 @@ class WorldStateNode{
     private aboveHeuristic(fstObj : string, sndObj : string) : number {
 		var heuristic = 0;
 
-        var distance = this.state.getDistance(fstObj,sndObj);
+        // Move each object on top of fstObj;
+		heuristic += this.state.objectsOnTop(fstObj) * 4;
 
-        // If they are in the same pile.
-        if(distance != 0) {
-            if(this.state.holding === fstObj) {
-                // Move arm between its place and sndObj stack
-                heuristic += Math.abs(this.state.getStackIndex(sndObj) - this.state.arm);
-
-                // Drop fstObj
-                heuristic += 1;
-            } else if(this.state.holding === sndObj) {
-                // Drop sndObj
-                heuristic += 1;
-
-                // Move arm between its place and fstObj stack
-                heuristic += Math.abs(this.state.getStackIndex(fstObj) - this.state.arm);
-
-                // Move all objects on top of fstObj
-                heuristic += this.state.objectsOnTop(fstObj) * 4;
-
-                // Move arm between fstObj stack and where we dropped sndObj
-                heuristic += Math.abs(this.state.getStackIndex(fstObj) - this.state.arm);
-            } else {
-                // Move all objects on top of fstObj
-                heuristic += this.state.objectsOnTop(fstObj) * 4;
-
-                // Pick up fstObj
-                heuristic += 1;
-
-                // Move first object on top of sndObj (min sndObj is on top of another pile)
-                heuristic += Math.abs(this.state.getStackIndex(fstObj) - this.state.getStackIndex(sndObj));
-
-                // Drop fstObj on top of sndObj stack
-                heuristic += 1;
-            }
-        } else {
-            var fstObjIx = this.state.stacks[this.state.getStackIndex(fstObj)].indexOf(fstObj);
-            var sndObjIx = this.state.stacks[this.state.getStackIndex(sndObj)].indexOf(sndObj);
-
-            if(fstObjIx < sndObjIx) {
-                // Move all objects on top of fstObj
-                heuristic += this.state.objectsOnTop(fstObj) * 4;
-                // Move first object on top of sndObj (min sndObj is on top of another pile)
-                heuristic += 2;
-            }
-
-        }
+		heuristic += 2 + this.state.getDistance(fstObj,sndObj);
 
 		return heuristic;
 	}

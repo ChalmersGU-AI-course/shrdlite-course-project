@@ -348,7 +348,11 @@ class WorldState {
      * @returns {boolean}   True if the first object is in an adjacent stack of the second, false otherwise.
      */
     isBeside(fstObj : string, sndObj : string) : boolean {
-        return 1 == this.getDistance(fstObj,sndObj);
+        if(this.isHoldingObj(fstObj) || this.isHoldingObj(sndObj)) {
+            return false;
+        } else {
+            return 1 === this.getDistance(fstObj,sndObj);
+        }
     }
 
     /**
@@ -380,7 +384,13 @@ class WorldState {
      * @returns {number}    The horizontal distance between the stacks of the first and second object.
      */
     getDistance(fstObj : string, sndObj : string) : number {
-        return Math.abs(this.getStackIndex(fstObj) - this.getStackIndex(sndObj));
+        if(this.isHoldingObj(fstObj)) {
+            return Math.abs(this.getStackIndex(sndObj) - this.arm);
+        } else if(this.isHoldingObj(sndObj)) {
+            return Math.abs(this.getStackIndex(fstObj) - this.arm);
+        } else {
+            return Math.abs(this.getStackIndex(fstObj) - this.getStackIndex(sndObj));
+        }
     }
 
     /**
