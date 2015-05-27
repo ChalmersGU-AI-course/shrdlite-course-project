@@ -192,6 +192,7 @@ module Planner {
     
     function goalFunction (lss : Interpreter.Literal[][], curr : string)
     {	
+        //console.log(curr);
     	for(var j in lss)
     	{
     		var ls : Interpreter.Literal[] = lss[j];
@@ -200,7 +201,7 @@ module Planner {
 		    for(var i in ls)
 		    {
 		        var l : Interpreter.Literal = ls[i];
-		        
+		        //console.log("in goal function");
 		        var rel : string = l.rel;
 		        var x   : string = l.args[0];
 		        var y   : string = l.args[1];
@@ -239,25 +240,29 @@ module Planner {
                     default:
                         throw new Planner.Error("Unknown relation: " + rel);
 		        }
+                
 		        if(!regExp.test(curr))
 		        {
 		            //console.log(regExp.toString());
 		            //console.log(curr);
-		            ret = false;
+		            //ret = ret && false;
+                    ret = false;
 		        }
 		    }
 		    if(ret)
-		    {
-		    	return true;
-		    }
+            {
+                return true;
+            }
         }
-        return false;
+        
+        return ret;
     }
 	
     function getHueristic (lss : Interpreter.Literal[][], curr : WorldState) :number
     {
         var totHue : number = 0;
         var biggestTot : number = 1000000;
+        var smallestStack :number = 10000; 
         
         var stacks : string[] = [];
         var z : number = 0;
@@ -281,30 +286,43 @@ module Planner {
 		        
 				for(var k in curr.stacks)
 				{
-				  var si : string[] = curr.stacks[k];
-				  var iox = -1;
-				  var ioy = -1;
-				  for(var m in si)
-				  {
-					  if(si[m] === x)
-					  {
-						  iox = m;
-					  }
-					  if(si[m] === y)
-					  {
-						  ioy = m;
-					  }
-				  }
+				    var si : string[] = curr.stacks[k];
+				    var iox = -1;
+				    var ioy = -1;
+				    for(var m in si)
+				    {
+					    if(si[m] === x)
+					    {
+				  		    iox = m;
+                            //console.log(m);
+					    }
+					    if(si[m] === y)
+					    {
+                            ioy = m;
+                        }
+                          
+				    }
 				 
-				  if(iox >= 0)
-				  {
-					  xStack = [k,iox];
-				  }
-				  if(ioy >= 0)
-				  {
-					  yStack = [k,ioy];
-				  }
+                    if(iox >= 0)
+                    {
+                        xStack = [k,iox];
+                    }
+                    if(ioy >= 0)
+                    {
+                        yStack = [k,ioy];
+                    }
 				}
+                if( y === "floor")
+                {
+                    var temp : number;
+                    for(var s in curr.stacks)
+                    {
+                        smallestStack = Math.min(smallestStack,curr.stacks[s].length);
+                        if(smallestStack == curr.stacks[s].length)
+                            temp = s
+                    }
+                    yStack = [s,smallestStack];
+                }
 		        //console.log(xStack,yStack);
 		        switch(rel)
 		        {
@@ -354,38 +372,50 @@ module Planner {
 		                break;
 		            case "inside":
 		            case "ontop":
-		            	if(xStack[1] === -1)
-		            	{
-		            		totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1;
-		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
-		            	}
-		            	else if(yStack[1] === -1)
-		            	{
-		            		totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +1;
-		            		totHue += +Math.abs(+yStack[0] - +xStack[0]) + +1;
-		            	}
-		            	else
-		            	{
-				            if(xStack[0] === yStack[0])
-				            {
-				                if(xStack[1]-yStack[1] > 1)
-				                { 
-				                    totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +2;
-				                }
-				                else if(xStack[1]-yStack[1] < 1)
-				                {
-				                    totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +2;
-				                }
-				            }
-				            else
-				            {
-				                var c : number = xStack[1]++;
-		                        totHue += +curr.stacks[yStack[0]].length - +c; // weight for clearing the top of y
-				                totHue += +curr.stacks[xStack[0]].length + Math.abs(+yStack[0] - +xStack[0]) - +c; //weight for moving x to the top/inside of y
-		                        
-				            }
-				        }
-		                //console.log(totHue);
+                        if((xStack[1] == 0 && y === "floor"))
+                        {
+                        //console.log("stuff");
+                        }
+                        else
+                        {
+                            //console.log(y);
+                            if(xStack[1] === -1)
+                            {
+                                totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1;
+                                totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+                                //console.log("test1");
+                            }
+                            else if(yStack[1] === -1)
+                            {            
+                                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +1;
+                                totHue += +Math.abs(+yStack[0] - +xStack[0]) + +1;
+                                //console.log("test2");
+                            }
+                            else
+                            {
+                                if(xStack[0] === yStack[0])
+                                {
+                                    if(xStack[1]-yStack[1] > 1)
+                                    { 
+                                        totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +2;
+                                    }
+                                    else if(xStack[1]-yStack[1] < 1)
+                                    {
+                                        totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +2;
+                                    }
+                                }
+                                else
+                                {
+                                    //var c : number = yStack[1]++;
+                                    totHue += +curr.stacks[yStack[0]].length - (+yStack[1]+ +1); // weight for clearing the top of y
+                                    totHue += +curr.stacks[xStack[0]].length + Math.abs(+yStack[0] - +xStack[0]) - (+xStack[1]+ +1); //weight for moving x to the top/inside of y
+                                    
+                                }
+                            }
+                            //console.log(totHue);
+                        }
+                       
+                       
 		                break;
 		            case "under":
 		            	if(xStack[1] == -1)
@@ -457,9 +487,13 @@ module Planner {
                     default:
                         throw new Planner.Error("Unknown relation: " + rel );
 		        }
-		        biggestTot = Math.min(biggestTot,totHue);
 		    }
+            if(totHue < 0)
+                console.log(totHue);
+            biggestTot = Math.min(biggestTot,totHue);
+            totHue = 0;
 	    }
+        //console.log(biggestTot);
         return biggestTot;
     }
     
@@ -476,7 +510,7 @@ module Planner {
             var s: string = tempplan.pop();
             plan.push(s);
         }
-        plan.push("GOBY PLZ!");
+        //plan.push("GOBY PLZ!");
         return plan;
     }
 

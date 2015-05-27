@@ -86,10 +86,11 @@ module Interpreter {
         
         if(cmd.ent.quant === "the")
         	if(result.length > 1)
-    			throw new Interpreter.Error("Description is not unambiguous");
+    			throw new Interpreter.Error("Description is not unambiguous"+result);
 		
-    	if(result.length <= 0)
-    		throw new Interpreter.Error( "Can not find any objects matching the description");
+        if(result.length <= 0)
+            return [];
+                //throw new Interpreter.Error( "Can not find any objects matching the description");
         
         switch(cmd.cmd)
         {
@@ -98,7 +99,8 @@ module Interpreter {
                 var moveTo: string[] = interpretLoc(cmd.loc,world,wObjs);
                 //console.log("after interloc" , moveTo);
                 if(moveTo.length <= 1)
-                   throw new Interpreter.Error("No matching objects found");
+                   return [];
+                   //throw new Interpreter.Error("No matching objects found");
                 
                 if( cmd.ent.quant === "all")
                 {
@@ -113,7 +115,7 @@ module Interpreter {
                             for(var o in result)
                             {
                                 var l : Literal = {pol:true,rel:moveTo[0],args:[result[o],moveTo[grej]]};
-                                if(result[o] !== moveTo[grej] && validateL(l,world))
+                                if(result[o] !== moveTo[grej] && validateL(l,world) === 1)
                                     temp.push(l);
                                 grej = j; 
                             }
@@ -132,11 +134,45 @@ module Interpreter {
 	                    for(var i = 1; i < moveTo.length; i++)
 	                    {
 	                        var l : Literal = {pol:true,rel:moveTo[0],args:[result[r],moveTo[i]]};
-	                        if(result[r] !== moveTo[i] && validateL(l,world))
+	                        if(result[r] !== moveTo[i] && validateL(l,world) === 1)
 	                            res.push([l]);
 	                            
 	                    }
 	                }
+                }
+                console.log(res);
+                if(res.length === 0)
+                {
+                    if( cmd.ent.quant === "all")
+                    {
+                        //var ls : Literal [] = [];
+                        var temp : Literal [] = [];
+                        var grej : number = 0;
+                        for(var i = 1; i < moveTo.length; i++)
+                        {
+                            for(var j = 1; j < moveTo.length; j++)
+                            {
+                                grej = i;
+                                for(var o in result)
+                                {
+                                    var l : Literal = {pol:true,rel:moveTo[0],args:[result[o],moveTo[grej]]};
+                                    generateError(l,world);
+                                }
+                            }
+                            
+                        } 
+                    }
+                    else
+                    {	
+                        for(var r in result)
+                        {
+                            for(var i = 1; i < moveTo.length; i++)
+                            {
+                                var l : Literal = {pol:true,rel:moveTo[0],args:[result[r],moveTo[i]]};
+                                generateError(l,world);
+                            }
+                        }
+                    }
                 }
                 break;
             case "take":
@@ -376,10 +412,10 @@ module Interpreter {
                                 }
                                 //console.log(res);
                             }
-                            if(i != 0)
+                            /*if(i != 0)
                             {
                                 throw new Interpreter.Error("Scan did not end in the last column"); //return 0;
-                            }
+                            }*/
                         
                         }
                         //console.log("found ", object);
@@ -410,7 +446,7 @@ module Interpreter {
     }
     
     
-    function validateL(l : Literal, w: WorldState ) : boolean
+    function validateL(l : Literal, w: WorldState ) : number
     {
         var obj1 = w.objects[l.args[0]];
         var obj2 = w.objects[l.args[1]];
@@ -420,18 +456,25 @@ module Interpreter {
             if(obj1.form === "ball")
             {
                 if(obj2.form !== "box")
-                    return false; 
+                {
+                    //throw new Interpreter.Error("A ball cannot be places on a " +obj2.form);
+                    return -1; 
+                }
             }
             //Balls cannot support anything.
             if(obj2.form === "ball")
             {
-                return false;
+                //throw new Interpreter.Error("Balls are not allowed to support anything");
+                return -2;
             }
             //Small objects cannot support large objects.
             if(obj1.size === "large")
             {
                 if(obj2.size !== "large")
-                    return false; 
+                {
+                    //throw new Interpreter.Error("Small objects are not allowed to support large objects");
+                    return -3; 
+                }
             }
             //Boxes cannot contain pyramids, planks or boxes of the same size.
             if(obj2.form === "box")
@@ -439,20 +482,29 @@ module Interpreter {
                 if(obj1.form === "box" || obj1.form === "pyramid" || obj1.form === "plank" )
                 {
                     if(obj2.size == obj1.size)
-                        return false; 
+                    {
+                        //throw new Interpreter.Error("Boxes are not allowed to contain"+obj1.form+"of the same size");
+                        return -4; 
+                    }
                 }
             }
             //Small boxes cannot be supported by small bricks or pyramids.
             if(obj1.form === "box" && obj1.size === "small")
             {
                 if(obj2.size === "small"&&(obj2.form ==="brick"||obj2.form ==="pyramid"))
-                    return false; 
+                {
+                    //throw new Interpreter.Error("Small boxes are not allowed to support small" +obj1.form);
+                    return -5; 
+                }
             }
             //Large boxes cannot be supported by large pyramids.
             if(obj1.form === "box" && obj1.size === "large")
             {
                 if(obj2.size === "large"&& obj2.form ==="pyramid")
-                    return false; 
+                {
+                    //throw new Interpreter.Error("Large pyramids are not allowed to support large boxes");
+                    return -6; 
+                }
             }
         }
         else if(l.rel === "above" && l.args[1] !== "floor")
@@ -462,13 +514,15 @@ module Interpreter {
         	{
         		if(obj2.size === "small")
         		{
-        			return false;
+                    //throw new Interpreter.Error("Small objects are not allowed to support large objects");
+        			return -3;
     			}
         	}
         	//No object can be above a ball.
         	if(obj2.form === "ball")
         	{
-        		return false;
+                //throw new Interpreter.Error("Balls are not allowed to support anything");
+        		return -2;
         	}
         }
         else if(l.rel === "under")
@@ -476,24 +530,59 @@ module Interpreter {
         	//Objects cannot be under the ground.
         	if(l.args[1] === "floor")
         	{
-        		return false;
+                //throw new Interpreter.Error("You are not allowed to place anything below the ground");
+        		return -7;
         	}
         	//Small objects cannot support large objects.
         	if(obj1.size === "small")
         	{
         		if(obj2.size === "large")
         		{
-        			return false;
+                    //throw new Interpreter.Error("Small objects are not allowed to support large objects");
+        			return -3;
         		}
         	}
         	//No object can be above a ball.
         	if(obj1.form === "ball")
         	{
-        		return false;
+                //throw new Interpreter.Error("Balls are not allowed to support anything");
+        		return -2;
         	}
         }
         
-        return true;
+        return 1;
+    }
+    
+    function generateError(l : Literal, w: WorldState )
+    {
+        var e: number = validateL(l,w);
+        var obj1 = w.objects[l.args[0]];
+        var obj2 = w.objects[l.args[1]];
+        switch(e)
+        {
+            case -1: 
+                throw new Interpreter.Error("A ball cannot be places on a " +obj2.form);
+                break;
+            case -2:
+                throw new Interpreter.Error("Balls are not allowed to support anything");
+                break;
+            case -3:
+                throw new Interpreter.Error("Small objects are not allowed to support large objects");
+                break;
+            case -4:
+                throw new Interpreter.Error("Boxes are not allowed to contain"+obj1.form+"of the same size");
+                break;
+            case -5:
+                throw new Interpreter.Error("Small boxes are not allowed to support small" +obj1.form);
+                break;
+            case -6:
+                throw new Interpreter.Error("Large pyramids are not allowed to support large boxes");
+                break;
+            case -7:
+                throw new Interpreter.Error("You are not allowed to place anything below the ground");
+                break;
+            
+        }
     }
     
     function getRandomInt(max) {
