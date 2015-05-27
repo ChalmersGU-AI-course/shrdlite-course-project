@@ -24,6 +24,9 @@ class ObjectPosition {
                 public isFloor      : boolean){}
 }
 
+/**
+* Returns true iff object `a` has relation `rel` with `b` in the world `s`.
+*/
 function isObjectInLocation(s : State, a : string, b : string, rel : string) : boolean{
     switch(rel){
         case "holding":
@@ -35,8 +38,8 @@ function isObjectInLocation(s : State, a : string, b : string, rel : string) : b
         case "above":   // Also incorporates "under"
             return heightDifference(s, a, b) > 0;
 
-        case "under":   // Previously missed this rel
-            return heightDifference(s, a, b) < 0;
+        case "under":   // Inverse of "above"
+            return heightDifference(s, b, a) > 0;
 
         case "beside": // In the stack directly to left or right
             return Math.abs(stackDifference(s, a, b)) === 1;

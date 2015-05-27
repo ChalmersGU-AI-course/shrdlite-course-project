@@ -10,7 +10,6 @@ module Interpreter {
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
 
         var interpretations : Result[] = [];
-        console.log("DEBUG parse len: " + parses.length);
 
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
@@ -320,6 +319,8 @@ module Interpreter {
         var searchResult : SearchingResult = {
             status : "", targets : result, common : com, ambiguousObjs : []};
         if(goalObj.obj != null){
+
+            console.log("DEBUG FTO nonNull obj...")
             // Ie form, size etc are null.
             // Filter on location instead...
             //return resolveObject(state, goalObj.obj, goalObj.loc);
