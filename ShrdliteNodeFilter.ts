@@ -51,6 +51,8 @@ class ShrdliteNodeFilter implements GraphFilter {
                 break;
             case 'leftof':
                 for (var i = 1; i < node.state.stacks.length; ++i) {
+                    if (i % node.state.rowLength == 0)
+                        continue;
                     var leftObject: boolean = node.state.stacks[i - 1].indexOf(this.intptr.args[0]) != -1;
                     var rightObject: boolean = node.state.stacks[i].indexOf(this.intptr.args[1]) != -1;
                     if (leftObject && rightObject)
@@ -59,6 +61,8 @@ class ShrdliteNodeFilter implements GraphFilter {
                 break;
             case 'rightof':
                 for (var i = 1; i < node.state.stacks.length; ++i) {
+                    if (i % node.state.rowLength == 0)
+                        continue;
                     var leftObject: boolean = node.state.stacks[i - 1].indexOf(this.intptr.args[1]) != -1;
                     var rightObject: boolean = node.state.stacks[i].indexOf(this.intptr.args[0]) != -1;
                     if (leftObject && rightObject)
@@ -94,14 +98,20 @@ class ShrdliteNodeFilter implements GraphFilter {
                 break;
             case 'stack':
                 var max = 0;
+
                 for (var i = 0; i < node.state.stacks.length; ++i) {
                     var no = 0;
-                    for (var j = 0; j < this.intptr.args.length; ++j)
-                        if (node.state.stacks[i].indexOf(this.intptr.args[j]) != -1)
+                    for (var k = 0; k < node.state.stacks[i].length; ++k) {
+                        var obj = node.state.stacks[i][k];
+                        if (this.intptr.args.indexOf(obj) == -1)
+                            break;
+                        else
                             ++no;
+                    }
                     if (no > max)
                         max = no;
                 }
+
                 return this.intptr.args.length - max;
                 break;
             default:

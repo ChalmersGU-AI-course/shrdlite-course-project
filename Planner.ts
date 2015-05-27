@@ -46,9 +46,8 @@ module Planner {
     function planInterpretation(intprt: Interpreter.Literal[][], state: WorldState): Array<string> {
         //Add my amazing code here!
         var currentNode: ShrdliteNode = new ShrdliteNode(state);
+
         var targetFilter: ShrdliteNodeFilter = new ShrdliteNodeFilter(intprt[0][0]);
-
-
 
         //var targetNode: ShrdliteNode = new ShrdliteNode(intprt);
 
@@ -102,7 +101,6 @@ module Planner {
             }
 
             if (currentNode.state.holding == null) {
-                //Pick.. jaja.. hur fan ska vi veta om di pickar eller droppar. Kanske lika bra att göra edgena i string och köra med arm states? enklast att lösa med en bool antar jag så länge. DÅ slipper vi ett enormt stort statespace men frågan är om det är onödig optimering?
                 var obj = currentNode.state.stacks[pickstack][currentNode.state.stacks[pickstack].length - 1];
                 plan.push("Picking up the " + currentNode.state.objects[obj].form, "p");
             } else {
