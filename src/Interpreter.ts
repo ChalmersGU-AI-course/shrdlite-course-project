@@ -147,8 +147,11 @@ module Interpreter {
 						                             });
                                     // THIS IS THE ONLY DIFFERENT CASE, THE OTHERS CAN USE THE FOLLOWING
                                     break;
-                    default:            
-						             switch (cmd.ent.quant) {
+                    default:       
+                                     var quantif ="";
+                                     if(cmd.ent) quantif=cmd.ent.quant;
+                                     else quantif="the"     
+						             switch (quantif) {
 						                  case "all":var targetBrachesReviewed:Key[]=[];
 						                                  for(var i = 0 ; i<targetBraches.length; i ++){ targetBrachesReviewed=targetBrachesReviewed.concat(targetBraches[i]);}
 						                                  targetBraches=[targetBrachesReviewed];
