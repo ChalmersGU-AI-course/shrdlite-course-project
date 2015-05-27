@@ -41,7 +41,7 @@ The project implements a few different additions to the original project descrip
 
 ### Quantifiers
 We handle the quantifiers any, all and the. All can not be interpreted as any.
-This code starts around line 112 in Interpreter.ts in the function intepretEntity.
+The code is in Interpreter.ts in the function intepretEntity. The disjunctions is made in the function "buildAllDisjunctions"
 
 
 ### Verbose planner
@@ -57,7 +57,7 @@ We have implemented different search strategies to compare them to A\* and they 
 ## Our implementation of A\* and its heuristic 
 
 ## Strange or half-finished behaviour
-Our interpreter is stupid. It is a risk when we make permutations that we create to many before filtering depending on physical rules and their actual relation. This means that it would take to long to compute and we throw an error instead.
+Our interpreter is stupid. It is a risk when we make permutations that we create to many before filtering depending on physical rules and their actual relation. This means that it would take to long to compute and we throw an error instead. This can be seen around line 264 in Interpreter.ts
 
 The program have mainly been tested using the HTML and console versions, ANSI is supported but it haven't 
 been tested thoroughly.
