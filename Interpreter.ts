@@ -12,6 +12,7 @@ module Interpreter {
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             try {
+                intprt.intp = interpretCommand(intprt.prs, currentState);
                 interpretations.push(intprt);
             } catch (err) {
                 if (err instanceof Ambiguity) {

@@ -639,6 +639,10 @@ module Planner {
             var state_stack = [];
             var current;
             var message;
+            //TODO: Make the description of the action, i.e. "Moving the ball", appear 
+            // right before picking it up in the plan. This is probably not that easy; will
+            // require some sort of temp-plan which we add to the real plan when we finally
+            // drop the object
             for (var p = 1; p < path.length; p++){
                 // Always include the action
                 current = (<ActionState> path[p]);
@@ -648,6 +652,8 @@ module Planner {
                     if (state_stack.length == 0) {
                         // We haven't picked anything up since we last dropped anything;
                         // i.e. we held it when we started
+                        // TODO: refactor these messages. They should all be created here;
+                        // there is no need for an ActionState to have a message anymore.
                         plan.push(current.msg);
                     } else {
                         // We have picked something up during this plan, which means
