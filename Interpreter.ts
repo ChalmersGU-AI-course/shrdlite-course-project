@@ -495,15 +495,17 @@ module Interpreter {
         //case all quantifier on left hand side
         if(left && !right){
 
-            for(var i =0;i < literals.length - 1;i++){
-                if(literals[i].args[1] != literals[i+1].args[1]){
+            var sorted = literals.sort(sortHelperR);
+
+            for(var i =0;i < sorted.length - 1;i++){
+                if(sorted[i].args[1] != sorted[i+1].args[1]){
                     occurences++;
                 }
             }
-            var chunk = literals.length / occurences;
+            var chunk = sorted.length / occurences;
 
-            for (var i=0; i < literals.length; i+=chunk) {
-                var temp = literals.slice(i,i+chunk);
+            for (var i=0; i < sorted.length; i+=chunk) {
+                var temp = sorted.slice(i,i+chunk);
                 result.push(temp);
             }
         }
@@ -517,7 +519,7 @@ module Interpreter {
                 }
             }
 
-            var sorted = literals.sort(sortHelper);
+            var sorted = literals.sort(sortHelperL);
             for (var i=0; i < sorted.length; i+=occurences) {
                 var temp = sorted.slice(i,i+occurences);
                 result.push(temp);
@@ -533,12 +535,24 @@ module Interpreter {
         return result;
     }
 
-    function sortHelper(a : Literal, b :Literal){
+    function sortHelperL(a : Literal, b :Literal){
 
         if(a.args[0] < b.args[0]){
             return -1;
         }
         else if(a.args[0] > b.args[0]){
+            return 1;
+        }
+        return 0;
+
+    }
+
+    function sortHelperR(a : Literal, b :Literal){
+
+        if(a.args[1] < b.args[1]){
+            return -1;
+        }
+        else if(a.args[1] > b.args[1]){
             return 1;
         }
         return 0;
@@ -581,7 +595,7 @@ module Interpreter {
     function checkValidObject(objs : string[], rels : string[], state : WorldState) : boolean {
         var numberOfLoop = rels.length;
         //old version
-        console.log(objs);
+        // console.log(objs);
         // for(var i = 0;i< numberOfLoop; i++){
         //     if(!checkPredicate(objs[i],objs[i+1],rels[i],state)){
         //         return false;
