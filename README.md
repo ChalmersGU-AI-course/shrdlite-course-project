@@ -41,6 +41,8 @@ The project implements a few different additions to the original project descrip
 
 ### Quantifiers
 We handle the quantifiers any, all and the. All can not be interpreted as any.
+This code starts around line 112 in Interpreter.ts in the function intepretEntity.
+
 
 ### Verbose planner
 The planner writes what it is doing in each step and what object it is handling.
