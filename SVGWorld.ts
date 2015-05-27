@@ -183,6 +183,7 @@ class SVGWorld implements World {
                         if (callback) setTimeout(callback, this.promptPause * 1000);
                     }
                 } else {
+				/*
                     if (item && item[0] != "#") {
                         if (this.isSpeaking()) {
                             plan.unshift(item);
@@ -194,6 +195,7 @@ class SVGWorld implements World {
                     } else {
                         performNextAction();
                     }
+				*/
                 }
             } else {
                 if (callback) setTimeout(callback, this.promptPause * 1000);
