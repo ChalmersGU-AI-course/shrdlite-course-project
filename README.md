@@ -28,7 +28,8 @@ An example would be: "node shrdlite-offline small 0 star".
 
 Interesting example utterances
 ------------------------------------------
-
+In the complex world:
+"Put all tables beside all boxes"
 
 Implemented extension
 -----------------
@@ -43,7 +44,7 @@ Our implementation of A and its heuristic
 
 Strange or half-finished behaviour
 -----------------------
-Our interpreter is stupid. It is a risk that we create to many permutations before filtering depending on physical rules and their actual relation
+Our interpreter is stupid. It is a risk when we make permutations that we create to many before filtering depending on physical rules and their actual relation. This means that it would take to long to compute and we throw an error instead.
 
 The program have mainly been tested using the HTML and console versions, ANSI is supported but it haven't 
 been tested thoroughly.
