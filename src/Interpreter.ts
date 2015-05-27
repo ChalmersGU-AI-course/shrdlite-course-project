@@ -126,7 +126,7 @@ module Interpreter {
 						                              var sources = param[0], targets = param[1];
 						                              var literals : Literal[] = [];
 						                              var possibleMatches : Literal [][] =[]; //TODO ADDED
-						                              debugger;
+						                              
 						                              targets.forEach((target)=> {
 						                                  var possibleLits: Literal [] = []; //TODO ADDED
 						                                  sources.forEach((source) => {
@@ -137,9 +137,7 @@ module Interpreter {
 						                                      if(possibleLits.length) possibleMatches.push(possibleLits); //TODO ADDED
 						                                  });
 						                          
-						                                  if ( possibleMatches.length && 
-						                                       findMatch(possibleMatches[0],possibleMatches.slice(1),literals) &&
-						                                       literals.length ) intprt.push(literals); //should end up with valid list of literals if such exists;//TODO ADDED
+						                                  if ( possibleMatches.length) findMatch(possibleMatches[0],possibleMatches.slice(1),literals, intprt) ; //should end up with valid list of literals if such exists;//TODO ADDED
 						                                   //if (literals.length && checkList(literals).val) intprt.push(literals);//TODO REMOVE
 						                             });
                                     // THIS IS THE ONLY DIFFERENT CASE, THE OTHERS CAN USE THE FOLLOWING
@@ -151,6 +149,7 @@ module Interpreter {
 						                                  targetBraches=[targetBrachesReviewed];
 									  	  default: 
 											        product(sourcesBranches, targetBraches).forEach((param) => {
+											        debugger;
 						                              var sources = param[0], targets = param[1];
 						                              var literals : Literal[] = [];
 						                              var possibleMatches : Literal [][] =[]; //TODO ADDED
@@ -165,9 +164,7 @@ module Interpreter {
 						                                      if(possibleLits.length) possibleMatches.push(possibleLits); //TODO ADDED
 						                                  });
 						                          
-						                                  if ( possibleMatches.length && 
-						                                       findMatch(possibleMatches[0],possibleMatches.slice(1),literals) &&
-						                                       literals.length ) intprt.push(literals); //should end up with valid list of literals if such exists;//TODO ADDED
+						                                  if ( possibleMatches.length) findMatch(possibleMatches[0],possibleMatches.slice(1),literals, intprt); //should end up with valid list of literals if such exists;//TODO ADDED
 						                                   //if (literals.length && checkList(literals).val) intprt.push(literals);//TODO REMOVE
 						                             });
 										             break;                    
@@ -201,7 +198,7 @@ module Interpreter {
     // The recursion will test out every combination of literals that satisfy the existence of one literal per 
     // source; //TODO ADDED
     
-    function findMatch( currentSet: Literal[] , remainingSets: Literal[][] , lits: Literal[] ) : boolean
+    function findMatch( currentSet: Literal[] , remainingSets: Literal[][] , lits: Literal[], intrp: Literal[][] ) 
       {
         var testLiteral: Literal ;
         var flag=false;
@@ -211,13 +208,15 @@ module Interpreter {
             testLiteral=currentSet[j];
             lits.push(testLiteral);
     
-            if(remainingSets.length) flag = findMatch( remainingSets[0] , remainingSets.slice(1) , lits);
+            if(remainingSets.length) findMatch( remainingSets[0] , remainingSets.slice(1) , lits, intrp);
             else flag = checkList(lits).val;    
     
-            if(flag) return flag;
-            else  lits.pop();  //remove the literal that didn't work to try another
+            if(flag) intrp.push( lits.slice() ); 
+            
+            flag=false;
+            lits.pop();  //remove the literal to try another
           }
-        return flag;
+        return;
       }
     
     
