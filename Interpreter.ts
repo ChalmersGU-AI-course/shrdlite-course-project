@@ -457,40 +457,53 @@ module Interpreter {
         }
         else if(l.rel === "above" && l.args[1] !== "floor")
         {
-        	//Small objects cannot support large objects.
-        	if(obj1.size === "large")
-        	{
-        		if(obj2.size === "small")
-        		{
-        			return false;
-    			}
-        	}
-        	//No object can be above a ball.
-        	if(obj2.form === "ball")
-        	{
-        		return false;
-        	}
+          	//Small objects cannot support large objects.
+          	if(obj1.size === "large")
+          	{
+            		if(obj2.size === "small")
+            		{
+            			  return false;
+        			  }
+          	}
+          	//No object can be above a ball.
+          	if(obj2.form === "ball")
+          	{
+          		  return false;
+          	}
         }
         else if(l.rel === "under")
         {
-        	//Objects cannot be under the ground.
-        	if(l.args[1] === "floor")
-        	{
-        		return false;
-        	}
-        	//Small objects cannot support large objects.
-        	if(obj1.size === "small")
-        	{
-        		if(obj2.size === "large")
-        		{
-        			return false;
-        		}
-        	}
-        	//No object can be above a ball.
-        	if(obj1.form === "ball")
-        	{
-        		return false;
-        	}
+          	//Objects cannot be under the ground.
+          	if(l.args[1] === "floor")
+          	{
+          		  return false;
+          	}
+          	//Small objects cannot support large objects.
+          	if(obj1.size === "small")
+          	{
+            		if(obj2.size === "large")
+            		{
+            			return false;
+            		}
+          	}
+          	//No object can be above a ball.
+          	if(obj1.form === "ball")
+          	{
+          		  return false;
+          	}
+        }
+        else if(l.args[1] !== "floor")
+        {
+            //An object cant be left or right of the floor.
+            if(l.rel === "rightof" || l.rel === "leftof")
+            {
+                return false;
+            }
+            //An object cant be under or beside the floor.
+            if(l.rel === "under" || l.rel === "beside")
+            {
+                return false;
+            }
         }
         
         return true;
