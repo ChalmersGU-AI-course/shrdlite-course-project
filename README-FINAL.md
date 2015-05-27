@@ -118,11 +118,8 @@ verb methods.
   private references(obj: Parser.Object): string[]
 ```
 Searches world state to find target object/s and reference/s referred in command.
-
-Example reference:
- "take the ball beside the table inside the box to the left of the brick"
-
-In this case the table is the reference, and we want to figure out what table
+Example reference: "take the ball beside the table inside the box to the left of
+the brick". In this case the table is the reference, and we want to figure out what table
 the sentence refers to, in order to know what ball to take.
 
 ```
