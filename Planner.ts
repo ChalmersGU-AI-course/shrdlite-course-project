@@ -372,50 +372,45 @@ module Planner {
 		                break;
 		            case "inside":
 		            case "ontop":
-                        if((xStack[1] == 0 && y === "floor"))
-                        {
-                        //console.log("stuff");
-                        }
-                        else
-                        {
-                            //console.log(y);
-                            if(xStack[1] === -1)
-                            {
-                                totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1;
-                                totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
-                                //console.log("test1");
-                            }
-                            else if(yStack[1] === -1)
-                            {            
-                                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +1;
-                                totHue += +Math.abs(+yStack[0] - +xStack[0]) + +1;
-                                //console.log("test2");
-                            }
-                            else
-                            {
-                                if(xStack[0] === yStack[0])
-                                {
-                                    if(xStack[1]-yStack[1] > 1)
-                                    { 
-                                        totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +2;
-                                    }
-                                    else if(xStack[1]-yStack[1] < 1)
-                                    {
-                                        totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +2;
-                                    }
-                                }
-                                else
-                                {
-                                    //var c : number = yStack[1]++;
-                                    totHue += +curr.stacks[yStack[0]].length - (+yStack[1]+ +1); // weight for clearing the top of y
-                                    totHue += +curr.stacks[xStack[0]].length + Math.abs(+yStack[0] - +xStack[0]) - (+xStack[1]+ +1); //weight for moving x to the top/inside of y
-                                    
-                                }
-                            }
-                            //console.log(totHue);
-                        }
-                       
-                       
+		                if(xStack[1] === 0 && y === "floor")
+		                {
+		                    totHue += 0;
+		                }
+		                else
+		                {
+		                	if(xStack[1] === -1)
+		                	{
+		                		totHue += +3 * (+curr.stacks[yStack[0]].length - (+yStack[1] + +1)); // weight for clearing way to y
+		                		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1; // path to y's stack + putting down x
+		                	}
+		                	else if(yStack[1] === -1)
+		                	{
+                        		totHue += +3 * (+curr.stacks[xStack[0]].length - (+xStack[1] + +1)); // weight for clearing the top of x
+                        		totHue += +Math.abs(+yStack[0] - +xStack[0]); // path to the stack next to x's
+                                totHue += +3; // putting down y, then putting x ontop of y   		
+		                	}
+		                	else
+		                	{
+				                if(xStack[0] === yStack[0])
+				                {
+				                    if(xStack[1]-yStack[1] > 1)
+				                    { 
+				                        totHue += +3 * (+curr.stacks[yStack[0]].length - (+yStack[1] + +1)) + +3; // clearing the top of y then putting back x on y
+				                    }
+				                    else if(xStack[1]-yStack[1] < 1)
+				                    {
+				                        totHue += +3 * (+curr.stacks[xStack[0]].length - (+xStack[1] + +1)) + +3; // clearing the top of x then putting x on y
+				                    }
+				                }
+				                else
+				                {
+		                            totHue += +3 * (+curr.stacks[yStack[0]].length - (+yStack[1]+ +1)); // weight for clearing the top of y
+				                    totHue += +3 * (+curr.stacks[xStack[0]].length - (+xStack[1] + +1)); // weight for clearing the top of x
+		                            totHue += Math.abs(+yStack[0] - +xStack[0]) + +2; // weight for moving x to y
+				                }
+				            }
+			            }
+		                //console.log(totHue);
 		                break;
 		            case "under":
 		            	if(xStack[1] == -1)

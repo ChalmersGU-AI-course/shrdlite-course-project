@@ -549,6 +549,19 @@ module Interpreter {
         		return -2;
         	}
         }
+        else if(l.args[1] !== "floor")
+        {
+            //An object cant be left or right of the floor.
+            if(l.rel === "rightof" || l.rel === "leftof")
+            {
+                return -7; /// kolla felkod igen
+            }
+            //An object cant be under or beside the floor.
+            if(l.rel === "under" || l.rel === "beside")
+            {
+                return -7;
+            }
+        }
         
         return 1;
     }
