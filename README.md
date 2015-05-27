@@ -26,15 +26,21 @@ Our console version takes the following arguments:
 An example would be: "node shrdlite-offline small 0 star".
 
 ## Interesting example utterances
-In the complex world:
+###In the complex world:
 "Put all tables beside all boxes"
 
+In order:
+-"Put all yellow objects above a red object"
+-"Put all red objects above a yellow object"
+
+###In the medium world:
+"put the object that is left of a red box that is above a brick that is left of a pyramid that is left of a ball that is inside a box into a box that is above a brick that is left of a pyramid"
 
 ## Implemented extension
 The project implements a few different additions to the original project description.
 
 ### Quantifiers
-Quantifier handling of any, all and the. All can not be interpreted as any.
+We handle the quantifiers any, all and the. All can not be interpreted as any.
 
 ### Verbose planner
 The planner writes what it is doing in each step and what object it is handling.
