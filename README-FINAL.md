@@ -39,15 +39,15 @@ TODO
 
 ## Overview of the implementation
 
-*/Interpreter.ts*
+####*/Interpreter.ts*
 This file contains the code for the interepreter. The code is self-contained and
 the only references to other files are */World.ts* and */Parser.ts*.
 
 #### Types and Ideas in Interpreter
 
-`
+```
   function interpret(parses : Parser.Result[], currentState : WorldState) : Result[]
-`
+```
 This is the only exported function and it is also what returnes the final result
 back to the Planner to compute the path for how to resolve the command in the
 context of the world. It also handles all the exceptions that are thrown by the
@@ -76,9 +76,9 @@ implemented as methods. The reason for having a choosen this structure is to
 contain the state in one place, and the state is given during instantiation of
 the class.
 
-`
+```
   public derive(cmd: Parser.Command): Literal[][]
-`
+```
 The top-level public function defines the following interpretation depending on the
 verb action. The verb actions: "take", "put" and "move" only check preconditions, the
 real work is done by "the/any/all" and "literals" that these functions call.
@@ -114,9 +114,9 @@ Verb methods that handle the verb actions in derive.
 Quantifer methods for the objects. All the arguments have been extracted by the
 verb methods.
 
-`
+```
   private references(obj: Parser.Object): string[]
-`
+```
 Searches world state to find target object/s and reference/s referred in command.
 
 Example reference:
@@ -125,9 +125,9 @@ Example reference:
 In this case the table is the reference, and we want to figure out what table
 the sentence refers to, in order to know what ball to take.
 
-`
+```
   private findTarget(obj: Parser.Object, rel: string, ref: string, onFloor: boolean): string
-`
+```
 Finds target object in relation (leftof, rightof, under, etc..) to another object.
 
 ```
@@ -146,7 +146,7 @@ should be weed out only the bad literals. The former case is what we describe as
 `tolerant` and the latter not.
 
 
-*/Planner.ts*
+####*/Planner.ts*
 
 TODO
 
