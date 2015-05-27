@@ -10,7 +10,7 @@ For more information, see the course webpages:
 This is an implementation of the project developed by Team Dandelion (#2) consisting of:
  
  - Gabriel Andersson 
- - Gustav Mörtberg,
+ - Gustav Mörtberg
  - Jack Petterson
  - Niklas Wärvik 
 
@@ -32,12 +32,19 @@ Interesting example utterances
 
 Implemented extension
 -----------------
+Quantifier handling of any, all and the. All can not be interpreted as any.
 
-Our implementation of A* and its heuristic
+Verbose planner. The planner writes what it is doing in each step and what object it is handling.
+How much it says about an object depends on how many there exits. If there is only one ball it just says "the ball"
+
+
+Our implementation of A and its heuristic 
 --------------------------------------
 
 Strange or half-finished behaviour
 -----------------------
+Our interpreter is stupid. It is a risk that we create to many permutations before filtering depending on physical rules and their actual relation
+
 The program have mainly been tested using the HTML and console versions, ANSI is supported but it haven't 
 been tested thoroughly.
 
