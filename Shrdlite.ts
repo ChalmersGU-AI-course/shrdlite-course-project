@@ -2,6 +2,7 @@
 ///<reference path="Parser.ts"/>
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Planner.ts"/>
+///<reference path="Rules.ts"/>
 
 module Shrdlite {
 
@@ -37,7 +38,7 @@ module Shrdlite {
             var parses : Parser.Result[] = Parser.parse(utterance);
         } catch(err) {
             if (err instanceof Parser.Error) {
-                world.printError("Parsing error", err.message);
+                world.printError("Parsing error", err.message);       
                 return;
             } else {
                 throw err;
