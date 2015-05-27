@@ -42,6 +42,9 @@ module Planner {
     // private functions
 
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState, searchStrategy : string) : string[] {
+
+        // If this boolean is true, we will measure performance of several search strategies.
+        // This is costly and should only be set to true if it is intended.
         var testPerformance = false;
         if(testPerformance) {
             console.log("\n--- Performance comparison ---");
@@ -106,6 +109,13 @@ module Planner {
         }
     }
 
+    /**
+     * Creates an explanation of what the planner is performing in the provided move in
+     * context of the entire path.
+     * @param path          Path the move is performed within.
+     * @param moveIndex     Index of the move to be explained.
+     * @returns {string}    A string which explains what the move is doing, only handles "pick" and "drop" moves.
+     */
     function explainMove(path, moveIndex) : string {
         var move = path.elementAtIndex(moveIndex);
 
