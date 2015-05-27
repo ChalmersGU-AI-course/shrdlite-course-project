@@ -38,13 +38,17 @@ You can build the different targets in the project using the provided Makefile:
   Calls TypeScript and Closure for the given target,
   i.e., it compiles the file `shrdlite-X.ts` into `shrdlite-X.js`
 
+### Interesting example utterances
+
+xxx (how to run your project, and some interesting example utterances)
+
 Implemented features
 ------------------------------------------------
-xxx
+xxx (what extensions you have implemented, and where in the code they are)
 
 ### Improved heuristics
 
-xxx
+xxx (how your A* planning heuristics work, and where in the code we can find it)
 
 ### IDA\*
 
