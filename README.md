@@ -78,41 +78,39 @@ which have no valid interpretation no matter which pyramid you choose.
 **small world: `put the ball in the box`**  
 This produces an infinite loop, the ball is first resolved but then it never accepts a valid description of the box (if there are several to choose from).
 
-List of files
---------------
 
-BSD Makefile for automatically creating `.js` files from `.ts` files:
-- `Makefile`
-
-Main browser files:
-- `shrdlite.html`, `shrdlite.css`
-
-Wrapper files for the browser-based interfaces:
-- `shrdlite-html.ts`, `shrdlite-ajax.ts`
-
-Wrapper files for the Node.JS-based interfaces:
-- `shrdlite-ansi.ts`, `shrdlite-offline.ts`
+Description of source files
+---------------------------
 
 Main TypeScript module:
-- `Shrdlite.ts`
 
-TypeScript interfaces and classes for the different implementations of the blocks world:
-- `World.ts`, `SVGWorld.ts`, `TextWorld.ts`, `ANSIWorld.ts`, `ExampleWorlds.ts`
+- `Shrdlite.ts`  
+  Some state has been added here to help solve the ambiguity problem.
 
-TypeScript modules for parsing, interpretation and planning:
-- `Parser.ts`, `Interpreter.ts`, `Planner.ts`
+Interpretation module:
 
-Grammar files used by the Nearley chartparser:
-- `grammar.js`, `grammar.ne`
+- `Interpreter.ts`  
+  Attempts at interpreting what the user really means, which includes resolving ambiguities. This module either outputs a non-empty list of interpretations that are valid in the current world, or an error that no interpretation was valid.
 
-Example CGI script that is called by the Ajax web interface:
-- `cgi-bin/shrdlite_cgi.py`
+Generic search modules:
 
-TypeScript declaration files for non-TypeScript libraries:
-- `lib/jquery.d.ts`, `lib/node.d.ts`
+- `Astar.ts`  
+  Contains interfaces for representations of heuristic search as well as the A\* algorithm.
 
-External Javascript libraries:
-- `lib/jquery-1.11.0.min.js`, `lib/nearley.js`
+- `IDAstar.ts`  
+  Reuses the representations found in `Astar.ts` to implement the IDA\* algorithm.
 
-Assorted documentation (currently only the TypeScript language definition):
-- `doc`
+Modules for planning:
+
+- `Planner.ts`  
+  Calculates a plan for each of the valid interpretations. Converts the interpretation into a goal function that is passed to the chosen search algorithm together with a cost function and a neighbour function.
+
+- `Heuristics.ts`  
+  Computes a good heuristic function for a certain interpretation, which is passed by the Planner to the search algorithm.
+
+- `Position.ts`  
+  Contains interfaces and functions that are useful in both the Planner and the Heuristics.
+
+Basarat's collections library for Typescript:
+
+- `lib/collections.ts`
