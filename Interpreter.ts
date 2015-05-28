@@ -118,10 +118,10 @@ module Interpreter {
     function interpretEntity(ent:Parser.Entity, state:WorldState):string[][] {
         var objs:string[][] = interpretObject(ent.obj, state);
         if (ent.quant === "the") {
-            if (objs.length === 1) {
-                return objs;
-            }   
-            throw new Interpreter.Error("There are more than one object that matches that description.");
+            if(objs.length>1){
+            	throw new Interpreter.Error("There are more than one object that matches that description.");
+            }    
+            return objs;
         }
         if (ent.quant === "all") {
             var disj:string[][] = [Array.prototype.concat.apply([], objs)];
@@ -181,9 +181,7 @@ module Interpreter {
         var rules:objLocPair[][] = buildAllDisjunctions(futureState, locs.rel, objs, locs.objs, state);
         if (rules.length === 0) {
             return finalSet;
-        }
-        console.log("rules : " + rules.length);
-        
+        }        
         //remove duplicates
         var noDups : objLocPair[][] = rules.filter(conj => !containsDuplicateObjLocPair(conj));  
         if (noDups.length === 0) {
@@ -195,7 +193,6 @@ module Interpreter {
         if (filtered.length === 0) {
             return finalSet;
         }
-        console.log("filtered : " + filtered.length);
         //remove duplicates between conjunctive rules
         filtered.map(row => {
             if (!objLocPairListListContains(finalSet, row)) {
@@ -219,9 +216,15 @@ module Interpreter {
         //Transpose depending on relation of objects and locations
         if(locs.length === 1 && locs[0][0] !== "floor"){
         	if(rel === "ontop" || rel === "inside"){
+	    		if(locs[0].length>8){
+	    			throw new Interpreter.Error("The interpreter is too stupid to handle the permutations");
+	    		}
 	    		objs = utils.transpose(objs); 
         	}
     	} else {
+    		if(objs[0].length>8){
+    			throw new Interpreter.Error("The interpreter is too stupid to handle the permutations");
+    		}
 	    	locs = utils.transpose(locs);
     	}
 
@@ -232,9 +235,12 @@ module Interpreter {
             if (futureState) {
                 fx = x.filter(o => y.some(l => state.validPlacement(o, l, rel)));
                 fy = y.filter(l => x.some(o => state.validPlacement(o, l, rel)));
+            	console.log("obj: ", fx, " loc: ",fy, " Lengths: "+ fx.length, ", ",fy.length);
             } else {
+
                 fx = x.filter(o => y.some(l => state.relationExists(o, l, rel)));
                 fy = y.filter(l => x.some(o => state.relationExists(o, l, rel)));
+                console.log("obj: ", fx, " loc: ",fy, " Lengths: "+ fx.length, ", ",fy.length);
             }
             if (fx.length !== 0 && fy.length !== 0) {
             	//Create the conjunctions
@@ -260,19 +266,18 @@ module Interpreter {
         else {
             var p1:string[][] = [];
             var p2:string[][] = [];
-            if(objs.length > 9){
-                //this will be a lot of permutations
-                //n = 10 : 10*9*8*...*2*1 different arrays
-  				throw new Interpreter.Error("You should be more specific. I'm too stupid to handle the object permutations.");
-        	} else{
-            	p1 = utils.permute(objs, [], []);
+            if(objs.length > 8){
+                //n = 9 : 9*8*...*2*1 different arrays
+                //this will be a lot of and therefor permutation space is reduced.
+  				objs = objs.slice(0,8);
         	}
-        	if(locs.length > 9){
-        		//this will be a lot of permutations
-  				throw new Interpreter.Error("You should be more specific. I'm too stupid to handle the location permutations.");
-        	} else{
-            	p2 = utils.permute(locs, [], []);
-        	}
+        	p1 = utils.permute(objs, [], []);        	
+        	if(locs.length > 8){
+        		//this will be a lot of and therefor permutation space is reduced.
+  				locs = locs.slice(0,8);
+  			}
+  			p2 = utils.permute(locs, [], []);
+
             p1.map(obj =>
                 p2.map(loc => {
                     var row:objLocPair[] = [];

@@ -67,6 +67,6 @@ As it should, for A\* the comparison function passed to the priority queue compa
 All of our heuristics are based on the question "What is the minimum amount of work needed to achieve the goals?". For each new state added to the frontier, we calculate the heuristic for each of the conjunctive goals and choose the one which has the lowest combined heuristic.
 
 ## Strange or half-finished behaviour
-Our interpreter is stupid. It is a risk when we make permutations that we create too many before filtering some out, depending on physical rules and the actual relation. This means that it would take too long to compute, so we throw an error instead. This can be seen around line 264 in Interpreter.ts
+Our interpreter is stupid. There is a risk that when the permutations are created the space usage will be too great. Therefor we added two cases where we throw an error in buildAllDisjunctions(..) around row 220 (Interpreter.ts). There is also a slimdown of the permutation space in combineConj(..) where the "any rules" are slimmed down to a greatly smaller number. This is found around row 270 (Interpreter.ts). 
 
 The program have mainly been tested using the HTML and console versions, ANSI is supported but it hasn't been tested thoroughly.
