@@ -77,14 +77,10 @@ module Shrdlite {
         }
 
         world.printDebugInfo("Found " + plans.length + " plans");
-        /*plans.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
-        });*/
-        
-        
         
         var finalPlan : string[] = [];
         var shortestIndex = 0;
+        // Selecting the shortest plan
         if(plans.length>1){
             world.printDebugInfo("\nI am a bit lazy and I only perform the easiest result.");
             finalPlan.push("\nI am a bit lazy and I only perform the easiest result.");
@@ -98,14 +94,13 @@ module Shrdlite {
             }
             world.printDebugInfo("\nThe shortest option consists of "+length+" moves.");
         }
+        //Constructing a string array to pass on. 
         var plan : Planner.Step[] = plans[shortestIndex].plan;
         finalPlan.push("\n The plan consists of "+(plan.length-1)+" moves.");
         plan.map(s=> {
             finalPlan.push(s.plan);
             finalPlan.push(s.explanation);
         });
-        //var plan : string[] = plans[0].plan;
-        //world.printDebugInfo("\nFinal plan: " + plan.join(", "));
         return finalPlan;
     }
 

@@ -97,16 +97,13 @@ module Planner {
 
         if(solution !== null ) {
             var path = solution.getPath();
-
+            //Create a Step array with explanations
             for(var moveIx = 0; moveIx < path.size(); moveIx++) {
                 var currentMove = path.elementAtIndex(moveIx);
                 var move : Step = { "plan":currentMove.getCommand(), 
                                     "explanation":explainMove(path, moveIx)};
                 moves.push(move);
-//                moves.push({}explainMove(path, moveIx));
- //               moves.push(currentMove.getCommand());
             }
-
             return moves;
         } else {
             throw new Planner.Error("Could not plan a path that fulfills the goals.")
