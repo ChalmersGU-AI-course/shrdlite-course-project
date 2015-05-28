@@ -48,40 +48,28 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+    //Main function for interpreting a command
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
     
         var objs : string[] = Array.prototype.concat.apply([], state.stacks );
         if(state.holding !== null)
             objs.push(state.holding);
-        //Draft
-        var interp : Literal [][];
-        //console.log(+23);
-        //console.log(cmd.ent.obj);
         
-        //traverseObj(cmd,state,objs,compareWithWorld);
-        //console.log(state);
-        //console.log("------------------------------------");
-        var result :Literal[][] = interpretCmd(cmd,state,objs,compareWithWorld);
+        var interp : Literal [][];
+        var result :Literal[][] = interpretCmd(cmd,state,objs);
 		//console.log(result);
 		if(result.length <= 0)
 		{
 			return null;
 		}
-        /*
-        var a = objs[getRandomInt(objs.length)];
-        var b = objs[getRandomInt(objs.length)];
-        var intprt : Literal[][] = [[
-            {pol: true, rel: "ontop", args: [a, "floor"]},
-            {pol: true, rel: "holding", args: [b]}
-        ]];
-        */
-        return result;//intprt;
+        
+        return result;
     }
     
-    function interpretCmd(cmd : Parser.Command, world : WorldState, wObjs : string[] , func : (obj: Parser.Object, world : WorldState, wObjs : string[]) => any ): Literal[][]
+    //Sub function to interpret a command dependant on the world state
+    function interpretCmd(cmd : Parser.Command, world : WorldState, wObjs : string[]): Literal[][]
     {
         var res : Literal[][] = [];
-        //var lit :Literal = {pol:true,rel : cmd.loc.rel}
         var result : string[] = interpretEnt(cmd.ent,world,wObjs);
         
         if(cmd.ent.quant === "the")
@@ -97,14 +85,12 @@ module Interpreter {
             case "move":
                 
                 var moveTo: string[] = interpretLoc(cmd.loc,world,wObjs);
-                //console.log("after interloc" , moveTo);
                 if(moveTo.length <= 1)
                    return [];
                    //throw new Interpreter.Error("No matching objects found");
                 
                 if( cmd.ent.quant === "all")
                 {
-                    //var ls : Literal [] = [];
                     var temp : Literal [] = [];
                     var grej : number = 0;
                     for(var i = 1; i < moveTo.length; i++)
@@ -123,9 +109,7 @@ module Interpreter {
                                 res.push(temp);
                             temp = [];
                         }
-                        
                     }
-                    console.log("el done"); 
                 }
                 else
                 {	
@@ -140,12 +124,11 @@ module Interpreter {
 	                    }
 	                }
                 }
-                console.log(res);
+
                 if(res.length === 0)
                 {
                     if( cmd.ent.quant === "all")
                     {
-                        //var ls : Literal [] = [];
                         var temp : Literal [] = [];
                         var grej : number = 0;
                         for(var i = 1; i < moveTo.length; i++)
@@ -182,12 +165,10 @@ module Interpreter {
                     res.push([{pol:true,rel:"holding",args:[result[0]]}])
                 break;
         }
-        //console.log("End of travCoom ", res);
-        //console.log(res);
         return res;
     }
     
-    
+    //Helperfunction to prune list that are invalid
     function pruningLits(lits : Literal [][]) : Literal [][]
     {
         var temp : Literal [][] = [];
@@ -199,6 +180,7 @@ module Interpreter {
         return temp;
     }
     
+    //Helper function to prune invalid litarals
     function isValidConfig(lits : Literal []) : boolean
     {
         var temp : boolean = true;
@@ -211,7 +193,7 @@ module Interpreter {
         }
         return temp;
     }
-    
+    // Sub function to interpret parsed entities
     function interpretEnt(ent : Parser.Entity, world : WorldState, wObjs : string[]) : string[]
     {
         var res: string[] = [];
@@ -227,7 +209,7 @@ module Interpreter {
         }
         return res; 
     }
-    
+    // Subfunction to interpret parsed locations
     function interpretLoc(loc: Parser.Location, world : WorldState, wObjs : string[]): string []
     {
         var res : string[] = [];
@@ -244,48 +226,13 @@ module Interpreter {
         return res;
     }
     
-    
-    function traverseEnt(ent : Parser.Entity, world : WorldState, wObjs : string[] , func : (obj: Parser.Object, world : WorldState, wObjs : string[]) => any ): string[]
-    {
-        var res : string[] = [];
-        //console.log("---------------------");
-        //console.log(ent);
-        //console.log("---------------------");
-        
-        if (typeof(ent.obj.obj) !== "undefined")
-        {
-            //console.log("found an object object");
-            //console.log(ent.obj.obj);
-            
-            if(typeof(ent.obj.loc) !== "undefined")
-            {
-                res.push(ent.obj.loc.rel)
-            }
-            res.push( func(ent.obj.obj,world,wObjs));
-            
-            //
-            res = res.concat(traverseEnt(ent.obj.loc.ent,world,wObjs, func));
-            
-            console.log("asdasdasd " ,res);
-        }
-        else if (typeof(ent.obj) !== "undefined")
-        {
-            //console.log("found an object");
-            //console.log(ent.obj);
-            res.push(func(ent.obj,world,wObjs));
-        }
-        
-        console.log("End of travEnt ", res);
-        return res;
-    }
-    
+    // Function to compare parsed objects with the world state to get coresponding objects in the world
     function compareWithWorld(inobj : Parser.Object, state : WorldState, wObjs : string[]) : string[]
     {
-        //console.log("searching for ", obj);
+    
         var obj : Parser.Object;
         var res : string[] =[];
         var otherObjs : string[];
-        //console.log("in cwW", inobj)
         if(inobj.form == 'floor')
         {
 			for(var i in state.stacks)
@@ -311,11 +258,10 @@ module Interpreter {
         }
         wObjs.forEach((object) => {
             var temp : ObjectDefinition = state.objects[object];
-            //console.log(object);
             if(temp.form == obj.form || obj.form == null || obj.form == 'anyform')
-            {   //console.log(temp.size + "    " + cmd.obj.size);
+            {
                 if(temp.size == obj.size || obj.size == null || temp.size == obj.size)
-                {//console.log(temp.color + "    " + cmd.obj.color);
+                {
                     if(temp.color == obj.color || obj.color == null )
                     {
                         if(otherObjs == null)
@@ -324,7 +270,6 @@ module Interpreter {
                         }
                         else
                         {
-                            console.log("inside the loop ", object, "otherObjs are", otherObjs);
                             for(var i in state.stacks)
                             {
                                 for(var j in state.stacks[i])
@@ -344,7 +289,6 @@ module Interpreter {
                                                 }
                                                 break;
                                             case "leftof":
-                                                console.log("asdasdasdasdasd",m, i,state.stacks.length);
                                                 for(var m : number = +i+ +1; m < state.stacks.length; m++)
                                                 {
                                                     console.log("suff")
@@ -361,10 +305,8 @@ module Interpreter {
                                                 });
                                                 break;
                                             case "ontop":
-												//console.log(otherObjs);
 												if(otherObjs[1] == 'floor')
 												{
-													//console.log(j);
 													if(j-1 < 0 )
 													{
 														res.push(object);
@@ -373,7 +315,6 @@ module Interpreter {
                                                 else
 												{
 												otherObjs.forEach((obj2) =>{
-													//console.log(obj2);
                                                     if(state.stacks[i][j+1] == obj2)
                                                     res.push(object);
                                                 });
@@ -410,23 +351,16 @@ module Interpreter {
                                         }
                                     }
                                 }
-                                //console.log(res);
                             }
-                            /*if(i != 0)
-                            {
-                                throw new Interpreter.Error("Scan did not end in the last column"); //return 0;
-                            }*/
-                        
                         }
-                        //console.log("found ", object);
                         return res;
                     }
                 }
             }
         });
-        //console.log("from func " +res);
         return res
     }
+    // Helper Function to validate that an object is in a column of the world state
     function isInColumn(obj: string[], col: number, state:WorldState) : boolean
     {
         var result : boolean = false;
@@ -445,7 +379,7 @@ module Interpreter {
         return result; 
     }
     
-    
+    // Compares a literal with the fysical rules of the world returns error numbers
     function validateL(l : Literal, w: WorldState ) : number
     {
         var obj1 = w.objects[l.args[0]];
@@ -566,6 +500,7 @@ module Interpreter {
         return 1;
     }
     
+    // Error function manager that generate errors dependant on the literal and world state
     function generateError(l : Literal, w: WorldState )
     {
         var e: number = validateL(l,w);

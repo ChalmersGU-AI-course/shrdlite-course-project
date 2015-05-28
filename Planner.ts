@@ -319,10 +319,11 @@ module Planner {
                     {
                         smallestStack = Math.min(smallestStack,curr.stacks[s].length);
                         if(smallestStack == curr.stacks[s].length)
-                            temp = s
+                            temp = (s)
                     }
-                    yStack = [s,smallestStack];
+                    yStack = [s,-1];
                 }
+                totHue += Math.min(Math.abs(curr.arm - xStack[0]),Math.abs(curr.arm - yStack[0]))
 		        //console.log(xStack,yStack);
 		        switch(rel)
 		        {
@@ -425,7 +426,7 @@ module Planner {
 		            	{
 				            if(xStack[0] != yStack[0])
 				            {
-				                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + (+yStack[0] - +xStack[0]);
+				                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + Math.abs(+yStack[0] - +xStack[0]);
 				            }
 				            else if(xStack[1] > yStack[1])
 				            {
@@ -464,7 +465,7 @@ module Planner {
 		            	{
 				            if(xStack[0] != yStack[0])
 				            {
-				                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + (+yStack[0] - +xStack[0]);
+				                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + Math.abs(+yStack[0] - +xStack[0]);
 				            }
 				            else if(xStack[1] < yStack[1])
 				            {
@@ -483,11 +484,14 @@ module Planner {
 		        }
 		    }
             if(totHue < 0)
-                console.log(totHue);
+            {
+                console.log(curr.stacks);
+            }
+                //console.log(totHue);
             biggestTot = Math.min(biggestTot,totHue);
             totHue = 0;
 	    }
-        //console.log(biggestTot);
+        console.log("count");
         return biggestTot;
     }
     
