@@ -69,11 +69,15 @@ Iterative Deepening A\* was also implemented. It does take longer time but still
 
 ### Clarification questions on ambiguity
 
-There are two types of ambiguity. The first one is with the `the` quantifier, for example `grasp the object`. In this case, the system prints a list of possible candidates to choose from. The user can then add more information such as `red`, if the new information is not sufficient he can provide more information such as `small` or `ball`.
+There are two types of ambiguity. The first one is with the `the` quantifier, for example `grasp the object`. If there are several objects that could fit with the object description, the system enters a state where it asks the user to specify which object is meant. In this case, a list of possible candidates to choose from is printed. The user can then add more information such as `red`, if the new information is not sufficient he can provide more information such as `small` or `ball`. When sufficient information has been gathered, the system performs the action.
+
+xxx (write something on handling of misspellings, and escaping the ambiguity loop by writing a new command)
 
 The other type of ambiguity comes from a shift/reduce conflict in the grammar. The typical example would be `put the small ball in a box on the floor`. The box in this sentence can either be parsed as the current location of the ball or as the target location for the ball. Our system investigates both possibilities and rules out any that is inconsistent with the current state of the world. If both have valid interpretations, the system calculates both and picks the shortest one.
 
 xxx (where in the code is the ambiguity stuff?)
+
+The implementation of the ambiguity handling is a bit spread out, but is found mainly in `Interpreter.ts` and `Shrdlite.ts`.  
 
 ### Known issues/bugs
 
@@ -92,7 +96,7 @@ which has a valid interpretation, instead of
 put the pyramid under a table (that is on the large table)
 ```
 
-which have no valid interpretation no matter which pyramid you choose.
+which has no valid interpretation no matter which pyramid you choose.
 
 **small world: `put the ball in the box`**  
 This produces an infinite loop, the ball is first resolved but then it never accepts a valid description of the box (if there are several to choose from).
@@ -109,7 +113,7 @@ Main TypeScript module:
 Interpretation module:
 
 - `Interpreter.ts`  
-  Attempts at interpreting what the user really means, which includes resolving ambiguities. This module either outputs a non-empty list of interpretations that are valid in the current world, or an error that no interpretation was valid.
+  Attempts to interpret what the user really means, which includes resolving ambiguities. This module either outputs a non-empty list of interpretations that are valid in the current world, or an error that no interpretation was valid.
 
 Generic search modules:
 
