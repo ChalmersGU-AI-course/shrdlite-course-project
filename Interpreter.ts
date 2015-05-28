@@ -71,17 +71,6 @@ module Interpreter {
         var res : Literal[][] = [];
         var result : string[] = interpretEnt(cmd.ent,world,wObjs);
         
-        if(cmd.ent.quant === "the")
-        	if(result.length > 1)
-            {
-                var map = Planner.uniqueAttributes(world);
-                for(var r in result)
-                {
-                    result[r] = map[result[r]].slice().reverse().join(" ");
-                }
-                
-                throw new Interpreter.Error("Description is ambiguous there is: a " +result.join(" and a "));
-            }
 		
         if(result.length <= 0)
             return [];
