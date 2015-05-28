@@ -58,7 +58,9 @@ If we want to move object `a` to the location `b`, the `arm cost` is the arm dis
 
 The `above cost` looks at how many objects are above the wanted target or location. For each object that is blocking the way, we add a cost of 4: `p, l, d, r`. This is admissible since it ignores the fact that not all objects can support any other object and it will at least require these 4 actions to move the object somewhere else.
 
-The `drop cost` is zero if the arm is not holding anything. If we intend to drop the object at the current stack, the drop cost is 1 for simply dropping it. If we want to drop this object at another location, we add a cost of 2: `l, d`. Before we had a cost of 3 here: `l, d, r`, but it turns out that a cost of 2 gives between 15-30% fewer iterations for many cases.
+The `drop cost` is zero if the arm is not holding anything. If we intend to drop the object at the current stack, the drop cost is 1 for simply dropping it. In the case that we want to drop the thing somewhere else and come back we give a cost of 3: `l, d, r`. There is also a case when we want to drop it somewhere else and not come back, in which case we give a cost of 2: `l, d`.
+
+Note that when we want to drop an object at the current stack and the object is neither `a` or `b`, the cost of moving the arm back to the right position is counted in the `arm cost`; that's why we only return 1 instead of 2 for that case.
 
 The implementations of all heuristics can be found in the file `Heuristic.ts`.
 
