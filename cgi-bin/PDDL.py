@@ -9,6 +9,7 @@ Examples:
 
 """
 
+import helpers
 
 def satisfy_pred(pred, stacks, holding):
     """check if a PDDL predicate is satisfied
@@ -29,7 +30,7 @@ def satisfy_ontop(a, b, stacks, holding):
     """a ontop of b: some stack: bot, ..., b, a, ..., top"""
     (astack, apos) = find_obj(a, stacks)
     (bstack, bpos) = find_obj(b, stacks)
-    if not astack or not bstack:
+    if astack == None or bstack == None:
         return False
     return astack == bstack and apos - bpos == 1
 
@@ -73,6 +74,7 @@ def find_obj(o, stacks):
     """return (stack, position), (0,0) = bottom of leftmost stack"""
     for stackno, stack in enumerate(stacks):
         for pos, obj in enumerate(stack):
+            helpers.log(o)
             if o == obj:
                 return (stackno, pos)
     return (None, None)
