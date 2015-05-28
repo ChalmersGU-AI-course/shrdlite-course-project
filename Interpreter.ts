@@ -230,7 +230,7 @@ module Interpreter {
         
         if (typeof(loc.ent) !== "undefined")
         {
-          if(loc.quant === "all")
+          if(loc.ent.quant === "all")
          {
             throw new Interpreter.Error("all quantifiers as destinations doesn't make sense!"); 
          } 

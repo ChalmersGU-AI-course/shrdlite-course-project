@@ -9,7 +9,7 @@ for the Node.js version
 
 ###Quantifiers :
 * the:  Returns errors when the object is not distinguishable given the explanation
-* all:  Specifies that all objects of the specified type should be placed according to the given scenario.
+* all:  Specifies that all objects of the specified type should be placed according to the clouse, but if the all countifier is in the second clous an error is raised as something cant exsist in all something.
 * any: Selects any interpretation concerning the object 
 
 This is realised in the interpreter 
