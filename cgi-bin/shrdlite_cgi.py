@@ -2,29 +2,25 @@
 
 import interpreter
 
+import helpers
+
+
 def main(state):
     try:
         intprt = interpreter.interpret(**state)
     except interpreter.InterpreterException as err:
         return {'plan': [str(err)]}
 
-    writeToLog(str(intprt))
-    writeToLog(str(state['stacks']))
+    helpers.log(str(intprt))
+    helpers.log(str(state['stacks']))
 
-    plan, sizeOfGraph = planner(intprt, **state)
+    plan, heur = planner(intprt, **state)
 
     return {'int': intprt,
             'plan': plan,
-            'sizeOfGraph': sizeOfGraph
-    }
+            'nodes_expanded': [heur]
+        }
 
-
-def writeToLog(string):
-    """
-    Since we cannot print to standard output, this function prints to a test log instead
-    """
-    with open('log', 'a') as f:
-        f.write("\n----\n" + string)
 
 
 def planner(intprt, stacks, holding, arm, objects, utterance, parses):
@@ -33,20 +29,17 @@ def planner(intprt, stacks, holding, arm, objects, utterance, parses):
     """
 
     import simple_planner
-    import AStar.algorithm, heuristic
+    import AStar.algorithm
+    from heuristic import heuristic, no_heuristic
 
     came_from, cost_so_far, actions_so_far, goal = \
       AStar.algorithm.a_star_search(
-            simple_planner.getAction,                       # successor method
-            (intprt, stacks, holding, arm, objects),        # initial state & world
-            simple_planner.goalWrapper,                     # goal test method
-            heuristic.heuristic)                            # heuristic function
+          simple_planner.getAction,                       # successor method
+          (intprt, stacks, holding, arm, objects),        # initial state & world
+          simple_planner.goalWrapper,                     # goal test method
+          heuristic)
 
     return AStar.algorithm.getPlan(goal, came_from, actions_so_far,objects), len(came_from)
-
-# for testing purposes
-def no_heuristic(*_): # discard all arguments
-    return 0
 
 if __name__ == '__main__':
     import cgi

@@ -43,7 +43,7 @@ def a_star_search(getActions, startState, isGoal, heuristic):
             if _getKey(nextState) not in cost_so_far or new_cost < cost_so_far[_getKey(nextState)]:
                 cost_so_far[_getKey(nextState)] = new_cost
                 actions_so_far[_getKey(nextState)] = cmd
-                priority = new_cost + heuristic(*nextState) #Priority is new cost and expected cost
+                priority = new_cost + heuristic(isGoal, *nextState) #Priority is new cost and expected cost
                 frontier.put(nextState, priority)
                 came_from[_getKey(nextState)] = _getKey(current)
 

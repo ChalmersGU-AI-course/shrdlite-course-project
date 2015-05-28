@@ -24,6 +24,7 @@ def interpret(stacks, holding, objects, parses, **_): # fancy way of ignoring al
         try:
             goal = interp_cmd(parse['prs'], objects, stacks, holding)
             # filter out impossible disj. gaols
+            log(goal)
             ok_goal = [g for g in goal if physics.check_physics_all(g, objects)]
 
             if len(ok_goal) < 1:
@@ -100,7 +101,7 @@ def interp_cmd_move(ent, loc, objects, stacks, holding):
     if what_quant == 'all':
         if where_quant == 'all':
             # all balls to the left of all tables
-            return [[(rel, a, b) for a in what for b in where]]
+            return [[(rel, a, b)] for a in what for b in where]
         else:
             # all balls to the left of any table
             alll = [[(rel, a, b) for b in where] for a in what]

@@ -31,3 +31,10 @@ def stringify_descr(descr):
             out += descr[prop] + ' '
 
     return out + descr['form']
+
+def log(obj):
+    """
+    Since we cannot print to standard output, this function prints to a test log instead
+    """
+    with open('log', 'a') as f:
+        f.write("\n----\n" + str(obj))

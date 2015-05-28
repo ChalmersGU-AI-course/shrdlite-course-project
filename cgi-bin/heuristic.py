@@ -1,5 +1,7 @@
-from simple_planner import COST_MOVE, COST_PICK 
+from simple_planner import COST_MOVE, COST_PICK
 import PDDL
+
+import helpers
 
 PLACE_IN_STACK_PENALTY = \
     COST_PICK * 2 + COST_MOVE # cost of picking up + moving once + putting down
@@ -7,76 +9,68 @@ CLOSE_TO_EDGE_PENALTY = \
     COST_PICK * 2 + COST_MOVE # cost of picking up + moving once + putting down
 NOT_HOLDING_PENALTY = COST_PICK # cost of picking up
 
+def no_heuristic(*_): # discard all arguments
+    return 0
 
-def heuristic(intprt, stacks, holding, arm, objects):
+def heuristic(isgoal, intprt, stacks, holding, arm, objects):
     """    Passed as a parameter to A*, The heuristicfunciton for this problem.
     """
-    scoreList = []
-    for disjunctive_goal in intprt:
-        addedScore = 0
 
-        for conjunctive_goal in disjunctive_goal:
-            score = 0
-            (pred, obj1, obj2) = conjunctive_goal
-            # if we are to put something ontop or inside something else,
-            # we give it a better score if either of the objects are higher up in the stacks
-            if pred in ('ontop','inside'):
-                score += _stackScore(obj1, stacks)
-                score += _stackScore(obj2, stacks)
+    if isgoal(intprt, stacks, holding, arm, objects):
+        return 0
 
-                # adds penalty if we are not holding obj1. 
-                # Is stupid?? Commented out.
+    scores = []
 
-                #score += _holdingScore(obj1, holding)
+    for goals in intprt:
+        scores.append(conjunctive(goals, stacks))
 
-                addedScore += score
+    return min(scores)
 
-            # add penalty the further down obj1/obj2 is in their respective stack,
-            #   depending if we are to put them above/under something else.
-            elif pred in ('under', 'above'):
-                score += _placeScore(obj2 if pred is 'under' else obj1, stacks, pred)
+def update_pens(sd, pens):
+    (s, d) = sd
+    if pens[s] < d:
+        pens[s] = d
+    return pens
 
-            elif pred == 'beside':
-                objectscores = []
-                objectscores.append(_stackScore(obj1, stacks))
-                objectscores.append(_stackScore(obj2, stacks))
-                score += min(objectscores)
-                addedScore += score
+def conjunctive(goals, stacks):
+    """heuristic for a conjunctive goal!"""
 
-            # If we are to put something left/right of something else,
-            # we add penalty if obj2 are to the far left/right
-            elif pred in ('leftof','rightof'):
-                # Add stack penalties???
-                score1 += _stackScore(obj1, stacks)
-                score2 += _stackScore(obj2, stacks)
-                score = min(score1, score2)
+    pens = [0 for h in stacks]
 
+    for goal in goals:
+        (rel, a, b) = goal
 
-                # Commented out to make more simple, might add back later
-               # score += _placeScore(obj2, stacks, pred)
-               # score += _placeScore(obj1, stacks, 'leftof' if pred is 'rightof' else 'rightof')
-                addedScore += score
+        if rel in {'ontop', 'inside'}:
+            pens = update_pens(_stackScore(a, stacks), pens)
+            pens = update_pens(_stackScore(b, stacks), pens)
 
-            # Add penalty if object is further down
-            elif pred == 'holding':
-                score += _stackScore(obj1, stacks)
-                addedScore += score
+        elif rel == 'under':
+            pens = update_pens(_stackScore(b, stacks), pens)
+        elif rel == 'above':
+            pens = update_pens(_stackScore(a, stacks), pens)
 
-        scoreList.append(addedScore)
+        elif rel == {'beside', 'leftof', 'rightof'}:
+            (s1, d1) = _stackScore(a, stacks)
+            (s2, d2) = _stackScore(b, stacks)
+            if d1 < d2:
+                pens = update_pens((s1, d1), pens)
+            else:
+                pens = update_pens((s2, d2), pens)
 
-    return min(scoreList)
+    return sum(pens)
 
-# Function for deciding the position of a object given the stacks of the world
 def _stackScore(obj, stacks):
-    for stack in stacks:
+    """how many must be moved to find the objet we want"""
+    for stackno, stack in enumerate(stacks):
         for i, o in enumerate(stack):
-            if o is obj:
-                score = (len(stack) - i - 1) * PLACE_IN_STACK_PENALTY
-                return score
-    #If obj was not found in any stack, assume that the arm is holding it
-    return 0
-    
-# Returns worse score if object is in first or last stack 
+            if o == obj:
+                depth = len(stack) - i - 1
+                return (stackno, depth * 3)
+
+    # no penalty if we're holding the object
+    return (0, 0)
+
+# Returns worse score if object is in first or last stack
 #  if we are supposed to put something to the left/right of it
 #
 # Score is even worse if objects are far down in the stack at the edge
