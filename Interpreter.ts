@@ -221,6 +221,8 @@ module Interpreter {
                 
                 throw new Interpreter.Error("Description is ambiguous there is: a " +res.join(" and a "));
             }
+         if(ent.quant === "all")
+            throw new Interpreter.Error("all quantifiers as destinations doesn't make sense!"); 
             //hantera på något sätt
         }
         
