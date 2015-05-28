@@ -7,20 +7,16 @@ For more information, see the course webpages:
 
 - <http://www.cse.chalmers.se/edu/course/TIN172/>
 
-The goal of the project was to create an interpreter and a planner so that
-a person can control a robot in a blocks world to move around objects,
-by giving commands in natural language.
+The goal of the project was to create an interpreter and a planner so that a person can control a robot in a block-based world to move objects around, by giving commands in natural language.
 
-There is a web-based graphical
-interface from which the user can interact with the blocks world.
+There is a web-based graphical interface from which the user can interact with the blocks world.
 
-The interface is written in TypeScript (which compiles into Javascript),
-and it can be run in several different modes:
+The interface is written in TypeScript (which compiles into Javascript), and it can be run in several different modes:
 
 - as a HTML web application, using SVG animations for displaying the world
 
 - as a text application, using ANSI graphics for displaying the world
-  (requires an ASNI-capable terminal, and that Node.JS is installed)
+  (requires an ANSI-capable terminal, and that Node.JS is installed)
 
 - as an offline text application, where input is provided at the command line
   (requires that Node.JS is installed, but nothing of the terminal)
@@ -59,7 +55,7 @@ Implemented extensions
 
 ### Improved heuristics
 
-The interpretation, which is a Disjunctive Normal Form, is broken down into atoms and the heuristic for each atom is computed. When we have `a && b` we take the maximum of the heuristic for `a` and `b` since both must be fulfilled. When we have `a || b` we take the minimum heuristic since we only need to achieve one of the goals. If the atomic heuristic is admissible, the combined heuristic is also admissible.
+The interpretation, which is of a Disjunctive Normal Form, is broken down into atoms and the heuristic for each atom is computed. When we have `a && b` we take the maximum of the heuristic for `a` and `b` since both must be fulfilled. When we have `a || b` we take the minimum heuristic since we only need to achieve one of the goals. If the atomic heuristic is admissible, the combined heuristic is also admissible.
 
 The atomic heuristic is calculated slightly differently depending on which command has been given but it generally consists of three parts:  
 - `arm cost`
@@ -82,7 +78,7 @@ Iterative Deepening A\* was also implemented. It does take longer time but still
 
 ### Clarification questions on ambiguity
 
-There are two types of ambiguity. The first one is with the `the` quantifier, for example `grasp the object`. If there are several objects that could fit with the object description, the system enters a state where it asks the user to specify which object is meant. In this case, a list of possible candidates to choose from is printed. The user can then add more information such as `red`, if the new information is not sufficient he can provide more information such as `small` or `ball`. When sufficient information has been gathered, the system performs the action. If the user enters a completely new command while the program is waiting for an ambiguity clarification, the system stops asking for more details and instead resolves the newly entered command instead. This way, there is no risk for the user getting stuck in a loop for an unwanted command.
+There are two types of ambiguity. The first one is with the `the` quantifier, for example `grasp the object`. If there are several objects that could fit the object description, the system enters a state where it asks the user to specify which object is meant. In this case, a list of possible candidates to choose from is printed. The user can then add more information such as `red`. If the new information is not sufficient he can provide more information such as `small` or `ball`. When sufficient information has been gathered, the system performs the action. If the user enters a completely new command while the program is waiting for an ambiguity clarification, the system stops asking for more details and resolves the newly entered command instead. This way, there is no risk for the user getting stuck in a loop for an unwanted command.
 
 The other type of ambiguity comes from a shift/reduce conflict in the grammar. The typical example would be `put the small ball in a box on the floor`. The box in this sentence can either be parsed as the current location of the ball or as the target location for the ball. Our system investigates both possibilities and rules out any that is inconsistent with the current state of the world. If both have valid interpretations, the system calculates both and picks the shortest one.
 
@@ -95,9 +91,9 @@ The implementation of the ambiguity handling is a bit spread out, but is found m
 There are currently two unsolved issues, both of which has to do with resolving ambiguity:
 
 **disambiguity system doesn't work on "loc"**  
-  Current disambiguity system works incrementally to refine which object the user is referring to. However, we still don't have the same system working for the "loc" field. The major reason for this is that both "ent" and "loc" can contain ambiguities, and we wanted to prove that refinement can be achieved and so experimented only on "ent" to reduce confusion.
-  Therefore, in some special cases, the user might type in some refinements on "loc" conflicting "ent" ambiguity causing the system to crash (resulting in an uncaught error so that the world must be reset).
-  There is still a possibility for the user to update the "loc" field. Since we always try to ask the original parser to parse an utterance before using our own parser, a complete command from the user can disambiguate both "ent" and "loc". The user will then not experience a crash, but will instead get repeated questions until the command has been fully specified.
+The current disambiguity system works incrementally to refine which object the user is referring to. However, we still don't have the same system working for the "loc" field. The major reason for this is that both "ent" and "loc" can contain ambiguities, and we wanted to prove that refinement can be achieved and so experimented only on "ent" to reduce confusion.
+Therefore, in some special cases, the user might type in some refinements on "loc" conflicting "ent" ambiguity causing the system to crash (resulting in an uncaught error so that the world must be reset).
+There is still a possibility for the user to update the "loc" field. Since we always try to ask the original parser to parse an utterance before using our own parser, a complete command from the user can disambiguate both "ent" and "loc". The user will then not experience a crash, but will instead get repeated questions until the command has been fully specified.
 
 **complex world: `put the pyramid under a table on the large table`**  
 This one has a parse ambiguity but the system seems to pick the wrong one. We would want it to interpret it as
