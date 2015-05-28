@@ -397,6 +397,7 @@ module Interpreter {
                             // Example: three blue balls => three combinations/interpretations
                             // [ [[o1,o2]],[[o1,o3]],[[o2,o3]] ]
                           _.map(locationsIntrprt, function (locationsOr) {
+                              console.log("here's the or list:", locationsOr);
                             // ...filter out all objects which...
                             return _.filter(alikeObjs, function (obj) {
                                 // ... satisfies at least one ...
@@ -505,9 +506,15 @@ module Interpreter {
     // Checks if ppdlWorld has some binary constraint
     // (Typically 'inside' or 'ontop')
     function hasBinaryConstraint(ppdlWorld, pol, rel, obj1, obj2) {
-        var constraint = {pol: pol, rel: rel, args: [obj1.id, obj2.id]}
-          , found      = _.find(ppdlWorld, constraint);
-        // console.log("hasBinaryConstraint(): constraint:",constraint,"ppdlWorld",ppdlWorld,"found:",found);
+        // ... Would like to use _.matches, but it is apparently not deep.
+        var found = _.find(ppdlWorld, function (otherRel : PddlLiteral) {
+                return otherRel.pol === pol
+                    && otherRel.rel == rel
+                    && otherRel.args[0]
+                    && otherRel.args[0] === obj1.id
+                    && otherRel.args[1]
+                    && otherRel.args[1] === obj2.id
+            });
         return found;
     }
 
