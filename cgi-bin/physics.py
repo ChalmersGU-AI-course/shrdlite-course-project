@@ -1,11 +1,23 @@
 """make sure that we don't break the physics!"""
 
 def check_physics_all(preds, objects):
-    ontops = filter(lambda p: p[0] == 'inside' or p[0] == 'ontop', preds)
-    # check that no two things are inside/ontop of eachother
+    return (all(check_physics(pred, objects) for pred in preds)
+            and check_uniqueness(preds))
 
+def check_uniqueness(preds):
+    """Check that we dont want to put two things inside a box or one thing inside two boxes
+    """
+    ontop = filter(lambda p: p[0] in {'inside', 'ontop'}, preds)
 
-    return all(check_physics(pred, objects) for pred in preds)
+    for a in ontop:
+        for b in ontop:
+            (_, at, ab) = a
+            (_, bt, bb) = b
+            if (not a == b) and (at == bt or ab == bb):
+                return False
+
+    return True
+
 
 def check_physics(pred, objects):
     (rel, x, y) = pred
