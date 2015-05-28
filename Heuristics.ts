@@ -136,9 +136,9 @@ module Heuristics {
 
         // +1 for dropping the object or
         // if holding something else, drop that first.
-        var dropC = dropCost(s, a, stackObj, false);
+        var holdCost = dropCost(s, a, stackObj, false);
 
-        return aboveCost + armCost + dropC;
+        return aboveCost + armCost + holdCost;
     }
 
     function heuristicMoveOntop(s : State, above : String, below : String, exactlyOntop : boolean) : number {
