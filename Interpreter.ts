@@ -71,17 +71,7 @@ module Interpreter {
         var res : Literal[][] = [];
         var result : string[] = interpretEnt(cmd.ent,world,wObjs);
         
-        if(cmd.ent.quant === "the")
-        	if(result.length > 1)
-            {
-                var map = Planner.uniqueAttributes(world);
-                for(var r in result)
-                {
-                    result[r] = map[result[r]].slice().reverse().join(" ");
-                }
-                
-                throw new Interpreter.Error("Description is ambiguous there is: a " +result.join(" and a "));
-            }
+
 		
         if(result.length <= 0)
             return [];
@@ -211,6 +201,7 @@ module Interpreter {
         if(typeof(ent.quant) !== "undefined")
         {
          if(ent.quant === "the")
+         {
         	if(res.length > 1)
             {
                 var map = Planner.uniqueAttributes(world);
@@ -221,8 +212,12 @@ module Interpreter {
                 
                 throw new Interpreter.Error("Description is ambiguous there is: a " +res.join(" and a "));
             }
-         if(ent.quant === "all")
+         }else if(ent.quant === "all")
+         {
             throw new Interpreter.Error("all quantifiers as destinations doesn't make sense!"); 
+         }else if(ent.quant === "any")
+         {}
+         
             //hantera på något sätt
         }
         
