@@ -122,10 +122,9 @@ module Heuristics {
         var aboveCost = a.objectsAbove * 4;
 
         // move the arm to `a`
-        var armCost = abs(a.stackNo - s.arm);
-
         // then move the arm to the correct stack
-        armCost = armCost + abs(a.stackNo - stack);
+        var armCost = abs(a.stackNo - s.arm) + abs(a.stackNo - stack);
+
         if(! a.isHeld){
             // pick up the object
             armCost = armCost + 1;
@@ -137,10 +136,6 @@ module Heuristics {
         // +1 for dropping the object or
         // if holding something else, drop that first.
         var holdCost = dropCost(s, a, stackObj, false);
-        // var holdCost = 0;
-        // if(s.holding != null){
-        //     holdCost = 1;
-        // }
 
         return aboveCost + armCost + holdCost;
     }
@@ -170,6 +165,10 @@ module Heuristics {
         return holdCost + armCost + aboveCost;
     }
 
+    /**
+    * Wants to drop `a` on or above `b`.
+    * Computes the heuristic cost of dropping whatever object the arm is currently holding.
+    */
     function dropCost(s : State, a : ObjectPosition, b : ObjectPosition, exactlyOntop : boolean) : number{
         var somewhereAbove : boolean = !exactlyOntop;
         if(s.holding == null){
@@ -179,14 +178,21 @@ module Heuristics {
             // Just drop `a` and we are done
             return 1;
         } else if (b.isHeld && s.arm != a.stackNo){
-            // Drop `b` anywhere so it doesn't block `a`
+            // Drop `b` here so it doesn't block `a`
             return 1;
         } else if (s.arm != b.stackNo && s.arm != a.stackNo){
             // We are holding something else and we should drop it here
             // so it doesn't block `a` or `b`
             return 1;
+        } else if(s.arm == b.stackNo && exactlyOntop && b.objectsAbove > 0){
+            // Drop somewhere else and come back to continue clearing the stack.
+            return 3;
+        } else if( (!a.isHeld) && s.arm == a.stackNo){
+            // Drop somewhere else and come back to get `a`.
+            return 3;
         }
-        // Holds something but needs to drop it somewhere else...
+        // Drop somewhere else but go get `a`,
+        // ie, don't return directly to the stack of `b`.
         return 2;
     }
 
