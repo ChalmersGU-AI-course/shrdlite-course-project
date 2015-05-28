@@ -38,6 +38,9 @@ module Heuristics {
         return hValue;
     }
 
+    // Returns heuristic value for this atom.
+    // `atom.pol` is interpreted as negation, however, in the current code it is
+    // always true: there is no grammar for negation as of yet.
     function heuristicAtom(s : State, atom : Interpreter.Literal) : number {
 
         switch(atom.rel){
