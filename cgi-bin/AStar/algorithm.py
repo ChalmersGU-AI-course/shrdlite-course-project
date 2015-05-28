@@ -55,7 +55,7 @@ def a_star_search(getActions, startState, isGoal, heuristic):
 
 def getPlan(goal, came_from, actions_so_far, objects):
     current = _getKey(goal)
-    plan = [DROP_IT]
+    plan = [NEW_COMMAND]
     while current in came_from:
         next    = came_from[current]
         command = actions_so_far[current]

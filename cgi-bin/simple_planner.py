@@ -58,7 +58,6 @@ def _changeStack(newStack,index,stacks):
     """
     return [newStack if i is index else x for i,x in enumerate(stacks)]
 
-#borde refaktoreras till physics!!!!!!!
 def physics(top,bottom,objects):
     if not bottom:
         return True
