@@ -42,6 +42,10 @@ module Planner {
 
 
 	// state changing functions
+    /************************************************************************
+     *Takes a WorldState and returns a modified WorldState where the arm    *
+     *has moved one stack to the right                                      *
+     ************************************************************************/
 	function moveRight(world: WorldState) : [WorldState,string]
 	{
         if(world.arm < world.stacks.length-1)
@@ -50,6 +54,10 @@ module Planner {
         }
         return null;
 	}
+    /************************************************************************
+     *Takes a WorldState and returns a modified WorldState where the arm    *
+     *has moved one stack to the right                                      *
+     ************************************************************************/
 	function moveLeft(world: WorldState) : [WorldState,string]
 	{
         if(world.arm > 0)
@@ -58,6 +66,10 @@ module Planner {
         }
         return null;
 	}
+    /************************************************************************
+     *Takes a WorldState and returns a modified WorldState where the arm    *
+     *has picked up the top object in the stack where the arm is.           *
+     ************************************************************************/    
 	function pickup(world:WorldState) : [WorldState,string]
 	{
         if(world.holding == null)
@@ -76,6 +88,10 @@ module Planner {
         }
         return null;
 	}
+    /************************************************************************
+     *Takes a WorldState and returns a modified WorldState where the arm    *
+     *has put down the object on top of the stack where the arm is.         *
+     ************************************************************************/
 	function putdown(world:WorldState) : [WorldState,string]
 	{
         if(world.holding !== null)
@@ -99,7 +115,10 @@ module Planner {
         }
         return null;
 	}
-    
+    /************************************************************************
+     *Takes a WorldState and returns a boolean that specifies if the        *
+     *putdown command can legally be preformed.                             *
+     ************************************************************************/
     function putdownRules(w : WorldState) : boolean
     {
         if(w.stacks[w.arm].length !== 0)
@@ -152,7 +171,10 @@ module Planner {
         }
         return true;
     }
-	
+	/************************************************************************
+     *Takes a WorldState and returns a list of legal moves as tuples with   *
+     * modified WorldState and strings representing what move it belongs to *
+     ************************************************************************/
 	function worldItteration(world: WorldState) : [WorldState,string][]
 	{
         var res :[WorldState,string][] = [];
@@ -165,7 +187,10 @@ module Planner {
         
 		return res;
 	}
-	
+	/************************************************************************
+     *Takes a WorldState and returns a Astar Node corresponding to that     *
+     * WorldState.                                                          *
+     ************************************************************************/
     function w2N(w : WorldState) : AStar.Node
     {
         var n : AStar.Neighbour[] = [];
@@ -177,6 +202,11 @@ module Planner {
         return {wState: w,wStateId: WorldFunc.world2String(w),neighbours:n}
     }
     
+    
+    
+    /************************************************************************
+     *Takes a WorldState and returns a map that maps letters to objects    *
+     ************************************************************************/
     function convertToMap(w : WorldState): {[s:string]: any}
     {
         var alphabet :string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -190,15 +220,21 @@ module Planner {
         return ret; 
     }
     
-    function goalFunction (lss : Interpreter.Literal[][], curr : string)
+    /****************************************************************************
+    * Takes the literal expression describing the goal as a disjunctive normal*
+    * form and a string describing the current state and determines if it      *
+    * has reached this state                                                   *
+    ****************************************************************************/
+    
+    function goalFunction (lss : Interpreter.Literal[][], curr : string) : boolean
     {	
         //console.log(curr);
-    	for(var j in lss)
+    	for(var j in lss) // loops over the disjunctions 
     	{
     		var ls : Interpreter.Literal[] = lss[j];
     		
     		var ret : boolean = true;
-		    for(var i in ls)
+		    for(var i in ls)    // loops over the conjunctions
 		    {
 		        var l : Interpreter.Literal = ls[i];
 		        //console.log("in goal function");
@@ -257,7 +293,9 @@ module Planner {
         
         return ret;
     }
-	
+	/***********************************************************************
+    *Calculates the heuristic given litteral expression and a world state  *
+    ************************************************************************/
     function getHueristic (lss : Interpreter.Literal[][], curr : WorldState) :number
     {
         var totHue : number = 0;
@@ -269,11 +307,11 @@ module Planner {
         
         //console.log(curr);
         
-        for(var u in lss)
+        for(var u in lss)// Iterates over the disjunctions
         {
         	var ls : Interpreter.Literal[] = lss[u];
         	
-		    for(var j in ls)
+		    for(var j in ls) // Iterates over the conjunctions
 		    {
 		        var l : Interpreter.Literal = ls[j];
 
@@ -495,6 +533,11 @@ module Planner {
         return biggestTot;
     }
     
+    
+    /********************************************************************************
+    * Given a literal interpretation in disjunctive normal form and a world state  *
+    * it will return a path to the state described by the literal expression       *
+    *********************************************************************************/
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
         var unqAttr : {[s:string]: string[];} = uniqueAttributes(state);
         var tempplan =  AStar.astar(intprt,state,goalFunction,getHueristic,w2N,unqAttr);
@@ -519,7 +562,12 @@ module Planner {
 
 }
 
-
+ /*******************************************************************
+ *Given a WorldState it returns a map that maps objects names       *
+ *to the smallest set of attributes that uniquely distinguishes it  *
+ * or if an object can not be uniquely describes it will be         *
+ * described in full and given the attribute notUnique.             *
+ ********************************************************************/
 function uniqueAttributes ( w : WorldState  ) : { [s:string]: string[]}
 {
 	var objs : string[] = [];
@@ -564,6 +612,7 @@ function uniqueAttributes ( w : WorldState  ) : { [s:string]: string[]}
 	return objsAttr;
 }
 
+/*helper function to uniqueAttributes*/
 function uniqueAttributes1 ( oA : ObjectDefinition , os : ObjectDefinition[] ) : string[]
 {
 	var unqAttr : string[] = [oA.form];
@@ -614,6 +663,7 @@ function uniqueAttributes1 ( oA : ObjectDefinition , os : ObjectDefinition[] ) :
 	return unqAttr;
 }
 
+/*helper function to uniqueAttributes1*/
 function uniqueAttributes2 ( type : string , oA : string , os : ObjectDefinition[] ) : ObjectDefinition[]
 {
 	var notUnique : ObjectDefinition[] = [];
