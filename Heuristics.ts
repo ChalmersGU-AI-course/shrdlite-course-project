@@ -147,7 +147,6 @@ module Heuristics {
         var holdCost = dropCost(s, a, b, exactlyOntop);
 
         var armCost = abs(s.arm - a.stackNo) + abs(a.stackNo - b.stackNo);
-        // var armCost = moveCost(s, a, b, exactlyOntop);
 
         // Number of objects that needs to be moved.
         var aboveCost;
@@ -161,7 +160,6 @@ module Heuristics {
         } else {
             aboveCost = 4 * a.objectsAbove;
             // ie Just somewhere above is sufficient
-            // throw new Planner.Error("should not be here atm...");
         }
         return holdCost + armCost + aboveCost;
     }
@@ -179,7 +177,7 @@ module Heuristics {
             return 1;
         }
         // Holds something but needs to drop it somewhere else...
-        // ...and come back?
+        // ...and come back
         return 3;
     }
 
@@ -218,11 +216,6 @@ module Heuristics {
         }
 
         throw new Planner.Error("!!! Error in heuristicDistance: must be able to find the target somewhere in the world...");
-        // Of course unless the target is simply the floor...
-
-
-        return 0;
-
     }
 
     ///////////////////////////////////////////////////////
