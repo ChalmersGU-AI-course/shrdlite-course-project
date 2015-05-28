@@ -128,7 +128,6 @@ SearchGraph.prototype.internal_neighbours =  function(state) {
 SearchGraph.prototype.neighbours = function* (state) {
     var internal = this.internal_neighbours(state);
 
-
     for (var outer of internal) {
         var new_state = stdlib.clone(state);
         //injecting backlink
@@ -197,7 +196,7 @@ SearchGraph.prototype.rule_satisfied = function(rule, state) {
                 return false;
             }
             return  (i !== 0 && rule.oneof.intersects(state.stacks[i-1])) ||
-                    (i !== state.stacks.length && rule.oneof.intersects(state.stacks[i+1]));
+                    (i !== state.stacks.length-1 && rule.oneof.intersects(state.stacks[i+1]));
 
         case "left":
             return (j !== -1) && state.stacks.slice(i+1).flatten().intersects(rule.oneof);
@@ -221,29 +220,6 @@ SearchGraph.prototype.isgoal = function(state) {
     }
     return true;
 };
-
-
-
-
-// Cost to put an element on top of obj
-function putOnTopOf(obj, state) {
-    // Find the object
-    var i = 0;
-    var j = -1;
-    for (var stack of state.stacks) {
-        j = stack.indexOf(obj);
-        if (j !== -1) {
-            break;
-        }
-        i++;
-    }
-    if (j === -1) {
-        return 1; // Arm is holding it, can just put it down (maybe :)
-    }
-    // Move the arm to the stack, put it down. (Plus remove all above objects if needed)
-    return Math.abs(state.arm - i) + 1 + 4*(stack.length-j);
-}
-
 
 
 SearchGraph.prototype.h_general = function (state) {
@@ -280,6 +256,26 @@ SearchGraph.prototype.h_general = function (state) {
 
 
 /// Specialized H for 1 arm ///////////////////////////////////////////////////////////////////////
+
+// Cost to put an element on top of obj
+function putOnTopOf(armpos, obj, state) {
+    // Find the object
+    var i = 0;
+    var j = -1;
+    for (var stack of state.stacks) {
+        j = stack.indexOf(obj);
+        if (j !== -1) {
+            break;
+        }
+        i++;
+    }
+    if (j === -1) {
+        return 1; // Arm is holding it, can just put it down (maybe :)
+    }
+    // Move the arm to the stack, put it down. (Plus remove all above objects if needed)
+    return Math.abs(armpos - i) + 1 + 4*(stack.length-j);
+}
+
 
 SearchGraph.prototype.closest_legal_putdown = function(obj, state) {
     var arm = state.arms[0].pos;
@@ -325,6 +321,7 @@ function closest_floor(armpos, state) {
 
 
 SearchGraph.prototype.h_1arm = function (state) {
+    // return 0;
     var arm = state.arms[0].pos;
     var holding = state.arms[0].holding;
 
@@ -363,7 +360,7 @@ SearchGraph.prototype.h_1arm = function (state) {
             case "ontop":
                 var least = 100000;
                 for (var obj of rule.oneof) {
-                    least = Math.min(least, putOnTopOf(obj,state));
+                    least = Math.min(least, putOnTopOf(arm, obj, state));
                 }
                 if (holding != rule.item) {
                     estimate += Math.abs(arm - i) + 1; // Go pick it up.

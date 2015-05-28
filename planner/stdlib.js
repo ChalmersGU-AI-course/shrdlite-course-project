@@ -7,6 +7,10 @@ Array.prototype.contains = function(e) {
 };
 
 Array.prototype.intersects = function(other) {
+    if (other === undefined) {
+        debugger;
+        throw "Other can't be undefined";
+    }
     for (var elem of this) {
         if (other.indexOf(elem) !== -1) {
             return true;

@@ -146,6 +146,7 @@ Parser.prototype.location_filter = function(candidates, loc) {
     var ret = [];
     for (var cand of candidates) {
         switch (loc.rel) {
+            case "above":
             case "inside":
             case "ontop":
                 if (this.test_ontop(cand, obs)) {
@@ -157,12 +158,12 @@ Parser.prototype.location_filter = function(candidates, loc) {
                     ret.push(cand);
                 }
                 break;
-            case "left":
+            case "leftof":
                 if (this.test_left(cand, obs)) {
                     ret.push(cand);
                 }
                 break;
-            case "right":
+            case "rightof":
                 if (this.test_right(cand, obs)) {
                     ret.push(cand);
                 }
@@ -215,21 +216,36 @@ function filterArray(elem, arr) {
 }
 
 
-Parser.prototype.parse_one = function (move, oneof, olocrel) {
+Parser.prototype.parse_one = function (move, loc) {
+    var oneof = this.parse_entity(loc.ent);
+
     var rules = [];
     for (var m of move) {
         var oneof2 = filterArray(m, oneof);
         if (oneof == "floor") {
-            if (olocrel != "ontop") {
+            if (loc.rel != "ontop") {
                 throw "Objects must be put on top of the floor";
             }
             rules.push({rel: 'floor', item: m});
-        } else if (olocrel == "ontop" || olocrel == "inside") {
-            rules.push({rel: 'ontop', item: m, oneof: oneof2});
-        } else if (olocrel == "beside" || olocrel == "left" || olocrel == "right") {
-            rules.push({rel: olocrel, item: m, oneof: oneof2});
+        } else if (loc.rel == "ontop" || loc.rel == "inside" || loc.rel == "above") {
+            if (loc.ent.quant == "all") {
+                for (var aa of oneof2) {
+                    rules.push({rel: 'ontop', item: m, oneof: [aa]});
+                }
+            } else {
+                rules.push({rel: 'ontop', item: m, oneof: oneof2});
+            }
+
+        } else if (loc.rel == "beside" || loc.rel == "left" || loc.rel == "right") {
+            if (loc.ent.quant == "all") {
+                for (var aa of oneof2) {
+                    rules.push({rel: loc.rel, item: m, oneof: [aa]});
+                }
+            } else {
+                rules.push({rel: loc.rel, item: m, oneof: oneof2});
+            }
         } else {
-            throw "Unknown relation" + olocrel;
+            throw "Unknown relation" + loc.rel;
         }
     }
     return rules;
@@ -238,34 +254,35 @@ Parser.prototype.parse_one = function (move, oneof, olocrel) {
 Parser.prototype.parse_cmd = function(o) {
     var move = this.parse_entity(o.ent);
     if (o.cmd == "take") {
-        if (move.length > this.state.arms.length) {
-            throw "Can't take more objects than current arms";
-        }
-        ret = [];
         if (o.ent.quant == "all") {
+            var ret = [];
+            if (move.length > this.state.arms.length) {
+                throw "Can't take more objects than current arms";
+            }
             for (var m of move) {
                 ret.push({rel: 'holding', item: m});
             }
             return [ret];
         } else {
+            var ret = [];
             for (var m of move) {
                 ret.push([{rel: 'holding', item: m}]);
             }
             return ret;
         }
     }
-    var oneof = this.parse_entity(o.loc.ent);
 
+    console.log("move:" + move);
     if (move.length === 0) {
         throw "No objects matching";
     } else if (o.ent.quant == "any") {
         var ret = [];
         for (var m of move) {
-            ret.push(this.parse_one(m, oneof, o.loc.rel));
+            ret.push(this.parse_one(m, o.loc));
         }
         return ret;
     } else {
-        return [this.parse_one(move, oneof, o.loc.rel)];
+        return [this.parse_one(move, o.loc)];
     }
 };
 
@@ -636,7 +653,6 @@ SearchGraph.prototype.internal_neighbours =  function(state) {
 SearchGraph.prototype.neighbours = function* (state) {
     var internal = this.internal_neighbours(state);
 
-
     for (var outer of internal) {
         var new_state = stdlib.clone(state);
         //injecting backlink
@@ -705,7 +721,7 @@ SearchGraph.prototype.rule_satisfied = function(rule, state) {
                 return false;
             }
             return  (i !== 0 && rule.oneof.intersects(state.stacks[i-1])) ||
-                    (i !== state.stacks.length && rule.oneof.intersects(state.stacks[i+1]));
+                    (i !== state.stacks.length-1 && rule.oneof.intersects(state.stacks[i+1]));
 
         case "left":
             return (j !== -1) && state.stacks.slice(i+1).flatten().intersects(rule.oneof);
@@ -729,29 +745,6 @@ SearchGraph.prototype.isgoal = function(state) {
     }
     return true;
 };
-
-
-
-
-// Cost to put an element on top of obj
-function putOnTopOf(obj, state) {
-    // Find the object
-    var i = 0;
-    var j = -1;
-    for (var stack of state.stacks) {
-        j = stack.indexOf(obj);
-        if (j !== -1) {
-            break;
-        }
-        i++;
-    }
-    if (j === -1) {
-        return 1; // Arm is holding it, can just put it down (maybe :)
-    }
-    // Move the arm to the stack, put it down. (Plus remove all above objects if needed)
-    return Math.abs(state.arm - i) + 1 + 4*(stack.length-j);
-}
-
 
 
 SearchGraph.prototype.h_general = function (state) {
@@ -788,6 +781,26 @@ SearchGraph.prototype.h_general = function (state) {
 
 
 /// Specialized H for 1 arm ///////////////////////////////////////////////////////////////////////
+
+// Cost to put an element on top of obj
+function putOnTopOf(armpos, obj, state) {
+    // Find the object
+    var i = 0;
+    var j = -1;
+    for (var stack of state.stacks) {
+        j = stack.indexOf(obj);
+        if (j !== -1) {
+            break;
+        }
+        i++;
+    }
+    if (j === -1) {
+        return 1; // Arm is holding it, can just put it down (maybe :)
+    }
+    // Move the arm to the stack, put it down. (Plus remove all above objects if needed)
+    return Math.abs(armpos - i) + 1 + 4*(stack.length-j);
+}
+
 
 SearchGraph.prototype.closest_legal_putdown = function(obj, state) {
     var arm = state.arms[0].pos;
@@ -833,6 +846,7 @@ function closest_floor(armpos, state) {
 
 
 SearchGraph.prototype.h_1arm = function (state) {
+    // return 0;
     var arm = state.arms[0].pos;
     var holding = state.arms[0].holding;
 
@@ -871,7 +885,7 @@ SearchGraph.prototype.h_1arm = function (state) {
             case "ontop":
                 var least = 100000;
                 for (var obj of rule.oneof) {
-                    least = Math.min(least, putOnTopOf(obj,state));
+                    least = Math.min(least, putOnTopOf(arm, obj, state));
                 }
                 if (holding != rule.item) {
                     estimate += Math.abs(arm - i) + 1; // Go pick it up.
@@ -982,6 +996,10 @@ Array.prototype.contains = function(e) {
 };
 
 Array.prototype.intersects = function(other) {
+    if (other === undefined) {
+        debugger;
+        throw "Other can't be undefined";
+    }
     for (var elem of this) {
         if (other.indexOf(elem) !== -1) {
             return true;

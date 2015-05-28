@@ -145,6 +145,7 @@ Parser.prototype.location_filter = function(candidates, loc) {
     var ret = [];
     for (var cand of candidates) {
         switch (loc.rel) {
+            case "above":
             case "inside":
             case "ontop":
                 if (this.test_ontop(cand, obs)) {
@@ -156,12 +157,12 @@ Parser.prototype.location_filter = function(candidates, loc) {
                     ret.push(cand);
                 }
                 break;
-            case "left":
+            case "leftof":
                 if (this.test_left(cand, obs)) {
                     ret.push(cand);
                 }
                 break;
-            case "right":
+            case "rightof":
                 if (this.test_right(cand, obs)) {
                     ret.push(cand);
                 }
@@ -214,21 +215,36 @@ function filterArray(elem, arr) {
 }
 
 
-Parser.prototype.parse_one = function (move, oneof, olocrel) {
+Parser.prototype.parse_one = function (move, loc) {
+    var oneof = this.parse_entity(loc.ent);
+
     var rules = [];
     for (var m of move) {
         var oneof2 = filterArray(m, oneof);
         if (oneof == "floor") {
-            if (olocrel != "ontop") {
+            if (loc.rel != "ontop") {
                 throw "Objects must be put on top of the floor";
             }
             rules.push({rel: 'floor', item: m});
-        } else if (olocrel == "ontop" || olocrel == "inside") {
-            rules.push({rel: 'ontop', item: m, oneof: oneof2});
-        } else if (olocrel == "beside" || olocrel == "left" || olocrel == "right") {
-            rules.push({rel: olocrel, item: m, oneof: oneof2});
+        } else if (loc.rel == "ontop" || loc.rel == "inside" || loc.rel == "above") {
+            if (loc.ent.quant == "all") {
+                for (var aa of oneof2) {
+                    rules.push({rel: 'ontop', item: m, oneof: [aa]});
+                }
+            } else {
+                rules.push({rel: 'ontop', item: m, oneof: oneof2});
+            }
+
+        } else if (loc.rel == "beside" || loc.rel == "left" || loc.rel == "right") {
+            if (loc.ent.quant == "all") {
+                for (var aa of oneof2) {
+                    rules.push({rel: loc.rel, item: m, oneof: [aa]});
+                }
+            } else {
+                rules.push({rel: loc.rel, item: m, oneof: oneof2});
+            }
         } else {
-            throw "Unknown relation" + olocrel;
+            throw "Unknown relation" + loc.rel;
         }
     }
     return rules;
@@ -237,34 +253,35 @@ Parser.prototype.parse_one = function (move, oneof, olocrel) {
 Parser.prototype.parse_cmd = function(o) {
     var move = this.parse_entity(o.ent);
     if (o.cmd == "take") {
-        if (move.length > this.state.arms.length) {
-            throw "Can't take more objects than current arms";
-        }
-        ret = [];
         if (o.ent.quant == "all") {
+            var ret = [];
+            if (move.length > this.state.arms.length) {
+                throw "Can't take more objects than current arms";
+            }
             for (var m of move) {
                 ret.push({rel: 'holding', item: m});
             }
             return [ret];
         } else {
+            var ret = [];
             for (var m of move) {
                 ret.push([{rel: 'holding', item: m}]);
             }
             return ret;
         }
     }
-    var oneof = this.parse_entity(o.loc.ent);
 
+    console.log("move:" + move);
     if (move.length === 0) {
         throw "No objects matching";
     } else if (o.ent.quant == "any") {
         var ret = [];
         for (var m of move) {
-            ret.push(this.parse_one(m, oneof, o.loc.rel));
+            ret.push(this.parse_one(m, o.loc));
         }
         return ret;
     } else {
-        return [this.parse_one(move, oneof, o.loc.rel)];
+        return [this.parse_one(move, o.loc)];
     }
 };
 
