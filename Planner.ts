@@ -36,7 +36,7 @@ module Planner {
     }
 
     //////////////////////////////////////////////////////////////////////
-    // Private classes
+    // Private classes and interfaces
 
     class ActionState extends Astar.Node {
             action: Action;
@@ -720,7 +720,11 @@ module Planner {
                 is_goalNode: is_goalstate
               });
         } catch (err) {
-            throw new Error("Impossible problem.");
+            if (err instanceof Planner.Error) {
+                throw err;
+            } else {
+                throw new Error("Impossible problem.");
+            }
         }
         
         // Next step: convert the path in the search tree (i.e. a series of
