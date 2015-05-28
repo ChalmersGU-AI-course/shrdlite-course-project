@@ -94,10 +94,10 @@ The implementation of the ambiguity handling is a bit spread out, but is found m
 
 There are currently two unsolved issues, both of which has to do with resolving ambiguity:
 
-**disambiguate system doesn't work on "loc"**  
-  Current disambiguate system work increamentally on refining object user referring to. However, we still dont have same system working on "loc" field; Major reason is that both of "ent" and "loc" can contain ambiguity, we wanted to prove refinement can be acheive and experimented on "ent" only to reduce confusion.
-  Therefore, in some special cases, user might type in some refinements on "loc" conflicting "ent" ambiguity causing system crash (resulting uncaught err and restart the world).
-  There are still possibility for user to update "loc" field. Since we always try to ask original parser to parse utterance before using our own parser, a complete command from user can disambiguate both ent and loc. User will not experience crash, instead he/she gets repetitive questions until full command entered.
+**disambiguity system doesn't work on "loc"**  
+  Current disambiguity system works incrementally to refine which object the user is referring to. However, we still don't have the same system working for the "loc" field. The major reason for this is that both "ent" and "loc" can contain ambiguities, and we wanted to prove that refinement can be achieved and so experimented only on "ent" to reduce confusion.
+  Therefore, in some special cases, the user might type in some refinements on "loc" conflicting "ent" ambiguity causing the system to crash (resulting in an uncaught error so that the world must be reset).
+  There is still a possibility for the user to update the "loc" field. Since we always try to ask the original parser to parse an utterance before using our own parser, a complete command from the user can disambiguate both "ent" and "loc". The user will then not experience a crash, but will instead get repeated questions until the command has been fully specified.
 
 **complex world: `put the pyramid under a table on the large table`**  
 This one has a parse ambiguity but the system seems to pick the wrong one. We would want it to interpret it as
