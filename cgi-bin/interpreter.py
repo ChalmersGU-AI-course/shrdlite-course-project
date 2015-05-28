@@ -101,18 +101,19 @@ def interp_cmd_move(ent, loc, objects, stacks, holding):
     if what_quant == 'all':
         if where_quant == 'all':
             # all balls to the left of all tables
-            return [[(rel, a, b)] for a in what for b in where]
+            return [[(rel, a, b) for a in what for b in where if not a == b]]
         else:
             # all balls to the left of any table
-            alll = [[(rel, a, b) for b in where] for a in what]
+            alll = [[(rel, a, b) for b in where if not a == b] for a in what]
             return [list(goal) for goal in itertools.product(*alll)]
     else:
         if where_quant == 'all':
             # any ball to the left of all tables
-            return [[(rel, a, b) for b in where] for a in what]
+            alll = [[(rel, a, b) for a in where if not a == b] for b in what]
+            return [list(goal) for goal in itertools.product(*alll)]
         else:
             # any ball to the left of any table
-            return [[(rel, a, b)] for a in what for b in where]
+            return [[(rel, a, b)] for a in what for b in where if not a == b]
 
 def find_ent(ent, objects, stacks, holding):
     """ent:

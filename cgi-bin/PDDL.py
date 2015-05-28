@@ -74,7 +74,6 @@ def find_obj(o, stacks):
     """return (stack, position), (0,0) = bottom of leftmost stack"""
     for stackno, stack in enumerate(stacks):
         for pos, obj in enumerate(stack):
-            helpers.log(o)
             if o == obj:
                 return (stackno, pos)
     return (None, None)
