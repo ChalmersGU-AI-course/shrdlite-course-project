@@ -170,6 +170,10 @@ module Heuristics {
         return holdCost + armCost + aboveCost;
     }
 
+    /**
+    * Wants to drop `a` on or above `b`.
+    * Computes the heuristic cost of dropping whatever object the arm is currently holding.
+    */
     function dropCost(s : State, a : ObjectPosition, b : ObjectPosition, exactlyOntop : boolean) : number{
         var somewhereAbove : boolean = !exactlyOntop;
         if(s.holding == null){
@@ -179,14 +183,21 @@ module Heuristics {
             // Just drop `a` and we are done
             return 1;
         } else if (b.isHeld && s.arm != a.stackNo){
-            // Drop `b` anywhere so it doesn't block `a`
+            // Drop `b` here so it doesn't block `a`
             return 1;
         } else if (s.arm != b.stackNo && s.arm != a.stackNo){
             // We are holding something else and we should drop it here
             // so it doesn't block `a` or `b`
             return 1;
+        } else if(s.arm == b.stackNo && exactlyOntop && b.objectsAbove > 0){
+            // Drop somewhere else and come back to continue clearing the stack.
+            return 3;
+        } else if( (!a.isHeld) && s.arm == a.stackNo){
+            // Drop somewhere else and come back to continue clearing the stack.
+            return 3;
         }
-        // Holds something but needs to drop it somewhere else...
+        // Drop somewhere else but go get `a`,
+        // ie, don't return directly to the stack of `b`.
         return 2;
     }
 
