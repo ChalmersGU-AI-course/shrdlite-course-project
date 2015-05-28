@@ -57,7 +57,6 @@ module Interpreter {
         
         var interp : Literal [][];
         var result :Literal[][] = interpretCmd(cmd,state,objs);
-		//console.log(result);
 		if(result.length <= 0)
 		{
 			return null;
@@ -256,9 +255,6 @@ module Interpreter {
         {
             otherObjs = interpretLoc(inobj.loc, state,wObjs);
             obj= inobj.obj;
-            
-            console.log("loc returned", otherObjs, "   ", obj);
-            
         }
         else
         {
@@ -299,7 +295,6 @@ module Interpreter {
                                             case "leftof":
                                                 for(var m : number = +i+ +1; m < state.stacks.length; m++)
                                                 {
-                                                    console.log("suff")
                                                     if(isInColumn(otherObjs,m,state))
                                                     {
                                                         res.push(object);
@@ -376,10 +371,8 @@ module Interpreter {
         {
             for (var i in  state.stacks[col]) 
             {
-                console.log("in is column",state.stacks[col][i], "object is", obj[j])
                 if(obj[j] === state.stacks[col][i])
                 {
-                    console.log("in is column",state.stacks[col][i])
                     result = true;
                 }
             }

@@ -98,7 +98,6 @@ module Planner {
         {
             if(world.holding !== "" )
             {
-                //console.log(world);
                 if(putdownRules(world))
                 {
                     var arr = world.stacks.slice();
@@ -354,7 +353,6 @@ module Planner {
                     yStack = [s,-1];
                 }
                 totHue += Math.min(Math.abs(curr.arm - xStack[0]),Math.abs(curr.arm - yStack[0]))
-		        //console.log(xStack,yStack);
 		        switch(rel)
 		        {
 		            case "rightof":
@@ -440,7 +438,6 @@ module Planner {
 				                }
 				            }
 			            }
-		                //console.log(totHue);
 		                break;
 		            case "under":
 		            	if(xStack[1] == -1)
@@ -520,11 +517,9 @@ module Planner {
             {
                 console.log(curr.stacks);
             }
-                //console.log(totHue);
             biggestTot = Math.min(biggestTot,totHue);
             totHue = 0;
 	    }
-        console.log("count");
         return biggestTot;
     }
     
