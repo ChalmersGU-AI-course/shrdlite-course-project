@@ -23,8 +23,9 @@ module Planner {
     }
 
 
-    export interface Result extends Interpreter.Result {plan:string[];}
+    export interface Result extends Interpreter.Result {plan:Step[];}
 
+    export interface Step {plan:string; explanation:string;}
 
     export function planToString(res : Result) : string {
         return res.plan.join(", ");
@@ -41,7 +42,7 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState, searchStrategy : string) : string[] {
+    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState, searchStrategy : string) : Step[] {
 
         // If this boolean is true, we will measure performance of several search strategies.
         // This is costly and should only be set to true if it is intended.
@@ -75,9 +76,9 @@ module Planner {
             console.log("------------------------------\n");
         }
 
-        var moves = [];
-
-        moves.push("\n Perform search with strategy: " + searchStrategy + ".");
+        var moves : Step[]= [];
+        var expl : string = "\n Perform search with strategy: " + searchStrategy + ".";
+        moves.push({"plan":"", "explanation":expl});
 
         switch(searchStrategy) {
             case 'DFS':
@@ -99,8 +100,11 @@ module Planner {
 
             for(var moveIx = 0; moveIx < path.size(); moveIx++) {
                 var currentMove = path.elementAtIndex(moveIx);
-                moves.push(explainMove(path, moveIx));
-                moves.push(currentMove.getCommand());
+                var move : Step = { "plan":currentMove.getCommand(), 
+                                    "explanation":explainMove(path, moveIx)};
+                moves.push(move);
+//                moves.push({}explainMove(path, moveIx));
+ //               moves.push(currentMove.getCommand());
             }
 
             return moves;

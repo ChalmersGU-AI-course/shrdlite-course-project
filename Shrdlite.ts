@@ -80,10 +80,33 @@ module Shrdlite {
         /*plans.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
         });*/
-
-        var plan : string[] = plans[0].plan;
+        
+        
+        
+        var finalPlan : string[] = [];
+        var shortestIndex = 0;
+        if(plans.length>1){
+            world.printDebugInfo("\nI am a bit lazy and I only perform the easiest result.");
+            finalPlan.push("\nI am a bit lazy and I only perform the easiest result.");
+            var length = 10000000;
+            for (var i = 0; i < plans.length; i++) {
+                var newLength = plans[i].plan.length;
+                if(newLength<length){
+                    shortestIndex = i;
+                    length = newLength;
+                }
+            }
+            world.printDebugInfo("\nThe shortest option consists of "+length+" moves.");
+        }
+        var plan : Planner.Step[] = plans[shortestIndex].plan;
+        finalPlan.push("\n The plan consists of "+(plan.length-1)+" moves.");
+        plan.map(s=> {
+            finalPlan.push(s.plan);
+            finalPlan.push(s.explanation);
+        });
+        //var plan : string[] = plans[0].plan;
         //world.printDebugInfo("\nFinal plan: " + plan.join(", "));
-        return plan;
+        return finalPlan;
     }
 
 
