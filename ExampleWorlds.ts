@@ -23,6 +23,7 @@ ExampleWorlds["complex"] = {
         "m": { "form":"box",     "size":"small",  "color":"blue"  }
     },
     "examples": [
+        "put an object that is under a box on a plank",
         "put the green plank left of the large brick",
         "put the red plank above the red box",
         "put the box beside a pyramid",
