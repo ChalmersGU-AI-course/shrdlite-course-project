@@ -4,7 +4,7 @@
 module Interpreter {
 
     //////////////////////////////////////////////////////////////////////
-    // exported functions, classes and interfaces/types
+    // exported functions, classes and interfaces/types 
 
     export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
         var interpretations : Result[] = [];
