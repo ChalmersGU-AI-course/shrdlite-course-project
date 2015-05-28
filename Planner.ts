@@ -220,27 +220,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         return pd;
     }
 
- /*   getTopObjInd(state:WorldState, pddls:Interpreter.Literal[]):number{
-        var ind :number= -1;
-        var fln = state.arm; 
-        var z = "f" + fln.toString();
-        for(var index = 0; index < pddls.length; index++){
-           // console.log("x: " + x + " , z: "+z);
-            var pddl = pddls[index];
-            var x = pddl.args[0];
-            if(pddl.args[0] == null){}
-            else if((pddl.rel == "ontop" || pddl.rel == "inside") && x==z){
-              //  console.log("new vals :x: " + x + " , z: "+z);
-                z = pddl.args[0];
-                ind= index;
-                index = -1;
-
-            }
-        }
-        return ind;
-    }*/
-
-
     getcost(from: number,to:number):number{
         return 1;
     }

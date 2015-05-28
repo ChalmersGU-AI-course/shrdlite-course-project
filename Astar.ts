@@ -54,7 +54,7 @@ class Astar <T>{
 
     private neighbor_nodes(current : number): number[]{
         var result : number[];
-        console.log("getting neighbors");
+      //  console.log("getting neighbors");
         result = this.mGraph.getneighbors(current);
         return result;
     }
