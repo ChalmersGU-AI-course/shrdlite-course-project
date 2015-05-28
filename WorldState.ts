@@ -323,7 +323,7 @@ class WorldState {
         } else {
             var stackIndex = this.getStackIndex(fstObj);
 
-            if (stackIndex == this.getStackIndex(sndObj)) {
+            if (stackIndex === this.getStackIndex(sndObj)) {
                 return this.stacks[stackIndex].indexOf(fstObj) > this.stacks[stackIndex].indexOf(sndObj);
             }
 
@@ -342,7 +342,7 @@ class WorldState {
     }
 
     /**
-     * Checks wether the first object is in an adjacent stack of the second object.
+     * Checks whether the first object is in an adjacent stack of the second object.
      * @param fstObj        The first object.
      * @param sndObj        The second object.
      * @returns {boolean}   True if the first object is in an adjacent stack of the second, false otherwise.
@@ -356,7 +356,7 @@ class WorldState {
     }
 
     /**
-     * Checks wether the first object is in an stack somewhere to the left of the second object.
+     * Checks whether the first object is in an stack somewhere to the left of the second object.
      * @param fstObj        The first object.
      * @param sndObj        The second object.
      * @returns {boolean}   True if the first object is in an stack somewhere to the left of the second, false otherwise.
@@ -366,7 +366,7 @@ class WorldState {
     }
 
     /**
-     * Checks wether the first object is in an stack somewhere to the right of the second object.
+     * Checks whether the first object is in an stack somewhere to the right of the second object.
      * @param fstObj        The first object.
      * @param sndObj        The second object.
      * @returns {boolean}   True if the first object is in an stack somewhere to the right of the second, false otherwise.
@@ -525,7 +525,7 @@ class WorldState {
         return this.holding !== null;
     }
 
-    private isHoldingObj(obj : string) : boolean {
+    isHoldingObj(obj : string) : boolean {
         return this.holding === obj;
     }
 

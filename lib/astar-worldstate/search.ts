@@ -20,6 +20,8 @@ module search {
         var evaluatedPaths = new collections.Set<Path>(p => p.getNode().toString() + p.getNode().state.arm);
         var pathsToEvaluate = new collections.PriorityQueue<Path>(compareStrategy);
 
+        var highestSoFar : number = 0;
+
         pathsToEvaluate.add(new Path(start, 0, start.heuristicTo(goals), new collections.LinkedList<WorldStateEdge>()));
 
         while(!pathsToEvaluate.isEmpty()) {
@@ -28,6 +30,7 @@ module search {
             evaluatedPaths.add(currentPath);
 
             if(currentPath.getNode().isSatisfied(goals)) {
+                console.log("Goal: " + goals.toString() + "\n Search complete. \n Evaluated paths: " + evaluatedPaths.size() + " \t Longest path evaluated: " + highestSoFar);
                 return currentPath;
             }
 
@@ -36,6 +39,10 @@ module search {
 
                 if(cycleChecking) {
                     if(!evaluatedPaths.contains(newPath)) {
+                        if(newPath.getPath().size() > highestSoFar) {
+                            //console.log("Longest path so far: " + newPath.getPath().size());
+                            highestSoFar = newPath.getPath().size();
+                        }
                         pathsToEvaluate.add(newPath);
                     }
                 } else {
@@ -43,6 +50,9 @@ module search {
                 }
 
             });
+            if(evaluatedPaths.size() % 10000 === 0) {
+                //console.log("Evaluated paths: " + evaluatedPaths.size());
+            }
         }
         return null;
     }

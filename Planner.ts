@@ -77,7 +77,7 @@ module Planner {
 
         var moves = [];
 
-        moves.push("Perform search with strategy: " + searchStrategy + ".");
+        moves.push("\n Perform search with strategy: " + searchStrategy + ".");
 
         switch(searchStrategy) {
             case 'DFS':

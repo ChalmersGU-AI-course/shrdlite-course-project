@@ -60,7 +60,7 @@ class TextWorld implements World {
                         Object.keys(props).map((k) => {return props[k]}).join(", "));
         };
         if (this.currentState.holding) printObject(this.currentState.holding);
-        stacks.forEach((stack) => stack.forEach(printObject));
+        //stacks.forEach((stack) => stack.forEach(printObject));
         console.log();
         if (callback) callback();
     }

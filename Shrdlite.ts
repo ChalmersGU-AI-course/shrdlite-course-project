@@ -46,9 +46,9 @@ module Shrdlite {
             }
         }
         world.printDebugInfo("Found " + parses.length + " parses");
-        parses.forEach((res, n) => {
+        /*parses.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
-        });
+        });*/
 
         try {
             var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
@@ -77,12 +77,12 @@ module Shrdlite {
         }
 
         world.printDebugInfo("Found " + plans.length + " plans");
-        plans.forEach((res, n) => {
+        /*plans.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
-        });
+        });*/
 
         var plan : string[] = plans[0].plan;
-        world.printDebugInfo("Final plan: " + plan.join(", "));
+        //world.printDebugInfo("\nFinal plan: " + plan.join(", "));
         return plan;
     }
 

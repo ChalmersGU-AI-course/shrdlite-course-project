@@ -37,7 +37,7 @@ In order:
 The project implements a few different additions to the original project description.
 
 ### Quantifiers
-The Interpreter handles quantifiers `any`, `all` and `the. `All` is interpreted as exactly that, all of the objects which fit the description. We have made the choice not the fallback on any other interpretation, such as `any.
+The Interpreter handles quantifiers `any`, `all` and `the`. `All` is interpreted as exactly that, all of the objects which fit the description. We have made the choice not the fallback on any other interpretation, such as `any`.
 
 The code is in `Interpreter.ts` in the function `interpretEntity()`. The disjunctions is made in the function `buildAllDisjunctions()`.
 
