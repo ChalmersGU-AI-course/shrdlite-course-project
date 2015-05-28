@@ -79,12 +79,12 @@ The implementation of the ambiguity handling is a bit spread out, but is found m
 
 ### Known issues/bugs
 
-For objects with "anyform" in its form field, we still couldn't search them by location information. 
+For objects with "anyform" in its form field, we still couldn't search them by location information.
 
 There are currently two unsolved issues, both of which has to do with resolving ambiguity:
 
-**disambiguate system doesn't work on "loc"
-  Current disambiguate system work increamentally on refining object user referring to. However, we still dont have same system working on "loc" field; Major reason is that both of "ent" and "loc" can contain ambiguity, we wanted to prove refinement can be acheive and experimented on "ent" only to reduce confusion. 
+**disambiguate system doesn't work on "loc"**  
+  Current disambiguate system work increamentally on refining object user referring to. However, we still dont have same system working on "loc" field; Major reason is that both of "ent" and "loc" can contain ambiguity, we wanted to prove refinement can be acheive and experimented on "ent" only to reduce confusion.
   Therefore, in some special cases, user might type in some refinements on "loc" conflicting "ent" ambiguity causing system crash (resulting uncaught err and restart the world).
   There are still possibility for user to update "loc" field. Since we always try to ask original parser to parse utterance before using our own parser, a complete command from user can disambiguate both ent and loc. User will not experience crash, instead he/she gets repetitive questions until full command entered.
 
