@@ -8,12 +8,6 @@ interface ObjectDefinition {
     color: string;
 }
 
-/*interface Literal{
-    pol: boolean;
-	rel: string; //ontopof
-	args: string[];
-}*/
-
 interface WorldState {
     stacks: string[][];
     pddl: collections.Set<Interpreter.Literal>;

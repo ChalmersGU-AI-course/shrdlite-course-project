@@ -53,7 +53,7 @@ class Astar <T>{
 
     private neighbor_nodes(current : number): number[]{
         var result : number[];
-      //  console.log("getting neighbors");
+        console.log("getting neighbors");
         result = this.mGraph.getneighbors(current);
         return result;
     }
@@ -88,7 +88,7 @@ class Astar <T>{
         		console.log("Worse Path: Number of nodes visited " + counter);
         		return path;	// no point in exporing a path which is worse than the one we have already got
         	}
-        	if(closedset.length > 5000){
+        	if(closedset.length > 4000){
         		console.log("Too long search: Number of nodes visited " + counter);
         		return [];	// the search is too long
         	}

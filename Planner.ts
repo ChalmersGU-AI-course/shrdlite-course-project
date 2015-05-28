@@ -227,6 +227,9 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 
     //counts objects on top of given object
     countOnTop(obj :string, state:WorldState, pddls:Interpreter.Literal[]):number{
+    	if(state.holding == obj){
+    		return 0;
+    	}
         var lit = this.findObjLiteral(obj, state);
         // if obj is ontop then this is the top obj and no one is above
         if(!lit){
@@ -407,7 +410,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
                     return 0;
                 }
                 else{
-                    return ontopA*4 + Math.abs(posA-state.arm-1) +1;//should maybe be +2..
+                    return ontopA*2 + Math.abs(posA-state.arm-1) +1;//should maybe be +2..
                 }
             }
             else{
@@ -419,56 +422,56 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		var ontopB = this.countOnTop(b,state,pddls);
 		
         if(cond.rel == "ontop" || cond.rel == "inside"){
-
             //if a above b, take #objects on b * 4 + (ifnotinsamepile)#objects on a*4 + distancefromcrane to a + distancefromatob
             
             if(state.holding == a && ontopB == 0){// if we are holding the objective
                 return 1 + Math.abs(posB - state.arm);
             }
             else if(state.holding == b){// if we are holding the wrong objective
-            	count += (ontopA-1)*4 + Math.abs(posA-state.arm) + 3;
+            	count += (ontopA-1)*2 + Math.abs(posA-state.arm) + 1;
             	if(this.getTopRelation(state.arm, state) && this.checkLegalLit(b, this.getTopRelation(state.arm,state).args[0], state)){
             		count += 1;
             	}else if(!morethanone){
+            		count += (ontopA-1)*2
             		count += this.costToClosestLegalNewPos(b, a, state.arm, state);
+            	}else{
+            		count += 2;
             	}
             	
                 return count; 
+            }else if(state.holding ){
+            	count += 1; //if holding then +1 to drop it 
             }
             // if anything is ontop of b, then count object on top and predict cost for placeing the top obj at another spot
             
             if(ontopB > 0){
-            	count += (ontopB-1)*4 + Math.abs(posB-state.arm);
+            	count += (ontopB-1)*2 + Math.abs(posB-state.arm);
             	// find shortest path to a possition to place the obj at the top
-            	var ontopColB = this.getTopRelation(posB , state);
             	if(!morethanone){
+            		count += (ontopB-1)*2;	
+            		var ontopColB = this.getTopRelation(posB , state);
 	            	count += this.costToClosestLegalNewPos(ontopColB.args[0], a, posB, state);
 	            }else{
-	            	count += 4;
+	            	count += 2;
 	            }
-            	if(posA == posB){
-            		//count += 4;	// if they are in same column, then we have to move away an then back again min 4.
-            	}
             	
-            }else{
-            	count += 1; // for droping a on b
             }
             // if anything is ontop of a, then count object on top and predict cost for placeing the top obj at another spot
             if(ontopA > 0 && posA != posB){ 	// we dont need to go here if they are in the same column
-            	count += (ontopA-1)*4 +Math.abs(posA-state.arm);
+            	count += (ontopA-1)*2 +Math.abs(posA-state.arm) +1;
             	// find shortest path to a possition to place the obj at the top
-            	var ontopColA = this.getTopRelation(posA , state);
+            	
             	if(!morethanone){
+            		count += (ontopA-1)*2;
+            		var ontopColA = this.getTopRelation(posA , state);
             		count += this.costToClosestLegalNewPos(ontopColA.args[0], b, posA, state);
             	}else{
-	            	count += 4;
+	            	count += 2;
 	            }
             }else{
             	count += Math.abs(posA-state.arm) + 1;	// +1 for picking it up
             }
-            if(state.holding ){
-            	count += 1; //if holding then +1 to drop it 
-            }
+
             return count; 
 
         }
