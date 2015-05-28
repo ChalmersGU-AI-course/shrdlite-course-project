@@ -216,18 +216,15 @@ module Interpreter {
                 var map = Planner.uniqueAttributes(world);
                 for(var r in res)
                 {
-                    res[r] = map[result[r]].slice().reverse().join(" ");
+                    res[r] = map[res[r]].slice().reverse().join(" ");
                 }
                 
-                throw new Interpreter.Error("Description is ambiguous there is: a " +result.join(" and a "));
+                throw new Interpreter.Error("Description is ambiguous there is: a " +res.join(" and a "));
             }
             //hantera på något sätt
         }
         
-        if (typeof (ent.obj) !== "undefined")
-        {
-            res = res.concat(compareWithWorld(ent.obj,world,wObjs)); //if errors don't propagate, then it might be a good idê to fix a try catch ot to revert compareWithWorld to returning 0 on failure
-        }
+
         return res; 
     }
     // Subfunction to interpret parsed locations
