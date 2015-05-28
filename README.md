@@ -44,7 +44,6 @@ xxx (how to run your project, and some interesting example utterances)
 
 Implemented extensions
 ------------------------------------------------
-xxx (what extensions you have implemented, and where in the code they are)
 
 ### Improved heuristics
 
@@ -78,8 +77,6 @@ xxx (where in the code is the ambiguity stuff?)
 The implementation of the ambiguity handling is a bit spread out, but is found mainly in `Interpreter.ts` and `Shrdlite.ts`.  
 
 ### Known issues/bugs
-
-For objects with "anyform" in its form field, we still couldn't search them by location information.
 
 There are currently two unsolved issues, both of which has to do with resolving ambiguity:
 

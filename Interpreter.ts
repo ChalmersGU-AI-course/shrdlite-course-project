@@ -327,13 +327,9 @@ module Interpreter {
             return searchResult;
         }
 
-        if (goalObj.form === "anyform"){
-            // TODO should search based on location for anyform
-            // searchResult.targets = resolveObject(state, goalObj, goalObj.loc);
-            // return searchResult;
-            console.log(goalObj);
-
-        }
+        // The anyform case is handled in testObject.
+        // if (goalObj.form === "anyform"){
+        // }
 
         if(goalObj.form === "floor"){
             result.push("floor");
