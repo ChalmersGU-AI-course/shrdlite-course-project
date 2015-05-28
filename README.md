@@ -42,13 +42,24 @@ You can build the different targets in the project using the provided Makefile:
 
 xxx (how to run your project, and some interesting example utterances)
 
-Implemented features
+Implemented extensions
 ------------------------------------------------
 xxx (what extensions you have implemented, and where in the code they are)
 
 ### Improved heuristics
 
-xxx (how your A* planning heuristics work, and where in the code we can find it)
+The interpretation, which is a Disjunctive Normal Form, is broken down into atoms and the heuristic for each atom is computed. When we have `a && b` we take the maximum of the heuristic for `a` and `b` since both must be fulfilled. When we have `a || b` we take the minimum heuristic since we only need to achieve one of the goals. If the atomic heuristic is admissible, the combined heuristic is also admissible.
+
+The atomic heuristic is calculated slightly differently depending on which command has been given but it generally consists of three parts:  
+- `arm cost`
+- `above cost`
+- `drop cost`
+
+If we want to move object `a` to the location `b`, the `arm cost` is the arm distance to `a` plus the distance from `a` to `b`. That is the minimum number of `l`/`r` actions we need to get the arm to the right stack both to get `a` and deliver `a` to its place.
+
+The `above cost` looks at how many objects are above the wanted target or location. For each object that is blocking the way, we add a cost of 4: `p, l, d, r`. This is admissible since it ignores the fact that not all objects can support any other object and it will at least require these 4 actions to move the object somewhere else.
+
+The `drop cost` is zero if the arm is not holding anything. If we intend to drop the object at the current stack, the drop cost is 1 for simply dropping it. If we want to drop this object at another location in order to come back and get what we really want, we add a cost of 3: `l, d, r`. This extra check did improve the heuristic very much for some cases.
 
 The implementations of all heuristics can be found in the file `Heuristic.ts`.
 
