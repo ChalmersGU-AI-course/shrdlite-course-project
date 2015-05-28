@@ -2,10 +2,10 @@
 ///<reference path='World.ts'/>
 ///<reference path='Interpreter.ts'/>
 
-
+//Implementation of A* alogithm that fits Shrdlite
 module AStar {
  
-
+    //Interface for holding important information of a state.
     export interface Node
     {
         wStateId : string;
@@ -16,25 +16,25 @@ module AStar {
         id?: number;
     }
     
+    //Interface for holding information of a states neighbour.
     export interface Neighbour
     {
         wState: Object;
         cmd: string;
     }
     
-    
-    //TBD
+    //Compare function that is needed for the priority queue.
     function compareT(a:Node,b:Node)
     {
         if(a.fscore == null || b.fscore == null)
         {
             return 1
         }
-        if(a.fscore < b.fscore) // a is greater than b
+        if(a.fscore < b.fscore)
         {
             return 1
         }
-        if(a.fscore > b.fscore) //a is less than b
+        if(a.fscore > b.fscore)
         {
             return -1
         }
@@ -42,6 +42,7 @@ module AStar {
         return 0
     }
     
+    //A* function that needs a start object, goal function, hueristic function, a function to create nodes, and a map of the objects least needed attributes.
     export function astar(lit:Interpreter.Literal[][],startObject,goalFunction,huerFunction,getNode,uniqueAttr) : string[]
     {
         var closedSet : Node[] = [];
@@ -63,11 +64,8 @@ module AStar {
             var current = openSet.dequeue();
             if (goalFunction(lit,current.wStateId))
             {
-                //console.log(openSet);
-                console.log("NU ÄR JAG FÄRDIG!")
                 return reconstruct_path(came_from, current, uniqueAttr);
             }
-            //console.log(current.neighbours)
             
             closedSet.push(current);
             for(var ei in current.neighbours)
@@ -86,22 +84,18 @@ module AStar {
                         g_score[eNeigh[0].wStateId] = tentative_g_score;
                         f_score[eNeigh[0].wStateId] = g_score[eNeigh[0].wStateId] + huerFunction(lit,eNeigh[0].wState);
                         eNeigh[0].fscore = f_score[eNeigh[0].wStateId];
-                        //console.log(g_score[eNeigh[0].wStateId]);
                         openSet.enqueue(eNeigh[0]);
-                        //console.log(eNeigh[0].wStateId);
                     }
                 }
             }
-            //console.log(openSet);
         }
         return [];
     }
     
+    //Reconstructs the path, converts the edges to shrdlite instructions and get description for the AI's movements.
     function reconstruct_path (came_from, current, uniqueAttr) : string[]
     {
-        //console.log(current);
         var total_path : string[] = [];
-        //total_path.push(current);
         var obj1 : string; 
         var obj2 : string; 
         var result : string ="";
@@ -160,12 +154,13 @@ module AStar {
         return total_path;
     }
 
+    //Function for checking if a given string exist in a given array.
     function arrayIsMember (e : string, array) : boolean
     {
         for(var i in array)
         {
             var v : string = array[i].wStateId;
-            if(e===v) // functionsanropet ska ändras lite
+            if(e===v)
             {
                 return true;
             }

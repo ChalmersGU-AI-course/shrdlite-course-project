@@ -351,12 +351,11 @@ module Planner {
 		            case "leftof":
 		            	if(xStack[1] == -1)
 		            	{
-		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +2;
 		            	}
 		            	else if(yStack[1] == -1)
 		            	{
-		            		totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +1;
-		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +2;
 		            	}
 		            	else
 		            	{
