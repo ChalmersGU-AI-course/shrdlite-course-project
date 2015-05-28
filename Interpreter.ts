@@ -483,7 +483,7 @@ module Interpreter {
         		return -2;
         	}
         }
-        else if(l.args[1] !== "floor")
+        else if(l.args[1] === "floor")
         {
             //An object cant be left or right of the floor.
             if(l.rel === "rightof" || l.rel === "leftof")
