@@ -5,7 +5,6 @@ interface Graph<T>{
     getneighbors(node: number):Array<number>;
     getcost(from: number,to:number):number;
     heuristic_cost_estimate(current : number, goal : Interpreter.Literal[] ) : number;
-    specialIndexOf(obj:T):number;
     reachedGoal(current:number, conditions:Interpreter.Literal[]):boolean;
     checkGoal(current:number, condition:Interpreter.Literal):boolean;
 }

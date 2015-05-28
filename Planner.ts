@@ -124,7 +124,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 			}
 		}
 		
-		// check if we have allready been there
+		// check if we have allready been there - this improved the speed alot.
 		neig = this.filterVissited(neig);
 		
 		// convert states to indexes
@@ -284,30 +284,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         }
         return counter;
     }
-
-
-    //returns x-pos (0->x) for object a
-    findPosition_old(obj : string, state : WorldState, pddls : Interpreter.Literal[]):number{
-		var x = obj;
-		var position = 0;
-		var floor : string = "f" + state.arm;
-
-		//time to move leftwards along the floors
-		for(var index = 0; index < pddls.length; index++){
-		    var pddl = pddls[index];
-		    // Find floor under which is under the arm
-		    if(pddl.rel == "leftof" && pddl.args[1]== floor){
-		        floor = pddl.args[0];
-		        index = -1;
-		        position ++;
-		
-		    }
-		    if(floor == "f0"){
-		        return position;
-		    }
-		}
-		return position;//should never happen
-    }
     
     findObjLiteralUnder(obj : string, state : WorldState): Interpreter.Literal{
     	var pddls = state.pddl.toArray();
@@ -396,13 +372,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 		}else{
 			return this.containsObj(obj, result, lits);
 		}
-    }
-    
-    
-    equalObjects(a : ObjectDefinition, b : ObjectDefinition):boolean{
-        if(a.form == b.form && a.color == b.color && a.size == b.size)
-            return true;
-        return false;
     }
 
     heuristic_cost_estimate(current:number, goal:Interpreter.Literal[]):number{
@@ -662,14 +631,7 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
         return count;
 
     }
-    specialIndexOf(obj:number[]):number {    
-        for (var i = 0; i < this._nodeValues.length; i++) {
-            if (this._nodeValues[i][0] == obj[0] && this._nodeValues[i][1] == obj[1]) {
-                return i;
-            }
-        }
-        return -1;
-    }
+
     reachedGoal(current: number, cond :  Interpreter.Literal[]):boolean{
         for(var i = 0; i < cond.length; i++ ){
             if( cond[i] != null && !this.checkGoal( current, cond[i]))
@@ -808,21 +770,6 @@ class Shortestpath implements Graph<number[]>{   // index 0 = x, index 1 = y
 	    return nFloors;
     }
     
-    getFloorSize(state : WorldState):number{
-	    var nFloors : number = 0;
-	    do{
-	        nFloors++;
-	        var temp : Interpreter.Literal[] = state.pddl.toArray();
-	        for(var i = 0; i < state.pddl.size(); i++){
-	            var found : boolean = (temp[i].args[0]=="f" + nFloors);
-	            if(found){
-	                break;
-	            }
-	        }
-	        
-	     }while(!found)          
-	    return nFloors;
-	}
 }
 
 
@@ -1022,11 +969,6 @@ module Planner {
     	}
     	
     	return descStr;
-    }
-
-
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
     }
     
 }
