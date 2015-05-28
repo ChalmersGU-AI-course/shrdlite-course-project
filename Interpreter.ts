@@ -16,31 +16,42 @@ module Interpreter {
                 interpretations.push(intprt);
             } catch (err) {
                 if (err instanceof Ambiguity) {
-                    var form = err.message;
-                    if (!contains(ambiguities, form)) {
-                        ambiguities.push(form);
-                    }
+                    // This parse had an object-level ambiguity
+                    // (I.e. of the form "take the ball" where there were
+                    // several balls)
+                    var objects = err.objects;
+                    objects.forEach((o) => {
+                    var form = currentState.objects[o].form;
+                        if (!contains(ambiguities, form)) {
+                            ambiguities.push(form);
+                        }
+                    });
                 }
             }
         });
         if (interpretations.length == 1) {
+            // There is only one valid interpretation (several invalid ones may
+            // have been pruned already
             return interpretations;
         } else if (ambiguities.length > 0) {
-            var msg : string = "Possibly ambiguous command. Try being more specific about the following objects: ";
-            ambiguities.forEach((form) => {
-                msg = msg + form + " ";
-            });
+            // There are either 0 or too many valid interpretations, and one
+            // or more invalid ones which reported ambiguities on the object
+            // level
+            var msg : string = "Possibly ambiguous command. Found ambiguous " +
+                               "references possibly referring to: " +
+                               ambiguities.join(", ");
             throw new Interpreter.Error(msg);
         } else if (interpretations.length == 0) {
+            // No object-level ambiguities but no valid interpretation either.
+            // Plain old invalid command, e.g. non-existent object or something
             throw new Interpreter.Error("No valid interpretation found.");
         } else {
-            // Scenario: the user used too many relative descriptors.
-            // We can't say what they were ambiguous about.
+            // Parse-level ambiguity. The user used too many relative
+            // descriptors. We don't know what they were ambiguous about.
             var msg : string = "Ambiguous command; " +
                 interpretations.length + " interpretations found. Please use fewer relative descriptions.";
             throw new Interpreter.Error(msg);
         }
-        
         
         function contains(a, obj) : boolean {
             for (var i = 0; i < a.length; i++) {
@@ -53,7 +64,15 @@ module Interpreter {
     }
 
 
-    export interface Goal {goal?:Literal; list?:Goal[]; isAnd?:boolean;}
+    /*
+    * Our own version of a goal. Standard PDDL is in normal form, i.e.
+    * an "AND"-list of "OR"-lists of Literals. Our version is more
+    * flexible, allowing any combination of AND and OR. This "should" really
+    * be a union type, similar to Parser.Object: each goal either has a
+    * literal, or a list of sub-goals which are combined with either AND or OR
+    */
+    export interface Goal {lit?:Literal; list?:Goal[]; isAnd?:boolean;}
+    
     export interface Result extends Parser.Result {intp:Goal;}
     export interface Literal {pol:boolean; rel:string; args:string[];}
     
@@ -75,10 +94,18 @@ module Interpreter {
 
     class Ambiguity implements Error {
         public name = "Interpreter.Error";
-        constructor(public message? : string) {}
+        constructor(public message? : string, public objects? : string[]) {}
         public toString() {return this.name + ": " + this.message}
     }
 
+    /*
+    * This type is used to represent a list of candidates for a description.
+    * When trying to identifi "the ball that is [...]", we generate a
+    * CandList of all balls, and then filter on the criterion in [...], e.g.
+    * "left of any table". The CandList also knows if the end result should be
+    * "the ball that is [...]", "any ball that is [...]" or "all balls that
+    * are [...]".
+    */
     interface CandList {
         candidates : string[];
         quant : string;
@@ -91,8 +118,8 @@ module Interpreter {
     
     
     function goalToString(goal : Goal) : string {
-        if (goal.goal != null) {
-            return literalToString(goal.goal);
+        if (goal.lit != null) {
+            return literalToString(goal.lit);
         } else {
             var goals = goal.list.slice();
             var str : string = "(" + goalToString(goals.pop());
@@ -110,15 +137,24 @@ module Interpreter {
     }
 
 
-    // Main function
+    /*
+    * Main function, which has all sub-function it needs inside.
+    * "state" effectively serves as a global variable in all of those functions.
+    */
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Goal {
 
-
+        // Generates a CandList from a Parser.Entity.
         function getCandListFromEnt(ent : Parser.Entity) : CandList {
             var cands : string[] = getCandidatesFromObj(ent.obj);
             return {candidates : cands, quant : ent.quant};
         }
         
+        /*
+        * The naming scheme is: any function returning a list of objects
+        * (represented by their WorldState.objects indices i.e. "a", "b")
+        * is called "getCandidates..." while those returning a CandList (i.e.
+        * the same thing but with a quantifier) are called "getCandList...".
+        */
         function getCandidatesFromObj(obj : Parser.Object) : string[] {
             var form = obj.form;
             if (form != null) {
@@ -141,7 +177,7 @@ module Interpreter {
         }
         
         // Returns all objects in the world which fit a given description
-        // i.e. {form, ?color, ?size}
+        // i.e. {form, ?color, ?size}.
         function getCandidatesFromDesc(form : string, color : string, size : string)
                  : string[] {
             function isCandidate(objDef) : boolean {
@@ -166,13 +202,22 @@ module Interpreter {
             return candidates;
         }
         
+        // Checks whether an object fulfils a given relation to another object.
         function isInLocation(candidate : string, relation : string, list : CandList) 
                  : boolean {
             var quant : string = list.quant;
             var result : boolean
             if (quant == "the" || quant == "any") {
-                // E.g. is the ball "inside any box".
-                // Check all boxes, if one is a match, return true.
+                /*
+                * E.g. is the ball "inside any box". Check all boxes, if one is
+                * a match, return true. The reason for treating "the" and "any"
+                * the same here is to allow for commands like "take the ball in
+                * the box". Trying to evalute "the box" prematurely results in
+                * an ambiguity if there are several boxes. Treating it as "any"
+                * passes the issue upwards - if there are still several
+                * candidates for the top-level "the" (i.e. "the ball [in the
+                * box]"), an ambiguity will be fired.
+                */
                 result = false;
                 list.candidates.forEach((obj) => {
                     if (fulfilsCondition(relation, candidate, obj)) {
@@ -191,54 +236,60 @@ module Interpreter {
                 });
                 return result;
             } else {
-                throw new Error("Quantifier \""+quant+"\" not implemented yet.");
+                throw new Error("Quantifier \""+quant+"\" not implemented.");
             }
         }
         
-        
-        function fulfilsCondition(rel : string, a : string, b : string) : boolean {
+        // There is some redundancy between this function and the "pddl" one
+        // in Planner.ts. They were written separately when working in
+        // parallel, and ought to be combined and brought out to some helper
+        // module.
+        function fulfilsCondition(rel : string, a : string, b : string)
+                 : boolean {
             if (state.holding == "a" || state.holding == "b") {
+                // None of the conditions tested here are fulfilled when
+                // either object is held by the arm.
                 return false;
             }
             var aPos : number[] = find_obj(state.stacks, a);
             var bPos : number[];
             
             if (b == "floor") {
-              if (rel == "above") {
-                return true;
-              } else if (rel == "ontop") {
-                return (aPos[1] == 0);
-              } else {
-                //Can't be under, beside, leftof, rightof, or inside the floor
-                return false;
-              }
+                if (rel == "above") {
+                    return true;
+                } else if (rel == "ontop") {
+                    return (aPos[1] == 0);
+                } else {
+                    //Can't be under, beside, leftof, rightof, or inside the floor
+                    return false;
+                }
               
             } else {
             
-              bPos = find_obj(state.stacks, b);
-              if (rel == "leftof") {
-                return (aPos[0] < bPos[0]);
-              } else if (rel == "rightof") {
-                return (aPos[0] > bPos[0]);          
-              } else if (rel == "beside") {
-                return (Math.abs(aPos[0] - bPos[0]) == 1);
-              } else if (rel == "under") {
-                return ((aPos[0] == bPos[0]) &&
-                        ((aPos[1] - bPos[1]) < 0));   
-              } else if (rel == "above") {
-                return ((aPos[0] == bPos[0]) &&
-                        ((aPos[1] - bPos[1]) > 0));                      
-              } else if (rel == "ontop") {
-                return ((aPos[0] == bPos[0]) &&
-                        ((aPos[1] - bPos[1]) == 1));          
-              } else if (rel == "inside") {
-                return ((aPos[0] == bPos[0]) &&
-                        ((aPos[1] - bPos[1]) == 1) &&
-                        state.objects[b].form == "box");
-              } else {
-              //something is wrong; every relation should be one of the above
-                throw new Error("Unsupported relation");
-              }
+                bPos = find_obj(state.stacks, b);
+                if (rel == "leftof") {
+                    return (aPos[0] < bPos[0]);
+                } else if (rel == "rightof") {
+                    return (aPos[0] > bPos[0]);          
+                } else if (rel == "beside") {
+                    return (Math.abs(aPos[0] - bPos[0]) == 1);
+                } else if (rel == "under") {
+                    return ((aPos[0] == bPos[0]) &&
+                            ((aPos[1] - bPos[1]) < 0));   
+                } else if (rel == "above") {
+                    return ((aPos[0] == bPos[0]) &&
+                            ((aPos[1] - bPos[1]) > 0));                      
+                } else if (rel == "ontop") {
+                    return ((aPos[0] == bPos[0]) &&
+                            ((aPos[1] - bPos[1]) == 1));          
+                } else if (rel == "inside") {
+                    return ((aPos[0] == bPos[0]) &&
+                            ((aPos[1] - bPos[1]) == 1) &&
+                            state.objects[b].form == "box");
+                } else {
+                    //something is wrong; every relation should be one of the above
+                    throw new Error("Unsupported relation");
+                }
             }
         }
         
@@ -250,12 +301,12 @@ module Interpreter {
               }
             } 
           }
-          throw new Error("No such object");
+          throw new Error("No such object"); // Might also be held by the arm
         }
         
         function makeGoal(relation : string, objects : string[]) : Goal {
-            var lit : Literal = {pol: true, rel: relation, args: objects};
-            return {goal:lit};
+            var literal : Literal = {pol: true, rel: relation, args: objects};
+            return {lit:literal};
         }
         
         function makeHoldingGoal(candList : CandList) : Goal {
@@ -265,13 +316,17 @@ module Interpreter {
             } else if (candList.quant == "all" && candidates.length > 1) {
                 throw new Error("Cannot hold more than one object.");
             } else if (candList.quant == "the" && candidates.length > 1) {
-                var form : string = state.objects[candidates[0]].form;
-                throw new Ambiguity(form);
+                throw new Ambiguity("", candidates);
             } else {
+                // We allow "take all X" if X resolves to a CandList with only
+                // one candidate.
                 var goals : Goal[] = [];
                 candList.candidates.forEach((c) => {
                     goals.push(makeGoal("holding", [c]));
                 });
+                // If we at this point have more than one goal, it's because
+                // we were to take "any X". The "isAnd" flag set to false makes
+                // this an OR-list (disjunctive list) or goals.
                 return {list:goals, isAnd:false};
             }
         }
@@ -286,11 +341,16 @@ module Interpreter {
             if (subjCands.length == 0 || objCands.length == 0) {
                 throw new Error("No objects of that description found.");
             } else if (subjQuant == "the" && subjCands.length > 1) {
-                    var form : string = state.objects[subjCands[0]].form;
-                    throw new Ambiguity(form);
+                var form : string = state.objects[subjCands[0]].form;
+                throw new Ambiguity("", subjCands);
             } else if (objQuant == "the" && objCands.length > 1) {
-                    var form : string = state.objects[objCands[0]].form;
-                    throw new Ambiguity(form);
+                var form : string = state.objects[objCands[0]].form;
+                throw new Ambiguity("", objCands);
+            // After checking some basic failure modes, we need to check for
+            // each combination of quantifiers; between the two lists of
+            // objects there are 3x3 = 9 possible combinations. Examples of
+            // what type of commands end up in each case are given in
+            // comments below.
             } else if (subjQuant == "the") {
                 // The ball
                 var subject : string = subjCands[0];
@@ -357,6 +417,12 @@ module Interpreter {
                     return {list:andGoals, isAnd:true};
                 } else if (objQuant == "any") {
                     // Put all balls left of any brick
+                    // N.B.: We interpret this as allowing each ball to have
+                    // its own designated brick to be right of. An alternate
+                    // interpretation is that we may choose any brick, and
+                    // put every ball right of it. Our way feels more natural
+                    // in e.g. "Put every ball in a box". Maybe an extension
+                    // of the grammar could be separating "every" and "all"?
                     var orGoals : Goal[];
                     var andGoals : Goal[] = [];
                     subjCands.forEach((subject) => {
@@ -384,6 +450,8 @@ module Interpreter {
             }
         } 
         
+        //////
+        // Here the "main" part of interpretCommand starts:
         
         var verb : string = cmd.cmd;
         var loc : Parser.Location;
@@ -401,7 +469,7 @@ module Interpreter {
 
         
         if (verb == "take") {
-        // we shall pick up something and hold it;
+        // we shall pick up something and hold it
             ent = cmd.ent;
             subjectCands = getCandListFromEnt(ent);
             goal = makeHoldingGoal(subjectCands);
@@ -417,7 +485,7 @@ module Interpreter {
             var holdCands : CandList = {candidates : [state.holding], quant : "the"};
             goal = makeMovingGoal(relation, holdCands, goalCands);
        } else if (verb == "move") { 
-       // we shall move something
+       // we shall move something somewhere
             ent = cmd.ent;
             subjectCands = getCandListFromEnt(ent);
             loc = cmd.loc;

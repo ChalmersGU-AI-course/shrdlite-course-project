@@ -137,7 +137,7 @@ module Planner {
         }
         
         function is_fulfilled(astate : ActionState, goal : Interpreter.Goal) : boolean {
-            var lit : Interpreter.Literal = goal.goal;
+            var lit : Interpreter.Literal = goal.lit;
             if (lit != null) {
                 var condition = pddl[lit.rel](astate, lit.args);
                 return  lit.pol ? condition : !condition;
@@ -377,7 +377,7 @@ module Planner {
         }
         
         function goal_heur(a1 : ActionState, goal : Interpreter.Goal) : number[] {
-            var lit : Interpreter.Literal = goal.goal;
+            var lit : Interpreter.Literal = goal.lit;
             if (lit != null) {
                 return pddl[lit.rel](a1, lit.args) ? [0,0] : heuristic[lit.rel](a1, lit.args);
             } else {
