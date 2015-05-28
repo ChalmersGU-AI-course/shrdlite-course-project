@@ -201,6 +201,7 @@ module Planner {
     	var locIndex : number =  -1;
     	var minimum : number = Number.MAX_VALUE;
     	var list : number[] = [];
+    	var findTar : number = -1;
     	
     	for(var i =0; i<goal.length; i++ ){
     		for(var x =0; x<state.stacks.length; x++ ){
@@ -209,12 +210,14 @@ module Planner {
 				
 				if( goal[i][0].args[0] == state.holding){
 					tar =0 ; 
-					tarIndex = state.arm; 
+					tarIndex = state.arm;
+					findTar =0;
 				}
 				
 				if( goal[i][0].args[1] == state.holding){
 					loc =0 ;
-					locIndex = state.arm; 
+					locIndex = state.arm;
+					findTar =0;
 				}
 
 				if(stackTar != -1){
@@ -235,10 +238,12 @@ module Planner {
 				tmpTot = tar;
 				
 			}else{
-				tmpTot = tar + loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex);
+				tmpTot = tar + loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex) + findTar;
 			}
 			
-			//	tmpTot +=  (Math.max (tarIndex,  state.arm) - Math.min (tarIndex,  state.arm));
+			if(findTar == -1){
+				tmpTot += (Math.max (tarIndex,  state.arm) - Math.min (tarIndex,  state.arm));
+			}
 				
 			if(minimum > tmpTot){
 				minimum = tmpTot;
