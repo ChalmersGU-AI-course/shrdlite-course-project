@@ -137,6 +137,10 @@ module Heuristics {
         // +1 for dropping the object or
         // if holding something else, drop that first.
         var holdCost = dropCost(s, a, stackObj, false);
+        // var holdCost = 0;
+        // if(s.holding != null){
+        //     holdCost = 1;
+        // }
 
         return aboveCost + armCost + holdCost;
     }
@@ -183,8 +187,8 @@ module Heuristics {
             return 1;
         }
         // Holds something but needs to drop it somewhere else...
-        // ...and come back
-        return 3;
+        // ...and come back?
+        return 2;
     }
 
     // Computes the expected number of actions to grab an object
