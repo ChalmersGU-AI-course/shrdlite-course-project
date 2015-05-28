@@ -8,6 +8,10 @@ from helpers import *
 from AStar.structures import PriorityQueue
 from AStar.structures import GridWithWeights
 
+DROP_IT = "Drop it like it\'s hot!"
+NEW_COMMAND = "Give me another command, meatbag."
+PICKING_UP = "Picking up "
+
 def a_star_search(getActions, startState, isGoal, heuristic):
     """Find a good path to a goal node using a-star.
 
@@ -51,7 +55,7 @@ def a_star_search(getActions, startState, isGoal, heuristic):
 
 def getPlan(goal, came_from, actions_so_far, objects):
     current = _getKey(goal)
-    plan = ['Give me another command. Meatbag']
+    plan = [DROP_IT]
     while current in came_from:
         next    = came_from[current]
         command = actions_so_far[current]
@@ -59,9 +63,9 @@ def getPlan(goal, came_from, actions_so_far, objects):
         if command is 'p':
             obj = keyToObj(current, objects)
             plan += ['p',
-                     'Picking up ' + stringify_descr(simplify_descr(obj, objects))]
+                     PICKING_UP + stringify_descr(simplify_descr(obj, objects))]
         elif command is 'd':
-            plan += ['d','Drop it like it\'s hot!']
+            plan += ['d',DROP_IT]
         else:
             plan += [command]
 
