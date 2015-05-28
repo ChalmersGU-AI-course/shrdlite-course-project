@@ -46,12 +46,11 @@ module Heuristics {
         switch(atom.rel){
             case "holding":
                 var target = atom.args[0];
-                var holds = s.holding === target;
 
                 if(atom.pol){
-                    return heuristicDistance(s, target);
+                    return heuristicGrab(s, target);
                 }
-                if(holds){
+                if(s.holding === target){
                     return 1;
                     // Just drop it. Optionally: use canSupport function.
                 }
@@ -65,27 +64,27 @@ module Heuristics {
                 var below = atom.args[1];
 
                 if(atom.pol){
-                    return heuristicDifference(s, target, below, atom.rel != "above");
+                    return heuristicMoveOntop(s, target, below, atom.rel != "above");
                 }
                 // Same heuristic as for grabbing the target.
-                return heuristicDistance(s, target);
+                return heuristicGrab(s, target);
 
             case "beside":
                 var target = atom.args[0];
                 var beside = atom.args[1];
-                var rightSide = heuristicLeftOf(s, beside, target);
-                var leftSide = heuristicLeftOf(s, target, beside);
+                var rightSide = heuristicMoveLeftOf(s, beside, target);
+                var leftSide = heuristicMoveLeftOf(s, target, beside);
                 return min(rightSide, leftSide);
 
             case "leftof":
                 var target = atom.args[0];
                 var leftof = atom.args[1];
-                return heuristicLeftOf(s, target, leftof);
+                return heuristicMoveLeftOf(s, target, leftof);
 
             case "rightof":
                 var target = atom.args[0];
                 var rightof = atom.args[1];
-                return heuristicLeftOf(s, rightof, target);
+                return heuristicMoveLeftOf(s, rightof, target);
 
             default:
                 throw new Planner.Error("!!! Unimplemented relation in heuristicAtom: "+atom.rel);
@@ -96,7 +95,7 @@ module Heuristics {
     }
 
     // a should be leftof b.
-    function heuristicLeftOf(s : State, target, leftof) : number {
+    function heuristicMoveLeftOf(s : State, target, leftof) : number {
 
         var a = computeObjectPosition(s, target);
         var b = computeObjectPosition(s, leftof);
@@ -142,7 +141,7 @@ module Heuristics {
         return aboveCost + armCost + dropC;
     }
 
-    function heuristicDifference(s : State, above : String, below : String, exactlyOntop : boolean) : number {
+    function heuristicMoveOntop(s : State, above : String, below : String, exactlyOntop : boolean) : number {
         var somewhereAbove : boolean = !exactlyOntop;
         var a = computeObjectPosition(s, above);
         var b = computeObjectPosition(s, below);
@@ -185,7 +184,7 @@ module Heuristics {
     }
 
     // Computes the expected number of actions to grab an object
-    function heuristicDistance(s : State, target : String) : number {
+    function heuristicGrab(s : State, target : String) : number {
         if(s.holding === target){
             return 0;
         }
@@ -218,20 +217,20 @@ module Heuristics {
             }
         }
 
-        throw new Planner.Error("!!! Error in heuristicDistance: must be able to find the target somewhere in the world...");
+        throw new Planner.Error("!!! Error in heuristicGrab: must be able to find the target somewhere in the world...");
     }
 
     ///////////////////////////////////////////////////////
     // Helper functions
 
-    function max(a, b){
+    function max(a : number, b : number) : number{
         if(a > b){
             return a;
         }
         return b;
     }
 
-    function min(a, b){
+    function min(a : number, b : number) : number{
         if(a < b){
             return a;
         }
