@@ -1,7 +1,14 @@
+# vim stuff
+*~
+*.swp
+*.swo
+*.swn
+
 # Typescript build stuff
 shrdlite-*.js
 *.map
 /*.js
+node_modules/
 
 # Visual Studio project stuff
 [Dd]ebug/

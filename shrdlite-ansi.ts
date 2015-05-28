@@ -17,4 +17,4 @@ if (process.argv.length != 3 || !ExampleWorlds[worldname]) {
 
 var world = new ANSIWorld(ExampleWorlds[worldname]);
 
-Shrdlite.interactive(world);
+Shrdlite.interactive(world, world);

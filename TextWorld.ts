@@ -19,6 +19,10 @@ class TextWorld implements World {
         console.log(output);
     }
 
+		public printPickList(elements : string[], callback) : void {
+        this.printDebugInfo("DEBUG: Ambiguity checks don't work in text world.");
+		}
+
     public printDebugInfo(info) {
         console.log(info);
     }

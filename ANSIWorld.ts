@@ -37,6 +37,10 @@ class ANSIWorld implements World {
         this.printSystemOutput("DEBUG: " + info);
     }
 
+		public printPickList(elements : string[], callback) : void {
+        this.printSystemOutput("DEBUG: Ambiguity checks don't work in ANSI world.");
+		}
+
     public printError(error, message?) {
         if (message) {
             error += ": " + message;

@@ -62,6 +62,20 @@ module Interpreter {
 		public toString() {return this.name + ": " + this.message}
 	}
 
+	//private functions
+	/**
+	* Interpret a command from the parser and return PDDL goals
+	*
+	* @param {Parser.Command} a command from the parser
+	* @param {WorldState} a description of the current state of the world
+	* @return {Literal[][]} Literal describing the PDDL goals
+	*/
+	function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
+		var interpret = new ShrdliteInterpretation(state, cmd); 
+		var intprt : Literal[][] = interpret.getInterpretation();
+		return intprt;
+	}
+
 	/**
 	 * @class Represents a Checker for the spatial relations in the current world
 	 */
@@ -677,21 +691,5 @@ module Interpreter {
 
 			return null;
 		}
-	}
-
-
-	//////////////////////////////////////////////////////////////////////
-	// private functions
-
-	function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-		//var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-
-		var interpret = new ShrdliteInterpretation(state, cmd); 
-		var intprt : Literal[][] = interpret.getInterpretation();
-		return intprt;
-	}
-
-	function getRandomInt(max) {
-		return Math.floor(Math.random() * max);
 	}
 }
