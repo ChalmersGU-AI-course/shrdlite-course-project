@@ -2,7 +2,7 @@ from physics import check_ontop
 from PDDL import satisfy_pred
 
 COST_MOVE = 1
-COST_PICK = 8
+COST_PICK = 1
 
 # actions
 
