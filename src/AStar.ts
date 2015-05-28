@@ -21,6 +21,10 @@ module AStar {
             var current: Node = lowestFScoreNode(openset);
             if (current.f_score==current.g_score) { // <=> heuristic(current.content, goalConditions)==0 : SUCCESS !!
                 // In the case of holding objects.
+                openset.forEach((s,n)=> {
+                    if((n.f_score-n.g_score)<4)
+                    console.log("Score: f="+n.f_score+" h="+(n.f_score-n.g_score)+" state: "+n.content.hash);
+                });
                 var hold: string = null;
                 goalConditions.forEach((goal) => {
                     if(goal.rel=="holding") {hold=goal.args[0];}

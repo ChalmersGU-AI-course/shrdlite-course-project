@@ -232,6 +232,7 @@ module Planner {
      */
     export function heuristic(stacks: string[][], goalConditions: Interpreter.Literal[]) : number {
         var score = 0;
+        var mw = new MinWeight();
         for (var goal=0; goal<goalConditions.length; goal++) {
             var g = goalConditions[goal];
             if (g.rel == "ontop" || g.rel == "inside") {
@@ -239,35 +240,57 @@ module Planner {
                 if(!(top[1]==0 && g.args[1]=="floor")) {
                     var bottom : number[] = Planner.getLocation(g.args[1], stacks);
                     if(top[0]!=bottom[0]) {
-                        score+=top[2]+bottom[2]+1;
+                        //score+=top[2]+bottom[2]+1;
+                        mw.setWeight(g.args[0],top[2]+1);
+                        mw.setWeight(g.args[1],bottom[2]);
                     } else if(top[1]!=bottom[1]+1) {
-                        score+=Math.max(top[2],bottom[2])+1;
+                        //score+=Math.max(top[2],bottom[2])+1;
+                        if(top[2]<bottom[2]) {
+                            mw.setWeight(g.args[0],top[2]+1);
+                            mw.setWeight(g.args[1],bottom[2]-top[2]);
+                        } else {
+                            mw.setWeight(g.args[0],top[2]-bottom[2]);
+                            mw.setWeight(g.args[1],bottom[2]+1);
+                        }
                     }
                 }
             } else if(g.rel == "beside") {
                 var o1 : number[] = Planner.getLocation(g.args[0], stacks);
                 var o2 : number[] = Planner.getLocation(g.args[1], stacks);
                 if(Math.abs(o1[0]-o2[0])!=1) {
-                    score+=Math.min(o1[2],o2[2])+1;
+                    //score+=Math.min(o1[2],o2[2])+1;
+                    if(o1[2]<o2[2]) {
+                        mw.setWeight(g.args[0],o1[2]+1);
+                    } else {
+                        mw.setWeight(g.args[1],o2[2]+1);
+                    }
                 }
             } else if(g.rel == "above" || g.rel == "under") {
                 var top : number[] = Planner.getLocation(g.args[(g.rel=="above") ? 0 : 1], stacks);
                 var bottom : number[] = Planner.getLocation(g.args[(g.rel=="above") ? 1 : 0], stacks);
                 if(!(top[0]==bottom[0] && bottom[1]<top[1])) {
-                    score+=top[2]+1;
+                    //score+=top[2]+1;
+                    mw.setWeight(g.args[(g.rel=="above") ? 0 : 1] , top[2]+1);
                 }
             } else if(g.rel == "rightof" || g.rel == "leftof") {
                 var right : number[] = Planner.getLocation(g.args[(g.rel=="rightof") ? 0 : 1], stacks);
                 var left : number[] = Planner.getLocation(g.args[(g.rel=="rightof") ? 1 : 0], stacks);
                 if(!(right[0]>left[0])) {
                     if(right[0]==0) {
-                        score+=right[2]+1;
+                        //score+=right[2]+1;
+                        mw.setWeight(g.args[(g.rel=="rightof") ? 0 : 1] , right[2]+1);
                     }
                     if(left[0]==stacks.length-1) {
-                        score+=left[2]+1;
+                        //score+=left[2]+1;
+                        mw.setWeight(g.args[(g.rel=="rightof") ? 1 : 0] , left[2]+1);
                     }
                     if(right[0]!=0 && left[0]!=stacks.length-1) {
-                        score+=Math.min(right[2],left[2])+1;
+                        //score+=Math.min(right[2],left[2])+1;
+                        if(right[2]<left[2]) {
+                            mw.setWeight(g.args[(g.rel=="rightof") ? 0 : 1],right[2]+1);
+                        } else {
+                            mw.setWeight(g.args[(g.rel=="rightof") ? 1 : 0],left[2]+1);
+                        }
                     }
                 }
             } else if(g.rel == "holding") {
@@ -275,7 +298,34 @@ module Planner {
                 score+=obj[2];
             }
         }
+        score+=mw.sumScores();
         return score;
+    }
+    
+    class MinWeight {
+        
+        contributions : Map<string,number>;
+        
+        constructor() {
+            this.contributions = new Map<string,number>();
+        }
+        
+        public setWeight(ob: string, w: number) {
+            if(this.contributions.has(ob)) {
+                this.contributions.set(ob,Math.min(this.contributions.get(ob),w));
+            } else {
+                this.contributions.set(ob,w);
+            }
+        }
+        
+        public sumScores() : number {
+            var score = 0;
+            this.contributions.forEach((n) => {
+                score+=n;
+            });
+            return score;
+        }
+        
     }
 
     /**
