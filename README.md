@@ -69,9 +69,7 @@ Iterative Deepening A\* was also implemented. It does take longer time but still
 
 ### Clarification questions on ambiguity
 
-There are two types of ambiguity. The first one is with the `the` quantifier, for example `grasp the object`. If there are several objects that could fit with the object description, the system enters a state where it asks the user to specify which object is meant. In this case, a list of possible candidates to choose from is printed. The user can then add more information such as `red`, if the new information is not sufficient he can provide more information such as `small` or `ball`. When sufficient information has been gathered, the system performs the action.
-
-xxx (write something on handling of misspellings, and escaping the ambiguity loop by writing a new command)
+There are two types of ambiguity. The first one is with the `the` quantifier, for example `grasp the object`. If there are several objects that could fit with the object description, the system enters a state where it asks the user to specify which object is meant. In this case, a list of possible candidates to choose from is printed. The user can then add more information such as `red`, if the new information is not sufficient he can provide more information such as `small` or `ball`. When sufficient information has been gathered, the system performs the action. If the user enters a completely new command while the program is waiting for an ambiguity clarification, the system stops asking for more details and instead resolves the newly entered command instead. This way, there is no risk for the user getting stuck in a loop for an unwanted command.
 
 The other type of ambiguity comes from a shift/reduce conflict in the grammar. The typical example would be `put the small ball in a box on the floor`. The box in this sentence can either be parsed as the current location of the ball or as the target location for the ball. Our system investigates both possibilities and rules out any that is inconsistent with the current state of the world. If both have valid interpretations, the system calculates both and picks the shortest one.
 
