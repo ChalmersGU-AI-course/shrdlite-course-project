@@ -1,73 +1,45 @@
 #!/usr/bin/env python3
 
-def main(state): 
-    # This is just to make the impression of a large computation:
-    import time
-    time.sleep(1)
+import interpreter
 
-    intprt = interpret(**state)
-    plan = planner(intprt, **state)
+import helpers
+
+
+def main(state):
+    try:
+        intprt = interpreter.interpret(**state)
+    except interpreter.InterpreterException as err:
+        return {'plan': [str(err)]}
+
+    helpers.log(str(intprt))
+    helpers.log(str(state['stacks']))
+
+    plan, heur = planner(intprt, **state)
+
     return {'int': intprt,
             'plan': plan,
-            }
+            'nodes_expanded': [heur]
+        }
 
-
-def interpret(stacks, holding, arm, objects, utterance, parses):
-    """
-    This function returns a dummy interpretation involving two random objects
-    """
-    import random
-    objs = [o for stk in stacks for o in stk]
-    a = random.choice(objs)
-    b = random.choice(objs)
-    interpretation = [[
-        {'pol': True, 'rel': "ontop", 'args': [a, "floor"]},
-        {'pol': True, 'rel': "holding", 'args': [b]},
-    ]]
-    return interpretation
 
 
 def planner(intprt, stacks, holding, arm, objects, utterance, parses):
     """
-    This function craetes a dummy plan involving a random stack
+    run the astar planner!
     """
-    import random
-    while True:
-        pickstack = random.randrange(len(stacks))
-        if stacks[pickstack]:
-            break
-    plan = []
 
-    # First move the arm to the selected stack
-    if pickstack < arm:
-        plan += ["Moving left"]
-        plan += ["l"] * (arm - pickstack)
-    elif pickstack > arm:
-        plan += ["Moving right"]
-        plan += ["r"] * (pickstack - arm)
+    import simple_planner
+    import AStar.algorithm
+    from heuristic import heuristic, no_heuristic
 
-    # Then pick up the object
-    obj = stacks[pickstack][-1];
-    plan += ["Picking up the " + objects[obj]['form'],
-             "p"]
+    came_from, cost_so_far, actions_so_far, goal = \
+      AStar.algorithm.a_star_search(
+          simple_planner.getAction,                       # successor method
+          (intprt, stacks, holding, arm, objects),        # initial state & world
+          simple_planner.goalWrapper,                     # goal test method
+          heuristic)
 
-    if pickstack < len(stacks) - 1:
-        # Then move to the rightmost stack
-        plan += ["Moving as far right as possible"]
-        plan += ["r"] * (len(stacks) - pickstack - 1)
-
-        # Then move back
-        plan += ["Moving back"]
-        plan += ["l"] * (len(stacks) - pickstack - 1)
-
-    # Finally put it down again
-    plan += ["Dropping the " + objects[obj]['form'],
-             "d"]
-
-    return plan
-
-
-######################################################################
+    return AStar.algorithm.getPlan(goal, came_from, actions_so_far,objects), len(came_from)
 
 if __name__ == '__main__':
     import cgi
@@ -80,6 +52,26 @@ if __name__ == '__main__':
         form = cgi.FieldStorage()
         jsondata = form.getfirst('data')
         state = json.loads(jsondata)
+
+        # add floors!
+        for idx, stack in enumerate(state['stacks']):
+            floor = "floor-" + str(idx)
+            state['objects'][floor] = {'color': None, 'form': 'floor', 'size': None}
+            stack.insert(0, floor)
+
+        if not 'holding' in state:
+            state['holding'] = None
+
+        import PDDL
+
+        # remove objects that are not in any stack from objects
+        new_objs = {}
+        for obj, props in state['objects'].items():
+            if not PDDL.find_obj(obj, state['stacks']) == (None, None) or obj == state['holding']:
+                new_objs[obj] = props
+
+        state['objects'] = new_objs
+
         result = main(state)
         print(json.dumps(result))
 

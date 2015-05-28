@@ -6,11 +6,36 @@
 // Replace this with the URL to your CGI script:
 var ajaxScript = "cgi-bin/shrdlite_cgi.py";
 
+var defaultWorld = 'small';
+var defaultSpeech = false;
 
 $(function(){
-    var startWorld = 'small';
-    var useSpeech = false;
-    var world = new SVGWorld(ExampleWorlds[startWorld], useSpeech);
+    var current = getURLParameter('world');
+    if (!(current in ExampleWorlds)) {
+        current = defaultWorld;
+    }
+
+    var speech = (getURLParameter('speech') || "").toLowerCase();
+    var useSpeech = (speech == 'true' || speech == '1' || defaultSpeech);
+
+    $('#currentworld').text(current);
+    $('<a>').text('reset')
+        .attr('href', '?world=' + current + '&speech=' + useSpeech)
+        .appendTo($('#resetworld'));
+    $('#otherworlds').empty();
+    for (var wname in ExampleWorlds) {
+        if (wname !== current) {
+            $('<a>').text(wname)
+                .attr('href', '?world=' + wname + '&speech=' + useSpeech)
+                .appendTo($('#otherworlds'))
+                .after(' ');
+        }
+    }
+    $('<a>').text(useSpeech ? 'turn off' : 'turn on')
+        .attr('href', '?world=' + current + '&speech=' + (!useSpeech))
+        .appendTo($('#togglespeech'));
+
+    var world = new SVGWorld(ExampleWorlds[current], useSpeech);
     ajaxInteractive(world);
 });
 
@@ -76,4 +101,15 @@ function ajaxParseUtteranceIntoPlan(world : World, utterance : string) : string[
     } else {
         return result;
     };
+}
+// Adapted from: http://www.jquerybyexample.net/2012/06/get-url-parameters-using-jquery.html
+function getURLParameter(sParam) : string {
+    var sPageURL = window.location.search.slice(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) {
+        var sParameterName = sURLVariables[i].split('=');
+        if (sParameterName[0] == sParam) {
+            return sParameterName[1];
+        }
+    }
 }

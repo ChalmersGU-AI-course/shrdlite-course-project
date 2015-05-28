@@ -1,0 +1,238 @@
+\documentclass[11pt]{article}
+\usepackage{coling2014}
+\usepackage{times}
+\usepackage{url}
+\usepackage{latexsym}
+\usepackage{apacite}
+\usepackage[colorinlistoftodos]{todonotes}
+
+\setcounter{secnumdepth}{0}
+
+\title{Ethics in computational decision-making}
+
+\author{Anonymous George \\
+  Chalmers University of Technology \\
+  {\tt george@example.com}
+}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+  This essay examines the ethical aspects of computational decision-making, 
+  from the view of a group of Computer Science students just introduced to 
+  the ethical side of artificial intelligence. We describe various applications 
+  where computational decision-making in our opinion requires ethical reasoning.
+  We discuss what constitutes ethical reasoning and how it is encoded in an 
+  artificial intelligence. We also present other ethical aspects of 
+  computational decision-making, such as assigning responsibility for a decision,
+  the importance of transparency, and how artificial intelligences both possibly
+  can discriminate and help against discrimination.
+\end{abstract}
+
+\section{Introduction}
+Computers help us make decisions every day. They recommend products for us to
+buy, they correct our spelling errors and they suggest whom we should befriend
+on social network sites. As computers become more powerful and research in artificial 
+intelligence progresses, the idea of letting computers make the decisions that have 
+typically been made by humans becomes more and more appealing. There are already some 
+applications for decision-making computers, such as bots trading on the stock market. 
+In the article ``The Ethics of Artificial Intelligence'' \citeyear{bostrom2013ethics}, 
+\citeauthor{bostrom2013ethics} argues that increasingly complex decision-making 
+algorithms are inevitable, and in the end very desirable. 
+
+When artificial intelligences will make decisions that more directly affect humans, a series of questions
+arises: How can we make sure that artificial intelligences make ethical decisions? What is considered ethical? 
+Who is to blame for a bad decision made by an artificial intelligence? Can we trust the decision-making 
+process? Is it even ethical to use computational decision-making? This essay will argue for both the positive 
+and negative aspects regarding the ethics of a computer-based decision and present our point of view as 
+computer science students.
+
+\section{Computer decisions and ethical effects}
+There are a number of applications and areas where artificial intelligences may come to take important ethical decisions that will directly affect us humans. In some of these areas we can already today see machines assisting in the decision-making, and in other areas we can expect machines to assist or fully take over the decision-making in a few years time. Some of these areas are purely speculative, with some background in referenced articles and papers.
+
+There have been much research into the idea of having machines predict court decisions 
+\cite{martin2004competing}, which is often a very tedious and time-consuming practice for anyone involved.
+According to some results, artificial intelligences have predicted as much as 70\% of the outcome of selected court cases correctly. These numbers makes the idea of having machines making the actual court decisions in the future very real. Of course, when making these decisions, machines will have to cover a wide range of ethical aspects.
+
+\citeauthor{bostrom2013ethics} mention the idea of letting a machine-learning algorithm approve or reject loan applications at a bank. There are already expert systems in use to help with mortgage handling, and one could imagine this being a field where algorithms will be more widely used in the future.
+
+Even in the field of education, artificial intelligences are in some degree used to make important decisions. \textit{Automated essay scoring} is the notion of using algorithms to evaluate and score essays written by students, typically used when scoring large standardized tests. The use of automated essay scoring has been criticized \cite{HumanReaders}.
+
+\citeA{Chatfield2014automate} writes about how medical triage is a field in which automation and algorithms already play a considerable part, and will come to play an even bigger part in the future. Triage is the practice of how to prioritize wounded or sick patients. One of the most common situations where artificial intelligence is used in triage is to calculate who to treat first in an emergency situation with multiple wounded patients. There is often simply too many factors involved for any human to make a rational decision based on the facts. If two lightly injured patients could be helped simultaneously, is it better to do so than helping one more critically injured? In these areas artificial intelligence decision-making could be applied, if all factors are properly considered.
+
+In his article, \citeauthor{Chatfield2014automate} also writes about the car industry: The evolution of cars has progressed for nearly one hundred years. For each year the car gets safer and safer and still, millions of people die in traffic each year. At one point, there will only be one part of the driving car that we can still improve on: the human driver. Turning all cars autonomous will completely remove the issue of bad drivers from the equation. \citeA{elonmusk2015however}, the CEO of Tesla Motors, believes that at some point in the future when autonomous cars are safer than self-driven cars, the public may outlaw human drivers completely. Even if the development of autonomous cars is mostly a question of making the car drive perfectly, it is also a question of ethical decision-making. For example, if children are crossing the road and an accident is unavoidable, should the car swerve risking the driver's life or break risking the children's life? This is a typical example of how artificial intelligences will have to make ethical decisions.
+
+Even in the late stages of human life, one could encounter machine-based decision-making. In their article \textit{Robot Be Good: A Call for Ethical Autonomous Machines}, \citeauthor{anderson2010robot} describe a robot which helps the elderly in various ways, for example by reminding them to take their medicine. In such a situation, the robot would have to take into consideration the autonomy of the person in question, who maybe does not want to take their medicine, as well as predicting the outcome if the person does not take their medicine. 
+
+All the cases above would benefit from if one could always realistically make all decisions based on pure facts. This is most often not possible for a human, since we will always make some subjective normative assessments. Computers are not like humans, and can instead base their decisions on pure facts. Thus, in all areas where fact-based decisions is desired, computer based decision making will shine as long as it is ethically in the right. 
+
+\section{Encoding ethical behavior}
+\label{sec:encodingEthical}
+
+How would one encode ethical thinking in an artificial intelligence? Typical for an artificial
+intelligence algorithm is its ability to deal with novel situations, situations that there is no 
+predetermined way how to deal with. This makes it harder to program an artificial intelligence 
+to behave ethically: one cannot simply tell an AI how to act in all possible cases, but the artificial
+intelligence would have to reason ethically. A classic example of encoding ethical behavior is the Isaac 
+Asimov's three laws of robotics \cite{asimov1950irobot}:
+
+\begin{enumerate}
+  \item A robot may not injure a human being or, through inaction, allow a human being to come to harm.
+  \item A robot must obey the orders given it by human beings, except where such orders would conflict 
+  with the First Law.
+  \item A robot must protect its own existence as long as such protection does not conflict with the 
+  First or Second Laws.
+\end{enumerate}
+
+Rules like these can describe certain actions artificial intelligences must or must not do, and an
+artificial intelligence can reason and plan to not end up e.g. hurting a human being. But these laws 
+cannot describe what would be ethical in less clear situations, when it comes to more everyday decisions.
+\citeauthor{anderson2010robot} describe how their idea of a robot helping with elderly care could end up
+in a situation where it would have to decide who gets to choose which television program to watch. They suggest a way of dealing with complex situations based on machine-learning, where how to deal with different 
+situations is based on training data describing how ethically correct different actions are in different
+situations.
+
+But even if we know how to implement ethically sound behavior, it is not obvious what is considered ethical.
+What constitutes ethical behavior might differ a
+lot between different situations, applications, cultures and even over time. 
+For not many decades ago homosexuality was considered a disease and slavery was legal.
+We believe that, despite the hard problem of encoding ethical behavior,
+ultimately, an artificial intelligence should be able to make better and more fair decisions than a
+human typically can. While a human can easily take in many aspects into
+its decision-making and weigh complex considerations, a human is still very
+controlled by its emotions. A human can be racist or homophobic, a human may
+personally know the people involved in the decision, a human can simply have a
+bad first impression of someone. An artificial intelligence, on the other hand, can be programmed to not
+take in certain aspects such as race and sexual orientation into its decision-
+making. 
+
+\section{The ethical scopes of artificial decision-making}
+
+Since computer-decision could operate in a large variety of areas, all from deciding which route to travel to work to which person to treat in an accident. Different applications of ethical decision making may need different ethical scopes, and one can categorize the different levels of ethical thinking that an agent may need. In his article "The Nature, Importance, and Difficulty of Machine Ethics", \citeauthor{moor2006nature} argues that there are four ways ethics can occur in artificial decision making: there are ethical-impact agents, implicit and explicit ethical agents and full ethical agents.
+
+\textit{Ethical-impact agents} are agents whose actions have an ethical impact, intended or not. \citeauthor{moor2006nature} gives an example of robot jockeys riding camels in Qatar. Since a camel is faster if the jockey is light, Camel owners enslaved very young boys from poorer countries to ride the camels. The boys were fed limited amounts of food to keep them light-weighted. But these days, during these camel races the camel is ridden by a robot. The robot does not take any ethical decisions but replacing the boy with a robot can have an ethical impact on society.
+
+\textit{Implicit ethical agents} is where a machine is controlled by a software that supports implicit ethical behavior, rather than by code containing explicit ethical case-by-case scenarios. In other words, they have some sort of ethical consideration built in. Usually they exist in are areas that people are promised a product or service where a software agent or machine perform a minor part, often safety or security. Examples of these are web banking, or any service that involve money transactions without human supervision or an airline that promises the plane's passengers arrival on time. The autopilot of that plane must consider the arrival time when planning the flight route. These agents will have some kind of automatic ethical reaction to a given solution.
+
+\textit{Explicit ethical agents} are agents that can handle an unpredicted problem in an ethically correct way. They should also make a correct decision when ethical principles are in conflict. Usually this is the area one thinks of in computer-made decision in regards to ethics. These agents will have a general principle or ethical rule to interpret a situation and find a solution that does not interfere with these. A classic example of this is Isaac Asimov's three laws of robotic \cite{asimov1950irobot}.
+
+\textit{Full ethical agents} can make explicit ethical judgments and can reasonably justify them. A human adult is a full ethical agent. Can machines ever take the role of a full ethical agent? Based on this definition it is really hard to say. It is both a philosophical and technical question.
+
+We think automation using \textit{explicit ethical agents} is where the focus must lie. Since there are some scenarios where they operate today, while making a full ethical agent is still science fiction as of this day. But to make explicit ethical agents one has to face the decision of what to do when ethical principles are in conflict. A classic example of conflict in ethics are the Trolley problem \cite{Chatfield2014automate}. The Trolley problem is expressed in many different versions but all sharing the conflict between consequence based (utilitarian) and duty based (deontology). In the "The fat guy must die"-version, the scenario is a trolley crashing down a hill towards five people, while you and a fat guy are standing above the hill on a bridge. You can either do nothing and see the trolley will run over the five people and they will die, or you push the fat innocent man from the bridge, so that his body interrupts the trolley path; saving the five people but killing the innocent fat guy. From the consequentialist viewpoint five deaths versus one death is an easy choice, however from a deontological viewpoint we also need care about how the solution is reached: not taking an action is always preferable to the murder of innocent people. 
+
+\citeauthor{moor2006nature} mentions research in the process of creating ethical logic, and how you would approach the problem of making machine based-decisions in these scenarios.
+As of today, where many advancements are made in the area of explicit ethical agents such as autonomous cars, a critical area of research is that of ethics, and it needs to be focused on. This could either be done by research findings from different organizations, for example the European Union, or through different scientific challenges. DARPA have had a challenge in autonomous vehicles for nearly ten years \cite{darpa2006} and one could argue that they should also have a similar challenge in Ethics in computational decision-making.
+
+\section{Assigning responsibility}
+
+Imagine being arrested for a crime you did not commit.
+Instead of the ordinary human judge or jury, the decision-making 
+entity is an artificial intelligence. Despite your innocence, the 
+artificial intelligence comes to the conclusion that you are guilty, 
+and so the outcome of the trial puts you in jail.
+
+A situation like the one described above would probably feel like a kafkaesque nightmare,
+where the judgment of the artificial intelligence appears like the judgment of a god. Who would be to
+blame for an unfair decision from an artificial intelligence? This is an important problem with
+computational decision-making. Would the owner of the algorithm, e.g. a company,
+or as in this situation a court of law, be to blame? Would the company that
+delivered the algorithm be responsible, or maybe the individual programmers who
+worked on the project? Or is there maybe no one but the artificial intelligence itself to blame --- a
+prospect that may seem silly today, but may be more reasonable in a future where
+artificial intelligences approach sentience in their intelligence.
+
+\citeauthor{mcfarland2014mind} present a similar case in their report 
+"Mind the Gap: Can Developers of Autonomous Weapons Systems Be Liable for War Crimes". 
+They argue that the criminal laws of today are stated in a way that there is a need for 
+personal accountability. The victim of a crime needs to see that the guilty party is remorseful or pays
+for its crime in some way. They argue that even if a programmer takes responsibility for their algorithms, 
+a victim could instead think that the company or even the robot is guilty.
+
+In this mess of trying to decide
+whom to blame, it could be easy for a company, or a court of law, to avoid
+taking responsibility. A decision-making algorithm can be used as a scapegoat,
+in cases where traditionally the person who had made the decision would have
+been responsible. This is a question which is important to discuss, and we
+believe that there needs to be policy handling the matter.
+
+% TODO: add more will smith
+
+\section{Importance of transparency in computer-made decisions}
+
+An important aspect of decision-making algorithms is transparency. We
+believe that to ensure the fairness and correctness of a
+decision-making algorithm, it is important for both the algorithm and
+its ``reasoning'' process to be transparent. Algorithms that make
+important decisions should have specification and implementation
+available to the public. However, this is not enough,
+\citeA{bostrom2013ethics} raises an important point: machine learning
+algorithms such as neural networks make it very hard to reason about
+why a decision was made, therefore one should favor algorithms that
+make it possible to follow the decision process.
+
+We also need the decisions to be predictable and decision reasons to
+be understandable to laypersons in order for society to accept
+artificial decisions as they receive a larger role in
+society. Predictable decisions allow laypersons to accept the
+decisions made even if they cannot understand the algorithms or
+reasoning. Interestingly machine learning algorithms are good in this
+regard: decisions are based on past decisions and observations.
+
+A remaining question to ask is: how much transparency is needed to
+trust an artificial decision? For example in an emergency situation we
+would easily accept that a human emergency worker prioritizes helping
+some person over another, but we would perhaps want a good reason to
+accept a computer's decision.
+
+\section{Discrimination in computer-made decisions}
+
+It is not always obvious if a decision is fair or not, and different people may have
+different views. Discrimination can be a big problem, and despite computers being better at making
+objective decision than humans, one could imagine situations where someone might feel discriminated by 
+an artificial intelligence. \citeauthor{bostrom2013ethics} describe a situation where an algorithm 
+responsible for approving and denying mortgage applications denied applications from people of different colors without obvious reason.
+In such a situation, it is both important to know who is responsible for the decision, and the reasoning 
+behind the decision.
+
+Still, as we have argued before, an artificial intelligence should typically be better than a 
+human at making fair decisions. Therefore, computational decision-making could be the way to create
+a world with less discrimination, as long as we as software engineers develop ethically responsible 
+artificial intelligences.
+
+\section{Is the use of computational decision-making ethical?}
+
+We believe that artificial intelligences playing a bigger role in society is inevitable. Many of the
+decisions today made by humans will in the future be made algorithms. We already have a huge problem
+in society with mass unemployment, and we believe the advent of artificial intelligence will lead to
+even more human beings losing their jobs, being replaced by computers. This is also an ethical 
+aspect of computational decision-making: not the question if the decisions are ethically sound, but if the
+use of computational decision-making is ethical in itself.
+
+In the case of automated essay scoring, a petition has been started against its use, arguing that 
+algorithms are not able to make a correct and fair assessment of essays \cite{HumanReaders}. It is 
+reasonable to assume that many of the early computational decision-makers will be worse than human
+decision-makers, making it unethical to let artificial intelligences make important decisions that 
+can strongly affect people's lives.
+
+\citeauthor{anderson2010robot} argue that if people would assume that robots are unethical, that could
+be a reason to oppose the use of artificial intelligence. So in order to make the use of artificial 
+intelligences ethical, we should make artificial intelligences behave ethically correct.
+
+\section{Conclusion}
+
+Despite the fact that encoding ethical behavior in artificial intelligences is a very difficult task, we believe that computational decision-making will become more common in the near future. 
+
+As more and more decisions made are being automatized, there are a lot of new obstacles we must face. We must assign responsibility for the decisions taken by our artificial intelligences, and all algorithms behind them must be made transparent, predictable and utmost understandable to any human being. The gap between the person who created the artificial intelligence making the decision, and the person who is directly affected is in the worst case very large. The general mass of society, uneducated on the subject will most likely have a very hard time adapting to having their lives decided by machines. The transition period will be long.
+
+The prospect of letting unbiased algorithms make important decisions instead of subjective humans is truly exciting. By overcoming the aforementioned challenges, with the help of artificial intelligence, we have a real opportunity to one day create a society which is more fair than the one we currently live in.
+
+\newpage
+\bibliographystyle{apacite}
+\bibliography{references}
+
+\end{document}
+
+
+

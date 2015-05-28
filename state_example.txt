@@ -1,0 +1,8 @@
+# Just a print of what the variables in the state (in shrdlite_cgi.py) contain, and their respective types.
+
+stacks (list): [['e'], ['g', 'l'], [], ['k', 'm', 'f'], []]
+holding (NoneType): None
+arm (int): 3
+objects (dict):{'h': {'size': 'small', 'color': 'red', 'form': 'table'}, 'm': {'size': 'small', 'color': 'blue', 'form': 'box'}, 'd': {'size': 'small', 'color': 'green', 'form': 'plank'}, 'c': {'size': 'large', 'color': 'red', 'form': 'plank'}, 'e': {'size': 'large', 'color': 'white', 'form': 'ball'}, 'i': {'size': 'large', 'color': 'yellow', 'form': 'pyramid'}, 'g': {'size': 'large', 'color': 'blue', 'form': 'table'}, 'f': {'size': 'small', 'color': 'black', 'form': 'ball'}, 'a': {'size': 'large', 'color': 'green', 'form': 'brick'}, 'l': {'size': 'large', 'color': 'red', 'form': 'box'}, 'j': {'size': 'small', 'color': 'red', 'form': 'pyramid'}, 'b': {'size': 'small', 'color': 'white', 'form': 'brick'}, 'k': {'size': 'large', 'color': 'yellow', 'form': 'box'}}
+utterance (str): pick up the black ball on the floor
+parses (list): [{'input': 'pick up the black ball on the floor', 'prs': {'ent': {'obj': {'loc': {'ent': {'obj': {'size': None, 'form': 'floor', 'color': None}, 'quant': 'the'}, 'rel': 'ontop'}, 'obj': {'size': None, 'form': 'ball', 'color': 'black'}}, 'quant': 'the'}, 'cmd': 'take'}}]

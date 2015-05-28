@@ -1,0 +1,15 @@
+Computers are becoming more and more integral to our daily lives, and
+we are constantly connected to Internet using devices such as
+smartphones and tablets. At the same time, computers are becoming
+cheaper and more powerful, as predicted by Moore's law. We're letting
+computers correct our spelling, help us decide what products to buy
+and suggest who we should befriend on social network sites. Much of
+this is achieved through methods originiating in AI research. While
+computers today mostly have an advisory role, the idea of letting
+programs make the decisions is becoming more and more
+interesting. LITE EXEMPEL PÅ PROGRAM SOM FÅR TA BESLUT.
+
+Computer programs making critical decisions rises many ethical
+questions.
+
+bs bs bs
