@@ -212,12 +212,7 @@ module Interpreter {
                 
                 throw new Interpreter.Error("Description is ambiguous there is: a " +res.join(" and a "));
             }
-         }else if(ent.quant === "all")
-         {
-            throw new Interpreter.Error("all quantifiers as destinations doesn't make sense!"); 
-         }else if(ent.quant === "any")
-         {}
-         
+         }        
             //hantera på något sätt
         }
         
@@ -235,6 +230,10 @@ module Interpreter {
         
         if (typeof(loc.ent) !== "undefined")
         {
+          if(loc.quant === "all")
+         {
+            throw new Interpreter.Error("all quantifiers as destinations doesn't make sense!"); 
+         } 
             res = res.concat(interpretEnt(loc.ent,world,wObjs));
         }
         
