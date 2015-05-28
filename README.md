@@ -42,6 +42,8 @@ After performing `make html` one can open the shrdlite.html file and start enter
 - grasp an object on the floor
 - put a ball above the red plank
 - put an object that is under a box on a plank
+- put the red plank left of the yellow brick
+- put the small ball in a box on the floor
 
 Some cases that are correctly aborted by the Interpreter:
 
