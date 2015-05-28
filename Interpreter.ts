@@ -351,157 +351,81 @@ module Interpreter {
     }
 
     /**
-*   Check that the combination of over and under object is valid 
-**/
-export function checkValidPos (over : ObjectDefinition, under : ObjectDefinition): boolean{
-	//console.log(over);
-	//console.log(under);
+    *   Check that the combination of over and under object is valid 
+    **/
+    export function checkValidPos (over : ObjectDefinition, under : ObjectDefinition): boolean{
         
+        //Everything can be on a floor
         if (under.form == "floor"){
             return true;
         }
-        //Ball
-        else if(under.form == "ball"){ return false; }
-        else if(over.form == "ball" )
-        {
-            if (under.form == "box" && checkSizeUGE(over.size, under.size) ){
-                return true;
+        //A ball can only be in a box of the correct size (except floor)
+        else if(over.form == "ball" && under.form == "box"){
+            return checkSizeUGE(over.size, under.size);
+        }       
+        //Boxes cannot contain pyramids, planks or boxes of the same size.
+        else if(under.form =="box"){
+            if(over.form == "table" || over.form == "brick"){
+                return checkSizeUGE(over.size, under.size);  
+            }else if(over.form == "plank" || over.form == "pyramid"){
+                return checkSizeUG(over.size, under.size);
             }else{
-                return false;
+                return checkLessEQ(over.size, under.size);
             }
         }
-        //Box
-        else if(under.form =="box" )
-        {
-            if(over.form == "table"){
-                if(checkSizeUGE(over.size, under.size)){
-                    return true;
-                }
-                else{
-                    return false;
-                }               
-            }
-            else if(over.form == "plank"){
-                if(checkSizeUG(over.size, under.size)){
-                    return true;
-                }
-                else{
-                    return false;
-                }
-            }
-            else if(over.form == "brick"){
-                return (checkSizeUGE(over.size, under.size))
-            }
-            else if(checkLessEQ(over.size, under.size) )
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-
-        }
-        // Pyramid
-        else if (under.form == "pyramid" || under.form == "brick")
-        {
-            if (over.form == "box")
-            {
-                // Large Box cant be over large Pyramid
-                // Small Box cant be over small Pyramid or Brick
-                if(checkSizeUG(over.size, under.size) && under.form =="pyramid")
-                {
-                    return true;
-                }
-                else if(under.size == "large" && under.form=="brick")
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            else{
-            	return checkSizeUGE(over.size, under.size);
-            }
-            
-        }
-        //table
-        else if (under.form == "table"){
-            if(checkSizeUGE(over.size, under.size)){
-                return true;
-            }
-            else
-            {
-                return false
+        // Large Box cant be over large Pyramid
+        // Small Box cant be over small Pyramid 
+        else if(under.form == "pyramid"){
+            if (over.form == "box"){
+                return checkSizeUG(over.size, under.size);
+            }else{
+                return checkSizeUGE(over.size, under.size);
             }
         }
-        //plank
-        else if (under.form == "plank"){
-            if(checkSizeUGE(over.size, under.size)){
-                return true;
-            }
-            else
-            {
-                return false
+        // Small Box cant be over small Brick
+        else if(under.form == "brick"){
+            if (over.form == "box"){
+                return under.size == "large";
+            }else{
+                return checkSizeUGE(over.size, under.size);
             }
         }
-
-
+        //Table or plank
+        else if (under.form == "table" || under.form == "plank"){
+            return checkSizeUGE(over.size, under.size);
+        }
         return false;
     }
 
-
-/**
-* checks that over is of same size or smaller than under.
-**/
-function checkSizeUGE (over : string, under : string): boolean {
-
-        if(under == "large" )
-        {
+    /**
+    * checks that over is of same size or smaller than under.
+    **/
+    function checkSizeUGE (over : string, under : string): boolean {
+        if(under == "large"){
             return true;
-        }
-        else if(over =="small")
-        {
+        }else if(over =="small"){
             return true;
-        }
-        else
-        {
+        }else{
             return false;
         }
+    }
 
-}
-
-/**
-* checks that over is of same size or smaller than under.
-**/
-function checkSizeUG (over : string, under : string): boolean {
-
-        if(under == "large" && over == "small")
-        {
+    /**
+    * checks that over is of same size or smaller than under.
+    **/
+    function checkSizeUG (over : string, under : string): boolean {
+        if(under == "large" && over == "small"){
             return true;
-        }
-        else
-        {
+        }else{
             return false;
         }
+    }
 
-}
-
-function checkLessEQ (over : string, under : string): boolean {
-
-        if(under == "large" && over == "small" || under == "small" && over == "small" )
-        {
+    function checkLessEQ (over : string, under : string): boolean {
+        if(under == "large" && over == "small" || under == "small" && over == "small"){
             return true;
-        }
-        else
-        {
+        }else{
             return false;
         }
+    }
 }
-
-
-}
-
