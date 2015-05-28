@@ -187,7 +187,6 @@ module Heuristics {
             return 1;
         }
         // Holds something but needs to drop it somewhere else...
-        // ...and come back?
         return 2;
     }
 
@@ -201,7 +200,7 @@ module Heuristics {
         if(s.holding != null){
             holdCost = 1;
             // This can be done more intelligently but
-            // it doesn't reduce the number of iterations very much: from 96 -> 90.
+            // it doesn't reduce the number of iterations very much.
             // The increased cost for computing the heuristic might not be worth it.
         }
 

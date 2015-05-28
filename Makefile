@@ -41,12 +41,14 @@ medium: shrdlite-offline.js
 	node shrdlite-offline.js medium "put the green brick below the yellow pyramid"
 
 complex: shrdlite-offline.js
-	node shrdlite-offline.js complex "put the green plank above the yellow pyramid"
+	# node shrdlite-offline.js complex "put the green plank above the yellow pyramid"
+	# node shrdlite-offline.js complex "put the green plank left of the yellow pyramid"
+	node shrdlite-offline.js complex "grasp the red plank"
 
 ambiguity: shrdlite-offline.js
 	node shrdlite-offline.js medium "put a ball that is on the floor beside the green plank"
 
 bug: shrdlite-offline.js
-	node shrdlite-offline.js small "grasp an object under a box"
-	# node shrdlite-offline.js complex "put the ball that is on a box on a brick"
+	# node shrdlite-offline.js small "grasp an object under a box"
+	node shrdlite-offline.js complex "put the ball that is on a box on a brick"
 	# node shrdlite-offline.js complex "put the white ball on a box on a brick"
