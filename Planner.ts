@@ -560,137 +560,139 @@ module Planner {
         return Math.floor(Math.random() * max);
     }
 
-}
-
- /*******************************************************************
- *Given a WorldState it returns a map that maps objects names       *
- *to the smallest set of attributes that uniquely distinguishes it  *
- * or if an object can not be uniquely describes it will be         *
- * described in full and given the attribute notUnique.             *
- ********************************************************************/
-function uniqueAttributes ( w : WorldState  ) : { [s:string]: string[]}
-{
-	var objs : string[] = [];
-	
-    if(w.holding !== null)
+     /*******************************************************************
+     *Given a WorldState it returns a map that maps objects names       *
+     *to the smallest set of attributes that uniquely distinguishes it  *
+     * or if an object can not be uniquely describes it will be         *
+     * described in full and given the attribute notUnique.             *
+     ********************************************************************/
+    function uniqueAttributes ( w : WorldState  ) : { [s:string]: string[]}
     {
-        objs.push(w.holding);
+	    var objs : string[] = [];
+	
+        if(w.holding !== null)
+        {
+            objs.push(w.holding);
+        }
+        
+	    for(var oi in w.stacks)
+	    {
+		    var o : string[] = w.stacks[oi];
+		
+		    for(var oi1 in o)
+		    {
+			    var o1 : string = o[oi1];
+			    objs.push(o1);
+		    }
+	    }
+	
+	
+	    var objsDef : ObjectDefinition[] = [];
+	
+	    for(var obji in objs)
+	    {
+		    var objS : string = objs[obji];
+		    objsDef.push(w.objects[objS]);
+	    }
+	
+	
+	    var objsAttr : { [s:string]: string[]} = {} //Map of the least needed attributes.
+	
+	    for(var obi in objs)
+	    {
+		    var objStr : string = objs[obi];
+		    var objDef : ObjectDefinition = w.objects[objStr];
+		    var obAttr : string[] = uniqueAttributes1(objDef, objsDef);
+		
+		    objsAttr[objStr] = obAttr;
+	    }
+	
+	    return objsAttr;
+    }
+
+    /*helper function to uniqueAttributes*/
+    function uniqueAttributes1 ( oA : ObjectDefinition , os : ObjectDefinition[] ) : string[]
+    {
+	    var unqAttr : string[] = [oA.form];
+	
+	    var unqOs : ObjectDefinition[] = uniqueAttributes2 ("form", oA.form, os);
+	
+	    if(unqOs.length > 1)
+	    {
+		    var temp0 : ObjectDefinition[] = uniqueAttributes2 ("size", oA.size, unqOs);
+		    var temp1 : ObjectDefinition[] = uniqueAttributes2 ("color", oA.color, unqOs);
+		
+		    if(temp0.length < temp1.length)
+		    {
+			    unqOs = temp0;
+			    if(unqOs.length <= 1)
+			    {
+				    unqAttr.push(oA.size);
+			    }
+			    else
+			    {
+				    unqAttr.push(oA.color);
+				    unqAttr.push(oA.size);
+				    if((uniqueAttributes2 ("color", oA.color, unqOs)).length > 1)
+				    {
+					    unqAttr.push("notUnique");
+				    }
+			    }
+		    }
+		    else
+		    {
+			    unqOs = temp1;
+			    if(unqOs.length <= 1)
+			    {
+				    unqAttr.push(oA.color);
+			    }
+			    else
+			    {
+				    unqAttr.push(oA.color);
+				    unqAttr.push(oA.size);
+				    if((uniqueAttributes2 ("size", oA.size, unqOs)).length > 1)
+				    {
+					    unqAttr.push("notUnique");
+				    }
+			    }
+		    }
+	    }
+	
+	    return unqAttr;
+    }
+
+    /*helper function to uniqueAttributes1*/
+    function uniqueAttributes2 ( type : string , oA : string , os : ObjectDefinition[] ) : ObjectDefinition[]
+    {
+	    var notUnique : ObjectDefinition[] = [];
+	
+	    for(var i in os)
+	    {
+		    switch (type)
+		    {
+			    case "form":
+				    if(oA === os[i].form)
+				    {
+					    notUnique.push(os[i]);
+				    }
+				    break;
+			    case "size":
+				    if(oA === os[i].size)
+				    {
+					    notUnique.push(os[i]);
+				    }
+				    break;
+			    case "color":
+				    if(oA === os[i].color)
+				    {
+					    notUnique.push(os[i]);
+				    }
+				    break;
+		    }
+	    }
+	    return notUnique;
     }
     
-	for(var oi in w.stacks)
-	{
-		var o : string[] = w.stacks[oi];
-		
-		for(var oi1 in o)
-		{
-			var o1 : string = o[oi1];
-			objs.push(o1);
-		}
-	}
-	
-	
-	var objsDef : ObjectDefinition[] = [];
-	
-	for(var obji in objs)
-	{
-		var objS : string = objs[obji];
-		objsDef.push(w.objects[objS]);
-	}
-	
-	
-	var objsAttr : { [s:string]: string[]} = {} //Map of the least needed attributes.
-	
-	for(var obi in objs)
-	{
-		var objStr : string = objs[obi];
-		var objDef : ObjectDefinition = w.objects[objStr];
-		var obAttr : string[] = uniqueAttributes1(objDef, objsDef);
-		
-		objsAttr[objStr] = obAttr;
-	}
-	
-	return objsAttr;
 }
 
-/*helper function to uniqueAttributes*/
-function uniqueAttributes1 ( oA : ObjectDefinition , os : ObjectDefinition[] ) : string[]
-{
-	var unqAttr : string[] = [oA.form];
-	
-	var unqOs : ObjectDefinition[] = uniqueAttributes2 ("form", oA.form, os);
-	
-	if(unqOs.length > 1)
-	{
-		var temp0 : ObjectDefinition[] = uniqueAttributes2 ("size", oA.size, unqOs);
-		var temp1 : ObjectDefinition[] = uniqueAttributes2 ("color", oA.color, unqOs);
-		
-		if(temp0.length < temp1.length)
-		{
-			unqOs = temp0;
-			if(unqOs.length <= 1)
-			{
-				unqAttr.push(oA.size);
-			}
-			else
-			{
-				unqAttr.push(oA.color);
-				unqAttr.push(oA.size);
-				if((uniqueAttributes2 ("color", oA.color, unqOs)).length > 1)
-				{
-					unqAttr.push("notUnique");
-				}
-			}
-		}
-		else
-		{
-			unqOs = temp1;
-			if(unqOs.length <= 1)
-			{
-				unqAttr.push(oA.color);
-			}
-			else
-			{
-				unqAttr.push(oA.color);
-				unqAttr.push(oA.size);
-				if((uniqueAttributes2 ("size", oA.size, unqOs)).length > 1)
-				{
-					unqAttr.push("notUnique");
-				}
-			}
-		}
-	}
-	
-	return unqAttr;
-}
 
-/*helper function to uniqueAttributes1*/
-function uniqueAttributes2 ( type : string , oA : string , os : ObjectDefinition[] ) : ObjectDefinition[]
-{
-	var notUnique : ObjectDefinition[] = [];
-	
-	for(var i in os)
-	{
-		switch (type)
-		{
-			case "form":
-				if(oA === os[i].form)
-				{
-					notUnique.push(os[i]);
-				}
-				break;
-			case "size":
-				if(oA === os[i].size)
-				{
-					notUnique.push(os[i]);
-				}
-				break;
-			case "color":
-				if(oA === os[i].color)
-				{
-					notUnique.push(os[i]);
-				}
-				break;
-		}
-	}
-	return notUnique;
-}
