@@ -21,6 +21,16 @@ take the ball in the box
 
 
 
+*** Extensions implemented ***
+
+- All quantifiers behvae correctly
+
+- Fully flexible conjunctive and disjunctive goals
+
+- Planner reports progress on a "once-per-object" basis, and uses minimal unique references to each object.
+
+We are not sure if the latter two counts as full extensions.
+
 
 
 *** Our search algorithm ***
@@ -82,6 +92,8 @@ Finally, if there is more than one valid interpretation, we must have had more t
 -- Planner messages --
 
 When performing the plan, the messages output to the user amount to one per object manipulation: placing an object held at the start of the plan, moving an object, and picking up an object at the end of a plan, all generate only one message. However, these messages appear when the task they refer to is finished. it would be better to have them show up at the start of the respective task, but we did not have time to fix this issue.
+
+When reporting an action, the planner references objects using the minimal unique reference, if one exists. The logic goes: if there's only one ball: "the ball". If there's only one blue ball: "the blue ball". Several blue balls, but only one small ball (total): "the small ball". Several blue balls, several small balls, but only one which is both: "the small blue ball". Several duplicates: "a small blue ball".
 
 
 
