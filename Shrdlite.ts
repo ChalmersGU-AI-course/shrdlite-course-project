@@ -82,7 +82,6 @@ module Shrdlite {
         var shortestIndex = 0;
         // Selecting the shortest plan
         if(plans.length>1){
-            world.printDebugInfo("\nI am a bit lazy and I only perform the easiest result.");
             finalPlan.push("\nI am a bit lazy and I only perform the easiest result.");
             var length = 10000000;
             for (var i = 0; i < plans.length; i++) {
@@ -92,7 +91,6 @@ module Shrdlite {
                     length = newLength;
                 }
             }
-            world.printDebugInfo("\nThe shortest option consists of "+length+" moves.");
         }
         //Constructing a string array to pass on. 
         var plan : Planner.Step[] = plans[shortestIndex].plan;
