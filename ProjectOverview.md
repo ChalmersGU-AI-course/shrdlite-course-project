@@ -6,6 +6,11 @@ For our project we implemented the following extensions, which will described in
 * Handling of 'all' quantifier
 
 
+We only updated the `SVGWorld` to display two arms. So to run our project compile the TypeScript files with `make html` and open the `shrdlite.html` file after that.
+
+We added examples for each world that show the features of our implementation quite well. Its best to run the examples in order though.
+
+
 ## Implementation details
 
 ### Second arm
@@ -19,3 +24,5 @@ We implemented the arms so they cannot pass each other.
 ### Heuristics
 
 We created specialized heuristics for each relation a literal can have. The implementation can be found in the `TwoArmHeuristic` class in `Planner.ts`.
+
+### Interpretation
