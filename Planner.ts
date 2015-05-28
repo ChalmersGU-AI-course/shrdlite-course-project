@@ -228,7 +228,6 @@ module Planner {
     
     function goalFunction (lss : Interpreter.Literal[][], curr : string) : boolean
     {	
-        //console.log(curr);
     	for(var j in lss) // loops over the disjunctions 
     	{
     		var ls : Interpreter.Literal[] = lss[j];
@@ -237,7 +236,6 @@ module Planner {
 		    for(var i in ls)    // loops over the conjunctions
 		    {
 		        var l : Interpreter.Literal = ls[i];
-		        //console.log("in goal function");
 		        var rel : string = l.rel;
 		        var x   : string = l.args[0];
 		        var y   : string = l.args[1];
@@ -245,7 +243,6 @@ module Planner {
 		        {
 		            x = x.concat("([a-z]|\\d)+");
 		            y = "\\d";
-		            //console.log(x,y);
 		        }
 		        var derp : string = ""; 
 		        var regExp : RegExp;
@@ -279,9 +276,6 @@ module Planner {
                 
 		        if(!regExp.test(curr))
 		        {
-		            //console.log(regExp.toString());
-		            //console.log(curr);
-		            //ret = ret && false;
                     ret = false;
 		        }
 		    }
@@ -305,7 +299,6 @@ module Planner {
         var stacks : string[] = [];
         var z : number = 0;
         
-        //console.log(curr);
         
         for(var u in lss)// Iterates over the disjunctions
         {
@@ -332,7 +325,6 @@ module Planner {
 					    if(si[m] === x)
 					    {
 				  		    iox = m;
-                            //console.log(m);
 					    }
 					    if(si[m] === y)
 					    {
@@ -453,39 +445,41 @@ module Planner {
 		            case "under":
 		            	if(xStack[1] == -1)
 		            	{
-		            		totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1;
-		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            		totHue += +3 * (+curr.stacks[yStack[0]].length - (+yStack[1] + +1)); // weight of clearing the top of y
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1; // weight to move x to y
 		            	}
 		            	else if(yStack[1] == -1)
 		            	{
-		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1; // weight to put y on top of x
 		            	}
 		            	else
 		            	{
 				            if(xStack[0] != yStack[0])
 				            {
-				                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + Math.abs(+yStack[0] - +xStack[0]);
+				                totHue += +3 * (+curr.stacks[yStack[0]].length - (+yStack[1] + +1)); //weight for clearing the top of y
+				                totHue += Math.abs(+yStack[0] - +xStack[0]) + +2; // weight for moving y over x
 				            }
 				            else if(xStack[1] > yStack[1])
 				            {
-				                totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +2;
+				                totHue += +3 * (+curr.stacks[yStack[0]].length - (+yStack[1] + +1)) + +3; //weight for clearing the top of y and then moving y
 				            }
 			            }
 		                break;    
 		            case "beside":
 		            	if(xStack[1] == -1)
 		            	{
-		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1; // weight for moving x to the side of y
 		            	}
 		            	else if(yStack[1] == -1)
 		            	{
-		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1;
+		            		totHue += Math.abs(+yStack[0] - +xStack[0]) + +1; // weight for moving y to the side of x
 		            	}
 		            	else
 		            	{
 				            if((+xStack[0] - +1) != yStack[0] && (+xStack[0] + +1) != yStack[0])
 				            {
-				                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + (+yStack[0] - +xStack[0] - +1); //weight for moving x beside of y
+				                totHue += +3 * Math.min( (+curr.stacks[xStack[0]].length - (+xStack[1] + +1)), (+curr.stacks[yStack[0]].length - (+yStack[1] + +1)) ); // weight for clearing the top of x or y
+				                totHue += Math.abs(+yStack[0] - +xStack[0]) + +2; //weight for moving x beside of y or vice versa
 				            }
 			            }
 		                break; 
@@ -496,25 +490,26 @@ module Planner {
 		            	}
 		            	else if(yStack[1] == -1)
 		            	{
-		            		totHue += +curr.stacks[yStack[0]].length - (+yStack[1] + +1) + +1;
-		            		totHue += Math.abs(yStack[0]-xStack[0])+1;
+		            		totHue += +3 * (+curr.stacks[xStack[0]].length - (+xStack[1] + +1)) + +1; // weight for clearing the top of x
+		            		totHue += Math.abs(yStack[0]-xStack[0]) + +1; // weight for moving y to x
 		            	}
 		            	else
 		            	{
 				            if(xStack[0] != yStack[0])
 				            {
-				                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + Math.abs(+yStack[0] - +xStack[0]);
+				                totHue += +3 * (+curr.stacks[xStack[0]].length - (+xStack[1] + +1)); //weight for clearing the top of x
+				                totHue += Math.abs(+yStack[0] - +xStack[0]) + +2; // weight for moving x over y
 				            }
 				            else if(xStack[1] < yStack[1])
 				            {
-				                totHue += +curr.stacks[xStack[0]].length - (+xStack[1] + +1) + +2;
+				                totHue += +3 * (+curr.stacks[xStack[0]].length - (+xStack[1] + +1)) + +3; //weight for clearing the top of x and then moving x
 				            }
 			            }
 		                break;
 		            case "holding":
 		                if(xStack[1] != -1)
 		            	{
-		            		totHue += +curr.stacks[xStack[0]].length-(+xStack[1] + +1);//totHue += 0;
+		            		totHue += +curr.stacks[xStack[0]].length-(+xStack[1] + +1); // weight for clearing the top of x then picking it up
 		            	}
 		            break;
                     default:
