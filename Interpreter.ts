@@ -397,7 +397,6 @@ module Interpreter {
                             // Example: three blue balls => three combinations/interpretations
                             // [ [[o1,o2]],[[o1,o3]],[[o2,o3]] ]
                           _.map(locationsIntrprt, function (locationsOr) {
-                              console.log("here's the or list:", locationsOr);
                             // ...filter out all objects which...
                             return _.filter(alikeObjs, function (obj) {
                                 // ... satisfies at least one ...
