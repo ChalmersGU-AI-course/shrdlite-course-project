@@ -53,9 +53,14 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(topGoal : Interpreter.Goal, state : WorldState) : string[] {
-        // This function returns an empty plan involving no random stack
-        var plan : string[] = [];
+    /*
+    * Main function, which has all sub-function it needs inside.
+    * "topGoal" and "state" effectively serve as a global variables in all of
+    * those functions.
+    */
+    function planInterpretation(topGoal : Interpreter.Goal, state : WorldState)
+             : string[] {
+             
         var statenr = 0;
         var MAX_STATES = 10000;
 
@@ -66,10 +71,55 @@ module Planner {
                 
         var actions : Action[]  = [left, right, pick, drop]; 
         
+        
+        
+        /******
+        * Section: is_goalstate
+        * This function is passed to Astar, to use it to identify a node where
+        * the goal is fulfilled. Our version of Astar does not even need to
+        * have an instance of a goal node, it can "search blind". Impossible
+        * problems would be searched forever were it not for our time-out
+        * mechanism.
+        */
+        
+
+        // This function only adds "topGoal" to the call, which means that the
+        // Astar module (which calls this function) does not need to know about
+        // the Interpreter.Goal class, preserving its generality.
+        function is_goalstate(astate : ActionState){
+            return is_fulfilled(astate, topGoal);
+        }
+        
+        
+        function is_fulfilled(astate : ActionState, goal : Interpreter.Goal) : boolean {        
+            var lit : Interpreter.Literal = goal.lit;
+            if (lit != null) {
+                // The goal is a Literal
+                var condition = pddl[lit.rel](astate, lit.args);
+                return  lit.pol ? condition : !condition;
+            } else {
+                // The goal is a combination of subGoals; connected with
+                // either AND or OR
+                var result : boolean;
+                if (goal.isAnd) {
+                    result = true;
+                    goal.list.forEach((subGoal) => {
+                        result = result && is_fulfilled(astate, subGoal);
+                    });
+                } else {
+                    result = false;
+                    goal.list.forEach((subGoal) => {
+                        result = result || is_fulfilled(astate, subGoal);
+                    });                
+                }
+                return result;
+            }
+        }
+        
         /*
         These PDDL Interpretation function could be lifted out to a separate module,
         but they are not since they take an ActionState as an argument and since they
-        are only to be used inside of  'planInterpretation'.
+        are only used inside of  'planInterpretation'.
         */
         var pddl = {
             ontop: function(a:ActionState, args:string[]) : boolean{
@@ -124,49 +174,24 @@ module Planner {
                 return (Math.abs(posX1 - posX2) == 1);
             }
         }
-        
-        /*
-        Given a PDDL(1) description, this function is supposed to decide if a
-        the given state satisfies the PDDL, making it a so called 
-        goal-state. && between colums and || between rows.
 
-        (1) - http://en.wikipedia.org/wiki/Planning_Domain_Definition_Language 
-        */      
-        function is_goalstate(astate : ActionState){
-            return is_fulfilled(astate, topGoal);
-        }
         
-        function is_fulfilled(astate : ActionState, goal : Interpreter.Goal) : boolean {
-            var lit : Interpreter.Literal = goal.lit;
-            if (lit != null) {
-                var condition = pddl[lit.rel](astate, lit.args);
-                return  lit.pol ? condition : !condition;
-            } else {
-                var result : boolean;
-                if (goal.isAnd) {
-                    result = true;
-                    goal.list.forEach((subGoal) => {
-                        result = result && is_fulfilled(astate, subGoal);
-                    });
-                } else {
-                    result = false;
-                    goal.list.forEach((subGoal) => {
-                        result = result || is_fulfilled(astate, subGoal);
-                    });                
-                }
-                return result;
-            }
-        }
-
-        var start =  new ActionState("start");
-        start.arm = state.arm
-        start.holding = state.holding;
-        start.stacks = state.stacks.slice();
+        /******
+        * Section: dynamic_children
+        * This function is passed to Astar, to use it to generate the search
+        * tree ahead of the search frontier. We perform a one-step loop check:
+        * each node represents a state with a memory of the previous action,
+        * and the immediate reversal of that action is not considered a valid
+        * neighbouring state.
+        */
         
+        // Similar to how is_goalnode adds "state" to the function call, this
+        // function references "actions" so that Astar does not need to know
+        // about them specifically; only neighbouring states.
         function dynamic_children(astate : ActionState){
             var states : ActionState[] = []; 
              actions.forEach((action) => { 
-                if(works(action,astate) ){
+                if(validNeighbour(action,astate) ){
                     var s = calculate_state(action,astate);
                     states.push(s);
                 }
@@ -175,10 +200,62 @@ module Planner {
         }
         
         /*
-        This function validates whether an action can be applied to a state, without
-        violating the physical conditions given. 
+        Given a state and an action, action is applied upon the state, the state is modified,
+        it is also given an 'plan action' - l:Left,r:right,d:drop,p:pick - and a corresponding
+        message to go with it. 
+        */ 
+        function calculate_state(action : Action, astate : ActionState) : ActionState {
+            statenr++;
+            if (statenr > MAX_STATES) {
+                throw new Error("Search tree too big; no solution found.");
+            }
+            var newstate = new ActionState(("state" + statenr));
+            newstate.action = action;
+            if (action == left){
+                    newstate.arm = ( astate.arm - 1 );
+                    newstate.holding = astate.holding
+                    newstate.stacks = astate.stacks.slice();
+                    newstate.msg = "Moving left"; 
+                    return newstate;
+            }else if (action == right){
+                    newstate.arm = ( astate.arm + 1 );
+                    newstate.holding = astate.holding
+                    newstate.stacks = astate.stacks.slice();
+                    newstate.msg = "Moving right"; 
+                    return newstate; 
+            }else if (action == pick){
+                    newstate.arm = astate.arm;
+                    var stack = astate.stacks[astate.arm].slice();
+                    var height = (stack.length);
+                    var objectToHold = stack[height-1];
+                    stack.pop();
+                    newstate.holding = objectToHold;
+                    newstate.stacks = astate.stacks.slice();
+                    newstate.stacks[astate.arm] = stack.slice();
+                    newstate.msg = ("Taking the "+ getUniqueDescription(objectToHold));
+                    return newstate;
+            }else if (action == drop){
+                    var stack = astate.stacks[astate.arm].slice();
+                    var objectToDrop = astate.holding;
+                    stack.push(objectToDrop);
+                    newstate.holding = null;
+                    newstate.stacks = astate.stacks.slice();
+                    newstate.stacks[astate.arm] = stack;
+                    newstate.arm = astate.arm;
+                    newstate.msg = ("Dropping "+ getUniqueDescription(objectToDrop));
+                    return newstate; 
+            }
+                    //Alternative: returns always false
+                    throw new Error("not yet implemented");
+        }
+        
+        /*
+        This function validates whether an action can be applied to a state,
+        without violating the physical conditions given. It also checks for
+        immediate reversals (i.e. actions opposite to the action that lead
+        to this state).
         */
-        function works(action : Action , astate : ActionState) : boolean {
+        function validNeighbour(action : Action , astate : ActionState) : boolean {
                 if (isOpposite(action, astate.action)) {
                     return false;
                 }
@@ -272,55 +349,6 @@ module Planner {
             return true;
         }
         
-        /*
-        Given a state and an action, action is applied upon the state, the state is modified,
-        it is also given an 'plan action' - l:Left,r:right,d:drop,p:pick - and a corresponding
-        message to go with it. 
-        */ 
-        function calculate_state(action : Action, astate : ActionState) : ActionState {
-            statenr++;
-            if (statenr > MAX_STATES) {
-                throw new Error("Search tree too big; no solution found.");
-            }
-            var newstate = new ActionState(("state" + statenr));
-            newstate.action = action;
-            if (action == left){
-                    newstate.arm = ( astate.arm - 1 );
-                    newstate.holding = astate.holding
-                    newstate.stacks = astate.stacks.slice();
-                    newstate.msg = "Moving left"; 
-                    return newstate;
-            }else if (action == right){
-                    newstate.arm = ( astate.arm + 1 );
-                    newstate.holding = astate.holding
-                    newstate.stacks = astate.stacks.slice();
-                    newstate.msg = "Moving right"; 
-                    return newstate; 
-            }else if (action == pick){
-                    newstate.arm = astate.arm;
-                    var stack = astate.stacks[astate.arm].slice();
-                    var height = (stack.length);
-                    var objectToHold = stack[height-1];
-                    stack.pop();
-                    newstate.holding = objectToHold;
-                    newstate.stacks = astate.stacks.slice();
-                    newstate.stacks[astate.arm] = stack.slice();
-                    newstate.msg = ("Taking the "+ getUniqueDescription(objectToHold));
-                    return newstate;
-            }else if (action == drop){
-                    var stack = astate.stacks[astate.arm].slice();
-                    var objectToDrop = astate.holding;
-                    stack.push(objectToDrop);
-                    newstate.holding = null;
-                    newstate.stacks = astate.stacks.slice();
-                    newstate.stacks[astate.arm] = stack;
-                    newstate.arm = astate.arm;
-                    newstate.msg = ("Dropping "+ getUniqueDescription(objectToDrop));
-                    return newstate; 
-            }
-                    //Alternative: returns always false
-                    throw new Error("not yet implemented");
-        }
         
         function getUniqueDescription(index : string) {
             var objectDef = state.objects[index];
@@ -367,23 +395,48 @@ module Planner {
             }
         }
         
-        /*
-        The simplest possible one is "return 0", which turns Astar
-        into breadth-first search.
+        
+        
+        /******
+        * Section: state_heur
+        * This function is passed to Astar, to use it to estimate the distance
+        * from a given node to a goal node. For more info on the heuristc, see
+        * README.txt.
         */
+
+        // Similar to is_goalstate and dynamic_children, this function's chief
+        // purpose is to add topGoal to the call.
         function state_heur(a1 : ActionState) : number {
             var costTuple : number[] = goal_heur(a1, topGoal);
             return costTuple[0] + costTuple[1];
         }
         
+        /*
+        The reason for using a number[], and thus splitting the heuristic value
+        in two, is to separate the contribution to the estimated cost from
+        moving the arm to the right place, and the constribution from
+        performing a task. The final heuristic for a single task is simply
+        their sum, but for a series of conjunctive (AND) goals, counting the
+        "move into place" constribution for every task can lead to
+        overestimating the total cost.
+        A simple example is where several
+        objects in a stack are to be placed on the floor, and the arm is far
+        from that stack. Summing both contributions would count the distance
+        from the arm to the stack multiple times.
+        */
         function goal_heur(a1 : ActionState, goal : Interpreter.Goal) : number[] {
             var lit : Interpreter.Literal = goal.lit;
             if (lit != null) {
-                return pddl[lit.rel](a1, lit.args) ? [0,0] : heuristic[lit.rel](a1, lit.args);
+                // The goal is a Literal. cf is_fulfilled.
+                return pddl[lit.rel](a1, lit.args) ?
+                       [0,0] :
+                       heuristic[lit.rel](a1, lit.args);
             } else {
                 var newVal : number[];
                 var result : number[];
                 if (goal.isAnd) {
+                    // We have a conjunctive list of subgoals; we compute the
+                    // heuristic for each and sum them (though see above)
                     result = [0,0];
                     goal.list.forEach((subGoal) => {
                         newVal = goal_heur(a1, subGoal);
@@ -391,6 +444,8 @@ module Planner {
                         result[1] = result[1] + newVal[1];
                     });
                 } else {
+                    // Disjunctive (OR) list of subgoals; compute all of them
+                    // and return the minimum
                     result = [MAX_STATES, MAX_STATES];
                     goal.list.forEach((subGoal) => {
                         newVal = goal_heur(a1, subGoal);
@@ -416,7 +471,8 @@ module Planner {
                     botPosX = findBestFloorSpot(a, topPosX);
                     toFreeBottom = heurFreeFloor(a, botPosX);
                 } else {
-                    botPosX = a.holding == bottom ? a.arm : find_obj(bottom, a.stacks)[0];
+                    botPosX = a.holding == bottom ?
+                              a.arm : find_obj(bottom, a.stacks)[0];
                     toFreeBottom = heurFree(a, bottom);
                 }
                 if (toFreeTop == 0) {
@@ -426,29 +482,30 @@ module Planner {
                     return [heurMoveArmToPOI(a,[botPosX]),
                             toFreeTop + heurMoveObject(a,top,botPosX)];
                 } else if (botPosX == topPosX) {
-                    // In the case of the objects being in the same stack, then 
-                    // adding the free heuristcs wont allways provide an underestimate
-                    return [heurMoveArmToPOI(a,[topPosX]),Math.max(toFreeTop,toFreeBottom)];
+                    // In the case of the objects being in the same stack,
+                    // then adding both toFree heuristics might overestimate
+                    // the true distance
+                    return [heurMoveArmToPOI(a,[topPosX]),
+                            Math.max(toFreeTop,toFreeBottom)];
                 } else {
                     return [heurMoveArmToFreeBoth(a, topPosX, botPosX),
-                            toFreeTop + toFreeBottom + heurMoveObject(a,top,botPosX)];
+                            toFreeTop + toFreeBottom +
+                                heurMoveObject(a,top,botPosX)];
                 }
             },
             inside : function(a:ActionState, args:string[]) : number[] {
+                // If the second argument is not a box, this is impossible;
+                // but the goal-checking already takes care of that
                 return heuristic["ontop"](a,args);
             },
             holding : function(a:ActionState, args:string[]) : number[] {
                 var top = args[0];
                 var toFreeTop;
-                //if its allready holding obj a then the heuristics should equal 0,0
-                if (a.holding  == top) { return [0,0] }; 
                 var topPosX = find_obj(top, a.stacks)[0];
-                // if im on top of the stack then 
-                var ontopOfStack = (heurMoveArmToPOI(a,[topPosX]) == 0);
                 // if its holding anything other than a, then it will have to put it down.
                 var toPick =  1 ; 
-                toFreeTop = heurFree(a,top) + toPick;
-                return [heurMoveArmToPOI(a,[topPosX]),toFreeTop] 
+                toFreeTop = heurFree(a,top);
+                return [heurMoveArmToPOI(a,[topPosX]),toFreeTop+toPick] 
             },
             above : function(a:ActionState, args:string[]) : number[] {
                 var top = args[0];
@@ -465,18 +522,23 @@ module Planner {
                 var toFreeTop = heurFree(a,top);
                 
                 return [heurMoveArmToPOI(a,[topPosX]),
-                        toFreeTop + heurMoveObject(a, top, bottomPosX) + holdingCost];
+                        toFreeTop + heurMoveObject(a, top, bottomPosX) +
+                            holdingCost];
             },
             under : function(a:ActionState, args:string[]) : number[] {
+                // Functionally identical to calling "above" with the arguments
+                // in opposite order
                 return heuristic["above"](a, [args[1], args[0]]);
             },
             rightof : function(a:ActionState, args:string[]) : number[] {
                 var currentLeft = args[0];
                 var currentRight = args[1];
                 var cLeftPosX : number =
-                    a.holding == currentLeft ? a.arm : find_obj(currentLeft, a.stacks)[0];
+                    a.holding == currentLeft ?
+                        a.arm : find_obj(currentLeft, a.stacks)[0];
                 var cRightPosX : number =
-                    a.holding == currentRight ? a.arm : find_obj(currentRight, a.stacks)[0];
+                    a.holding == currentRight ?
+                        a.arm : find_obj(currentRight, a.stacks)[0];
                 var toFreeCLeft = heurFree(a,currentLeft);
                 var toFreeCRight = heurFree(a,currentRight);
                 if (cLeftPosX == 0) {
@@ -485,14 +547,18 @@ module Planner {
                                 toFreeCLeft + toFreeCRight + a.stacks.length];
                     } else {
                         return [heurMoveArmToPOI(a, [cLeftPosX]),
-                                toFreeCLeft + heurMoveObject(a,currentLeft,cRightPosX+1)];
+                                toFreeCLeft +
+                                heurMoveObject(a,currentLeft,cRightPosX+1)];
                     }
-                } else if (cRightPosX == a.stacks.length || toFreeCRight < toFreeCLeft) {
+                } else if (cRightPosX == a.stacks.length ||
+                           toFreeCRight < toFreeCLeft) {
                     return [heurMoveArmToPOI(a, [cRightPosX]),
-                            toFreeCRight + heurMoveObject(a,currentRight,cLeftPosX-1)];
+                            toFreeCRight +
+                                heurMoveObject(a,currentRight,cLeftPosX-1)];
                 } else {
                     return [heurMoveArmToPOI(a, [cLeftPosX]),
-                            toFreeCLeft + heurMoveObject(a,currentLeft,cRightPosX+1)];
+                            toFreeCLeft +
+                                heurMoveObject(a,currentLeft,cRightPosX+1)];
                 }
 
             },         
@@ -523,8 +589,9 @@ module Planner {
         }
         
         // The approximate cost of moving the arm to a Place Of Interest
-        // (while also dropping whatever it's holding from before)
+        // (while dropping whatever it's already holding)
         function heurMoveArmToPOI(a:ActionState, positions:number[]) : number {
+            var holdingPenalty : number = a.holding == null ? 0 : 1;
             var dists : number[] = [];
             positions.forEach((pos) => {
                 dists.push(Math.abs(a.arm - pos));
@@ -532,16 +599,17 @@ module Planner {
             return Math.min.apply(null,dists);
         }
 
-        // The approximate cost of the arm movements needed to free two objects,
+        // The approx. cost of the arm movements needed to free two objects,
         // excluding the actual freeing (i.e. moving the arm to and between the places
         // to free)
         function heurMoveArmToFreeBoth(a:ActionState, pos1:number, pos2:number) : number {
             var armPos = a.arm;
-            var moveTo = Math.min(Math.abs(armPos - pos1), Math.abs(armPos - pos2));
+            var moveTo = heurMoveArmToPOI(a, [pos1, pos2]);
             var moveBetween = Math.abs(pos1 - pos2) - 1;
             return moveTo + moveBetween;
         }
         
+        // The approx. cost of moving an object to a position
         function heurMoveObject(a:ActionState, obj:string, posX:number) : number {
             var objPos : number;
             var pickUpCost : number;
@@ -556,11 +624,7 @@ module Planner {
             return moveDist + pickUpCost;
         }
         
-        /*
-        function isFree(a:ActionState, obj:string) : boolean {
-            return heurFree(a,obj) == 0;
-        }*/
-        
+        // The approx. cost to free an object (i.e. remove all objects above it)
         function heurFree(a:ActionState, obj:string) : number {
             if (a.holding == obj) {
                 return 0;
@@ -580,12 +644,16 @@ module Planner {
                 return heightOfStack * 4;
         }
         
+        // Returns the spot which is cheapest (in the best case) to put
+        // something on, if that something is currently at posX. Both distance
+        // to the spot, and the number of objects currently occupying it,
+        // contribute.
         function findBestFloorSpot(a:ActionState, posX:number) : number {
                 var spots : number[] = [];
                 var stack;
                 for (var i = 0; i < a.stacks.length; i++) {
                     stack = a.stacks[i];
-                    spots.push(stack.length * 4 + Math.abs(i - posX));
+                    spots.push(heurFreeFloor(a, i) + Math.abs(i - posX));
                 }
                 return min_index(spots);
         }
@@ -602,15 +670,24 @@ module Planner {
             return mi;
         }
         
+        
+        
+        
         /*
         Calculates the distance between two states, see astarTest.
-        In this case, the weight of a step is 1. 
+        In this case, the weight of a step is 1. All the work in the heuristic
+        goes toward approximating how many of these steps are left before the
+        goal is reached.
         */
         function get_state_dist() : number {
             return 1; 
         }
         
-        //Probably unnecessary
+        
+        
+        /*
+        * General helper; used by several other functions.
+        */
         function find_obj(obj : string, stacks : string[][]) : number[] {
             for (var i = 0 ; i < stacks.length; i++){
                 for (var ii = 0 ; ii < stacks[i].length ; ii++){
@@ -622,10 +699,20 @@ module Planner {
             throw new Error("no such object");
         }
         
-        /*
-        Conversion from path to plan.
-        */
+        
+        
+        //////
+        // Here the "main" part of planInterpretation starts:
+        
+        var plan : string[] = [];
+        var start =  new ActionState("start");
+        start.arm = state.arm
+        start.holding = state.holding;
+        start.stacks = state.stacks.slice();
+        
         try {
+            // Perform Astar search, using several of the previously defined
+            // functions as parameters
             var path = Astar.Astar(start,{
                 heuristic_approx: state_heur,
                 dist_between: get_state_dist,
@@ -635,47 +722,51 @@ module Planner {
         } catch (err) {
             throw new Error("Impossible problem.");
         }
+        
+        // Next step: convert the path in the search tree (i.e. a series of
+        // ActionStates) into a plan (to be used in a Planner.Result).
+        
         { // Extra block to prevent variable confusion - limits the scope.
             var state_stack = [];
             var current;
             var message;
-            //TODO: Make the description of the action, i.e. "Moving the ball", appear 
-            // right before picking it up in the plan. This is probably not that easy; will
-            // require some sort of temp-plan which we add to the real plan when we finally
-            // drop the object
+            //TODO: Make the description of the action, i.e. "Moving the ball",
+            // appear right before picking it up in the plan. This is probably
+            // not that easy; will require some sort of buffer which we add to
+            // the real plan when we actually drop the object
             for (var p = 1; p < path.length; p++){
-                // Always include the action
                 current = (<ActionState> path[p]);
-                plan.push(current.action.command);                
+                // Always include the action
+                plan.push(current.action.command);        
                 if (current.action.command == "d") {
                     // We're dropping something:
                     if (state_stack.length == 0) {
-                        // We haven't picked anything up since we last dropped anything;
-                        // i.e. we held it when we started
-                        // TODO: refactor these messages. They should all be created here;
-                        // there is no need for an ActionState to have a message anymore.
+                        // We haven't picked anything up since we last dropped
+                        // anything; i.e. we held it when we started
+                        
+                        // TODO: refactor these messages. They should all be
+                        // created here; there is no need for an ActionState to
+                        // have a message anymore.
                         plan.push(current.msg);
                     } else {
-                        // We have picked something up during this plan, which means
-                        // that we're moving it
+                        // We have picked something up during this plan, which
+                        // means that we're moving it
                         var dropState = state_stack.pop();
-                        message = "Moving "+getUniqueDescription(dropState.holding);
+                        message = "Moving " +
+                                  getUniqueDescription(dropState.holding);
                         plan.push(message);
                     }
                 } else if (current.action.command == "p" ){
                     // We're picking something up
                     if (p == (path.length - 1)){
-                        // This is the last step, so we're not moving it; only taking it
+                        // This is the last step of the plan, so we're not
+                        // moving it anywhere; only picking it up
                         plan.push(current.msg);
                     }
                     state_stack.push(current);
                 }
             }
         }
-        // for (var p = 1; p < path.length; p++){
-        //     plan.push((<ActionState>path[p]).msg);
-        //     plan.push((<ActionState>path[p]).action.command);            
-        // }
         return plan;
     }
 }
