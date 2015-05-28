@@ -9,7 +9,12 @@ The project has been implementing using Python.
 
 Two extensions were implemented: **Quantifiers** (All, Any, The) and **Text-To-Speech**.
 
-The bot can handle any of the worlds.
+The bot can handle any of the different worlds.
+
+
+Recommended Browser: Chrome
+Safari can reset the world when computation time exceeds a few seconds.
+
 
 List of files
 --------------
@@ -42,3 +47,4 @@ Graph is expanded on demand(States are only created when they are considered)
 
 
 ![Arnold](http://cdn.movieweb.com/img.news/NEMaK3MXDD14PU_1_2.jpg "Arnold")
+
