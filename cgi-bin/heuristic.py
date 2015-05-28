@@ -1,4 +1,5 @@
 from simple_planner import COST_MOVE, COST_PICK 
+import PDDL
 
 PLACE_IN_STACK_PENALTY = \
     COST_PICK * 2 + COST_MOVE # cost of picking up + moving once + putting down
@@ -23,8 +24,10 @@ def heuristic(intprt, stacks, holding, arm, objects):
                 score += _stackScore(obj1, stacks)
                 score += _stackScore(obj2, stacks)
 
-                # adds penalty if we are not holding obj1
-                score += _holdingScore(obj1, holding)
+                # adds penalty if we are not holding obj1. 
+                # Is stupid?? Commented out.
+
+                #score += _holdingScore(obj1, holding)
 
                 addedScore += score
 
@@ -43,8 +46,15 @@ def heuristic(intprt, stacks, holding, arm, objects):
             # If we are to put something left/right of something else,
             # we add penalty if obj2 are to the far left/right
             elif pred in ('leftof','rightof'):
-                score += _placeScore(obj2, stacks, pred)
-                score += _placeScore(obj1, stacks, 'leftof' if pred is 'rightof' else 'rightof')
+                # Add stack penalties???
+                score1 += _stackScore(obj1, stacks)
+                score2 += _stackScore(obj2, stacks)
+                score = min(score1, score2)
+
+
+                # Commented out to make more simple, might add back later
+               # score += _placeScore(obj2, stacks, pred)
+               # score += _placeScore(obj1, stacks, 'leftof' if pred is 'rightof' else 'rightof')
                 addedScore += score
 
             # Add penalty if object is further down
@@ -88,3 +98,9 @@ def _holdingScore(obj, holding):
     else:
         return NOT_HOLDING_PENALTY
 
+
+# Returns a score based on how far the two objects are from each other
+def _xdifScore(obj1, obj2, stacks):
+    (obj1x,_) = find_obj(obj1, stacks)
+    (obj2x,_) = find_obj(obj2, stacks)
+    return abs(obj1x-obj2x)
