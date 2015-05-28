@@ -204,9 +204,23 @@ module Interpreter {
     function interpretEnt(ent : Parser.Entity, world : WorldState, wObjs : string[]) : string[]
     {
         var res: string[] = [];
-        
+        if (typeof (ent.obj) !== "undefined")
+        {
+            res = res.concat(compareWithWorld(ent.obj,world,wObjs)); //if errors don't propagate, then it might be a good idê to fix a try catch ot to revert compareWithWorld to returning 0 on failure
+        }        
         if(typeof(ent.quant) !== "undefined")
         {
+         if(ent.quant === "the")
+        	if(res.length > 1)
+            {
+                var map = Planner.uniqueAttributes(world);
+                for(var r in res)
+                {
+                    res[r] = map[result[r]].slice().reverse().join(" ");
+                }
+                
+                throw new Interpreter.Error("Description is ambiguous there is: a " +result.join(" and a "));
+            }
             //hantera på något sätt
         }
         
