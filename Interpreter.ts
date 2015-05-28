@@ -757,19 +757,6 @@ module Interpreter {
     	return uniqeObjects(objs);
     }
     
-    function uniqeObjsFromLits(lits: Literal[]):collections.Set<string>{
-    	var objset : collections.Set<string> = new collections.Set<string>(function(a){return a});
-    	lits.forEach((lit) => {
-    		if(lit.args[0]){
-    			objset.add(lit.args[0]);
-    		}
-    		if(lit.args[1]){
-    			objset.add(lit.args[1]);
-    		}
-    	});
-    	return objset;
-    }
-    
     function uniqeObjects(objs:string[]):string[]{
     	var objset : collections.Set<string> = new collections.Set<string>(function(a){return a});
     	objs.forEach((obj) =>
