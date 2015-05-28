@@ -7,7 +7,7 @@ Interpreter.interpret = function(parses, currentState) {
     var ret = [];
     for (var x of parses) {
         try {
-            ret.push(window.interpreterCore(currentState, x.prs));
+            ret = ret.concat(window.interpreterCore(currentState, x.prs));
         } catch (err) {
             console.log("Interpreter exception: " + err);
         }

@@ -213,47 +213,59 @@ function filterArray(elem, arr) {
     return arr2;
 }
 
-Parser.prototype.parse_cmd = function(o) {
-    var move = this.parse_entity(o.ent);
-    if (o.cmd == "take") {
-        if (move.length !== 1) {
-            throw "Can only take exactly one element";
-        }
-        return [{rel: 'holding', item: move[0]}];
-    }
-    var oneof = this.parse_entity(o.loc.ent);
-    // var oneof = this.location_filter(this.all, o.loc);
 
-    console.log(o.cmd);
-    console.log("move " + move);
-    console.log("oneof: " + oneof);
-
-
-
-    if (move.length === 0) {
-        throw "No objects matching";
-    } else if (move.length > 1 && o.ent.quant == "any") {
-        move = [move[Math.floor(Math.random()*move.length)]];
-    }
-
+Parser.prototype.parse_one = function (move, oneof, olocrel) {
     var rules = [];
     for (var m of move) {
         var oneof2 = filterArray(m, oneof);
         if (oneof == "floor") {
-            if (o.loc.rel != "ontop") {
+            if (olocrel != "ontop") {
                 throw "Objects must be put on top of the floor";
             }
             rules.push({rel: 'floor', item: m});
-        } else if (o.loc.rel == "ontop" || o.loc.rel == "inside") {
+        } else if (olocrel == "ontop" || olocrel == "inside") {
             rules.push({rel: 'ontop', item: m, oneof: oneof2});
-        } else if (o.loc.rel == "beside" || o.loc.rel == "left" || o.loc.rel == "right") {
-            rules.push({rel: o.loc.rel, item: m, oneof: oneof2});
+        } else if (olocrel == "beside" || olocrel == "left" || olocrel == "right") {
+            rules.push({rel: olocrel, item: m, oneof: oneof2});
         } else {
-            throw "Unknown relation" + o.loc.rel;
+            throw "Unknown relation" + olocrel;
         }
     }
     return rules;
+};
 
+Parser.prototype.parse_cmd = function(o) {
+    var move = this.parse_entity(o.ent);
+    if (o.cmd == "take") {
+        if (move.length > this.state.arms.length) {
+            throw "Can't take more objects than current arms";
+        }
+        ret = [];
+        if (o.ent.quant == "all") {
+            for (var m of move) {
+                ret.push({rel: 'holding', item: m});
+            }
+            return [ret];
+        } else {
+            for (var m of move) {
+                ret.push([{rel: 'holding', item: m}]);
+            }
+            return ret;
+        }
+    }
+    var oneof = this.parse_entity(o.loc.ent);
+
+    if (move.length === 0) {
+        throw "No objects matching";
+    } else if (o.ent.quant == "any") {
+        var ret = [];
+        for (var m of move) {
+            ret.push(this.parse_one(m, oneof, o.loc.rel));
+        }
+        return ret;
+    } else {
+        return [this.parse_one(move, oneof, o.loc.rel)];
+    }
 };
 
 function all(state, parse) {
