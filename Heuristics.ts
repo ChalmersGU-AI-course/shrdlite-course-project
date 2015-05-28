@@ -172,10 +172,14 @@ module Heuristics {
             return 0;
         } else if(a.isHeld && s.arm == b.stackNo &&
                  (somewhereAbove || b.objectsAbove == 0) ){
+            // Just drop `a` and we are done
             return 1;
         } else if (b.isHeld && s.arm != a.stackNo){
+            // Drop `b` anywhere so it doesn't block `a`
             return 1;
         } else if (s.arm != b.stackNo && s.arm != a.stackNo){
+            // We are holding something else and we should drop it here
+            // so it doesn't block `a` or `b`
             return 1;
         }
         // Holds something but needs to drop it somewhere else...
@@ -192,6 +196,9 @@ module Heuristics {
         var holdCost = 0;
         if(s.holding != null){
             holdCost = 1;
+            // This can be done more intelligently but
+            // it doesn't reduce the number of iterations very much: from 96 -> 90.
+            // The increased cost for computing the heuristic might not be worth it.
         }
 
         if(target === "floor"){
@@ -213,7 +220,7 @@ module Heuristics {
             for(var height in stack){
                 if(stack[height] === target){
                     var objectsAbove = stack.length -1 -height;
-                    return abs(stackNo - s.arm) + 4*objectsAbove + holdCost; // - 0.5*emptyStacks;
+                    return abs(stackNo - s.arm) + 4*objectsAbove + holdCost;
                 }
             }
         }
