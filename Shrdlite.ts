@@ -31,6 +31,8 @@ module Shrdlite {
     // - then it interprets the parse(s)
     // - then it creates plan(s) for the interpretation(s)
 
+	
+	
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
@@ -97,6 +99,5 @@ module Shrdlite {
             plan.splice(i, 0, actions[plan[i]]);
         }
         return plan;
-    }
-
+	}
 }
