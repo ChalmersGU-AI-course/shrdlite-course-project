@@ -40,7 +40,19 @@ You can build the different targets in the project using the provided Makefile:
 
 ### Interesting example utterances
 
-xxx (how to run your project, and some interesting example utterances)
+After performing `make html` one can open the shrdlite.html file and start entering commands. Some interesting examples for the complex world can be:
+
+- put the box beside a pyramid
+- grasp an object on the floor
+- put a ball above the red plank
+- put an object that is under a box on a plank
+
+Some cases that are correctly aborted by the Interpreter:
+
+- grasp the floor
+- put an object under the floor
+- put an object above a ball
+- put a large object above a small object
 
 Implemented extensions
 ------------------------------------------------
