@@ -96,10 +96,24 @@ module Interpreter {
         return output;
     }
 
+    //Checks that if the "the" quantifier is used, it only matches to one object and in that case returns false
+    function checkTheTheAmbiguity(ent :Parser.Entity, matching : string[], state : WorldState) : boolean {
+        if(ent.quant === "the" && matching.length>1){
+                var errString = "Object not unique, did you mean ";
+                for(var i = 0; i < matching.length; ++i){
+                    var object = lookupLiteralArg(matching[i], state);
+                    errString = errString +" "+ printObject(object) +" or";
+                }
+                throw new Interpreter.Error(errString);
+            }
+        return false;
+    }
+
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         var matching: string[];
         if (cmd.ent) {
-             matching = findObjects(cmd.ent.obj, state);
+            matching = findObjects(cmd.ent.obj, state);
+            checkTheTheAmbiguity(cmd.ent, matching, state);
         } else if(state.holding) {
             matching = [state.holding];
         }
@@ -112,8 +126,6 @@ module Interpreter {
             }
             return literals;
         }
-
-
         for (var i=0; i < matching.length; ++i)
         {
             var matchLiterals = buildRelativeLiterals(matching[i], cmd.loc, state);
@@ -135,7 +147,6 @@ module Interpreter {
                         }
                     }
                 }
-
                 literals = newLiterals.slice();
             }
             else{
@@ -219,7 +230,6 @@ module Interpreter {
         return false;
     }
 
-
     function buildRelativeLiterals(object: string, location: Parser.Location, world: WorldState): Literal[][] {
         var matching: string[];
         if (location.ent.obj.obj) {
@@ -227,6 +237,7 @@ module Interpreter {
         } else {
             matching = findObjectsByDescription(location.ent.obj, world) || [];
         }
+        checkTheTheAmbiguity(location.ent, matching, world);
 
         var result: Literal[][] = [];
 
