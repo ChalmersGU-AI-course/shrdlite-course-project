@@ -69,7 +69,7 @@ module Interpreter {
     function interpretCmd(cmd : Parser.Command, world : WorldState, wObjs : string[]): Literal[][]
     {
         var res : Literal[][] = [];
-        var result : string[][] = interpretEnt(cmd.ent,world,wObjs);
+        var result : string[] = interpretEnt(cmd.ent,world,wObjs);
         
         if(cmd.ent.quant === "the")
         	if(result.length > 1)
@@ -83,7 +83,7 @@ module Interpreter {
                 throw new Interpreter.Error("Description is ambiguous there is: a " +result.join(" and a "));
             }
 		
-        if(result[0].length <= 0)
+        if(result.length <= 0)
             return [];
                 //throw new Interpreter.Error( "Can not find any objects matching the description");
         
@@ -91,7 +91,7 @@ module Interpreter {
         {
             case "move":
                 
-                var moveTo: string[][] = interpretLoc(cmd.loc,world,wObjs);
+                var moveTo: string[] = interpretLoc(cmd.loc,world,wObjs);
                 if(moveTo.length <= 1)
                    return [];
                    //throw new Interpreter.Error("No matching objects found");
@@ -102,23 +102,19 @@ module Interpreter {
                     var grej : number = 0;
                     for(var i = 1; i < moveTo.length; i++)
                     {
-                        
-                        for(var u in result)
+                        for(var j = 1; j < moveTo.length; j++)
                         {
-                            for(var j = 1; j < moveTo[i].length; j++)
+                            grej = i;
+                            for(var o in result)
                             {
-                                grej = i;
-                                for(var o in result[u])
-                                {
-                                    var l : Literal = {pol:true,rel:moveTo[0],args:[result[o],moveTo[grej]]};
-                                    if(result[o] !== moveTo[grej] && validateL(l,world) === 1)
-                                        temp.push(l);
-                                    grej = j; 
-                                }
-                                if(result.length <= temp.length)
-                                    res.push(temp);
-                                temp = [];
+                                var l : Literal = {pol:true,rel:moveTo[0],args:[result[o],moveTo[grej]]};
+                                if(result[o] !== moveTo[grej] && validateL(l,world) === 1)
+                                    temp.push(l);
+                                grej = j; 
                             }
+                            if(result.length <= temp.length)
+                                res.push(temp);
+                            temp = [];
                         }
                     }
                 }
@@ -205,19 +201,16 @@ module Interpreter {
         return temp;
     }
     // Sub function to interpret parsed entities
-    function interpretEnt(ent : Parser.Entity, world : WorldState, wObjs : string[]) : string[][]
+    function interpretEnt(ent : Parser.Entity, world : WorldState, wObjs : string[]) : string[]
     {
-        var res: string[][] = [[]];
-        var temp : string[] = [];
+        var res: string[] = [];
         if (typeof (ent.obj) !== "undefined")
         {
-            temp = temp.concat(compareWithWorld(ent.obj,world,wObjs)); 
-        }
- 
+            res = res.concat(compareWithWorld(ent.obj,world,wObjs)); //if errors don't propagate, then it might be a good idê to fix a try catch ot to revert compareWithWorld to returning 0 on failure
+        }        
         if(typeof(ent.quant) !== "undefined")
         {
          if(ent.quant === "the")
-            res[0]=temp;
         	if(res.length > 1)
             {
                 var map = Planner.uniqueAttributes(world);
@@ -228,26 +221,19 @@ module Interpreter {
                 
                 throw new Interpreter.Error("Description is ambiguous there is: a " +res.join(" and a "));
             }
-            if(ent.quant === "any")
-            {
-                for(var t in temp)
-                {
-                    res[t]=[temp[t]];
-                }
-            }
-
+            //hantera på något sätt
         }
         
 
         return res; 
     }
     // Subfunction to interpret parsed locations
-    function interpretLoc(loc: Parser.Location, world : WorldState, wObjs : string[]): string [][]
+    function interpretLoc(loc: Parser.Location, world : WorldState, wObjs : string[]): string []
     {
-        var res : string[] = [[]];
+        var res : string[] = [];
         if (typeof(loc.rel) !== "undefined")
         {
-            res.push([loc.rel]);
+            res.push(loc.rel);
         }
         
         if (typeof(loc.ent) !== "undefined")
