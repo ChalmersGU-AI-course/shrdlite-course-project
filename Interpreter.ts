@@ -320,7 +320,6 @@ module Interpreter {
             status : "", targets : result, common : com, ambiguousObjs : []};
         if(goalObj.obj != null){
 
-            console.log("DEBUG FTO nonNull obj...")
             // Ie form, size etc are null.
             // Filter on location instead...
             //return resolveObject(state, goalObj.obj, goalObj.loc);
