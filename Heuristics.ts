@@ -211,17 +211,7 @@ module Heuristics {
         }
 
         if(target === "floor"){
-            throw new Planner.Error("!!! Error in heuristicGrab: This should never happen??");
-            // var closest = Infinity;
-            //
-            // for(var stackNo in s.stacks){
-            //     var stack = s.stacks[stackNo];
-            //     var cost = abs(stackNo - s.arm) + 4*stack.length;
-            //     if(closest > cost){
-            //         closest = cost;
-            //     }
-            // }
-            // return closest;
+            throw new Planner.Error("!!! Error in heuristicGrab: The Interpreter should never allow this to happen!");
         }
 
         for(var stackNo in s.stacks){
