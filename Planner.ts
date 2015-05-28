@@ -551,7 +551,11 @@ module Planner {
             var s: string = tempplan.pop();
             plan.push(s);
         }
-        //plan.push("GOBY PLZ!");
+        if(plan.length <= 0)
+        {
+            plan.push("The state of the matter is allready satisfied, in my humble opinion");
+        }
+        
         return plan;
     }
 
@@ -566,7 +570,7 @@ module Planner {
      * or if an object can not be uniquely describes it will be         *
      * described in full and given the attribute notUnique.             *
      ********************************************************************/
-    function uniqueAttributes ( w : WorldState  ) : { [s:string]: string[]}
+    export function uniqueAttributes ( w : WorldState  ) : { [s:string]: string[]}
     {
 	    var objs : string[] = [];
 	
