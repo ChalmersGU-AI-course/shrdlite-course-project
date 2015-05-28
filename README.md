@@ -62,7 +62,7 @@ The `drop cost` is zero if the arm is not holding anything. If we intend to drop
 
 Note that when we want to drop an object at the current stack and the object is neither `a` or `b`, the cost of moving the arm back to the right position is counted in the `arm cost`; that's why we only return 1 instead of 2 for that case.
 
-The implementations of all heuristics can be found in the file `Heuristic.ts`.
+The implementations of all heuristics can be found in the file `Heuristics.ts`.
 
 ### IDA\*
 
