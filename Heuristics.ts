@@ -122,10 +122,9 @@ module Heuristics {
         var aboveCost = a.objectsAbove * 4;
 
         // move the arm to `a`
-        var armCost = abs(a.stackNo - s.arm);
-
         // then move the arm to the correct stack
-        armCost = armCost + abs(a.stackNo - stack);
+        var armCost = abs(a.stackNo - s.arm) + abs(a.stackNo - stack);
+
         if(! a.isHeld){
             // pick up the object
             armCost = armCost + 1;
@@ -137,10 +136,6 @@ module Heuristics {
         // +1 for dropping the object or
         // if holding something else, drop that first.
         var holdCost = dropCost(s, a, stackObj, false);
-        // var holdCost = 0;
-        // if(s.holding != null){
-        //     holdCost = 1;
-        // }
 
         return aboveCost + armCost + holdCost;
     }
@@ -193,7 +188,7 @@ module Heuristics {
             // Drop somewhere else and come back to continue clearing the stack.
             return 3;
         } else if( (!a.isHeld) && s.arm == a.stackNo){
-            // Drop somewhere else and come back to continue clearing the stack.
+            // Drop somewhere else and come back to get `a`.
             return 3;
         }
         // Drop somewhere else but go get `a`,
