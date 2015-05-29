@@ -64,7 +64,7 @@ heuristic/Heuristic.ts
 
 
 5. Other things
-5.1 Things that does not longer work
+5.1 Things that does not longer work (but have in previous commits)
 - The examples under graph/example/ does not longer work with how the graph etc 
   is implemented.
 - The examples under heuristic/exapmle/ does not longer work with how the
@@ -94,3 +94,23 @@ heuristic/Heuristic.ts
 - put big ball inside small box
 
 Note that some things might be missed (not test everything).
+
+5.4 Description of the files
+- Utils.ts
+  Contains helperfunctions which are used by more than one module/class
+- heuristic/Heuristic.ts
+  Contains all the different functions for calculating the heuristics
+- graph/astar.ts
+  Contains the module that holds the "compute" functions which calculates
+  the shortest path (A*)
+- graph/graph.ts
+  Contains the module which in turns holds all the different classes for the graph
+  This includes the Node, Edge, Path, Adjacency and ofcourse the Graph class.
+  Here is also the interfaces for the heuristic function and generate node function.
+  This module also have a function to compare two paths
+- graph/permutate.ts
+  This file contains functions to permutate the world (the stacks).
+  It contains both a "permutate" function which will create the complete graph
+  given a WorldState, and also a "permutateBasedOn" which will only create the
+  "next in line" nodes given a graph node to base the permutate on. This prevents
+  the graph to grow too big too fast in the search for shortest path.

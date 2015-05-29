@@ -275,25 +275,6 @@ module Planner {
         return to;
     }
     
-    function prettyMat(mat: string[][]){
-        var prettyString = "[";
-        for(var i=0; i<mat.length; i++){
-            prettyString+="[";
-            for(var j=0; j<mat[i].length; j++){
-                prettyString+= mat[i][j] + "";
-                if(j!=mat[i].length-1){
-                    prettyString+=",";
-                }
-            }
-            prettyString+="]";
-            if(i!=mat.length-1){
-                prettyString+=",";
-            }
-        }
-        prettyString+="]";
-        return prettyString;
-    }
-    
     /** Finds from which stack (index) an object was moved */
     function movedFrom(from: string[][], to: string[][]){
         for(var i = 0; i < from.length; i++){
@@ -303,7 +284,6 @@ module Planner {
         }
         return undefined;
     }
-    
     
     function movedTo(from: string[][], to: string[][]){
         return movedFrom(to, from);
