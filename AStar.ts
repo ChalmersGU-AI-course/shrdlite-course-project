@@ -5,7 +5,7 @@ module AStar {
     export interface Node<S> { 
         getChildren() : Edge<S>[];
         getState() : S;
-	getHeuristic() : number;
+        getHeuristic() : number;
     }
 
     export class StaticNode<S> implements Node<S> {
@@ -24,9 +24,9 @@ module AStar {
             this.children.push(edge);
         }
 
-	getHeuristic() {
-	    return this.h(this.state);
-	}
+        getHeuristic() {
+            return this.h(this.state);
+        }
     }
  
     //A path contains the total cost of the path and a list of
@@ -69,7 +69,7 @@ module AStar {
     }
 
     export interface Heuristic<S> {
-	(s : S) : number;
+        (s : S) : number;
     }
 
     export interface Edge<S> {
@@ -85,14 +85,14 @@ module AStar {
         });
         frontier.add(new Path<S>([ graph]));
 
-	var j : number = 0;
-	var time : number = new Date().getTime();
+        var j : number = 0;
+        var time : number = new Date().getTime();
 
         while(!frontier.isEmpty()) {
             var p = frontier.dequeue();
-	    j++;
+            j++;
             if(goal(p.peek().getState())) {
-		alert("Number of iterations: " + j + "\nTime taken: " + (new Date().getTime() - time));
+                alert("Number of iterations: " + j + "\nTime taken: " + (new Date().getTime() - time));
                 return p;
             } else {
                 if(new Date().getTime() - time > 4000) { throw new AStar.Error("Request timeout") }
@@ -113,12 +113,12 @@ module AStar {
 
     //Simple test
     export function test(){
-	var heur = function(a){return 0;};
+        var heur = function(a){return 0;};
 
         var g1 = new StaticNode<number>([],heur,4);
         var g2 = new StaticNode([],heur,3);
         var g = new StaticNode<number>([{ cost: 1, end: g1},
-					{cost: 1, end: g2}], heur, 0);
+                                        {cost: 1, end: g2}], heur, 0);
         g1.children.push({cost:1, end: g});
 
         var h = astarSearch<number>(g,function(a : number){return a == 3;})
@@ -128,7 +128,7 @@ module AStar {
 
     //Complicated test geolocations
     export function geoTest() : string[] {
-	var heur = function(a : string){ //H(n)
+        var heur = function(a : string){ //H(n)
             if(a == "gothenburg") {
                 return Math.sqrt(4*4 + 15*15);
             } else if(a == "malmo"){

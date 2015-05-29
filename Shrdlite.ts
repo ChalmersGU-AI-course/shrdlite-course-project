@@ -49,20 +49,20 @@ module Shrdlite {
         });
 
         try {
-	    var interpretations : Interpreter.Result[] = [];
-	    if(world.previousRes.length == 0) {
-		interpretations = Interpreter.interpret(parses, world.currentState);
-	    } else {
-		interpretations = [world.previousRes[parseInt(parses[0].prs.letter) - 1]];
-		world.previousRes = [];
-	    }
+            var interpretations : Interpreter.Result[] = [];
+            if(world.previousRes.length == 0) {
+                interpretations = Interpreter.interpret(parses, world.currentState);
+            } else {
+                interpretations = [world.previousRes[parseInt(parses[0].prs.letter) - 1]];
+                world.previousRes = [];
+            }
         } catch(err) {
             if (err instanceof Interpreter.Error) {
                 world.printError("Interpretation error", err.message);
                 return;
             }else if(err instanceof Interpreter.Clarification) {
                 world.previousRes = err.data;
-		world.printError(err.message);
+                world.printError(err.message);
                 return;
             } else {
                 throw err;
