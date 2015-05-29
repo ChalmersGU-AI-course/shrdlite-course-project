@@ -232,7 +232,7 @@ module Planner {
      */
     export function heuristic(stacks: string[][], goalConditions: Interpreter.Literal[]) : number {
         var score = 0;
-        var mw = new MinWeight();
+        var mw = new Moving(stacks);
         for (var goal=0; goal<goalConditions.length; goal++) {
             var g = goalConditions[goal];
             if (g.rel == "ontop" || g.rel == "inside") {
@@ -241,16 +241,14 @@ module Planner {
                     var bottom : number[] = Planner.getLocation(g.args[1], stacks);
                     if(top[0]!=bottom[0]) {
                         //score+=top[2]+bottom[2]+1;
-                        mw.setWeight(g.args[0],top[2]+1);
-                        mw.setWeight(g.args[1],bottom[2]);
+                        mw.setObjects(top[0],top[1]);
+                        mw.setObjects(bottom[0],bottom[1]+1);
                     } else if(top[1]!=bottom[1]+1) {
                         //score+=Math.max(top[2],bottom[2])+1;
                         if(top[2]<bottom[2]) {
-                            mw.setWeight(g.args[0],top[2]+1);
-                            mw.setWeight(g.args[1],bottom[2]-top[2]);
+                            mw.setObjects(bottom[0],bottom[1]);
                         } else {
-                            mw.setWeight(g.args[0],top[2]-bottom[2]);
-                            mw.setWeight(g.args[1],bottom[2]+1);
+                            mw.setObjects(top[0],top[1]);
                         }
                     }
                 }
@@ -260,9 +258,9 @@ module Planner {
                 if(Math.abs(o1[0]-o2[0])!=1) {
                     //score+=Math.min(o1[2],o2[2])+1;
                     if(o1[2]<o2[2]) {
-                        mw.setWeight(g.args[0],o1[2]+1);
+                        mw.setObjects(o1[0],o1[1]);
                     } else {
-                        mw.setWeight(g.args[1],o2[2]+1);
+                        mw.setObjects(o2[0],o2[1]);
                     }
                 }
             } else if(g.rel == "above" || g.rel == "under") {
@@ -270,7 +268,7 @@ module Planner {
                 var bottom : number[] = Planner.getLocation(g.args[(g.rel=="above") ? 1 : 0], stacks);
                 if(!(top[0]==bottom[0] && bottom[1]<top[1])) {
                     //score+=top[2]+1;
-                    mw.setWeight(g.args[(g.rel=="above") ? 0 : 1] , top[2]+1);
+                    mw.setObjects(top[0] , top[1]);
                 }
             } else if(g.rel == "rightof" || g.rel == "leftof") {
                 var right : number[] = Planner.getLocation(g.args[(g.rel=="rightof") ? 0 : 1], stacks);
@@ -278,18 +276,18 @@ module Planner {
                 if(!(right[0]>left[0])) {
                     if(right[0]==0) {
                         //score+=right[2]+1;
-                        mw.setWeight(g.args[(g.rel=="rightof") ? 0 : 1] , right[2]+1);
+                        mw.setObjects(right[0] , right[1]);
                     }
                     if(left[0]==stacks.length-1) {
                         //score+=left[2]+1;
-                        mw.setWeight(g.args[(g.rel=="rightof") ? 1 : 0] , left[2]+1);
+                        mw.setObjects(left[0] , left[1]);
                     }
                     if(right[0]!=0 && left[0]!=stacks.length-1) {
                         //score+=Math.min(right[2],left[2])+1;
                         if(right[2]<left[2]) {
-                            mw.setWeight(g.args[(g.rel=="rightof") ? 0 : 1],right[2]+1);
+                            mw.setObjects(right[0],right[1]);
                         } else {
-                            mw.setWeight(g.args[(g.rel=="rightof") ? 1 : 0],left[2]+1);
+                            mw.setObjects(left[0],left[1]);
                         }
                     }
                 }
@@ -302,28 +300,31 @@ module Planner {
         return score;
     }
     
-    class MinWeight {
+    class Moving {
         
-        contributions : Map<string,number>;
+        objects : string[];
+        stacks: string[][];
         
-        constructor() {
-            this.contributions = new Map<string,number>();
+        constructor(sta: string[][]) {
+            this.objects = [];
+            this.stacks = sta;
         }
         
-        public setWeight(ob: string, w: number) {
-            if(this.contributions.has(ob)) {
-                this.contributions.set(ob,Math.min(this.contributions.get(ob),w));
-            } else {
-                this.contributions.set(ob,w);
+        /**
+         * Set all objects in column col above row n (included) in the "moving" list if not already.
+         */
+        public setObjects(col: number, n: number) {
+            var o: string;
+            for(var i=n; i<this.stacks[col].length; i++) {
+                o = this.stacks[col][i];
+                if(this.objects.indexOf(o)==-1) {
+                    this.objects.push(o);
+                }
             }
         }
         
         public sumScores() : number {
-            var score = 0;
-            this.contributions.forEach((n) => {
-                score+=n;
-            });
-            return score;
+            return this.objects.length;
         }
         
     }
