@@ -25,6 +25,9 @@ Put the large ball inside the box - Ambigous, which box did you mean?
 
 Put the white brick above all pyramids - To show that the all commands works in the location entity aswell. (feel free to move the pyramids before running)
 
+##Complex world
+Put the yellow brick right of the green plank - To show that the iprt/planner works reasonably fast for complex world aswell.
+
 #What extensions
 ##Ambigious
 Implemented inside Interpreter.ts. If we have a utterance that can be parsed as several meanings, we throw an error inside the interpret function to request a clarification from the user. The error message is built up from the different meanings. Here we only show information that is necessary to the user. This is done by comparing all the different commands by 'folding' them against each other. In each fold, we remove unecessary information by comparing them against each other (see cmpCmd and cmpObjs in interpreter.ts). The fold then returns only the useful information and from that we print a message.
