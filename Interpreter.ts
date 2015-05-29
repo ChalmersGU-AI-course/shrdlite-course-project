@@ -361,7 +361,11 @@ module Interpreter {
         }
         //A ball can only be in a box of the correct size (except floor)
         else if(over.form == "ball" && under.form == "box"){
-            return checkSizeUGE(over.size, under.size);
+                return checkSizeUGE(over.size, under.size);
+        }
+        // A ball can only be in a box, which is already tested therefore it is false
+        else if(over.form == "ball"){
+            return false;
         }       
         //Boxes cannot contain pyramids, planks or boxes of the same size.
         else if(under.form =="box"){
