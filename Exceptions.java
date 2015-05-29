@@ -20,7 +20,8 @@ After the project has been compiled, simply open the "shrdlite.html" file.
     Implemented in Interpreter.ts as well as in Shrdlite.ts
 - Planner describes what it is doing in a way that is understandable to humans
     Implemented in Planner.ts
-- Timer for the path finding algorithm (To prevent too long wait for hard interpretations)
+- Timer for the path finding algorithm (To prevent too long wait for hard
+  interpretations)
     Implemented in graph/astar.ts
 - Handles some invalid placements in sensible manner
     Implemented in Utils.ts, Interpreter.ts as well as in Shrdlite.ts
@@ -29,6 +30,22 @@ After the project has been compiled, simply open the "shrdlite.html" file.
 3. How the A* heuristics work
 
 3.1
+The heuristics work differently depending on the relation. For example for the
+interpretation '"ontop", [a,b]' the number of objects above 'a' and 'b' is
+multiplied by the cost for picking up and dropping an object plus two. This is
+since all objects above 'a' needs to be moved at least one step in order to pick
+it up. The same goes for 'b' as it needs to be clear in order for 'a' to be
+placed on top of it. For the other relations it works similarly for example 
+'"above", [a,b]' takes only the cost of clearing a since b does not necessarily
+needs to be cleared. For '"ontop", [a,"floor"]' the heuristics is calculated as
+the cost for clearing 'a' plus the cost of clearing the smallest stack from the
+floor.
+
+When there are disjunct interpretations the heuristics for the smallest one is chosen. When there are conjunct
+interpretations the heuristics for each of them is added up. This means the heuristics is not admissible since
+the conjunct interpretations may affect each other, and when added together cause an overestimate. For example
+if we have a world with three bricks all on top of each other. If we want to put the all the bricks on the 
+floor the cost for moving the top most brick will be added to the heuristics twice.
 
 3.2 Where to find it
 heuristic/Heuristic.ts
