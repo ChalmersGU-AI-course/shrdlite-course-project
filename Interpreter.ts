@@ -127,6 +127,28 @@ module Interpreter {
         return false;
     }
 
+    function reverseRelation(relation : string) : string {
+        switch (relation) {
+            case "leftof":
+                return "rightof";
+            case "rightof":
+                return "leftof";
+            case "containing":
+                return "inside";
+            case "under":
+                return "ontop";
+            case "inside":
+                return "containing";
+            case "ontop":
+                return "under";
+            case "below":
+                return "above";
+            case "above":
+                return "below";
+        }
+        return relation;
+    }
+
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         var matching: string[];
         if (cmd.ent) {
@@ -144,6 +166,18 @@ module Interpreter {
             }
             return literals;
         }
+
+        if (cmd.ent && cmd.ent.quant == "any" && cmd.loc.ent && cmd.loc.ent.quant == "all" ) {
+            //reverse the command:
+            cmd.ent.quant = "all";
+            cmd.loc.ent.quant = "any";
+            var tmpObj = cmd.ent.obj;
+            cmd.ent.obj = cmd.loc.ent.obj;
+            cmd.loc.ent.obj = tmpObj;
+            cmd.loc.rel = reverseRelation(cmd.loc.rel);
+            return interpretCommand(cmd, state);
+        }
+
         for (var i=0; i < matching.length; ++i)
         {
             var matchLiterals = buildRelativeLiterals(matching[i], cmd.loc, state);
@@ -159,7 +193,6 @@ module Interpreter {
                         var tempLiteral : Literal[] = previousLiterals[k].slice();
                         var matchLiteral : Literal[] = matchLiterals[j].slice();
                         var newestLiterals = concatLiterals(tempLiteral, matchLiteral);
-                        newestLiterals = newestLiterals.filter(function(l){return isLegalLiteral(l, state);});
                         if (!listContainsList(newLiterals, newestLiterals)) {
                             newLiterals.push(newestLiterals);
                         }
@@ -172,25 +205,6 @@ module Interpreter {
             }
         }
         return literals;
-    }
-
-    function isLegalLiteral(literal : Literal, state : WorldState) : boolean {
-        if(literal.args) {
-            var first = lookupLiteralArg(literal.args[0], state);
-            var second = lookupLiteralArg(literal.args[1], state);
-            if (literal.rel === "ontop") {
-                return CanPutObjectOntop(first, second);
-            }
-
-            if (literal.rel === "above") {
-               return first.size >= second.size;
-            }
-
-            if (literal.rel === "under") {
-                return first.size <= second.size;
-            }
-        }
-        return true;
     }
 
     function lookupLiteralArg(arg : string, state : WorldState) : ObjectDefinition {
@@ -399,11 +413,15 @@ module Interpreter {
                 return firstPosition.Stack > secondPosition.Stack;
             case "beside":
                 return Math.abs(firstPosition.Stack - secondPosition.Stack) === 1;
+            case "containing":
+            case "under":
+                return firstPosition.Stack === secondPosition.Stack && 
+                       firstPosition.ObjectNr + 1 === secondPosition.ObjectNr;
             case "inside":
             case "ontop":
                 return firstPosition.Stack === secondPosition.Stack && 
                        firstPosition.ObjectNr === secondPosition.ObjectNr + 1;
-            case "under":
+            case "below":
                 return firstPosition.Stack === secondPosition.Stack && 
                        firstPosition.ObjectNr < secondPosition.ObjectNr;
             case "above":
