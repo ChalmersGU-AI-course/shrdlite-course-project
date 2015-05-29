@@ -95,12 +95,19 @@ module AStar {
 		alert("Number of iterations: " + j + "\nTime taken: " + (new Date().getTime() - time));
                 return p;
             } else {
+                if(new Date().getTime() - time > 4000) { throw new AStar.Error("Request timeout") }
                 var children = p.peek().getChildren();
                 for( var i = 0; i < children.length; i++ ) {
                     frontier.add( p.push(children[i]));
                 }
             }
         }
+    }
+
+    export class Error implements Error {
+        public name = "AStar.Error";
+        constructor(public message? : string) {}
+        public toString() {return this.name + ": " + this.message}
     }
     
 

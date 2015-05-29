@@ -79,6 +79,9 @@ module Shrdlite {
             if (err instanceof Planner.Error) {
                 world.printError("Planning error", err.message);
                 return;
+            } else if (err instanceof AStar.Error) {
+                world.printError("Planning error", err.message);
+                return;
             } else {
                 throw err;
             }
