@@ -25,4 +25,8 @@ We implemented the arms so they cannot pass each other.
 
 We created specialized heuristics for each relation a literal can have. The implementation can be found in the `TwoArmHeuristic` class in `Planner.ts`.
 
+The basic idea is to estimate the number of steps both arms would need to fulfill a literal in the optimal case and then use that as the heuristic.
+
+Then for every literal in the target an estimate is calculated and and the minimum of all estimates taken. This certainly produces worse estimates but is necessary in order to produce an underestimate and be able to find the best path.
+
 ### Interpretation
