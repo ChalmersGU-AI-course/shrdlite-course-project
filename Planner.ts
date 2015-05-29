@@ -68,6 +68,17 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+    function compare(a: Result, b: Result) {
+        if (a.plan.length < b.plan.length) {
+            return -1;
+        }
+        if (a.plan.length > b.plan.length) {
+            return 1;
+        }
+        // a must be equal to b
+        return 0;
+    }
+
     /*
         Physical laws
 
@@ -88,26 +99,7 @@ module Planner {
 
     module PhysicalLaws {
 
-        //Check the validity for arm pickups
-        export function possibleArmPickup(obj: string, state: WorldState): boolean {
-            var bool = false;
-
-            if (state.holding !== null) {
-            } else {
-                //Check if the object is free
-                for (var i = 0; i < state.stacks.length; i++) {
-                    var topObjIndex = state.stacks[i].length - 1;
-                    if (topObjIndex >= 0) {
-                        if (state.stacks[i][topObjIndex] == obj) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return bool;
-        }
-
-        //Check if an intended move is valid
+        //Check if an intended move is to a valid position
         export function validPosition(topObj: ObjectDefinition, bottomObj: ObjectDefinition): boolean {
             if (bottomObj.form === "ball")
                 return false;
@@ -311,7 +303,6 @@ module Planner {
     //  thankful for the solution.
     //  The first solution achieved should be the best (not totally convinced of this yet)
 
-
     // Function to return a function to check if we fulfilled the goal state
     function goalFuncHandle(intrps: Interpreter.Literal[][]) {
         // Store a set of all interpretations expressed as strings to make subset checks with current world.
@@ -341,9 +332,10 @@ module Planner {
             return false;
         });
     }
-//###################################################################
-//###################################################################
-//###################################################################
+
+    //###################################################################
+    //###################################################################
+    //###################################################################
     function getNeighbours(currentWorld: Nworld): [Nworld, number][]{
         // Return all possible moves as corresponing Nworlds, with actual cost (?)
         var arm     = currentWorld.states.arm;
@@ -387,13 +379,11 @@ module Planner {
             var state = cloneWorldstate(currentWorld.states);
             var topObject = state.objects[state.holding];
             var bottomObject = state.objects[stacks[arm][stacks[arm].length-1]];
-            //console.log("Trying to put on stack with length: " + stacks[arm].length);
             
             if(stacks[arm].length === 0 || PhysicalLaws.validPosition(topObject, bottomObject)){
                 var worldstate = new Nworld();
                 var state = cloneWorldstate(currentWorld.states);
                 state.stacks[state.arm].push(state.holding);
-                //console.log("Pushed: " + state.holding + " to position " + state.arm);
                 state.holding = null;
                 worldstate.states = state;
                 worldstate.step = 'd';
@@ -402,9 +392,9 @@ module Planner {
         }
         return currentWorld.neighbours;
     }
-//################################################################################
-//################################################################################
-//################################################################################
+    //################################################################################
+    //################################################################################
+    //################################################################################
     function getStackIndex(o1: string, stacks: string[][]): number[] {
         var cords: number[] = [-1, -1];
         for (var i = 0; i < stacks.length; i++) {
@@ -418,10 +408,10 @@ module Planner {
         return cords;
     }
 
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
-    }
-
+    /*
+    * Takes a path and add some statements that is visible in GUI which
+    * describes what the arm is doing.
+    */
     function pathToPlan(path : string[]): string[] {
         var plan: string[] = [];
         var prev: string = "";
@@ -483,7 +473,6 @@ module Planner {
         // Since we are searching for the cost we have not yet reached the goal
 
         if (literal.rel === "holding") {
-
             cost = calculateHolding(primary, state);
 
         } else if (literal.rel === "ontop" || literal.rel === "inside") {
@@ -634,17 +623,6 @@ module Planner {
     //Returns how many items obj has above in the stack
     function howManyAbove(obj: string, stack: string[]): number {
         return stack.length - stack.lastIndexOf(obj) + 1;
-    }
-
-    function compare(a: Result, b: Result) {
-        if (a.plan.length < b.plan.length) {
-            return -1;
-        }
-        if (a.plan.length > b.plan.length) {
-            return 1;
-        }
-        // a must be equal to b
-        return 0;
     }
 
     export class Nworld implements N{

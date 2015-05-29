@@ -23,7 +23,6 @@ module Interpreter {
         }
     }
 
-
     export interface Result extends Parser.Result { intp: Literal[][]; }
     export interface Literal { pol: boolean; rel: string; args: string[]; }
 
@@ -38,13 +37,11 @@ module Interpreter {
         return (lit.pol ? "" : "-") + lit.rel + "(" + lit.args.join(",") + ")";
     }
 
-
     export class Error implements Error {
         public name = "Interpreter.Error";
         constructor(public message?: string) { }
         public toString() {return this.name + ": " + this.message }
     }
-
 
     //////////////////////////////////////////////////////////////////////
     // private functions
@@ -60,8 +57,7 @@ module Interpreter {
         /*
               Structure for "put"
                 -See if we hold an object o
-                -Identify the target objects t[] (i.e. "floor")
-                -See if such an object exists in the world
+                -Identify the target objects t[] (i.e. "floor") and see if such an object exists
                 -If ambiguity and the quantifier is 'the', ask for clarification
                 -Check if the positioning is valid, (i.e. under(o, t))
                 -Convert possible objects to interpretations in PDDL //Possibly more here?
@@ -102,8 +98,7 @@ module Interpreter {
 
         /*
             Structure for "take"
-                -Identify what objects we want
-                -See if such an object exists in the world
+                -Identify what objects we want, see if such an object exists
                 -If no object found, abort
                 -If ambiguity and the quantifier is 'the', ask for clarification
                 -If quantifier is 'all', abort
@@ -124,10 +119,8 @@ module Interpreter {
 
         /*
             Do correct stuff with "move"
-                -Identify the primary objects o[]
-                -See if such an object exists in the world
-                -Identify the target objects t[] (i.e. "floor")
-                -See if such an object exists in the world
+                -Identify the primary objects o[] and see if such an object exists in the world
+                -Identify the target objects t[] (i.e. "floor") and see the object exists
                 -If ambiguity and the quantifier is 'the', ask for clarification
                 -Check if the positioning is valid, ontop(o, t) 
         */
@@ -155,7 +148,6 @@ module Interpreter {
             var secondaryObjs:string[] = getPossibleObjects(secObj, state);
             possibleObjs = getRelation(possibleObjs, secondaryObjs, rel, state);
         }
-        //Anything more?
         
         return possibleObjs;
     }
@@ -188,11 +180,12 @@ module Interpreter {
         return possibleObjs;
     }
 
+    /*
+    * We extract the descriptive parts of the object.
+    * By using a set we do not have to handle the null parts, we just check that the parsed object's 
+    * set is a subset of the object from the stack.
+    */  
     function getPossibleObjects(obj: Parser.Object, state: WorldState):string[] {
-        // Extract the descriptive parts of the object
-        // By using a set we do not have to handle the null parts.
-        // We could just check that the parsed object's set is a subset of 
-        // the object from the stack
         
         // Edge case for floor object
         if(obj.form === "floor")
@@ -222,9 +215,10 @@ module Interpreter {
         }
         return possibleObjects;
     }
+
     /**
      *  This method will take primary and target objects and check the command to see which relations is wanted and use the world state
-     *  to see existing sizes and relations
+     *  to see existing sizes and relations. It creates the relations between objects in PDDL as a array in DNF. 
      */
     function convertToPDDL(cmd: Parser.Command, primobj: string[], targets : string[]) : Literal[][] {
         var interpretations: Literal[][] = [];
@@ -395,9 +389,4 @@ module Interpreter {
         }
         return cords;
     }
-
-    function getRandomInt(max):number {
-        return Math.floor(Math.random() * max);
-    }
-
 }
