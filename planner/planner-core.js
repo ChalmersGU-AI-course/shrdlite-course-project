@@ -249,6 +249,62 @@ SearchGraph.prototype.h_general = function (state) {
                 }, 0) / state.arms.length;
                 break;
 
+            case "floor":
+                var arm;
+                state.arms.every(function(a) {
+                    if(a.holding == rule.item) {
+                        arm = a;
+                        return false;
+                    }
+                    return true;
+                });
+
+                if(arm) {
+                    // Find closest floor and put down
+                    estimate += closest_floor(arm.pos, state) + 1;
+                } else {
+                    // Move to object, take, move to closest floor, put down
+                    var minArmPos = state.arms.reduce(function(acc, arm) {
+                        var a = Math.abs(arm.pos - i);
+                        if(a < acc) return a;
+                        else return acc;
+                    }, Infinity);
+                    estimate += minArmPos + 2 +  closest_floor(i, state);
+                }
+                break;
+
+                /*
+            case "ontop":
+                var least = 100000;
+                for (var obj of rule.oneof) {
+                    least = Math.min(least, putOnTopOf(arm, obj, state));
+                }
+                if (holding != rule.item) {
+                    estimate += Math.abs(arm - i) + 1; // Go pick it up.
+                }
+                estimate += least;
+                break;
+
+            // TODO
+            case "beside":
+                estimate += 1;
+                break;
+            //     if (j === -1) {
+            //         return false;
+            //     }
+            //     return  (i !== 0 && rule.oneof.intersects(state.stacks[i-1])) ||
+            //             (i !== state.stacks.length && rule.oneof.intersects(state.stacks[i+1]));
+
+            case "left":
+                estimate += 1;
+                break;
+            //     return (j !== -1) && state.stacks.slice(i+1).flatten().intersects(rule.oneof);
+
+            case "right":
+                estimate += 1;
+                break;
+            //     return (j !== -1) && state.stacks.slice(i-1).flatten().intersects(rule.oneof);
+            */
         }
     }
     return estimate;
