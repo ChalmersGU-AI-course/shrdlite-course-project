@@ -14,28 +14,36 @@ by giving commands in natural language.
 How to compile
 --------------
 In order to compile the project coffeescript is needed, if you do not have
-it you can install it with npm install -g coffee-script.
-
+it you can install it with
+```
+npm install -g coffee-script.
+```
 Also bash is needed (for Windows) and it is installed through Cygwin.
 
 In order to compile use the command:
+```
 bash Cake.sh
-
+```
 which should run if you have coffeescript and bash. 
 
 
 How to run
 ----------
 When you have compiled you can run the project with the command:
+```
 node shrdlite-offline.js [world] [Ex]
-
+```
 where [world] = small | medium | complex | impossible
 and [Ex] is a number or a string.
 
 E.g.
+```
 node shrdlite-offline.js medium "put the small box in the large box"
+```
 or
+```
 node shrdlite-offline.js complex 2
+```
 
 Enjoy!
 ------
