@@ -28,6 +28,7 @@ module Interpreter {
 		    intprt.intp = iprcmd[0].lits;
 		    interpretations.push(intprt);
 		} else {
+		    //Ambigious interpretation
 		    iprcmd.forEach(function(ipr) {
 			var inpr : Result = {intp : ipr.lits, input: intprt.input, prs: intprt.prs, amb: ipr.amb};
 			interpretations.push(inpr);
@@ -39,6 +40,7 @@ module Interpreter {
             return interpretations;
         } else if(interpretations.length) {
 	    //This only occurs when there are ambiuity, either in the utterance or that the quantifier matches several objects
+	    //Ambigious utterance
 	    var error = new Interpreter.Clarification(getClarQuest(interpretations, currentState));
 	    error.data = interpretations;
 	    throw error;
