@@ -27,7 +27,7 @@ GreedyBFS = (start, goal, heuristicFunction, nextMoves, getNextState,
       return current.moves
     closedSet.push(current.state)
     if closedSet.length > 200
-      console.log "GreedyBFS search has finished"
+      console.log "GreedyBFS finished searching without finding a solution"
       return -1
     listOfPossibleMoves = nextMoves(current.state)
     # All possible moves from move chosen from priority queue
