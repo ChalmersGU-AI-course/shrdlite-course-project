@@ -615,7 +615,7 @@ module Interpreter {
           var o = toObjectDef(this.findObject(obj));
           return " the" + objectToString(o);
         });
-        strobjs.splice(-1, 0, "or");            // insert "or" before the last object
+        strobjs.splice(-1, 0, " or");            // insert "or" before the last object
         var enumeration = strobjs.slice(0, -2); // commaseparated part of sentence
         var last = strobjs.slice(-2);           // last part of sentence
         return "Did you mean" + (rel ? (" " + rel) : "") + enumeration.join(",") + last.join("") + "?";
@@ -936,7 +936,7 @@ module Interpreter {
         str += " " + (obj.form !== "anyform" ? obj.form : "object");
       if(obj.loc) // this only occurs when entityToString calls the function
         str += " " + locationToString(obj.loc);
-      return str;
+      return str + " ";
     }
 
     function locationToString(loc: Parser.Location): string {

@@ -6,36 +6,34 @@ for the task of running in the browser.
 
 #### How to run
 
-If you want to run tests you will need to run `npm install` to include any
-dependecies.
-
-To run test in this folder:
-
-- Run `make test`.
-
-The tests build on the testing frameworks:
-[Mocha] (https://github.com/mochajs/mocha),
-[Should] (https://github.com/tj/should.js) and
-[Chai] (http://chaijs.com/)
-
-To run the program:
-
 - Run `make all`
 - Open */shrdlite.html* in your browser
 
 #### Interesting utterance examples
 
-In the small world:
-TODO
+In the small world (quantifiers):
+- "put all balls inside a box" (all objects, any references)
+- "put the table inside any box" (the object, any reference)
+- "take the ball" (gives Interpretation error)
 
-
-In the medium world:
-TODO
-
-
-In the complex world:
-TODO
-
+In the medium world (relations):
+- "take the red table ontop of a object on the floor" (ontop)
+- "put all green objects above the blue table" (above)
+- "put all boxes to the left of the pyramid" (left of)
+- "put all boxes to the right of the pyramid" (right of)
+Observe that it takes into consideration all pyramids since the interpreter does
+not know what pyramid the utterance refers to, so it puts the boxes to the
+left/right of both of the pyramids.
+- "put the small pyramid beside all boxes"
+Observe that the boxes could be to both the right or the left since it does not
+matter as long as they are directly to the right/left of the pyramid.
+- "put all boxes beside the small pyramid"
+Observe that this sentence have the same semantic meaning as the one before so
+running these commands in sequence does not affect the state of the world more
+than once.
+- "put all tables under a brick" (under)
+Observe that we have choosen to interpret the command as all tables under any
+brick but the same brick.
 
 ## Overview of the implementation
 
@@ -173,7 +171,7 @@ TODO
   over x and y
 
 In the end, we return the minimum heuristical value of all disjuncted
-parameters. 
+parameters.
 
 This heuristic is can overestimate the number of moves, for example if
   one stack is used in more than one relationship, so its objects are
@@ -199,11 +197,17 @@ that asks the user what object he/she means.
 
 ### Other
 
-- if some things are half-finished, or strange/unexpected behaviour
-TODO
-
-- anything else you want to inform us about
 We have not implemented any tests for neither the Planner or the Interpreter
 because of the lack of time.
+
+We have diabled the tests for the Astar implementation since there were some
+issues with [Mocha] (https://github.com/mochajs/mocha). Mocha runs ontop of Node
+and since Node has a different module system (commonjs) we could not have both
+the tests and the browser compile at the same time. This is a known
+[issue](https://github.com/Microsoft/TypeScript/issues/17) in typescript. But
+since we had the test pass for the Astar implementation we did not consider it
+that important to make it work this time since we have not made any substatial
+changes in the Astar implementation and you have already seen the tests pass
+before.
 
 
