@@ -54,4 +54,4 @@ We begin by extracting all the data we want in a one pass by iteration through t
 Well, we haven't had the time to fully optimize the leftof/rightof/besides relation. We have implemented a heuristic for these cases aswell, but they are not as fast as ontop/above/below. In the perfect world where we have unlimited time, we would like to optimize these more! 
 
 #Anything else
-																   Thanks you for the project, the heuristic were singing. Thanks for all, the joy its bringing. Who could plan without it, i'm only asking who. 
+--- 
