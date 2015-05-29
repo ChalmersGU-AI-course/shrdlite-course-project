@@ -185,6 +185,12 @@ SearchGraph.prototype.rule_satisfied = function(rule, state) {
         case "ontop":
             return j > 0 && rule.oneof.contains(stack[j-1]);
 
+        case "above":
+            return j !== 1 && rule.oneof.intersects(stack.slice(0, j));
+
+        case "under":
+            return j !== 1 && rule.oneof.intersects(stack.slice(j+1));
+
         case "beside":
             if (j === -1) {
                 return false;
@@ -192,14 +198,14 @@ SearchGraph.prototype.rule_satisfied = function(rule, state) {
             return  (i !== 0 && rule.oneof.intersects(state.stacks[i-1])) ||
                     (i !== state.stacks.length-1 && rule.oneof.intersects(state.stacks[i+1]));
 
-        case "left":
+        case "leftof":
             return (j !== -1) && state.stacks.slice(i+1).flatten().intersects(rule.oneof);
 
-        case "right":
-            return (j !== -1) && state.stacks.slice(i-1).flatten().intersects(rule.oneof);
+        case "rightof":
+            return (j !== -1) && state.stacks.slice(0, i).flatten().intersects(rule.oneof);
 
         default:
-            throw "ERRORRRR";
+            throw "ERRORRRR: Planner does not know the relation: " + rule.rel;
     }
 
 };
@@ -438,28 +444,10 @@ SearchGraph.prototype.h_1arm = function (state) {
                 estimate += least;
                 break;
 
-            // TODO
-            case "beside":
-                estimate += 1;
-                break;
-            //     if (j === -1) {
-            //         return false;
-            //     }
-            //     return  (i !== 0 && rule.oneof.intersects(state.stacks[i-1])) ||
-            //             (i !== state.stacks.length && rule.oneof.intersects(state.stacks[i+1]));
-
-            case "left":
-                estimate += 1;
-                break;
-            //     return (j !== -1) && state.stacks.slice(i+1).flatten().intersects(rule.oneof);
-
-            case "right":
-                estimate += 1;
-                break;
-            //     return (j !== -1) && state.stacks.slice(i-1).flatten().intersects(rule.oneof);
-
+            case "above":
+            case "below":
             default:
-                throw "ERRORRRR";
+                estimate += 1;
         }
 
     }

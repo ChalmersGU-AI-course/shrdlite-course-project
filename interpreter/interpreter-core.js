@@ -145,7 +145,6 @@ Parser.prototype.location_filter = function(candidates, loc) {
     var ret = [];
     for (var cand of candidates) {
         switch (loc.rel) {
-            case "above":
             case "inside":
             case "ontop":
                 if (this.test_ontop(cand, obs)) {
@@ -168,6 +167,10 @@ Parser.prototype.location_filter = function(candidates, loc) {
                 }
                 break;
             default:
+
+            case "above":
+            case "under":
+
             throw "Unknown relation: " + loc.rel;
         }
     }
@@ -226,25 +229,15 @@ Parser.prototype.parse_one = function (move, loc) {
                 throw "Objects must be put on top of the floor";
             }
             rules.push({rel: 'floor', item: m});
-        } else if (loc.rel == "ontop" || loc.rel == "inside" || loc.rel == "above") {
+        } else  {
             if (loc.ent.quant == "all") {
-                for (var aa of oneof2) {
-                    rules.push({rel: 'ontop', item: m, oneof: [aa]});
-                }
-            } else {
-                rules.push({rel: 'ontop', item: m, oneof: oneof2});
-            }
-
-        } else if (loc.rel == "beside" || loc.rel == "left" || loc.rel == "right") {
-            if (loc.ent.quant == "all") {
+                var newrel = loc.rel == "inside" ? "ontop" : loc.rel;
                 for (var aa of oneof2) {
                     rules.push({rel: loc.rel, item: m, oneof: [aa]});
                 }
             } else {
                 rules.push({rel: loc.rel, item: m, oneof: oneof2});
             }
-        } else {
-            throw "Unknown relation" + loc.rel;
         }
     }
     return rules;

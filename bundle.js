@@ -146,7 +146,6 @@ Parser.prototype.location_filter = function(candidates, loc) {
     var ret = [];
     for (var cand of candidates) {
         switch (loc.rel) {
-            case "above":
             case "inside":
             case "ontop":
                 if (this.test_ontop(cand, obs)) {
@@ -169,6 +168,10 @@ Parser.prototype.location_filter = function(candidates, loc) {
                 }
                 break;
             default:
+
+            case "above":
+            case "below":
+
             throw "Unknown relation: " + loc.rel;
         }
     }
@@ -227,25 +230,15 @@ Parser.prototype.parse_one = function (move, loc) {
                 throw "Objects must be put on top of the floor";
             }
             rules.push({rel: 'floor', item: m});
-        } else if (loc.rel == "ontop" || loc.rel == "inside" || loc.rel == "above") {
+        } else  {
             if (loc.ent.quant == "all") {
-                for (var aa of oneof2) {
-                    rules.push({rel: 'ontop', item: m, oneof: [aa]});
-                }
-            } else {
-                rules.push({rel: 'ontop', item: m, oneof: oneof2});
-            }
-
-        } else if (loc.rel == "beside" || loc.rel == "left" || loc.rel == "right") {
-            if (loc.ent.quant == "all") {
+                var newrel = loc.rel == "inside" ? "ontop" : loc.rel;
                 for (var aa of oneof2) {
                     rules.push({rel: loc.rel, item: m, oneof: [aa]});
                 }
             } else {
                 rules.push({rel: loc.rel, item: m, oneof: oneof2});
             }
-        } else {
-            throw "Unknown relation" + loc.rel;
         }
     }
     return rules;
@@ -711,6 +704,12 @@ SearchGraph.prototype.rule_satisfied = function(rule, state) {
         case "ontop":
             return j > 0 && rule.oneof.contains(stack[j-1]);
 
+        case "above":
+            return j !== 1 && rule.oneof.intersects(stack.slice(0, j));
+
+        case "under":
+            return j !== 1 && rule.oneof.intersects(stack.slice(j+1));
+
         case "beside":
             if (j === -1) {
                 return false;
@@ -718,14 +717,14 @@ SearchGraph.prototype.rule_satisfied = function(rule, state) {
             return  (i !== 0 && rule.oneof.intersects(state.stacks[i-1])) ||
                     (i !== state.stacks.length-1 && rule.oneof.intersects(state.stacks[i+1]));
 
-        case "left":
+        case "leftof":
             return (j !== -1) && state.stacks.slice(i+1).flatten().intersects(rule.oneof);
 
-        case "right":
-            return (j !== -1) && state.stacks.slice(i-1).flatten().intersects(rule.oneof);
+        case "rightof":
+            return (j !== -1) && state.stacks.slice(0, i).flatten().intersects(rule.oneof);
 
         default:
-            throw "ERRORRRR";
+            throw "ERRORRRR: Planner does not know the relation: " + rule.rel;
     }
 
 };
@@ -964,28 +963,10 @@ SearchGraph.prototype.h_1arm = function (state) {
                 estimate += least;
                 break;
 
-            // TODO
-            case "beside":
-                estimate += 1;
-                break;
-            //     if (j === -1) {
-            //         return false;
-            //     }
-            //     return  (i !== 0 && rule.oneof.intersects(state.stacks[i-1])) ||
-            //             (i !== state.stacks.length && rule.oneof.intersects(state.stacks[i+1]));
-
-            case "left":
-                estimate += 1;
-                break;
-            //     return (j !== -1) && state.stacks.slice(i+1).flatten().intersects(rule.oneof);
-
-            case "right":
-                estimate += 1;
-                break;
-            //     return (j !== -1) && state.stacks.slice(i-1).flatten().intersects(rule.oneof);
-
+            case "above":
+            case "below":
             default:
-                throw "ERRORRRR";
+                estimate += 1;
         }
 
     }
