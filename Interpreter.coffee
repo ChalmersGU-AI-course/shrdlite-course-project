@@ -1,5 +1,9 @@
 class Interpreter
 
+    # Take the parses and te current state of the world and return
+    # the interpretations of them.
+    # Input: List of parses, the current state of the world
+    # Output: List of interpretations
     Interpreter.interpret = (parses, currentState) ->
       interpList = []
       usedParses = []
@@ -31,7 +35,9 @@ class Interpreter
           #[getObjClarification(retObjs, currentState)]
           return parseInterps
 
-          
+    # Returns a list of interpretations for a specific parse in the current state
+    # Input: One parse, the current state of the world, if quantifier should be checked
+    # Output: List of interpretations for the parse
     getInterpListFromParse = (parse, currentState, quantifierCheck = false) ->
         parseInterpList = []
         matchingObjEntities = getMatchingEntities(parse.prs.ent, currentState, quantifierCheck)

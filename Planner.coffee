@@ -1,7 +1,10 @@
 class Planner
 
+# Plan according to the chosen interpretation and based on the current state of the world
+# Chose the interpretation with lowest heuristic
+# Input: List of interpretation, the current state of the world
+# Output: Return the plan
 Planner.plan = (interpretations, currentState) ->
-  
   plans = []
   # Pick the interpretation with the lowest heuristic
   minHeuristic = -1
@@ -27,6 +30,7 @@ Planner.plan = (interpretations, currentState) ->
   plan.plan = planInterpretation(movesToGoal)
   plans.push(plan)
   return plans
+
 # This function adds text about what shrd does
 planInterpretation = (moves) ->
   plan = []
@@ -49,6 +53,9 @@ planInterpretation = (moves) ->
     plan.push(move)
   return plan
 
+# Calculates the heuristic for the way from the current state to the goal state.
+# Input: Current state, goal state
+# Output: The heuristic cost
 heuristicFunction = (state, goalRep) ->
   sum = 0
   for goal in goalRep
@@ -190,6 +197,7 @@ heuristicFunction = (state, goalRep) ->
                 sum += Math.abs(si1-si2)
   return sum
 
+# Returns a list of possible moves based on the current state
 nextMoves = (state) ->
   moves = []
   
@@ -221,6 +229,7 @@ nextMoves = (state) ->
 
   return moves
 
+# Return the object of specified letter
 getItem = (state, letter) ->
   switch letter
     when "a" then return state.objects.a
@@ -238,6 +247,7 @@ getItem = (state, letter) ->
     when "m" then return state.objects.m
     else console.log "Did not recognize object!"
 
+# Checks if the cranteItem can be on topItem based on the physical laws
 isObjectDropValid = (craneItem, topItem) ->
   # Cannot place large item on small item
   if not (topItem.size is "small" and craneItem.size is "large")
@@ -269,6 +279,7 @@ isObjectDropValid = (craneItem, topItem) ->
           return false
   return false
 
+# Returns the new state after performing the move on the current state
 getNextState = (state, move) ->
   stackCopy = []
   for s,i in state.stacks
@@ -291,12 +302,15 @@ getNextState = (state, move) ->
     newState.arm = state.arm - 1
   return newState
 
+# Check if the current state is equal to the goal state
 equality = (state, goal) ->
   return state.arm == goal.arm && state.holding == goal.holding && "#{state.stacks}" is "#{goal.stacks}"
 
+# Returns the polarity
 polarity = (polarity, b) ->
   return ((not polarity and not b) or (polarity and b))
 
+# Check if an item is left of another
 leftOfCheck = (state, left, right) ->
   result = false
   for stack,i in state.stacks
@@ -305,6 +319,7 @@ leftOfCheck = (state, left, right) ->
         result = true
   return result
 
+# Check if an items is on top of the other
 onTopCheck = (state, above, below) ->
   result = false
   if below is "floor" # Floor is a special case..
@@ -317,6 +332,7 @@ onTopCheck = (state, above, below) ->
         result = true
   return result
 
+# Check if an item is above the other
 aboveCheck = (state, above, below) ->
   result = false
   for stack in state.stacks
@@ -325,6 +341,7 @@ aboveCheck = (state, above, below) ->
         result = true
   return result
 
+# Check if an item is beside the other
 besideCheck = (state, a, b) ->
   return leftOfCheck(state,a,b) or leftOfCheck(state,b,a)
 
@@ -360,6 +377,7 @@ checkRelation = (state, quantifier1, itemList1, relation, quantifier2, itemList2
       result = result and itemResult
   return result
 
+# Check if PDDL-goals are satisfied
 satisfaction = (state, goalRep) ->
   result = true
   for goal in goalRep
