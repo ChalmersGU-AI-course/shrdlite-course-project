@@ -24,7 +24,7 @@ Mostly implemented in AmbiguityResolve.ts.
 ### Plan description
 Describes the plan in a human readable way, for example that it is moving an object and why. It tries to be as brief as possible with the description of the object, so if there is only one table it just states "the table". It can also differ between if the action is to pick up, move or drop an object.
 
-This extension does not handle when secondary args are moved to satisfy literal as elegantly however. It will then not print the "why" of the action, and just say e.g. "Moving the white ball".
+This extension does not handle when secondary args are moved to satisfy literals as elegantly. It will then not print the "why" of the action, and just say e.g. "Moving the white ball".
 
 Implemented in Planalyzer.ts.
 
