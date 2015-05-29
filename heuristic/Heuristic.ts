@@ -11,7 +11,7 @@ module heuristics {
             for(var i=0; i<stacks.length; i++){
                 if(stacks[i].length<h){
                     foundS=i;
-                    h = stacks[i].length*(pickDropCost+1);
+                    h = stacks[i].length*(pickDropCost+2);
                 }
             }
         }
@@ -22,14 +22,14 @@ module heuristics {
                     if(stacks[i].length-1>j && stacks[i][j+1] == first){
                         return 0
                     }
-                    h += (stacks[i].length-1-j)*(pickDropCost+1);
+                    h += (stacks[i].length-1-j)*(pickDropCost+2);
                 }
                 if(stacks[i][j] == first){
                     if(j==0 && second == "floor"){
                         return 0;
                     }
                     foundF = i;
-                    h += (stacks[i].length-1-j)*(pickDropCost+1);
+                    h += (stacks[i].length-1-j)*(pickDropCost+2);
                 }
                 if(foundF!=-1 && foundS!=-1){
                     return h+Math.abs(foundS-foundF)+pickDropCost;
@@ -54,7 +54,7 @@ module heuristics {
                 }
                 if(stacks[i][j] == first){
                     foundF = i;
-                    h = (stacks[i].length-1-j)*(pickDropCost+1);
+                    h = (stacks[i].length-1-j)*(pickDropCost+2);
                 }
                 if(foundF!=-1 && foundS!=-1){
                     return h+Math.abs(foundS-foundF)+pickDropCost;
@@ -82,7 +82,7 @@ module heuristics {
                             }
                         }
                     }
-                    hS = (stacks[i].length-1-j)*(pickDropCost+1);
+                    hS = (stacks[i].length-1-j)*(pickDropCost+2);
                 }
                 if(stacks[i][j] == first){
                     foundF = i;
@@ -93,7 +93,7 @@ module heuristics {
                             }
                         }
                     }
-                    hF = (stacks[i].length-1-j)*(pickDropCost+1);
+                    hF = (stacks[i].length-1-j)*(pickDropCost+2);
                 }
                 if(foundF && foundS){
                     return Math.min(hF,hS)+Math.abs(foundS-foundF)+pickDropCost;
@@ -111,7 +111,7 @@ module heuristics {
             for(var j=0; j<stacks[i].length; j++){
                 if(stacks[i][j] == second){
                     foundS = i;
-                    hS = (stacks[i].length-1-j)*(pickDropCost+1);
+                    hS = (stacks[i].length-1-j)*(pickDropCost+2);
                 }
                 if(stacks[i][j] == first){
                     foundF = i;
@@ -122,7 +122,7 @@ module heuristics {
                             }
                         }
                     }
-                    hF = (stacks[i].length-1-j)*(pickDropCost+1);
+                    hF = (stacks[i].length-1-j)*(pickDropCost+2);
                 }
                 if(foundF && foundS){
                     return Math.min(hF,hS)+Math.abs(foundS-foundF)+pickDropCost;
@@ -138,7 +138,7 @@ module heuristics {
         for(var i=0; i<stacks.length; i++){
             for(var j=0; j<stacks[i].length; j++){
                 if(stacks[i][j] == first){
-                    return (stacks[i].length-1-j)*(pickDropCost+1);
+                    return (stacks[i].length-1-j)*(pickDropCost+2);
                 }
             }
         }

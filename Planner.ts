@@ -84,6 +84,12 @@ module Planner {
        
         //Check if the arm is holding anything
         if(holding != null){
+            //hack to not do anything, if we want to hold what we are already holding.
+            if(intprt.length == 1 && intprt[0].length == 1 &&
+               intprt[0][0].rel == "holding" && intprt[0][0].args[0] == holding){
+                plan.push("Done");
+                return plan;
+            }
             //The arm holds something. "Drop" it at the first available place
             for(var i = 0; i < startStacks.length; i++){
                 //console.log("Looping: " + i);
@@ -119,7 +125,8 @@ module Planner {
         
         
         //Compute the shortest path!
-        var path = astar.compute(graph, startId, 
+        var path = astar.compute(graph, startId,
+            //Satisfying state function.
             (node: graphmodule.GraphNode<string[][]>) => {
                 var ret = false;
                 for(var i=0; i<intprt.length; i++){
@@ -143,7 +150,7 @@ module Planner {
                 }
                 return ret;
             }
-        ,
+        ,    //Heuristics
             (node:  string[][]) => {
                 var minH = Number.POSITIVE_INFINITY;
                 for(var i=0; i<intprt.length; i++){
@@ -171,13 +178,6 @@ module Planner {
             plan.push("No path found. (ノ ゜Д゜)ノ ︵ ┻━┻");
             return plan;
         } else if(path.isEmpty()) {
-            //First we need to remove the object with ID objectID
-            // from the worldstate, since we've cheated by putting it 
-            // there while doing the A* search.
-            if(objectDropIndex != undefined){
-                //The object is now at column objectDropIndex
-                startStacks[objectDropIndex].pop();
-            }
             console.log("path is empty adding drop plan");
             //Now only do the dropPlan
             plan = plan.concat(dropPlan);
@@ -199,15 +199,6 @@ module Planner {
                 
                 if(first){
                     first = false;
-                    
-                    //First we need to remove the object with ID objectID
-                    // from the worldstate, since we've cheated by putting it 
-                    // there while doing the A* search.
-                    if(objectDropIndex != undefined){
-                        //The object is now at column objectDropIndex
-                        startStacks[objectDropIndex].pop();
-                    }
-                    
                     if(objectID == holding){
                         console.log("fancy drop plan");
                         //The dropPlan was not executed, so reset the arm position
@@ -250,6 +241,14 @@ module Planner {
             }
         }
         plan.push("Done");
+        
+        //If we added the held object to the stacks, remove it
+        // from the worldstate, since we've cheated by putting it 
+        // there while doing the A* search.
+        if(objectDropIndex != undefined){
+            //The object is now at column objectDropIndex
+            startStacks[objectDropIndex].pop();
+        }
         return plan;
         
     }
