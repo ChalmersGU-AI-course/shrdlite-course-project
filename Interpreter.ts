@@ -118,9 +118,9 @@ module Interpreter {
 		 * @return {Literal[][]} Literal describing the PDDL goals
 		 */
 		//todo: pruning maybe only for origins? because the destination you can create!
-		//todo: better error for "spatial relations do not work out"
-		//todo: for several interpretations we fail already once the first of them is not working
-		//todo: move a ball inside a box
+		//todo: move all balls inside a box
+		//todo: move all balls inside the box
+		//todo: move all balls left of a ball
 		//todo: move the ball beside the box under the table left of the box in the box under the box
 		//todo: move command when you are already holding sth
 		public getInterpretation() : Literal[][][] {
@@ -272,6 +272,13 @@ module Interpreter {
 						var formO : string = this.state.objects[dests[j]].form;
 					}
 
+					if (formO == "floor") {
+						origChecker[i] = origChecker[i] - 1;
+						destChecker[j] = destChecker[j] - 1;
+						error = "The floor can only be a destination.";
+						continue;
+					}
+
 					if (rel == "inside") {
 						if (formD != "box") {
 							origChecker[i] = origChecker[i] - 1;
@@ -315,7 +322,8 @@ module Interpreter {
 							continue;
 						}
 					}
-
+					
+					//TODO: clean up
 					if (rel == "ontop" || rel == "above") {
 						if (rel == "ontop" && formO == "ball" &&  formD != "floor") {
 							origChecker[i] = origChecker[i] - 1;
@@ -335,6 +343,13 @@ module Interpreter {
 							origChecker[i] = origChecker[i] - 1;
 							destChecker[j] = destChecker[j] - 1;
 							error = "Small boxes cannot be supported by small bricks or pyramids.";
+							continue;
+						}
+
+						if (rel == "ontop" && (formO == "pyramid" || formO == "box" || formO == "plank") && (sizeO == sizeD) && (formD == "box")) {
+							origChecker[i] = origChecker[i] - 1;
+							destChecker[j] = destChecker[j] - 1;
+							error = "Boxes cannot contain pyramids, planks or boxes of the same size.";
 							continue;
 						}
 
@@ -411,9 +426,8 @@ module Interpreter {
 				return intprt;
 			}
 
-			var n : number = 0;
+			var n : number = 0; //++n is like "or", n stays unchanged is like "and"
 			var m : number = 0;
-			//++n is like "or", n stays unchanged is like "and"
 
 			if (!dests.length) {
 				for (var i = 0; i < origs.length; i++) {
@@ -447,9 +461,44 @@ module Interpreter {
 					}
 					var lit : Literal =  {pol:true, rel:goal, args:[dests[i]]};
 					intprt[m][n].push(lit);
-					n = (quantDest == "all" || quantDest == "the") ? n : ++n;
-					m = (quantDest == "all" || quantDest == "any") ? m : ++m;
+					n = (quantDest == "all" || (quantDest == "the" && dests[i] != "floor")) ? n : ++n;
+					m = ((quantDest == "all" || quantDest == "any") && dests[i] == "floor")? m : ++m;
 				}
+				return intprt;
+			}
+
+			//this is a rather special case that requires the computation of all possible combinations
+			if (quantOrig == "all" && quantDest == "any" && origs.length > 1) {
+				//todo: if ontop or inside, prune all those combinations that have the same destination
+				var a : string[][][] = [[[]]];
+				for (var i = 0; i < origs.length; i++) {
+					a.push(combinations([[origs[i]], dests]));
+				}
+				a.splice(0,1);
+				var b : string[][] = [[]];
+				for (var i=0; i<a.length; i++) {
+				var c : string[] = [];
+					for (var j=0; j<a[i].length; j++) {
+						c.push(a[i][j][0]+a[i][j][1]);
+					}
+					b.push(c);
+				}
+				b.splice(0,1);
+				var test : string[][] = combinations(b);
+				intprt[0] = [[]];
+				var max : number = test.length;
+				for (var i = 0; i < max; i++) {
+					var o1 : string = test[i][0].substring(0,1);
+					var o2 : string = test[i][0].substring(1,2);
+					var o3 : string = test[i][1].substring(0,1);
+					var o4 : string = test[i][1].substring(1,2);
+					var lit : Literal = {pol:true, rel:goal, args:[o1, o2]};
+					var lit2 : Literal = {pol:true, rel:goal, args:[o3, o4]};
+					intprt[0][i] = [];
+					intprt[0][i].push(lit);
+					intprt[0][i].push(lit2);
+				}
+
 				return intprt;
 			}
 
@@ -467,49 +516,29 @@ module Interpreter {
 					var lit : Literal =  {pol:true, rel:goal, args:[origs[i], dests[j]]};
 					intprt[m][n].push(lit);
 					n = (quantDest == "all" || quantDest == "the") ? n : ++n;
-					m = (quantDest == "all" || quantDest == "any") ? m : ++m;
+					m = ((quantDest == "all" || quantDest == "any") || dests[j] == "floor")? m : ++m;
 				}
 				n = (quantOrig == "all" || quantOrig == "the") ? n : ++n;
 				m = (quantOrig == "all" || quantOrig == "any") ? m : ++m;
 			}
 
-			//var l : Literal[][] = [[]];
-
-			//for (var i = 0; i < origs.length; i++) {
-			//	l[i] = [];
-			//	for (var j = 0; j < dests.length; j++) {
-			//		var lit : Literal =  {pol:true, rel:goal, args:[origs[i], dests[j]]};
-			//		l[i].push(lit);
-			//	}
-			//}
-
-			////todo: if ontop or inside, prune all those combinations that have the same destination
-			//if (quantOrig == "all") {
-			//	for (var i = 0; i < l.length; i++) {
-			//		for (var j = 0; j < l[i].length; j++) {
-			//			if (i == 0) {
-			//				intprt[j] = [];
-			//			}
-			//			intprt[j] = combinations(l[0], l[1]);
-			//		}
-			//	}
-			//}
-
-			//function combinations(arg : any[]) {
-			//	var r = [], arg = arguments, max = arg.length-1;
-			//	function helper(arr, i) {
-			//		for (var j=0, l=arg[i].length; j<l; j++) {
-			//			var a = arr.slice(0); // clone arr
-			//			a.push(arg[i][j]);
-			//			if (i==max) {
-			//				r.push(a);
-			//			} else
-			//				helper(a, i+1);
-			//		}
-			//	}
-			//	helper([], 0);
-			//	return r;
-			//}
+			function combinations(arg : string[][]) {
+				var r : string[][] = [[]];
+				var max = arg.length - 1;
+				function helper(arr, i) {
+					for (var j=0, l=arg[i].length; j<l; j++) {
+						var a = arr.slice(0); // clone arr
+						a.push(arg[i][j]);
+						if (i==max) {
+							r.push(a);
+						} else
+							helper(a, i+1);
+					}
+				}
+				helper([], 0);
+				r.splice(0,1);
+				return r;
+			}
 
 			return intprt;
 		}
