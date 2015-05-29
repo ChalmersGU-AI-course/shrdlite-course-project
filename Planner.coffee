@@ -399,8 +399,7 @@ satisfaction = (state, goalRep) ->
   return result
 
 Planner.planToString = (res)->
-  console.log "called planToString"
-  return "tostring"
+  return ""
 
 class Planner.Error
   constructor: (@msg) ->

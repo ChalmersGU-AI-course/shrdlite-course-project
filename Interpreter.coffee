@@ -23,7 +23,6 @@ class Interpreter
       if parseInterps.length is 1
           return parseInterps
       else
-          console.log "THE CHECK"
           parseInterps = getInterpListFromParse(usedParse, currentState, true)
           #for pInterp,i in parseInterps
           #  console.log "Inter" + i
