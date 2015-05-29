@@ -84,9 +84,9 @@ There are two types of ambiguity. The first one is with the `the` quantifier, fo
 
 The other type of ambiguity comes from a shift/reduce conflict in the grammar. The typical example would be `put the small ball in a box on the floor`. The box in this sentence can either be parsed as the current location of the ball or as the target location for the ball. Our system investigates both possibilities and rules out any that is inconsistent with the current state of the world. If both have valid interpretations, the system calculates both and picks the shortest one.
 
-xxx (where in the code is the ambiguity stuff?)
+These two ambiguities are raised in Interpreter.ts (see line 390 for first type and line 42 for second type of ambiguities) by updating current state of world. Additional information is kept in worldstate fields.(see line 17-20 of World.ts for detail). 
 
-The implementation of the ambiguity handling is a bit spread out, but is found mainly in `Interpreter.ts` and `Shrdlite.ts`.  
+Due to the need of interaction (namely side effects) and memorising past command for command refinement, the implementation of the ambiguity handling is a bit spread out, but is found mainly in `Interpreter.ts` and `Shrdlite.ts`.  
 
 ### Known issues/bugs
 
@@ -95,6 +95,7 @@ There are currently two unsolved issues, both of which has to do with resolving 
 **disambiguity system doesn't work on "loc"**  
 The current disambiguity system works incrementally to refine which object the user is referring to. However, we still don't have the same system working for the "loc" field. The major reason for this is that both "ent" and "loc" can contain ambiguities, and we wanted to prove that refinement can be achieved and so experimented only on "ent" to reduce confusion.
 Therefore, in some special cases, the user might type in some refinements on "loc" conflicting "ent" ambiguity causing the system to crash (resulting in an uncaught error so that the world must be reset).
+
 There is still a possibility for the user to update the "loc" field. Since we always try to ask the original parser to parse an utterance before using our own parser, a complete command from the user can disambiguate both "ent" and "loc". The user will then not experience a crash, but will instead get repeated questions until the command has been fully specified.
 
 **complex world: `put the pyramid under a table on the large table`**  
