@@ -3,6 +3,10 @@
 
 /// Reinventing a decent standard library /////////////////////////////////////////////////////////
 Array.prototype.contains = function(e) {
+    if (e === undefined) {
+        debugger;
+        throw "E can't be undefined";
+    }
     return this.indexOf(e) !== -1;
 };
 
@@ -61,7 +65,7 @@ module.exports.cartesian = function(lst) {
 
         return result;
     }
-    return addTo([], Array.prototype.slice.call(lst));
+    return addTo([], lst.slice());
 };
 
 
@@ -108,7 +112,6 @@ module.exports.test_satisfied = function(state, item, oneof, relation) {
         }
         i++;
     }
-
     switch (relation) {
         case "holding":
             var res = state.arms.some(function(arm) {
@@ -121,7 +124,11 @@ module.exports.test_satisfied = function(state, item, oneof, relation) {
 
         case "inside":
         case "ontop":
-            return j > 0 && oneof.contains(stack[j-1]);
+            if (oneof == "floor") {
+                return j === 0;
+            } else {
+                return j > 0 && oneof.contains(stack[j-1]);
+            }
 
         case "above":
             return j !== 1 && oneof.intersects(stack.slice(0, j));

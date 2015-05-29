@@ -220,8 +220,6 @@ module.exports = function (G, start) {
     // Nodes that are already completely evaluated to prevent reevaluation
     // var evaluated = new Set([], Object.equals, G.state_hash);
     var evaluated = new Set(G.state_hash);
-    // Map of backlinks of best path.
-    var previous = new Map(G.state_hash);
     // Map of actual distances from the start node;
     var d = new Map(G.state_hash);
 
@@ -236,16 +234,8 @@ module.exports = function (G, start) {
 
         // Finished, follow backlinks to reconstruct path.
         if (G.isgoal(elem)) {
-            var ret = [];
-            var bs = elem;
-            while (G.state_hash(bs) != G.state_hash(start)) {
-                ret.unshift(bs);
-                bs = previous.get(bs);
-            }
-            ret.unshift(bs);
             console.log('Nodes evaluated: ' + evaluated.size());
-            console.log('Goal steps: ' + (ret.length-1));
-            return ret;
+            return elem;
         }
 
         // Check every neighbour and see if this path improves the distance to it.
@@ -259,7 +249,6 @@ module.exports = function (G, start) {
             var new_distance = d.get(elem) + neigh_container.cost;
             if (new_distance < old_distance) {
                 d.set(neigh, new_distance);
-                previous.set(neigh, elem);
 
                 // Update front
                 var new_approx = new_distance + G.h(neigh);
@@ -475,7 +464,6 @@ SearchGraph.prototype.internal_neighbours =  function(state) {
     }
     var candidates = stdlib.cartesian(combs);
 
-
     // Invalidating dependent actions
     var valid = [];
     outer: for (var cand of candidates) {
@@ -515,15 +503,28 @@ SearchGraph.prototype.internal_neighbours =  function(state) {
 };
 
 
+function clone_state(state) {
+    var new_stacks = new Array(state.stacks.length);
+    for (var i = 0; i < state.stacks.length; i++) {
+        new_stacks[i] = state.stacks[i].slice();
+    }
+    var new_arms = new Array(state.arms.length);
+    for (var i = 0; i < state.arms.length; i++) {
+        new_arms[i] = {pos: state.arms[i].pos, holding: state.arms[i].holding};
+    }
+
+    return {stacks: new_stacks, arms: new_arms};
+}
 
 // Move left or right, or put up or down
 SearchGraph.prototype.neighbours = function* (state) {
     var internal = this.internal_neighbours(state);
 
     for (var outer of internal) {
-        var new_state = stdlib.clone(state);
+        var new_state = clone_state(state);
         //injecting backlink
-        new_state.backlink = [];
+        new_state.backlink = new Array(outer.length);
+        new_state.previous = state;
         for (var i=0; i < outer.length; i++) {
             switch (outer[i]) {
                 case -1: new_state.arms[i].pos -= 1;
@@ -781,8 +782,6 @@ SearchGraph.prototype.h_1arm = function (state) {
                 estimate += least;
                 break;
 
-            case "above":
-            case "below":
             default:
                 estimate += 1;
         }
@@ -793,7 +792,14 @@ SearchGraph.prototype.h_1arm = function (state) {
 
 
 SearchGraph.prototype.state_hash = function(state) {
-    return JSON.stringify([state.stacks, state.arms]);
+    var ret = [];
+    for (var arm of state.arms) {
+        ret.push(arm.pos);
+        ret.push(arm.holding === null ? ' ' : arm.holding);
+    }
+
+    return JSON.stringify(state.stacks) + ret;
+    // return JSON.stringify([state.stacks, state.arms]);
 };
 
 //This one is still buggy
@@ -825,22 +831,19 @@ SearchGraph.prototype.state_hash = function(state) {
 // };
 
 
-// d drop
-// p pick up
-// l left
-// r right
-function backlink(path) {
+function backlink(state) {
     var link = [];
-    for (var i = 1; i < path.length; i++) {
-        link.push(path[i].backlink);
+    while (state.backlink !== undefined) {
+        link.unshift(state.backlink);
+        state = state.previous;
     }
-
     return link;
 }
 
 var astar = require("./astar.js");
 
 module.exports = function(currentState, pddl) {
+    console.log("Planning: " + JSON.stringify(pddl));
     var g = new SearchGraph(currentState, pddl);
     // if (!g.isPossible(g.startNode)) {
     //     console.log("impossible:" + pddl);
@@ -862,6 +865,10 @@ module.exports = function(currentState, pddl) {
 
 /// Reinventing a decent standard library /////////////////////////////////////////////////////////
 Array.prototype.contains = function(e) {
+    if (e === undefined) {
+        debugger;
+        throw "E can't be undefined";
+    }
     return this.indexOf(e) !== -1;
 };
 
@@ -920,7 +927,7 @@ module.exports.cartesian = function(lst) {
 
         return result;
     }
-    return addTo([], Array.prototype.slice.call(lst));
+    return addTo([], lst.slice());
 };
 
 
@@ -967,7 +974,6 @@ module.exports.test_satisfied = function(state, item, oneof, relation) {
         }
         i++;
     }
-
     switch (relation) {
         case "holding":
             var res = state.arms.some(function(arm) {
@@ -980,7 +986,11 @@ module.exports.test_satisfied = function(state, item, oneof, relation) {
 
         case "inside":
         case "ontop":
-            return j > 0 && oneof.contains(stack[j-1]);
+            if (oneof == "floor") {
+                return j === 0;
+            } else {
+                return j > 0 && oneof.contains(stack[j-1]);
+            }
 
         case "above":
             return j !== 1 && oneof.intersects(stack.slice(0, j));

@@ -55,8 +55,6 @@ module.exports = function (G, start) {
     // Nodes that are already completely evaluated to prevent reevaluation
     // var evaluated = new Set([], Object.equals, G.state_hash);
     var evaluated = new Set(G.state_hash);
-    // Map of backlinks of best path.
-    var previous = new Map(G.state_hash);
     // Map of actual distances from the start node;
     var d = new Map(G.state_hash);
 
@@ -71,16 +69,8 @@ module.exports = function (G, start) {
 
         // Finished, follow backlinks to reconstruct path.
         if (G.isgoal(elem)) {
-            var ret = [];
-            var bs = elem;
-            while (G.state_hash(bs) != G.state_hash(start)) {
-                ret.unshift(bs);
-                bs = previous.get(bs);
-            }
-            ret.unshift(bs);
             console.log('Nodes evaluated: ' + evaluated.size());
-            console.log('Goal steps: ' + (ret.length-1));
-            return ret;
+            return elem;
         }
 
         // Check every neighbour and see if this path improves the distance to it.
@@ -94,7 +84,6 @@ module.exports = function (G, start) {
             var new_distance = d.get(elem) + neigh_container.cost;
             if (new_distance < old_distance) {
                 d.set(neigh, new_distance);
-                previous.set(neigh, elem);
 
                 // Update front
                 var new_approx = new_distance + G.h(neigh);

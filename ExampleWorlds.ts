@@ -87,8 +87,7 @@ ExampleWorlds["medium"] = {
     "arms": [
                 {"holding": null, "pos": 0},
                 {"holding": null, "pos": 2},
-                {"holding": null, "pos": 5},
-                {"holding": null, "pos": 7}
+                {"holding": null, "pos": 5}
             ],
     "objects": {
         "a": { "form":"brick",   "size":"large",  "color":"green" },

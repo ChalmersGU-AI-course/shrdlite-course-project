@@ -83,7 +83,6 @@ SearchGraph.prototype.internal_neighbours =  function(state) {
     }
     var candidates = stdlib.cartesian(combs);
 
-
     // Invalidating dependent actions
     var valid = [];
     outer: for (var cand of candidates) {
@@ -123,15 +122,28 @@ SearchGraph.prototype.internal_neighbours =  function(state) {
 };
 
 
+function clone_state(state) {
+    var new_stacks = new Array(state.stacks.length);
+    for (var i = 0; i < state.stacks.length; i++) {
+        new_stacks[i] = state.stacks[i].slice();
+    }
+    var new_arms = new Array(state.arms.length);
+    for (var i = 0; i < state.arms.length; i++) {
+        new_arms[i] = {pos: state.arms[i].pos, holding: state.arms[i].holding};
+    }
+
+    return {stacks: new_stacks, arms: new_arms};
+}
 
 // Move left or right, or put up or down
 SearchGraph.prototype.neighbours = function* (state) {
     var internal = this.internal_neighbours(state);
 
     for (var outer of internal) {
-        var new_state = stdlib.clone(state);
+        var new_state = clone_state(state);
         //injecting backlink
-        new_state.backlink = [];
+        new_state.backlink = new Array(outer.length);
+        new_state.previous = state;
         for (var i=0; i < outer.length; i++) {
             switch (outer[i]) {
                 case -1: new_state.arms[i].pos -= 1;
@@ -389,8 +401,6 @@ SearchGraph.prototype.h_1arm = function (state) {
                 estimate += least;
                 break;
 
-            case "above":
-            case "below":
             default:
                 estimate += 1;
         }
@@ -401,7 +411,14 @@ SearchGraph.prototype.h_1arm = function (state) {
 
 
 SearchGraph.prototype.state_hash = function(state) {
-    return JSON.stringify([state.stacks, state.arms]);
+    var ret = [];
+    for (var arm of state.arms) {
+        ret.push(arm.pos);
+        ret.push(arm.holding === null ? ' ' : arm.holding);
+    }
+
+    return JSON.stringify(state.stacks) + ret;
+    // return JSON.stringify([state.stacks, state.arms]);
 };
 
 //This one is still buggy
@@ -433,22 +450,19 @@ SearchGraph.prototype.state_hash = function(state) {
 // };
 
 
-// d drop
-// p pick up
-// l left
-// r right
-function backlink(path) {
+function backlink(state) {
     var link = [];
-    for (var i = 1; i < path.length; i++) {
-        link.push(path[i].backlink);
+    while (state.backlink !== undefined) {
+        link.unshift(state.backlink);
+        state = state.previous;
     }
-
     return link;
 }
 
 var astar = require("./astar.js");
 
 module.exports = function(currentState, pddl) {
+    console.log("Planning: " + JSON.stringify(pddl));
     var g = new SearchGraph(currentState, pddl);
     // if (!g.isPossible(g.startNode)) {
     //     console.log("impossible:" + pddl);
