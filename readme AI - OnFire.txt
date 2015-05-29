@@ -15,7 +15,7 @@ Interesting examples to test the shrdlite.
 
 1. put the white ball in a box on the floor.
     - This command will give the user the chance to select between two options.
-    This is because of ambiguity in the question. To select an option respond by typing the number corresponding to your choice.
+    This is because of ambiguity in the question. To select an option respond by typing the number corresponding to your choice. Every alternative states which objects you mean, so in this example it asks if we would like to take the "white ball inside any box" and place it on the floor or take the white ball and place it inside a "box ontop the floor". 
 
 - Medium World
 1. put the green plank in the red box. - Very interesting and fun to watch.
@@ -24,7 +24,7 @@ Interesting examples to test the shrdlite.
 2. Put the green plank on the red plank. It is possible to find solution pretty fast.
 
 Complex World
-
+1. put the blue box in the red box. It is possible to find solution pretty fast.
 
 
 ###Extensions implemented.###############################
@@ -32,14 +32,14 @@ Complex World
 
 Where in code.
 - Interpreter.ts row 20 - check if there are more than one interpretation.
-    If more than one interpretation,  calls function makeClariQuest (row 60)
+    If more than one interpretation,  calls function makeClariQuest (row 59)
 
     makeClariQuest , uses help functions getRestOfPath and cmpObj.
 
     MakeClariQuest - Compares the different interpretations and adds the entity and location with the most nested objects
 
 
-- Shredlite.ts
+- Shrdlite.ts
     (row 55 and forward) Check if last question was ambiguous and parses the input from the user to chose a correct interpretation.
 
 - World.ts
@@ -52,7 +52,7 @@ Where in code.
 
 ### AStar planning heuristics. ############################
 
-the function is called heuristicFunc in planner.ts (row 197) and it is a manhattan heuristic.
+the function is called heuristicFunc in planner.ts (row 184) and it is a manhattan heuristic.
 
 the arguments to the function are,
  - current state which is a worldState
@@ -76,11 +76,11 @@ We have also added a arm penalty that adds more points if the arm is not holding
 
 for example in medium world if we use the following command.
 - Put the green plank right of the blue box.
-Our shrdlite picks up the white ball and moves it unnecessarily but it seems to be concentrated to the left command. Most likely it has something to do with the arm penalty in the heuristic.
+Our shrdlite picks up the white ball and moves it unnecessarily but it seems to be concentrated to the left/right command. Most likely it has something to do with the arm penalty in the heuristic.
 
 
 ##Extra information#######################################
 
 It was a fun project!!
-But a lot to do....
+But a lot to do in the course....
 
