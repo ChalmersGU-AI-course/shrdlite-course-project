@@ -12,26 +12,26 @@ for the task of running in the browser.
 #### Interesting utterance examples
 
 In the small world (quantifiers):
-- "put all balls inside a box" (all objects, any references)
-- "put the table inside any box" (the object, any reference)
-- "take the ball" (gives Interpretation error)
+- **"put all balls inside a box"** (all objects, any references)
+- **"put the table inside any box"** (the object, any reference)
+- **"take the ball"** (gives Interpretation error)
 
 In the medium world (relations):
-- "take the red table ontop of a object on the floor" (ontop)
-- "put all green objects above the blue table" (above)
-- "put all boxes to the left of the pyramid" (left of)
-- "put all boxes to the right of the pyramid" (right of)
+- **"take the red table ontop of a object on the floor"** (ontop)
+- **"put all green objects above the blue table"** (above)
+- **"put all boxes to the left of the pyramid"** (left of)
+- **"put all boxes to the right of the pyramid"** (right of) <br />
 Observe that it takes into consideration all pyramids since the interpreter does
 not know what pyramid the utterance refers to, so it puts the boxes to the
 left/right of both of the pyramids.
-- "put the small pyramid beside all boxes"
+- **"put the small pyramid beside all boxes"** <br />
 Observe that the boxes could be to both the right or the left since it does not
 matter as long as they are directly to the right/left of the pyramid.
-- "put all boxes beside the small pyramid"
+- **"put all boxes beside the small pyramid"** <br />
 Observe that this sentence have the same semantic meaning as the one before so
 running these commands in sequence does not affect the state of the world more
 than once.
-- "put all tables under a brick" (under)
+- **"put all tables under a brick"** (under) <br />
 Observe that we have choosen to interpret the command as all tables under any
 brick but the same brick.
 
