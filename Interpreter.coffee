@@ -1,26 +1,49 @@
 class Interpreter
 
     Interpreter.interpret = (parses, currentState) ->
-      # If there are more than 1 parse than do a clarify 
-      if parses.length > 1
-            parse = getParseClarification(parses)
-        else # Else just pick the one
-            parse = parses[0]
+      interpList = []
+      usedParses = []
+      for parse in parses
+        parseInterpList = getInterpListFromParse(parse, currentState)
+        if parseInterpList.length > 0
+            interpList.push(parseInterpList)
+            usedParses.push(parse)
+      
+      parseInterps = []
+      usedParse = null
+      if interpList.length is 0
+          throw new Interpreter.Error 'Could not find any interpretations.'
+      else if interpList.length is 1
+          parseInterps = interpList[0]
+          usedParse = usedParses[0]
+      else
+          parseIndex = getParseClarification(usedParses)
+          parseInterps = interpList[parseIndex]
+          usedParse = usedParses[parseIndex]
+      if parseInterps.length is 1
+          return parseInterps
+      else
+          console.log "THE CHECK"
+          parseInterps = getInterpListFromParse(usedParse, currentState, true)
+          #for pInterp,i in parseInterps
+          #  console.log "Inter" + i
+          #  console.log pInterp
+          #if entity.quant is "the" and retObjs.length > 1
+          #[getObjClarification(retObjs, currentState)]
+          return parseInterps
 
+          
+    getInterpListFromParse = (parse, currentState, quantifierCheck = false) ->
         parseInterpList = []
-        console.log parse
-        matchingObjEntities = getMatchingEntities(parse.prs.ent, currentState)
+        matchingObjEntities = getMatchingEntities(parse.prs.ent, currentState, quantifierCheck)
         if parse.prs.loc?
-            matchingLocEntities = getMatchingEntities(parse.prs.loc.ent, currentState)
+            matchingLocEntities = getMatchingEntities(parse.prs.loc.ent, currentState, quantifierCheck)
             for obj in matchingObjEntities
                 for locObj in matchingLocEntities
-                    # A simple check to remove some impossible scenarios
                     if objRelValid(obj, locObj, parse.prs.loc.rel, currentState)
                         intrp = {
                             input: parse.input,
                             prs: parse.prs,
-                            # TODO: placeholder for [[obj]], [[locObj]] lists of objects
-                            #       quantifers set to "all"
                             intp: [{ pol: true, rel: parse.prs.loc.rel, args: [[obj], [locObj]], quantifier1: "all", quantifier2: "all"}]
                         }
                         parseInterpList.push(intrp)
@@ -32,21 +55,21 @@ class Interpreter
                     intp: [{ pol: true, rel: "holding", args: [obj]}]
                 }
                 parseInterpList.push(intrp)
-        if parseInterpList.length is 0
-            throw new Interpreter.Error 'Could not find any interpretations.'
-        else
-            parseInterpList
+        parseInterpList        
 
+    
+    # Simple check if the interpretation is possible
     objRelValid = (obj, locObj, rel, state) ->
         if obj is locObj
             return false
         if (rel is "ontop" or rel is "inside") and locObj isnt "floor"
-            # We need to use getItem to get information about the objects
+            # We use getItem to go from letter to actual object
             o1 = getItem(state, obj)
             o2 = getItem(state, locObj)
             return isObjectDropValid(o1, o2)
         true
-    
+
+    # Prints the objects and asks which one
     getObjClarification = (objs, currentState) ->
         console.log "Did you mean: "
         for obj, i in objs
@@ -56,6 +79,7 @@ class Interpreter
                     console.log i + ") The " + currObj.size + " " + currObj.color + " " + currObj.form
         objs[getClarificationAnswer(objs.length)]
 
+    # Prints the parses and asks which one, returns the number
     getParseClarification = (parses) ->
         console.log "Did you mean: "
         for parse, i in parses
@@ -64,8 +88,9 @@ class Interpreter
             locString = getLocString(prs.loc)
             locEntString = getEntString(prs.loc.ent)
             console.log i + ") " + entString + locString + locEntString
-        parses[getClarificationAnswer(parses.length)]
-        
+        getClarificationAnswer(parses.length)
+
+    # Prompts the user for a number in the range and returns it
     getClarificationAnswer = (listLength) ->
         input = -1 # The input to be read
         fs = require 'fs'
@@ -84,15 +109,17 @@ class Interpreter
           console.log "You must input a number int the range 0.." + (listLength-1)
           return getClarificationAnswer listLength
 
+    # Creates a string from an entity
     getEntString = (entity) ->
         entString = entity.quant + " "
-        if entity.obj.loc?
+        if entity.obj.loc? # If the entity has an loc than it should be referred to
             entString = entString + getObjString(entity.obj.obj) + "that is "
             entString = entString + getLocString(entity.obj.loc)
             entString = entString + getEntString(entity.obj.loc.ent)
         else
             entString = entString + getObjString(entity.obj)
 
+    # Creates a string from an object
     getObjString = (obj) ->
         objString = ""
         if obj.size?
@@ -105,6 +132,7 @@ class Interpreter
             objString = objString + obj.form + " "
         objString
 
+    # Creates a string for the loc
     getLocString = (loc) ->
         switch loc.rel
             when "inside" then "in "
@@ -113,7 +141,8 @@ class Interpreter
             when "rightof" then "right of "
             else loc.rel + " "
 
-    getMatchingEntities = (entity, currentState) ->
+    # Returns the entities that matches the description
+    getMatchingEntities = (entity, currentState,quantifierCheck = false) ->
         retObjs = []  
 
         if entity.obj.loc?
@@ -136,11 +165,11 @@ class Interpreter
             retObjs
         else
             retObjs = getMatchingObjects(entity.obj, currentState)
-        if entity.quant is "the" and retObjs.length > 1
+        if quantifierCheck and entity.quant is "the" and retObjs.length > 1
             [getObjClarification(retObjs, currentState)]
         else
             retObjs
-
+    # Returns the objects that match the description
     getMatchingObjects = (object, currentState) ->    
         objs = []
         if object.form is "floor"
@@ -152,7 +181,8 @@ class Interpreter
                         if object.form is null or object.form is "anyform" or object.form is stateObj.form
                             objs.push(k)
         objs
-
+    
+    # Returns a string for the interpretation
     Interpreter.interpretationToString = (res) ->
         res.intp.map((lits) ->
             literalToString lits
