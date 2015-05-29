@@ -71,26 +71,35 @@ function Astar<T>(start: INode<T>, isGoal: GoalFunction<INode<T>>, heuristic: He
 	var numExpandedNodes = 0;
 	var startPath : Path<INode<T>> = new Path<INode<T>>([start], [], 0, 0);
 	frontier.enqueue(startPath);
+
 	while (!frontier.isEmpty()) {
 		var path = frontier.dequeue();
+		//The interesting node is the last node of the current path
 		var currentNode = path.Last();
+
 		if (isGoal(currentNode)) {
 			return new AstarResult<INode<T>>(path, numExpandedNodes);
 		}
+
 		var neighbours = currentNode.Neighbours();
 		for (var i = 0; i < neighbours.length; ++i) {
 			var neighbour = neighbours[i];
 			var visitedCost = visited.getValue(neighbour.Node);
+			//Check if the current node is unvisited or has a more expensive previous visit
 			if (visitedCost === undefined || visitedCost > path.Cost + neighbour.Cost) {
 				var heuristicCost = heuristic(currentNode, neighbour.Node);
+				//Add the neighbour to the path and get the resulting path
 				var newPath = path.Add(neighbour.Node, neighbour.Operation, neighbour.Cost, heuristicCost);
 
+				//Mark the node as visited with the total cost
 				visited.setValue(neighbour.Node, newPath.Cost);
 				frontier.enqueue(newPath);
 
 				++numExpandedNodes;
 			}
 		}
+
+		//Check for timeout
 		if (timeout && (Date.now() - startTime) > timeout) {
 			throw new TimeoutException();
 		}

@@ -3,6 +3,7 @@
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Planner.ts"/>
 ///<reference path="Planalyzer.ts"/>
+///<reference path="AmbiguityResolve.ts"/>
 
 module Shrdlite {
 
@@ -63,6 +64,12 @@ module Shrdlite {
         interpretations.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
         });
+
+        if (interpretations.length > 1) {
+            var clarifications = AmbiguityResolve.getClarifications(parses);
+            world.printError("Ambiguous statement", clarifications);
+            return;
+        }
 
         try {
             var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);

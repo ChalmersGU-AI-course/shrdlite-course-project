@@ -7,6 +7,13 @@ interface ObjectDefinition {
     color: string;
 }
 
+class ObjectPosition {
+    constructor (
+        public Column: number,
+        public Row: number
+    ){}
+}
+
 interface WorldState {
     stacks: string[][];
     holding: string;
@@ -28,43 +35,79 @@ interface World {
 
 }
 
-function CanPutObjectOntop(object: ObjectDefinition, baseObject: ObjectDefinition): boolean {
-    if (!baseObject) {
-        baseObject = {
-            form: "floor",
-            size: null,
-            color: null,
-        };
+//Returns a deep copy of the stacks which can be edited without the original being changed
+function copyStacks(stacks: string[][]): string[][] {
+    return stacks.slice().map(function(stack) { return stack.slice()});
+}
+
+//Searched for the specified object and returns its position, null if object not found
+function getObjectPosition(object: string, world: WorldState): ObjectPosition {
+    for (var i = 0; i < world.stacks.length; ++i) {
+        var stack = world.stacks[i];
+        for (var j = 0; j < stack.length; ++j) {
+            if (stack[j] == object) {
+                return new ObjectPosition(i, j);
+            }
+        }
     }
-    //Balls cannot support anything.
-    if (baseObject.form == "ball") {
-        return false;
+    return null;
+}
+
+//Returns the column of the object
+function getObjectColumn(object: string, world: WorldState): number {
+    var position = getObjectPosition(object, world);
+    if (position) {
+        return position.Column;
     }
-    //Small objects cannot support large objects.
-    if(baseObject.size == "small" && object.size =="large"){
-        return false;
+    if (world.holding == object) {
+        return world.arm;
     }
-    //Balls must be in boxes or on the floor, otherwise they roll away.
-    //TODO check if baseobject is floor
-    if(object.form == "ball" && !(baseObject.form == "box" || baseObject.form == "floor")){
-            return false;
-    }
-    //Boxes cannot contain pyramids, planks or boxes of the same size.
-    if(baseObject.form == "box" && 
-      (object.form == "pyramid" || object.form =="plank" ||
-      (object.form == "box" && baseObject.size == object.size))){
-        return false;
-    }
-    //Small boxes cannot be supported by small bricks or pyramids.
-    if(object.size == "small" && object.form == "box" && 
-      (baseObject.form == "brick" ||baseObject.form == "pyramid")){
-        return false
+    return null;
+}
+
+//Returns all objects that are above the specified object in its stack
+function getBlockingObjects(object: string, world: WorldState): string[] {
+    var position = getObjectPosition(object, world);
+    if (position === null) {
+        return [];
     }
 
-    //Large boxes cannot be supported by large pyramids.
-    if(baseObject.form == "pyramid" && baseObject.size == "large" &&
-       object.form == "box" && object.size == "large"){
-        return false;
+    var stack = world.stacks[position.Column];
+    var blocking = [];
+    for (var i = position.Row + 1; i < stack.length; ++i) {
+        blocking.push(stack[i]);
     }
-    return true;
+    return blocking;
+}
+
+//Returns the topmost object in the specified column, null if the stack is empty
+function getTopObjectInColumn(column: number, world: WorldState): ObjectDefinition {
+    var stack = world.stacks[column];
+
+    for (var i = stack.length - 1; i >= 0; --i) {
+        if (stack[i]) {
+            var retObject = world.objects[stack[i]];
+            return retObject;
+        }
+    }
+    return null;
+}
+
+//Returns true if the specified state satisfies the specified literal
+function stateSatisfiesLiteral(state: WorldState, literal: Interpreter.Literal) : boolean {
+    if (literal.rel === "holding") {
+        return state.holding === literal.args[0];
+    }
+
+    var firstObject : string = literal.args[0];
+    var secondObject : string = literal.args[1];
+    return isRelativeMatch(firstObject, literal.rel, secondObject, state);
+}
+
+//Returns a subset of literals that are not satisfied by the current state
+function getUnsatisfiedLiterals(literals: Interpreter.Literal[], world: WorldState): Interpreter.Literal[] {
+    var unsatisfiedLiterals = literals.filter(function(l) {
+        return !stateSatisfiesLiteral(world, l);
+    });
+    return unsatisfiedLiterals;
 }

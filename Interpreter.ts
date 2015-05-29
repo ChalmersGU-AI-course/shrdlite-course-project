@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
+///<reference path="AmbiguityResolve.ts"/>
 
 module Interpreter {
 
@@ -16,18 +17,8 @@ module Interpreter {
                 interpretations.push(intprt);
             }
         });
-        if (interpretations.length == 1) {
+        if (interpretations.length > 0) {
             return interpretations;
-        } else if (interpretations.length > 1) {
-            //world.printDebugInfo("Ambiguous statement, wich of the following did you mean?");
-            //Print claryfied statements in a loop
-            var allClarifications = "";
-            var i = 1;
-            parses.forEach((parseresult) => {
-                allClarifications = allClarifications + " Interpertation " + i +": "+ clarifyParseTree(parseresult)+"\n";
-                i++
-            });
-            throw new Interpreter.Error(allClarifications);
         } else  {
             throw new Interpreter.Error("Found no interpretation");
         }
@@ -58,102 +49,11 @@ module Interpreter {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
-
-    //Split
-    function clarifyParseTree(parse : Parser.Result) : string{
-        //If entety and target location is defined?
-        return parse.prs.cmd +" "+ parse.prs.ent.quant +" "+ 
-               clarifyRecursive(parse.prs.ent.obj, parse.prs.ent.quant) +" TO " + parse.prs.loc.ent.quant +" "+ clarifyRecursive(parse.prs.loc.ent.obj, parse.prs.loc.ent.quant); //Add destination /other half of tree? this should be recirsive?
-    }
-    function clarifyRecursive(object: Parser.Object, quant : string) : string{
-        var output = "";
-        var isPlural = false;
-        if (quant === "all") {
-            var isPlural = true;
-        }
-        //if object is relative to something
-        if(object.loc){
-            var is = "is ";
-            if (isPlural) {
-                var is = "are "; 
-            }
-            return printObject(object.obj, isPlural) + " THAT " + is + object.loc.rel + " " +
-                   object.loc.ent.quant + " " + clarifyRecursive(object.loc.ent.obj, object.loc.ent.quant);
-            //add object "that is " clarifyRecursive(location.entity.object)
-        }else if(object.obj){
-            return clarifyRecursive(object, quant);
-        }else if(object){
-            return printObject(object, isPlural);
-        }
-    }
-    //Returns a nice formated string of an object
-    function printObject(object: Parser.Object, isPlural : boolean = false) : string{
-        var output = "";
-        if(object.size){
-            output = output + object.size +" ";
-        }
-        if(object.color){
-            output = output + object.color +" ";
-        }
-        if(object.form) {
-            var form = object.form;
-            if (form === "anyform" ) {
-                form = "object";
-            }
-            if (isPlural) {
-                form = form + "s";
-            }
-            output = output + form +" ";
-        }
-        if(object.loc){
-            output = output + object.loc.rel +" ";
-        }
-        return output;
-    }
-
-    //Checks that if the "the" quantifier is used, it only matches to one object and in that case returns false
-    function checkTheTheAmbiguity(ent :Parser.Entity, matching : string[], state : WorldState) : boolean {
-        if(ent.quant === "the" && matching.length>1){
-                var errString = "Object not unique, did you mean the ";
-                for(var i = 0; i < matching.length; ++i){
-                    var object = lookupLiteralArg(matching[i], state);
-                    errString = errString +" "+ printObject(object);
-                    if (i < matching.length-1){
-                        errString = errString + " or the "
-                    }
-                }
-                throw new Interpreter.Error(errString + "?");
-            }
-        return false;
-    }
-
-    function reverseRelation(relation : string) : string {
-        switch (relation) {
-            case "leftof":
-                return "rightof";
-            case "rightof":
-                return "leftof";
-            case "containing":
-                return "inside";
-            case "under":
-                return "ontop";
-            case "inside":
-                return "containing";
-            case "ontop":
-                return "under";
-            case "below":
-                return "above";
-            case "above":
-                return "below";
-        }
-        return relation;
-    }
-
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         var matching: string[];
         if (cmd.ent) {
             matching = findObjects(cmd.ent.obj, state);
-            checkTheTheAmbiguity(cmd.ent, matching, state);
+            AmbiguityResolve.checkTheTheAmbiguity(cmd.ent, matching, state);
         } else if(state.holding) {
             matching = [state.holding];
         }
@@ -205,13 +105,6 @@ module Interpreter {
             }
         }
         return literals;
-    }
-
-    function lookupLiteralArg(arg : string, state : WorldState) : ObjectDefinition {
-        if (arg === "floor") {
-            return null;
-        }
-        return state.objects[arg];
     }
 
     function concatLiterals(literals1: Literal[], literals2 : Literal[]) : Literal[] {
@@ -269,7 +162,7 @@ module Interpreter {
         } else {
             matching = findObjectsByDescription(location.ent.obj, world) || [];
         }
-        checkTheTheAmbiguity(location.ent, matching, world);
+        AmbiguityResolve.checkTheTheAmbiguity(location.ent, matching, world);
 
         var result: Literal[][] = [];
 
@@ -385,75 +278,26 @@ module Interpreter {
         return false;
     }
 
-    //TODO: refactor into world.ts or something
-    export function isRelativeMatch(firstObject: string, relation: string, secondObject: string, world: WorldState): boolean {
-        if (firstObject === "floor" && relation !== "under") {
-            return false;
-        }
-
-        var firstPosition = getObjectPosition(firstObject, world);
-        if (!firstPosition){
-            return false;
-        }
-        var secondPosition: ObjectPosition;
-        if (secondObject === "floor") {
-            secondPosition = new ObjectPosition(firstPosition.Stack, -1);
-        } else {
-            secondPosition = getObjectPosition(secondObject, world);
-        }
-
-        if (!secondPosition) {
-            return false;
-        }
-
+    function reverseRelation(relation : string) : string {
         switch (relation) {
             case "leftof":
-                return firstPosition.Stack < secondPosition.Stack;
+                return "rightof";
             case "rightof":
-                return firstPosition.Stack > secondPosition.Stack;
-            case "beside":
-                return Math.abs(firstPosition.Stack - secondPosition.Stack) === 1;
+                return "leftof";
             case "containing":
+                return "inside";
             case "under":
-                return firstPosition.Stack === secondPosition.Stack && 
-                       firstPosition.ObjectNr + 1 === secondPosition.ObjectNr;
+                return "ontop";
             case "inside":
+                return "containing";
             case "ontop":
-                return firstPosition.Stack === secondPosition.Stack && 
-                       firstPosition.ObjectNr === secondPosition.ObjectNr + 1;
+                return "under";
             case "below":
-                return firstPosition.Stack === secondPosition.Stack && 
-                       firstPosition.ObjectNr < secondPosition.ObjectNr;
+                return "above";
             case "above":
-                return firstPosition.Stack === secondPosition.Stack && 
-                       firstPosition.ObjectNr > secondPosition.ObjectNr;
+                return "below";
         }
-        throw "Invalid relation '" + relation + "'";
+        return relation;
     }
-    class ObjectPosition {
-        constructor(
-            public Stack: number,
-            public ObjectNr: number
-        ) {}
-    }
-
-    function getObjectPosition(objectId: string, world: WorldState): ObjectPosition {
-        if (world.holding === objectId) {
-            return null;
-        }
-        for (var stack = 0; stack < world.stacks.length; ++stack) {
-            for (var objectnr = 0; objectnr < world.stacks[stack].length; ++objectnr) {
-                if (objectId === world.stacks[stack][objectnr]) {
-                    return new ObjectPosition(stack, objectnr);
-                }
-            }
-        }
-        throw "Unable to find object with id " + objectId;
-    }
-
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
-    }
-
 }
 
