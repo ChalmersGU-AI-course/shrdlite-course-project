@@ -1,7 +1,10 @@
 ///<reference path="World.ts"/>
 ///<reference path="lib/node.d.ts"/>
+///<reference path="Interpreter.ts"/>
 
 class TextWorld implements World {
+
+    public previousRes : Interpreter.Result[] = [];
 
     constructor(public currentState: WorldState) {
         if (!this.currentState.arm) this.currentState.arm = 0;

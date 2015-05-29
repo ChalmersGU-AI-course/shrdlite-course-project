@@ -1,10 +1,41 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="collections.ts"/>
+///<reference path="AStar.ts"/>
+///<reference path="Interpreter.ts"/>
+
 
 module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
+
+    export class ShrdliteNode implements AStar.Node<Interpreter.Literal[]> {
+
+        private pddl : Interpreter.Literal[]; 
+        private heur : number;
+
+        constructor(public state : WorldState, public lastAction : string, public goals : Interpreter.Literal[][]) {
+            this.pddl = stackToPddl(this.state);
+            this.heur = getHeur(this.goals, this.pddl);
+        }
+
+        getState(){
+            return this.pddl;
+        }
+
+        getHeuristic() {
+            return this.heur;
+        }
+
+        getGoal() {
+            return this.goals;
+        }
+
+        getChildren(){
+            return generateChildren(this.state, this.lastAction, this.goals);
+        }
+    } 
 
     export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
         var plans : Result[] = [];
@@ -18,6 +49,107 @@ module Planner {
         } else {
             throw new Planner.Error("Found no plans");
         }
+    }
+
+    //Returns true if any goal is reached
+    export function checkGoal(goal : Interpreter.Literal[][]) : AStar.Goal<Interpreter.Literal[]>{
+        return function(lits : Interpreter.Literal[]){
+            var allFound : boolean = false;
+            goal.forEach(function(and : Interpreter.Literal[]){
+                var goalReached = true;
+                and.forEach(function(lit : Interpreter.Literal){
+                    var found : boolean = isElem2(lit, lits);
+                    if(found != lit.pol) { goalReached = false; }
+                })
+                if(goalReached == true) { allFound = true; }
+            })
+            return allFound;
+        }
+    }
+
+    //Returns true if elem is an element in arr
+    function isElem2(elem : Interpreter.Literal, arr : Interpreter.Literal[]): boolean {
+        for(var i = 0; i < arr.length; i++) {
+            var a = arr[i];
+            if(elem.rel == a.rel && elem.args.toString() == a.args.toString()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+
+    export function generateChildren(state : WorldState, lastAction : string, goals : Interpreter.Literal[][]) : AStar.Edge<Interpreter.Literal[]>[] {
+        
+        var map : collections.Dictionary<string,WorldState> = new collections.Dictionary<string,WorldState>();
+        map.setValue("r", moveRight(state, lastAction));
+        map.setValue("l", moveLeft(state, lastAction));
+        map.setValue("d", drop(state, lastAction));
+        map.setValue("p", pickup(state, lastAction));
+
+        var edges : AStar.Edge<Interpreter.Literal[]>[] = [];
+        map.forEach(function(key:string, value:WorldState){
+            if(value != null) { edges.push({cost:1, end: new ShrdliteNode(value, key, goals), label: key});}
+        });
+
+        return edges;
+    }
+
+    //Returns the current state
+    export function cloneWorldState(state : WorldState) : WorldState {
+        var newStack : string[][] = []; 
+        state.stacks.forEach(function(col: string[]){
+            var temp : string[] = [];
+            col.forEach(function(elem : string){
+                temp.push(elem);
+            })
+            newStack.push(temp);
+        })
+        return {arm: state.arm, holding: state.holding, examples: state.examples, objects: state.objects, stacks: newStack};
+    }
+
+    export function moveRight(state : WorldState, lastAction : string) : WorldState {
+        
+        if(state.arm == state.stacks.length -1 || lastAction == "l") {return null;}
+
+        var newState : WorldState = cloneWorldState(state);
+        newState.arm += 1;
+
+        return newState;
+    }
+
+    export function moveLeft(state : WorldState, lastAction : string) : WorldState {
+        
+        if(state.arm == 0 || lastAction == "r") {return null;}
+
+        var newState : WorldState = cloneWorldState(state);
+        newState.arm -= 1;
+
+        return newState;
+    }
+
+    export function drop(state : WorldState, lastAction : string) : WorldState {
+        var len = state.stacks[state.arm].length;
+        if(state.holding == null || lastAction == "d" || lastAction == "p" || (state.stacks[state.arm].length != 0 && !Interpreter.checkSize(state.objects[state.holding], state.objects[state.stacks[state.arm][len - 1]]))){
+            return null;
+        }
+        var newState : WorldState = cloneWorldState(state);
+        newState.stacks[newState.arm].push(newState.holding);
+        newState.holding = null;
+
+        return newState;
+    }
+
+    export function pickup(state : WorldState, lastAction : string) : WorldState {
+        
+        if(state.holding != null || lastAction == "d" || lastAction == "p" || state.stacks[state.arm].length == 0) {return null;}
+
+        var newState : WorldState = cloneWorldState(state);
+        
+        newState.holding = newState.stacks[newState.arm].pop();
+
+        return newState;
     }
 
 
@@ -38,51 +170,49 @@ module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
+    //Converts the stack version of the state into a pddl representation
+    function stackToPddl(state :WorldState) : Interpreter.Literal[] {
+        var pddl :Interpreter.Literal[] = [];
+        if(state.holding != null) {
+            pddl.push({pol:true, rel: "holding", args: [state.holding]});
+        } 
 
+        pddl.push({pol:true, rel: "armpos", args: [state.arm + ""]})
+        pddl.push({pol:true, rel: "maxcol", args: [state.stacks.length + ""]})
+
+        for(var x = 0; x < state.stacks.length; x++) {
+            //Create on top of floor
+            var col : string[] = [];
+            for(var y = 0; y < state.stacks[x].length; y++) {
+                var o : string = state.stacks[x][y];
+                if(y == 0) { // Add floors
+                    pddl.push({pol:true, rel: "ontop", args: [o, "f_" + x]});
+                } else {
+                    pddl.push({pol:true, rel: "ontop", args: [o, state.stacks[x][y-1]]});
+                }
+                
+                col.forEach(function(c) {
+                    pddl.push({pol:true, rel: "above", args: [o, c]});
+                });
+                col.push(o);
+
+                pddl.push({pol:true, rel: "column", args: [o, "" + x]});
+
+            }
+        }
+        
+        return pddl;
+    }
+
+    //Runs A* alg and returns the found path
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
+
         var plan : string[] = [];
+        var node : ShrdliteNode = new ShrdliteNode(state, "", intprt);
 
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
-            }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
-            }
-        }
+        var path : AStar.Path<Interpreter.Literal[]> = AStar.astarSearch<Interpreter.Literal[]>(node, checkGoal(intprt));  
 
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
-
-        if (pickstack < state.stacks.length-1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
-                plan.push("r");
-            }
-
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
-                plan.push("l");
-            }
-        }
-
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
-
-        return plan;
+        return path.getLabelPath();      
     }
 
 
@@ -90,4 +220,120 @@ module Planner {
         return Math.floor(Math.random() * max);
     }
 
+    //Heuristic function for A*
+    function getHeur(ors : Interpreter.Literal[][], lits: Interpreter.Literal[]) : number {
+//      return 0;
+        var holding : string = null;
+        var colData = [];
+        var ontopData = [];
+        var aboveData = [];
+        var belowData = [];
+        var armpos : number;
+        //Retreive all data necessary once and for all!
+        lits.forEach(function(lit) {
+            if(lit.rel == "holding") { holding = lit.args[0]; }
+            else if(lit.rel == "column") {
+                colData[lit.args[0]] = lit.args[1];
+            }else if(lit.rel == "ontop") {
+                ontopData[lit.args[0]] = lit.args[1];
+            }else if(lit.rel == "above") {
+                if(!aboveData[lit.args[0]]) {aboveData[lit.args[0]] = [];}
+                aboveData[lit.args[0]] = aboveData[lit.args[0]].concat([lit.args[1]]);
+
+                if(!belowData[lit.args[1]]) {belowData[lit.args[1]] = [];}
+                belowData[lit.args[1]] = belowData[lit.args[1]].concat([lit.args[0]]);
+            } else if(lit.rel == "armpos") {
+                armpos = parseInt(lit.args[0]);
+            }
+        });
+
+
+        var lowestCost : number = 60000000000; //High number, should be INFINITE
+        /*
+          Heur is calculated below. The general idea is to add a cost for the:
+          Distance between arm and object to move/pickup
+          Distance between current position and target position
+          The number of object above an object to be moved
+         */
+        ors.forEach(function(ands) {
+            var cost : number = 0;
+            ands.forEach(function(and) {
+                if(and.rel == "ontop" || and.rel == "above") {
+                    if(holding != null) {
+                        if(holding == and.args[0]) {
+                            cost += Math.abs(armpos - colData[and.args[1]]);
+                            if(belowData[and.args[1]]) {
+                                cost += (4 * (belowData[and.args[1]].length));
+                            }
+                        } else {
+                            cost += 3;
+                            if(belowData[and.args[0]]) {
+                                cost += (4 * (belowData[and.args[0]].length + 1)); //+1 as we need to move the obj itself aswell
+                            }
+                            if(and.rel == "ontop" && belowData[and.args[1]]) {
+                                cost += (4 * (belowData[and.args[1]].length));
+                            }
+                        }
+                    } else {
+                        var satisfied : boolean = false; //Is relation sat?
+                        if(and.rel == "ontop") { 
+                            satisfied = (ontopData[and.args[0]] == and.args[1]) == and.pol; 
+                        } else {
+                            if(aboveData[and.args[0]]) {
+                                for(var i = 0; i < aboveData[and.args[0]].length; i++) {
+                                    var l = aboveData[and.args[0]][i];
+                                    if(and.args[1] == l) { 
+                                        satisfied = true == and.pol; 
+                                        break;
+                                    }
+                                }
+                            } 
+                        }
+
+                        //Only add a cost if relation is not already sat
+                        if(!satisfied) {
+                            if(colData[and.args[0]] == colData[and.args[1]]) {
+                                cost += 1;
+                                if(belowData[and.args[0]]) {
+                                    cost += (4 * (belowData[and.args[0]].length + 1));
+                                } else {
+                                    cost += 3;
+                                }
+                            } else {
+                                cost += Math.abs(colData[and.args[0]] - colData[and.args[1]]);
+                                if(belowData[and.args[0]]) {
+                                    cost += (4 * (belowData[and.args[0]].length + 1));
+                                }
+                                if(and.rel == "ontop" && belowData[and.args[1]]) {
+                                    cost += (4 * (belowData[and.args[1]].length));
+                                }
+                            }
+                            cost += Math.abs(armpos - colData[and.args[0]]);
+                        }
+                    }
+                } else if( and.rel == "holding" && holding != and.args[0]) {
+                    if(holding == null) {
+                        cost += Math.abs(armpos - colData[and.args[0]]);
+                    }
+                    if(belowData[and.args[0]]) {
+                        cost += (4 * belowData[and.args[0]].length );
+                    }
+                } else if (and.rel == "column") {
+                    if(holding == null) {
+                        cost += 2;
+                        if(belowData[and.args[0]]) {
+                            cost += (2 * belowData[and.args[0]].length);
+                        }
+                        cost += Math.abs(colData[and.args[0]] - parseInt(and.args[1]));
+                    } else if (holding == and.args[0]) {
+                        cost += Math.abs(armpos - parseInt(and.args[1]));
+                    } else {
+                        cost += Math.abs(colData[and.args[0]] - parseInt(and.args[1]));
+                    }
+                }
+            });
+            if(cost < lowestCost) { lowestCost = cost; }
+        });
+        return lowestCost;
+    }
 }

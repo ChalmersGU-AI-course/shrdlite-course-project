@@ -1,0 +1,105 @@
+<html>
+<head>
+  <title>A* README</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="css.css">
+  <script src="collections.js"></script>
+  <script type="text/javascript">var AStar = false;</script>
+  <script src="AStar.js"></script>
+  <script type="text/javascript">
+    window.onload = function(){
+
+      var toHide;
+      if(AStar === false)
+        toHide = document.getElementById("suchAstar");
+      else
+        toHide = document.getElementById("noAstar");
+      toHide.style.display = "none";
+      
+    }
+
+    function test() {
+        var res = AStar.geoTest();
+        console.log(res);
+        document.getElementById("res").innerHTML = "Result: " + res;
+    }
+  </script>
+</head>
+<body>
+  <div id="descr">
+    
+  <div id="noAstar">
+    <h2>You have not compiled AStar yet</h2>
+    <p>To compile the A* files run: make all. Then refresh the page.</p>
+  </div>
+  <div id="suchAstar">
+    <h2>You have compiled AStar.</h2>
+    <h3>
+      A* Laboration </h3>
+      <p>Group 10 (Traveling salesmen O(n)) - Simon Lindhén, Johan Nilsson Hansen, Alexander Persson
+    </p>
+    <p>
+      How to run:
+      Follow the instructions further down.
+    </p>
+    <p>
+      Important files:
+      <ul>
+      <li>AStar.ts       - The TypeScript file with our implementation of the A* search algorithm.</li>
+      <li>collections.ts - The data structure library we have chosen to utilize. 
+                           Defines the PriorityQueue class necessary for implementing A*.</li>
+      </ul>
+    </p>
+    <p>
+      Example: <br>
+      Our example is a geographical one, involving several Swedish cities and the connections
+      between them. The cities are modeles as nodes in a graph, and the connections are
+      represented as the archs connecting the nodes. The distance between the cities act
+      as arch costs, and as such the cost of a path is the sum of all arch costs along the path.
+      The heuristic value associated to each node is the an underestimate of the remaining cost to get from
+      that city to the goal. The starting city is Göteborg and the goal city is Stockholm.
+    </p>
+    <img src="graph.jpg"/>
+    <p>The heuristcs of the diffrent nodes are:</p>
+    <table>
+      <tr>
+        <td>n<br></td>
+        <td>h(n) <br></td>
+      </tr>
+      <tr>
+        <td>göteborg <br></td>
+        <td>~15</td>
+      </tr>
+      <tr>
+        <td>borås</td>
+        <td>~22</td>
+      </tr>
+      <tr>
+        <td>jönköping</td>
+        <td>15</td>
+      </tr>
+      <tr>
+        <td>värnamo</td>
+        <td>32</td>
+      </tr>
+      <tr>
+        <td>mellerud</td>
+        <td>26</td>
+      </tr>
+      <tr>
+        <td>malmö</td>
+        <td>~22</td>
+      </tr>
+      <tr>
+        <td>stockholm <br></td>
+        <td>0</td>
+      </tr>
+    </table>
+
+    <h3>Test the solution</h3>
+    <p>To run the test and see the result, press the button below.</p>
+     <p id="res"></p>
+     <button onclick="test();">Run the geo test.</button>  
+  </div>
+</body>
+</html>

@@ -1,5 +1,6 @@
 
-TARGETS = html ajax ansi offline
+TARGETS = html ajax ansi offline 
+OWN     = AStar collections
 
 .DELETE_ON_ERROR:
 
@@ -14,9 +15,12 @@ help:
 clean:
 	rm -f $(TSFILES:%.ts=%.js) *.map
 
-all: $(TARGETS)
+
+all: $(TARGETS) $(OWN) grammar.js
+
 
 $(TARGETS): %: shrdlite-%.js
+$(OWN)    : %: %.js
 
 %.js: %.ts $(TSFILES)
 	tsc --out $@ $<
