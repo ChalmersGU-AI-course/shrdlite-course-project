@@ -1,6 +1,7 @@
 ///<reference path="Shrdlite.ts"/>
 ///<reference path="TextWorld.ts"/>
 ///<reference path="ExampleWorlds.ts"/>
+///<reference path="lib/jquery.d.ts" />
 
 // Extract command line arguments:
 var nodename = process.argv[0];

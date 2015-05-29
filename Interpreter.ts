@@ -10,9 +10,15 @@ module Interpreter {
 		var interpretations : Result[] = [];
 		parses.forEach((parseresult) => {
 			var intprt : Result = <Result>parseresult;
-			intprt.intp = interpretCommand(intprt.prs, currentState);
-			if (intprt.intp != null)
-			interpretations.push(intprt);
+			var goals : Literal[][][] = interpretCommand(intprt.prs, currentState);
+
+			for (var i=0; i < goals.length; i++) {
+				var interpretation = jQuery.extend(true, {}, intprt); //deep copy
+				interpretation.intp = goals[i];
+				if (interpretation.intp != null) {
+					interpretations.push(interpretation);
+				}
+			}
 		});
 		if (interpretations.length) {
 			return interpretations;
@@ -70,241 +76,10 @@ module Interpreter {
 	* @param {WorldState} a description of the current state of the world
 	* @return {Literal[][]} Literal describing the PDDL goals
 	*/
-	function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
+	function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][][] {
 		var interpret = new ShrdliteInterpretation(state, cmd); 
-		var intprt : Literal[][] = interpret.getInterpretation();
+		var intprt : Literal[][][] = interpret.getInterpretation();
 		return intprt;
-	}
-
-	/**
-	 * @class Represents a Checker for the spatial relations in the current world
-	 */
-	class ShrdliteWorldChecker {
-		private nodeL : PosNode[];
-		/*
-		 * Creates an instance of ShrdliteWorldChecker
-		 * @constructor
-		 */
-		constructor(private state : WorldState) {
-			this.nodeL = [];
-		}
-
-		/**
-		 * add PosNode to the array of all PosNodes
-		 *
-		 * @param {object} node object
-		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof, behind, infront)
-		 * @return {void}
-		 */
-		public addNode(o, rel : string) : void {
-			//get all possible positions for the current object pattern
-			var pos : Position[] = this.getPositions(o);
-
-			//when no positions can be found
-			if (!pos.length) {
-				throw new Interpreter.Error("There is no "
-						+ ((o.size != null) ? o.size+" " : "") 
-						+ ((o.color != null) ? o.color+" " : "") 
-						+ ((o.form != null) ? o.form : ""));
-			}
-
-			var node : PosNode = {pos:pos, rel:rel};
-			this.nodeL.push(node);
-		}	
-
-		/**
-		 * Get an array of the trunk objects of the parse tree
-		 *
-		 * @return {string[]} string[] that represents the trunk objects, returns [] if no objects matched the pattern
-		 */
-		public getTrunk() : string[] {
-			var t : string[] = [];
-			for (var i = 0; i < this.nodeL[0].pos.length; i++) {
-				var x : number = this.nodeL[0].pos[i].x;
-				var y : number = this.nodeL[0].pos[i].y;
-				var s : string = "";
-
-				if (x == -1) {
-					s = "floor";
-				} else if (x == -2) {
-					s = this.state.holding;
-				} else {
-					s = this.state.stacks[x][y];
-				}
-
-				t.push(s);
-			}
-			return t;
-		}
-
-		/**
-		 * Prune all positions that do not have the given spatial relation
-		 *
-		 * @return {boolean} Has any pruning been done?
-		 */
-		public prune() : boolean {
-			var workDone : boolean = false;
-			for (var n = 0; n < (this.nodeL.length - 1); n++) {
-				var p : Position [] = this.nodeL[n].pos;
-				var c : Position [] = this.nodeL[n+1].pos;
-				var rel : string = this.nodeL[n].rel;
-
-				var nP : number = p.length;
-				var nC : number = c.length;
-				var parentChecker : number[] = [];
-				for (var i = 0; i < nP; i++) {
-					parentChecker.push(nC);
-				}
-				var childChecker : number[] = [];
-				for (var i = 0; i < nC; i++) {
-					childChecker.push(nP);
-				}
-
-				//for every potential relation that does not actually exist, decrease the respective checker by 1
-				for (var i = 0; i < p.length; i++) {
-					for (var j = 0; j < c.length; j++) {
-						if (!this.isReachable(p[i], c[j], rel)) {
-							parentChecker[i] = parentChecker[i] - 1;
-							childChecker[j] = childChecker[j] - 1;
-							workDone = true;
-						}
-					}
-				}
-				
-				//if the checker is 0 (no relation exists), then remove that Position
-				for (var i = nP-1; i >= 0; i--) {
-					if (parentChecker[i] == 0) {
-						p.splice(i, 1);
-					}
-				}
-				for (var i = nC-1; i >= 0; i--) {
-					if (childChecker[i] == 0) {
-						c.splice(i, 1);
-					}
-				}
-				this.nodeL[n].pos = p;
-				this.nodeL[n+1].pos = c;
-			}
-			return workDone;
-		}
-
-		/**
-		 * Get all possible Positions of an object pattern in the current world state
-		 *
-		 * @param {object} object representing an object pattern in the parse tree
-		 * @return {Position[]} array of all positions that reflect the current object pattern in the world state
-		 * returns [{x: -1, y: -1}] in case of "floor"
-		 * returns [{x: -2, y: -2}] in case of holding
-		 */
-		private getPositions(o) : Position[] {
-			//in case of floor
-			if (o.form == "floor") {
-				return [{x: -1, y: -1}];
-			}
-
-			//otherwise
-			var p : Position[] = [];
-			//is it held by the arm?
-			if (this.state.holding != null) {
-				var a = this.state.objects[this.state.holding];
-				if (this.objCompare(o,a)) {
-					var temp : Position = {x: -2, y: -2}; 
-					p.push(temp);	
-				}
-			}
-
-			//is it on the table?
-			for (var i = 0; i < this.state.stacks.length; i++) {
-				for (var j = 0; j < this.state.stacks[i].length; j++) {
-					var a = this.state.objects[this.state.stacks[i][j]];
-					if (this.objCompare(o,a)) {
-						var temp : Position = {x: i, y: j}; 
-						p.push(temp);	
-					}
-				}
-			}
-			return p;
-		}
-
-		/**
-		 * Do the objects match?
-		 *
-		 * @param {object} object representing an object pattern in the parse tree
-		 * @param {object} object representing an actual object in the current world
-		 * @return {boolean} true if they match, false if they do not match
-		 */
-		private objCompare(o,a) : boolean {
-			if ((o.size == null || o.size == a.size) &&
-					(o.color == null || o.color == a.color) &&
-					(o.form == null || o.form == a.form || o.form == "anyform")) {
-						return true;
-					}
-
-			return false;
-		}
-
-		/**
-		 * Check if the given spatial relation between two positions holds
-		 *
-		 * @param {Position} Position of the origin
-		 * @param {Position} Position of the destination
-		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof, behind, infront)
-		 * @return {boolean} Does the relation hold?
-		 */
-		private isReachable(orig : Position, dest : Position, rel : string) : boolean {
-			switch (rel) {
-				case "inside":
-					if (orig.x == dest.x && orig.y == (dest.y + 1)) {
-						return true;
-					}
-					break;
-				case "ontop":
-					if (orig.x == dest.x && orig.y == (dest.y + 1)) {
-						return true;
-					} else if (dest.x == -1 && orig.y == 0) { //the floor case
-						return true;
-					}
-					break;
-				case "above":
-					if (orig.x == dest.x && orig.y > dest.y) {
-						return true;
-					} else if (dest.x == -1 && orig.y >= 0) { //the floor case
-						return true;
-					}
-					break;
-				case "under":
-					if (orig.x == dest.x && orig.y == (dest.y - 1)) {
-						return true;
-					}
-					break;
-				case "leftof": //as in "directly left of"
-					if (orig.x == (dest.x - 1)) {
-						return true;
-					}
-					break;
-				case "rightof": //as in "directly right of"
-					if (orig.x == (dest.x + 1)) {
-						return true;
-					}
-					break;
-				case "beside": //as in "directly beside"
-					if (orig.x == (dest.x - 1) || orig.x == (dest.x + 1) || orig.x == (dest.x - this.state.rowLength) || orig.x == (dest.x + this.state.rowLength)) {
-						return true;
-					}
-					break;
-				case "behind": //as in "directly behind"
-					if (orig.x == (dest.x + this.state.rowLength)) {
-						return true;
-					}
-					break;
-				case "infront": //as in "directly in front of"
-					if (orig.x == (dest.x - this.state.rowLength)) {
-						return true;
-					}
-					break;
-			}
-			return false;
-		}
 	}
 
 	/**
@@ -314,12 +89,74 @@ module Interpreter {
 		constructor(private state : WorldState, private cmd : Parser.Command) {}
 
 		/**
-		 * Check if any position of the trunk node in the parse tree exists that fulfills the spatial specs
+		 * Interpret the command based on the given objects and their relations and the actual command
+		 *
+		 * @return {Literal[][]} Literal describing the PDDL goals
+		 */
+		//todo: pruning maybe only for origins? because the destination you can create!
+		//todo: better error for "spatial relations do not work out"
+		//todo: for several interpretations we fail already once the first of them is not working
+		//todo: move a ball inside a box
+		//todo: move command when you are already holding sth
+		public getInterpretation() : Literal[][][] {
+			var cmdS : string = this.cmd.cmd;
+
+			//for a stack command
+			if (cmdS == "stack") {
+				//check objects
+				var ent = this.cmd.ent;
+				var objects : string[] = this.checkExistence(ent);
+				if (objects.length && this.isPhysicallyPossible(cmdS, ent.quant, "", objects, [])) {
+					return this.buildLiteral(cmdS, ent.quant, "", objects, []);
+				}
+			}
+
+			//for a take/grasp/pick up command
+			if (cmdS == "take") {
+				//check origin
+				var ent = this.cmd.ent;
+				var origs : string[] = this.checkExistence(ent);
+				if (origs.length && this.isPhysicallyPossible("holding", ent.quant, "", origs, [])) {
+					return this.buildLiteral("holding", ent.quant, "", origs, []);
+				}
+			}
+
+			//for a move/put/drop command when we are holding something and the "it" specifier is used (e.g. "drop it on the floor")
+			if ((cmdS == "put" || cmdS == "move") && this.state.holding != null && typeof this.cmd.ent === "undefined") {
+				//check destination
+				var ent = this.cmd.loc.ent;
+				var origs : string[] = [this.state.holding];
+				var dests : string[] = this.checkExistence(ent);
+				if (dests.length && this.isPhysicallyPossible(this.cmd.loc.rel, entO.quant, entD.quant, origs, dests)) {
+					return this.buildLiteral(this.cmd.loc.rel, "the", ent.quant, origs, dests); 
+				}
+			}
+
+			//for a move/put/drop command from an origin pattern to a destination pattern
+			if (cmdS == "move") {
+				//check origin
+				var entO = this.cmd.ent;
+				var origs : string[] = this.checkExistence(entO);
+
+				//check destination
+				var entD = this.cmd.loc.ent;
+				var dests : string[] = this.checkExistence(entD);
+
+				if (origs.length && dests.length && this.isPhysicallyPossible(this.cmd.loc.rel, entO.quant, entD.quant, origs, dests)) {
+					return this.buildLiteral(this.cmd.loc.rel, entO.quant, entD.quant, origs, dests); 
+				}
+			}
+
+			return null;
+		}
+
+		/**
+		 * Check if any position of the top node in the parse tree exists that fulfills the spatial specs
 		 *
 		 * @param {Entity} Entity of an object pattern in the parse tree
-		 * @return {string[]} array of string for the trunk object pattern that represent the existing objects in the current world state
+		 * @return {string[]} array of string for the top object pattern that represent the existing objects in the current world state
 		 */
-		private checkExistence(ent, isOrig : boolean) : string[] {
+		private checkExistence(ent) : string[] {
 			//object to check the spatial relations
 			var checker : ShrdliteWorldChecker = new ShrdliteWorldChecker(this.state);
 
@@ -345,15 +182,13 @@ module Interpreter {
 				ent = ent.obj.loc.ent;
 			}
 
-			//removing the spatial relations that don't work in the current world state
-			if (isOrig) {
+			//removing all spatial relations that don't work in the current world state
 				while(checker.prune()) {
 					continue;
-				}
 			}
 
-			//return the array of matching trunk objects
-			return checker.getTrunk();
+			//return the array of matching top objects
+			return checker.getTop();
 		}	 
 		
 		/**
@@ -526,7 +361,7 @@ module Interpreter {
 		}
 
 		/**
-		 * Build the Literal[][] based on the Position[] of the origin and/or destination, 
+		 * Build the Literal[][] based on the objects of the origin and/or destination, 
 		 * the goal and the quantifiers for both origin and/or destination
 		 *
 		 * @param {string} goal of the movement (ontop, above, under, beside, leftof, rightof, inside)
@@ -536,8 +371,8 @@ module Interpreter {
 		 * @param {string[]} array of string that represent the objects for the destination
 		 * @return {Literal[][]} Literal describing the PDDL goals
 		 */
-		private buildLiteral(goal : string, quantOrig : string, quantDest : string, origs : string[], dests : string[]) {
-			var intprt : Literal[][] = [[]];
+		private buildLiteral(goal : string, quantOrig : string, quantDest : string, origs : string[], dests : string[]) : Literal[][][] {
+			var intprt : Literal[][][]= [[[]]];
 
 			if (goal == "stack") {
 				var argList : string[] = [];
@@ -545,45 +380,72 @@ module Interpreter {
 					argList.push(origs[i]);
 				}
 				var lit : Literal =  {pol:true, rel:goal, args:argList};
-				intprt[0] = [];
-				intprt[0].push(lit);
+				intprt[0] = [[]];
+				intprt[0][0] = [];
+				intprt[0][0].push(lit);
 				return intprt;
 			}
 
 			var n : number = 0;
+			var m : number = 0;
 			//++n is like "or", n stays unchanged is like "and"
 
 			if (!dests.length) {
 				for (var i = 0; i < origs.length; i++) {
-					if (n>(intprt.length - 1))
-						intprt[n] = [];
+					if (m>(intprt.length - 1)) {
+						m = intprt.length;
+						n = 0;
+						intprt[m] = [[]];
+					}
+					if (n>(intprt[m].length - 1)) {
+						n = intprt[m].length;
+						intprt[m][n] = [];
+					}
 					var lit : Literal =  {pol:true, rel:goal, args:[origs[i]]};
-					intprt[n].push(lit);
+					intprt[m][n].push(lit);
 					n = (quantOrig == "all" || quantOrig == "the") ? n : ++n;
+					m = (quantOrig == "all" || quantOrig == "any") ? m : ++m;
 				}
 				return intprt;
 			}
 
 			if (!origs.length) {
 				for (var i = 0; i < dests.length; i++) {
-					if (n>(intprt.length - 1))
-						intprt[n] = [];
+					if (m>(intprt.length - 1)) {
+						m = intprt.length;
+						n = 0;
+						intprt[m] = [[]];
+					}
+					if (n>(intprt[m].length - 1)) {
+						n = intprt[m].length;
+						intprt[m][n] = [];
+					}
 					var lit : Literal =  {pol:true, rel:goal, args:[dests[i]]};
-					intprt[n].push(lit);
+					intprt[m][n].push(lit);
 					n = (quantDest == "all" || quantDest == "the") ? n : ++n;
+					m = (quantDest == "all" || quantDest == "any") ? m : ++m;
 				}
 				return intprt;
 			}
 
 			for (var i = 0; i < origs.length; i++) {
 				for (var j = 0; j < dests.length; j++) {
-					if (n>(intprt.length - 1))
-						intprt[n] = [];
+					if (m>(intprt.length - 1)) {
+						m = intprt.length;
+						n = 0;
+						intprt[m] = [[]];
+					}
+					if (n>(intprt[m].length - 1)) {
+						n = intprt[m].length;
+						intprt[m][n] = [];
+					}
 					var lit : Literal =  {pol:true, rel:goal, args:[origs[i], dests[j]]};
-					intprt[n].push(lit);
+					intprt[m][n].push(lit);
 					n = (quantDest == "all" || quantDest == "the") ? n : ++n;
+					m = (quantDest == "all" || quantDest == "any") ? m : ++m;
 				}
 				n = (quantOrig == "all" || quantOrig == "the") ? n : ++n;
+				m = (quantOrig == "all" || quantOrig == "any") ? m : ++m;
 			}
 
 			//var l : Literal[][] = [[]];
@@ -626,70 +488,237 @@ module Interpreter {
 
 			return intprt;
 		}
+	}
 
+	/**
+	 * @class Represents a Checker for the spatial relations in the current world
+	 */
+	class ShrdliteWorldChecker {
+		private nodeL : PosNode[];
+		/*
+		 * Creates an instance of ShrdliteWorldChecker
+		 * @constructor
+		 */
+		constructor(private state : WorldState) {
+			this.nodeL = [];
+		}
 
 		/**
-		 * Interpret the command based on the given objects and their relations and the actual command
+		 * add PosNode to the array of all PosNodes
 		 *
-		 * @return {Literal[][]} Literal describing the PDDL goals
+		 * @param {object} node object
+		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof, behind, infront)
+		 * @return {void}
 		 */
-		//todo: pruning maybe only for origins? because the destination you can create!
-		//todo: for several interpretations we fail already once the first of them is not working
-		//todo: move a ball inside a box
-		//todo: move command when you are already holding sth
-		public getInterpretation() : Literal[][] {
-			//typeof this.cmd.ent !== "undefined"
-			//typeof this.cmd.loc !== "undefined"
+		public addNode(o, rel : string) : void {
+			//get all possible positions for the current object pattern
+			var pos : Position[] = this.getPositions(o);
 
-			var cmdS : string = this.cmd.cmd;
+			//when no positions can be found
+			if (!pos.length) {
+				throw new Interpreter.Error("There is no "
+						+ ((o.size != null) ? o.size+" " : "") 
+						+ ((o.color != null) ? o.color+" " : "") 
+						+ ((o.form != null) ? o.form : ""));
+			}
 
-			//for a stack command
-			if (cmdS == "stack") {
-				//check objects
-				var ent = this.cmd.ent;
-				var objects : string[] = this.checkExistence(ent, true);
-				if (objects.length && this.isPhysicallyPossible(cmdS, ent.quant, "", objects, [])) {
-					return this.buildLiteral(cmdS, ent.quant, "", objects, []);
+			var node : PosNode = {pos:pos, rel:rel};
+			this.nodeL.push(node);
+		}	
+
+		/**
+		 * Get an array of the topmost objects of the parse tree
+		 *
+		 * @return {string[]} string[] that represents the top objects, returns [] if no objects matched the pattern
+		 */
+		public getTop() : string[] {
+			var t : string[] = [];
+			for (var i = 0; i < this.nodeL[0].pos.length; i++) {
+				var x : number = this.nodeL[0].pos[i].x;
+				var y : number = this.nodeL[0].pos[i].y;
+				var s : string = "";
+
+				if (x == -1) {
+					s = "floor";
+				} else if (x == -2) {
+					s = this.state.holding;
+				} else {
+					s = this.state.stacks[x][y];
+				}
+
+				t.push(s);
+			}
+			return t;
+		}
+
+		/**
+		 * Prune all positions that do not have the given spatial relation
+		 *
+		 * @return {boolean} Has any pruning been done?
+		 */
+		public prune() : boolean {
+			var workDone : boolean = false;
+			for (var n = 0; n < (this.nodeL.length - 1); n++) {
+				var p : Position [] = this.nodeL[n].pos;
+				var c : Position [] = this.nodeL[n+1].pos;
+				var rel : string = this.nodeL[n].rel;
+
+				var nP : number = p.length;
+				var nC : number = c.length;
+				var parentChecker : number[] = [];
+				for (var i = 0; i < nP; i++) {
+					parentChecker.push(nC);
+				}
+				var childChecker : number[] = [];
+				for (var i = 0; i < nC; i++) {
+					childChecker.push(nP);
+				}
+
+				//for every potential relation that does not actually exist, decrease the respective checker by 1
+				for (var i = 0; i < p.length; i++) {
+					for (var j = 0; j < c.length; j++) {
+						if (!this.isReachable(p[i], c[j], rel)) {
+							parentChecker[i] = parentChecker[i] - 1;
+							childChecker[j] = childChecker[j] - 1;
+							workDone = true;
+						}
+					}
+				}
+				
+				//if the checker is 0 (no relation exists), then remove that Position
+				for (var i = nP-1; i >= 0; i--) {
+					if (parentChecker[i] == 0) {
+						p.splice(i, 1);
+					}
+				}
+				for (var i = nC-1; i >= 0; i--) {
+					if (childChecker[i] == 0) {
+						c.splice(i, 1);
+					}
+				}
+				this.nodeL[n].pos = p;
+				this.nodeL[n+1].pos = c;
+			}
+			return workDone;
+		}
+
+		/**
+		 * Get all possible Positions of an object pattern in the current world state
+		 *
+		 * @param {object} object representing an object pattern in the parse tree
+		 * @return {Position[]} array of all positions that reflect the current object pattern in the world state
+		 * returns [{x: -1, y: -1}] in case of "floor"
+		 * returns [{x: -2, y: -2}] in case of holding
+		 */
+		private getPositions(o) : Position[] {
+			//in case of floor
+			if (o.form == "floor") {
+				return [{x: -1, y: -1}];
+			}
+
+			//otherwise
+			var p : Position[] = [];
+
+			//is it held by the arm?
+			if (this.state.holding != null) {
+				var a = this.state.objects[this.state.holding];
+				if (this.objCompare(o,a)) {
+					var temp : Position = {x: -2, y: -2}; 
+					p.push(temp);	
 				}
 			}
 
-			//for a take/grasp/pick up command
-			if (cmdS == "take") {
-				//check origin
-				var ent = this.cmd.ent;
-				var origs : string[] = this.checkExistence(ent, true);
-				if (origs.length && this.isPhysicallyPossible("holding", ent.quant, "", origs, [])) {
-					return this.buildLiteral("holding", ent.quant, "", origs, []);
+			//is it on the table?
+			for (var i = 0; i < this.state.stacks.length; i++) {
+				for (var j = 0; j < this.state.stacks[i].length; j++) {
+					var a = this.state.objects[this.state.stacks[i][j]];
+					if (this.objCompare(o,a)) {
+						var temp : Position = {x: i, y: j}; 
+						p.push(temp);	
+					}
 				}
 			}
+			return p;
+		}
 
-			//for a move/put/drop command when we are holding something and the "it" specifier is used (e.g. "drop it on the floor")
-			if ((cmdS == "put" || cmdS == "move") && this.state.holding != null && typeof this.cmd.ent === "undefined") {
-				//check destination
-				var ent = this.cmd.loc.ent;
-				var origs : string[] = [this.state.holding];
-				var dests : string[] = this.checkExistence(ent, false);
-				if (dests.length && this.isPhysicallyPossible(this.cmd.loc.rel, entO.quant, entD.quant, origs, dests)) {
-					return this.buildLiteral(this.cmd.loc.rel, "the", ent.quant, origs, dests); 
-				}
+		/**
+		 * Do the objects match?
+		 *
+		 * @param {object} object representing an object pattern in the parse tree
+		 * @param {object} object representing an actual object in the current world
+		 * @return {boolean} true if they match, false if they do not match
+		 */
+		private objCompare(o,a) : boolean {
+			if ((o.size == null || o.size == a.size) &&
+					(o.color == null || o.color == a.color) &&
+					(o.form == null || o.form == a.form || o.form == "anyform")) {
+						return true;
+					}
+
+			return false;
+		}
+
+		/**
+		 * Check if the given spatial relation between two positions holds
+		 *
+		 * @param {Position} Position of the origin
+		 * @param {Position} Position of the destination
+		 * @param {string} spatial relation string (inside, ontop, under, beside, above, leftof, rightof, behind, infront)
+		 * @return {boolean} Does the relation hold?
+		 */
+		private isReachable(orig : Position, dest : Position, rel : string) : boolean {
+			switch (rel) {
+				case "inside":
+					if (orig.x == dest.x && orig.y == (dest.y + 1)) {
+						return true;
+					}
+					break;
+				case "ontop":
+					if (orig.x == dest.x && orig.y == (dest.y + 1)) {
+						return true;
+					} else if (dest.x == -1 && orig.y == 0) { //the floor case
+						return true;
+					}
+					break;
+				case "above":
+					if (orig.x == dest.x && orig.y > dest.y) {
+						return true;
+					} else if (dest.x == -1 && orig.y >= 0) { //the floor case
+						return true;
+					}
+					break;
+				case "under":
+					if (orig.x == dest.x && orig.y == (dest.y - 1)) {
+						return true;
+					}
+					break;
+				case "leftof": //as in "directly left of"
+					if (orig.x == (dest.x - 1)) {
+						return true;
+					}
+					break;
+				case "rightof": //as in "directly right of"
+					if (orig.x == (dest.x + 1)) {
+						return true;
+					}
+					break;
+				case "beside": //as in "directly beside"
+					if (orig.x == (dest.x - 1) || orig.x == (dest.x + 1) || orig.x == (dest.x - this.state.rowLength) || orig.x == (dest.x + this.state.rowLength)) {
+						return true;
+					}
+					break;
+				case "behind": //as in "directly behind"
+					if (orig.x == (dest.x + this.state.rowLength)) {
+						return true;
+					}
+					break;
+				case "infront": //as in "directly in front of"
+					if (orig.x == (dest.x - this.state.rowLength)) {
+						return true;
+					}
+					break;
 			}
-
-			//for a move/put/drop command from an origin pattern to a destination pattern
-			if (cmdS == "move") {
-				//check origin
-				var entO = this.cmd.ent;
-				var origs : string[] = this.checkExistence(entO, true);
-
-				//check destination
-				var entD = this.cmd.loc.ent;
-				var dests : string[] = this.checkExistence(entD, false);
-
-				if (origs.length && dests.length && this.isPhysicallyPossible(this.cmd.loc.rel, entO.quant, entD.quant, origs, dests)) {
-					return this.buildLiteral(this.cmd.loc.rel, entO.quant, entD.quant, origs, dests); 
-				}
-			}
-
-			return null;
+			return false;
 		}
 	}
 }

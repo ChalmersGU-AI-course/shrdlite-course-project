@@ -57,7 +57,7 @@ objectPL --> size:? color:? formPL  {% R({size:0, color:1, form:2}) %}
 ## Lexical rules
 
 quantifierSG --> ("any" | "an" | "a")  {% R("any") %}
-quantifierSG --> ("the")               {% R("any") %}
+quantifierSG --> ("the")               {% R("the") %}
 quantifierSG --> ("every")             {% R("all") %}
 quantifierPL --> ("all")               {% R("all") %}
 
