@@ -1,16 +1,13 @@
 /*jslint node: true, esnext: true */
 "use strict";
-require('./../planner/planner-core.js');
+var stdlib = require('./../planner/stdlib.js');
 
-function objects_in_world(state) {
-    var list = state.stacks.flatten();
-    for (var arm of state.arms) {
-        if (arm.holding !== null) {
-            list.push(arm.holding);
-        }
-    }
-    return list;
+
+function Parser(state) {
+    this.state = state;
+    this.all = stdlib.objects_in_world(state);
 }
+
 
 // If a constraint is satisfied for a given object
 Parser.prototype.binds = function(constr, world_object) {
@@ -19,14 +16,6 @@ Parser.prototype.binds = function(constr, world_object) {
            (constr.size  === null || constr.size  == desc.size) &&
            (constr.color === null || constr.color == desc.color);
 };
-
-
-
-function Parser(state) {
-    this.state = state;
-    this.all = objects_in_world(state);
-    // this.interpretation = interpretation;
-}
 
 // Returns a list of objects matching or "floor"
 Parser.prototype.parse_object = function(obj) {
@@ -50,131 +39,15 @@ Parser.prototype.parse_object = function(obj) {
     return this.location_filter(candidates, obj.loc);
 };
 
-
-// True if item is on top of one of oneof
-Parser.prototype.test_ontop = function(item, oneof) {
-    // Find the object
-    var i = 0;
-    var j = -1;
-    for (var stack of this.state.stacks) {
-        j = stack.indexOf(item);
-        if (j !== -1) {
-            break;
-        }
-        i++;
-    }
-    if (j === -1) {
-        return false;
-    }
-    if (j === 0) {
-        return oneof == "floor";
-    }
-
-    return oneof.contains(stack[j-1]);
-};
-
-// True if item is beside one of oneof
-Parser.prototype.test_beside = function(item, oneof) {
-    if (oneof == "floor") {
-        throw "Cannot be beside the floor";
-    }
-    // Find the object
-    var i = 0;
-    var j = -1;
-    for (var stack of this.state.stacks) {
-        j = stack.indexOf(item);
-        if (j !== -1) {
-            break;
-        }
-        i++;
-    }
-    if (j === -1) {
-        return false;
-    }
-
-    return  (i !== 0 && oneof.intersects(this.state.stacks[i-1])) ||
-        (i !== this.state.stacks.length && oneof.intersects(this.state.stacks[i+1]));
-
-};
-
-Parser.prototype.test_left = function(item, oneof) {
-    if (oneof == "floor") {
-        throw "Cannot be left of the floor";
-    }
-    // Find the object
-    var i = 0;
-    var j = -1;
-    for (var stack of this.state.stacks) {
-        j = stack.indexOf(item);
-        if (j !== -1) {
-            break;
-        }
-        i++;
-    }
-    if (j === -1) {
-        return false;
-    }
-    return (j !== -1) && this.state.stacks.slice(i+1).flatten().intersects(oneof);
-};
-
-Parser.prototype.test_right = function(item, oneof) {
-    if (oneof == "floor") {
-        throw "Cannot be right of the floor";
-    }
-    // Find the object
-    var i = 0;
-    var j = -1;
-    for (var stack of this.state.stacks) {
-        j = stack.indexOf(item);
-        if (j !== -1) {
-            break;
-        }
-        i++;
-    }
-    if (j === -1) {
-        return false;
-    }
-    return (j !== -1) && this.state.stacks.slice(i-1).flatten().intersects(oneof);
-};
-
 // candidate object <on top/etc> of loc.obj. Returns the candidates for which this is true
 Parser.prototype.location_filter = function(candidates, loc) {
     // var obs = this.parse_object(loc.obj);
     var obs = this.parse_entity(loc.ent);
     console.log("loc cand:" + candidates + " on " + obs);
-    var ret = [];
-    for (var cand of candidates) {
-        switch (loc.rel) {
-            case "inside":
-            case "ontop":
-                if (this.test_ontop(cand, obs)) {
-                    ret.push(cand);
-                }
-                break;
-            case "beside":
-                if (this.test_beside(cand, obs)) {
-                    ret.push(cand);
-                }
-                break;
-            case "leftof":
-                if (this.test_left(cand, obs)) {
-                    ret.push(cand);
-                }
-                break;
-            case "rightof":
-                if (this.test_right(cand, obs)) {
-                    ret.push(cand);
-                }
-                break;
-            default:
-
-            case "above":
-            case "under":
-
-            throw "Unknown relation: " + loc.rel;
-        }
-    }
-    return ret;
+    var this_state = this.state;
+    return candidates.filter(function (item){
+        return stdlib.test_satisfied(this_state, item, obs, loc.rel);
+    });
 };
 
 //Returns a list of objects matching or "floor"
@@ -230,13 +103,13 @@ Parser.prototype.parse_one = function (move, loc) {
             }
             rules.push({rel: 'floor', item: m});
         } else  {
+            var newrel = loc.rel == "inside" ? "ontop" : loc.rel;
             if (loc.ent.quant == "all") {
-                var newrel = loc.rel == "inside" ? "ontop" : loc.rel;
                 for (var aa of oneof2) {
-                    rules.push({rel: loc.rel, item: m, oneof: [aa]});
+                    rules.push({rel: newrel, item: m, oneof: [aa]});
                 }
             } else {
-                rules.push({rel: loc.rel, item: m, oneof: oneof2});
+                rules.push({rel: newrel, item: m, oneof: oneof2});
             }
         }
     }

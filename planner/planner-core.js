@@ -159,66 +159,11 @@ SearchGraph.prototype.neighbours = function* (state) {
 };
 
 
-// If one PDDL rule is satisfied for a state
-SearchGraph.prototype.rule_satisfied = function(rule, state) {
-    // Find the object
-    var i = 0;
-    var j = -1;
-    for (var stack of state.stacks) {
-        j = stack.indexOf(rule.item);
-        if (j !== -1) {
-            break;
-        }
-        i++;
-    }
-
-    switch (rule.rel) {
-        case "holding":
-            var res = state.arms.some(function(arm) {
-                return arm.holding === rule.item;
-            });
-            return res;
-
-        case "floor":
-            return j === 0;
-
-        case "ontop":
-            return j > 0 && rule.oneof.contains(stack[j-1]);
-
-        case "above":
-            return j !== 1 && rule.oneof.intersects(stack.slice(0, j));
-
-        case "under":
-            return j !== 1 && rule.oneof.intersects(stack.slice(j+1));
-
-        case "beside":
-            if (j === -1) {
-                return false;
-            }
-            return  (i !== 0 && rule.oneof.intersects(state.stacks[i-1])) ||
-                    (i !== state.stacks.length-1 && rule.oneof.intersects(state.stacks[i+1]));
-
-        case "leftof":
-            return (j !== -1) && state.stacks.slice(i+1).flatten().intersects(rule.oneof);
-
-        case "rightof":
-            return (j !== -1) && state.stacks.slice(0, i).flatten().intersects(rule.oneof);
-
-        default:
-            throw "ERRORRRR: Planner does not know the relation: " + rule.rel;
-    }
-
-};
-
-
 // Check if all PDDL goals are satisfied.
 SearchGraph.prototype.isgoal = function(state) {
-    for (var rule of this.pddl) {
-        if (!this.rule_satisfied(rule, state)) {
-            return false;
-        }
-    }
-    return true;
+    return this.pddl.every(function (rule) {
+       return stdlib.test_satisfied(state, rule.item, rule.oneof, rule.rel);
+    });
 };
 
 
@@ -226,7 +171,7 @@ SearchGraph.prototype.h_general = function (state) {
     var estimate = 0;
 
     for(var rule of this.pddl) {
-        if(this.rule_satisfied(rule, state)) {
+        if (stdlib.test_satisfied(state, rule.item, rule.oneof, rule.rel)) {
             continue;
         }
 
@@ -403,7 +348,7 @@ SearchGraph.prototype.h_1arm = function (state) {
 
     var estimate = 0;
     for (var rule of this.pddl) {
-        if (this.rule_satisfied(rule, state)) {
+        if (stdlib.test_satisfied(state, rule.item, rule.oneof, rule.rel)) {
             continue;
         }
         // Find the object

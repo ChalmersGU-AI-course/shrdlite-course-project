@@ -1,17 +1,14 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /*jslint node: true, esnext: true */
 "use strict";
-require('./../planner/planner-core.js');
+var stdlib = require('./../planner/stdlib.js');
 
-function objects_in_world(state) {
-    var list = state.stacks.flatten();
-    for (var arm of state.arms) {
-        if (arm.holding !== null) {
-            list.push(arm.holding);
-        }
-    }
-    return list;
+
+function Parser(state) {
+    this.state = state;
+    this.all = stdlib.objects_in_world(state);
 }
+
 
 // If a constraint is satisfied for a given object
 Parser.prototype.binds = function(constr, world_object) {
@@ -20,14 +17,6 @@ Parser.prototype.binds = function(constr, world_object) {
            (constr.size  === null || constr.size  == desc.size) &&
            (constr.color === null || constr.color == desc.color);
 };
-
-
-
-function Parser(state) {
-    this.state = state;
-    this.all = objects_in_world(state);
-    // this.interpretation = interpretation;
-}
 
 // Returns a list of objects matching or "floor"
 Parser.prototype.parse_object = function(obj) {
@@ -51,131 +40,15 @@ Parser.prototype.parse_object = function(obj) {
     return this.location_filter(candidates, obj.loc);
 };
 
-
-// True if item is on top of one of oneof
-Parser.prototype.test_ontop = function(item, oneof) {
-    // Find the object
-    var i = 0;
-    var j = -1;
-    for (var stack of this.state.stacks) {
-        j = stack.indexOf(item);
-        if (j !== -1) {
-            break;
-        }
-        i++;
-    }
-    if (j === -1) {
-        return false;
-    }
-    if (j === 0) {
-        return oneof == "floor";
-    }
-
-    return oneof.contains(stack[j-1]);
-};
-
-// True if item is beside one of oneof
-Parser.prototype.test_beside = function(item, oneof) {
-    if (oneof == "floor") {
-        throw "Cannot be beside the floor";
-    }
-    // Find the object
-    var i = 0;
-    var j = -1;
-    for (var stack of this.state.stacks) {
-        j = stack.indexOf(item);
-        if (j !== -1) {
-            break;
-        }
-        i++;
-    }
-    if (j === -1) {
-        return false;
-    }
-
-    return  (i !== 0 && oneof.intersects(this.state.stacks[i-1])) ||
-        (i !== this.state.stacks.length && oneof.intersects(this.state.stacks[i+1]));
-
-};
-
-Parser.prototype.test_left = function(item, oneof) {
-    if (oneof == "floor") {
-        throw "Cannot be left of the floor";
-    }
-    // Find the object
-    var i = 0;
-    var j = -1;
-    for (var stack of this.state.stacks) {
-        j = stack.indexOf(item);
-        if (j !== -1) {
-            break;
-        }
-        i++;
-    }
-    if (j === -1) {
-        return false;
-    }
-    return (j !== -1) && this.state.stacks.slice(i+1).flatten().intersects(oneof);
-};
-
-Parser.prototype.test_right = function(item, oneof) {
-    if (oneof == "floor") {
-        throw "Cannot be right of the floor";
-    }
-    // Find the object
-    var i = 0;
-    var j = -1;
-    for (var stack of this.state.stacks) {
-        j = stack.indexOf(item);
-        if (j !== -1) {
-            break;
-        }
-        i++;
-    }
-    if (j === -1) {
-        return false;
-    }
-    return (j !== -1) && this.state.stacks.slice(i-1).flatten().intersects(oneof);
-};
-
 // candidate object <on top/etc> of loc.obj. Returns the candidates for which this is true
 Parser.prototype.location_filter = function(candidates, loc) {
     // var obs = this.parse_object(loc.obj);
     var obs = this.parse_entity(loc.ent);
     console.log("loc cand:" + candidates + " on " + obs);
-    var ret = [];
-    for (var cand of candidates) {
-        switch (loc.rel) {
-            case "inside":
-            case "ontop":
-                if (this.test_ontop(cand, obs)) {
-                    ret.push(cand);
-                }
-                break;
-            case "beside":
-                if (this.test_beside(cand, obs)) {
-                    ret.push(cand);
-                }
-                break;
-            case "leftof":
-                if (this.test_left(cand, obs)) {
-                    ret.push(cand);
-                }
-                break;
-            case "rightof":
-                if (this.test_right(cand, obs)) {
-                    ret.push(cand);
-                }
-                break;
-            default:
-
-            case "above":
-            case "below":
-
-            throw "Unknown relation: " + loc.rel;
-        }
-    }
-    return ret;
+    var this_state = this.state;
+    return candidates.filter(function (item){
+        return stdlib.test_satisfied(this_state, item, obs, loc.rel);
+    });
 };
 
 //Returns a list of objects matching or "floor"
@@ -231,13 +104,13 @@ Parser.prototype.parse_one = function (move, loc) {
             }
             rules.push({rel: 'floor', item: m});
         } else  {
+            var newrel = loc.rel == "inside" ? "ontop" : loc.rel;
             if (loc.ent.quant == "all") {
-                var newrel = loc.rel == "inside" ? "ontop" : loc.rel;
                 for (var aa of oneof2) {
-                    rules.push({rel: loc.rel, item: m, oneof: [aa]});
+                    rules.push({rel: newrel, item: m, oneof: [aa]});
                 }
             } else {
-                rules.push({rel: loc.rel, item: m, oneof: oneof2});
+                rules.push({rel: newrel, item: m, oneof: oneof2});
             }
         }
     }
@@ -289,7 +162,7 @@ function all(state, parse) {
 
 module.exports = all;
 
-},{"./../planner/planner-core.js":4}],2:[function(require,module,exports){
+},{"./../planner/stdlib.js":5}],2:[function(require,module,exports){
 /*jslint node: true, esnext: true */
 "use strict";
 
@@ -678,66 +551,11 @@ SearchGraph.prototype.neighbours = function* (state) {
 };
 
 
-// If one PDDL rule is satisfied for a state
-SearchGraph.prototype.rule_satisfied = function(rule, state) {
-    // Find the object
-    var i = 0;
-    var j = -1;
-    for (var stack of state.stacks) {
-        j = stack.indexOf(rule.item);
-        if (j !== -1) {
-            break;
-        }
-        i++;
-    }
-
-    switch (rule.rel) {
-        case "holding":
-            var res = state.arms.some(function(arm) {
-                return arm.holding === rule.item;
-            });
-            return res;
-
-        case "floor":
-            return j === 0;
-
-        case "ontop":
-            return j > 0 && rule.oneof.contains(stack[j-1]);
-
-        case "above":
-            return j !== 1 && rule.oneof.intersects(stack.slice(0, j));
-
-        case "under":
-            return j !== 1 && rule.oneof.intersects(stack.slice(j+1));
-
-        case "beside":
-            if (j === -1) {
-                return false;
-            }
-            return  (i !== 0 && rule.oneof.intersects(state.stacks[i-1])) ||
-                    (i !== state.stacks.length-1 && rule.oneof.intersects(state.stacks[i+1]));
-
-        case "leftof":
-            return (j !== -1) && state.stacks.slice(i+1).flatten().intersects(rule.oneof);
-
-        case "rightof":
-            return (j !== -1) && state.stacks.slice(0, i).flatten().intersects(rule.oneof);
-
-        default:
-            throw "ERRORRRR: Planner does not know the relation: " + rule.rel;
-    }
-
-};
-
-
 // Check if all PDDL goals are satisfied.
 SearchGraph.prototype.isgoal = function(state) {
-    for (var rule of this.pddl) {
-        if (!this.rule_satisfied(rule, state)) {
-            return false;
-        }
-    }
-    return true;
+    return this.pddl.every(function (rule) {
+       return stdlib.test_satisfied(state, rule.item, rule.oneof, rule.rel);
+    });
 };
 
 
@@ -745,7 +563,7 @@ SearchGraph.prototype.h_general = function (state) {
     var estimate = 0;
 
     for(var rule of this.pddl) {
-        if(this.rule_satisfied(rule, state)) {
+        if (stdlib.test_satisfied(state, rule.item, rule.oneof, rule.rel)) {
             continue;
         }
 
@@ -922,7 +740,7 @@ SearchGraph.prototype.h_1arm = function (state) {
 
     var estimate = 0;
     for (var rule of this.pddl) {
-        if (this.rule_satisfied(rule, state)) {
+        if (stdlib.test_satisfied(state, rule.item, rule.oneof, rule.rel)) {
             continue;
         }
         // Find the object
@@ -1134,6 +952,59 @@ module.exports.objects_in_world = function(state) {
         }
     }
     return list;
+};
+
+
+
+module.exports.test_satisfied = function(state, item, oneof, relation) {
+    // Find the object
+    var i = 0;
+    var j = -1;
+    for (var stack of state.stacks) {
+        j = stack.indexOf(item);
+        if (j !== -1) {
+            break;
+        }
+        i++;
+    }
+
+    switch (relation) {
+        case "holding":
+            var res = state.arms.some(function(arm) {
+                return arm.holding === item;
+            });
+            return res;
+
+        case "floor":
+            return j === 0;
+
+        case "inside":
+        case "ontop":
+            return j > 0 && oneof.contains(stack[j-1]);
+
+        case "above":
+            return j !== 1 && oneof.intersects(stack.slice(0, j));
+
+        case "under":
+            return j !== 1 && oneof.intersects(stack.slice(j+1));
+
+        case "beside":
+            if (j === -1) {
+                return false;
+            }
+            return  (i !== 0 && oneof.intersects(state.stacks[i-1])) ||
+                    (i !== state.stacks.length-1 && oneof.intersects(state.stacks[i+1]));
+
+        case "leftof":
+            return (j !== -1) && state.stacks.slice(i+1).flatten().intersects(oneof);
+
+        case "rightof":
+            return (j !== -1) && state.stacks.slice(0, i).flatten().intersects(oneof);
+
+        default:
+            throw "ERRORRRR: Planner does not know the relation: " + relation;
+    }
+
 };
 
 },{}],6:[function(require,module,exports){
