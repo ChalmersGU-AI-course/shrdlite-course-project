@@ -273,18 +273,38 @@ SearchGraph.prototype.h_general = function (state) {
                 }
                 break;
 
-                /*
             case "ontop":
-                var least = 100000;
+                var least = Infinity;
                 for (var obj of rule.oneof) {
-                    least = Math.min(least, putOnTopOf(arm, obj, state));
+                    var xs = state.arms.map(function(arm) {
+                        return putOnTopOf(arm.pos, obj, state);
+                    });
+                    xs.push(least);
+                    least = Math.min.apply(null, xs);
                 }
-                if (holding != rule.item) {
-                    estimate += Math.abs(arm - i) + 1; // Go pick it up.
+
+                var arm;
+                state.arms.every(function(a) {
+                    if(a.holding == rule.item) {
+                        arm = a;
+                        return false;
+                    }
+                    return true;
+                });
+
+                if(!arm) {
+                    var minArmPos = state.arms.reduce(function(acc, arm) {
+                        var a = Math.abs(arm.pos - i);
+                        if(a < acc) return a;
+                        else return acc;
+                    }, Infinity);
+
+                    estimate += minArmPos + 1; // Go pick it up.
                 }
                 estimate += least;
                 break;
 
+                /*
             // TODO
             case "beside":
                 estimate += 1;
