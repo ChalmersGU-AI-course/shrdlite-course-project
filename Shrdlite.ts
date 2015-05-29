@@ -62,7 +62,6 @@ module Shrdlite {
             var parses : Parser.Result[] = Parser.parse(utterance);
         } catch (err) {
                 if (err instanceof Parser.Error) {
-                    // TODO findout if we should be updating loc or ent?
                    var newInfo = utterance.toLowerCase().replace(/\W/g, "");
                     var newResult : Parser.Result[] = [];
                     var index = previousCmd.length - 1;
