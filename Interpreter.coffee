@@ -49,7 +49,7 @@ class Interpreter
                         intrp = {
                             input: parse.input,
                             prs: parse.prs,
-                            intp: [{ pol: true, rel: parse.prs.loc.rel, args: [[obj], [locObj]], quantifier1: "all", quantifier2: "all"}]
+                            intp: [{ pol: true, rel: parse.prs.loc.rel, args: [obj, locObj], quantifier1: "all", quantifier2: "all"}]
                         }
                         parseInterpList.push(intrp)
         else
