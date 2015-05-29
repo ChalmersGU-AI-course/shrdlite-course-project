@@ -99,7 +99,11 @@ ExampleWorlds["small"] = {
         "take a blue object",
         "take the white ball",
         "put all boxes on the floor",
-        "move all balls inside a large box"
+        "move all balls inside a large box",
+        "take the table",
+        "put an object inside all boxes",
+        "put a ball inside all boxes",
+        "put a box that is containing a ball on the floor",
     ]
 };
 
