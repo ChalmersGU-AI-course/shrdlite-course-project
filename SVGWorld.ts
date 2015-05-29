@@ -1,8 +1,11 @@
 ///<reference path="World.ts"/>
 ///<reference path="lib/jquery.d.ts" />
+///<reference path="Interpreter.ts" />
 
 
 class SVGWorld implements World {
+
+	public lastAns : Interpreter.Result[] = [];
 
     constructor(
         public currentState: WorldState,

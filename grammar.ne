@@ -37,6 +37,7 @@ function R(obj) {
 
 main --> will_you:? please:? command please:?  {% R(2) %}  
 
+command --> [0-9]                 {% R({cmd:"quest", num:0}) %}
 command --> take entity           {% R({cmd:"take", ent:1}) %}
 command --> move  it    location  {% R({cmd:"put", loc:2}) %}
 command --> move entity location  {% R({cmd:"move", ent:1, loc:2}) %}

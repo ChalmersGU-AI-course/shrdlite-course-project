@@ -17,6 +17,7 @@ interface WorldState {
 
 interface World {
     currentState : WorldState;
+    lastAns : Interpreter.Result[];
 
     printWorld(callback? : () => void) : void;
     performPlan(plan: string[], callback? : () => void) : void;
