@@ -1,7 +1,7 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
-///<reference path="Interpreter.ts"/>
-///<reference path="Planner.ts"/>
+///<reference path="Interpreter.d.ts"/>
+///<reference path="Planner.d.ts"/>
 
 module Shrdlite {
 
@@ -60,7 +60,7 @@ module Shrdlite {
         }
         world.printDebugInfo("Found " + interpretations.length + " interpretations");
         interpretations.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
+            world.printDebugInfo("  (" + n + ") " /* + Interpreter.interpretationToString(res)*/);
         });
 
         try {
