@@ -8,22 +8,37 @@ module Interpreter {
 
 	export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
 		var interpretations : Result[] = [];
+		var error : string = "";
 		parses.forEach((parseresult) => {
 			var intprt : Result = <Result>parseresult;
-			var goals : Literal[][][] = interpretCommand(intprt.prs, currentState);
 
-			for (var i=0; i < goals.length; i++) {
-				var interpretation = jQuery.extend(true, {}, intprt); //deep copy
-				interpretation.intp = goals[i];
-				if (interpretation.intp != null) {
-					interpretations.push(interpretation);
+			try {
+			var goals : Literal[][][] = interpretCommand(intprt.prs, currentState);
+			} catch(err) {
+				if (err instanceof Interpreter.Error) {
+					error = err.message;
+				} else {
+					throw err;
+					}
+			}
+
+			if (goals) {
+				for (var i=0; i < goals.length; i++) {
+					var interpretation = jQuery.extend(true, {}, intprt); //deep copy
+					interpretation.intp = goals[i];
+					if (interpretation.intp != null) {
+						interpretations.push(interpretation);
+					}
 				}
 			}
 		});
 		if (interpretations.length) {
 			return interpretations;
 		} else {
-			throw new Interpreter.Error("The described spatial relations do not exist.");
+			if (error == "") {
+				error = "The described spatial relations do not exist.";
+			}
+			throw new Interpreter.Error(error);
 		}
 	}
 
@@ -106,6 +121,7 @@ module Interpreter {
 		//todo: better error for "spatial relations do not work out"
 		//todo: for several interpretations we fail already once the first of them is not working
 		//todo: move a ball inside a box
+		//todo: move the ball beside the box under the table left of the box in the box under the box
 		//todo: move command when you are already holding sth
 		public getInterpretation() : Literal[][][] {
 			var cmdS : string = this.cmd.cmd;
@@ -174,7 +190,7 @@ module Interpreter {
 				//checking the next object pattern
 				var o = ent.obj;
 				var rel : string = "";
-				if (typeof o.size === "undefined") {
+				while (typeof o.size === "undefined") {
 					rel = o.loc.rel;
 					o = o.obj;
 				}
@@ -589,20 +605,20 @@ module Interpreter {
 						if (!this.isReachable(p[i], c[j], rel)) {
 							parentChecker[i] = parentChecker[i] - 1;
 							childChecker[j] = childChecker[j] - 1;
-							workDone = true;
 						}
 					}
 				}
-				
 				//if the checker is 0 (no relation exists), then remove that Position
 				for (var i = nP-1; i >= 0; i--) {
 					if (parentChecker[i] == 0) {
 						p.splice(i, 1);
+						workDone = true;
 					}
 				}
 				for (var i = nC-1; i >= 0; i--) {
 					if (childChecker[i] == 0) {
 						c.splice(i, 1);
+						workDone = true;
 					}
 				}
 				this.nodeL[n].pos = p;
