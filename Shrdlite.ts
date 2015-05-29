@@ -171,7 +171,7 @@ module Shrdlite {
         //world.printDebugInfo(world.currentState.status);
         world.currentState.status.forEach((status) => {
             if (status === "softambiguity"){
-                throw new Interpreter.Ambiguity(); // throw sth-else!
+                throw new Interpreter.Ambiguity();
             }
             if (status === "multiValidInterpret"){
                 world.printSystemOutput("There are multiple valid interpretation");
