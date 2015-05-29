@@ -133,6 +133,7 @@ module Planner {
     	var lits : Interpreter.Literal[][] = [];
     	var leftof : string[] = [];
 		for(var x =0; x<state.stacks.length; x++ ){
+			var tmp : string [] = [];
 			for(var y =0; y<state.stacks[x].length; y++ ){
 				if(y == 0){
 					lits.push([{pol : true, rel : "ontop", args : [state.stacks[x][0], "floor" ]}]);
@@ -143,38 +144,27 @@ module Planner {
 						lits.push([{pol : true, rel : "ontop", args : [state.stacks[x][y], state.stacks[x][y-1] ]}]);
 					}
 				}
-			}
-		}
-		//Adds a ppdl for all the objects that is above every object
-		for(var x =0; x<state.stacks.length; x++ ){
-			for(var y =0; y<state.stacks[x].length; y++ ){
+
+				//Adds a ppdl for all the objects that is above every object
 				for(var z = y+1; z<state.stacks[x].length; z++ ){
 					lits.push([{pol : true, rel : "above", args : [state.stacks[x][z], state.stacks[x][y] ]}]);
 				}
-			}
-		}
-		//Adds a ppdl for all the objects left of the each stack
-		for(var x =0; x<state.stacks.length; x++ ){
-			var tmp : string [] = [];
-			for(var y =0; y<state.stacks[x].length; y++ ){
+
+				//Adds a ppdl for all the objects left of the each stack
 				for(var i =0; i<leftof.length; i++ ){
 					lits.push([{pol : true, rel : "leftof", args : [leftof[i] , state.stacks[x][y]]}]);
 				}
 				tmp.push(state.stacks[x][y]);
-			}
-			leftof = leftof.concat(tmp);
-		}
-		//Adds a ppdl for all the objects next to each stack
-		for(var x =0; x<state.stacks.length; x++ ){
-			for(var y =0; y<state.stacks[x].length; y++ ){
+			
+				//Adds a ppdl for all the objects next to each stack
 				for(var z = x-1; z<x+2; z++ ){
 					if(z >= 0 && z!=x && z <= state.stacks.length-1){
 						lits = lits.concat(addBesideStack(state.stacks[z] , state.stacks[x][y]));
 					}
 				}				
 			}
+			leftof = leftof.concat(tmp);
 		}
-			
 		
 		lits.push([{pol : true, rel : "arm", args : ["" + state.arm, "" + state.stacks.length ]}]);
 		if(state.holding == null){
