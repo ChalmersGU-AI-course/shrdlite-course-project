@@ -65,8 +65,6 @@ module Interpreter {
     			if(i != j){
     				uniqueString.add(cmpObj(interps[i].prs.ent.obj, interps[j].prs.ent.obj, ""));
     				uniqueString.add(cmpObj(interps[i].prs.loc.ent.obj, interps[j].prs.loc.ent.obj, ""));
-    				//console.log (cmpObj(interps[i].prs.ent.obj, interps[j].prs.ent.obj, ""));
-    				//console.log (cmpObj(interps[i].prs.loc.ent.obj, interps[j].prs.loc.ent.obj, ""));
     			}
     		}
     	}
@@ -212,14 +210,10 @@ module Interpreter {
     					}
     				}else if(loc.rel == "above"){
                         var b : Literal = {pol : true, rel : "above", args : [posList[i].name, goal[j].name ]};
-                        //if(checkValidPos(posList[i].obj, goal[j].obj )){
-                            lits.push([b]);
-                        //}                        
+                            lits.push([b]);                     
                     }else if(loc.rel == "under"){
                         var b : Literal = {pol : false, rel : "above", args : [posList[i].name, goal[j].name ]};
-                        if(checkValidPos(posList[i].obj, goal[j].obj )){
-                            lits.push([b]);
-                        }                        
+                            lits.push([b]);                    
                     }else if(loc.rel == "beside"){
                         var a : Literal = {pol : true, rel : "beside", args : [posList[i].name, goal[j].name ]};
                             lits.push([a]);
@@ -265,7 +259,6 @@ module Interpreter {
 							(state.stacks[stmLocObj[i].x][stmLocObj[i].y+1] == state.stacks[stmObj[j].x][stmObj[j].y])){
 					
 							list.push(stmObj[j]);
-							//list.push(stmLocObj[i]);
 						}
 					}
 				}else if( objs.loc.rel == "above"){

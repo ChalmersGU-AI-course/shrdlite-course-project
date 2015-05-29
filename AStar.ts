@@ -156,14 +156,13 @@ module AStar {
 			var current : Nod = frontier.dequeue();		
 			if (checkGoal (Planner.worldToPPDL (current.getWorldState()) , goal)){
 				  var a = getPath (startNode, current);	//return the path if we found the goal
-					a[0]="Number of visited nodes " +haveSeen.size() + " ";
-			//		a[1]="<br>" + a[1];				
+					a[0]="Number of visited nodes " +haveSeen.size() + " ";		
 				return a;
 			}
 			
-	//		if(haveSeen.size() == 20000){
-	//			return ["20000 nodes searched and no solution was found"];
-	//		}
+			if(haveSeen.size() == 20000){
+				return ["TimeOut: 20000 nodes searched and no solution was found"];
+			}
 	
 			haveSeen.add(current);
 			
@@ -193,7 +192,6 @@ module AStar {
 				}
 			}
 		}
-		console.log("haveseeen--------------------------",haveSeen);
 		return ["No path was found"];
 	}
 }

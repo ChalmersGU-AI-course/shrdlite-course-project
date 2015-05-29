@@ -66,7 +66,6 @@ module Planner {
 				}
 			}	
 		}
-		//console.log("nodeList----------------------", nodeList);
 		current.setArcList(nodeList);
 	}
 
@@ -103,11 +102,9 @@ module Planner {
 				dState = null;
 			}else{
 				dState.stacks[parent.arm][dState.stacks[parent.arm].length]=dState.holding;
-				//dState.stacks[parent.arm].push(dState.holding);
 				dState.holding = null;
 			}
 			ans.push(rState, lState, pState, dState);
-			//console.log("ans............", ans);
 			return ans;
 		}
 
@@ -227,6 +224,12 @@ module Planner {
 			if(goal[i][0].rel == "holding"){
 				tmpTot = tar;
 				
+			}else if(goal[i][0].rel == "above" && goal[i][0].pol){
+				tmpTot = tar +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex) + findTar;
+				
+			}else if(goal[i][0].rel == "above" && goal[i][0].pol == false){
+				tmpTot = loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex) + findTar;
+				
 			}else{
 				tmpTot = tar + loc +  Math.max(tarIndex , locIndex)- Math.min(locIndex , tarIndex) + findTar;
 			}
@@ -239,7 +242,6 @@ module Planner {
 				minimum = tmpTot;
 			}
 		}
-		//console.log("min------------------------",minimum);
     	return minimum;
     }
 
