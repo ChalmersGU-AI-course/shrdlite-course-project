@@ -84,13 +84,14 @@ module.exports = function (G, start) {
         }
 
         // Check every neighbour and see if this path improves the distance to it.
-        for (var neigh of G.neighbours(elem)) {
+        for (var neigh_container of G.neighbours(elem)) {
+            var neigh = neigh_container.state;
             if (evaluated.has(neigh)) {
                 continue;
             }
 
             var old_distance = d.get(neigh, Infinity);
-            var new_distance = d.get(elem) + G.cost(elem, neigh);
+            var new_distance = d.get(elem) + neigh_container.cost;
             if (new_distance < old_distance) {
                 d.set(neigh, new_distance);
                 previous.set(neigh, elem);

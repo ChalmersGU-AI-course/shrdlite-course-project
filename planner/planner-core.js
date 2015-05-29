@@ -154,15 +154,9 @@ SearchGraph.prototype.neighbours = function* (state) {
                     break; // This captures the '-'
             }
         }
-        yield new_state;
+        yield {state: new_state, cost: 1};
     }
 };
-
-
-SearchGraph.prototype.cost = function(from, to) {
-    return 1;
-};
-
 
 
 // If one PDDL rule is satisfied for a state
