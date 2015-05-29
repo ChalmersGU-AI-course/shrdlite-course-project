@@ -14,11 +14,16 @@ Planner.plan = (interpretations, currentState) ->
   plan = interpretations[planIndex]
   console.log "The interpretation (" + planIndex + ") was chosen with heuristic " + minHeuristic
   goalRep = plan.intp
-  moves2 = GreedyBFS(currentState, goalRep, heuristicFunction,
+  start = new Date().getTime()
+  # Search with GBFS for 200 states 
+  movesToGoal = GreedyBFS(currentState, goalRep, heuristicFunction,
      nextMoves, getNextState, satisfaction, equality)
-  movesToGoal = Astar(currentState, goalRep, heuristicFunction,
+  # If no solution then switch to A*
+  if movesToGoal is -1
+    movesToGoal = Astar(currentState, goalRep, heuristicFunction,
      nextMoves, getNextState, satisfaction, equality)
- 
+  end = new Date().getTime()
+  console.log "Total search time: " + (end - start) + "ms"
   plan.plan = planInterpretation(movesToGoal)
   plans.push(plan)
   return plans
