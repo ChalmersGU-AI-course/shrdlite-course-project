@@ -143,11 +143,52 @@ should be weed out only the bad literals. The former case is what we describe as
 
 ####*/Planner.ts*
 
-TODO
+The Planner part is implemented in this file. It uses the AStar implementation
+we have from the first part and the colections data structures (just for the
+Dictionary data structure).
 
 #### Types and Ideas in Planner
 
-TODO
+In the planner part of the project, states of the current world are used together
+with the A* algorithm. States are modeled by the WorldDescription class:
+
+```
+class WorldDescription implements Astar.State {
+    //heuristical value for this state. Useful if you don't want to call
+    //the heuristical function each time
+    h: number; 
+    stacks: WorldObject[][];
+    crane: WorldObject;
+    ...
+}
+```
+
+This class also implements the following abstract methods, which are used
+in the A* algorithm:
+
+expand() - generates a list of neighbouring world states
+match(goal: PDDL) - checks if the respective state satisfies the given PDDL. The
+    eval function is used to check each literal depending on the relation, polarity and
+    arguments.
+heuristic() - explained below
+toString()
+
+The checkIfValid function checks if the given WorldDescription is a valid state
+by checking all the given rules.
+
+```
+function checkIfValid(state) 
+```
+
+When an interpretation is received from the Interpreter, the Planner creates a
+WorldDescription object based on the current world, and starts the A* search
+with it as a start state, and the interpretation PDDL as a goal. The A*
+checks different neighbours based on heuristic, and when it reaches a state
+which satisfies the PDDL, returns the path.
+
+Based on the path, movements are computed and passed along to the next project
+component.
+
 
 #### Heuristics
 
