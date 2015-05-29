@@ -74,7 +74,7 @@ module Shrdlite {
             world.printSystemOutput("The utterance is ambiguous.\nCan you please clarify ...");
             var s: string[] = [];
             interpretations.forEach((res, n) => {
-                s.push(Interpreter.interpretationToSentence(res, world.currentState));
+                s = s.concat(Interpreter.interpretationToSentence(res, world.currentState));
             });
 						//TODO: very ugly ;)
 						return ["Please select ..."].concat(s);
