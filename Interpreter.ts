@@ -114,12 +114,15 @@ module Interpreter {
     //Checks that if the "the" quantifier is used, it only matches to one object and in that case returns false
     function checkTheTheAmbiguity(ent :Parser.Entity, matching : string[], state : WorldState) : boolean {
         if(ent.quant === "the" && matching.length>1){
-                var errString = "Object not unique, did you mean ";
+                var errString = "Object not unique, did you mean the ";
                 for(var i = 0; i < matching.length; ++i){
                     var object = lookupLiteralArg(matching[i], state);
-                    errString = errString +" "+ printObject(object) +" or";
+                    errString = errString +" "+ printObject(object);
+                    if (i < matching.length-1){
+                        errString = errString + " or the "
+                    }
                 }
-                throw new Interpreter.Error(errString);
+                throw new Interpreter.Error(errString + "?");
             }
         return false;
     }

@@ -175,7 +175,11 @@ function DescribeTarget(literal: Interpreter.Literal, world: WorldState): string
 function DescribeRel(rel: string): string {
 	switch (rel) {
 		case "ontop":
-		return "ontop of";
+			return "on top of";
+		case "rightof":
+			return "to the right of";
+		case "leftof":
+			return "to the left of"
 	}
 	return rel;
 }
