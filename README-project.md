@@ -39,10 +39,10 @@ Except for the notes above, we are pretty happy with how things are working.
 We also added a new relation "containing", which is the opposite of "inside".
 
 ## List of new files
-AmbiguityResolve.ts - Ambiguity resolve code.
-Astar.ts - the A\* implementation.
-Planalyzer.ts - The component creating the descriptions of the plans.
-README-project.md - This file.
-WorldAStar.ts - Goal function and heuristic function for the Shrdlite world.
-WorldNode.ts - The node used in the graph A\* implementation for the Shrdlite world. Contains neighbour functions.
-WorldRules.ts - Rules describing how the world works, e.g. what can be placed on top of other objects and when a relative match is satisfied.
+* `AmbiguityResolve.ts` - Ambiguity resolve code.
+* `Astar.ts` - the A\* implementation.
+* `Planalyzer.ts` - The component creating the descriptions of the plans.
+* `README-project.md` - This file.
+* `WorldAStar.ts` - Goal function and heuristic function for the Shrdlite world.
+* `WorldNode.ts` - The node used in the graph A\* implementation for the Shrdlite world. Contains neighbour functions.
+* `WorldRules.ts` - Rules describing how the world works, e.g. what can be placed on top of other objects and when a relative match is satisfied.
