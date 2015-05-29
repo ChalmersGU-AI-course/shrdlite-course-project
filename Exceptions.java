@@ -52,10 +52,6 @@ heuristic/Heuristic.ts
 
 
 4. Half-finished and/or strange/unexpected behaviour
-- Every other time when asking it to pick up a object, it will simply put down
-  the object on the left most valid placement, and then move the arm to the right
-  most position and pick up the object in that column (if any).
-  
 - The heuristics is (in some cases) not admissable
 
 - If there are three boxes and two balls and it is told to "put all balls in all boxes"
