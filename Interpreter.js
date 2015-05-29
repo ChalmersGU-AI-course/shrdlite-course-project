@@ -12,6 +12,9 @@ Interpreter.interpret = function(parses, currentState) {
             console.log("Interpreter exception: " + err);
         }
     }
+    if (ret.length === 0) {
+        throw new Interpreter.Error("Ambigious query, please be more precise.");
+    }
     return ret;
     // throw new Interpreter.Error("Found no interpretation");
     // return [[{rel: 'ontop', item: 'e', oneof: ['k']}]];
