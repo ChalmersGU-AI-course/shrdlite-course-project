@@ -13,11 +13,9 @@ Interpreter.interpret = function(parses, currentState) {
         }
     }
     if (ret.length === 0) {
-        throw new Interpreter.Error("Ambigious query, please be more precise.");
+        throw new Interpreter.Error("Ambiguous query, please be more precise.");
     }
     return ret;
-    // throw new Interpreter.Error("Found no interpretation");
-    // return [[{rel: 'ontop', item: 'e', oneof: ['k']}]];
 };
 
 
