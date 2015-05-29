@@ -1,130 +1,32 @@
-The Shrdlite course project
+The Shrdlite Qthulu project
 ============================
 
-Shrdlite is a programming project in Artificial Intelligence, a course given 
+Shrdlite is a programming project in Artificial Intelligence, a course given
 at the University of Gothenburg and Chalmers University of Technology.
 For more information, see the course webpages:
 
 - <http://www.cse.chalmers.se/edu/course/TIN172/>
 
-The goal of the project is to create an interpreter and a planner so that
-a person can control a robot in a blocks world to move around objects,
-by giving commands in natural language.
+The goal of the project was to create an interpreter and a planner so that a person can control a robot in a block-based world to move objects around, by giving commands in natural language.
 
-To make the project more interesting, there is a web-based graphical 
-interface from which the user can interact with the blocks world.
+There is a web-based graphical interface from which the user can interact with the blocks world.
 
-The interface is written in TypeScript (which compiles into Javascript),
-and it can be run in several different modes:
+The interface is written in TypeScript (which compiles into Javascript), and it can be run in several different modes:
 
 - as a HTML web application, using SVG animations for displaying the world
 
 - as a text application, using ANSI graphics for displaying the world
-  (requires an ASNI-capable terminal, and that Node.JS is installed)
+  (requires an ANSI-capable terminal, and that Node.JS is installed)
 
 - as an offline text application, where input is provided at the command line
   (requires that Node.JS is installed, but nothing of the terminal)
 
-To be able to run the system you need to install Node.JS and TypeScript.
-Do that. Now.
-
-
-What is already implemented and what is missing
-------------------------------------------------
-
-The natural language parser is already implemented using the 
-[Nearley parsing library] (https://github.com/Hardmath123/nearley).
-
-Furthermore, there are three different implementations of the blocks
-world: the SVGWorld, the ANSIWorld and the simple TextWorld.
-
-What is not implemented correctly is the natural language interpreter
-and the robot planner. What you are given are stubs that return
-a dummy interpretation resp. a dummy plan. Your goal is to implement
-the interpreter and the planner so that the robot behaves as it should.
-
-
-Compiling to Javascript or using Ajax CGI
-------------------------------------------
-
-The preferred way to implement this is to write your programs in a 
-language that can be compiled directly into Javascript, such as
-TypeScript. The advantage with this is that you can use
-all three ways of interacting (web, text and offline), and that there's
-much less overhead when running. The (possible) disadvantage is that 
-you cannot use any programming language.
-
-
-Using TypeScript
------------------
-
-TypeScript is a typed superset of JavaScript that compiles to plain JavaScript.
-It is open-source and not specific to any browser or operating system.
-(And it's developed by Microsoft...)
-
-For information about the language, please visit the official site:
-
-- <http://www.typescriptlang.org/>
-
-### Using another language that can be compiled to Javascript
-
-The surrounding code for the Shrdlite project is all written in TypeScript,
-which is an argument for continuing with that language. But there are other
-alternatives that should be possible to use, such as:
-
-- [CoffeeScript](http://coffeescript.org) is like a more readable version 
-  of Javascript, with a very simple one-to-one translation into Javascript.
-
-- [PureScript](http://www.purescript.org) is very inspired from Haskell, with 
-  static types, higher-order functions and Haskell-like syntax.
-
-Using Ajax CGI and a local web server
---------------------------------------
-
-(Note: you don't need this if you don't use the CGI approach)
-
-If you really don't want to implement in TypeScript (or JavaScript or CoffeeScript or ...), 
-you can create a CGI script that the HTML file communicates with.
-To be able to use this, and to make the following minor change to the file `shrdlite.html`:
-
-- comment the line importing the file `shrdlite-html.js`, and
-  instead uncomment the line importing the file `shrdlite-ajax.js`
-
-To be able to run the graphical interface you need a web server. 
-There are several options (a very common one is Apache), but for this
-project it is enough to use Python's built-in server. 
-
-### Using the Python 3 web server
-
-For this you need to have Python 3 installed. To start the server, 
-just run this from the command line, from the same directory as the 
-file `shrdlite.html`:
-
-    python3 -m http.server --cgi 8000
-
-Now let the webserver keep running and browse to any of these addresses:
-
-- <http://localhost:8000/shrdlite.html>
-- <http://127.0.0.1:8000/shrdlite.html>
-- <http://0.0.0.0:8000/shrdlite.html>
-
-Your CGI script has to be executable and reside in the `cgi-bin` directory.
-There is an example dummy CGI Python 3 script in the file `shrdlite_cgi.py`.
-
-### Using another programming language via CGI
-
-If you want to use another language that Python, you can either call the other
-language from within Python, or use another web server. E.g., if you want to 
-use Haskell, there are lots of opportunities (such as Happstack or Snap).
-
-Note that if you choose to use another web server, you have to do some changes 
-in the file `shrdlite-ajax.ts`, depending on your choice of server.
-
-
-Additional information
+How to compile
 -----------------------
 
-There is a Makefile if you want to use the GNU Make system. Here's what it can do:
+To be able to run the system you need Node.JS and TypeScript.
+
+You can build the different targets in the project using the provided Makefile:
 
 - `make clean`: Removes all auto-generated Javascript files
 - `make all`: Calls TypeScript and Closure for each target
@@ -132,71 +34,118 @@ There is a Makefile if you want to use the GNU Make system. Here's what it can d
   Calls TypeScript and Closure for the given target,
   i.e., it compiles the file `shrdlite-X.ts` into `shrdlite-X.js`
 
-### Data structures
+### Interesting example utterances
 
-You probably want to use some kind of collection datatype (such as a heap
-and/or priority queue), so here are two possible TypeScript libraries:
+After performing `make html` one can open the shrdlite.html file and start entering commands. Some interesting examples for the complex world can be:
 
-- [TypeScript-STL] (https://github.com/vovazolotoy/TypeScript-STL)
-- [typescript-collections] (https://github.com/basarat/typescript-collections)
+- put the box beside a pyramid
+- grasp an object on the floor
+- put a ball above the red plank
+- put an object that is under a box on a plank
+- put the red plank left of the yellow brick
+- put the small ball in a box on the floor
 
-If you're using another language (such as Haskell or Java), please see the 
-public libraries of that language.
+Some cases that are correctly aborted by the Interpreter:
 
-### Using JavaScript modules in TypeScript
+- grasp the floor
+- put an object under the floor
+- put an object above a ball
+- put a large object above a small object
 
-If you want to use standard JavaScript libraries in TypeScript, you have to
-have a TypeScript declaration file for that library. 
-The [DefinitelyTyped library] (https://github.com/borisyankov/DefinitelyTyped)
-contains declaration files for several libraries, such as the following two:
+Implemented extensions
+------------------------------------------------
 
-- `node.d.ts`
-- `jquery.d.ts`
+### Improved heuristics
 
-### JavaScript chart parser
+The interpretation, which is of a Disjunctive Normal Form, is broken down into atoms and the heuristic for each atom is computed. When we have `a && b` we take the maximum of the heuristic for `a` and `b` since both must be fulfilled. When we have `a || b` we take the minimum heuristic since we only need to achieve one of the goals. If the atomic heuristic is admissible, the combined heuristic is also admissible.
 
-The parser is generated by [Nearley] (http://github.com/Hardmath123/nearley).
-The grammar is in the file `grammar.ne`, and it is compiled into the 
-Javascript file `grammar.js`. You don't have to install Nearley if you 
-don't plan to make any changes in the grammar.
+The atomic heuristic is calculated slightly differently depending on which command has been given but it generally consists of three parts:  
+- `arm cost`
+- `above cost`
+- `drop cost`
+
+If we want to move object `a` to the location `b`, the `arm cost` is the arm distance to `a` plus the distance from `a` to `b`. That is the minimum number of `l`/`r` actions we need to get the arm to the right stack both to get `a` and deliver `a` to its place.
+
+The `above cost` looks at how many objects are above the wanted target or location. For each object that is blocking the way, we add a cost of 4: `p, l, d, r`. This is admissible since it ignores the fact that not all objects can support any other object and it will at least require these 4 actions to move the object somewhere else.
+
+The `drop cost` is zero if the arm is not holding anything. If we intend to drop the object at the current stack, the drop cost is 1 for simply dropping it. In the case that we want to drop the thing somewhere else and come back we give a cost of 3: `l, d, r`. There is also a case when we want to drop it somewhere else and not come back, in which case we give a cost of 2: `l, d`.
+
+Note that when we want to drop an object at the current stack and the object is neither `a` or `b`, the cost of moving the arm back to the right position is counted in the `arm cost`; that's why we only return 1 instead of 2 for that case.
+
+The implementations of all heuristics can be found in the file `Heuristics.ts`.
+
+### IDA\*
+
+Iterative Deepening A\* was also implemented. It does take longer time but still finds the optimal solution. The advantage lies in using less memory. In order to use IDA\* instead of A\*, one has to change it in `Planner.ts` at line 62.
+
+### Clarification questions on ambiguity
+
+There are two types of ambiguity. The first one is with the `the` quantifier, for example `grasp the object`. If there are several objects that could fit the object description, the system enters a state where it asks the user to specify which object is meant. In this case, a list of possible candidates to choose from is printed. The user can then add more information such as `red`. If the new information is not sufficient he can provide more information such as `small` or `ball`. When sufficient information has been gathered, the system performs the action. If the user enters a completely new command while the program is waiting for an ambiguity clarification, the system stops asking for more details and resolves the newly entered command instead. This way, there is no risk for the user getting stuck in a loop for an unwanted command.
+
+The other type of ambiguity comes from a shift/reduce conflict in the grammar. The typical example would be `put the small ball in a box on the floor`. The box in this sentence can either be parsed as the current location of the ball or as the target location for the ball. Our system investigates both possibilities and rules out any that is inconsistent with the current state of the world. If both have valid interpretations, the system calculates both and picks the shortest one.
+
+These two ambiguities are raised in Interpreter.ts (see line 390 for first type and line 42 for second type of ambiguities) by updating current state of world. Additional information is kept in worldstate fields.(see line 17-20 of World.ts for detail). 
+
+Due to the need of interaction (namely side effects) and memorising past command for command refinement, the implementation of the ambiguity handling is a bit spread out, but is found mainly in `Interpreter.ts` and `Shrdlite.ts`.  
+
+### Known issues/bugs
+
+There are currently two unsolved issues, both of which has to do with resolving ambiguity:
+
+**disambiguity system doesn't work on "loc"**  
+The current disambiguity system works incrementally to refine which object the user is referring to. However, we still don't have the same system working for the "loc" field. The major reason for this is that both "ent" and "loc" can contain ambiguities, and we wanted to prove that refinement can be achieved and so experimented only on "ent" to reduce confusion.
+Therefore, in some special cases, the user might type in some refinements on "loc" conflicting "ent" ambiguity causing the system to crash (resulting in an uncaught error so that the world must be reset).
+
+There is still a possibility for the user to update the "loc" field. Since we always try to ask the original parser to parse an utterance before using our own parser, a complete command from the user can disambiguate both "ent" and "loc". The user will then not experience a crash, but will instead get repeated questions until the command has been fully specified.
+
+**complex world: `put the pyramid under a table on the large table`**  
+This one has a parse ambiguity but the system seems to pick the wrong one. We would want it to interpret it as
+
+```
+put the pyramid (that is under a table) on the large table
+```
+
+which has a valid interpretation, instead of
+
+```
+put the pyramid under a table (that is on the large table)
+```
+
+which has no valid interpretation no matter which pyramid you choose.
 
 
-List of files
---------------
-
-BSD Makefile for automatically creating `.js` files from `.ts` files:
-- `Makefile`
-
-Main browser files:
-- `shrdlite.html`, `shrdlite.css`
-
-Wrapper files for the browser-based interfaces:
-- `shrdlite-html.ts`, `shrdlite-ajax.ts`
-
-Wrapper files for the Node.JS-based interfaces:
-- `shrdlite-ansi.ts`, `shrdlite-offline.ts`
+Description of source files
+---------------------------
 
 Main TypeScript module:
-- `Shrdlite.ts`
 
-TypeScript interfaces and classes for the different implementations of the blocks world:
-- `World.ts`, `SVGWorld.ts`, `TextWorld.ts`, `ANSIWorld.ts`, `ExampleWorlds.ts`
+- `Shrdlite.ts`  
+  Some state has been added here to help solve the ambiguity problem.
 
-TypeScript modules for parsing, interpretation and planning:
-- `Parser.ts`, `Interpreter.ts`, `Planner.ts`
+Interpretation module:
 
-Grammar files used by the Nearley chartparser:
-- `grammar.js`, `grammar.ne`
+- `Interpreter.ts`  
+  Attempts to interpret what the user really means, which includes resolving ambiguities. This module either outputs a non-empty list of interpretations that are valid in the current world, or an error that no interpretation was valid.
 
-Example CGI script that is called by the Ajax web interface:
-- `cgi-bin/shrdlite_cgi.py`
+Generic search modules:
 
-TypeScript declaration files for non-TypeScript libraries:
-- `lib/jquery.d.ts`, `lib/node.d.ts`
+- `Astar.ts`  
+  Contains interfaces for representations of heuristic search as well as the A\* algorithm.
 
-External Javascript libraries:
-- `lib/jquery-1.11.0.min.js`, `lib/nearley.js`
+- `IDAstar.ts`  
+  Reuses the representations found in `Astar.ts` to implement the IDA\* algorithm.
 
-Assorted documentation (currently only the TypeScript language definition):
-- `doc`
+Modules for planning:
 
+- `Planner.ts`  
+  Calculates a plan for each of the valid interpretations. Converts the interpretation into a goal function that is passed to the chosen search algorithm together with a cost function and a neighbour function.
+
+- `Heuristics.ts`  
+  Computes a good heuristic function for a certain interpretation, which is passed by the Planner to the search algorithm.
+
+- `Position.ts`  
+  Contains interfaces and functions that are useful in both the Planner and the Heuristics.
+
+Basarat's collections library for Typescript:
+
+- `lib/collections.ts`

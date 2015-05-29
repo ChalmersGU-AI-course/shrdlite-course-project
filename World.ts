@@ -1,3 +1,4 @@
+///<reference path="Parser.ts"/>
 
 // Interface definitions for worlds
 
@@ -13,6 +14,9 @@ interface WorldState {
     arm: number;
     objects: { [s:string]: ObjectDefinition; };
     examples: string[];
+    status :string[];
+    ambiguousObjs : [Parser.Object[]]; 
+    previousCmd : Parser.Result[];
 }
 
 interface World {

@@ -38,18 +38,18 @@ $(function(){
 
 // Adapted from: http://www.openjs.com/scripts/events/exit_confirmation.php
 function goodbye(e) {
-	if(!e) e = window.event;
-	// e.cancelBubble is supported by IE - this will kill the bubbling process.
-	e.cancelBubble = true;
+        if(!e) e = window.event;
+        // e.cancelBubble is supported by IE - this will kill the bubbling process.
+        e.cancelBubble = true;
 
     // This is displayed in the dialog:
-	e.returnValue = 'Are you certain?\nYou cannot undo this, you know.'; 
+        e.returnValue = 'Are you certain?\nYou cannot undo this, you know.'; 
 
-	// e.stopPropagation works in Firefox.
-	if (e.stopPropagation) {
-		e.stopPropagation();
-		e.preventDefault();
-	}
+        // e.stopPropagation works in Firefox.
+        if (e.stopPropagation) {
+                e.stopPropagation();
+                e.preventDefault();
+        }
 }
 window.onbeforeunload = goodbye;
 

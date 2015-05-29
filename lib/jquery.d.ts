@@ -308,8 +308,8 @@ interface JQueryPromiseCallback<T> {
 }
 
 interface JQueryPromiseOperator<T, R> {
-	(callback: JQueryPromiseCallback<T>, ...callbacks: JQueryPromiseCallback<T>[]): JQueryPromise<R>;
-	(callback: JQueryPromiseCallback<T>[], ...callbacks: JQueryPromiseCallback<T>[]): JQueryPromise<R>;
+        (callback: JQueryPromiseCallback<T>, ...callbacks: JQueryPromiseCallback<T>[]): JQueryPromise<R>;
+        (callback: JQueryPromiseCallback<T>[], ...callbacks: JQueryPromiseCallback<T>[]): JQueryPromise<R>;
 }
 
 /**
@@ -322,28 +322,28 @@ interface JQueryPromise<T> {
      * @param alwaysCallbacks1 A function, or array of functions, that is called when the Deferred is resolved or rejected.
      * @param alwaysCallbacks2 Optional additional functions, or arrays of functions, that are called when the Deferred is resolved or rejected.
      */
-	always: JQueryPromiseOperator<any, T>;
+        always: JQueryPromiseOperator<any, T>;
     /**
      * Add handlers to be called when the Deferred object is resolved.
      * 
      * @param doneCallbacks1 A function, or array of functions, that are called when the Deferred is resolved.
      * @param doneCallbacks2 Optional additional functions, or arrays of functions, that are called when the Deferred is resolved.
      */
-	done: JQueryPromiseOperator<T, T>;
+        done: JQueryPromiseOperator<T, T>;
     /**
      * Add handlers to be called when the Deferred object is rejected.
      * 
      * @param failCallbacks1 A function, or array of functions, that are called when the Deferred is rejected.
      * @param failCallbacks2 Optional additional functions, or arrays of functions, that are called when the Deferred is rejected.
      */
-	fail: JQueryPromiseOperator<any, T>;
+        fail: JQueryPromiseOperator<any, T>;
     /**
      * Add handlers to be called when the Deferred object generates progress notifications.
      * 
      * @param progressCallbacks A function, or array of functions, to be called when the Deferred generates progress notifications.
      */
-	progress(progressCallback: JQueryPromiseCallback<T>): JQueryPromise<T>;
-	progress(progressCallbacks: JQueryPromiseCallback<T>[]): JQueryPromise<T>;
+        progress(progressCallback: JQueryPromiseCallback<T>): JQueryPromise<T>;
+        progress(progressCallbacks: JQueryPromiseCallback<T>[]): JQueryPromise<T>;
 
     /**
      * Determine the current state of a Deferred object.
@@ -462,7 +462,7 @@ interface JQueryDeferred<T> extends JQueryPromise<T> {
      */
     progress(progressCallback: JQueryPromiseCallback<T>): JQueryDeferred<T>;
     progress(progressCallbacks: JQueryPromiseCallback<T>[]): JQueryDeferred<T>;
-	
+        
     /**
      * Call the progressCallbacks on a Deferred object with the given args.
      * 
