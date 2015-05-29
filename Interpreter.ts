@@ -63,23 +63,31 @@ module Interpreter {
     function clarifyParseTree(parse : Parser.Result) : string{
         //If entety and target location is defined?
         return parse.prs.cmd +" "+ parse.prs.ent.quant +" "+ 
-               clarifyRecursive(parse.prs.ent.obj) +" TO " + parse.prs.ent.quant +" "+ clarifyRecursive(parse.prs.loc.ent.obj); //Add destination /other half of tree? this should be recirsive?
+               clarifyRecursive(parse.prs.ent.obj, parse.prs.ent.quant) +" TO " + parse.prs.loc.ent.quant +" "+ clarifyRecursive(parse.prs.loc.ent.obj, parse.prs.loc.ent.quant); //Add destination /other half of tree? this should be recirsive?
     }
-    function clarifyRecursive(object: Parser.Object) : string{
+    function clarifyRecursive(object: Parser.Object, quant : string) : string{
         var output = "";
+        var isPlural = false;
+        if (quant === "all") {
+            var isPlural = true;
+        }
         //if object is relative to something
         if(object.loc){
-            return printObject(object.obj) + " THAT IS " + object.loc.rel + " " +
-                   object.loc.ent.quant + " " + clarifyRecursive(object.loc.ent.obj);
+            var is = "is ";
+            if (isPlural) {
+                var is = "are "; 
+            }
+            return printObject(object.obj, isPlural) + " THAT " + is + object.loc.rel + " " +
+                   object.loc.ent.quant + " " + clarifyRecursive(object.loc.ent.obj, object.loc.ent.quant);
             //add object "that is " clarifyRecursive(location.entity.object)
         }else if(object.obj){
-            return clarifyRecursive(object);
+            return clarifyRecursive(object, quant);
         }else if(object){
-            return printObject(object);
+            return printObject(object, isPlural);
         }
     }
     //Returns a nice formated string of an object
-    function printObject(object: Parser.Object) : string{
+    function printObject(object: Parser.Object, isPlural : boolean = false) : string{
         var output = "";
         if(object.size){
             output = output + object.size +" ";
@@ -87,8 +95,15 @@ module Interpreter {
         if(object.color){
             output = output + object.color +" ";
         }
-        if(object.form){
-         output = output + object.form +" ";
+        if(object.form) {
+            var form = object.form;
+            if (form === "anyform" ) {
+                form = "object";
+            }
+            if (isPlural) {
+                form = form + "s";
+            }
+            output = output + form +" ";
         }
         if(object.loc){
             output = output + object.loc.rel +" ";
