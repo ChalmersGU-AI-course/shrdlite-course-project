@@ -1,5 +1,4 @@
-
-readme AI - OnFire 
+readme AI - OnFire
 
 Hello,
 
@@ -59,7 +58,7 @@ the arguments to the function are,
  - current state which is a worldState
  - goal which is a list of lists of pddl goals.
 
-The return statetment is a number corresponding to the heuristic value for the worldstate.
+The return statement is a number corresponding to the heuristic value for the worldstate.
 
 For each goal it finds the objects that matches the goal in the stacks in the worldstate.
 
@@ -70,13 +69,13 @@ We also add a penalty of one for each floor between the target and goal.
 
 If holding is the goal then we just take height of the stack as penalty and ignore location.
 
-We have also added a arm penalty that adds more points if the arm is not holding the target and is dependent on how far from the target the arm is. more points if the arm is faar from the target.
+We have also added a arm penalty that adds more points if the arm is not holding the target and is dependent on how far from the target the arm is. more points if the arm is far from the target.
 
 
 ##Strange Behaviour ######################################
 
 for example in medium world if we use the following command.
-- Put the green plank left of the blue box.
+- Put the green plank right of the blue box.
 Our shrdlite picks up the white ball and moves it unnecessarily but it seems to be concentrated to the left command. Most likely it has something to do with the arm penalty in the heuristic.
 
 
@@ -84,7 +83,4 @@ Our shrdlite picks up the white ball and moves it unnecessarily but it seems to 
 
 It was a fun project!!
 But a lot to do....
-
-
-
 
