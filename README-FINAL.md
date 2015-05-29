@@ -153,8 +153,34 @@ TODO
 
 #### Heuristics
 
-- how your A* planning heuristics work, and where in the code we can find it
-TODO
+- Our heuristic is implemented in the Planner module and calculates a
+  non-admisible heuristical distance between a state and a goal in
+  PDDL-form. A PDDL is a disjuction of conjunctions of literals, where
+  each literal has a relationship, a number of arguments and can be
+  negated. For each parameter of the disjuction, we calculate a
+  heuristical value which is the sum of the heuristical values of all
+  contained literals. The heuristical value of each literal depends on
+  its relationship. The following functions are implemented:
+-- inside/ontop: if x should be ontop/inside of y, we have to remove all
+  things above x and y, so the heuristic is the number of objects above
+  x and y
+-- above/leftof/rightof/holding: if x should be
+  above/leftof/rightof y or the crane should hold x, we return the
+  number of objects above of x, which must be removed.
+-- under: if x should be under y, we return the number of objects above
+  of y
+-- beside: if x should be beside y, we return the minimum of objects
+  over x and y
+
+In the end, we return the minimum heuristical value of all disjuncted
+parameters. 
+
+This heuristic is can overestimate the number of moves, for example if
+  one stack is used in more than one relationship, so its objects are
+  counted multiple times. This can result in PDDLs for which our program
+  returns a path which is longer than the optimal one, but we think this
+  will occur very rare, and a easy and fast heuristic is more import and
+  than getting always the optimal path.
 
 ## Extensions
 
