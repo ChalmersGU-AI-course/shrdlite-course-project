@@ -11,17 +11,17 @@ module AStar {
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     // Types
     //TODO create a separate version with previous and such
-    export class Node<T>  {
+    export class Node  {
         //TODO remove lavel?
-        label: T;
-        neighbours: Edge<T>[];
+        label: PddlWorld;
+        neighbours: Edge[];
         cost:number;
         heuristic: number;
-        previous: Node<T>;
+        previous: Node;
         action: string;
         visited: boolean;
         
-        constructor (label:T, neighbours:Edge<T>[]=[], cost:number=Infinity, previous:Node<T> = null, action:string="") {
+        constructor (label:PddlWorld, neighbours:Edge[]=[], cost:number=Infinity, previous:Node = null, action:string="") {
             this.label = label;
             this.neighbours = neighbours;
             this.cost = cost;
@@ -32,7 +32,7 @@ module AStar {
 
         // Convenience function for creating many nodes.
         // Sets all neighbour lists to []
-        public static createNodes<K>(data : [[string,number]]) : Node<K>[] {
+        public static createNodes(data : [[PddlWorld,number]]) : Node[] {
             var nodes = [];
             for (var key in data) {
                 nodes.push(new Node(data[key][0], [], data[key][1]));
@@ -41,12 +41,12 @@ module AStar {
         }
     }
 
-    export class Edge<T> {
-        start : Node<T>;
-        end : Node<T>;
+    export class Edge {
+        start : Node;
+        end : Node;
         cost: number;
         
-        constructor (start : Node<T>, end : Node<T>, cost : number) {
+        constructor (start : Node, end : Node, cost : number) {
             this.start = start;
             this.end   = end;
             this.cost  = cost;
@@ -55,16 +55,16 @@ module AStar {
 
         // Creates a new edge which goes in the opposite direction of this one.
         // If no cost is given, the new edge recieves the same cost as this one
-        public complement(cost? : number) : Edge<T> {
+        public complement(cost? : number) : Edge {
             if (!(_.isFinite(cost))) cost = 1;
             return new Edge(this.end, this.start, this.cost);
         }
 
         // Convenience function for creating many edges
-        public static createEdges<T>(data : [[Node<T>,Node<T>,number]]) : Edge<T>[] {
+        public static createEdges<T>(data : [[Node,Node,number]]) : Edge[] {
             var edges = [];
             for (var key in data) {
-                var e = new Edge<T>(data[key][0], data[key][1], data[key][2]);
+                var e = new Edge(data[key][0], data[key][1], data[key][2]);
                 edges.push(e);
             }
             return edges;
@@ -84,12 +84,12 @@ module AStar {
     //
     // Returns a path (array of nodes)
 
-    export function astar(s: Node<PddlWorld>, isGoal: (Node)=>boolean, heuristic: (Node)=>number) : Node<PddlWorld>[] {
+    export function astar(s: Node, isGoal: (Node)=>boolean, heuristic: (Node)=>number) : Node[] {
 
         console.log("sök!");
 
         //Function that the heap uses to order itself
-        var compFunc : collections.ICompareFunction<Node<PddlWorld>> = function(a:Node<PddlWorld>, b: Node<PddlWorld>){
+        var compFunc : collections.ICompareFunction<Node> = function(a:Node, b: Node){
             if(!a.heuristic) {
                 a.heuristic = heuristic(a);
             }
@@ -99,13 +99,13 @@ module AStar {
             return (a.cost+a.heuristic)-(b.cost+b.heuristic);
         };
 
-        var frontier : Heap<Node<PddlWorld>> = new Heap<Node<PddlWorld>>(compFunc);
+        var frontier : Heap<Node> = new Heap<Node>(compFunc);
 
         frontier.add(s);
 
         var foundGoal = false;
 
-        var done     : Node<PddlWorld>[]   = [];
+        var done     : Node[]   = [];
         // Start node's cost from start node is 0
         s.cost = 0;
         s.previous = null;
@@ -129,8 +129,8 @@ module AStar {
 
             // Possibly update neighbours of node we're visiting now
             for (var eKey in v.neighbours) {
-                var edge : Edge<PddlWorld> = v.neighbours[eKey]
-                 ,  n    : Node<PddlWorld> = edge.end;
+                var edge : Edge = v.neighbours[eKey]
+                 ,  n    : Node = edge.end;
 
                 // Add to frontier if not already visited
                 if (!n.visited)

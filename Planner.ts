@@ -73,7 +73,7 @@ module Planner {
             var secNodeState = putDownObject(state.pddlWorld, state.arm, state);
             
             if (secNodeState) {
-                secNode = new AStar.Node<PddlWorld>(secNodeState, [], Infinity, null, "d" + 1);
+                secNode = new AStar.Node(secNodeState, [], Infinity, null, "d" + 1);
             } else {
                 console.warn("Second node can't legally drop!");
             }
@@ -81,7 +81,7 @@ module Planner {
             // Try to lift something
             var secNodeState = liftObject(state.pddlWorld, state.arm);
             if (secNodeState) {
-                secNode = new AStar.Node<PddlWorld>(secNodeState, [], Infinity, null,"p"+1);
+                secNode = new AStar.Node(secNodeState, [], Infinity, null,"p"+1);
             } else {
                 console.warn("Second node can't legally pick!");
             }
@@ -90,15 +90,15 @@ module Planner {
         //Will hold all the created nodes
         //One of the dimensions is the "layers" of the node generation
         //The other dimension is the nodes within that layer
-        var nodes: AStar.Node<PddlWorld>[][] = [[]];
+        var nodes: AStar.Node[][] = [[]];
 
         // Create initial node
-        var startNode:AStar.Node<PddlWorld> = new AStar.Node<PddlWorld>(state.pddlWorld, [], Infinity, null);
+        var startNode:AStar.Node = new AStar.Node(state.pddlWorld, [], Infinity, null);
         getNeighbours(startNode);
 
         // If an action was possible in the current position, do it
         if (secNode) {
-            var eSnd = new AStar.Edge<PddlWorld>(startNode, secNode, 1);
+            var eSnd = new AStar.Edge(startNode, secNode, 1);
             startNode.neighbours.push(eSnd);
             getNeighbours(secNode);
         }
@@ -201,7 +201,7 @@ module Planner {
     // Creates a heuristic function which looks for a specific goal state
     // The heuristic function takes a node and returns a number which measures how close it is to the goal state
     function createHeuristicFunction(goalWorld:PddlLiteral[][]) {
-        return function(node:AStar.Node<PddlWorld>) : number {
+        return function(node:AStar.Node) : number {
             var world  = node.label
               , stacks = world.stacks
               , orList = goalWorld
@@ -311,7 +311,7 @@ module Planner {
     // Creates a goal function for a specific goal state
     // The goal function takes a node and returns true or false
     function createGoalFunction(goalWorld:PddlLiteral[][]) {
-        return function(node:AStar.Node<PddlWorld>) {
+        return function(node:AStar.Node) {
             var pddlWorld = node.label;
             var world = pddlWorld.rels;
             var done = false;
@@ -345,7 +345,7 @@ module Planner {
     }
 
     // Get the neighbours for a specific node
-    export function getNeighbours(oldNode:AStar.Node<PddlWorld>) {
+    export function getNeighbours(oldNode:AStar.Node) {
         var oldNodeWorld  = oldNode.label
             , armPos        = oldNodeWorld.arm;
         for(var j = 0; j<NUM_STACKS; j++) {
@@ -360,7 +360,7 @@ module Planner {
                     // We can't always lift - not if we lack objects!
                     var newerNodeWorld = liftObject(newNodeWorld, j);
                     if (newerNodeWorld) {
-                        newNode = new AStar.Node<PddlWorld>(newerNodeWorld, [], Infinity, null, dir+cost+"p"+1);
+                        newNode = new AStar.Node(newerNodeWorld, [], Infinity, null, dir+cost+"p"+1);
                     } else {
                         //console.warn("breaking the first commandment");
                     }
@@ -368,7 +368,7 @@ module Planner {
                     // Try to putDown. Will fail if move is illegal
                     var newerNodeWorld = putDownObject(newNodeWorld, j, WORLD_STATE);
                     if (newerNodeWorld) {
-                        newNode = new AStar.Node<PddlWorld>(newerNodeWorld, [], Infinity, null, dir+cost+"d"+1);
+                        newNode = new AStar.Node(newerNodeWorld, [], Infinity, null, dir+cost+"d"+1);
                     } else {
                         //console.warn("breakin the laaw");
                     }
@@ -376,7 +376,7 @@ module Planner {
             
                 // Check if performing action at current column was legal
                 if (newNode) {
-                    var edge = new AStar.Edge<PddlWorld>(oldNode, newNode, cost+1);
+                    var edge = new AStar.Edge(oldNode, newNode, cost+1);
                     oldNode.neighbours.push(edge); // Note: we don't want a return edge
                 }
             }

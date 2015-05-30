@@ -30,3 +30,5 @@ left/right   - We take the distance between the subjects and add 1 to it. We ret
 			   already true.
 
 beside       - We take the distance between the subjects and subtract 1 to it.
+
+The code that generates the heuristics can be found in the createHeuristicFunction in Planners.ts.
