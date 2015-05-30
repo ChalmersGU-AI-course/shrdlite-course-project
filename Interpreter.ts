@@ -74,22 +74,15 @@ module Interpreter {
         }
     }
 
-    // DEPRECATED
     export function interpretationToString(res : PddlLiteral[][]) : string {
-        // TODO: print human-readable sentence? Or at least add new function for that
         return res.map((lits) => {
             return lits.map((lit) => literalToString(lit)).join(" & ");
         }).join(" | ");
     }
 
-    // DEPRECATED
     export function literalToString(lit : PddlLiteral) : string {
         return (lit.pol ? "" : "-") + lit.rel + "(" + lit.args.join(",") + ")";
     }
-
-
-    // TODO: Don't use anywhere! 'Tis bad!
-    export interface Result extends Parser.Result {intp:PddlLiteral[][];}
 
     export class Error implements Error {
         public name = "Interpreter.Error";
@@ -105,11 +98,6 @@ module Interpreter {
         // Outer list: different interpretations
         // Inner list: different conditions for one interpretation, separated by OR.
         //             that is, either of may be true for the interpretation to be satisfied
-
-        // Log interesting things
-        console.log('state:',state);
-        console.log('stacks:', state.stacks);
-        console.log('cmd:',cmd);
 
         //workaround for incorrect command strings
         if(cmd.cmd === 'put'){
@@ -182,20 +170,6 @@ module Interpreter {
                 entitiesIntrprt = resolveAmb(entitiesIntrprt, 'objects', 'pick up');
                 interpretations = combineStuff(toIds(entitiesIntrprt), null, 'holding');
             }
-        }
-
-        else {
-            /*
-            var objectKeys : string[] = concat(state.stacks);
-            // Below: old code
-            var a = objectKeys[getRandomInt(objectKeys.length)];
-            var b = objectKeys[getRandomInt(objectKeys.length)];
-
-            var intprt : PddlLiteral[][] = [[
-                {pol: true, rel: "ontop", args: [a, "floor"]},
-                {pol: true, rel: "holding", args: [b]}
-            ]];
-            */
         }
 
         //console.log("returning",interpretations[0][0].slice(), interpretations[0][0]);
@@ -458,7 +432,6 @@ module Interpreter {
                 // TODO: test these
 
                 // "The floor" does in fact mean any floor tile
-                // TODO: change... parser?
                 if ((ent.quant === 'the') && (ent.obj.form === 'floor')) {
                     ent.quant = 'any';
                 }
