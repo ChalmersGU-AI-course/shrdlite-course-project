@@ -1,5 +1,5 @@
 ///<reference path="World.ts"/>
-///<reference path="lib/jquery.d.ts" />
+///<reference path="../lib/jquery.d.ts" />
 
 
 class SVGWorld implements World {
@@ -26,7 +26,10 @@ class SVGWorld implements World {
                 this.containers.userinput.val(userinput).focus();
             }
         });
-        this.containers.inputform.submit(() => this.handleUserInput.call(this));
+        this.containers.inputform.submit((e) => {
+          e.preventDefault();
+          this.handleUserInput.call(this)
+        });
         this.disableInput();
     }
 

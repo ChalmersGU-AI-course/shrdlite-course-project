@@ -34,7 +34,7 @@ module Shrdlite {
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
-            var parses : Parser.Result[] = Parser.parse(utterance);
+            var parses : Parser.Result[][][] = Parser.parse(utterance);
         } catch(err) {
             if (err instanceof Parser.Error) {
                 world.printError("Parsing error", err.message);
@@ -43,28 +43,34 @@ module Shrdlite {
                 throw err;
             }
         }
-        world.printDebugInfo("Found " + parses.length + " parses");
-        parses.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
+        world.printDebugInfo("Found " + parses.length + " alternative propositions, with respectively");
+        parses.forEach((andProp) => {
+            world.printDebugInfo("    "+andProp.length + " conjunctive propositions, with respectively");
+            andProp.forEach((prop) => {
+                world.printDebugInfo(prop.length + " parses");
+                prop.forEach((res, n) => {
+                    world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
+                });
+            });
         });
 
         try {
-            var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
+            var interpretations : Interpreter.Result = Interpreter.interpret(parses, world.currentState);
         } catch(err) {
             if (err instanceof Interpreter.Error) {
                 world.printError("Interpretation error", err.message);
                 return;
             } else {
+                world.printError("Exception");
                 throw err;
+                return;
             }
         }
-        world.printDebugInfo("Found " + interpretations.length + " interpretations");
-        interpretations.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
-        });
+        world.printDebugInfo("Found " + interpretations.intp.length + " interpretations");
+        world.printDebugInfo(Interpreter.interpretationToString(interpretations, world.currentState));
 
         try {
-            var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
+            var plan : Planner.Result = Planner.plan(interpretations, world.currentState);
         } catch(err) {
             if (err instanceof Planner.Error) {
                 world.printError("Planning error", err.message);
@@ -73,14 +79,8 @@ module Shrdlite {
                 throw err;
             }
         }
-        world.printDebugInfo("Found " + plans.length + " plans");
-        plans.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
-        });
-
-        var plan : string[] = plans[0].plan;
-        world.printDebugInfo("Final plan: " + plan.join(", "));
-        return plan;
+        world.printDebugInfo("Final plan: " + plan.plan.join(", "));
+        return plan.plan;
     }
 
 

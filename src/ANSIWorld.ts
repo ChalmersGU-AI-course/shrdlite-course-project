@@ -1,5 +1,5 @@
 ///<reference path="World.ts"/>
-///<reference path="lib/node.d.ts"/>
+///<reference path="../lib/node.d.ts"/>
 
 class ANSIWorld implements World {
 

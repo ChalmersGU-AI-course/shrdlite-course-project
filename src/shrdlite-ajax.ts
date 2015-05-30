@@ -1,7 +1,7 @@
 ///<reference path="Parser.ts"/>
 ///<reference path="SVGWorld.ts"/>
 ///<reference path="ExampleWorlds.ts"/>
-///<reference path="lib/jquery.d.ts" />
+///<reference path="../lib/jquery.d.ts" />
 
 // Replace this with the URL to your CGI script:
 var ajaxScript = "cgi-bin/shrdlite_cgi.py";
@@ -36,7 +36,7 @@ function ajaxInteractive(world : World) : void {
 function ajaxParseUtteranceIntoPlan(world : World, utterance : string) : string[] {
     world.printDebugInfo('Parsing utterance: "' + utterance + '"');
     try {
-        var parses : Parser.Result[] = Parser.parse(utterance);
+        var parses : Parser.Result[][][] = Parser.parse(utterance);
     } catch(err) {
         if (err instanceof Parser.Error) {
             world.printError("Parsing error: " + err.message);
@@ -45,9 +45,15 @@ function ajaxParseUtteranceIntoPlan(world : World, utterance : string) : string[
             throw err;
         }
     }
-    world.printDebugInfo("Found " + parses.length + " parses");
-    parses.forEach((res, n) => {
-        world.printDebugInfo("  (" + n + ") " + JSON.stringify(res.prs));
+    world.printDebugInfo("Found " + parses.length + " alternative propositions, with respectively");
+    parses.forEach((andProp) => {
+        world.printDebugInfo("    "+andProp.length + " conjunctive propositions, with respectively");
+        andProp.forEach((prop) => {
+            world.printDebugInfo(prop.length + " parses");
+            prop.forEach((res, n) => {
+                world.printDebugInfo("  (" + n + ") " + JSON.stringify(res.prs));
+            });
+        });
     });
 
     world.printDebugInfo('Calling interpreter/planner using AJAX');

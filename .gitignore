@@ -1,1 +1,7 @@
-shrdlite-*.js
+*.js
+dist/*
+!.gitkeep
+node_modules
+src/*.js
+*.json
+*.log

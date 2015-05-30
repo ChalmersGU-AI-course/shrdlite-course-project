@@ -1,25 +1,41 @@
+export PATH := node_modules/.bin:$(PATH)
 
 TARGETS = html ajax ansi offline
 
 .DELETE_ON_ERROR:
 
-.PHONY: help clean all $(TARGETS)
+.PHONY: help clean all $(TARGETS) start run_example FORCE
 
+DIST = dist
+SOURCE = src
+TSFILES = $(wildcard $(SOURCE)/*.ts)
 
-TSFILES = $(wildcard *.ts)
+FORCE:
 
 help:
-	@echo "make help | clean | all | $(TARGETS:%=% |) ..."
+	@echo "make help | clean | all | start | $(TARGETS:%=% |) ..."
 
 clean:
-	rm -f $(TSFILES:%.ts=%.js) *.map
+	rm -f $(DIST)/*.js
 
 all: $(TARGETS)
 
-$(TARGETS): %: shrdlite-%.js
+start: all
+	python -m SimpleHTTPServer 8001
 
-%.js: %.ts $(TSFILES)
+# start-offline: all
+# 	node dist/shrdlite-offline.js complex 3
+
+run_example: $(DIST)/astar_example.js FORCE
+	node --harmony dist/astar_example.js
+
+$(TARGETS): %: $(DIST)/shrdlite-%.js $(DIST)/grammar.js $(DIST)/AStar.js
+
+$(DIST)/%.js: $(SOURCE)/%.ts $(TSFILES)
 	tsc --out $@ $<
 
-grammar.js: grammar.ne
+$(DIST)/grammar.js: $(SOURCE)/grammar.ne
 	nearleyc $< > $@
+
+$(DIST)/astar_example.js: test/astar_example.ts $(TSFILES)
+	tsc --out $@ $<
