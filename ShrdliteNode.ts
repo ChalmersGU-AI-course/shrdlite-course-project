@@ -74,7 +74,7 @@ class ShrdliteNode implements GraphNode<number> {
         }
 
         //Large boxes cannot be supported by large pyramids.
-        if ((orig.size == "large" && orig.form == "box") && (dest.size == "large" && dest.size == "pyramid")) {
+        if ((orig.size == "large" && orig.form == "box") && (dest.size == "large" && dest.form == "pyramid")) {
             return false;
         }
 
