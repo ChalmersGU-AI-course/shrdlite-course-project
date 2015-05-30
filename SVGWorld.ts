@@ -172,44 +172,6 @@ class SVGWorld implements World {
         }
     }
 
- /*   public performPlan(plan, callback?) {
-        if (this.isSpeaking()) {
-            setTimeout(() => this.performPlan(plan, callback), this.animationPause * 1000);
-            return;
-        }
-        var planctr = 0;
-        var performNextAction = () => {
-            planctr++;
-            if (plan && plan.length) {
-                var item = plan.shift().trim();
-                var action = this.getAction(item);
-                if (action) {
-                    try {
-                        action.call(this, performNextAction);
-                    } catch(err) {
-                        this.printError(err);
-                        if (callback) setTimeout(callback, this.promptPause * 1000);
-                    }
-                } else {
-                    if (item && item[0] != "#") {
-                        if (this.isSpeaking()) {
-                            plan.unshift(item);
-                            setTimeout(performNextAction, this.animationPause * 1000);
-                        } else {
-                            this.printSystemOutput(item);
-                            performNextAction();
-                        }
-                    } else {
-                        performNextAction();
-                    }
-                }
-            } else {
-                if (callback) setTimeout(callback, this.promptPause * 1000);
-            }
-        }
-        performNextAction();
-    }*/
-
     public performPlan(plan, callback?) {
         if (this.isSpeaking()) {
             setTimeout(() => this.performPlan(plan, callback), this.animationPause * 1000);
@@ -221,13 +183,11 @@ class SVGWorld implements World {
             if (plan && plan.length) {
                 var item = plan.shift()
                 if (item.length == 2) { //Two actions
-                    var action1 = this.getAction([item[0].trim(),item[1].trim()+"2"]);
-                    //var action2 = this.getAction(item[1].trim()+"2");
+                    var action = this.getAction([item[0].trim(),item[1].trim()+"2"]);//the actions for the right arm end with 2
                 }
-                if (item.length == 2 && action1) {
+                if (item.length == 2 && action) {
                     try {
-                        action1.call(this, performNextAction);
-                        //action2.call(this, performNextAction);
+                        action.call(this, performNextAction);
                     } catch(err) {
                         this.printError(err);
                         if (callback) setTimeout(callback, this.promptPause * 1000);
@@ -309,7 +269,6 @@ class SVGWorld implements World {
 
     private getAction(act) {
         var actions = {n:this.doNothing,p:this.pick, d:this.drop, l:this.left, r:this.right, n2:this.doNothing,p2:this.pick2, d2:this.drop2, l2:this.left2, r2:this.right2};
-        //return actions[act.toLowerCase()];
         var a1 = actions[act[0].toLowerCase()].bind(this);
         var a2 = actions[act[1].toLowerCase()].bind(this);
         return function (callback?) {
@@ -323,6 +282,7 @@ class SVGWorld implements World {
         return 0; //doNothing
     }
     private left(callback?) {
+        //Move arm1 left
         if (this.currentState.arm1 <= 0) {
             throw "Already at left edge!";
         }
@@ -330,6 +290,7 @@ class SVGWorld implements World {
     }
 
     private right(callback?) {
+        //Move arm1 right
         if (this.currentState.arm1 >= this.currentState.stacks.length - 1) {
             throw "Already at right edge!";
         }
@@ -337,6 +298,7 @@ class SVGWorld implements World {
     }
 
     private drop(callback?) {
+        //Drop items from arm1
         if (!this.currentState.holding1) {
             throw "Not holding anything!";
         }
@@ -347,6 +309,7 @@ class SVGWorld implements World {
     }
 
     private pick(callback?) {
+        //Pick up items with arm1
         if (this.currentState.holding1) {
             throw "Already holding something!";
         }
@@ -355,6 +318,7 @@ class SVGWorld implements World {
     }
 
     private left2(callback?) {
+        //Move arm2 left
         if (this.currentState.arm2 <= 0) {
             throw "Already at left edge!";
         }
@@ -362,6 +326,7 @@ class SVGWorld implements World {
     }
 
     private right2(callback?) {
+        //Move arm2 right
         if (this.currentState.arm2 >= this.currentState.stacks.length - 1) {
             throw "Already at right edge!";
         }
@@ -369,6 +334,7 @@ class SVGWorld implements World {
     }
 
     private drop2(callback?) {
+        //Drop items from arm2
         if (!this.currentState.holding2) {
             throw "Not holding anything!";
         }
@@ -379,6 +345,7 @@ class SVGWorld implements World {
     }
 
     private pick2(callback?) {
+        //Pick up items with arm2
         if (this.currentState.holding2) {
             throw "Already holding something!";
         }
