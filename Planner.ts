@@ -236,9 +236,7 @@ module Planner {
                                 val = xDistance(world, obj1, obj2) - 1;
                             }
 
-                            //console.log("heuristik:",val);
                             return val;
-                            //return 0;
                         })
                 })
               , maxVals : number[] = _.map(vals, function(list) {return _.max(list)}) // only _.max breaks typing
@@ -255,10 +253,7 @@ module Planner {
     function xDistance(world : PddlWorld, obj1 : string, obj2 : string) {
         var stacks : string[][] = world.stacks;
 
-        console.log("xDistance",arguments);
-
-        if (obj1 === world.holding) {
-            console.log("holding :) 1");
+        if (obj1 === world.holding || obj1 === 'arm') {
             var obj1Idx = world.arm;
         } else {
             var obj1Idx = _.findIndex(stacks, function (stack) {
@@ -266,8 +261,7 @@ module Planner {
             });
         }
 
-        if (obj2 === world.holding) {
-            console.log("holding :) 2");
+        if (obj2 === world.holding || obj2 === 'arm') {
             var obj1Idx = world.arm;
         } else {
             var obj2Idx = _.findIndex(stacks, function (stack) {
