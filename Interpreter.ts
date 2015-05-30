@@ -56,7 +56,14 @@ module Interpreter {
 	export interface Position {x:number; y:number;}
 	export interface PosNode {pos:Position[]; rel:string;}
 
-	export function interpretationToSentence(res : Result, state : WorldState) : string[] {
+	/**
+	* Convert interpretations back to meaningful utterances enriched with context to solve disambiguities
+	*
+	* @param {Result} Result of Parsing and Interpreting
+	* @param {WorldState} a description of the current state of the world
+	* @return {string[]} array of string containing the utterances
+	*/
+	export function interpretationToUtterance(res : Result, state : WorldState) : string[] {
 		var l : string[] = [];
 		for (var i = 0; i < res.intp.length; i++) {
 			for (var j = 0; j < res.intp[i].length; j++) {
