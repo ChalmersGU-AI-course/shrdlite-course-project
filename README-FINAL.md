@@ -43,4 +43,9 @@ The following document is supposed to explain the final submission of the ShrdLi
 
 * the ambiguity check in the current form is a bit overambitious and will try to give suggestions solely based on the objects found in the Interpreter without regarding the original quantifiers, a potentially ambiguous example like _move all red objects above a yellow object on the floor_ will therefore spawn choices based on all the objects that fit the pattern without keeping the original **all** quantifier intact
 * the Interpreter will check the spatial relations for both the origin and the destination based on the current state, it will therefore disregard utterances like _move the white ball in the red box on the floor_ if there is no red box on the floor, although a human might interpret the goal in a way that one could first put the red box on the floor and then the white ball into it
-* Beside an object is, as explicity stated in the project page, left or right of an object.
+* beside an object is, as explicity stated in the project page, left or right of an object.
+
+## Planner
+### Heuristic function
+ * Can be found in ShrdliteNodeFilter
+ * The cost is the minimum number of objects above the object (or a variant of this depending on the relation between the objects)
