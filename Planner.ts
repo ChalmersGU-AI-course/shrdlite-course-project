@@ -13,6 +13,7 @@ module Planner {
     var WORLD_STATE;
 
     export function plan(interpretation : PddlLiteral[][], currentState : ExtendedWorldState) : string[] {
+
         var plan : string[] = planInterpretation(interpretation, currentState);
         if (plan) {
             return plan;
@@ -55,6 +56,15 @@ module Planner {
         state.pddlWorld.arm = state.arm;
         state.pddlWorld.holding = state.holding;
         state.pddlWorld.stacks = cloneStacks(state.stacks);
+
+        // xDistance test. can remove
+        //var stacks = state.stacks;
+        //console.log("stacks:",stacks);
+        //console.log("m to l:",xDistance(state.pddlWorld, "m", "l"));
+
+
+        console.log("stacks",state.pddlWorld.stacks);
+        console.log("inner stacks",state.pddlWorld.stacks[0]);
 
         var secNode;
         if(state.holding) {
@@ -204,7 +214,7 @@ module Planner {
                                 } else {
                                     return countObjectsOnTop(node.label, literal.args[0]) +
                                         countObjectsOnTop(node.label, literal.args[1]) +
-                                        xDistance(stacks, literal.args[0], literal.args[1]);
+                                        xDistance(world, literal.args[0], literal.args[1]);
                                 }
                             }
 
@@ -212,7 +222,7 @@ module Planner {
                                 if(checkWhichSide(stacks, literal.args[0], literal.args[1]) === literal.rel) {
                                     return 0;
                                 } else {
-                                    return xDistance(stacks, literal.args[0], literal.args[1]) +
+                                    return xDistance(world, literal.args[0], literal.args[1]) +
                                         _.min([countObjectsOnTop(node.label, literal.args[0]),
                                             countObjectsOnTop(node.label, literal.args[1])]);
                                 }
@@ -222,39 +232,61 @@ module Planner {
                                 if(checkWhichSide(stacks, literal.args[0], literal.args[1]) === literal.rel) {
                                     return 0
                                 } else {
-                                    return xDistance(stacks, literal.args[0], literal.args[1])+1;
+                                    return xDistance(world, literal.args[0], literal.args[1])+1;
                                 }
                             }
 
                             else if (literal.rel === 'beside') {
                                 var obj1 = literal.args[0]
                                   , obj2 = literal.args[1];
-                                return xDistance(stacks, obj1, obj2) - 1;
+                                return xDistance(world, obj1, obj2) - 1;
                             }
+
+                            //return 0;
                         })
                 })
               , maxVals : number[] = _.map(vals, function(list) {return _.max(list)}) // only _.max breaks typing
               , minVal  : number   = _.min(maxVals);
 
+
+            console.log("heuristic: returning",minVal);
             return minVal;
 
         }
-        
-        function xDistance(stacks : string[][], obj1 : string, obj2 : string) {
+
+    }
+
+    function xDistance(world : PddlWorld, obj1 : string, obj2 : string) {
+        var stacks : string[][] = world.stacks;
+
+        console.log("xDistance",arguments);
+
+        if (obj1 === world.holding) {
+            console.log("holding :) 1");
+            var obj1Idx = world.arm;
+        } else {
             var obj1Idx = _.findIndex(stacks, function (stack) {
                 return _.contains(stack, obj1);
             });
+        }
+
+        if (obj2 === world.holding) {
+            console.log("holding :) 2");
+            var obj1Idx = world.arm;
+        } else {
             var obj2Idx = _.findIndex(stacks, function (stack) {
                 return _.contains(stack, obj2);
             });
-            if (obj1Idx === -1 || obj2Idx === -1) {
-                return -1;
-            } else {
-                return Math.abs(obj1Idx-obj2Idx);
-            }
+        }
+
+        if (obj1Idx === -1 || obj2Idx === -1) {
+            console.log("xDistance: object(s) not found!",world, obj1, obj2);
+            return 0;
+        } else {
+            return Math.abs(obj1Idx-obj2Idx);
         }
     }
-    
+
     function countObjectsOnTop(world:PddlWorld, obj:string) {
         
         var count = 0;
