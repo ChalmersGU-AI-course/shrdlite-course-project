@@ -23,3 +23,6 @@ $(TARGETS): %: shrdlite-%.js
 
 grammar.js: grammar.ne
 	nearleyc $< > $@
+
+astar:
+	tsc --out collections.ts graph.ts astar.ts 

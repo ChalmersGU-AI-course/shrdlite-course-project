@@ -32,6 +32,7 @@ module Shrdlite {
     // - then it creates plan(s) for the interpretation(s)
 
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
+		var inputChoice : number;
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
             var parses : Parser.Result[] = Parser.parse(utterance);
@@ -50,6 +51,15 @@ module Shrdlite {
 
         try {
             var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
+			if(interpretations.length > 1)
+			{
+				world.printSystemOutput("What did you mean?");
+				interpretations.forEach((res, i) => {
+					world.printSystemOutput((i+1).toString() + ": " + Interpreter.interpretationToString(res));
+				});
+				while(!clarification()){};
+				interpretations = interpretations.splice(inputChoice,1);
+			}
         } catch(err) {
             if (err instanceof Interpreter.Error) {
                 world.printError("Interpretation error", err.message);
@@ -58,6 +68,19 @@ module Shrdlite {
                 throw err;
             }
         }
+		function clarification(utterance : string = "") : Boolean {
+			world.printDebugInfo("clarification");
+			var inputPrompt = "Choose the corresponding number.";
+			var nextInput = () => world.readUserInput(inputPrompt, clarification);
+            if (utterance.trim()) {
+				inputChoice = parseInt(utterance)-1;
+				world.printDebugInfo("utterance: " + utterance + ", inputChoice: " + inputChoice);
+				if(inputChoice >= 0)
+					return true;
+            }
+			nextInput();
+			return false;
+		}
         world.printDebugInfo("Found " + interpretations.length + " interpretations");
         interpretations.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
@@ -81,6 +104,8 @@ module Shrdlite {
         var plan : string[] = plans[0].plan;
         world.printDebugInfo("Final plan: " + plan.join(", "));
         return plan;
+		
+		
     }
 
 
@@ -98,5 +123,7 @@ module Shrdlite {
         }
         return plan;
     }
+	
+	
 
 }

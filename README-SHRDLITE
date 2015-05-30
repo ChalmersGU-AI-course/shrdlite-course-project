@@ -1,0 +1,21 @@
+Running the program
+-------------------
+Run 'make all' and open shrdlite.html in your browser.
+
+Extentions
+----------
+None
+
+Heuristics for A*
+-----------------
+The heuristics looks at the distance from the current position of the arm to the
+position of the targeted. Additionaly the heuristics also take into account any
+overlaying object when our goal is picking up or dropping objects.
+You can find the heuristics in Planner.ts.
+
+Stange behaviours
+-----------------
+We started implementing an extention for disambiguating interpretations of
+utterances but we did not finish it on time. This could possibly lead to some 
+stange behavior. Otherwise we have not seen any stange or unexpected behavior
+when running the program.
