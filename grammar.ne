@@ -36,6 +36,10 @@ function R(obj) {
 ## Grammar rules
 
 main --> will_you:? please:? command please:?  {% R(2) %}  
+main --> will_you:? please:? answer please:?  {% R(2) %}
+
+answer --> objectSG {% R({obj:0}) %}
+answer --> objectPL {% R({obj:0}) %}
 
 command --> take entity           {% R({cmd:"take", ent:1}) %}
 command --> move  it    location  {% R({cmd:"put", loc:2}) %}

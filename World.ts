@@ -1,4 +1,5 @@
-
+/// <reference path="collections.ts" />
+/// <reference path="Interpreter.ts"/>
 // Interface definitions for worlds
 
 interface ObjectDefinition {
@@ -9,10 +10,13 @@ interface ObjectDefinition {
 
 interface WorldState {
     stacks: string[][];
+    pddl: collections.Set<Interpreter.Literal>;
     holding: string;
     arm: number;
     objects: { [s:string]: ObjectDefinition; };
     examples: string[];
+    planAction: string; // l, r, p, d(the possible actions that got us into this state)
+    description: string;
 }
 
 interface World {
