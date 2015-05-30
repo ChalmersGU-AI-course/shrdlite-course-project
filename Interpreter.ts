@@ -50,7 +50,7 @@ module Interpreter {
 
 	export function interpretationToSentence(res : Result, state : WorldState) : string[] {
 		//todo: this new utterance might actually be more specific than the user's first input
-		//todo: will take a ball work?
+		//todo: move all balls inside the box
 		var l : string[] = [];
 		for (var i = 0; i < res.intp.length; i++) {
 			for (var j = 0; j < res.intp[i].length; j++) {
@@ -66,8 +66,12 @@ module Interpreter {
 				if (rel == "infront") {
 					rel = "in front of";
 				}
+				if (rel == "holding" || d == null) {
+					s += res.prs.cmd + " the " + o.size + " " + o.color + " " + o.form;
+				} else {
+					s += res.prs.cmd + " the " + o.size + " " + o.color + " " + o.form + " " + rel + " the " + d.size + " " + d.color + " " + d.form;
+				}
 
-				s += res.prs.cmd + " the " + o.size + " " + o.color + " " + o.form + " " + rel + " the " + d.size + " " + d.color + " " + d.form;
 				l.push(s);
 			}
 		}
@@ -117,12 +121,6 @@ module Interpreter {
 		 *
 		 * @return {Literal[][]} Literal describing the PDDL goals
 		 */
-		//todo: pruning maybe only for origins? because the destination you can create!
-		//todo: move all balls inside a box
-		//todo: move all balls inside the box
-		//todo: move all balls left of a ball
-		//todo: move the ball beside the box under the table left of the box in the box under the box
-		//todo: move command when you are already holding sth
 		public getInterpretation() : Literal[][][] {
 			var cmdS : string = this.cmd.cmd;
 
@@ -152,7 +150,7 @@ module Interpreter {
 				var ent = this.cmd.loc.ent;
 				var origs : string[] = [this.state.holding];
 				var dests : string[] = this.checkExistence(ent);
-				if (dests.length && this.isPhysicallyPossible(this.cmd.loc.rel, entO.quant, entD.quant, origs, dests)) {
+				if (dests.length && this.isPhysicallyPossible(this.cmd.loc.rel, "the", ent.quant, origs, dests)) {
 					return this.buildLiteral(this.cmd.loc.rel, "the", ent.quant, origs, dests); 
 				}
 			}
@@ -412,7 +410,7 @@ module Interpreter {
 		 * @return {Literal[][]} Literal describing the PDDL goals
 		 */
 		private buildLiteral(goal : string, quantOrig : string, quantDest : string, origs : string[], dests : string[]) : Literal[][][] {
-			var intprt : Literal[][][]= [[[]]];
+			var intprt : Literal[][][] = [[[]]];
 
 			if (goal == "stack") {
 				var argList : string[] = [];
@@ -469,7 +467,6 @@ module Interpreter {
 
 			//this is a rather special case that requires the computation of all possible combinations
 			if (quantOrig == "all" && quantDest == "any" && origs.length > 1) {
-				//todo: if ontop or inside, prune all those combinations that have the same destination
 				var a : string[][][] = [[[]]];
 				for (var i = 0; i < origs.length; i++) {
 					a.push(combinations([[origs[i]], dests]));
@@ -485,19 +482,24 @@ module Interpreter {
 				}
 				b.splice(0,1);
 				var test : string[][] = combinations(b);
-				intprt[0] = [[]];
 				var max : number = test.length;
 				for (var i = 0; i < max; i++) {
 					var o1 : string = test[i][0].substring(0,1);
 					var o2 : string = test[i][0].substring(1,2);
 					var o3 : string = test[i][1].substring(0,1);
 					var o4 : string = test[i][1].substring(1,2);
+					//self referencing or same goal for "ontop" or "inside"
+					if (o1 == o2 || o3 == o4 || (o2 == o4 && (goal == "ontop" || goal == "inside"))) {
+						continue;
+					}
 					var lit : Literal = {pol:true, rel:goal, args:[o1, o2]};
 					var lit2 : Literal = {pol:true, rel:goal, args:[o3, o4]};
-					intprt[0][i] = [];
-					intprt[0][i].push(lit);
-					intprt[0][i].push(lit2);
+					intprt[0].push([lit, lit2]);
 				}
+				intprt[0].splice(0,1);
+				//TODO: ugly!!!!
+				//TODO: test all complex examples
+				//TODO: move all balls beside a ball
 
 				return intprt;
 			}
