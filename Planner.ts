@@ -56,6 +56,9 @@ module Planner {
         state.pddlWorld.holding = state.holding;
         state.pddlWorld.stacks = cloneStacks(state.stacks);
 
+        console.log("stacks",state.pddlWorld.stacks);
+        console.log("inner stacks",state.pddlWorld.stacks[0]);
+
         var secNode;
         if(state.holding) {
             // Update state with 'holding' (if any)
@@ -119,11 +122,13 @@ module Planner {
     function cloneStacks(oldStacks: string[][]) {
         var stacks = [];
         for(var i in oldStacks) {
+            stacks[i] = [];
             for(var j in oldStacks[i]) {
                 stacks[i][j] = oldStacks[i][j];
             }
         }
         
+        console.log("clone done");
         return stacks;
     }
 
@@ -161,14 +166,13 @@ module Planner {
                 var min = Infinity;
                 for(var j in goalWorld[i]) {
                     if(goalWorld[i][j].rel === "ontop" || goalWorld[i][j].rel === "inside") {
-                        var count = countObjectsOnTop(node.label, goalWorld[i][j].args[0])
-                        if(max < count) {
-                            max = count;
-                        }
+                        var localWorld = node.label.stacks;
                         
-                        if(relExist(node.label.rels, goalWorld[i][j])) {
-                            max = 0;
-                        }
+                        for(var x in localWorld) {
+                            for(var y in localWorld[x]) {
+                                
+                            }
+                        }   
                     }
                 }
                 if(min > max) {
