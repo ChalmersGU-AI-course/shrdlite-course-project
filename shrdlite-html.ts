@@ -12,11 +12,6 @@ $(function () {
 
     
     var current = getURLParameter('world');
-    
-    if (current != '3D')
-        $('#theworld3d').hide();
-    else
-        $('#theworld').hide();
 
     if (!(current in ExampleWorlds)) {
         current = defaultWorld;
@@ -41,8 +36,17 @@ $(function () {
         .attr('href', '?world=' + current + '&speech=' + (!useSpeech))
         .appendTo($('#togglespeech'));
 
+
+    if (ExampleWorlds[current].rowLength == ExampleWorlds[current].stacks.length)
+        $('#theworld3d').hide();
+    else
+        $('#theworld').hide();
+
     var world = new SVGWorld(ExampleWorlds[current], useSpeech);
     var glworld = new GLGWorld(ExampleWorlds[current], <HTMLCanvasElement> document.getElementById('glcanvas'));
+
+
+
     Shrdlite.interactive(world, glworld);
 
 });
