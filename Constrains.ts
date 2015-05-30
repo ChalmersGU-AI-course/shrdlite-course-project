@@ -23,17 +23,21 @@ module Constrains {
         var arcs : collections.LinkedList<ArcNode<T>> = new collections.LinkedList<ArcNode<T>>();
         var whereTo : VariableNode<T> = constructGraph<T>(fullDomain, head.loc.ent, arcs, true, 'whereTo');
         var what : VariableNode<T> = constructGraph<T>(fullDomain, head.ent, arcs, false, 'what');
-        if(head.loc.rel == "inside") {
-            var constrain : ConstrainNode<T> = {type: "CanBeInside",
+        var actions = {inside:'CanBeInside',
+                       under :'CanBeUnder'
+        };
+        var verb = actions[head.loc.rel];
+        if(verb != null) {
+            var constrain : ConstrainNode<T> = {type: verb,
                                                 stringParameter: null,
                                                 futureTense : true};
             arcs.add({variable1 : what,
-                      constrain : {type: "CanBeInside",
+                      constrain : {type: verb,
                                    stringParameter: null,
                                    futureTense : true},
                       variable2 : whereTo});
             arcs.add({variable1 : whereTo,
-                      constrain : {type: "Reverse_CanBeInside",
+                      constrain : {type: "Reverse_" + verb,
                                    stringParameter: null,
                                    futureTense : true},
                       variable2 : what});
@@ -157,8 +161,10 @@ module Constrains {
     function reduceVoice<T>(arc : ArcNode<T>,
                             state : WorldState) {
         var a = getVoiceAction<T>(arc.constrain.type, arc.constrain.futureTense);
-        if(a == null)
+        if(a == null) {
+            console.log(' DEBUG / no support for ' + arc.constrain.type+ ' future '+arc.constrain.futureTense);
             return false;
+        }
         var ret : boolean = false;
         var rep : boolean;
         do {
@@ -203,9 +209,17 @@ module Constrains {
                        Reverse_leftof:hasSomethingLeftof, Reverse_rightof:hasSomethingRightof,
                        Reverse_CanBeInside:hasCanBeInside
         };
-        var facts = {hasSize:hasSize, hasColor:hasColor, isA:isA, CanBeInside:isCanBeInside,
+        var facts = {hasSize:hasSize, hasColor:hasColor, isA:isA,
+                     ontop:CanBeMoved,  Reverse_ontop:Reverse_CanBeMoved,
+                     inside:CanBeMoved, Reverse_inside:Reverse_CanBeMoved,
+                     under:CanBeMoved, Reverse_under:Reverse_CanBeMoved,
+                     beside:CanBeMoved, Reverse_beside:Reverse_CanBeMoved,
 
-                     Reverse_CanBeInside:hasCanBeInside
+                     leftof:CanBeLeftof, Reverse_leftof:Reverse_CanBeLeftof,
+                     rightof:CanBeRightof, Reverse_rightof:Reverse_CanBeRightof,
+
+                     CanBeInside:isCanBeInside,          CanBeUnder:hasCanBeInside,
+                     Reverse_CanBeInside:hasCanBeInside, Reverse_CanBeUnder:isCanBeInside,
         };
         return !futureTense ? actions[act.trim()] : facts[act.trim()];
     }
@@ -253,6 +267,68 @@ module Constrains {
                     return {stack:stack, row:row, what:state.stacks[stack][row]};
     }
 
+    function CanBeMoved<T>(obj : ObjectDefinition,
+                        stringParameter : string,
+                        variable : VariableNode<T>,
+                        state : WorldState) {
+        if(obj==null)
+            return false; //the floor cant be on top of anything
+        return true;
+    }
+
+    function Reverse_CanBeMoved<T>(obj : ObjectDefinition,
+                        stringParameter : string,
+                        variable : VariableNode<T>,
+                        state : WorldState) {
+        var ret : boolean = false;
+        variable.domain.forEach((ele) => {
+            ret = state.objects[ele.toString()] != null;
+            return !ret;
+        });
+        return ret;
+    }
+
+    function CanBeLeftof<T>(obj : ObjectDefinition,
+                        stringParameter : string,
+                        variable : VariableNode<T>,
+                        state : WorldState) {
+        var ret : boolean = false;
+        variable.domain.forEach((ele) => {
+            var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
+            ret = objPos.row > 0;
+            return !ret;
+        });
+        return ret;
+    }
+
+    function CanBeRightof<T>(obj : ObjectDefinition,
+                        stringParameter : string,
+                        variable : VariableNode<T>,
+                        state : WorldState) {
+        var ret : boolean = false;
+        variable.domain.forEach((ele) => {
+            var objPos : whereInTheWorld = findInWorld(state.objects[ele.toString()], state);
+            ret = objPos.row < state.stacks.length - 1;
+            return !ret;
+        });
+        return ret;
+    }
+
+    function Reverse_CanBeLeftof<T>(obj : ObjectDefinition,
+                        stringParameter : string,
+                        variable : VariableNode<T>,
+                        state : WorldState) {
+        var objPos : whereInTheWorld = findInWorld(obj, state)
+        return objPos.row < state.stacks.length - 1;
+    }
+
+    function Reverse_CanBeRightof<T>(obj : ObjectDefinition,
+                        stringParameter : string,
+                        variable : VariableNode<T>,
+                        state : WorldState) {
+        var objPos : whereInTheWorld = findInWorld(obj, state)
+        return objPos.row > 0;
+    }
 
     function CanBeInside(lhs : ObjectDefinition,
                          rhs : ObjectDefinition) : boolean {
@@ -267,7 +343,9 @@ module Constrains {
             if(rhs.size == 'large')
                 return true; // large box can carry anything else
         }
-        return false;
+        if(rhs.form == 'ball')
+            return false;
+        return true;
     }
 
     function isCanBeInside<T>(obj : ObjectDefinition,

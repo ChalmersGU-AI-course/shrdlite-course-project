@@ -67,7 +67,7 @@ ExampleWorlds["medium"] = {
         "take a red object",
         "take the white ball",
         "put all boxes on the floor",
-        "put the large plank under the blue brick",
+        "put the large plank under the green brick",
         "move all bricks on a table",
         "move all balls inside a large box"
     ]

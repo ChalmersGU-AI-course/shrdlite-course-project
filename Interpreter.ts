@@ -76,7 +76,11 @@ module Interpreter {
 
         constrained.what.forEach((ele) => {
           constrained.whereTo.first().variable1.domain.forEach((v) => {
-            var finalGoal : Literal[] = [{pol: true, rel: m_typ, args: [ele, v]}];
+            var finalGoal : Literal[];
+            if(m_typ == 'under')
+                finalGoal = [{pol: true, rel: 'ontop', args: [v, ele]}];
+            else
+                finalGoal = [{pol: true, rel: m_typ, args: [ele, v]}];
             constrained.whereTo.forEach((arc) => {
               var typ : string = arc.constrain.type;
               if(typ == 'inside')
