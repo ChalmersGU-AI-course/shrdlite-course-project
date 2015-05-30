@@ -517,7 +517,26 @@ module Planner {
 
         newWorld.rels.push({pol:true, rel:rel, args:[object, topObject]});
         newWorld.rels.push({pol:true, rel:"attop", args:[object, "floor-"+floor]});
+
+        // Add all relations of type beside, above, under, leftof and rightof.
+        // If something was beside etc. the previous top object, then it must now
+        // be beside the new top object. 
+        for(var i in newWorld.rels){
+            if(newWorld.rels[i].rel === 'above' || newWorld.rels[i].rel === 'under' || newWorld.rels[i].rel === 'leftof' 
+                || newWorld.rels[i].rel === 'rightof' || newWorld.rels[i].rel === 'beside'){
+
+                if(newWorld.rels[i].args[0] === topObjectObj.id){
+                    newWorld.rels.push({pol:true, rel:newWorld.rels[i].rel, args:[objectObj.id, newWorld.rels[i].args[1]]});
+                }else if(newWorld.rels[i].args[1] === topObjectObj.id){
+                    newWorld.rels.push({pol:true, rel:newWorld.rels[i].rel, args:[newWorld.rels[i].args[0], objectObj.id]});
+                }
+            }
+        }
+        newWorld.rels.push({pol:true, rel:'above', args:[objectObj.id, topObjectObj.id]});
+        newWorld.rels.push({pol:true, rel:'under', args:[topObjectObj.id, objectObj.id]});
+
         newWorld.stacks[floor].push(object);
+
         return newWorld;
     }
 
@@ -589,6 +608,19 @@ module Planner {
         if(!foundObject) {
             return null;
         }
+
+        // remove all leftof/rightof, above/under and beside relations of the picked up object
+        var newRels = [];
+        for(var r in world.rels){
+            // if NOT (involving the picked up object AND is one of the spatial relations above)
+            if(!((world.rels[r].args[0] === foundObject.id || world.rels[r].args[1] === foundObject.id)
+                && (world.rels[r].rel === 'leftof' || world.rels[r].rel === 'rightof' 
+                    || world.rels[r].rel === 'above' || world.rels[r].rel === 'under'
+                    || world.rels[r].rel === 'beside'))){
+                newRels.push(world.rels[r]);
+            }
+        }
+        world.rels = newRels;
         
         world.stacks[floor].pop();
         

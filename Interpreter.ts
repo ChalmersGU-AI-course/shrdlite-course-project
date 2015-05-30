@@ -12,10 +12,61 @@ module Interpreter {
         // TODO remove, used for debugging
         this._ = _;
 
-        var cmds        : Parser.Command[]    = <Parser.Command[]> _.map(parses, 'prs')
+        var cmds        : Parser.Command[]    = <Parser.Command[]> _.map(parses, 'prs');
         //  , intpsPerCmd : PddlLiteral[][][][] = _.map(cmds, _.partial(interpretCommand, _, state))
-          , intpsPerCmd : PddlLiteral[][][][] = _.map(cmds, function(a) {return interpretCommand(a, state);})
-          , intps       : PddlLiteral[][][]   = concat(intpsPerCmd)
+        
+        // Handle ambiguity by recursively converting a command object to a string,
+        // with parentheses indicating precedence.
+        if(cmds.length > 1){
+            var promptStr = 'There are multiple ways to interpret that command:\n';
+            var cmdToStr = function(obj){
+                var str = '';
+                if(obj.cmd){
+                    str += obj.cmd + ' ';
+                }
+                if(obj.quant){
+                    str += obj.quant + ' ';
+                }   
+                if(obj.size){
+                    str += obj.size + ' ';
+                }
+                if(obj.color){
+                    str += obj.color + ' ';
+                }
+                if(obj.form){
+                    str += obj.form + ' ';
+                }
+                if(obj.rel){
+                    str += obj.rel + ' ';
+                }
+                if(obj.obj){
+                    str += cmdToStr(obj.obj) + ' ';
+                }
+                if(obj.ent){
+                    str += '(' + cmdToStr(obj.ent) + ') ';
+                }
+                if(obj.loc){
+                    str += cmdToStr(obj.loc) + ' ';
+                }
+                return str;
+            };
+
+            for(var c in cmds){
+                promptStr += c + '. ' + cmdToStr(cmds[c]) + '\n';
+            }
+            promptStr += 'Which one did you mean?';
+            var selected;
+            while(!cmds[selected]){
+                selected = Number(prompt(promptStr));
+                if(!cmds[selected]){
+                    alert("Unfortunately, I didn't quite grasp that. Try again.");
+                }
+            }
+            cmds = [cmds[selected]];
+        }
+
+        var intpsPerCmd : PddlLiteral[][][][] = _.map(cmds, function(a) {return interpretCommand(a, state);});
+        var intps       : PddlLiteral[][][]   = concat(intpsPerCmd);
         if (intps.length) {
             return intps;
         } else {
@@ -23,22 +74,15 @@ module Interpreter {
         }
     }
 
-    // DEPRECATED
     export function interpretationToString(res : PddlLiteral[][]) : string {
-        // TODO: print human-readable sentence? Or at least add new function for that
         return res.map((lits) => {
             return lits.map((lit) => literalToString(lit)).join(" & ");
         }).join(" | ");
     }
 
-    // DEPRECATED
     export function literalToString(lit : PddlLiteral) : string {
         return (lit.pol ? "" : "-") + lit.rel + "(" + lit.args.join(",") + ")";
     }
-
-
-    // TODO: Don't use anywhere! 'Tis bad!
-    export interface Result extends Parser.Result {intp:PddlLiteral[][];}
 
     export class Error implements Error {
         public name = "Interpreter.Error";
@@ -54,11 +98,6 @@ module Interpreter {
         // Outer list: different interpretations
         // Inner list: different conditions for one interpretation, separated by OR.
         //             that is, either of may be true for the interpretation to be satisfied
-
-        // Log interesting things
-        console.log('state:',state);
-        console.log('stacks:', state.stacks);
-        console.log('cmd:',cmd);
 
         //workaround for incorrect command strings
         if(cmd.cmd === 'put'){
@@ -131,20 +170,6 @@ module Interpreter {
                 entitiesIntrprt = resolveAmb(entitiesIntrprt, 'objects', 'pick up');
                 interpretations = combineStuff(toIds(entitiesIntrprt), null, 'holding');
             }
-        }
-
-        else {
-            /*
-            var objectKeys : string[] = concat(state.stacks);
-            // Below: old code
-            var a = objectKeys[getRandomInt(objectKeys.length)];
-            var b = objectKeys[getRandomInt(objectKeys.length)];
-
-            var intprt : PddlLiteral[][] = [[
-                {pol: true, rel: "ontop", args: [a, "floor"]},
-                {pol: true, rel: "holding", args: [b]}
-            ]];
-            */
         }
 
         //console.log("returning",interpretations[0][0].slice(), interpretations[0][0]);
@@ -335,7 +360,7 @@ module Interpreter {
             // Note: this has a different type than alikeObjs -
             //       this also accounts for different interpretations of locations
             if (critLoc) {
-                if (critLoc.rel === 'inside' || critLoc.rel === 'ontop') {
+                //if (critLoc.rel === 'inside' || critLoc.rel === 'ontop') {
                     var locationsIntrprt = findEntities(critLoc.ent, objects, ppdlWorld)
                       , rel         = critLoc.rel
                         // For each location interpretation, store all objects which has relation to that interpretation's location
@@ -359,9 +384,9 @@ module Interpreter {
                             })
                         });
                        // (Example output: [[□1], [□1], [□1,□2]]
-                } else {
-                    console.log("TODO: implement more relations! See rel value of ",critLoc);
-                }
+                //} else {
+                //    console.log("TODO: implement more relations! See rel value of ",critLoc);
+                //}
                 console.log('close objects:', closeObjsIntrprt);
             }
 
@@ -407,7 +432,6 @@ module Interpreter {
                 // TODO: test these
 
                 // "The floor" does in fact mean any floor tile
-                // TODO: change... parser?
                 if ((ent.quant === 'the') && (ent.obj.form === 'floor')) {
                     ent.quant = 'any';
                 }
@@ -454,9 +478,15 @@ module Interpreter {
     // Checks if ppdlWorld has some binary constraint
     // (Typically 'inside' or 'ontop')
     function hasBinaryConstraint(ppdlWorld, pol, rel, obj1, obj2) {
-        var constraint = {pol: pol, rel: rel, args: [obj1.id, obj2.id]}
-          , found      = _.find(ppdlWorld, constraint);
-        // console.log("hasBinaryConstraint(): constraint:",constraint,"ppdlWorld",ppdlWorld,"found:",found);
+        // ... Would like to use _.matches, but it is apparently not deep.
+        var found = _.find(ppdlWorld, function (otherRel : PddlLiteral) {
+                return otherRel.pol === pol
+                    && otherRel.rel == rel
+                    && otherRel.args[0]
+                    && otherRel.args[0] === obj1.id
+                    && otherRel.args[1]
+                    && otherRel.args[1] === obj2.id
+            });
         return found;
     }
 

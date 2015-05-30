@@ -122,6 +122,55 @@ function extendWorldState(state: WorldState) : ExtendedWorldState {
     }
     console.log("objsbytyp", objectsByForm);
 
+    // Add beside, leftof, rightof, above and under relations.
+    for(var ind = 0; ind < objStacks.length; ind++){
+
+        var beside = [];
+        if(ind - 1 >= 0){
+            beside.push(ind-1);
+        }
+        if(ind + 1 < objStacks.length){
+            beside.push(ind+1);
+        }
+
+        var left = [], right = [];
+        for(var j = 0; j < ind; j++){
+            left.push(j);
+        }
+        for(var j = ind + 1; j < objStacks.length; j++){
+            right.push(j);
+        }
+
+        // under/above
+        for(var j = 0; j < objStacks[ind].length; j++){
+            for(var k = j + 1; k < objStacks[ind].length; k++){
+                pddlWorld.push({pol: true, rel: 'under', args: [objStacks[ind][j].id, objStacks[ind][k].id]});
+                pddlWorld.push({pol: true, rel: 'above', args: [objStacks[ind][k].id, objStacks[ind][j].id]});
+            }
+
+            // beside
+            for(var b in beside){
+                for(var c in objStacks[beside[b]]){
+                    pddlWorld.push({pol: true, rel: 'beside', args: [objStacks[ind][j].id, objStacks[beside[b]][c].id]});
+                }
+            }
+
+            // leftof
+            for(var l in left){
+                for(var c in objStacks[left[l]]){
+                    pddlWorld.push({pol: true, rel: 'leftof', args: [objStacks[left[l]][c].id, objStacks[ind][j].id]});
+                }
+            }
+
+            // rightof
+            for(var r in right){
+                for(var c in objStacks[right[r]]){
+                    pddlWorld.push({pol: true, rel: 'rightof', args: [objStacks[right[r]][c].id, objStacks[ind][j].id]});
+                }
+            }
+
+        }
+    }
 
     var newState : ExtendedWorldState = {
         objStacks: objStacks,
