@@ -18,11 +18,17 @@ module Constrains {
     export function constrain<T>(fullDomain : collections.Set<T>,
                                  head : Parser.Command,
                                  state : WorldState) : Result<T> {
-        if((head == null) || (head.ent.obj == null) || (head.loc.ent.obj == null))
+        if((head == null) || (head.ent.obj == null))
             return null;
         var arcs : collections.LinkedList<ArcNode<T>> = new collections.LinkedList<ArcNode<T>>();
-        var whereTo : VariableNode<T> = constructGraph<T>(fullDomain, head.loc.ent, arcs, true, 'whereTo');
         var what : VariableNode<T> = constructGraph<T>(fullDomain, head.ent, arcs, false, 'what');
+
+        if((head.loc == null) || (head.loc.ent.obj == null)) {
+            arcReduction<T>(arcs, state);
+            return {what : what.domain, whereTo : null};
+        }
+
+        var whereTo : VariableNode<T> = constructGraph<T>(fullDomain, head.loc.ent, arcs, true, 'whereTo');
         var actions = {inside:'CanBeInside',
                        under :'CanBeUnder'
         };
@@ -42,6 +48,12 @@ module Constrains {
                                    futureTense : true},
                       variable2 : what});
         }
+        var notActiveArcs : collections.LinkedList<ArcNode<T>> = arcReduction<T>(arcs, state);
+        return {what : what.domain, whereTo : relatedArcs<T>(whereTo, notActiveArcs, true)};
+    }
+
+    function arcReduction<T>(arcs : collections.LinkedList<ArcNode<T>>,
+                             state : WorldState):collections.LinkedList<ArcNode<T>> {
         var notActiveArcs : collections.LinkedList<ArcNode<T>> = new collections.LinkedList<ArcNode<T>>();
         do {
             var arc : ArcNode<T> = arcs.first();
@@ -50,7 +62,7 @@ module Constrains {
             if(reduceVoice<T>(arc, state))
                reSheduleArcs<T>(arcs, arc, notActiveArcs);
         } while(arcs.size() > 0);
-        return {what : what.domain, whereTo : relatedArcs<T>(whereTo, notActiveArcs, true)};
+        return notActiveArcs;
     }
 
     export class Error implements Error {
@@ -252,6 +264,8 @@ module Constrains {
                     state : WorldState) {
         if(obj==null)
             return stringParameter == 'floor'; //the floor is something in particular
+        if(stringParameter == 'anyform')
+            return true;
         if(obj.form != stringParameter)
             return false;
         return true;

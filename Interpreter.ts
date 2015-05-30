@@ -65,13 +65,20 @@ module Interpreter {
 
         var intprt : Literal[][] = [];
 
+        if((cmd.cmd == 'take') && (constrained.whereTo == null)) {
+            constrained.what.forEach((ele) => {
+                var finalGoal : Literal[] = [{pol: true, rel: 'ontop', args: [ele, 'floor']}];
+                intprt.push(finalGoal);
+                return true;
+            });
+            return intprt;
+        }
+
         var m_typ : string = cmd.loc.rel;
         if(m_typ == 'inside')
             m_typ = 'ontop';
 
-        if(constrained.whereTo == null)
-            return null;
-        if(constrained.whereTo.size() == 0)
+        if((constrained.whereTo == null) || (constrained.whereTo.size() == 0))
             return null;
 
         constrained.what.forEach((ele) => {
