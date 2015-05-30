@@ -49,6 +49,10 @@ module Interpreter {
 
     //////////////////////////////////////////////////////////////////////
     // private functions
+
+    /**
+        Construct literals from the gicen interpretation, if possible
+    */
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
         var matching: string[];
         if (cmd.ent) {
@@ -68,7 +72,9 @@ module Interpreter {
         }
 
         if (cmd.ent && cmd.ent.quant == "any" && cmd.loc.ent && cmd.loc.ent.quant == "all" ) {
-            //reverse the command:
+            //in the case of a command that is 'any <object> all <locations>' we flip it around,
+            //this is magic that works because of how we solve the all quantifier.
+            // example: "a ball in all boxes" becomes "all boxes containing a ball". 
             cmd.ent.quant = "all";
             cmd.loc.ent.quant = "any";
             var tmpObj = cmd.ent.obj;
@@ -83,6 +89,8 @@ module Interpreter {
             var matchLiterals = buildRelativeLiterals(matching[i], cmd.loc, state);
             var previousLiterals = literals.slice();
             if (cmd.ent && cmd.ent.quant == "all") {
+                //To handle the all quantifier we must splice together our different litterals
+                //so here we add them to any existing litterals, without introducing duplicates 
                 var newLiterals : Literal[][] = [];
                 for (var j=0; j<matchLiterals.length; ++j) {
                     if (previousLiterals.length == 0) {
@@ -106,6 +114,9 @@ module Interpreter {
         return literals;
     }
 
+    /**
+        concatenate two literals and remove duplicates
+    */
     function concatLiterals(literals1: Literal[], literals2 : Literal[]) : Literal[] {
         var literals = literals1.slice();
         for (var i = 0; i < literals1.length; ++i) {
@@ -119,6 +130,9 @@ module Interpreter {
         return stripDuplicates(literals);
     }
 
+    /**
+        Takes a list of literals and returns the same list with duplicates removed
+    */
     function stripDuplicates(literals : Literal[]) : Literal[] {
         var newLiterals : Literal[] = [];
         for (var i=0; i<literals.length; ++i) {
@@ -130,6 +144,9 @@ module Interpreter {
         return newLiterals;
     }
 
+    /**
+        returns true if the given list contains the given object
+    */
     function listContainsObject(list, obj) : boolean {
         for (var i=0; i<list.length; ++i) {
             if (list[i] === obj) {
@@ -139,6 +156,9 @@ module Interpreter {
         return false;
     }
 
+    /**
+        check if a list of list contains a given list
+    */
     function listContainsList(listlist, list) : boolean {
         for (var i=0; i<listlist.length; ++i) {
             var isEqual = true;
@@ -154,6 +174,9 @@ module Interpreter {
         return false;
     }
 
+    /**
+        Construct literals for commands that refer to objects taht are relative to each other
+    */
     function buildRelativeLiterals(object: string, location: Parser.Location, world: WorldState): Literal[][] {
         var matching: string[];
         if (location.ent.obj.obj) {
@@ -193,6 +216,9 @@ module Interpreter {
         }
     }
 
+    /**
+        Find all objects that match a certain description or location
+    */
     function findObjects(parserObject: Parser.Object, world: WorldState): string[] {
         if (parserObject.obj) {
             return findObjectsByLocation(parserObject, world);
@@ -201,6 +227,9 @@ module Interpreter {
         }
     }
 
+    /**
+        find object within the world based on the direct properties of the object
+    */
     function findObjectsByDescription(object: Parser.Object, world: WorldState): string[] {
         var result: string[] = [];
 
@@ -243,6 +272,9 @@ module Interpreter {
         return true;
     }
 
+    /**
+        Find objects who's locations match the given object's
+    */
     function findObjectsByLocation(object: Parser.Object, world: WorldState): string[] {
         var result: string[] = [];
         var matchingObjects = findObjectsByDescription(object.obj, world);
@@ -257,26 +289,32 @@ module Interpreter {
     }
 
     function isMatchByLocation(objectId: string, location: Parser.Location, world: WorldState): boolean {
-        //TODO: handle singular vs plural quantifier
         var matchingEntities = findObjects(location.ent.obj, world);
         for (var matchingNr = 0; matchingNr < matchingEntities.length; ++matchingNr) {
             if (isRelativeMatch(objectId, location.rel, matchingEntities[matchingNr], world)) {
                 if(location.ent.quant !== "all") {
+                    //If we don't need all to match then one is enough
                     return true;
                 }
             }
             else {
                 if (location.ent.quant === "all") {
+                    //some object didn't match so all cannot
                     return false;
                 }
             }
         }
         if (location.ent.quant === "all") {
+            //if quant==="all" when we would have already exited if someone didn't match
             return true;
         }
+        //no match found
         return false;
     }
 
+    /**
+        Returns the opposite of a relation.
+    */
     function reverseRelation(relation : string) : string {
         switch (relation) {
             case "leftof":

@@ -1,5 +1,7 @@
 
-
+/**
+    Module that contains methods used for detecting and handling ambiguities in commands
+*/
 module AmbiguityResolve {
 	export function getClarifications(parses: Parser.Result[]): string {
         var allClarifications = "";
@@ -12,6 +14,7 @@ module AmbiguityResolve {
 	}
 
     //Checks that if the "the" quantifier is used, it only matches to one object and in that case returns false
+    //otherwise it throws an error containing a query that asks the user to better clarify what he wants
     export function checkTheTheAmbiguity(ent :Parser.Entity, matching : string[], state : WorldState) : boolean {
         if(ent.quant === "the" && matching.length>1){
                 var errString = "Object not unique, did you mean the ";
@@ -28,6 +31,8 @@ module AmbiguityResolve {
         return false;
     }
 
+
+    //object for helping to keep track of which objects are required to uniquely describe an object
     interface UniqueAttributes {
         color : boolean;
         size : boolean;

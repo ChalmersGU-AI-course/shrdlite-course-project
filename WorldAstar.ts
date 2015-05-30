@@ -35,7 +35,8 @@ function getHeuristicFunction(targetLiteral: Interpreter.Literal[][]) {
     }
 }
 
-//A heuristic that calculates the total number of blocking objects in the world.
+// A heuristic that calculates the total number of objects blocking the objects we are interested in
+// in the world.
 function numBlockingObjectsHeuristic(target: Interpreter.Literal[], world: WorldNode): number {
     var blockingObjects = {};
     var numBlocking = 0;

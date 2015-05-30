@@ -71,6 +71,7 @@ module Planner {
                 return null;
             }
 
+            // Add descriptions of actions to the plan
             var steps = astarResult.Path.Steps;
             var analyzedPlan = Planalyzer.planalyzeActions(steps, state, intprt);
             return analyzedPlan;
