@@ -43,11 +43,9 @@ $(function () {
         $('#theworld').hide();
 
     var world = new SVGWorld(ExampleWorlds[current], useSpeech);
-    var glworld = new GLGWorld(ExampleWorlds[current], <HTMLCanvasElement> document.getElementById('glcanvas'));
+    var glworld = new GLWorld(ExampleWorlds[current], <HTMLCanvasElement> document.getElementById('glcanvas'));
 
-
-
-    Shrdlite.interactive(world, glworld);
+    Shrdlite.interactive(world);
 
 });
 

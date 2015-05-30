@@ -4,7 +4,7 @@
 ///<reference path="lib/gl-matrix.d.ts" />>
 ///<reference path="RenderItem" />>
 
-class GLGWorld implements World {
+class GLWorld {
     protected gl: WebGLRenderingContext;
     protected cam: Camera;
 
@@ -198,181 +198,11 @@ class GLGWorld implements World {
 
         //View
         this.cam.Setup();
-        
 
-        //var translation = vec3.create();
-        //vec3.set(translation, 0.0, 0.0, -6.0);
-        //mat4.translate(this.mvMatrix, this.mvMatrix, translation);
-
-
+        //Draw scene
         for (var i = 0; i < this.scene.length; ++i) {
             this.scene[i].draw(this.cam);
         }
 
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private test2() {
-        var vertices = [
-
-            // Front face
-            -0.1, 0, 0.1,
-            0.1, 0, 0.1,
-            0.1, 0.35, 0.1,
-            -0.1, 0.35, 0.1,
-
-            -0.1, 0, -0.1,
-            -0.1, 0.35, -0.1,
-            0.1, 0.35, -0.1,
-            0.1, 0, -0.1,
-
-            // Top face
-            -0.1, 0.35, -0.1,
-            -0.1, 0.35, 0.1,
-            0.1, 0.35, 0.1,
-            0.1, 0.35, -0.1,
-
-            // Bottom face
-            -0.1, 0, -0.1,
-            0.1, 0, -0.1,
-            0.1, 0, 0.1,
-            -0.1, 0, 0.1,
-
-        // Right face
-            0.1, 0, -0.1,
-            0.1, 0.35, -0.1,
-            0.1, 0.35, 0.1,
-            0.1, 0, 0.1,
-
-            // Left face
-            -0.1, 0, -0.1,
-            -0.1, 0, 0.1,
-            -0.1, 0.35, 0.1,
-            -0.1, 0.35, -0.1
-        ];
-
-        var vertexIndices = [
-            0, 1, 2, 0, 2, 3,    // front
-            4, 5, 6, 4, 6, 7,    // back
-            8, 9, 10, 8, 10, 11,   // top
-            12, 13, 14, 12, 14, 15,   // bottom
-            16, 17, 18, 16, 18, 19,   // right
-            20, 21, 22, 20, 22, 23    // left
-        ];
-        
-        for (var i = 0; i < vertices.length; i += 3) {
-            vertices[i] -= 0.3;
-        }
-        for (var i = 1; i < vertices.length; i += 3) {
-
-        }
-        for (var i = 2; i < vertices.length; i += 3) {
-            vertices[i] += 0.3;
-        }
-
-        for (var i = 0; i < vertexIndices.length; ++i) {
-            vertexIndices[i] += 24 * 0;
-        }
-
-        var k = "";
-        var l = "";
-        for (var i = 0; i < vertices.length; ++i) {
-            k += ',' + vertices[i].toFixed(2);
-        }
-
-        for (var i = 0; i < vertexIndices.length; ++i) {
-            l += ',' + vertexIndices[i];
-        }
-    }
-
-    private test() {
-        var radius = 0.15;
-        var latitudeBands = 12;
-        var longitudeBands = 12;
-        var vertexPositionData = [];
-        var normalData = [];
-        var textureCoordData = [];
-        for (var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
-            var theta = latNumber * Math.PI / latitudeBands;
-            var sinTheta = Math.sin(theta);
-            var cosTheta = Math.cos(theta);
-
-            for (var longNumber = 0; longNumber <= longitudeBands; longNumber++) {
-                var phi = longNumber * 2 * Math.PI / longitudeBands;
-                var sinPhi = Math.sin(phi);
-                var cosPhi = Math.cos(phi);
-
-                var x = cosPhi * sinTheta;
-                var y = cosTheta + radius;
-                var z = sinPhi * sinTheta;
-                var u = 1 - (longNumber / longitudeBands);
-                var v = 1 - (latNumber / latitudeBands);
-
-                normalData.push(x);
-                normalData.push(y);
-                normalData.push(z);
-                textureCoordData.push(u);
-                textureCoordData.push(v);
-                vertexPositionData.push(radius * x);
-                vertexPositionData.push(radius * y);
-                vertexPositionData.push(radius * z);
-            }
-        }
-
-        var indexData = [];
-        for (var latNumber = 0; latNumber < latitudeBands; latNumber++) {
-            for (var longNumber = 0; longNumber < longitudeBands; longNumber++) {
-                var first = (latNumber * (longitudeBands + 1)) + longNumber;
-                var second = first + longitudeBands + 1;
-                indexData.push(first);
-                indexData.push(second);
-                indexData.push(first + 1);
-
-                indexData.push(second);
-                indexData.push(second + 1);
-                indexData.push(first + 1);
-            }
-        }
-
-        var k: string = "";
-        for (var i = 0; i < textureCoordData.length; ++i) {
-            k += ',' + textureCoordData[i].toFixed(5);
-        }
-    }
-
-    printWorld(callback?: () => void): void {
-        //Guard flags
-        if (!this.gl)
-            return;
-
-        //Draw floor
-    }
-    performPlan(plan: string[], callback?: () => void): void {
-    }
-    readUserInput(prompt: string, callback: (string) => void): void {
-    }
-    printPickList(elements: string[]): void {
-    }
-    printSystemOutput(output: string, participant?: string): void {
-    }
-    printDebugInfo(info: string): void {
-    }
-    printError(error: string, message?: string): void {
     }
 }
