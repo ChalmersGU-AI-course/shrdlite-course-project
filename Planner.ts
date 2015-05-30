@@ -46,7 +46,6 @@ module Planner {
 	var actions : string[] = [];
 	var initState : State = new State(state.stacks, state.holding, state.arm, "");
 	var plan : State[] = AStar.AStarSearch<State>(initState.copy(), goalFunc, heurFunc, costFunc, adjacent);
-	console.log(plan);
 	plan.forEach((elem) => {
 	    actions.push(elem.action);
 	});
@@ -76,14 +75,13 @@ module Planner {
 
     function makeHeurFunc(intprt : Interpreter.Literal[][]) {
 	return (s : State) => {
-	    var hVal : number = 123123123123;
+	    var hVal : number = 999999999999999;
 	    intprt.forEach((i) => {
 		var hi : number = h(s, i[0]);
 		if(hi < hVal)
 			hVal = hi;
 	    });
 	    return hVal;
-//	    return 0;
 	};
     }
 
@@ -93,17 +91,13 @@ module Planner {
 		var goalObj = lit.args[0];
 		var stackIndex;
 		var hval = 0;
-		//findObjinStacks(goalObj);
-		// best case for picking up object is 'p l|r d r|l', 4 actions per object ontop of goal object
-		// assuming arm is on correct stackpos.
-		// s.stacks[stackIndex].length - s.stacks[stackIndex].indexOf(goalObj) * 4
 
 		// if we are already holding, we need atleast 1 move to drop it.
-		// TODO: generalize to something better.
 		if(s.holding && s.holding !== lit.args[0])
 			hval += 1;
 
-		// Also remove all objects above goalObj (each remove takes at best 4 actions)
+		// Also remove all objects above goalObj (each remove takes at best 4 actions).
+		// best case for picking up object is 'p l|r d r|l', 4 actions per object ontop of goal object.
 		// finds relevant stack and calculate distance from armpos to stack.
 		s.stacks.forEach((stack) => {
 			if(stack.indexOf(lit.args[0]) >= 0){
@@ -123,7 +117,6 @@ module Planner {
 		var below = lit.args[1];
 		var hval = 0;
 		// if we are already holding, we need atleast 1 move to drop it.
-		// TODO: generalize to something better.
 		if(s.holding && s.holding !== lit.args[0] )
 			hval += 1;
 
@@ -147,7 +140,6 @@ module Planner {
 			}
 		});
 		return hval;
-//		return 0;
 	}
 	else if(lit.rel === "ontop" || lit.rel === "inside") {
 		var ontop = lit.args[0];
@@ -179,7 +171,6 @@ module Planner {
 			}
 		});
 		return hval;
-//		return 0;
 	}
 	else if(lit.rel === "under") {
 		var under = lit.args[0];
@@ -208,7 +199,6 @@ module Planner {
 			}
 		});
 		return hval;
-//		return 0;
 	}
 	else if(lit.rel === "rightof") {
 		var rightofThis = lit.args[1];
@@ -236,7 +226,6 @@ module Planner {
 			}
 		});
 		return hval;
-//		return 0;
 	}
 	else if(lit.rel === "leftof") {
 		var leftofThis = lit.args[1];
@@ -264,7 +253,6 @@ module Planner {
 			}
 		});
 		return hval;
-//		return 0;
 	}
 	else if(lit.rel === "beside") {
 		var besideThis = lit.args[1];
@@ -294,13 +282,7 @@ module Planner {
 			}
 		});
 		return hval;
-//		return 0;	
 	}
-    }
-
-    function dummyH(s : State, lit : Interpreter.Literal) : number {
-	return 0;
-
     }
 
     function adjacent(state : State) : State[] {

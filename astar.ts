@@ -17,11 +17,9 @@ module AStar {
 
 		costSoFar.setValue(start, 0);
 		frontier.enqueue(new Node<T>(start));
-		var debg : number = 0;
 		while(!frontier.isEmpty()) {
 			var cur : Node<T> = frontier.dequeue();
 			if(checkGoal(cur.node)) {
-				console.log(debg+" iterations");
 				var finalPath = recons_path<T>(cur);
 				return finalPath;
 			}
@@ -35,7 +33,6 @@ module AStar {
 					frontier.enqueue(next);
 				}
 			});
-			debg++;
 		}
 		return null;
 	}

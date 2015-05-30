@@ -93,7 +93,6 @@ module Interpreter {
 	var intprt : Literal[][] = [];
 	for(var i = 0; i < ent.length; i++) {
 		for(var j = 0; j < loc.length; j++) {
-			// physics is only relevant to 'ontop' and 'inside'
 			if(validPhysics(ent[i], loc[j], location.rel, state))
 				intprt.push([{pol: true, rel: location.rel, args: [ent[i],loc[j]] }]);
 		}
@@ -191,8 +190,6 @@ module Interpreter {
 	var posObjs : string[] = interpretLocation(obj.loc, state);
 	var intprt : string[] = [];
 
-	// posObjs should give us a list of all object where the location is possible 
-	// now we should check with immObjs and see if they match up in the state.stacks
 	if(obj.loc.rel === "leftof") {
 	    immObjs.forEach((o) => {
     	        posObjs.forEach((e) => {
