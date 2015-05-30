@@ -487,6 +487,7 @@ module Planner {
         // remove all leftof/rightof, above/under and beside relations of the picked up object
         var newRels = [];
         for(var r in world.rels){
+            // if NOT (involving the picked up object AND is one of the spatial relations above)
             if(!((world.rels[r].args[0] === foundObject.id || world.rels[r].args[1] === foundObject.id)
                 && (world.rels[r].rel === 'leftof' || world.rels[r].rel === 'rightof' 
                     || world.rels[r].rel === 'above' || world.rels[r].rel === 'under'
