@@ -265,8 +265,8 @@ module Interpreter {
                     return false;
                 }
                 // Pyramid/plank/same size box in box
-                if(obj1.form === 'pyramid' || obj1.form === 'plank' 
-                    || (obj1.form === 'box' && obj1.size === obj2.size)){
+                if((obj1.form === 'pyramid' || obj1.form === 'plank' 
+                    || obj1.form === 'box') && obj1.size === obj2.size)){
                     return false;
                 }
             break;
