@@ -271,7 +271,7 @@ module Planner {
         }
 
         if (obj2 === world.holding || obj2 === 'arm') {
-            var obj1Idx = world.arm;
+            var obj1Idx = world.arm;   
         } else {
             var obj2Idx = _.findIndex(stacks, function (stack) {
                 return _.contains(stack, obj2);
