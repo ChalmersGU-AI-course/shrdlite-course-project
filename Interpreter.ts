@@ -512,6 +512,9 @@ module Interpreter {
 					if (dests[j] == "") {
 						lit = {pol:true, rel:goal, args:[origs[i]]};
 					} else {
+						//no self-referencing please
+						if (origs[i] == dests[j])
+							continue;
 						lit = {pol:true, rel:goal, args:[origs[i], dests[j]]};
 					}
 					intprt[m][n].push(lit);
