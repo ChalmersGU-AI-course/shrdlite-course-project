@@ -128,7 +128,6 @@ module Planner {
             }
         }
         
-        console.log("clone done");
         return stacks;
     }
 
@@ -167,14 +166,33 @@ module Planner {
                         return _.map(andList, function (literal) {
 
                             if(literal.rel === "ontop" || literal.rel === "inside") {
-
                                 if(relExist(node.label.rels, literal)) {
                                     return 0;
                                 } else {
-                                    var count = countObjectsOnTop(node.label, literal.args[0]);
-                                    return count;
+                                    return countObjectsOnTop(node.label, literal.args[0]) +
+                                        countObjectsOnTop(node.label, literal.args[1]) +
+                                        xDistance(stacks, literal.args[0], literal.args[1]);
                                 }
                             }
+
+                            else if(literal.rel === "above" || literal.rel === "under") {
+                                if(checkWhichSide === literal.rel) {
+                                    return 0;
+                                } else {
+                                    return xDistance(stacks, literal.args[0], literal.args[1]) +
+                                        _.min([countObjectsOnTop(node.label, literal.args[0]),
+                                            countObjectsOnTop(node.label, literal.args[1])]);
+                                }
+                            }
+
+                            else if(literal.rel === "left" || literal.rel === "right") {
+                                if(checkWhichSide(literal.args[0], literal.args[1]) === literal.rel) {
+                                    return 0
+                                } else {
+                                    return xDistance(stacks, literal.args[0], literal.args[1])+1;
+                                }
+                            }
+
                             else if (literal.rel === 'beside') {
                                 var obj1 = literal.args[0]
                                     , obj2 = literal.args[1];
