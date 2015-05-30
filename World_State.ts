@@ -26,7 +26,7 @@
         get_Neighbour_Nodes() : Neighbour_Node<State>[] {
             var neighbour_nodes: Neighbour_Node<State>[] = [];
 
-            if (this.State.holding && this.check_physical_laws_drop()) {
+            if (this.State.holding && this.check_physical_laws_drop()) { // checking if we can drop an object
                 var modified_stack = this.State.stacks.map(function(stack) {return stack.slice();});
                 modified_stack[this.State.arm].push(this.State.holding);
                 var modified_world = this.modify_world(modified_stack);
@@ -34,7 +34,7 @@
                 neighbour_nodes.push(new Neighbour_Node<State>(modified_world, 1, "d"));
             }
 
-            if (!this.State.holding && this.get_object_on_top(this.State.arm) != null) {
+            if (!this.State.holding && this.get_object_on_top(this.State.arm) != null) { // checking if we can pick an object
                 var modified_stack = this.State.stacks.map(function(stack) {return stack.slice();});
                 var holding = modified_stack[this.State.arm].pop();
                 var modified_world = this.modify_world(modified_stack);
