@@ -1,1 +1,5 @@
-shrdlite-*.js
+
+shrdlite-offline.js
+shrdlite-ansi.js
+shrdlite-ajax.js
+shrdlite-html.js
