@@ -46,8 +46,8 @@ module Spatial {
                 var lObj = state.objects[left];
                 var rObj = state.objects[pddl.args[0]];
                 return "Cannot move to the " + rObj.color + " " + rObj.form + " to left of the " +
-                       lObj.color + " " + lObj.form + " since the " + lObj.color +
-                       " " + lObj.form + " is located at the left wall.";
+                    lObj.color + " " + lObj.form + " since the " + lObj.color +
+                    " " + lObj.form + " is located at the left wall.";
             }
         }
         else if (pddl.rel === "rightof")
@@ -61,7 +61,7 @@ module Spatial {
                 var rObj = state.objects[right];
                 var lObj = state.objects[pddl.args[0]];
                 return "Cannot move to the " + lObj.color + " " + lObj.form + " to right of the " +
-                        rObj.color + " " + rObj.form + " since the " + rObj.color + " " + rObj.form + " is located at the right wall.";
+                    rObj.color + " " + rObj.form + " since the " + rObj.color + " " + rObj.form + " is located at the right wall.";
             }
         }
 
@@ -92,7 +92,7 @@ module Spatial {
         //Balls must be in boxes or on the floor.
         if(over.form === "ball" &&
            under.form !== "box")
-           return false;
+            return false;
 
         //Balls cannot support anything
         if(under.form === "ball")
@@ -100,7 +100,7 @@ module Spatial {
 
         //Small objects cannot support large objects.
         if(over.size  === "large" && under.size === "small")
-           return false;
+            return false;
 
         //Boxes cannot contain pyramids, planks or boxes of the same size
         if(under.form === "box" &&
@@ -111,19 +111,19 @@ module Spatial {
             return false;
 
         //Small boxes cannot be supported by small bricks or pyramids.
-        if(over.size === "small" &&
+        if(over.size  === "small" &&
            under.size === "small" &&
-           (under.form === "brick" ||
-            under.form === "pyramid") &&
-           over.form === "box")
-           return false;
+          (under.form === "brick" ||
+           under.form === "pyramid") &&
+           over.form  === "box")
+            return false;
 
         //Large boxes cannot be supported by large pyramids.
         if(over.size === "large" &&
            under.size === "large" &&
            under.form === "pyramid" &&
            over.form === "box")
-           return false;
+            return false;
 
         return true;
     }
@@ -132,10 +132,10 @@ module Spatial {
     function ontopError(over, under)
     {
         return "A " + over.size +
-               " "  + over.form +
-               " cannot be placed " +
-               (under.form === "box" ? "inside a " : "ontop a ") +
-               under.size + " " + under.form + ".";
+            " "  + over.form +
+            " cannot be placed " +
+            (under.form === "box" ? "inside a " : "ontop a ") +
+            under.size + " " + under.form + ".";
     }
 
     //Returns the stack number of the object

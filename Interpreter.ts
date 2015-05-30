@@ -69,18 +69,18 @@ module Interpreter {
         // and gives the command to pick the first one up. If no object is found, return null.
         if(cmd.cmd == "take"){
             var ids = identifyObj(cmd.ent.obj, state);
-            if(ids.length == 0) 
+            if(ids.length == 0)
                 return null;
             var intprt : Literal[][] = [[
                 {pol: true, rel: "holding", args: [ids[0]]}
             ]];
         }
         // If the command is to put the current held object down at a given location, we find every
-        // location that fits the description and drops the object at the first we found. Returns 
+        // location that fits the description and drops the object at the first we found. Returns
         // null if no locations were found or if the arm does not hold anything.
         else if (cmd.cmd == "put"){
             var ids = identifyObj(cmd.loc.ent.obj, state);
-            if(ids.length == 0 || state.holding == null) 
+            if(ids.length == 0 || state.holding == null)
                 return null;
             var intprt : Literal[][] = [[
                 {pol: true, rel: cmd.loc.rel, args: [state.holding, ids[0]]}
@@ -93,15 +93,15 @@ module Interpreter {
         // the first found location.
         else if (cmd.cmd == "move"){
             var srcIds = identifyObj(cmd.ent.obj, state);
-            if(srcIds.length == 0) 
+            if(srcIds.length == 0)
                 return null;
             var dstIds = identifyObj(cmd.loc.ent.obj, state);
-            if(dstIds.length == 0) 
+            if(dstIds.length == 0)
                 return null;
 
             var intprt : Literal[][] = [[
                 {pol: true, rel: cmd.loc.rel, args: [srcIds[0], dstIds[0]]}
-            ]];        
+            ]];
         }
         else
             throw new Interpreter.Error("NYI: CMD " + cmd.cmd);
@@ -124,22 +124,22 @@ module Interpreter {
             if(form == "floor") ids.push("floor");
 
             // Since we do not care where the object is, only if it exists, we can concat all stacks
-            // and iterate through that instead of iterating through every stack. 
+            // and iterate through that instead of iterating through every stack.
             var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-            
-            //Objects can also be held.            
+
+            //Objects can also be held.
             if(state.holding) {
                 objs.push(state.holding);
             }
 
             for(var i = 0; i < objs.length; i++){
                 var currentObj = state.objects[objs[i]];
-                if((currentObj.form == form || form == "anyform") && 
-                    (currentObj.color == color || color == null) && 
-                    (currentObj.size == size || size == null)){
+                if((currentObj.form == form || form == "anyform") &&
+                   (currentObj.color == color || color == null) &&
+                   (currentObj.size == size || size == null)){
                     ids.push(objs[i]);
                 }
-            }           
+            }
         }
         // Find every object that conforms to the given constraints inlcuded in object and location.
         else{
@@ -185,7 +185,7 @@ module Interpreter {
             else if(relation == "ontop"){
                 // The floor object is "in" all stacks
                 if((pos[0] == lpos[0] || lpos[0] == -1) && pos[1] == lpos[1] + 1)
-                    res = true;   
+                    res = true;
             }
             else if(relation == "under"){
                 if(pos[0] == lpos[0] && pos[1] < lpos[1])
@@ -200,7 +200,7 @@ module Interpreter {
                 if((pos[0] == lpos[0] || lpos[0] == -1) && pos[1] > lpos[1])
                     res = true;
             }
-            else 
+            else
                 throw new Interpreter.Error("NYI: checkLoc " + loc.rel);
 
         });
@@ -212,7 +212,7 @@ module Interpreter {
 
         // The floor "object" is handled separately
         // Also the object might be held by the arm.
-        if(objectId === "floor" || 
+        if(objectId === "floor" ||
            objectId === state.holding)
             return [-1,-1];
 
@@ -229,18 +229,4 @@ module Interpreter {
         // If no object matches the given Object ID, null is returned.
         return null;
     }
-
-    //function getRandomInt(max) {
-    //    return Math.floor(Math.random() * max);
-    //}
-
 }
-
-// This returns a dummy interpretation involving two random objects in the world
-// var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-// var a = objs[getRandomInt(objs.length)];
-// var b = objs[getRandomInt(objs.length)];
-//var intprt : Literal[][] = [[
-//     {pol: true, rel: "ontop", args: [a, "floor"]},
-//     {pol: true, rel: "holding", args: [b]}
-// ]]; 
