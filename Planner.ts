@@ -200,12 +200,13 @@ module Planner {
               , vals : number[][] =
                     _.map(orList, function (andList) {
                         return _.map(andList, function (literal) {
+                            var val = 0;
 
                             if(literal.rel === "ontop" || literal.rel === "inside") {
                                 if(relExist(node.label.rels, literal)) {
-                                    return 0;
+                                    val = 0;
                                 } else {
-                                    return countObjectsOnTop(node.label, literal.args[0]) +
+                                    val = countObjectsOnTop(node.label, literal.args[0]) +
                                         countObjectsOnTop(node.label, literal.args[1]) +
                                         xDistance(world, literal.args[0], literal.args[1]);
                                 }
@@ -213,9 +214,9 @@ module Planner {
 
                             else if(literal.rel === "above" || literal.rel === "under") {
                                 if(checkWhichSide(stacks, literal.args[0], literal.args[1]) === literal.rel) {
-                                    return 0;
+                                    val = 0;
                                 } else {
-                                    return xDistance(world, literal.args[0], literal.args[1]) +
+                                    val = xDistance(world, literal.args[0], literal.args[1]) +
                                         _.min([countObjectsOnTop(node.label, literal.args[0]),
                                             countObjectsOnTop(node.label, literal.args[1])]);
                                 }
@@ -223,18 +224,20 @@ module Planner {
 
                             else if(literal.rel === "left" || literal.rel === "right") {
                                 if(checkWhichSide(stacks, literal.args[0], literal.args[1]) === literal.rel) {
-                                    return 0
+                                    val = 0;
                                 } else {
-                                    return xDistance(world, literal.args[0], literal.args[1])+1;
+                                    val = xDistance(world, literal.args[0], literal.args[1])+1;
                                 }
                             }
 
                             else if (literal.rel === 'beside') {
                                 var obj1 = literal.args[0]
                                   , obj2 = literal.args[1];
-                                return xDistance(world, obj1, obj2) - 1;
+                                val = xDistance(world, obj1, obj2) - 1;
                             }
 
+                            //console.log("heuristik:",val);
+                            return val;
                             //return 0;
                         })
                 })
