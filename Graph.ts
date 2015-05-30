@@ -6,11 +6,47 @@
 interface GraphNode<E> {
     name: string;
     costTo(to: GraphNode<E>): number;
-    neighbours(): { node: GraphNode<E>; edge: E}[];
+    neighbours(): { node: GraphNode<E>; edge: E }[];
 }
 
 interface GraphFilter {
     costTo(state): number;
+}
+
+class GraphFilterList {
+    public constructor(private filters?: GraphFilter[]) {
+        if (filters == undefined)
+            this.filters = new Array<GraphFilter>();
+
+    }
+    public costTo(state): number {
+        var cost = 0;
+        this.filters.forEach(s => { cost += s.costTo(state); });
+        return cost;
+    }
+    List() {
+        get: { return this.filters; }
+    }
+    public add(filter: GraphFilter): void {
+        this.filters.push(filter);
+    }
+};
+
+class GraphFilterListTargets {
+    public constructor(private filterList?: GraphFilterList[]) {
+        if (filterList == undefined)
+            this.filterList = new Array<GraphFilterList>();
+    }
+    public costTo(state): number {
+        var result: number[] = this.filterList.map(s=> s.costTo(state));
+        return Math.min.apply(Math, result);
+    }
+    List() {
+        get: { return this.filterList; }
+    }
+    public add(filterList: GraphFilterList): void {
+        this.filterList.push(filterList);
+    }
 }
 
 /**
@@ -40,9 +76,8 @@ class Graph<T, E> {
     public constructor(private nodes: GraphNode<E>[], private edges: E[][]  /*A list of edges for every node */) {
     }
 
-    public fintPathToFilter<F extends GraphFilter>(start: GraphNode<E>, filter: F): { node: GraphNode<E>; edge: E }[] {
+    public fintPathToFilters(start: GraphNode<E>, filters: GraphFilterListTargets): { node: GraphNode<E>; edge: E }[] {
         var openset = new collections.Set<GraphNode<E>>();
-
         var cameFrom = new collections.Dictionary<GraphNode<E>, { node: GraphNode<E>; edge: E }>();
 
         var fScore = new collections.PriorityQueue<{ node: GraphNode<E>; cost: number }>(function (a, b): number {
@@ -51,15 +86,14 @@ class Graph<T, E> {
         var closedSet = new collections.Set<GraphNode<E>>();
         var gScore = new collections.Dictionary<GraphNode<E>, number>();
 
-
         openset.add(start);
         gScore.setValue(start, 0);
-        fScore.enqueue({ node: start, cost: gScore.getValue(start) + filter.costTo(start) });
+        fScore.enqueue({ node: start, cost: gScore.getValue(start) + filters.costTo(start) });
 
         while (!openset.isEmpty()) {
             var current = fScore.dequeue().node;
 
-            if (filter.costTo(current) == 0) {
+            if (filters.costTo(current) == 0) {
                 var path: Array<{ node: GraphNode<E>; edge: E }> = [];
                 var nodeIterator = current;
                 while (nodeIterator != start) {
@@ -74,7 +108,6 @@ class Graph<T, E> {
                 for (var i = 0; i < path.length; ++i) {
                     pathI[i] = path[path.length - 1 - i];
                 }
-
                 return pathI;*/
                 return path;
             }
@@ -89,27 +122,20 @@ class Graph<T, E> {
                 if (closedSet.contains(currentNeighbours[i].node))
                     continue;
 
-
                 var edge_between_cost = current.costTo(currentNeighbours[i].node);
-
                 var tentativeGScore = gScore.getValue(current) + edge_between_cost;
-
-
 
                 if (!openset.contains(currentNeighbours[i].node) || (gScore.containsKey(currentNeighbours[i].node) && tentativeGScore < gScore.getValue(currentNeighbours[i].node))) { //TODO: contains() may be overhead
                     cameFrom.setValue(currentNeighbours[i].node, { edge: currentNeighbours[i].edge, node: current });
                     gScore.setValue(currentNeighbours[i].node, tentativeGScore);
 
-                    fScore.enqueue({ node: currentNeighbours[i].node, cost: tentativeGScore + filter.costTo(currentNeighbours[i].node) });
+                    fScore.enqueue({ node: currentNeighbours[i].node, cost: tentativeGScore + filters.costTo(currentNeighbours[i].node) });
 
                     if (!openset.contains(currentNeighbours[i].node))
                         openset.add(currentNeighbours[i].node);
                 }
             }
         }
-
-
-
 
         return undefined;
     }
@@ -180,7 +206,7 @@ class Graph<T, E> {
                     cameFrom[currentEdges[i][1]] = current;
                     gScore[currentEdges[i][1]] = tentativeGScore;
 
-                    fScore.enqueue({node: currentEdges[i][1], cost: gScore[currentEdges[i][1]] + this.heuristicCost(currentEdges[i][1], goal)});
+                    fScore.enqueue({ node: currentEdges[i][1], cost: gScore[currentEdges[i][1]] + this.heuristicCost(currentEdges[i][1], goal) });
 
                     if (!openset.contains(currentEdges[i][1]))
                         openset.add(currentEdges[i][1]);
@@ -222,7 +248,7 @@ class Graph<T, E> {
         return this.nodes.length;
     }
 
-    public get Nodes(): GraphNode<E>[]{
+    public get Nodes(): GraphNode<E>[] {
         return this.nodes;
     }
 

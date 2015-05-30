@@ -10,8 +10,9 @@ var defaultSpeech = false;
 //When document is ready
 $(function () {
 
-
+    
     var current = getURLParameter('world');
+    
     if (current != '3D')
         $('#theworld3d').hide();
     else

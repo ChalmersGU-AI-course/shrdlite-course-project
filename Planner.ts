@@ -6,11 +6,6 @@
 ///<reference path="ShrdliteNodeFilter.ts"/>
 
 module Planner {
-
-
-    //////////////////////////////////////////////////////////////////////
-    // exported functions, classes and interfaces/types
-
     export function plan(interpretations: Interpreter.Result[], currentState: WorldState): Result[] {
         var plans: Result[] = [];
         interpretations.forEach((intprt) => {
@@ -39,30 +34,29 @@ module Planner {
         public toString() { return this.name + ": " + this.message }
     }
 
-
-    //////////////////////////////////////////////////////////////////////
-    // private functions
-
     function planInterpretation(intprt: Interpreter.Literal[][], state: WorldState): Array<string> {
-        //Add my amazing code here!
-        var currentNode: ShrdliteNode = new ShrdliteNode(state);
+        var startNode: ShrdliteNode = new ShrdliteNode(state);
+        var g: Graph<ShrdliteNode, number> = new Graph<ShrdliteNode, number>([startNode], null);
 
-        var targetFilter: ShrdliteNodeFilter = new ShrdliteNodeFilter(intprt[0][0]);
+        var picks: { node: ShrdliteNode; edge: number }[] = undefined;
 
-        //var targetNode: ShrdliteNode = new ShrdliteNode(intprt);
+        var targetFilters = new GraphFilterListTargets();
 
-        var g: Graph<ShrdliteNode, number> = new Graph<ShrdliteNode, number>([currentNode], null);
-        var picks: { node: ShrdliteNode; edge: number }[] = <{ node: ShrdliteNode; edge: number }[]>g.fintPathToFilter<ShrdliteNodeFilter>(currentNode, targetFilter);
+        for (var i = 0; i < intprt.length; ++i) {
+            var a = new GraphFilterList();
 
-        // Overhead med noder... borde kanske edgen vara 'l', 'r', 'p', 'd' direkt? och bara returnera den?
-        // This function returns a dummy plan involving a random stack
-        var plan: Array<string> = [];
+            for (var j = 0; j < intprt[i].length; ++j)
+                a.add(new ShrdliteNodeFilter(intprt[i][j]));
 
-        //TODO: maybe empty
+            targetFilters.add(a);
+        }
+
+        picks = <{ node: ShrdliteNode; edge: number }[]>g.fintPathToFilters(startNode, targetFilters);
+
         if (picks == undefined)
             throw new Error('That is an impossible move');
 
-
+        var plan: Array<string> = [];
         while (picks.length > 0) {
             var pick = picks.pop();
             var currentNode = pick.node;
@@ -110,11 +104,6 @@ module Planner {
         }
 
         return plan;
-    }
-
-
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
     }
 
 }
