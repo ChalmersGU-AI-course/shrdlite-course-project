@@ -56,6 +56,9 @@ module Planner {
         state.pddlWorld.holding = state.holding;
         state.pddlWorld.stacks = cloneStacks(state.stacks);
 
+        console.log("stacks",state.pddlWorld.stacks);
+        console.log("inner stacks",state.pddlWorld.stacks[0]);
+
         var secNode;
         if(state.holding) {
             // Update state with 'holding' (if any)
@@ -119,11 +122,13 @@ module Planner {
     function cloneStacks(oldStacks: string[][]) {
         var stacks = [];
         for(var i in oldStacks) {
+            stacks[i] = [];
             for(var j in oldStacks[i]) {
                 stacks[i][j] = oldStacks[i][j];
             }
         }
         
+        console.log("clone done");
         return stacks;
     }
 
@@ -152,35 +157,36 @@ module Planner {
 
     function createHeuristicFunction(goalWorld:PddlLiteral[][]) {
         //console.log("create heuristic");
-        return function(node:AStar.Node<PddlWorld>) {
+        return function(node:AStar.Node<PddlWorld>) : number {
           //  console.log("run heuristic");
             var world  = node.label
               , stacks = world.stacks
               , orList = goalWorld
-              , val = _.min(orList, function (andList) {
-                return _.max(andList, function (literal) {
+              , vals : number[][] =
+                    _.map(orList, function (andList) {
+                        return _.map(andList, function (literal) {
 
-                    if(literal.rel === "ontop" || literal.rel === "inside") {
+                            if(literal.rel === "ontop" || literal.rel === "inside") {
 
-                        if(relExist(node.label.rels, literal)) {
-                            return 0;
-                        } else {
-                            var count = countObjectsOnTop(node.label, literal.args[0]);
-                            return count;
-                        }
+                                if(relExist(node.label.rels, literal)) {
+                                    return 0;
+                                } else {
+                                    var count = countObjectsOnTop(node.label, literal.args[0]);
+                                    return count;
+                                }
+                            }
+                            else if (literal.rel === 'beside') {
+                                var obj1 = literal.args[0]
+                                    , obj2 = literal.args[1];
+                                var dist = xDistance(stacks, obj1, obj2);
 
-                    }
-                    else if (literal.rel === 'beside') {
-                        var obj1 = literal.args[0]
-                          , obj2 = literal.args[1];
-                        var dist = xDistance(stacks, obj1, obj2);
-
-                    }
-
+                            }
+                        })
                 })
-            });
+              , maxVals : number[] = _.map(vals, function(list) {return _.max(list)}) // only _.max breaks typing
+              , minVal  : number   = _.min(maxVals);
 
-            return val;
+            return minVal;
 
         }
         
