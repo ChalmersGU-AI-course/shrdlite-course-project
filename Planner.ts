@@ -2,6 +2,7 @@
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Astar/astar.ts"/>
 ///<reference path="World_State.ts"/>
+///<reference path="Heuristics.ts"/>
 
 module Planner { 
 
@@ -48,17 +49,10 @@ module Planner {
         
         var path = astar_search(starting_state, goal, heuristic);
 
-        console.log("Path")
-        console.log(path.Path.Operations)
         return path.Path.Operations;
     }
 
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
-    }
-
-    ////////////////////// Defining GOal //////////////////////
-
+    // Tests if the argument literal is a goal or not.
     function find_goal_node(intprt: Interpreter.Literal[][]) {
         return function testNode(state: State) : boolean {
             for (var i=0; i < intprt.length; i++) {
@@ -72,12 +66,12 @@ module Planner {
                 if (validWorldState) {
                     return true;
                 }
-
             }
             return false;
         }
     }
 
+    // Checks whether a state is valid within the current world or not.
     export function checkStateValidity(state: WorldState, literal: Interpreter.Literal) : boolean {
         if (literal.rel.indexOf("holding") != -1)
             return state.holding == literal.args[0];
@@ -119,9 +113,9 @@ module Planner {
             return pos1.location == pos2.location && pos1.height > pos2.height;
         else
             return null;
-
     }
 
+    // Fetches the current location of an object in the current world's stack.
     function locate_object(obj: string, state: WorldState): Object_Location {
         if (state.holding == obj)
             return null;
