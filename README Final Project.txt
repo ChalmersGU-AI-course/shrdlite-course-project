@@ -15,6 +15,7 @@ The project is entirely coded in Typescript and fully working in the html view.
  - When "the" is used and matches several possibilities, we get notified how much objects are designed.
  - When "a" (or any) is used, the simplest move is chosen
  - All these relations have been implemented: on top, inside, beside, above, under, right of, left of, holding.
+ - It is possible to ask to "take" an object and then refer to it by "it" in the next utterance.
  - It is possible to ask several propositions at a time with relations "and" and "or":
  	For example: "Put a table in a red box and take a brick or put a box on the floor."
  	This would try to resolve "put a table in a red box" and "take a brick" simultaneously, or "put a box on
