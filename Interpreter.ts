@@ -217,9 +217,18 @@ module Interpreter {
         if(locs.length === 1 && locs[0][0] !== "floor"){
         	if(rel === "ontop" || rel === "inside"){
 	    		if(locs[0].length>8){
-	    			throw new Interpreter.Error("The interpreter is too stupid to handle the permutations");
+	    			return [];
 	    		}
 	    		objs = utils.transpose(objs); 
+        	} else {
+        		if(locs[0].length>8){
+        			console.log(state.getNrOfObjects("any","any","any"));
+        			console.log(locs[0].length);
+        			if(locs[0].length=== state.getNrOfObjects("any","any","any")+1){ //floor
+        				return [];
+        			}
+	    			throw new Interpreter.Error("The interpreter is too stupid to handle the permutations");
+	    		}
         	}
     	} else {
     		if(objs[0].length>8){

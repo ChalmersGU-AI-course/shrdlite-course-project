@@ -75,26 +75,28 @@ module Shrdlite {
                 throw err;
             }
         }
-
-        world.printDebugInfo("Found " + plans.length + " plans");
         
         var finalPlan : string[] = [];
-        var shortestIndex = 0;
         // Selecting the shortest plan
         if(plans.length>1){
-            finalPlan.push("\nI am a bit lazy and I only perform the easiest result.");
-            var length = 10000000;
-            for (var i = 0; i < plans.length; i++) {
-                var newLength = plans[i].plan.length;
-                if(newLength<length){
-                    shortestIndex = i;
-                    length = newLength;
-                }
+            finalPlan.push("\nThe utterance was ambiguous. There are "+plans.length+" ways possible actions for that query.");
+            finalPlan.push("And I will perform the fastest one.");
+        } 
+        var shortestIndex = 0;
+        var shortestPath = 100000;
+        var length = 10000000;
+        for (var i = 0; i < plans.length; i++) {
+            var p : Planner.Step[] = plans[i].plan.filter(p => p.explanation.length>0);
+            var newLength = p.length;
+            if(newLength<length){
+                shortestIndex = i;
+                length = newLength;
             }
         }
+        
         //Constructing a string array to pass on. 
         var plan : Planner.Step[] = plans[shortestIndex].plan;
-        finalPlan.push("\n The plan consists of "+(plan.length-1)+" moves.");
+        finalPlan.push("\n The plan consists of "+(length-1)+" moves.");
         plan.map(s=> {
             finalPlan.push(s.plan);
             finalPlan.push(s.explanation);
