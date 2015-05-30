@@ -173,10 +173,130 @@ module Interpreter {
         }
 
         //console.log("returning",interpretations[0][0].slice(), interpretations[0][0]);
-        console.log("returning",interpretations);
-        return interpretations;
+        console.log("Before pruning", interpretations);
+        if(interpretations.length > 1){
+            console.log('WARNING - interpretCommand found multiple interpretations.');
+        }
+        return [pruneImpossibilities(interpretations[0], state)];
     }
 
+    function pruneImpossibilities(interpretation: PddlLiteral[][], 
+        state: ExtendedWorldState) : PddlLiteral[][] {
+
+        var legalInterpretation = [];
+        for (var i in interpretation) {
+            var ontopInside = [], holding = false;
+            var legal = true;
+            for (var j in interpretation[i]) {
+                var literal = interpretation[i][j];
+                if (!possibleLiteral(literal, state)) {
+                    legal = false;
+                    break;
+                } else if (literal.pol && (literal.rel === 'ontop' || literal.rel === 'inside')) {
+                    if (_.contains(ontopInside, literal.args[1])) {
+                        // Many things ontop/inside same thing
+                        legal = false;
+                        break;
+                    } else {
+                        ontopInside.push(literal.args[1]);
+                    }
+                } else if (literal.pol && literal.rel === 'holding') {
+                    if (holding) {
+                        // Many things in arm
+                        legal = false;
+                        break;
+                    } else {
+                        holding = true;
+                    }
+                }
+
+            }
+            if (legal) {
+                legalInterpretation.push(interpretation[i]);
+            }
+        }
+        return legalInterpretation;
+    }
+
+    function possibleLiteral(literal: PddlLiteral, state: ExtendedWorldState) : boolean {
+        if(literal.pol === false){
+            return true;
+        }
+
+        var obj1 = state.objectsWithId[literal.args[0]];
+        // Holding floor
+        if(literal.rel === 'holding'){
+            return obj1.form === 'floor';
+        }
+        // Can not have a binary relation to itself
+        if(literal.args[0] === literal.args[1]){
+            return false;
+        }
+        var obj2 = state.objectsWithId[literal.args[1]];
+        switch(literal.rel){
+            case 'ontop':
+                // Things ontop boxes instead of inside
+                if(obj2.form === 'box'){
+                    return false;
+                }
+                // Balls ontop non-floor things
+                if(obj1.form === 'ball' && obj2.form !== 'floor'){
+                    return false;
+                }
+                // Things ontop balls
+                if(obj2.form === 'ball'){
+                    return false;
+                }
+                // Large things ontop small things
+                if(obj1.size === 'large' && obj2.size === 'small'){
+                    return false;
+                }
+                // Boxes ontop pyramid
+                if(obj1.form === 'box' && obj2.form === 'pyramid'){
+                    return false;
+                }
+                // Small box ontop small brick
+                if(obj1.size === 'small' && obj1.form === 'box' 
+                    && obj2.size === 'small' && obj2.form === 'brick'){
+                    return false;
+                }
+            break;
+            case 'inside':
+                // Things inside non-boxes instead of ontop
+                if(obj2.form !== 'box'){
+                    return false;
+                }
+                // Large things inside small things
+                if(obj1.size === 'large' && obj2.size === 'small'){
+                    return false;
+                }
+                // Pyramid/plank/same size box in box
+                if(obj1.form === 'pyramid' || obj1.form === 'plank' 
+                    || (obj1.form === 'box' && obj1.size === obj2.size)){
+                    return false;
+                }
+            break;
+            case 'above':
+                // Things above balls
+                if(obj2.form === 'ball'){
+                    return false;
+                }
+            break;
+            case 'under':
+                // Balls under things
+                if(obj1.form === 'ball'){
+                    return false;
+                }
+                // Under the floor
+                if(obj2.form === 'floor'){
+                    return false;
+                }
+            break;
+            default:
+                return true;
+        }
+        return true;
+    }
 
     function toIds(objDefs : ObjectDefinitionWithId[][][]) : string[][][] {
         var interpretIds : string[][][] = [];
@@ -283,7 +403,7 @@ module Interpreter {
 
     // Helper function for permuting an array.
     // Source: http://stackoverflow.com/questions/9960908/permutations-in-javascript
-    function permutator(inputArr) {
+    /*function permutator(inputArr) {
         var results = [];
         function permute(arr, memo) {
             var cur, memo = memo || [];
@@ -298,10 +418,10 @@ module Interpreter {
             return results;
         }
         return permute(inputArr, null);
-    }
+    }*/
 
     // Returns a list of all unordered permutatios with n elements taken from list.
-    function waysToTake(list : string[], n : number) : string[][] {
+    /*function waysToTake(list : string[], n : number) : string[][] {
         list = list.slice();
         if (n > list.length) {
             return [];
@@ -318,7 +438,7 @@ module Interpreter {
             return tookOne.concat(tookZero);
         }
 
-    }
+    }*/
 
     // TODO Use lodash helper instead? Flatten or something like that...
     // Takes a 2-dim list where one of the dimensions only has one element and returns a 1-dim list.
