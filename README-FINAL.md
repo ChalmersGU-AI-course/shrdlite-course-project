@@ -49,5 +49,5 @@ The following document is supposed to explain the final submission of the ShrdLi
 ### Heuristic function
  * Can be found in ShrdliteNodeFilter
  * The cost is the minimum number of objects above the object (or a variant of this depending on the relation between the objects)
- * Arm cost movements in 3D
+ * Planner works in 3D worlds, eg. arm cost movements in 3D and h-cost for behind of /in front of object
  * Several targets, eg: (this AND that AND ...) OR (something AND something else AND ..) OR ...
