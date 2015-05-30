@@ -161,7 +161,7 @@ module Planner {
         return false;
     }
 
-    function checkWhichSide(world, left, right) {
+    function checkWhichSide(world:PddlWorld, left:string, right:string) {
         
         var leftP=[], rightP=[];
         var stacks = world.stacks;
@@ -219,7 +219,7 @@ module Planner {
                             }
 
                             else if(literal.rel === "above" || literal.rel === "under") {
-                                if(checkWhichSide(stacks, literal.args[0], literal.args[1]) === literal.rel) {
+                                if(checkWhichSide(world, literal.args[0], literal.args[1]) === literal.rel) {
                                     return 0;
                                 } else {
                                     return xDistance(world, literal.args[0], literal.args[1]) +
@@ -229,7 +229,7 @@ module Planner {
                             }
 
                             else if(literal.rel === "left" || literal.rel === "right") {
-                                if(checkWhichSide(stacks, literal.args[0], literal.args[1]) === literal.rel) {
+                                if(checkWhichSide(world, literal.args[0], literal.args[1]) === literal.rel) {
                                     return 0
                                 } else {
                                     return xDistance(world, literal.args[0], literal.args[1])+1;
@@ -240,6 +240,10 @@ module Planner {
                                 var obj1 = literal.args[0]
                                   , obj2 = literal.args[1];
                                 return xDistance(world, obj1, obj2) - 1;
+                            }
+                            
+                            else if(literal.rel === 'holding') {
+                                return xDistance(world, literal.args[0], "arm") + countObjectsOnTop(world, literal.args[0]);   
                             }
 
                             //return 0;
