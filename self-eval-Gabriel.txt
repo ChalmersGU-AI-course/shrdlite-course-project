@@ -1,0 +1,36 @@
+# General questions
+## What is your name and “personnummer”?
+911010-4131
+## Which is your project group?
+Group 2: Team Dandelion
+
+# Questions about the programming project
+Worth mentioning on before hand. Since the project had two sub-goals and we initially divided up ourselves in sub-groups. 
+So when one of us was undisposable we could still carry on. 
+
+## Which parts of the programming project were you actively involved in? Please note which parts you did yourself and which parts you did together with others (and who they were).
+I was very dedicated in the Interpreter section. Both making the basic one with only the "any"-quantifier work and the difficult one to handle all the quantifiers. Also in the end I was working on the post-processing part when Parser.Result began containing a list of {Step} insted of just strings. It was just a partial refactoration to reach a more readable setup.
+
+## Which parts of the programming project were you not actively involved in?
+I Was not actively involved in the Planner until the end period. I still knew where the development was headed but I did not contribute in creating the initial heuristics. 
+
+## Do you think that some or several in the group (including you) deserve a higher or lower grade than the others, for the programming project? Who would that be and why?
+Personally, I sincerely think that we all should have the same grade. There were moments when Niklas was elsewhere but since the project has in overall moved on in a good pace and when we had some trouble he contributed. 
+
+# Questions about the essay
+Worth mentioning on before hand. We found our sources early on and everyone needed to read them before we could sit down and find our approach. 
+
+## Which parts of the essay were you actively involved in? Please note which parts you did yourself and which parts you did together with others (and who they were).
+In the beginning I started off writing some ideas on how to structure the whole essays and aided us finding our writing style. 
+I started off writing on a section regarding Bostroms theory of simulating consciousness by simulating everything. But since the essay had taken a turn for the better we cut that part.
+In the end game I was involved in improving the content and formulations of section 2 (all subsections), 3, 5 and 6. 
+
+## Which parts of the essay were you not actively involved in?
+
+
+## Which essays (if any) did you review and together with whom?
+
+## Do you think that some or several in the group (including you) deserve a higher or lower grade than the others, for the essay? Who would that be and why?
+
+# Final remarks
+##Do you have any other comments?

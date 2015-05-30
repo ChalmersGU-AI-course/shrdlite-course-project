@@ -83,20 +83,22 @@ module Shrdlite {
             finalPlan.push("And I will perform the fastest one.");
         } 
         var shortestIndex = 0;
-        var shortestPath = 100000;
         var length = 10000000;
+        var descriptionLength = 100000
         for (var i = 0; i < plans.length; i++) {
+            var newLength = plans[i].plan.length;
             var p : Planner.Step[] = plans[i].plan.filter(p => p.explanation.length>0);
-            var newLength = p.length;
+            var newdesc = p.length;
             if(newLength<length){
                 shortestIndex = i;
                 length = newLength;
+                descriptionLength = newdesc-1;
             }
         }
         
         //Constructing a string array to pass on. 
         var plan : Planner.Step[] = plans[shortestIndex].plan;
-        finalPlan.push("\n The plan consists of "+(length-1)+" moves.");
+        finalPlan.push("\n The plan consists of "+descriptionLength+" moves.");
         plan.map(s=> {
             finalPlan.push(s.plan);
             finalPlan.push(s.explanation);
