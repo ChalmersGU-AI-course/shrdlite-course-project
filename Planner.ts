@@ -253,8 +253,6 @@ module Planner {
               , maxVals : number[] = _.map(vals, function(list) {return _.max(list)}) // only _.max breaks typing
               , minVal  : number   = _.min(maxVals);
 
-
-            console.log("heuristic: returning",minVal);
             return minVal;
 
         }
