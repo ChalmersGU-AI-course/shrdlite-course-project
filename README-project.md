@@ -7,7 +7,7 @@ Build the project and load the Shrdlite.html website. If building doesn't work, 
 The example utterances of the small world has been updated with a couple of utterances that we consider extra interesting. All of the default ones are very relevant as well.
 
 ## Extensions
-We have chosen to implement three extensions.
+We have chosen to implement three extensions (and a small bonus).
 
 ### Quantifiers
 The quantifiers the/any/all are handled.
@@ -28,6 +28,10 @@ This extension does not handle when secondary args are moved to satisfy literals
 
 Implemented in Planalyzer.ts.
 
+### Bonus
+We also added a new relation: "containing", which is the opposite of "inside".
+Additionally, the relation "under" has been changed to mean "directly below" (the opposite of "on top of"), instead of being the same as below.
+
 ## Heuristics
 We are using a heuristic that combines two values:
 
@@ -37,10 +41,7 @@ We are using a heuristic that combines two values:
 Implemented in WorldAstar.ts
 
 ## TODO
-Except for the notes above, we are pretty happy with how things are working.
-
-## Misc
-We also added a new relation "containing", which is the opposite of "inside".
+Except for the issues noted above, we are pretty happy with how things are working.
 
 ## List of new files
 * `AmbiguityResolve.ts` - Ambiguity resolve code.
