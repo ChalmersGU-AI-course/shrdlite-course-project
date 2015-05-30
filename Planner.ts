@@ -1,15 +1,15 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="Graph.ts"/>
+///<reference path="lib/collections.ts"/>
+///<reference path="ShrdliteNode.ts"/>
+///<reference path="ShrdliteNodeFilter.ts"/>
 
 module Planner {
-
-    //////////////////////////////////////////////////////////////////////
-    // exported functions, classes and interfaces/types
-
-    export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
-        var plans : Result[] = [];
+    export function plan(interpretations: Interpreter.Result[], currentState: WorldState): Result[] {
+        var plans: Result[] = [];
         interpretations.forEach((intprt) => {
-            var plan : Result = <Result>intprt;
+            var plan: Result = <Result>intprt;
             plan.plan = planInterpretation(plan.intp, currentState);
             plans.push(plan);
         });
@@ -20,74 +20,88 @@ module Planner {
         }
     }
 
+    export interface Result extends Interpreter.Result { plan: string[]; }
 
-    export interface Result extends Interpreter.Result {plan:string[];}
 
-
-    export function planToString(res : Result) : string {
+    export function planToString(res: Result): string {
         return res.plan.join(", ");
     }
 
 
     export class Error implements Error {
         public name = "Planner.Error";
-        constructor(public message? : string) {}
-        public toString() {return this.name + ": " + this.message}
+        constructor(public message?: string) { }
+        public toString() { return this.name + ": " + this.message }
     }
 
+    function planInterpretation(intprt: Interpreter.Literal[][], state: WorldState): Array<string> {
+        var startNode: ShrdliteNode = new ShrdliteNode(state);
+        var g: Graph<ShrdliteNode, number> = new Graph<ShrdliteNode, number>([startNode], null);
 
-    //////////////////////////////////////////////////////////////////////
-    // private functions
+        var picks: { node: ShrdliteNode; edge: number }[] = undefined;
 
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
-        var plan : string[] = [];
+        var targetFilters = new GraphFilterListTargets();
 
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
-            }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
-            }
+        for (var i = 0; i < intprt.length; ++i) {
+            var a = new GraphFilterList();
+            for (var j = 0; j < intprt[i].length; ++j)
+                a.add(new ShrdliteNodeFilter(intprt[i][j]));
+            targetFilters.add(a);
         }
 
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
+        picks = <{ node: ShrdliteNode; edge: number }[]>g.fintPathToFilters(startNode, targetFilters);
 
-        if (pickstack < state.stacks.length-1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
-                plan.push("r");
+        if (picks == undefined)
+            throw new Error('That is an impossible move');
+
+        var plan: Array<string> = [];
+        while (picks.length > 0) {
+            var pick = picks.pop();
+            var currentNode = pick.node;
+            var pickstack = pick.edge;
+
+
+            //Move arm!
+            var arm_row = Math.floor(currentNode.state.arm / currentNode.state.rowLength);
+            var pick_row = Math.floor(pickstack / currentNode.state.rowLength);
+            var arm_col = currentNode.state.arm % currentNode.state.rowLength;
+            var pick_col = pickstack % currentNode.state.rowLength;
+
+            if (pick_row < arm_row) {
+                plan.push("Moving forward");
+                for (var i = arm_row; i > pick_row; --i) {
+                    plan.push("f");
+                }
+            }
+            if (pick_row > arm_row) {
+                plan.push("Moving backward");
+                for (var i = arm_row; i < pick_row; ++i) {
+                    plan.push("b");
+                }
             }
 
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
-                plan.push("l");
+            if (pick_col < arm_col) {
+                plan.push("Moving left");
+                for (var i = arm_col; i > pick_col; --i) {
+                    plan.push("l");
+                }
+            } else if (pick_col > arm_col) {
+                plan.push("Moving right");
+                for (var i = arm_col; i < pick_col; ++i) {
+                    plan.push("r");
+                }
+            }
+
+            if (currentNode.state.holding == null) {
+                var obj = currentNode.state.stacks[pickstack][currentNode.state.stacks[pickstack].length - 1];
+                plan.push("Picking up the " + currentNode.state.objects[obj].form, "p");
+            } else {
+                var obj = currentNode.state.holding;
+                plan.push("Dropping the " + currentNode.state.objects[obj].form, "d");
             }
         }
-
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
 
         return plan;
-    }
-
-
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
     }
 
 }

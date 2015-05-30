@@ -1,6 +1,7 @@
 ///<reference path="Shrdlite.ts"/>
 ///<reference path="ANSIWorld.ts"/>
 ///<reference path="ExampleWorlds.ts"/>
+///<reference path="lib/jquery.d.ts" />
 
 // Extract command line arguments:
 var nodename = process.argv[0];
@@ -17,4 +18,4 @@ if (process.argv.length != 3 || !ExampleWorlds[worldname]) {
 
 var world = new ANSIWorld(ExampleWorlds[worldname]);
 
-Shrdlite.interactive(world);
+Shrdlite.interactive(world, world);

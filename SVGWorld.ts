@@ -67,6 +67,24 @@ class SVGWorld implements World {
         this.inputCallback = callback;
     }
 
+		public printPickList(elements : string[], callback) {
+			$('<select>').attr("class", "pick")
+					.attr('style', 'padding: 0.1em' ) 
+					//; border: solid blue; border-radius: 0.05em' )
+					.insertBefore(this.containers.inputform)
+					.change(function() {
+						//alert("something was clicked.");
+						var optionSelected = $(this).find("option:selected");
+						callback(optionSelected.text());
+						$(this).prop('disabled',true);
+					});
+			for (var i = 0; i < elements.length; i++) {
+				$( ".pick" ).append(new Option(elements[i], "option"+i))
+			}
+			var dialogue = this.containers.dialogue;
+			dialogue.scrollTop(dialogue.prop("scrollHeight"));
+		}
+
     public printSystemOutput(output, participant="system", utterance?) {
         if (utterance == undefined) {
             utterance = output;
@@ -245,7 +263,7 @@ class SVGWorld implements World {
     // The basic actions: left, right, pick, drop
 
     private getAction(act) {
-        var actions = {p:this.pick, d:this.drop, l:this.left, r:this.right};
+        var actions = { p: this.pick, d: this.drop, l: this.left, r: this.right, f: this.forward, b: this.backward };
         return actions[act.toLowerCase()];
     }
 
@@ -280,6 +298,20 @@ class SVGWorld implements World {
         this.verticalMove('pick', callback);
     }
 
+    private forward(callback?) {
+        if (this.currentState.arm < this.currentState.rowLength) {
+            throw "Already at the front edge!";
+        }
+        this.horizontalMove(this.currentState.arm - this.currentState.rowLength, callback);
+    }
+
+    private backward(callback?) {
+        if (this.currentState.arm + this.currentState.rowLength >= this.currentState.stacks.length) {
+            throw "Already at the back edge!";
+        }
+        this.horizontalMove(this.currentState.arm + this.currentState.rowLength, callback);
+    }
+
     //////////////////////////////////////////////////////////////////////
     // Moving around
 
@@ -301,6 +333,11 @@ class SVGWorld implements World {
         if (callback) setTimeout(callback, (duration + this.animationPause) * 1000);
         return 
     }
+
+    /*
+    private forwardMove(newArm, callback?) {
+        this.currentState.arm = newArm;
+    }*/
 
     private verticalMove(action, callback?) {
         var altitude = this.getAltitude(this.currentState.arm);
@@ -326,6 +363,8 @@ class SVGWorld implements World {
         }
         if (callback) setTimeout(callback, 2*(duration + this.animationPause) * 1000);
     }
+
+
 
     //////////////////////////////////////////////////////////////////////
     // Methods for getting information about objects 

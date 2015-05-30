@@ -1,0 +1,131 @@
+node: Albania
+edges: Republic of Macedonia, Greece, Montenegro, Kosovo
+
+node: Andorra
+edges: France, Spain
+
+node: Belgium
+edges: Netherlands, Luxembourg, Germany, France
+
+node: Bosnia and Herzegovina
+edges: Croatia, Serbia, Montenegro
+
+node: Bulgaria
+edges: Romania, Republic of Macedonia, Greece, Serbia
+
+node: Denmark
+edges: Germany, Sweden
+
+node: Estonia
+edges: Latvia
+
+node: Finland
+edges: Sweden, Norway
+
+node: France
+edges: Belgium, Germany, Luxembourg, Switzerland, Italy, Monaco, Spain, Andorra, United Kingdom
+
+node: Greece
+edges: Albania, Republic of Macedonia, Bulgaria
+
+node: Ireland
+edges: United Kingdom
+
+node: Island
+edges: Norway, United Kingdom
+
+node: Italy
+edges: France, Switzerland, San Marino, Austria, Slovenia, Vatican City
+
+node: Croatia
+edges: Bosnia and Herzegovina, Slovenia, Hungary, Serbia, Montenegro
+
+node: Latvia
+edges: Estonia, Belarus, Lithuania
+
+node: Liechtenstein
+edges: Switzerland, Austria
+
+node: Lithuania
+edges: Latvia, Belarus, Kaliningrad Oblast, Poland
+
+node: Luxembourg
+edges: France, Belgium, Germany
+
+node: Republic of Macedonia
+edges: Albania, Bulgaria, Greece
+
+node: Moldova
+edges: Romania, Ukraine
+
+node: Monaco
+edges: France
+
+node: Netherlands
+edges: Belgium, Germany
+
+node: Norway
+edges: Finland, Sweden
+
+node: Poland
+edges: Kaliningrad Oblast, Lithuania, Belarus, Ukraine, Czech Republic, Slovakia, Germany
+
+node: Portugal
+edges: Spain
+
+node: Romania
+edges: Hungary, Bulgaria, Ukraine, Moldova
+
+node: Kaliningrad Oblast
+edges: Poland, Lithuania
+
+node: Switzerland
+edges: France, Germany, Austria, Italy, Liechtenstein
+
+node: Slovakia
+edges: Poland, Czech Republic, Hungary, Austria, Ukraine
+
+node: Slovenia
+edges: Austria, Hungary, Croatia, Italy
+
+node: Spain
+edges: Portugal, France, Andorra
+
+node: United Kingdom
+edges: Ireland, France
+
+node: Sweden
+edges: Norway, Finland, Denmark
+
+node: Czech Republic
+edges: Germany, Poland, Slovakia, Austria
+
+node: Germany
+edges: France, Belgium, Netherlands, Luxembourg, Denmark, Poland, Czech Republic, Austria, Switzerland
+
+node: Ukraine
+edges: Poland, Belarus, Hungary, Slovakia, Moldova, Romania
+
+node: Hungary
+edges: Austria, Slovakia, Ukraine, Romania, Serbia, Croatia, Slovenia
+
+node: Vatican City
+edges: Italy
+
+node: Belarus
+edges: Poland, Latvia, Lithuania, Ukraine
+
+node: Austria
+edges: Germany, Czech Republic, Slovakia, Hungary, Slovenia, Italy, Switzerland, Liechtenstein
+
+node: San Marino
+edges: Italy
+
+node: Montenegro
+edges: Croatia, Bosnia and Herzegovina, Serbia, Kosovo, Albania
+
+node: Kosovo
+edges: Montenegro, Serbia, Republic of Macedonia, Albania
+
+node: Serbia
+edges: Bosnia and Herzegovina, Croatia, Hungary, Romania, Bulgaria, Republic of Macedonia, Kosovo, Montenegro

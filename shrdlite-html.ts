@@ -1,13 +1,18 @@
 ///<reference path="Shrdlite.ts"/>
 ///<reference path="SVGWorld.ts"/>
+///<reference path="GLWorld.ts"/>
 ///<reference path="ExampleWorlds.ts"/>
 ///<reference path="lib/jquery.d.ts" />
 
 var defaultWorld = 'small';
 var defaultSpeech = false;
 
-$(function(){
+//When document is ready
+$(function () {
+
+    
     var current = getURLParameter('world');
+
     if (!(current in ExampleWorlds)) {
         current = defaultWorld;
     }
@@ -31,8 +36,17 @@ $(function(){
         .attr('href', '?world=' + current + '&speech=' + (!useSpeech))
         .appendTo($('#togglespeech'));
 
+
+    if (ExampleWorlds[current].rowLength == ExampleWorlds[current].stacks.length)
+        $('#theworld3d').hide();
+    else
+        $('#theworld').hide();
+
     var world = new SVGWorld(ExampleWorlds[current], useSpeech);
+    var glworld = new GLWorld(ExampleWorlds[current], <HTMLCanvasElement> document.getElementById('glcanvas'));
+
     Shrdlite.interactive(world);
+
 });
 
 
@@ -51,7 +65,7 @@ function goodbye(e) {
 		e.preventDefault();
 	}
 }
-window.onbeforeunload = goodbye;
+//window.onbeforeunload = goodbye; //NoNo!
 
 
 // Adapted from: http://www.jquerybyexample.net/2012/06/get-url-parameters-using-jquery.html
