@@ -151,32 +151,31 @@ module Planner {
     }
 
     function createHeuristicFunction(goalWorld:PddlLiteral[][]) {
-        //console.log("create heuristic"); 
+        //console.log("create heuristic");
         return function(node:AStar.Node<PddlWorld>) {
           //  console.log("run heuristic");
-            var cost = [];
-            var h = 0;
-            for(var i in goalWorld) {
-                var max = 0;
-                var min = Infinity;
-                for(var j in goalWorld[i]) {
-                    if(goalWorld[i][j].rel === "ontop" || goalWorld[i][j].rel === "inside") {
-                        var count = countObjectsOnTop(node.label, goalWorld[i][j].args[0])
-                        if(max < count) {
-                            max = count;
+            var world  = node.label
+              , stacks = world.stacks
+              , orList = goalWorld
+              , val = _.min(orList, function (andList) {
+                return _.max(andList, function (literal) {
+
+                    if(literal.rel === "ontop" || literal.rel === "inside") {
+
+                        if(relExist(node.label.rels, literal)) {
+                            return 0;
+                        } else {
+                            var count = countObjectsOnTop(node.label, literal.args[0]);
+                            return count;
                         }
-                        
-                        if(relExist(node.label.rels, goalWorld[i][j])) {
-                            max = 0;
-                        }
+
                     }
-                }
-                if(min > max) {
-                    min = max;
-                }
-            }
-            
-            return min;
+
+                })
+            });
+
+            return val;
+
         }
     }
     
