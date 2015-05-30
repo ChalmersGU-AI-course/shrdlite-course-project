@@ -42,6 +42,11 @@ module Planner {
         
         console.log("goal", intprt);
         
+        if(intprt.length === 0) {
+            plan.push("This can't be done");
+            return plan;
+        }
+        
         NUM_STACKS = state.stacks.length;
         WORLD_STATE = state;
 
