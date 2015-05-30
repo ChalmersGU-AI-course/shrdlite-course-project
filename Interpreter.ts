@@ -386,7 +386,7 @@ module Interpreter {
             // Note: this has a different type than alikeObjs -
             //       this also accounts for different interpretations of locations
             if (critLoc) {
-                if (critLoc.rel === 'inside' || critLoc.rel === 'ontop') {
+                //if (critLoc.rel === 'inside' || critLoc.rel === 'ontop') {
                     var locationsIntrprt = findEntities(critLoc.ent, objects, ppdlWorld)
                       , rel         = critLoc.rel
                         // For each location interpretation, store all objects which has relation to that interpretation's location
@@ -410,9 +410,9 @@ module Interpreter {
                             })
                         });
                        // (Example output: [[□1], [□1], [□1,□2]]
-                } else {
-                    console.log("TODO: implement more relations! See rel value of ",critLoc);
-                }
+                //} else {
+                //    console.log("TODO: implement more relations! See rel value of ",critLoc);
+                //}
                 console.log('close objects:', closeObjsIntrprt);
             }
 
