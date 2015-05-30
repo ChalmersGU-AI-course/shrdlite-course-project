@@ -466,6 +466,7 @@ module Interpreter {
 				var combosAll : string[][] = this.combinations(goals);
 
 				//building Literals
+				intprt[0] = [];
 				for (var i = 0; i < combosAll.length; i++) {
 					var o1 : string = combosAll[i][0].substring(0,1);
 					var o2 : string = combosAll[i][0].substring(1,2);
