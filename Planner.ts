@@ -221,9 +221,8 @@ module Planner {
 
                             else if (literal.rel === 'beside') {
                                 var obj1 = literal.args[0]
-                                    , obj2 = literal.args[1];
-                                var dist = xDistance(stacks, obj1, obj2);
-
+                                  , obj2 = literal.args[1];
+                                return xDistance(stacks, obj1, obj2) - 1;
                             }
                         })
                 })
