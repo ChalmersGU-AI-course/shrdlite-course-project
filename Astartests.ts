@@ -1,20 +1,9 @@
 /// <reference path ="Astar.ts" />
 
-var grid = 
-[
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-];
+//This example consists of navigating a grid from a start position to a goal position
+//The dimensions of the grid is 10x10
 
-
+//Class representing a position on the grid
 class Cell 
 {
 	x : number;
@@ -27,6 +16,7 @@ class Cell
 	}
 }
 
+//Returns true if the argument cells are the same
 function cellEquals(a : Cell, b : Cell) : boolean
 {
 	return a.x == b.x && a.y == b.y;
@@ -37,6 +27,7 @@ function cellString(c : Cell) : string
 	return c.x.toString() + "|" + c.y.toString();
 }
 
+//Generates all cells adjacent to the input cell
 function generator(cell : Cell) : Cell[]
 {
 	var cells:Cell[] = [];
@@ -69,11 +60,13 @@ function generator(cell : Cell) : Cell[]
 	return cells;
 }
 
+//A dummy heuristic incapable of differentiating between cells
 function nullheuristic(cell : Cell) : number
 {
 	return 0;
 }
 
+//The absolute value function
 function abs(a : number)
 {
 	if(a >= 0)
@@ -82,11 +75,13 @@ function abs(a : number)
 		return -a;
 }
 
+//Returns a random integer between zero and the input
 function rand(m : number)
 {
 	return Math.floor(Math.random() * m);
 }
 
+//Throws an exception with message msg if exp is false
 function enforce(exp : boolean, msg : string)
 {
 	if(!exp)
@@ -96,12 +91,15 @@ function enforce(exp : boolean, msg : string)
 	}
 }
 
+//Returns true if we can move between "from" and "to"
 function validMove(from : Cell, to : Cell)
 {
 	return abs(from.x - to.x) <= 1 && 
 		   abs(from.y - to.y) <= 1;
 }
 
+//Ensures that the A* result is valid
+//If if it isn't, it throws an exception
 function enforceAstarResult(start : Cell, end : Cell, sRes : Astar.SearchResult<Cell>)
 {
 	enforce(sRes.success, "Astar failed.");
@@ -115,6 +113,8 @@ function enforceAstarResult(start : Cell, end : Cell, sRes : Astar.SearchResult<
 	}
 }
 
+//Tests the input heuristic "heur" using Dijkstra's algorithm and the A* search algorithm
+//Prints the result to the console
 function testHeuristic(numTests : number, heur : (a : Cell, b : Cell) => number, heurName : string)
 {
 	console.log("\nStarting tests for", heurName);
@@ -122,19 +122,24 @@ function testHeuristic(numTests : number, heur : (a : Cell, b : Cell) => number,
 	{
 		var start = new Cell(rand(10), rand(10));
 		var end   = new Cell(rand(10), rand(10));
-		
+
 		var goal = function(c : Cell)
 		{
 			return cellEquals(c, end);
 		}
-		
+
 		var wrappedHeur = function(c : Cell)
 		{
 			return heur(c, end);
 		}
-		
-		var apath = Astar.findPath(start, generator, wrappedHeur, cellEquals, goal, cellString);
-		var dpath = Astar.findPath(start, generator, nullheuristic, cellEquals, goal, cellString);
+
+    //Test A*
+    var apath = Astar.findPath(start, generator, wrappedHeur, goal, cellString, 20000);
+
+    //Test Dijkstra's
+    //(without a valid heuristic, our A* implementation will use
+		// the distance from the start as heuristic).
+		var dpath = Astar.findPath(start, generator, nullheuristic, goal, cellString, 20000);
 
 		enforceAstarResult(start, end, apath);
 		enforceAstarResult(start, end, dpath);
@@ -143,21 +148,28 @@ function testHeuristic(numTests : number, heur : (a : Cell, b : Cell) => number,
 
 		console.log("\nTest", i, "\n");
 		console.log("Between ", start, " and ", end);
-		console.log("Nodes visited Astar:", apath.nodesVisited, "Dijkstra's algorithm:", dpath.nodesVisited);	
-		console.log("NL", apath.nodes.length);			
+		console.log("Nodes visited:");
+		console.log("Astar:", apath.nodesVisited);
+		console.log("Dijkstra's algorithm:", dpath.nodesVisited);
+		console.log("NL", apath.nodes.length);
 	}
 }
 
 
+//Returns the manhattan distance between the input cells
 function manhatan(cell : Cell, goal : Cell) : number
 {
 	return abs(goal.x - cell.x) + abs(goal.y - cell.y);
 }
 
+//Returns the flight distance between the two cells
 function pointDist(a : Cell, b : Cell) : number
 {
 	return Math.sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
 }
 
+//Test the Manhattan distance heuristic
 testHeuristic(10, manhatan, "Manhatan");
+
+//Test the point distance heuristic
 testHeuristic(10, pointDist, "Point distance");

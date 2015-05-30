@@ -39,14 +39,20 @@ module Planner {
     // private functions
     function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {    
         var pddl = intprt[0][0];
-                   
+
         var goal = Goals.createGoalFromPDDL(pddl, state);
         var heur = Heuristics.createHeuristicsFromPDDL(pddl, state);
+        //Attempts to find a path, terminates after 20000 iterations of generating new frontiers
         var result = Astar.findPath(state, Neighbour.listNeighbours, heur, goal, worldStr, 20000);
         if(!result.success)
             throw new Planner.Error("The planner could not find a solution to the query.");
-        
+
         var path = [];
+        //Build a sequence of instructions for the robot.
+        //"d" represents dropping the current object
+        //"p" represents picking up the object directly below the robot
+        //"r" represents taking a step to the right
+        //"l" represents taking a step to the left
         for (var i = 1; i < result.nodes.length; i++)
         {
             var s0 = result.nodes[i - 1];
@@ -58,7 +64,7 @@ module Planner {
             }
             else if(!s0.holding && s1.holding)
             {
-                path.push("p");                
+                path.push("p");
             }
             else if(s0.arm < s1.arm)
             {
@@ -68,16 +74,17 @@ module Planner {
             {
                 path.push("l");
             }
-            else 
+            else //This case is required if we started in the goal state
             {
                 //No action.
                 path.push("No action required.");
             }
         }
-        
+
         return path;
     }
-        
+
+    //Returns a string representation of the world state
     function worldStr(a: WorldState): string 
     {
         var str = "";
@@ -86,8 +93,9 @@ module Planner {
             str = str + "(";
             for (var j = 0; j < a.stacks[i].length; j++)
             {
+                //No separator is required inside the stacks in the example worlds,
+                //since no object name can be constructed from other object names
                 str = str + a.stacks[i][j];
-
             }
             str = str + ")";
         }

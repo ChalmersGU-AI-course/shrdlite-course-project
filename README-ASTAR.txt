@@ -7,5 +7,4 @@ The tests can then be run using node:
 
 node Astartests.js
 
-
 The algorithm makes use of the typescript-collections library.

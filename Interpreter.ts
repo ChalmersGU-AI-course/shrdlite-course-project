@@ -22,14 +22,14 @@ module Interpreter {
         if (interpretations.length > 1) {
             throw new Interpreter.Error("Your utterance was ambiguous, please be more specific!");
         } else if (interpretations.length) {
-            
+
             for(var i = 0; i < interpretations.length; i++)
             {
                 var err = Spatial.validatePDDLGoal(interpretations[i].intp[0][0], currentState);
                 if(err !== "ok")
                     throw new Interpreter.Error(err);
-            }            
-            
+            }
+
             return interpretations;
         } else {
             throw new Interpreter.Error("Found no interpretation");
@@ -85,7 +85,7 @@ module Interpreter {
             var intprt : Literal[][] = [[
                 {pol: true, rel: cmd.loc.rel, args: [state.holding, ids[0]]}
             ]];
-            
+
         }
         // If the command is to move an object to a certain location, we try to find every object that fits
         // the description, returns null if none were found. Then we search for all locations that fits the
@@ -206,7 +206,7 @@ module Interpreter {
         });
         return res;
     }
-    
+
     //  Returns the postion of an object with the given object ID as [stack number, stack altitude].
     function findObjPos(objectId, state : WorldState) : [number, number]{
 
@@ -215,7 +215,7 @@ module Interpreter {
         if(objectId === "floor" || 
            objectId === state.holding)
             return [-1,-1];
-        
+
         // Iterates through the stacks until the given Object ID is found.
         for (var stacknr = 0; stacknr < state.stacks.length; stacknr++) {
             for (var objectnr=0; objectnr < state.stacks[stacknr].length; objectnr++) {
@@ -225,7 +225,7 @@ module Interpreter {
 
             }
         }
-        
+
         // If no object matches the given Object ID, null is returned.
         return null;
     }
