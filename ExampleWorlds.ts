@@ -108,7 +108,6 @@ ExampleWorlds["small"] = {
     rowLength: 5
 };
 
-
 ExampleWorlds["impossible"] = { 
     "stacks": [["lbrick1","lball1","sbrick1"], [],
                ["lpyr1","lbox1","lplank2","sball2"], [],
@@ -170,7 +169,7 @@ ExampleWorlds["3D-Small"] = {
 };
 
 ExampleWorlds["3D-Medium"] = {
-    "stacks": [["e"], ["g"], ["b"], ["k", "f"], ["i"], ["c", "a", "h"], ["l", "j"], ["m"], ["n", "t"], ["o"], ["p"], ["q"], ["r"], ["d"], ["s"], ["u"]],
+    "stacks": [["e"], [], ["g", "s", "d"], ["k", "f"], ["i", "t"], ["c", "a", "h", "r"], ["l", "j"], ["m"], ["n", "u"], ["o", "p"], ["b"], ["q"]],
     //"stacks": [[], ["g"], [], [], [], [], ["j"], ["m"], []],
     "holding": "a",
     "arm": 0,
@@ -191,8 +190,8 @@ ExampleWorlds["3D-Medium"] = {
         "m": { "form": "box", "size": "small", "color": "blue" },
         "n": { "form": "box", "size": "large", "color": "blue" },
         "o": { "form": "table", "size": "large", "color": "yellow" },
-        "p": { "form": "table", "size": "small", "color": "blue" },
-        "q": { "form": "box", "size": "small", "color": "blue" },
+        "p": { "form": "table", "size": "small", "color": "green" },
+        "q": { "form": "brick", "size": "large", "color": "blue" },
         "r": { "form": "pyramid", "size": "small", "color": "blue" },
         "s": { "form": "pyramid", "size": "large", "color": "black" },
         "t": { "form": "box", "size": "small", "color": "black" },

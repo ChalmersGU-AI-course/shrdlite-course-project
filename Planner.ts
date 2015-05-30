@@ -44,10 +44,8 @@ module Planner {
 
         for (var i = 0; i < intprt.length; ++i) {
             var a = new GraphFilterList();
-
             for (var j = 0; j < intprt[i].length; ++j)
                 a.add(new ShrdliteNodeFilter(intprt[i][j]));
-
             targetFilters.add(a);
         }
 
