@@ -48,6 +48,7 @@ class ShrdliteNodeFilter implements GraphFilter {
                         noOfObjectsAbove += node.state.stacks.length - onTop - 1;
                     }
                 }
+                return 1;
                 return noOfObjectsAboveTarget;
                 break;
             case 'beside':
@@ -89,14 +90,18 @@ class ShrdliteNodeFilter implements GraphFilter {
                 }
                 break;
             case 'under':
-                //TODO: Here
+                var noOfObjectsAboveTarget = 1; //Must be one
                 for (var i = 0; i < node.state.stacks.length; ++i) {
                     var below = node.state.stacks[i].indexOf(this.intptr.args[0]);
                     var onTop = node.state.stacks[i].indexOf(this.intptr.args[1]);
 
                     if ((below != -1 || this.intptr.args[0] == 'floor') && onTop != -1 && below < onTop)
                         return 0;
+                    else if (onTop != -1)
+                        noOfObjectsAbove += node.state.stacks.length - onTop - 1;
                 }
+                return 1;
+                return noOfObjectsAbove;
                 break;
             case 'infront':
                 for (var i = node.state.rowLength; i < node.state.stacks.length; ++i) {
@@ -135,7 +140,7 @@ class ShrdliteNodeFilter implements GraphFilter {
                 return this.intptr.args.length - max;
                 break;
             default:
-                alert('no');
+                throw new Error("I do not know what that is.");
                 return 0;
                 break;
         }
