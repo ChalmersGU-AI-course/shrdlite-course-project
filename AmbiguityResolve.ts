@@ -33,6 +33,7 @@ module AmbiguityResolve {
         return parse.prs.cmd +" "+ parse.prs.ent.quant +" "+ 
                clarifyRecursive(parse.prs.ent.obj, parse.prs.ent.quant) +" TO " + parse.prs.loc.ent.quant +" "+ clarifyRecursive(parse.prs.loc.ent.obj, parse.prs.loc.ent.quant); //Add destination /other half of tree? this should be recirsive?
     }
+
     function clarifyRecursive(object: Parser.Object, quant : string) : string{
         var output = "";
         var isPlural = false;
@@ -54,6 +55,7 @@ module AmbiguityResolve {
             return printObject(object, isPlural);
         }
     }
+    
     //Returns a nice formated string of an object
     function printObject(object: Parser.Object, isPlural : boolean = false) : string{
         var output = "";

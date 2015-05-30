@@ -29,7 +29,11 @@ This extension does not handle when secondary args are moved to satisfy literals
 Implemented in Planalyzer.ts.
 
 ## Heuristics
-*describe the heuristics*
+We are using a heuristic that combines two values:
+
+* The maximum of the following: for each literal, calculate the minimum distance needed to travel to reach an argument and add how long that argument needs to be moved to reach the other argument.
+* The number of unique blocking objects in the world, where a blocking object is an object that is in the way of an ontop of relation literal.
+
 Implemented in WorldAstar.ts
 
 ## TODO

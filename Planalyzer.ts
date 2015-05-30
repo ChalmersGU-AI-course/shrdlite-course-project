@@ -4,7 +4,7 @@ module Planalyzer {
 	//Analyzes the input plan and inserts descriptions of the actions made
 	export function planalyzeActions(plan: string[], world: WorldState, literals: Interpreter.Literal[][]): string[] {
 		var result: string[] = [];
-		var actionPlans = SplitToActionPlans(plan);
+		var actionPlans = splitToActionPlans(plan);
 		var currentWorld = world;
 		var allLiterals = _.flatten(literals);
 		var unsatisfiedLiterals = getUnsatisfiedLiterals(allLiterals, world);
@@ -12,11 +12,11 @@ module Planalyzer {
 		//Adds a description to each found action plan
 		for (var i = 0; i < actionPlans.length; ++i) {
 			var actionPlan = actionPlans[i];
-			var nextWorld = ApplyPlanToWorld(actionPlan, currentWorld);
+			var nextWorld = applyPlanToWorld(actionPlan, currentWorld);
 			var nextUnsatisfiedLiterals = getUnsatisfiedLiterals(unsatisfiedLiterals, nextWorld);
 			var satisfiedLiterals = _.difference(unsatisfiedLiterals, nextUnsatisfiedLiterals);
 
-			var description = DescribeActionPlan(actionPlan, currentWorld, satisfiedLiterals);
+			var description = describeActionPlan(actionPlan, currentWorld, satisfiedLiterals);
 			result.push(description);
 			result = result.concat(actionPlan);
 			currentWorld = nextWorld;
@@ -28,7 +28,7 @@ module Planalyzer {
 	//Private functions...
 
 	//Applies all actions in the plan on the world and returns the resulting world state
-	function ApplyPlanToWorld(plan: string[], world: WorldState): WorldState {
+	function applyPlanToWorld(plan: string[], world: WorldState): WorldState {
 		var newState = {
 			stacks: copyStacks(world.stacks),
 			holding: world.holding,
@@ -60,7 +60,7 @@ module Planalyzer {
 	}
 
 	//Splits the plan into separate action groups. An action group is a sequence of actions between drops.
-	function SplitToActionPlans(plan: string[]): string[][] {
+	function splitToActionPlans(plan: string[]): string[][] {
 		var actionPlans: string[][] = [];
 		var currentGroup: string[] = [];
 
@@ -84,23 +84,23 @@ module Planalyzer {
 	}
 
 	//Prints a description of the current action plan 
-	function DescribeActionPlan(plan: string[], world: WorldState, satisfiedLiterals: Interpreter.Literal[]): string {
-		var relevantObject = FindRelevantObject(plan, world);
-		var actionDescription = DescribeAction(plan, world, satisfiedLiterals);
-		var objectDescription = DescribeObject(relevantObject, world);
-		var relevantLiteral = FindRelevantLiteral(relevantObject, satisfiedLiterals);
-		var targetDescription = DescribeTarget(relevantLiteral, world);
+	function describeActionPlan(plan: string[], world: WorldState, satisfiedLiterals: Interpreter.Literal[]): string {
+		var relevantObject = findRelevantObject(plan, world);
+		var actionDescription = describeAction(plan, world, satisfiedLiterals);
+		var objectDescription = describeObject(relevantObject, world);
+		var relevantLiteral = findRelevantLiteral(relevantObject, satisfiedLiterals);
+		var targetDescription = describeTarget(relevantLiteral, world);
 		return actionDescription + " the " + objectDescription + targetDescription;
 	}
 
 	//Based on the action plan, tries to identify the interesting object.
 	//If there is a pick up command, the object picked up is considered the most interesting,
 	//otherwise the dropped object is used.
-	function FindRelevantObject(plan: string[], world: WorldState): string {
+	function findRelevantObject(plan: string[], world: WorldState): string {
 		var pickUpIndex = plan.indexOf("p");
 		if (pickUpIndex >= 0) {
 			var planUntilPickup = plan.slice(0, pickUpIndex);
-			var newWorld = ApplyPlanToWorld(planUntilPickup, world);
+			var newWorld = applyPlanToWorld(planUntilPickup, world);
 			var currentStack = newWorld.stacks[newWorld.arm];
 			return currentStack[currentStack.length - 1];
 		}
@@ -108,13 +108,13 @@ module Planalyzer {
 		if (dropIndex >= 0) {
 			return world.holding;
 		}
-		var newWorld = ApplyPlanToWorld(plan, world);
+		var newWorld = applyPlanToWorld(plan, world);
 		var currentStack = newWorld.stacks[newWorld.arm];
 		return currentStack[currentStack.length - 1];
 	}
 
 	//Based on a list of satisfied literals, finds a literal containing the relevant object
-	function FindRelevantLiteral(relevantObject: string, literals: Interpreter.Literal[]): Interpreter.Literal {
+	function findRelevantLiteral(relevantObject: string, literals: Interpreter.Literal[]): Interpreter.Literal {
 		for (var i = 0; i < literals.length; ++i) {
 			var literal = literals[i];
 			if (literal.args[0] == relevantObject) {
@@ -127,16 +127,16 @@ module Planalyzer {
 	//Creates a sparse description of the specified object. The description is as brief as possible
 	//(but will always say the objects shape for clarity), it prefers to describe objects by color
 	//rather than size.
-	function DescribeObject(objectId: string, world: WorldState): string {
+	function describeObject(objectId: string, world: WorldState): string {
 		if (objectId === "floor") {
 			return "floor";
 		}
 
 		var objectDefinition = world.objects[objectId];
 
-		var objectsBySize = FindInWorldByProperty("size", objectDefinition.size, world);
-		var objectsByColor = FindInWorldByProperty("color", objectDefinition.color, world);
-		var objectsByForm = FindInWorldByProperty("form", objectDefinition.form, world);
+		var objectsBySize = findInWorldByProperty("size", objectDefinition.size, world);
+		var objectsByColor = findInWorldByProperty("color", objectDefinition.color, world);
+		var objectsByForm = findInWorldByProperty("form", objectDefinition.form, world);
 
 		var bySizeAndForm = _.intersection(objectsByForm, objectsBySize);
 		var byColorAndForm = _.intersection(objectsByForm, objectsByColor);
@@ -153,7 +153,7 @@ module Planalyzer {
 	}
 
 	//Describes what kind of action is being performed (move, pick up, drop)
-	function DescribeAction(plan: string[], world: WorldState, satisfiedLiterals: Interpreter.Literal[]): string {
+	function describeAction(plan: string[], world: WorldState, satisfiedLiterals: Interpreter.Literal[]): string {
 		var pickUpIndex = plan.indexOf("p");
 		var dropIndex = plan.indexOf("d");
 
@@ -172,15 +172,15 @@ module Planalyzer {
 
 	//Decribes the target of the action based on the literal and also the relation of the relvant object
 	//to the target.
-	function DescribeTarget(literal: Interpreter.Literal, world: WorldState): string {
+	function describeTarget(literal: Interpreter.Literal, world: WorldState): string {
 		if (!literal || literal.args.length <= 1) {
 			return "";
 		}
-		return " " + DescribeRel(literal.rel) + " the " + DescribeObject(literal.args[1], world);
+		return " " + describeRel(literal.rel) + " the " + describeObject(literal.args[1], world);
 	}
 
 	//A simple translation of the relation for prettier printing.
-	function DescribeRel(rel: string): string {
+	function describeRel(rel: string): string {
 		switch (rel) {
 			case "ontop":
 				return "on top of";
@@ -193,7 +193,7 @@ module Planalyzer {
 	}
 
 	//Searches for objects in the world where their property is the value
-	function FindInWorldByProperty(property: string, value: string, world: WorldState): string[] {
+	function findInWorldByProperty(property: string, value: string, world: WorldState): string[] {
 		var objects: string[] = [];
 		for (var i = 0; i < world.stacks.length; ++i) {
 			var stack = world.stacks[i];

@@ -17,7 +17,6 @@ function canPutObjectOntop(object: ObjectDefinition, baseObject: ObjectDefinitio
         return false;
     }
     //Balls must be in boxes or on the floor, otherwise they roll away.
-    //TODO check if baseobject is floor
     if(object.form == "ball" && !(baseObject.form == "box" || baseObject.form == "floor")){
             return false;
     }
@@ -41,6 +40,7 @@ function canPutObjectOntop(object: ObjectDefinition, baseObject: ObjectDefinitio
     return true;
 }
 
+//Returns true if firstObject relates according to relation to secondObject in the specified world state
 function isRelativeMatch(firstObject: string, relation: string, secondObject: string, world: WorldState): boolean {
     if (firstObject === "floor" && relation !== "under") {
         return false;

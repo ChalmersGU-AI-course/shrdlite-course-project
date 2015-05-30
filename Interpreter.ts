@@ -99,8 +99,7 @@ module Interpreter {
                     }
                 }
                 literals = newLiterals.slice();
-            }
-            else{
+            } else {
                 literals = literals.concat(matchLiterals);
             }
         }
