@@ -6,13 +6,6 @@ module Interpreter {
 	//////////////////////////////////////////////////////////////////////
 	// exported functions, classes and interfaces/types
 	//
-	//TODO: what doesn't work:
-	//- ambiguity checker is too ambitious, it might destroy the original meaning of the utterance by having you pick one of all the many possibilities
-	// (which can be a lot sometimes) -> e.g. move all balls inside the box, move all red objects above a yellow object on the floor
-	//- the spatial relation checker in the Interpreter is stupid in the way that it checks whether the spatial relations work out for both the origin and destination
-	// (it will therefore give you an error for a command like "move the white ball in the red box that is on the floor" because there is no red box on the floor,
-	//  even though a human might say that you could just put the red box on the floor first and then fulfil the command)
-	//- haven't tested all complex examples yet 
 
 	export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
 		var interpretations : Result[] = [];
@@ -115,7 +108,7 @@ module Interpreter {
 	*
 	* @param {Parser.Command} a command from the parser
 	* @param {WorldState} a description of the current state of the world
-	* @return {Literal[][]} Literal describing the PDDL goals
+	* @return {Literal[][][]} array of Literal describing the PDDL goals
 	*/
 	function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][][] {
 		var interpret = new ShrdliteInterpretation(state, cmd); 
@@ -130,10 +123,11 @@ module Interpreter {
 		constructor(private state : WorldState, private cmd : Parser.Command) {}
 
 		/**
-		 * Interpret the command based on the given objects and their relations and the actual command
-		 *
-		 * @return {Literal[][]} Literal describing the PDDL goals
-		 */
+		* Interpret the command based on the given objects and their relations and the actual command
+		*
+		*
+		* @return {Literal[][][]} array of Literal describing the PDDL goals
+		*/
 		public getInterpretation() : Literal[][][] {
 			var cmdS : string = this.cmd.cmd;
 

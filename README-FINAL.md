@@ -2,13 +2,14 @@
 
 ## Introduction
 
-The following document is supposed to explain the final submission of the ShrdLite project for group **void *** in the course **TIN172**.
+The following document is supposed to explain the final submission of the ShrdLite project for group **void*** in the course **TIN172**.
 
 ## General
 
 * To build the project just run "$make all" in the project directory.
 * To look at the project in action open _shrdlite.html_ in your browser after building.
 * Please do not consider the ANSI or Text World because some features of our project have never been implemented in those.
+* You can also visit https://tin172.github.io/ to run the project in your browser without building and installing stuff.
 
 ## Interesting examples
 
@@ -42,3 +43,4 @@ The following document is supposed to explain the final submission of the ShrdLi
 
 * the ambiguity check in the current form is a bit overambitious and will try to give suggestions solely based on the objects found in the Interpreter without regarding the original quantifiers, a potentially ambiguous example like _move all red objects above a yellow object on the floor_ will therefore spawn choices based on all the objects that fit the pattern without keeping the original **all** quantifier intact
 * the Interpreter will check the spatial relations for both the origin and the destination based on the current state, it will therefore disregard utterances like _move the white ball in the red box on the floor_ if there is no red box on the floor, although a human might interpret the goal in a way that one could first put the red box on the floor and then the white ball into it
+* Beside an object is, as explicity stated in the project page, left or right of an object.
