@@ -1,0 +1,3 @@
+[submodule "A-star/binary-heap-hash"]
+	path = planner/binary-heap-hash
+	url = git@github.com:Cadynum/binary-heap-hash.js.git
