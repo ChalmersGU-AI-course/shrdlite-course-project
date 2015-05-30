@@ -244,7 +244,7 @@ module Planner {
                             }
                             
                             else if(literal.rel === 'holding') {
-                                return xDistance(world, literal.args[0], "arm") + countObjectsOnTop(world, literal.args[0]);   
+                                val = xDistance(world, literal.args[0], "arm") + countObjectsOnTop(world, literal.args[0]);   
                             }
 
                             return val;
