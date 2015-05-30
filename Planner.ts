@@ -57,7 +57,6 @@ module Planner {
         state.pddlWorld.holding = state.holding;
         state.pddlWorld.stacks = cloneStacks(state.stacks);
 
-
         // xDistance test. can remove
         //var stacks = state.stacks;
         //console.log("stacks:",stacks);
@@ -162,6 +161,35 @@ module Planner {
         return false;
     }
 
+    function checkWhichSide(stacks, left, right) {
+        
+        var leftP=[], rightP=[];
+        
+        for(var i in stacks) {
+            for(var j in stacks[i]) {
+                if(stacks[i][j] === left) {
+                    leftP[0] = i;
+                    leftP[1] = j;
+                } else if(stacks[i][j] === right) {
+                    rightP[0] = i;
+                    rightP[1] = j;
+                }
+            }
+        }
+        
+        if(leftP[0] < rightP[0]) {
+            return "left";
+        } else if(leftP[0] > rightP[0]){
+            return "right";
+        } else {
+            if(leftP[1] > rightP[1]) {
+                return "above";
+            } else {
+                return "under";
+            }
+        }
+    }
+
     function createHeuristicFunction(goalWorld:PddlLiteral[][]) {
         //console.log("create heuristic");
         return function(node:AStar.Node<PddlWorld>) : number {
@@ -179,32 +207,32 @@ module Planner {
                                 } else {
                                     return countObjectsOnTop(node.label, literal.args[0]) +
                                         countObjectsOnTop(node.label, literal.args[1]) +
-                                        xDistance(stacks, literal.args[0], literal.args[1]);
+                                        xDistance(world, literal.args[0], literal.args[1]);
                                 }
                             }
 
                             else if(literal.rel === "above" || literal.rel === "under") {
-                                if(checkWhichSide === literal.rel) {
+                                if(checkWhichSide(stacks, literal.args[0], literal.args[1]) === literal.rel) {
                                     return 0;
                                 } else {
-                                    return xDistance(stacks, literal.args[0], literal.args[1]) +
+                                    return xDistance(world, literal.args[0], literal.args[1]) +
                                         _.min([countObjectsOnTop(node.label, literal.args[0]),
                                             countObjectsOnTop(node.label, literal.args[1])]);
                                 }
                             }
 
                             else if(literal.rel === "left" || literal.rel === "right") {
-                                if(checkWhichSide(literal.args[0], literal.args[1]) === literal.rel) {
+                                if(checkWhichSide(stacks, literal.args[0], literal.args[1]) === literal.rel) {
                                     return 0
                                 } else {
-                                    return xDistance(stacks, literal.args[0], literal.args[1])+1;
+                                    return xDistance(world, literal.args[0], literal.args[1])+1;
                                 }
                             }
 
                             else if (literal.rel === 'beside') {
                                 var obj1 = literal.args[0]
                                   , obj2 = literal.args[1];
-                                return xDistance(stacks, obj1, obj2) - 1;
+                                return xDistance(world, obj1, obj2) - 1;
                             }
 
                             //return 0;
@@ -214,7 +242,7 @@ module Planner {
               , minVal  : number   = _.min(maxVals);
 
 
-            //console.log("heuristic: returning",minVal);
+            console.log("heuristic: returning",minVal);
             return minVal;
 
         }
