@@ -10,12 +10,14 @@ module Goals
         {
             goal = holdingGoal(pddl.args[0]);
         }           
-        else if(pddl.rel === "ontop" || pddl.rel == "inside")
+        else if(pddl.rel === "ontop" || pddl.rel === "inside" || pddl.rel === "above")
         {
             goal = ontopGoal(pddl.args[0], pddl.args[1]);
         }
         else if(pddl.rel === "under")
         {
+            //The under goal is the same as an onput goal only the 
+            //arguments have to be swapped. 
             goal = ontopGoal(pddl.args[1], pddl.args[0]);
         }
         else if(pddl.rel === "rightof")
@@ -26,7 +28,14 @@ module Goals
         {
             goal = sideOfGoal(pddl.args[0], pddl.args[1]);
         }
-        
+        else if(pddl.rel === "beside")
+        {
+            goal = besideGoal(pddl.args[0], pddl.args[1]);
+        }      
+        else 
+        {
+            return (a) => false;
+        }
         
 		return goal;
 	}
@@ -95,6 +104,29 @@ module Goals
             }
             
             return le < ri;
+        }
+    }
+    
+    function besideGoal(moved : string, stationary : string) : (a : WorldState) => boolean
+    {
+        return function(a : WorldState) : boolean
+        {
+            var mov = 0, stat = 0;
+            for (var i = 0; i < a.stacks.length; i++)
+            {
+                for (var j = 0; j < a.stacks[i].length; j++)
+                {
+                    if(a.stacks[i][j] == moved)
+                    {
+                        mov = i;
+                    }
+                    else if(a.stacks[i][j] == stationary)
+                    {
+                        stat = i;
+                    }
+                }
+            }
+            return Math.abs(mov - stat) == 1;      
         }
     }
 }

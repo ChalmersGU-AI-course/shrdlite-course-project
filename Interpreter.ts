@@ -229,18 +229,4 @@ module Interpreter {
         // If no object matches the given Object ID, null is returned.
         return null;
     }
-
-    //function getRandomInt(max) {
-    //    return Math.floor(Math.random() * max);
-    //}
-
 }
-
-// This returns a dummy interpretation involving two random objects in the world
-// var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-// var a = objs[getRandomInt(objs.length)];
-// var b = objs[getRandomInt(objs.length)];
-//var intprt : Literal[][] = [[
-//     {pol: true, rel: "ontop", args: [a, "floor"]},
-//     {pol: true, rel: "holding", args: [b]}
-// ]]; 

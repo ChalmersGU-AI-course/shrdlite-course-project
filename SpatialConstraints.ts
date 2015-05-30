@@ -137,7 +137,7 @@ module Spatial {
                under.size + " " + under.form + "."; 
     }
     
-    //get
+    //find the object position in the world
     function objPos(obj : string, state : WorldState) : number
     {
         for(var i = 0; i < state.stacks.length; i++)
