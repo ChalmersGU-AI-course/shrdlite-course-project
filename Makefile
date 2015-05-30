@@ -5,6 +5,14 @@ TARGETS = html ajax ansi offline
 
 .PHONY: help clean all $(TARGETS)
 
+ifeq ($(OS),Windows_NT)
+#Windows stuff
+TSC = C:/Users/David/AppData/Roaming/npm/tsc
+else
+#Linux stuff
+TSC = tsc
+endif
+
 
 TSFILES = $(wildcard *.ts)
 
@@ -19,7 +27,7 @@ all: $(TARGETS)
 $(TARGETS): %: shrdlite-%.js
 
 %.js: %.ts $(TSFILES)
-	tsc --out $@ $<
+	$(TSC) --out $@ $<
 
 grammar.js: grammar.ne
 	nearleyc $< > $@
