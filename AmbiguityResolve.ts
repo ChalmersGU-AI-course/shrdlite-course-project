@@ -17,7 +17,8 @@ module AmbiguityResolve {
                 var errString = "Object not unique, did you mean the ";
                 for(var i = 0; i < matching.length; ++i){
                     var object = lookupLiteralArg(matching[i], state);
-                    errString = errString +" "+ printObject(object);
+                    var uniqueAttributes = findUniqueAttributes(matching[i], matching, state);
+                    errString = errString +" "+ printObject(object, false, uniqueAttributes);
                     if (i < matching.length-1){
                         errString = errString + " or the "
                     }
@@ -26,6 +27,35 @@ module AmbiguityResolve {
             }
         return false;
     }
+
+    interface UniqueAttributes {
+        color : boolean;
+        size : boolean;
+    }
+
+    // Returns the attributes that are unique for the supplied object obj
+    function findUniqueAttributes(obj: string, matching : string[], state : WorldState) : UniqueAttributes {
+        var attributes : UniqueAttributes = {color: true,
+                                             size: true,
+                                        };
+        var object :ObjectDefinition = lookupLiteralArg(obj, state);
+        for (var j=0; j < matching.length; ++j) {
+            if (matching[j] === obj) {
+                //the object won't be unique with regards to itself
+                continue;
+            }
+            var second = lookupLiteralArg(matching[j], state);
+            if (object.color === second.color) { 
+                attributes.color = false;
+            }
+
+            if (object.size === second.size) {
+                attributes.size = false;
+            }
+        }
+        return attributes;
+    }
+
 
     //Ask for clarifications of the parse tree
     function clarifyParseTree(parse : Parser.Result) : string{
@@ -57,12 +87,24 @@ module AmbiguityResolve {
     }
     
     //Returns a nice formated string of an object
-    function printObject(object: Parser.Object, isPlural : boolean = false) : string{
+    function printObject(object: Parser.Object, isPlural : boolean = false, atr: UniqueAttributes = null) : string{
         var output = "";
-        if(object.size){
+        var sizeRequired = true;
+        var colorRequired = true;
+        if (atr) {
+            sizeRequired = atr.size;
+            colorRequired = !sizeRequired && atr.color;
+        }
+        if(!(sizeRequired || colorRequired)) {
+            //no unique attribs, we need all
+            sizeRequired = true;
+            colorRequired = true;
+        }
+
+        if(object.size && sizeRequired){
             output = output + object.size +" ";
         }
-        if(object.color){
+        if(object.color && colorRequired){
             output = output + object.color +" ";
         }
         if(object.form) {
