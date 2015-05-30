@@ -1,4 +1,4 @@
-README file for group 7 singularity
+README File for Group 7 Singularity:
 
 How to run:
     1. make sure you have nodejs, NPM, and typescipt installed
@@ -23,7 +23,7 @@ Extensions:
 
         An example of this scenario can be seen in (Example Utterances) Nr.2
 
-        found inside: shrdlite.ts / parseUtteranceIntoPlan
+        The code is found inside: shrdlite.ts / parseUtteranceIntoPlan
 
     2. All quantifier, All can be a bit tricky since it can easily create imposible situations 
         for example "put all balls beside all balls" is only possible if there are only two balls.
@@ -32,9 +32,9 @@ Extensions:
         
         Another example for All is "put all boxes on the floor", which also works for us.
 
-        found inside: Interpreter.ts / groupRules
+        The code is found inside: Interpreter.ts / groupRules
 
-Astar heuristic:
+Astar Heuristic:
     For our solution, the Astar heuristic is a function that is a combination of two parts.
 
     The first part is a heuristic for the movement of the arm of the robot, the heuristic is measured
@@ -47,3 +47,8 @@ Astar heuristic:
     
     The two heuristic parts have equal value, meaning that the movement to the left and right has the 
     same heuristic cost as the pulling and dropping of an object.
+
+    The code is found inside: Heuristics.ts
+
+Notes:
+    * From out own testing of the project, there are no strange or unexpected behaviour.
