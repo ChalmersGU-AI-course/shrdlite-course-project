@@ -86,20 +86,6 @@ module Interpreter {
         var worldLit = worldToLiteral(state);
         var objectMap = getWorldObjectsMap(state);
 
-        // This returns a dummy interpretation involving two random objects in the world
-        /*
-        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        var a = objs[getRandomInt(objs.length)];
-        var b = objs[getRandomInt(objs.length)];
-
-        var intprt : Literal[][] = [[
-         {pol: true, rel: "ontop", args: [a, "floor"]},
-         {pol: true, rel: "holding", args: [b]}
-        ],[
-         {pol: true, rel: "ontop", args: [b, "floor"]},
-         {pol: true, rel: "holding", args: [a]}
-        ]];
-        */
        var test = checkList( [ {pol:true , rel:"ontop", args:['a','b']} , {pol:true, rel:"ontop", args:['a','c']}] );
        var test2 = checkList( [ {pol:true , rel:"ontop", args:['a','b']} , {pol:true, rel:"under", args:['a','b']}] );
 
@@ -130,22 +116,21 @@ module Interpreter {
                                       product(sourcesBranches, targetBraches).forEach((param) => {
 						                              var sources = param[0], targets = param[1];
 						                              var literals : Literal[] = [];
-						                              var possibleMatches : Literal [][] =[]; //TODO ADDED
+						                              var possibleMatches : Literal [][] =[]; 
 						                              
 						                              targets.forEach((target)=> {
-						                                  var possibleLits: Literal [] = []; //TODO ADDED
+						                                  var possibleLits: Literal [] = []; 
 						                                  sources.forEach((source) => {
 						                                          var newLit = { pol: true, rel: cmd.loc.rel, args: [source, target] };
-						                                           //  if (checkLiteral(objectMap, newLit).val) literals.push(newLit); //TODO REMOVED
-						                                          if (checkLiteral(objectMap, newLit).val) possibleLits.push(newLit); //TODO ADDED
+						                                          if (checkLiteral(objectMap, newLit).val) possibleLits.push(newLit);
 						                                      });      
-						                                      if(possibleLits.length) possibleMatches.push(possibleLits); //TODO ADDED
+						                                      if(possibleLits.length) possibleMatches.push(possibleLits);
 						                                  });
 						                          
-						                                  if ( possibleMatches.length) findMatch(possibleMatches[0],possibleMatches.slice(1),literals, intprt) ; //should end up with valid list of literals if such exists;//TODO ADDED
-						                                   //if (literals.length && checkList(literals).val) intprt.push(literals);//TODO REMOVE
+						                                  if ( possibleMatches.length) findMatch(possibleMatches[0],possibleMatches.slice(1),literals, intprt) ; //ends up with valid list of literals if such exists;
+						                                
 						                             });
-                                    // THIS IS THE ONLY DIFFERENT CASE, THE OTHERS CAN USE THE FOLLOWING
+                                    // THIS IS THE ONLY DIFFERENT CASE, THE OTHERS CAN USE THE FOLLOWING WRITTEN IN DEFAULT
                                     break;
                     default:       
                                      var quantif ="";
@@ -160,20 +145,18 @@ module Interpreter {
 											        debugger;
 						                              var sources = param[0], targets = param[1];
 						                              var literals : Literal[] = [];
-						                              var possibleMatches : Literal [][] =[]; //TODO ADDED
+						                              var possibleMatches : Literal [][] =[]; 
 						                              debugger;
 						                              sources.forEach((source) => {
-						                                  var possibleLits: Literal [] = []; //TODO ADDED
+						                                  var possibleLits: Literal [] = []; 
 						                                  targets.forEach((target) => {
 						                                          var newLit = { pol: true, rel: cmd.loc.rel, args: [source, target] };
-						                                           //  if (checkLiteral(objectMap, newLit).val) literals.push(newLit); //TODO REMOVED
-						                                          if (checkLiteral(objectMap, newLit).val) possibleLits.push(newLit); //TODO ADDED
+						                                          if (checkLiteral(objectMap, newLit).val) possibleLits.push(newLit); 
 						                                      });      
-						                                      if(possibleLits.length) possibleMatches.push(possibleLits); //TODO ADDED
+						                                      if(possibleLits.length) possibleMatches.push(possibleLits); 
 						                                  });
 						                          
-						                                  if ( possibleMatches.length) findMatch(possibleMatches[0],possibleMatches.slice(1),literals, intprt); //should end up with valid list of literals if such exists;//TODO ADDED
-						                                   //if (literals.length && checkList(literals).val) intprt.push(literals);//TODO REMOVE
+						                                  if ( possibleMatches.length) findMatch(possibleMatches[0],possibleMatches.slice(1),literals, intprt); //ends up with valid list of literals if such exists;
 						                             });
 										             break;                    
 						                }
@@ -204,7 +187,7 @@ module Interpreter {
     
    
     // The recursion will test out every combination of literals that satisfy the existence of one literal per 
-    // source; //TODO ADDED
+    // source; 
     
     function findMatch( currentSet: Literal[] , remainingSets: Literal[][] , lits: Literal[], intrp: Literal[][] ) 
       {
@@ -248,7 +231,7 @@ module Interpreter {
                       if(obj.color) msg+=obj.color+" ";
                       if(obj.form!="anyform") msg+=obj.form+"s found;";
                       else msg+="objects found;";
-                      throw new Interpreter.Error(" found multiple objects matching description: "+ results.length + " "+msg); // TODO
+                      throw new Interpreter.Error(" found multiple objects matching description: "+ results.length + " "+msg); 
         }
     }
 
@@ -260,17 +243,16 @@ module Interpreter {
     function findAll(obj : Parser.Object, allLiterals : Literal[], objects : ObjectMap) : Key[] {
         if ("obj" in obj) {
             var relatedObjKeysBranches = find(obj.loc.ent, allLiterals, objects);
-            // TODO this picks the first possible path
-            // the find should always result in an arrays of branches
-            if(relatedObjKeysBranches.length == 0) return[]; //TODO ADDED
+          
+            if(relatedObjKeysBranches.length == 0) return[];
             
             var targetObjKeys = searchObjects(obj.obj, objects);
-            if (targetObjKeys.length == 0) return [];  //TODO took this out of the loop since it did not depend on anything from inside the loop
+            if (targetObjKeys.length == 0) return [];  
            
             var matchingAll: Literal[] = [];
             for(var i in relatedObjKeysBranches) {
                 var relatedObjKeys : Key[] = relatedObjKeysBranches[i];
-                if (relatedObjKeys.length != 0) //return []; //TODO REMOVED
+                if (relatedObjKeys.length != 0)
                   {
                      var matchingLiterals = allLiterals.filter((lit) => {
                        return (
@@ -279,13 +261,10 @@ module Interpreter {
                          contains(relatedObjKeys, lit.args[1])
                        );
                      });
-                     //return matchingLiterals.map((lit) => lit.args[0]); //TODO REMOVED
-                     matchingAll=matchingAll.concat(matchingLiterals);//TODO ADDED
+                     matchingAll=matchingAll.concat(matchingLiterals);
                   }
-                // TODO litList=litList.concat(matchingLiterals.map((lit) => lit.args[0]));
             }
-            return matchingAll.map((lit) => lit.args[0]); //TODO ADDED
-            // TODO return litList;
+            return matchingAll.map((lit) => lit.args[0]); 
         } else {
             return searchObjects(obj, objects);
         }
@@ -314,10 +293,8 @@ module Interpreter {
     // portrait in state variable
     //
     // Relations considered:
-    //    ontop  above  under  rightof    leftof  beside
-    //
-    // TODO - decide if we wish to use all of them
-    //
+    //    ontop  above  under  rightof  leftof  beside
+
 
     function worldToLiteral(state : WorldState) : Literal[] {
         var worldLiterals : Literal[] = [];
@@ -338,15 +315,13 @@ module Interpreter {
 
                 if (iter==0) {
                     // adds ontop relation for 1st object (floor)
-                    // TODO - Add number of floor space (number of column) - easy, gg
                     topRelation={pol: true, rel: "ontop", args: [o, "floor"]};
                     worldLiterals.push(topRelation);
                 } else {
                     var last=underObjs.length-1;
                     var under=underObjs[last];
 
-                    //only box can have inside objects, the remaining are ontop
-                    //TODO - ask if two boxes of same size can be ontop of each other
+                    //only box can have inside objects, the remaining are ontop 
                     if (state.objects[under].form=="box")  topRelation={pol: true, rel: "inside", args: [o, under]};  //box is the only form that can contain other objects
                     else topRelation={pol: true, rel: "ontop", args: [o, under]};  // any other (valid) form has objects ontop and not inside
 
@@ -354,9 +329,6 @@ module Interpreter {
 
                     for (var uObj in underObjs) { // #3
                         var u=underObjs[uObj];
-                        // TODO ??? what's inside is also above?
-                        // ??? what's "outside" is also under?
-                        // ??? decide if both are necessary
                         var abvRelation={pol: true, rel: "above", args: [o, u]};
                         var undRelation={pol: true, rel: "under", args: [u, o]};
                         worldLiterals.push(abvRelation);
@@ -399,10 +371,9 @@ module Interpreter {
 
   interface Check {val: boolean; str: string;};
   function checkLiteral(objects : ObjectMap, lit: Literal) : Check {
-      // var relations = ["ontop", "above", "under", "rightof", "leftof", "beside", "inside", "holding"];
+      
       var rel = lit.rel;
       var objs = objects;
-      // var rIndex =relations.indexOf(rel);
       var floor : ObjectDefinition = {form: "floor", size: null, color: null};
       
       if(lit.args[0]==lit.args[1])
@@ -557,8 +528,6 @@ module Interpreter {
             filtList=rel.filter((obj) => { return ( obj == "inside" ); } );
             if (filtList.length>1) return false ;
         }
-        
-        //TODO add restriction ontop+inside 
         
       return true;
       
