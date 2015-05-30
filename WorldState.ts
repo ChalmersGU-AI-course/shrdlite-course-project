@@ -177,7 +177,7 @@ class WorldState {
                      return snd === "floor" || (sndObj.form !== "ball" && !fstObj.largerThan(sndObj));
                  case "under":
                      if(snd === "floor"){ return false; }
-                     return (fstObj.form !== "ball" && !sndObj.largerThan(fstObj)); //TODO second operand of || will crash sometimes
+                     return (fstObj.form !== "ball" && !sndObj.largerThan(fstObj));
                  case "beside":
                  case "leftof":
                  case "rightof":
@@ -229,7 +229,6 @@ class WorldState {
 
     /**
      * Generates a collection of reachable states from this state.
-     * TODO: Instead of moving one step at a time, we could reason about how objects can be moved.
      *
      * @returns {collections.Dictionary<string, WorldState>} Collection of reachable states from this state, where the key represents the move performed.
      */
