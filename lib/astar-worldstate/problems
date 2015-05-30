@@ -1,0 +1,11 @@
+World               Number          Comment
+small               *               Correct.
+medium              1               Correct.
+medium              3               Does not work.
+medium              6               Correct, takes time.
+medium              8               Correct.
+complex             0               Correct.
+complex             1               Correct.
+complex             2               Correct.
+complex             4               Correct.
+complex             6               Correct.

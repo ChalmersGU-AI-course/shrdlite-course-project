@@ -2,17 +2,18 @@
 ///<reference path="Parser.ts"/>
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Planner.ts"/>
+///<reference path="tests/WorldStateTest.ts"/>
 
 module Shrdlite {
 
-    export function interactive(world : World) : void {
+    export function interactive(world : World, searchStrategy : string) : void {
         function endlessLoop(utterance : string = "") : void {
             var inputPrompt = "What can I do for you today? ";
             var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
             if (utterance.trim()) {
                 var plan : string[] = splitStringIntoPlan(utterance);
                 if (!plan) {
-                    plan = parseUtteranceIntoPlan(world, utterance);
+                    plan = parseUtteranceIntoPlan(world, utterance, searchStrategy);
                 }
                 if (plan) {
                     world.printDebugInfo("Plan: " + plan.join(", "));
@@ -31,7 +32,8 @@ module Shrdlite {
     // - then it interprets the parse(s)
     // - then it creates plan(s) for the interpretation(s)
 
-    export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
+    export function parseUtteranceIntoPlan(world : World, utterance : string, searchStrategy : string) : string[] {
+        runTests();
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
             var parses : Parser.Result[] = Parser.parse(utterance);
@@ -44,15 +46,15 @@ module Shrdlite {
             }
         }
         world.printDebugInfo("Found " + parses.length + " parses");
-        parses.forEach((res, n) => {
+        /*parses.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
-        });
+        });*/
 
         try {
             var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
         } catch(err) {
             if (err instanceof Interpreter.Error) {
-                world.printError("Interpretation error", err.message);
+                world.printError("Interpretation error: ", err.message);
                 return;
             } else {
                 throw err;
@@ -64,7 +66,7 @@ module Shrdlite {
         });
 
         try {
-            var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
+            var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState, searchStrategy);
         } catch(err) {
             if (err instanceof Planner.Error) {
                 world.printError("Planning error", err.message);
@@ -73,14 +75,35 @@ module Shrdlite {
                 throw err;
             }
         }
-        world.printDebugInfo("Found " + plans.length + " plans");
-        plans.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
+        
+        var finalPlan : string[] = [];
+        // Selecting the shortest plan
+        if(plans.length>1){
+            finalPlan.push("\nThe utterance was ambiguous. There are "+plans.length+" ways possible actions for that query.");
+            finalPlan.push("And I will perform the fastest one.");
+        } 
+        var shortestIndex = 0;
+        var length = 10000000;
+        var descriptionLength = 100000
+        for (var i = 0; i < plans.length; i++) {
+            var newLength = plans[i].plan.length;
+            var p : Planner.Step[] = plans[i].plan.filter(p => p.explanation.length>0);
+            var newdesc = p.length;
+            if(newLength<length){
+                shortestIndex = i;
+                length = newLength;
+                descriptionLength = newdesc-1;
+            }
+        }
+        
+        //Constructing a string array to pass on. 
+        var plan : Planner.Step[] = plans[shortestIndex].plan;
+        finalPlan.push("\n The plan consists of "+descriptionLength+" moves.");
+        plan.map(s=> {
+            finalPlan.push(s.plan);
+            finalPlan.push(s.explanation);
         });
-
-        var plan : string[] = plans[0].plan;
-        world.printDebugInfo("Final plan: " + plan.join(", "));
-        return plan;
+        return finalPlan;
     }
 
 
@@ -99,4 +122,9 @@ module Shrdlite {
         return plan;
     }
 
+    function runTests() {
+        var test = new tsUnit.Test(WorldStateTests);
+
+        console.log((test.run().errors.length === 0) ? 'Test Passed' : 'Test Failed')
+    }
 }

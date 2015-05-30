@@ -1,16 +1,18 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
+///<reference path="lib/astar-worldstate/search.ts"/>
+///<reference path="lib/utils.ts" />
 
 module Planner {
 
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
-    export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
+    export function plan(interpretations : Interpreter.Result[], currentState : WorldState, searchStrategy : string) : Result[] {
         var plans : Result[] = [];
         interpretations.forEach((intprt) => {
             var plan : Result = <Result>intprt;
-            plan.plan = planInterpretation(plan.intp, currentState);
+            plan.plan = planInterpretation(plan.intp, currentState, searchStrategy);
             plans.push(plan);
         });
         if (plans.length) {
@@ -21,15 +23,16 @@ module Planner {
     }
 
 
-    export interface Result extends Interpreter.Result {plan:string[];}
+    export interface Result extends Interpreter.Result {plan:Step[];}
 
+    export interface Step {plan:string; explanation:string;}
 
     export function planToString(res : Result) : string {
         return res.plan.join(", ");
     }
 
 
-    export class Error implements Error {
+    export class Error {
         public name = "Planner.Error";
         constructor(public message? : string) {}
         public toString() {return this.name + ": " + this.message}
@@ -39,55 +42,153 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
-        // This function returns a dummy plan involving a random stack
-        do {
-            var pickstack = getRandomInt(state.stacks.length);
-        } while (state.stacks[pickstack].length == 0);
-        var plan : string[] = [];
+    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState, searchStrategy : string) : Step[] {
 
-        // First move the arm to the leftmost nonempty stack
-        if (pickstack < state.arm) {
-            plan.push("Moving left");
-            for (var i = state.arm; i > pickstack; i--) {
-                plan.push("l");
-            }
-        } else if (pickstack > state.arm) {
-            plan.push("Moving right");
-            for (var i = state.arm; i < pickstack; i++) {
-                plan.push("r");
-            }
+        // If this boolean is true, we will measure performance of several search strategies.
+        // This is costly and should only be set to true if it is intended.
+        var testPerformance = false;
+        if(testPerformance) {
+            console.log("\n--- Performance comparison ---");
+            var start = new Date().getTime();
+            var solution = search.search(new WorldStateNode(state), intprt, search.compareBFS);
+            var end = new Date().getTime();
+            var time = end - start;
+            console.log("BSF:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
+
+            var start = new Date().getTime();
+            var solution = search.search(new WorldStateNode(state), intprt, search.compareStar);
+            var end = new Date().getTime();
+            var time = end - start;
+            console.log("aStar:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
+
+            var start = new Date().getTime();
+            var solution = search.search(new WorldStateNode(state), intprt, search.compareDFS);
+            var end = new Date().getTime();
+            var time = end - start;
+            console.log("DFS:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
+
+            var start = new Date().getTime();
+            var solution = search.search(new WorldStateNode(state), intprt, search.compareBestFirst);
+            var end = new Date().getTime();
+            var time = end - start;
+            console.log("BestFS:\t" + time + "ms \t Path length: " + solution.getPath().size() + ".");
+
+            console.log("------------------------------\n");
         }
 
-        // Then pick up the object
-        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-        plan.push("Picking up the " + state.objects[obj].form,
-                  "p");
+        var moves : Step[]= [];
+        var expl : string = "\n Perform search with strategy: " + searchStrategy + ".";
+        moves.push({"plan":"", "explanation":expl});
 
-        if (pickstack < state.stacks.length-1) {
-            // Then move to the rightmost stack
-            plan.push("Moving as far right as possible");
-            for (var i = pickstack; i < state.stacks.length-1; i++) {
-                plan.push("r");
-            }
-
-            // Then move back
-            plan.push("Moving back");
-            for (var i = state.stacks.length-1; i > pickstack; i--) {
-                plan.push("l");
-            }
+        switch(searchStrategy) {
+            case 'DFS':
+                var solution = search.search(new WorldStateNode(state), intprt, search.compareDFS);
+                break;
+            case 'BFS':
+                var solution = search.search(new WorldStateNode(state), intprt, search.compareBFS);
+                break;
+            case 'star':
+                var solution = search.search(new WorldStateNode(state), intprt, search.compareStar);
+                break;
+            case 'BestFS':
+                var solution = search.search(new WorldStateNode(state), intprt, search.compareBestFirst);
+                break;
         }
 
-        // Finally put it down again
-        plan.push("Dropping the " + state.objects[obj].form,
-                  "d");
-
-        return plan;
+        if(solution !== null ) {
+            var path = solution.getPath();
+            //Create a Step array with explanations
+            for(var moveIx = 0; moveIx < path.size(); moveIx++) {
+                var currentMove = path.elementAtIndex(moveIx);
+                var move : Step = { "plan":currentMove.getCommand(), 
+                                    "explanation":explainMove(path, moveIx)};
+                moves.push(move);
+            }
+            return moves;
+        } else {
+            throw new Planner.Error("Could not plan a path that fulfills the goals.")
+        }
     }
 
+    /**
+     * Creates an explanation of what the planner is performing in the provided move in
+     * context of the entire path.
+     * @param path          Path the move is performed within.
+     * @param moveIndex     Index of the move to be explained.
+     * @returns {string}    A string which explains what the move is doing, only handles "pick" and "drop" moves.
+     */
+    function explainMove(path, moveIndex) : string {
+        var move = path.elementAtIndex(moveIndex);
 
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
+        var returnString = "";
+
+        switch (move.getCommand()) {
+            case "p":
+                if (move.getEndNode().state.isHolding()) {
+                    var pickObj        = move.getEndNode().state.getHoldingObj();
+                    var nrSameForm     = move.getEndNode().state.getNrOfObjects(pickObj.form, "any", "any");
+                    var nrSameFormSize = move.getEndNode().state.getNrOfObjects(pickObj.form, pickObj.size, "any");
+
+                    for (var i = moveIndex; i < path.size(); i++) {
+                        // If this is last move, we wont drop it.
+                        if (moveIndex === path.size()-1) {
+                            returnString += "Picking up the "
+                            if (nrSameForm === 1) {
+                                returnString += pickObj.form;
+                            } if (nrSameFormSize === 1) {
+                                returnString += pickObj.size + " " + pickObj.form;
+                            } else {
+                                returnString += pickObj.size + " " + pickObj.color + " " + pickObj.form;
+                            }
+                        } else {
+                            if (path.elementAtIndex(i).getCommand() === "d") {
+                                returnString += "Moving the ";
+                                if (nrSameForm === 1) {
+                                    returnString += pickObj.form;
+                                } else if (nrSameFormSize === 1) {
+                                    returnString += pickObj.size + " " + pickObj.form;
+                                } else {
+                                    returnString += pickObj.size + " " + pickObj.color + " " + pickObj.form;
+                                }
+
+                                var stackHeightDropIndex = path.elementAtIndex(i).getFromNode().state.stackHeight(path.elementAtIndex(i).getFromNode().state.arm);
+
+                                if (stackHeightDropIndex > 0) {
+                                    var dropOnObjName = path.elementAtIndex(i).getFromNode().state.stacks[path.elementAtIndex(i).getFromNode().state.arm][stackHeightDropIndex-1];
+                                    var dropOnObj = path.elementAtIndex(i).getFromNode().state.objects[dropOnObjName];
+
+                                    if(dropOnObj.form === "box") {
+                                        returnString += " inside the ";
+                                    } else {
+                                        returnString += " on top of the ";
+                                    }
+
+
+                                    var nrSameFormDropObj     = move.getFromNode().state.getNrOfObjects(dropOnObj.form, "any", "any");
+                                    var nrSameFormSizeDropObj = move.getFromNode().state.getNrOfObjects(dropOnObj.form, dropOnObj.size, "any");
+
+                                    if(nrSameFormDropObj === 1) {
+                                        returnString += dropOnObj.form;
+                                    } else if(nrSameFormSizeDropObj === 1) {
+                                        returnString += dropOnObj.size + " " + dropOnObj.form;
+                                    } else {
+                                        returnString += dropOnObj.size + " " + dropOnObj.color + " " + dropOnObj.form;
+                                    }
+                                } else {
+                                    returnString += " to the floor";
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+
+                }
+                break;
+        }
+        if(returnString.length > 0) {
+            returnString += ".";
+        }
+        return returnString.toString();
     }
-
 }

@@ -3,26 +3,26 @@
 var ExampleWorlds : {[s:string]: WorldState} = {};
 
 
-ExampleWorlds["complex"] = {
-    "stacks": [["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]],
-    "holding": null,
-    "arm": 0,
-    "objects": {
-        "a": { "form":"brick",   "size":"large",  "color":"yellow" },
-        "b": { "form":"brick",   "size":"small",  "color":"white" },
-        "c": { "form":"plank",   "size":"large",  "color":"red"   },
-        "d": { "form":"plank",   "size":"small",  "color":"green" },
-        "e": { "form":"ball",    "size":"large",  "color":"white" },
-        "f": { "form":"ball",    "size":"small",  "color":"black" },
-        "g": { "form":"table",   "size":"large",  "color":"blue"  },
-        "h": { "form":"table",   "size":"small",  "color":"red"   },
-        "i": { "form":"pyramid", "size":"large",  "color":"yellow"},
-        "j": { "form":"pyramid", "size":"small",  "color":"red"   },
-        "k": { "form":"box",     "size":"large",  "color":"yellow"},
-        "l": { "form":"box",     "size":"large",  "color":"red"   },
-        "m": { "form":"box",     "size":"small",  "color":"blue"  }
+ExampleWorlds["complex"] = new WorldState(
+    [["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]],
+    null,
+    0,
+    {
+        "a": new ObjectDefinition("brick",   "large",  "yellow"),
+        "b": new ObjectDefinition("brick",   "small",  "white" ),
+        "c": new ObjectDefinition("plank",   "large",  "red"   ),
+        "d": new ObjectDefinition("plank",   "small",  "green" ),
+        "e": new ObjectDefinition("ball",    "large",  "white" ),
+        "f": new ObjectDefinition("ball",    "small",  "black" ),
+        "g": new ObjectDefinition("table",   "large",  "blue"  ),
+        "h": new ObjectDefinition("table",   "small",  "red"   ),
+        "i": new ObjectDefinition("pyramid", "large",  "yellow"),
+        "j": new ObjectDefinition("pyramid", "small",  "red"   ),
+        "k": new ObjectDefinition("box",     "large",  "yellow"),
+        "l": new ObjectDefinition("box",     "large",  "red"   ),
+        "m": new ObjectDefinition("box",     "small",  "blue"  )
     },
-    "examples": [
+    [
         "put a box in a box",
         "put all balls on the floor",
         "take the yellow box",
@@ -37,29 +37,29 @@ ExampleWorlds["complex"] = {
         "put all red objects above a yellow object on the floor",
         "put all yellow objects under a red object under an object"
     ]
-};
+);
 
 
-ExampleWorlds["medium"] = {
-    "stacks": [["e"],["a","l"],[],[],["i","h","j"],[],[],["k","g","c","b"],[],["d","m","f"]],
-    "holding": null,
-    "arm": 0,
-    "objects": {
-        "a": { "form":"brick",   "size":"large",  "color":"green" },
-        "b": { "form":"brick",   "size":"small",  "color":"white" },
-        "c": { "form":"plank",   "size":"large",  "color":"red"   },
-        "d": { "form":"plank",   "size":"small",  "color":"green" },
-        "e": { "form":"ball",    "size":"large",  "color":"white" },
-        "f": { "form":"ball",    "size":"small",  "color":"black" },
-        "g": { "form":"table",   "size":"large",  "color":"blue"  },
-        "h": { "form":"table",   "size":"small",  "color":"red"   },
-        "i": { "form":"pyramid", "size":"large",  "color":"yellow"},
-        "j": { "form":"pyramid", "size":"small",  "color":"red"   },
-        "k": { "form":"box",     "size":"large",  "color":"yellow"},
-        "l": { "form":"box",     "size":"large",  "color":"red"   },
-        "m": { "form":"box",     "size":"small",  "color":"blue"  }
+ExampleWorlds["medium"] = new WorldState(
+    [["e"],["a","l"],[],[],["i","h","j"],[],[],["k","g","c","b"],[],["d","m","f"]],
+    null,
+    0,
+    {
+        "a": new ObjectDefinition("brick",   "large",  "green" ),
+        "b": new ObjectDefinition("brick",   "small",  "white" ),
+        "c": new ObjectDefinition("plank",   "large",  "red"   ),
+        "d": new ObjectDefinition("plank",   "small",  "green" ),
+        "e": new ObjectDefinition("ball",    "large",  "white" ),
+        "f": new ObjectDefinition("ball",    "small",  "black" ),
+        "g": new ObjectDefinition("table",   "large",  "blue"  ),
+        "h": new ObjectDefinition("table",   "small",  "red"   ),
+        "i": new ObjectDefinition("pyramid", "large",  "yellow"),
+        "j": new ObjectDefinition("pyramid", "small",  "red"   ),
+        "k": new ObjectDefinition("box",     "large",  "yellow"),
+        "l": new ObjectDefinition("box",     "large",  "red"   ),
+        "m": new ObjectDefinition("box",     "small",  "blue"  )
     },
-    "examples": [
+    [
         "put the brick that is to the left of a pyramid in a box",
         "put the white ball in a box on the floor",
         "move the large ball inside a yellow box on the floor",
@@ -71,64 +71,62 @@ ExampleWorlds["medium"] = {
         "move all bricks on a table",
         "move all balls inside a large box"
     ]
-};
+);
 
 
-ExampleWorlds["small"] = { 
-    "stacks": [["e"],["g","l"],[],["k","m","f"],[]],
-    "holding": "a",
-    "arm": 0,
-    "objects": {
-        "a": { "form":"brick",   "size":"large",  "color":"green" },
-        "b": { "form":"brick",   "size":"small",  "color":"white" },
-        "c": { "form":"plank",   "size":"large",  "color":"red"   },
-        "d": { "form":"plank",   "size":"small",  "color":"green" },
-        "e": { "form":"ball",    "size":"large",  "color":"white" },
-        "f": { "form":"ball",    "size":"small",  "color":"black" },
-        "g": { "form":"table",   "size":"large",  "color":"blue"  },
-        "h": { "form":"table",   "size":"small",  "color":"red"   },
-        "i": { "form":"pyramid", "size":"large",  "color":"yellow"},
-        "j": { "form":"pyramid", "size":"small",  "color":"red"   },
-        "k": { "form":"box",     "size":"large",  "color":"yellow"},
-        "l": { "form":"box",     "size":"large",  "color":"red"   },
-        "m": { "form":"box",     "size":"small",  "color":"blue"  }
+ExampleWorlds["small"] = new WorldState(
+    [["e"],["g","l"],[],["k","m","f"],[]],
+    "a",
+    0,
+    {
+        "a": new ObjectDefinition("brick",   "large",  "green" ),
+        "b": new ObjectDefinition("brick",   "small",  "white" ),
+        "c": new ObjectDefinition("plank",   "large",  "red"   ),
+        "d": new ObjectDefinition("plank",   "small",  "green" ),
+        "e": new ObjectDefinition("ball",    "large",  "white" ),
+        "f": new ObjectDefinition("ball",    "small",  "black" ),
+        "g": new ObjectDefinition("table",   "large",  "blue"  ),
+        "h": new ObjectDefinition("table",   "small",  "red"   ),
+        "i": new ObjectDefinition("pyramid", "large",  "yellow"),
+        "j": new ObjectDefinition("pyramid", "small",  "red"   ),
+        "k": new ObjectDefinition("box",     "large",  "yellow"),
+        "l": new ObjectDefinition("box",     "large",  "red"   ),
+        "m": new ObjectDefinition("box",     "small",  "blue"  )
     },
-    "examples": [
+    [
+        "put the black ball in the yellow box",
         "put the white ball in a box on the floor",
         "put the black ball in a box on the floor",
         "take a blue object",
         "take the white ball",
         "put all boxes on the floor",
         "move all balls inside a large box"
-    ]
-};
+    ]);
 
-
-ExampleWorlds["impossible"] = { 
-    "stacks": [["lbrick1","lball1","sbrick1"], [],
-               ["lpyr1","lbox1","lplank2","sball2"], [],
-               ["sbrick2","sbox1","spyr1","ltable1","sball1"]],
-    "holding": null,
-    "arm": 0,
-    "objects": {
-        "lbrick1": { "form":"brick",   "size":"large",  "color":"green" },
-        "sbrick1": { "form":"brick",   "size":"small",  "color":"yellow" },
-        "sbrick2": { "form":"brick",   "size":"small",  "color":"blue" },
-        "lplank1": { "form":"plank",   "size":"large",  "color":"red"   },
-        "lplank2": { "form":"plank",   "size":"large",  "color":"black"   },
-        "splank1": { "form":"plank",   "size":"small",  "color":"green" },
-        "lball1":  { "form":"ball",    "size":"large",  "color":"white" },
-        "sball1":  { "form":"ball",    "size":"small",  "color":"black" },
-        "sball2":  { "form":"ball",    "size":"small",  "color":"red" },
-        "ltable1": { "form":"table",   "size":"large",  "color":"green"  },
-        "stable1": { "form":"table",   "size":"small",  "color":"red"   },
-        "lpyr1":   { "form":"pyramid", "size":"large",  "color":"white"},
-        "spyr1":   { "form":"pyramid", "size":"small",  "color":"blue"   },
-        "lbox1":   { "form":"box",     "size":"large",  "color":"yellow"},
-        "sbox1":   { "form":"box",     "size":"small",  "color":"red"   },
-        "sbox2":   { "form":"box",     "size":"small",  "color":"blue"  }
-    },
-    "examples": [
-        "this is just an impossible world"
-    ]
-};
+ExampleWorlds["impossible"] = new WorldState(
+    [["lbrick1","lball1","sbrick1"], [],
+        ["lpyr1","lbox1","lplank2","sball2"], [],
+        ["sbrick2","sbox1","spyr1","ltable1","sball1"]],
+    null,
+    0,
+    {
+        "lbrick1": new ObjectDefinition("brick",   "large",  "green" ),
+        "sbrick1": new ObjectDefinition("brick",   "small",  "yellow"),
+        "sbrick2": new ObjectDefinition("brick",   "small",  "blue" ),
+        "lplank1": new ObjectDefinition("plank",   "large",  "red"   ),
+        "lplank2": new ObjectDefinition("plank",   "large",  "black" ),
+        "splank1": new ObjectDefinition("plank",   "small",  "green" ),
+        "lball1":  new ObjectDefinition("ball",    "large",  "white" ),
+        "sball1":  new ObjectDefinition("ball",    "small",  "black" ),
+        "sball2":  new ObjectDefinition("ball",    "small",  "red" ),
+        "ltable1": new ObjectDefinition("table",   "large",  "green" ),
+        "stable1": new ObjectDefinition("table",   "small",  "red"   ),
+        "lpyr1":   new ObjectDefinition("pyramid", "large",  "white"),
+        "spyr1":   new ObjectDefinition("pyramid", "small",  "blue"  ),
+        "lbox1":   new ObjectDefinition("box",     "large",  "yellow"),
+        "sbox1":   new ObjectDefinition("box",     "small",  "red"   ),
+        "sbox2":   new ObjectDefinition("box",     "small",  "blue"  )
+},
+[
+    "this is just an impossible world"
+]);
