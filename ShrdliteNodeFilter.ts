@@ -86,7 +86,7 @@ class ShrdliteNodeFilter implements GraphFilter {
                     if (rightObject != -1)
                         noOfObjectsAboveRight += node.state.stacks[i].length - rightObject - 1;
                 }
-                return Math.min(noOfObjectsAboveLeft, noOfObjectsAboveRight);
+                return Math.min(noOfObjectsAboveLeft, noOfObjectsAboveRight); //Atleast one of them needs to be moved
                 break;
             case 'rightof':
                 var noOfObjectsAboveLeft = 1;
@@ -105,7 +105,7 @@ class ShrdliteNodeFilter implements GraphFilter {
                     if (rightObject != -1)
                         noOfObjectsAboveRight += node.state.stacks[i].length - rightObject - 1;
                 }
-                return Math.min(noOfObjectsAboveLeft, noOfObjectsAboveRight);
+                return Math.min(noOfObjectsAboveLeft, noOfObjectsAboveRight); //Atleast one of them needs to be moved
                 break;
             case 'under':
                 var noOfObjectsAboveTarget = 1; //Must be one
@@ -121,22 +121,38 @@ class ShrdliteNodeFilter implements GraphFilter {
                 return noOfObjectsAboveTarget;
                 break;
             case 'infront':
+                var noOfObjectsAboveBack = 1;
+                var noOfObjectsAboveFront = 1;
                 for (var i = node.state.rowLength; i < node.state.stacks.length; ++i) {
                     var behind = node.state.stacks[i].indexOf(this.intptr.args[1]);
-                    var infront = node.state.stacks[i - + node.state.rowLength].indexOf(this.intptr.args[0]);
+                    var infront = node.state.stacks[i - node.state.rowLength].indexOf(this.intptr.args[0]);
 
                     if (infront != -1 && behind != -1)
                         return 0;
+
+                    if (infront != -1)
+                        noOfObjectsAboveFront += node.state.stacks[i - node.state.rowLength].length - infront - 1;
+                    if (behind != -1)
+                        noOfObjectsAboveBack += node.state.stacks[i].length - behind - 1;
                 }
+                return Math.min(noOfObjectsAboveBack, noOfObjectsAboveFront); //Atleast one of them needs to be moved
                 break;
             case 'behind':
+                var noOfObjectsAboveBack = 1;
+                var noOfObjectsAboveFront = 1;
                 for (var i = node.state.rowLength; i < node.state.stacks.length; ++i) {
                     var behind = node.state.stacks[i].indexOf(this.intptr.args[0]);
-                    var infront = node.state.stacks[i - + node.state.rowLength].indexOf(this.intptr.args[1]);
+                    var infront = node.state.stacks[i - node.state.rowLength].indexOf(this.intptr.args[1]);
 
                     if (infront != -1 && behind != -1)
                         return 0;
+
+                    if (infront != -1)
+                        noOfObjectsAboveFront += node.state.stacks[i - node.state.rowLength].length - infront - 1;
+                    if (behind != -1)
+                        noOfObjectsAboveBack += node.state.stacks[i].length - behind - 1;
                 }
+                return Math.min(noOfObjectsAboveBack, noOfObjectsAboveFront); //Atleast one of them needs to be moved
                 break;
             case 'stack':
                 var max = 0;
