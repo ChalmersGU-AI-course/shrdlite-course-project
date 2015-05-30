@@ -314,6 +314,7 @@ module Planner {
          * Set all objects in column col above row n (included) in the "moving" list if not already.
          */
         public setObjects(col: number, n: number) {
+            if(col==-1) return;
             var o: string;
             for(var i=n; i<this.stacks[col].length; i++) {
                 o = this.stacks[col][i];

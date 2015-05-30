@@ -1,6 +1,6 @@
 **************************************************************
 ** README - Final project Shrdlu - Artificial Intelligence 	**
-** 			Group ? - Potatissallad/Goto fail;				**
+** 			  Group Potatissallad/Goto fail;				**
 ** 					2015 - period 4							**
 **************************************************************
 
@@ -8,15 +8,30 @@ The project is entirely coded in Typescript and fully working in the html view.
 
 -= Features =-
  
- "Laziest-first strategy"
+ "Laziest-first strategy" which means that to resolve ambiguities (parsing as well as interpretation),
+ the heuristic will be run for each possibility of goal and the lowest score will be chosen.
+ 
+ - Implemented the any, all feature
+ - When "the" is used and matches several possibilities, we get notified how much objects are designed.
+ - When "a" (or any) is used, the simplest move is chosen
+ - All these relations have been implemented: on top, inside, beside, above, under, right of, left of, holding.
+ - It is possible to ask several propositions at a time with relations "and" and "or":
+ 	For example: "Put a table in a red box and take a brick or put a box on the floor."
+ 	This would try to resolve "put a table in a red box" and "take a brick" simultaneously, or "put a box on
+ 	the floor". The cheapest solution according to the heuristic would be chosen.
+ 
+ See the example section at the end for some interesting demos!
  
  
 -= Parser modifications =-
- 
+
+ [see Parser.ts file, first function]
+ The parser has been modified to parse sentences with "and"/"or", with priority on "and" as in boolean algebra.
  
  
 -= Interpreter implementation =-
  
+ Some comments are writen in the code.
  
  
 -= Planner implementation =-
@@ -65,7 +80,7 @@ The project is entirely coded in Typescript and fully working in the html view.
 	 
 	 It relies on the number of object to be moved.
 	 There are different cases depending on the relation:
-	 "ontop"/"inside", "beside", "above"/"under", "rightpf"/"leftof", "holding".
+	 "ontop"/"inside", "beside", "above"/"under", "rightof"/"leftof", "holding".
 	 
 	 The goal is to fill a list of the objects we need to move, without duplicate, and simply return the length
 	 of this list. The number of Moves needed would be at least the number of objects to be moved and therefore,
@@ -103,9 +118,13 @@ The project is entirely coded in Typescript and fully working in the html view.
 
 -= Examples =-
 
+[To run in complex world. /!\ Reset the world for each example.]
+
 - Take the yellow object.
+- Take a yellow object. (The easiest one to take will be chosen)
 - Put all red objects above a yellow object on the floor.
 - Put the white ball right of all objects.
 - Put a red table on the floor and put a box on the floor and put a blue table in a box and take a brick.
 - Put a table in a red box and take a brick or put a box on the floor.
 - Put all boxes on the floor and take a yellow object.
+- Put a black ball left of all objects.
