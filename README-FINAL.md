@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The following document is supposed to explain the final submission of the ShrdLite project for group **void *** in the course **TIN172**.
+The following document is supposed to explain the final submission of the ShrdLite project for group **void*** in the course **TIN172**.
 
 ## General
 
