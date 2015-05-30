@@ -56,9 +56,6 @@ module Planner {
         state.pddlWorld.holding = state.holding;
         state.pddlWorld.stacks = cloneStacks(state.stacks);
 
-        console.log("stacks",state.pddlWorld.stacks);
-        console.log("inner stacks",state.pddlWorld.stacks[0]);
-
         var secNode;
         if(state.holding) {
             // Update state with 'holding' (if any)
@@ -154,6 +151,35 @@ module Planner {
         return false;
     }
 
+    function checkWhichSide(stacks, left, right) {
+        
+        var leftP=[], rightP=[];
+        
+        for(var i in stacks) {
+            for(var j in stacks[i]) {
+                if(stacks[i][j] === left) {
+                    leftP[0] = i;
+                    leftP[1] = j;
+                } else if(stacks[i][j] === right) {
+                    rightP[0] = i;
+                    rightP[1] = j;
+                }
+            }
+        }
+        
+        if(leftP[0] < rightP[0]) {
+            return "left";
+        } else if(leftP[0] > rightP[0]){
+            return "right";
+        } else {
+            if(leftP[1] > rightP[1]) {
+                return "above";
+            } else {
+                return "under";
+            }
+        }
+    }
+
     function createHeuristicFunction(goalWorld:PddlLiteral[][]) {
         //console.log("create heuristic");
         return function(node:AStar.Node<PddlWorld>) : number {
@@ -176,7 +202,7 @@ module Planner {
                             }
 
                             else if(literal.rel === "above" || literal.rel === "under") {
-                                if(checkWhichSide === literal.rel) {
+                                if(checkWhichSide(stacks, literal.args[0], literal.args[1]) === literal.rel) {
                                     return 0;
                                 } else {
                                     return xDistance(stacks, literal.args[0], literal.args[1]) +
@@ -186,7 +212,7 @@ module Planner {
                             }
 
                             else if(literal.rel === "left" || literal.rel === "right") {
-                                if(checkWhichSide(literal.args[0], literal.args[1]) === literal.rel) {
+                                if(checkWhichSide(stacks, literal.args[0], literal.args[1]) === literal.rel) {
                                     return 0
                                 } else {
                                     return xDistance(stacks, literal.args[0], literal.args[1])+1;
