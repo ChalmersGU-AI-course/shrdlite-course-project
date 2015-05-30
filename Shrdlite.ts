@@ -14,7 +14,6 @@ module Shrdlite {
                 if (!plan) {
                     plan = parseUtteranceIntoPlan(world, utterance);
                 }
-								//TODO: this is ugly ;)
 								if (plan) {
 									if (plan[0] == "Please select ...") {
 										var askQuestion = () => world.printPickList(plan, endlessLoop); 
@@ -70,13 +69,13 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
         });
 
+				//check if the utterance was ambiguous
         if (interpretations.length > 1) {
             world.printSystemOutput("The utterance is ambiguous.\nCan you please clarify ...");
             var s: string[] = [];
             interpretations.forEach((res, n) => {
                 s = s.concat(Interpreter.interpretationToSentence(res, world.currentState));
             });
-						//TODO: very ugly ;)
 						return ["Please select ..."].concat(s);
         }
 

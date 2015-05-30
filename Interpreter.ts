@@ -5,6 +5,14 @@ module Interpreter {
 
 	//////////////////////////////////////////////////////////////////////
 	// exported functions, classes and interfaces/types
+	//
+	//TODO: what doesn't work:
+	//- ambiguity checker is too ambitious, it might destroy the original meaning of the utterance by having you pick one of all the many possibilities
+	// (which can be a lot sometimes) -> e.g. move all balls inside the box, move all red objects above a yellow object on the floor
+	//- the spatial relation checker in the Interpreter is stupid in the way that it checks whether the spatial relations work out for both the origin and destination
+	// (it will therefore give you an error for a command like "move the white ball in the red box that is on the floor" because there is no red box on the floor,
+	//  even though a human might say that you could just put the red box on the floor first and then fulfil the command)
+	//- haven't tested all complex examples yet 
 
 	export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
 		var interpretations : Result[] = [];
@@ -49,8 +57,6 @@ module Interpreter {
 	export interface PosNode {pos:Position[]; rel:string;}
 
 	export function interpretationToSentence(res : Result, state : WorldState) : string[] {
-		//todo: this new utterance might actually be more specific than the user's first input
-		//todo: move all balls inside the box
 		var l : string[] = [];
 		for (var i = 0; i < res.intp.length; i++) {
 			for (var j = 0; j < res.intp[i].length; j++) {
@@ -239,10 +245,11 @@ module Interpreter {
 				return true;
 			}
 
-			var error : string = "";
-			var sizeO : string, formO : string, sizeD : string, formD : string = "";
+			var sizeO : string, formO : string, sizeD : string, formD : string = "", error : string = "";
 			var nO : number = origs.length;
 			var nD : number = dests.length;
+
+			//the checkers are used to check all possibilities before having to throw an error
 			var origChecker : number[] = [];
 			for (var i = 0; i < nO; i++) {
 				origChecker.push(nD);
@@ -270,6 +277,7 @@ module Interpreter {
 						var formO : string = this.state.objects[dests[j]].form;
 					}
 
+					//making sure noone tries to move the floor somewhere
 					if (formO == "floor") {
 						origChecker[i] = origChecker[i] - 1;
 						destChecker[j] = destChecker[j] - 1;
@@ -277,6 +285,7 @@ module Interpreter {
 						continue;
 					}
 
+					//the "inside" cases
 					if (rel == "inside") {
 						if (formD != "box") {
 							origChecker[i] = origChecker[i] - 1;
@@ -320,34 +329,52 @@ module Interpreter {
 							continue;
 						}
 					}
-					
-					//TODO: clean up
-					if (rel == "ontop" || rel == "above") {
-						if (rel == "ontop" && formO == "ball" &&  formD != "floor") {
+
+					//the "ontop" cases
+					if (rel == "ontop") {
+						if (formO == "ball" &&  formD != "floor") {
 							origChecker[i] = origChecker[i] - 1;
 							destChecker[j] = destChecker[j] - 1;
 							error = "Balls must be in boxes or on the floor.";
 							continue;
 						}
 
-						if ((sizeO == "large" && formO == "box") && (sizeD == "large" && formD == "pyramid")) {
-							origChecker[i] = origChecker[i] - 1;
-							destChecker[j] = destChecker[j] - 1;
-							error = "Large boxes cannot be supported by large pyramids.";
-							continue;
-						}
-
-						if (rel == "ontop" && (sizeO == "small" && formO == "box") && (sizeD == "small" && (formD == "pyramid" || formD == "brick"))) {
+						if ((sizeO == "small" && formO == "box") && (sizeD == "small" && (formD == "pyramid" || formD == "brick"))) {
 							origChecker[i] = origChecker[i] - 1;
 							destChecker[j] = destChecker[j] - 1;
 							error = "Small boxes cannot be supported by small bricks or pyramids.";
 							continue;
 						}
 
-						if (rel == "ontop" && (formO == "pyramid" || formO == "box" || formO == "plank") && (sizeO == sizeD) && (formD == "box")) {
+						if ((formO == "pyramid" || formO == "box" || formO == "plank") && (sizeO == sizeD) && (formD == "box")) {
 							origChecker[i] = origChecker[i] - 1;
 							destChecker[j] = destChecker[j] - 1;
 							error = "Boxes cannot contain pyramids, planks or boxes of the same size.";
+							continue;
+						}
+
+						if (nO > 1 && nD == 1 && formD != "floor") {
+							origChecker[i] = origChecker[i] - 1;
+							destChecker[j] = destChecker[j] - 1;
+							error = "Only one thing can be ontop of another thing.";
+							continue;
+						}
+
+						if (quantOrig == "all" && nO > 1 && formD != "floor" && quantDest == "all" && nD > 1) {
+							origChecker[i] = origChecker[i] - 1;
+							destChecker[j] = destChecker[j] - 1;
+							error = "Only one thing can be ontop of another thing.";
+							continue;
+						}
+
+					}
+					
+					//the "ontop" or "above" cases
+					if (rel == "ontop" || rel == "above") {
+						if ((sizeO == "large" && formO == "box") && (sizeD == "large" && formD == "pyramid")) {
+							origChecker[i] = origChecker[i] - 1;
+							destChecker[j] = destChecker[j] - 1;
+							error = "Large boxes cannot be supported by large pyramids.";
 							continue;
 						}
 
@@ -364,20 +391,6 @@ module Interpreter {
 							error = "Small objects cannot support large objects.";
 							continue;
 						}
-
-						if (nO > 1 && nD == 1 && rel == "ontop" && formD != "floor") {
-							origChecker[i] = origChecker[i] - 1;
-							destChecker[j] = destChecker[j] - 1;
-							error = "Only one thing can be ontop of another thing.";
-							continue;
-						}
-
-						if (quantOrig == "all" && rel == "ontop" && nO > 1 && formD != "floor" && quantDest == "all" && nD > 1) {
-							origChecker[i] = origChecker[i] - 1;
-							destChecker[j] = destChecker[j] - 1;
-							error = "Only one thing can be ontop of another thing.";
-							continue;
-						}
 					}
 				}
 			}
@@ -392,6 +405,7 @@ module Interpreter {
 				}
 			}
 
+			//when nothing was physically possible, throw an error
 			if (!origs.length || !dests.length) {
 				throw new Interpreter.Error(error);
 			}
@@ -399,7 +413,7 @@ module Interpreter {
 		}
 
 		/**
-		 * Build the Literal[][] based on the objects of the origin and/or destination, 
+		 * Build the Literal[][][] based on the objects of the origin and/or destination, 
 		 * the goal and the quantifiers for both origin and/or destination
 		 *
 		 * @param {string} goal of the movement (ontop, above, under, beside, leftof, rightof, inside)
@@ -407,88 +421,50 @@ module Interpreter {
 		 * @param {string} quantifier for the destination (the, any)
 		 * @param {string[]} array of string that represent the objects for the origin
 		 * @param {string[]} array of string that represent the objects for the destination
-		 * @return {Literal[][]} Literal describing the PDDL goals
+		 * @return {Literal[][][]} array of Literal describing the PDDL goals
 		 */
 		private buildLiteral(goal : string, quantOrig : string, quantDest : string, origs : string[], dests : string[]) : Literal[][][] {
-			var intprt : Literal[][][] = [[[]]];
+			var intprt : Literal[][][] = [];
 
+			//special case: stack command
 			if (goal == "stack") {
 				var argList : string[] = [];
 				for (var i = 0; i < origs.length; i++) {
 					argList.push(origs[i]);
 				}
 				var lit : Literal =  {pol:true, rel:goal, args:argList};
-				intprt[0] = [[]];
-				intprt[0][0] = [];
-				intprt[0][0].push(lit);
+				intprt.push([[lit]]);
 				return intprt;
 			}
 
-			var n : number = 0; //++n is like "or", n stays unchanged is like "and"
-			var m : number = 0;
-
-			if (!dests.length) {
-				for (var i = 0; i < origs.length; i++) {
-					if (m>(intprt.length - 1)) {
-						m = intprt.length;
-						n = 0;
-						intprt[m] = [[]];
-					}
-					if (n>(intprt[m].length - 1)) {
-						n = intprt[m].length;
-						intprt[m][n] = [];
-					}
-					var lit : Literal =  {pol:true, rel:goal, args:[origs[i]]};
-					intprt[m][n].push(lit);
-					n = (quantOrig == "all" || quantOrig == "the") ? n : ++n;
-					m = (quantOrig == "all" || quantOrig == "any") ? m : ++m;
-				}
-				return intprt;
-			}
-
-			if (!origs.length) {
-				for (var i = 0; i < dests.length; i++) {
-					if (m>(intprt.length - 1)) {
-						m = intprt.length;
-						n = 0;
-						intprt[m] = [[]];
-					}
-					if (n>(intprt[m].length - 1)) {
-						n = intprt[m].length;
-						intprt[m][n] = [];
-					}
-					var lit : Literal =  {pol:true, rel:goal, args:[dests[i]]};
-					intprt[m][n].push(lit);
-					n = (quantDest == "all" || (quantDest == "the" && dests[i] != "floor")) ? n : ++n;
-					m = ((quantDest == "all" || quantDest == "any") && dests[i] == "floor")? m : ++m;
-				}
-				return intprt;
-			}
-
-			//this is a rather special case that requires the computation of all possible combinations
+			//this is a rather special case that requires the computation of all possible combinations of combinations between origins and destinations
 			if (quantOrig == "all" && quantDest == "any" && origs.length > 1) {
-				var a : string[][][] = [[[]]];
+				//compute all combinations between each origin and all possible destinations
+				var combos : string[][][] = [];
 				for (var i = 0; i < origs.length; i++) {
-					a.push(combinations([[origs[i]], dests]));
+					combos.push(this.combinations([[origs[i]], dests]));
 				}
-				a.splice(0,1);
-				var b : string[][] = [[]];
-				for (var i=0; i<a.length; i++) {
-				var c : string[] = [];
-					for (var j=0; j<a[i].length; j++) {
-						c.push(a[i][j][0]+a[i][j][1]);
+
+				//combine the combinations to goal strings
+				var goals : string[][] = [];
+				for (var i=0; i<combos.length; i++) {
+				var t : string[] = [];
+					for (var j=0; j<combos[i].length; j++) {
+						t.push(combos[i][j][0]+combos[i][j][1]);
 					}
-					b.push(c);
+					goals.push(t);
 				}
-				b.splice(0,1);
-				var test : string[][] = combinations(b);
-				var max : number = test.length;
-				for (var i = 0; i < max; i++) {
-					var o1 : string = test[i][0].substring(0,1);
-					var o2 : string = test[i][0].substring(1,2);
-					var o3 : string = test[i][1].substring(0,1);
-					var o4 : string = test[i][1].substring(1,2);
-					//self referencing or same goal for "ontop" or "inside"
+
+				//get all possible combinations between those goal strings
+				var combosAll : string[][] = this.combinations(goals);
+
+				//building Literals
+				for (var i = 0; i < combosAll.length; i++) {
+					var o1 : string = combosAll[i][0].substring(0,1);
+					var o2 : string = combosAll[i][0].substring(1,2);
+					var o3 : string = combosAll[i][1].substring(0,1);
+					var o4 : string = combosAll[i][1].substring(1,2);
+					//do not add self references or same goal for "ontop" or "inside"
 					if (o1 == o2 || o3 == o4 || (o2 == o4 && (goal == "ontop" || goal == "inside"))) {
 						continue;
 					}
@@ -496,16 +472,24 @@ module Interpreter {
 					var lit2 : Literal = {pol:true, rel:goal, args:[o3, o4]};
 					intprt[0].push([lit, lit2]);
 				}
-				intprt[0].splice(0,1);
-				//TODO: ugly!!!!
-				//TODO: test all complex examples
-				//TODO: move all balls beside a ball
-
 				return intprt;
 			}
 
-			for (var i = 0; i < origs.length; i++) {
-				for (var j = 0; j < dests.length; j++) {
+			//all other cases
+			var n : number = 0; //++n is like "or", n stays unchanged is like "and"
+			var m : number = 0; //++m to mark an ambiguity
+			var oL : number = origs.length;
+			var dL : number = dests.length;
+
+			//to handle the "take" command that does not have a destination
+			if (!dL) {
+				dL = 1;
+				dests.push("");
+			}
+
+			//going through all objects
+			for (var i = 0; i < oL; i++) {
+				for (var j = 0; j < dL; j++) {
 					if (m>(intprt.length - 1)) {
 						m = intprt.length;
 						n = 0;
@@ -515,34 +499,46 @@ module Interpreter {
 						n = intprt[m].length;
 						intprt[m][n] = [];
 					}
-					var lit : Literal =  {pol:true, rel:goal, args:[origs[i], dests[j]]};
+					//pushing the Literal to the correct position
+					var lit : Literal;
+					if (dests[j] == "") {
+						lit = {pol:true, rel:goal, args:[origs[i]]};
+					} else {
+						lit = {pol:true, rel:goal, args:[origs[i], dests[j]]};
+					}
 					intprt[m][n].push(lit);
+
 					n = (quantDest == "all" || quantDest == "the") ? n : ++n;
-					m = ((quantDest == "all" || quantDest == "any") || dests[j] == "floor")? m : ++m;
+					m = ((quantDest == "all" || quantDest == "any") || dests[j] == "floor" || dests[j] == "") ? m : ++m;
 				}
 				n = (quantOrig == "all" || quantOrig == "the") ? n : ++n;
 				m = (quantOrig == "all" || quantOrig == "any") ? m : ++m;
 			}
 
-			function combinations(arg : string[][]) {
-				var r : string[][] = [[]];
-				var max = arg.length - 1;
-				function helper(arr, i) {
-					for (var j=0, l=arg[i].length; j<l; j++) {
-						var a = arr.slice(0); // clone arr
-						a.push(arg[i][j]);
-						if (i==max) {
-							r.push(a);
-						} else
-							helper(a, i+1);
-					}
-				}
-				helper([], 0);
-				r.splice(0,1);
-				return r;
-			}
-
 			return intprt;
+		}
+
+		/**
+		 * compute all combinations between several string arrays
+		 *
+		 * @param {string[][]} array of string arrays to be computed
+		 * @return {string[][]} array of string arrays of combinations
+		 */
+		private	combinations(arg : string[][]) : string[][] {
+			var r : string[][] = [];
+			var max = arg.length - 1;
+			function helper(arr, i) {
+				for (var j=0, l=arg[i].length; j<l; j++) {
+					var a = arr.slice(0); // clone arr
+					a.push(arg[i][j]);
+					if (i==max) {
+						r.push(a);
+					} else
+						helper(a, i+1);
+				}
+			}
+			helper([], 0);
+			return r;
 		}
 	}
 
