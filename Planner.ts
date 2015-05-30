@@ -161,9 +161,16 @@ module Planner {
         return false;
     }
 
-    function checkWhichSide(stacks, left, right) {
+    function checkWhichSide(world:PddlWorld, left:string, right:string) {
         
         var leftP=[], rightP=[];
+        var stacks = world.stacks;
+        
+        if(world.holding === left) {
+            leftP[0] = world.arm;
+        } else if(world.holding === right) {
+            rightP[0] = world.arm;
+        }
         
         for(var i in stacks) {
             for(var j in stacks[i]) {
@@ -213,7 +220,7 @@ module Planner {
                             }
 
                             else if(literal.rel === "above" || literal.rel === "under") {
-                                if(checkWhichSide(stacks, literal.args[0], literal.args[1]) === literal.rel) {
+                                if(checkWhichSide(world, literal.args[0], literal.args[1]) === literal.rel) {
                                     val = 0;
                                 } else {
                                     val = xDistance(world, literal.args[0], literal.args[1]) +
@@ -223,7 +230,7 @@ module Planner {
                             }
 
                             else if(literal.rel === "left" || literal.rel === "right") {
-                                if(checkWhichSide(stacks, literal.args[0], literal.args[1]) === literal.rel) {
+                                if(checkWhichSide(world, literal.args[0], literal.args[1]) === literal.rel) {
                                     val = 0;
                                 } else {
                                     val = xDistance(world, literal.args[0], literal.args[1])+1;
@@ -234,6 +241,10 @@ module Planner {
                                 var obj1 = literal.args[0]
                                   , obj2 = literal.args[1];
                                 val = xDistance(world, obj1, obj2) - 1;
+                            }
+                            
+                            else if(literal.rel === 'holding') {
+                                return xDistance(world, literal.args[0], "arm") + countObjectsOnTop(world, literal.args[0]);   
                             }
 
                             return val;
