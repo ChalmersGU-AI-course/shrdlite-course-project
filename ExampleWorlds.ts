@@ -139,7 +139,7 @@ ExampleWorlds["impossible"] = {
     rowLength: 5
 };
 
-ExampleWorlds["3D-Small"] = {
+ExampleWorlds["3DSmall"] = {
     "stacks": [["e"], ["g"], ["b"], ["k", "f"], [], ["c", "a", "h"], ["l", "j"], ["m"], []],
     //"stacks": [[], ["g"], [], [], [], [], ["j"], ["m"], []],
     "holding": "a",
@@ -168,7 +168,7 @@ ExampleWorlds["3D-Small"] = {
     rowLength: 3
 };
 
-ExampleWorlds["3D-Medium"] = {
+ExampleWorlds["3DMedium"] = {
     "stacks": [["e"], [], ["g", "s", "d"], ["k", "f"], ["i", "t"], ["c", "a", "h", "r"], ["l", "j"], ["m"], ["n", "u"], ["o", "p"], ["b"], ["q"]],
     //"stacks": [[], ["g"], [], [], [], [], ["j"], ["m"], []],
     "holding": "a",
