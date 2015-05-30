@@ -13,6 +13,7 @@ module Planner {
     var WORLD_STATE;
 
     export function plan(interpretation : PddlLiteral[][], currentState : ExtendedWorldState) : string[] {
+
         var plan : string[] = planInterpretation(interpretation, currentState);
         if (plan) {
             return plan;
@@ -54,6 +55,20 @@ module Planner {
         }
         state.pddlWorld.arm = state.arm;
         state.pddlWorld.holding = state.holding;
+        state.pddlWorld.stacks = cloneStacks(state.stacks);
+
+        for(var s in state.pddlWorld.stacks) {
+            state.pddlWorld.stacks[s].unshift("floor-"+s);
+        }
+
+        // xDistance test. can remove
+        //var stacks = state.stacks;
+        //console.log("stacks:",stacks);
+        //console.log("m to l:",xDistance(state.pddlWorld, "m", "l"));
+
+
+        console.log("stacks",state.pddlWorld.stacks);
+        console.log("inner stacks",state.pddlWorld.stacks[0]);
 
         var secNode;
         if(state.holding) {
@@ -115,6 +130,18 @@ module Planner {
         return plan;
     }
 
+    function cloneStacks(oldStacks: string[][]) {
+        var stacks = [];
+        for(var i in oldStacks) {
+            stacks[i] = [];
+            for(var j in oldStacks[i]) {
+                stacks[i][j] = oldStacks[i][j];
+            }
+        }
+        
+        return stacks;
+    }
+
     function isHolding(world:PddlWorld):boolean {
         return world.holding !== null;
     }
@@ -125,35 +152,161 @@ module Planner {
         }
     }
 
-    function createHeuristicFunction(goalWorld:PddlLiteral[][]) { 
-        return function (node:AStar.Node<PddlWorld>) {
-            
-            return 0;
+    function relExist(world:PddlLiteral[], rel:PddlLiteral) {
+        for(var i in world) {
+            if(world[i].rel === rel.rel && 
+            world[i].pol === rel.pol && 
+            world[i].args[0] === rel.args[0] && 
+            world[i].args[1] === rel.args[1]) {
+                return true;
+            }
         }
+        
+        return false;
     }
-    
-    function countObjectsOnTop(world:PddlWorld, obj:string) {
-        var notDone = true;
-        var i = 0;
-        var currObj = obj;
-        while(notDone) {
-            for(var j in world.rels){
-                if((world.rels[j].rel === "ontop" || world.rels[j].rel === "inside") && world.rels[j].args[1] === currObj) {
-                    i++;
-                    currObj = world.rels[j].args[0];
-                    console.log("hej",currObj);
-                    break;
-                }
-                
-                if(world.rels[j].rel === "attop") {
-                    console.log(world.rels[j].rel);
-                    if(world.rels[j].args[0] === currObj)
-                        notDone = false;
+
+    function checkWhichSide(world:PddlWorld, left:string, right:string) {
+        
+        var leftP=[], rightP=[];
+        var stacks = world.stacks;
+        
+        if(world.holding === left) {
+            leftP[0] = world.arm;
+        } else if(world.holding === right) {
+            rightP[0] = world.arm;
+        }
+        
+        for(var i in stacks) {
+            for(var j in stacks[i]) {
+                if(stacks[i][j] === left) {
+                    leftP[0] = i;
+                    leftP[1] = j;
+                } else if(stacks[i][j] === right) {
+                    rightP[0] = i;
+                    rightP[1] = j;
                 }
             }
         }
         
-        return i;
+        if(leftP[0] < rightP[0]) {
+            return "left";
+        } else if(leftP[0] > rightP[0]){
+            return "right";
+        } else {
+            if(leftP[1] > rightP[1]) {
+                return "above";
+            } else {
+                return "under";
+            }
+        }
+    }
+
+    function createHeuristicFunction(goalWorld:PddlLiteral[][]) {
+        //console.log("create heuristic");
+        return function(node:AStar.Node<PddlWorld>) : number {
+          //  console.log("run heuristic");
+            var world  = node.label
+              , stacks = world.stacks
+              , orList = goalWorld
+              , vals : number[][] =
+                    _.map(orList, function (andList) {
+                        return _.map(andList, function (literal) {
+                            var val = 0;
+
+                            if(literal.rel === "ontop" || literal.rel === "inside") {
+                                if(relExist(node.label.rels, literal)) {
+                                    val = 0;
+                                } else {
+                                    val = 4*countObjectsOnTop(node.label, literal.args[0]) +
+                                        4*countObjectsOnTop(node.label, literal.args[1]) +
+                                        xDistance(world, literal.args[0], literal.args[1]);
+                                }
+                            }
+
+                            else if(literal.rel === "above" || literal.rel === "under") {
+                                if(checkWhichSide(world, literal.args[0], literal.args[1]) === literal.rel) {
+                                    val = 0;
+                                } else {
+                                    val = xDistance(world, literal.args[0], literal.args[1]) +
+                                        4 * _.min([countObjectsOnTop(node.label, literal.args[0]),
+                                            countObjectsOnTop(node.label, literal.args[1])]);
+                                }
+                            }
+
+                            else if(literal.rel === "left" || literal.rel === "right") {
+                                if(checkWhichSide(world, literal.args[0], literal.args[1]) === literal.rel) {
+                                    val = 0;
+                                } else {
+                                    val = xDistance(world, literal.args[0], literal.args[1])+1;
+                                }
+                            }
+
+                            else if (literal.rel === 'beside') {
+                                var obj1 = literal.args[0]
+                                  , obj2 = literal.args[1];
+                                val = xDistance(world, obj1, obj2) - 1;
+                            }
+                            
+                            else if(literal.rel === 'holding') {
+                                val = xDistance(world, literal.args[0], "arm") + countObjectsOnTop(world, literal.args[0]);   
+                            }
+
+                            return val;
+                        })
+                })
+              , maxVals : number[] = _.map(vals, function(list) {return _.max(list)}) // only _.max breaks typing
+              , minVal  : number   = _.min(maxVals);
+
+            return minVal;
+
+        }
+
+    }
+
+    function xDistance(world : PddlWorld, obj1 : string, obj2 : string) {
+        var stacks : string[][] = world.stacks;
+
+        if (obj1 === world.holding || obj1 === 'arm') {
+            var obj1Idx = world.arm;
+        } else {
+            var obj1Idx = _.findIndex(stacks, function (stack) {
+                return _.contains(stack, obj1);
+            });
+        }
+
+        if (obj2 === world.holding || obj2 === 'arm') {
+            var obj2Idx = world.arm;
+        } else {
+            var obj2Idx = _.findIndex(stacks, function (stack) {
+                return _.contains(stack, obj2);
+            });
+        }
+
+        if (obj1Idx === -1 || obj2Idx === -1) {
+            console.log("xDistance: object(s) not found!",world, obj1, obj2);
+            return 0;
+        } else {
+            return Math.abs(obj1Idx-obj2Idx);
+        }
+    }
+
+    function countObjectsOnTop(world:PddlWorld, obj:string) {
+        
+        var count = 0;
+        
+        if(world.holding === obj) {
+            return 0;
+        }
+        
+        for(var i in world.stacks) {
+            for(var j in world.stacks[i]) {
+                if(world.stacks[i][j] === obj) {
+                    count = world.stacks[i].length-1-j;
+                }
+            }
+        }
+        
+        return count;
     }
     
     function createGoalFunction(goalWorld:PddlLiteral[][]) {
@@ -242,13 +395,15 @@ module Planner {
 
     //TODO put in PddlWorld interface in some way or other?
     function clonePddlWorld(pddlWorld:PddlWorld):PddlWorld {
-        var newWorld: PddlWorld = {rels: [], arm: 0, holding: null}
+        var newWorld: PddlWorld = {rels: [], arm: 0, holding: null, stacks : []}
          ,  world = pddlWorld.rels;
 
         //TODO move to a clone-method somewhere
         for(var w in world) {
             newWorld.rels.push({pol: world[w].pol, rel: world[w].rel, args: [world[w].args[0], world[w].args[1]]});
         }
+
+        newWorld.stacks = cloneStacks(pddlWorld.stacks);
 
         newWorld.arm = pddlWorld.arm;
         newWorld.holding = pddlWorld.holding;
@@ -380,6 +535,8 @@ module Planner {
         newWorld.rels.push({pol:true, rel:'above', args:[objectObj.id, topObjectObj.id]});
         newWorld.rels.push({pol:true, rel:'under', args:[topObjectObj.id, objectObj.id]});
 
+        newWorld.stacks[floor].push(object);
+
         return newWorld;
     }
 
@@ -464,6 +621,8 @@ module Planner {
             }
         }
         world.rels = newRels;
+        
+        world.stacks[floor].pop();
         
         return world;
     }

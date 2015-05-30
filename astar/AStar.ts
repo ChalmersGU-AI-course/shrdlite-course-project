@@ -16,9 +16,11 @@ module AStar {
         label: T;
         neighbours: Edge<T>[];
         cost:number;
+        heuristic: number;
         previous: Node<T>;
         action: string;
         visited: boolean;
+        
         constructor (label:T, neighbours:Edge<T>[]=[], cost:number=Infinity, previous:Node<T> = null, action:string="") {
             this.label = label;
             this.neighbours = neighbours;
@@ -84,9 +86,17 @@ module AStar {
 
     export function astar(s: Node<PddlWorld>, isGoal: (Node)=>boolean, heuristic: (Node)=>number) : Node<PddlWorld>[] {
 
+        console.log("sök!");
+
         //Function that the heap uses to order itself
         var compFunc : collections.ICompareFunction<Node<PddlWorld>> = function(a:Node<PddlWorld>, b: Node<PddlWorld>){
-            return (a.cost+heuristic(a))-(b.cost+heuristic(b));
+            if(!a.heuristic) {
+                a.heuristic = heuristic(a);
+            }
+            if(!b.heuristic) {
+                b.heuristic = heuristic(b);
+            }
+            return (a.cost+a.heuristic)-(b.cost+b.heuristic);
         };
 
         var frontier : Heap<Node<PddlWorld>> = new Heap<Node<PddlWorld>>(compFunc);
