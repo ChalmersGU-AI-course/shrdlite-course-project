@@ -1,6 +1,8 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
 ///<reference path="Astar/collections.ts"/>
+///<reference path="Parsetoken.ts"/>
+///<reference path="Validate.ts"/>
 
 
 module Interpreter {
@@ -57,98 +59,29 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    //dictionary to store pair of information.
+    //dictionary to store (token,type) of information.
     //e.g. (take,cmd)  (white,color)  (ball,form)
-    //useful functions from dictionary
-    //getValue(key) : value
-    //setValue(key,value)
     var globalDic  = new collections.Dictionary<string,string>();
-
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : PairOfResult {
 
-        // console.log(cmd);
-        console.log(state);
-        var intprt : Literal[][] = [];
-        var tokens : string[] = [];
-
-        tokens.push(cmd.cmd);
-        globalDic.setValue(cmd.cmd,"cmd");
-
-
-        //case take||grasp||pickup entity === take ent
-        //parse the result from cmd into new finite Array named tokens
-        if(cmd.cmd == "take"){
-            var currentEnt = cmd.ent;
-
-            tokens.push(currentEnt.quant);
-            globalDic.setValue(currentEnt.quant,"quant");
-
-
-            if(currentEnt.obj != null){
-                var objArrays = recursiveObject(currentEnt.obj);
-                tokens = tokens.concat(objArrays);
-            }
-
-
-        }
-
-        //case move||put||drop "it" loc === put loc
-        //parse the result from cmd into new finite Array named tokens
-        if(cmd.cmd == "put"){
-            var currentLoc = cmd.loc;
-
-            if(currentLoc != null){
-                var objArrays = recursiveLocation(currentLoc);
-                tokens = tokens.concat(objArrays);
-            }
-
-        }
-
-        //case move||put||drop entity location === move ent loc
-        //parse the result from cmd into new finite Array named tokens
-        //separated by x to support ambiguous 
-        if(cmd.cmd == "move"){
-            var currentEnt = cmd.ent;
-            var currentLoc = cmd.loc;
-
-            tokens.push(currentEnt.quant);
-            globalDic.setValue(currentEnt.quant,"quant");
-
-            if(currentEnt.obj != null){
-                var objArrays = recursiveObject(currentEnt.obj);
-                tokens = tokens.concat(objArrays);
-                tokens.push("(and move it)");
-            }
-
-            if(currentLoc != null){
-                var objArrays = recursiveLocation(currentLoc);
-                tokens = tokens.concat(objArrays);
-            }
-        }
-
-        console.log(tokens);
+        //convert Parser.Command into (Tokens,Dic)
+        var dicToken = Parsetoken.interpretToken(cmd);
+        globalDic = dicToken.dic;
 
         //add new rule according to parsed array
-        var newRules = genRule(tokens,state);
+        var newRules = genRule(dicToken.tokens,state);
         if(newRules !== null){
-            return {literals:newRules, speech:tokens};
+            return {literals:newRules, speech:dicToken.tokens};
         }
-        else return null;
-
+        else 
+            return null;
 
     }
 
-
-    //generate rule from prepared array
-    //for example , 
-    // query : put the black ball in a box on the floor
-    // tokens = ["move","the","black","ball","inside","any","box","ontop","the","floor"]
-    //modify some algorithm here to properly generate new rule. e.g. inside(a,b), ontop(a,b)
+    //generate predicate rules from tokens
     function genRule(tokens : string[], state : WorldState) : Literal[][] {
        
-        var rules : Literal[] = [];
-
         var foundForm = false;
         var selSize = "";
         var selColor = "";
@@ -186,7 +119,7 @@ module Interpreter {
                 }
 
                 if(foundForm){
-                    var founds = searchObject(selSize,selColor,selForm,state);
+                    var founds = Validate.searchObject(selSize,selColor,selForm,state);
                     objs.push(founds);
                     foundForm = false;
                     selSize = "";
@@ -195,7 +128,7 @@ module Interpreter {
                 }
             }
 
-            var goalObj = findObject(objs,rels,state);
+            var goalObj = Validate.findObject(objs,rels,state);
             var allGoals : Literal[][] = [];
             if(goalObj.length == 0)
                 return null;
@@ -246,7 +179,7 @@ module Interpreter {
                 }
 
                 if(foundForm){
-                    var founds = searchObject(selSize,selColor,selForm,state);
+                    var founds = Validate.searchObject(selSize,selColor,selForm,state);
                     objs.push(founds);
                     foundForm = false;
                     selSize = "";
@@ -255,8 +188,7 @@ module Interpreter {
                 }
             }
 
-            objB = findObject(objs,rels,state);
-
+            objB = Validate.findObject(objs,rels,state);
 
             if(objA === null || objA == ""){
                 throw new Interpreter.Error("There is no item to drop.");
@@ -270,11 +202,9 @@ module Interpreter {
             var allGoals : Literal[][] = [];
             var allQuantGoals : Literal[] = [];
 
-
             for(var i = 0 ;i < objB.length; i++){
 
-                if(checkLaws(objA,objB[i],sRel,state)){
-
+                if(Validate.checkLaws(objA,objB[i],sRel,state)){
                     if(pluralFound){
                         if(objB[i] == "z"){
                             allQuantGoals.push({pol:true, rel:sRel, args:[objA,"floor"]});
@@ -282,7 +212,6 @@ module Interpreter {
                         else {
                             allQuantGoals.push({pol:true, rel:sRel, args:[objA,objB[i]]});
                         }
-
                     }
                     else{
                         if(objB[i] == "z"){
@@ -313,8 +242,6 @@ module Interpreter {
             else
                 throw new Interpreter.Error("Physical Laws error.");
 
-
-
         }
 
         //case move cmd
@@ -331,14 +258,12 @@ module Interpreter {
             var allQuantRight = false;
             var foundSplited = false;
 
-
             for(var i =1;i< tokens.length ;i++){
 
                 var token = tokens[i];
                 var tokenType = globalDic.getValue(token);
 
                 switch(tokenType) {
-
                     case "size":
                         selSize = token;
                         break;
@@ -353,12 +278,12 @@ module Interpreter {
                         if(foundX){
                             foundX = false;
                             sRel = token;
-                        }else{
+                        }
+                        else{
                             rels.push(token)
                         }
                         break;
                     case "quant": 
-                        //... to do
                         if(token == "all" || token == "every"){
                             pluralFound = true;
                             if(foundSplited){
@@ -371,14 +296,14 @@ module Interpreter {
                         break;
 
                     default:
-                        //case "x" for ambiguous
+                        //other case for ambiguity
                         splitIndex = i;
                         foundX = true;
                         foundSplited = true;
                 }
 
                 if(foundForm){
-                    var founds = searchObject(selSize,selColor,selForm,state);
+                    var founds = Validate.searchObject(selSize,selColor,selForm,state);
                     objs.push(founds);
                     foundForm = false;
                     selSize = "";
@@ -387,13 +312,13 @@ module Interpreter {
                 }
 
                 if(foundX){
-                    objA_move = findObject(objs,rels,state);
+                    objA_move = Validate.findObject(objs,rels,state);
                     rels = [];
                     objs = [];
                 }
             }
 
-            objB_move = findObject(objs,rels,state);
+            objB_move = Validate.findObject(objs,rels,state);
 
             if(objA_move.length == 0 || objB_move.length == 0){
                 return null;
@@ -404,7 +329,7 @@ module Interpreter {
             objsLaw.push(objA_move);
             objsLaw.push(objB_move);
 
-            var combs = allCombinations(objsLaw);
+            var combs = Validate.allCombinations(objsLaw);
             var allGoals : Literal[][] = [];
             var allQuantGoals : Literal[] = [];
             var isAllValid = false;
@@ -413,14 +338,10 @@ module Interpreter {
                 return combs.indexOf(elem) == pos;
             }); 
 
-            // console.log(combs);
-
-
             for(var i = 0 ;i < combs.length; i++){
 
                 var combArray = combs[i].split("");
-
-                if(checkLaws(combArray[0],combArray[1],sRel,state)){
+                if(Validate.checkLaws(combArray[0],combArray[1],sRel,state)){
 
                     if(pluralFound){
                         if(combArray[1] == "z"){
@@ -429,7 +350,6 @@ module Interpreter {
                         else {
                             allQuantGoals.push({pol:true, rel:sRel, args:[combArray[0],combArray[1]]});
                         }
-
                     }
                     else{
                         if(combArray[1] == "z"){
@@ -446,8 +366,6 @@ module Interpreter {
                     if(allQuantValidate(allQuantGoals)){
                         var grouped = groupRules(allQuantGoals,allQuantLeft,allQuantRight);
                         return grouped;
-                        // allGoals.push(allQuantGoals);
-                        // return allGoals;
                     }
                     else
                         throw new Interpreter.Error("Physical Laws error.");
@@ -461,19 +379,14 @@ module Interpreter {
             }
             else
                 throw new Interpreter.Error("Physical Laws error.");
-
-
-
         }
-
     }
 
-    // {pol:boolean; rel:string; args:string[];}
-
+    //check that the Literal relation should not be ontop,inside
+    //because there is no way to put all objects inside/ontop a single object 
     function allQuantValidate(literals : Literal[]) : boolean {
 
         var sRel = literals[0].rel;
-
         if(sRel == "ontop" || sRel == "inside"){
             if(literals[0].args[1] == "floor"){
                 return true;
@@ -486,10 +399,10 @@ module Interpreter {
 
     }
 
+    //group the Literals to achieve all quantifier
     function groupRules(literals : Literal[], left : boolean, right : boolean) : Literal[][] {
 
         var result : Literal[][] = [];
-
         var occurences = 1;
 
         //case all quantifier on left hand side
@@ -535,6 +448,8 @@ module Interpreter {
         return result;
     }
 
+    //helper function to sort Literal based on left argument.
+    //e.g. inside(a,x), inside(b,x), inside(c,x)
     function sortHelperL(a : Literal, b :Literal){
 
         if(a.args[0] < b.args[0]){
@@ -547,6 +462,8 @@ module Interpreter {
 
     }
 
+    //helper function to sort Literal based on right argument
+    //e.g. inside(x,a), inside(x,b), inside(x,c)
     function sortHelperR(a : Literal, b :Literal){
 
         if(a.args[1] < b.args[1]){
@@ -558,327 +475,6 @@ module Interpreter {
         return 0;
 
     }
-
-    function findObject(objs : string[][], rels : string[], state : WorldState) : string[] {
-        var result : string[] = [];
-
-        //case simple object, no relation
-        if(rels.length == 0){
-            //no object found
-            if(objs.length == 0){
-                return [];
-            }
-            else{
-                return objs[0];
-            }
-        }
-        else{
-            var combinations = allCombinations(objs);
-            // console.log(combinations);
-
-            for(var i = 0 ;i < combinations.length; i++){
-
-                var combArray = combinations[i].split("");
-
-                if(checkValidObject(combArray,rels,state)){
-                    // return combArray[0];
-                    result.push(combArray[0]);
-                }
-            }
-
-        }
-
-        return result;
-
-    }
-
-    function checkValidObject(objs : string[], rels : string[], state : WorldState) : boolean {
-        var numberOfLoop = rels.length;
-        //old version
-        // console.log(objs);
-        // for(var i = 0;i< numberOfLoop; i++){
-        //     if(!checkPredicate(objs[i],objs[i+1],rels[i],state)){
-        //         return false;
-        //     }
-        // }
-        //new version with human sense
-        for(var i = 0;i< numberOfLoop; i++){
-            if(!checkPredicate(objs[0],objs[i+1],rels[i],state)){
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    interface stackPosition {x:number; y:number;};
-
-    // Function for finding the x and y position of an object in the stacks (x = column, y = row)
-    function getStackLocation(object : string , state : WorldState) : stackPosition {
-        for(var x = 0; x < state.stacks.length ; x++){
-            for(var y = 0 ; y < state.stacks[x].length ; y++){
-                if(state.stacks[x][y] == object){
-                    return {x:x, y:y};
-                }
-            }
-        }
-    }
-
-    function checkPredicate(obj1 : string, obj2 : string, rel : string, state : WorldState) : boolean {
-        var a_loc = getStackLocation(obj1,state);
-        var b_loc = getStackLocation(obj2,state);
-
-        //special case for "floor"
-        if(obj2 == "z"){
-            if(a_loc.y == 0)
-                return true;
-            else
-                return false;
-        }
-        if(obj1 == "z")
-            return null;
-
-
-        var result = false;
-
-        switch(rel){
-            case "inside":
-                //consider it as ontop case but it will be checked about laws later
-                result = (a_loc.x == b_loc.x) && (a_loc.y == (b_loc.y + 1));
-                break;
-            case "ontop":
-                result = (a_loc.x == b_loc.x) && (a_loc.y == (b_loc.y + 1));
-                break;
-            case "above":
-                result = (a_loc.x == b_loc.x) && (a_loc.y > b_loc.y);
-                break;
-            case "under":
-                result = (a_loc.x == b_loc.x) && (a_loc.y < b_loc.y);
-                break;
-            case "beside":
-                result = ((a_loc.x == (b_loc.x +1)) || (a_loc.x == (b_loc.x -1)));
-                break;
-            case "leftof":
-                result = (a_loc.x < b_loc.x);
-                break;
-            case "rightof":
-                result = (a_loc.x > b_loc.x);
-                break;
-        }
-
-        // console.log(result);
-        return result;
-    }
-
-
-    function checkLaws(obj1 : string, obj2 : string, rel : string, state : WorldState) : boolean {
-
-        var detail1 = state.objects[obj1];
-        var detail2 = state.objects[obj2];
-
-        var result = true;
-
-        if(obj2 == "z"){
-            detail2 = {form:"floor", size:"", color:""};
-        }
-
-        if(obj1 == obj2){
-            return false;
-        }
-
-        switch(rel){
-            case "inside":
-                if(detail2.form == "box"){
-                    if(detail2.size == "small"){
-                        result = (detail1.size == "small") && (detail1.form == "brick" || detail1.form == "ball" || detail1.form == "table");
-                    }
-                    if(detail2.size == "large"){
-                        result = detail1.size == "small" || detail1.form == "brick" || detail1.form == "ball" || detail1.form == "table";
-                    }
-                }
-                else{
-                    result = false;
-                }
-
-                break;
-            case "ontop":
-                if(detail1.form == "ball"){
-                    result = (detail2.form == "floor");
-                }
-                else if(detail2.form == "box"){
-                    result = false;
-                }
-                else if(detail2.form == "ball"){
-                    result = false;
-                }
-                else{
-                    if(detail1.size == "large" && detail2.size == "small"){
-                        result = false;
-                    }
-                    if(detail1.size == "small" && detail1.form == "box"){
-                        if(detail2.size == "small" && (detail2.form == "brick" || detail2.form == "pyramid")){
-                            result = false;
-                        }
-                    }
-                    if(detail1.size == "large" && detail1.form == "box"){
-                        if(detail2.size == "large" && detail2.form == "pyramid"){
-                            result = false;
-                        }
-                    }
-                }
-                break;
-            case "under":
-                if(detail1.form == "ball"){
-                    result = false;
-                }     
-                break;        
-            case "above":
-                if(detail2.form == "ball"){
-                    result = false;
-                }
-                if(detail1.form == "ball" && detail1.size == "large"){
-                    if(detail2.size == "small"){
-                        result = false;
-                    }
-                }
-
-                break; 
-
-        }
-
-        // console.log(obj1 + " " + obj2 + " " + rel + " " + result);
-
-        return result;
-    }
-
-    function allCombinations(arr) {
-        if (arr.length == 1) {
-            return arr[0];
-        } else {
-            var result = [];
-            var allCasesOfRest = allCombinations(arr.slice(1));  // recur with the rest of array
-            for (var i = 0; i < allCasesOfRest.length; i++) {
-              for (var j = 0; j < arr[0].length; j++) {
-                result.push(arr[0][j] + allCasesOfRest[i]);
-              }
-            }
-            return result;
-        }
-    }
-
-
-    //search object representation from size, color, form
-    //return an object representation in current world e.g. "a", "b", "c"
-    //return emptystring if there is no object found in current world so it means that impossible to be solved
-    function searchObject(size : string, color : string, form : string, state : WorldState) : string[] {
-
-        var results : string[] = [];
-
-        if(form == "floor")
-            return ["z"];
-
-        var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        var matchCount = 0;
-        var maxMatchCount = 0;
-
-        if(size != "")
-            maxMatchCount++;
-
-        if(color != "")
-            maxMatchCount++;
-
-        if(form != "")
-            maxMatchCount++;
-
-
-        for(var i = 0;i < objs.length ; i++){
-
-            var details = state.objects[objs[i]];
-            matchCount = 0;
-
-            if(size == details.size){
-                matchCount++;
-            }
-            if(color == details.color){
-                matchCount++;
-            }
-            if(form == "anyform" || form == details.form){
-                matchCount++;
-            }
-
-            if(matchCount == maxMatchCount){
-                results.push(objs[i]);
-            }
-        }
-       // console.log(results);
-       return results; 
-
-    }
-
-    //traverse through object to get finite array
-    function recursiveObject(currentObj : Parser.Object) : string[] {
-        var temp : string[] = [];
-
-        //case1 object
-        if(currentObj.obj != null) {
-            var objArrays = recursiveObject(currentObj.obj);
-            temp = temp.concat(objArrays);
-        }
-
-        //case2 location
-        if(currentObj.loc != null) {
-            var objArrays = recursiveLocation(currentObj.loc);
-            temp = temp.concat(objArrays);
-        }
-
-        //case3 size color form
-        if(currentObj.size != null){
-            temp.push(currentObj.size);
-            globalDic.setValue(currentObj.size,"size");
-        }
-        
-        if(currentObj.color != null){
-            temp.push(currentObj.color);
-            globalDic.setValue(currentObj.color,"color");
-
-        }
-
-        if(currentObj.form != null){
-            temp.push(currentObj.form);
-            globalDic.setValue(currentObj.form,"form");
-        }
-
-        return temp;
-
-    }
-
-    //traverse through object to get finite array
-    function recursiveLocation(currentLoc : Parser.Location) : string[] {
-        var temp : string[] = [];
-
-        if(currentLoc.rel != null){
-            temp.push(currentLoc.rel);
-            globalDic.setValue(currentLoc.rel,"rel");
-
-        }
-
-        if(currentLoc.ent != null){
-            var newEnt = currentLoc.ent;
-            temp.push(newEnt.quant);
-            globalDic.setValue(newEnt.quant,"quant");
-
-         
-          if(newEnt.obj != null) {
-                var objArrays = recursiveObject(newEnt.obj);
-                temp = temp.concat(objArrays);
-            }
-
-        }
-
-        return temp;
-
-    }
-
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
