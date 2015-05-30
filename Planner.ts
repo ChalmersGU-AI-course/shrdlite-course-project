@@ -57,6 +57,10 @@ module Planner {
         state.pddlWorld.holding = state.holding;
         state.pddlWorld.stacks = cloneStacks(state.stacks);
 
+        for(var s in state.pddlWorld.stacks) {
+            state.pddlWorld.stacks[s].unshift("floor-"+s);
+        }
+
         // xDistance test. can remove
         //var stacks = state.stacks;
         //console.log("stacks:",stacks);
@@ -213,8 +217,8 @@ module Planner {
                                 if(relExist(node.label.rels, literal)) {
                                     val = 0;
                                 } else {
-                                    val = countObjectsOnTop(node.label, literal.args[0]) +
-                                        countObjectsOnTop(node.label, literal.args[1]) +
+                                    val = 4*countObjectsOnTop(node.label, literal.args[0]) +
+                                        4*countObjectsOnTop(node.label, literal.args[1]) +
                                         xDistance(world, literal.args[0], literal.args[1]);
                                 }
                             }
@@ -224,7 +228,7 @@ module Planner {
                                     val = 0;
                                 } else {
                                     val = xDistance(world, literal.args[0], literal.args[1]) +
-                                        _.min([countObjectsOnTop(node.label, literal.args[0]),
+                                        4 * _.min([countObjectsOnTop(node.label, literal.args[0]),
                                             countObjectsOnTop(node.label, literal.args[1])]);
                                 }
                             }
