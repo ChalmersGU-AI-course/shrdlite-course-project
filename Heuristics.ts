@@ -49,7 +49,6 @@ module Heuristics{
         {
             var points = 0;
             //To hold an object we first need to remove all objects above it.
-            //For each object we remove we give 10 points
             //When we are not holding anything we want to move towards the object position.
             if(a.holding == null)
             {
@@ -100,6 +99,7 @@ module Heuristics{
             {
                 var points = 0;
 
+                //For every object above the first object, add a penalty of 10
                 for(var row = overPos.y + 1; row < a.stacks[overPos.x].length; row++)
                 {
                     points += 10;
