@@ -102,9 +102,12 @@ module AStar {
 
         var startTime = new Date().getTime();
 
+        var nbrIterations = 0;
+
         while (!frontier.isEmpty()) {
-            
+            nbrIterations++;
             if(new Date().getTime() - startTime > 2000) {
+                console.log('A* canceled after ' + nbrIterations + ' iterations');
                 return [];
             }
             
@@ -156,6 +159,7 @@ module AStar {
             path.unshift(s);   
         }
 
+        console.log('A* completed after ' + nbrIterations + ' iterations.');
         return path;
     }
 
