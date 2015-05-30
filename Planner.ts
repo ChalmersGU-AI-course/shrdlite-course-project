@@ -363,54 +363,22 @@ module Planner {
         newWorld.rels.push({pol:true, rel:rel, args:[object, topObject]});
         newWorld.rels.push({pol:true, rel:"attop", args:[object, "floor-"+floor]});
 
-        // add all relations of type beside, above, under, leftof and rightof
-        var objStacks = state.objStacks;
-        var beside = [];
-        if(floor - 1 >= 0){
-            beside.push(floor-1);
-        }
-        if(floor + 1 < objStacks.length){
-            beside.push(floor+1);
-        }
+        // Add all relations of type beside, above, under, leftof and rightof.
+        // If something was beside etc. the previous top object, then it must now
+        // be beside the new top object. 
+        for(var i in newWorld.rels){
+            if(newWorld.rels[i].rel === 'above' || newWorld.rels[i].rel === 'under' || newWorld.rels[i].rel === 'leftof' 
+                || newWorld.rels[i].rel === 'rightof' || newWorld.rels[i].rel === 'beside'){
 
-        var left = [], right = [];
-        for(var j = 0; j < floor; j++){
-            left.push(j);
-        }
-        for(var j = floor + 1; j < objStacks.length; j++){
-            right.push(j);
-        }
-
-        // above/under
-        for(var j = 0; j < objStacks[floor].length; j++){
-            newWorld.rels.push({pol: true, rel: 'above', args: [objectObj.id, objStacks[floor][j].id]});
-            newWorld.rels.push({pol: true, rel: 'under', args: [objStacks[floor][j].id, objectObj.id]});
-        }
-
-        // beside
-        for(var b in beside){
-            for(var c in objStacks[beside[b]]){
-                newWorld.rels.push({pol: true, rel: 'beside', args: [objectObj.id, objStacks[beside[b]][c].id]});
-                newWorld.rels.push({pol: true, rel: 'beside', args: [objStacks[beside[b]][c].id, objectObj.id]});
+                if(newWorld.rels[i].args[0] === topObjectObj.id){
+                    newWorld.rels.push({pol:true, rel:newWorld.rels[i].rel, args:[objectObj.id, newWorld.rels[i].args[1]]});
+                }else if(newWorld.rels[i].args[1] === topObjectObj.id){
+                    newWorld.rels.push({pol:true, rel:newWorld.rels[i].rel, args:[newWorld.rels[i].args[0], objectObj.id]});
+                }
             }
         }
-
-        // leftof/rightof
-        for(var l in left){
-            for(var c in objStacks[left[l]]){
-                newWorld.rels.push({pol: true, rel: 'leftof', args: [objStacks[left[l]][c].id, objectObj.id]});
-                newWorld.rels.push({pol: true, rel: 'rightof', args: [objectObj.id, objStacks[left[l]][c].id]});
-            }
-        }
-
-        // rightof/leftof
-        for(var r in right){
-            for(var c in objStacks[right[r]]){
-                newWorld.rels.push({pol: true, rel: 'rightof', args: [objStacks[right[r]][c].id, objectObj.id]});
-                newWorld.rels.push({pol: true, rel: 'leftof', args: [objectObj.id, objStacks[right[r]][c].id]});
-            }
-        }
-
+        newWorld.rels.push({pol:true, rel:'above', args:[objectObj.id, topObjectObj.id]});
+        newWorld.rels.push({pol:true, rel:'under', args:[topObjectObj.id, objectObj.id]});
 
         return newWorld;
     }
