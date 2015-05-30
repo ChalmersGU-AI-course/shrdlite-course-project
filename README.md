@@ -12,7 +12,7 @@ The interpreter should be complete and interpret everything successfuly (we hope
 There is no timeout for the planner, however before it starts planning it will check if the goal state is possible, such that there is a physically valid state that is the goal state. This means that impossible queries should be reported as such right away. 
 
 ### Queries
-#### Complex1 (1 arm):
+##### Complex1 (1 arm):
  * put the ball left of the yellow brick right of the red pyramid
  * put all tables on the floor
 
