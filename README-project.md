@@ -1,7 +1,7 @@
 # Shrdlite project
 
 ## Running the project
-Build the project and load the Shrdlite.html website.
+Build the project and load the Shrdlite.html website. If building doesn't work, use the latest release available in our repository.
 
 ## Interesting utterances
 The example utterances of the small world has been updated with a couple of utterances that we consider extra interesting. All of the default ones are very relevant as well.
