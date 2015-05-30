@@ -9,6 +9,7 @@ The following document is supposed to explain the final submission of the ShrdLi
 * To build the project just run "$make all" in the project directory.
 * To look at the project in action open _shrdlite.html_ in your browser after building.
 * Please do not consider the ANSI or Text World because some features of our project have never been implemented in those.
+* You can also visit https://tin172.github.io/ to run the project in your browser without building and installing stuff.
 
 ## Interesting examples
 
