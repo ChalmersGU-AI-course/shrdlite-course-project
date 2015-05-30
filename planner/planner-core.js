@@ -422,32 +422,32 @@ SearchGraph.prototype.state_hash = function(state) {
 };
 
 //This one is still buggy
-// SearchGraph.prototype.isPossible = function(state) {
-//     var elems = stdlib.objects_in_world(state);
-//     //Check that each element exists, and that the rule is possible.
-//     for (var rule of this.pddl) {
-//         if (!elems.contains(rule.item)) {
-//             return false;
-//         }
-//         if (rule.rel == "holding" || rule.rel == "floor") {
-//             continue;
-//         }
-//         var newOneof = [];
-//         for (var sub of rule.oneof) {
-//             if (!elems.contains(sub)) {
-//                 return false;
-//             }
-//             if (rule.rel == "ontop" && this.can_place(rule.item, [sub])){
-//                 newOneof.push(sub);
-//             }
-//         }
-//         if (newOneof.length === 0) {
-//             return false;
-//         }
-//         rule.oneof = newOneof;
-//     }
-//     return true;
-// };
+SearchGraph.prototype.isPossible = function(state) {
+    var elems = stdlib.objects_in_world(state);
+    //Check that each element exists, and that the rule is possible.
+    for (var rule of this.pddl) {
+        if (!elems.contains(rule.item)) {
+            return false;
+        }
+        if (rule.rel == "holding" || rule.rel == "floor") {
+            continue;
+        }
+        var newOneof = [];
+        for (var sub of rule.oneof) {
+            if (!elems.contains(sub)) {
+                return false;
+            }
+            if (rule.rel != "ontop" || this.can_place(rule.item, [sub])){
+                newOneof.push(sub);
+            }
+        }
+        if (newOneof.length === 0) {
+            return false;
+        }
+        rule.oneof = newOneof;
+    }
+    return true;
+};
 
 
 function backlink(state) {
@@ -464,10 +464,10 @@ var astar = require("./astar.js");
 module.exports = function(currentState, pddl) {
     console.log("Planning: " + JSON.stringify(pddl));
     var g = new SearchGraph(currentState, pddl);
-    // if (!g.isPossible(g.startNode)) {
-    //     console.log("impossible:" + pddl);
-    //     return undefined;
-    // }
+    if (!g.isPossible(g.startNode)) {
+        console.log("impossible:" + pddl);
+        return undefined;
+    }
     console.time("A*");
     var res = astar(g, g.startNode);
     console.timeEnd("A*");
