@@ -7,13 +7,11 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
-    //TODO should this be moved somewhere? Argument och global parameter?
     var searchDepth = 10;
     var NUM_STACKS;
     var WORLD_STATE;
 
     export function plan(interpretation : PddlLiteral[][], currentState : ExtendedWorldState) : string[] {
-
         var plan : string[] = planInterpretation(interpretation, currentState);
         if (plan) {
             return plan;
@@ -56,19 +54,10 @@ module Planner {
         state.pddlWorld.arm = state.arm;
         state.pddlWorld.holding = state.holding;
         state.pddlWorld.stacks = cloneStacks(state.stacks);
-
+        // Add floor
         for(var s in state.pddlWorld.stacks) {
             state.pddlWorld.stacks[s].unshift("floor-"+s);
         }
-
-        // xDistance test. can remove
-        //var stacks = state.stacks;
-        //console.log("stacks:",stacks);
-        //console.log("m to l:",xDistance(state.pddlWorld, "m", "l"));
-
-
-        console.log("stacks",state.pddlWorld.stacks);
-        console.log("inner stacks",state.pddlWorld.stacks[0]);
 
         var secNode;
         if(state.holding) {
@@ -121,7 +110,7 @@ module Planner {
             }
         }
 
-        console.log("färdig", startNode);
+        //console.log("färdig", startNode);
 
         if(searchResult.length === 0) {
             plan.push("What you are asking is simply impossible!");
@@ -130,6 +119,7 @@ module Planner {
         return plan;
     }
 
+    // Utility function for cloning two lists
     function cloneStacks(oldStacks: string[][]) {
         var stacks = [];
         for(var i in oldStacks) {
@@ -138,7 +128,6 @@ module Planner {
                 stacks[i][j] = oldStacks[i][j];
             }
         }
-        
         return stacks;
     }
 
@@ -152,6 +141,7 @@ module Planner {
         }
     }
 
+    // Check if a relation exists in the world
     function relExist(world:PddlLiteral[], rel:PddlLiteral) {
         for(var i in world) {
             if(world[i].rel === rel.rel && 
@@ -165,6 +155,8 @@ module Planner {
         return false;
     }
 
+    // Check which relation left has to right
+    // (Returns "left", "right", "above" or "below")
     function checkWhichSide(world:PddlWorld, left:string, right:string) {
         
         var leftP=[], rightP=[];
@@ -201,10 +193,10 @@ module Planner {
         }
     }
 
+    // Creates a heuristic function which looks for a specific goal state
+    // The heuristic function takes a node and returns a number which measures how close it is to the goal state
     function createHeuristicFunction(goalWorld:PddlLiteral[][]) {
-        //console.log("create heuristic");
         return function(node:AStar.Node<PddlWorld>) : number {
-          //  console.log("run heuristic");
             var world  = node.label
               , stacks = world.stacks
               , orList = goalWorld
@@ -263,6 +255,7 @@ module Planner {
 
     }
 
+    // Finds the distance across the x axis between two objects
     function xDistance(world : PddlWorld, obj1 : string, obj2 : string) {
         var stacks : string[][] = world.stacks;
 
@@ -290,6 +283,7 @@ module Planner {
         }
     }
 
+    // Count the number of objects on top of the given object
     function countObjectsOnTop(world:PddlWorld, obj:string) {
         
         var count = 0;
@@ -308,7 +302,9 @@ module Planner {
         
         return count;
     }
-    
+
+    // Creates a goal function for a specific goal state
+    // The goal function takes a node and returns true or false
     function createGoalFunction(goalWorld:PddlLiteral[][]) {
         return function(node:AStar.Node<PddlWorld>) {
             var pddlWorld = node.label;
@@ -343,7 +339,7 @@ module Planner {
         }
     }
 
-    
+    // Get the neighbours for a specific node
     export function getNeighbours(oldNode:AStar.Node<PddlWorld>) {
         var oldNodeWorld  = oldNode.label
             , armPos        = oldNodeWorld.arm;
@@ -381,24 +377,11 @@ module Planner {
             }
         }               
     }
-    
-    
-    //Returns the first of the given relation in a Pddlworld
-    //DEPRECATED
-    function getRel(world:PddlLiteral[], rel:string):PddlLiteral {
-        for(var i in world) {
-            if(world[i].rel === rel) {
-                return world[i];
-            }
-        }
-    }
 
-    //TODO put in PddlWorld interface in some way or other?
     function clonePddlWorld(pddlWorld:PddlWorld):PddlWorld {
         var newWorld: PddlWorld = {rels: [], arm: 0, holding: null, stacks : []}
          ,  world = pddlWorld.rels;
 
-        //TODO move to a clone-method somewhere
         for(var w in world) {
             newWorld.rels.push({pol: world[w].pol, rel: world[w].rel, args: [world[w].args[0], world[w].args[1]]});
         }
@@ -479,8 +462,6 @@ module Planner {
             return null;
         }
 
-
-
         // if topObject is a box, and
         // if object is a pyramid, plank or box, and
         // if object and topObject have the same size,
@@ -496,7 +477,6 @@ module Planner {
             return null;
         }
 
-
         // Large boxes cannot be supported by large pyramids.
         // if topObject is a large pyramid, and
         // if object is a large box,
@@ -504,7 +484,6 @@ module Planner {
         if((objectForm === 'box' && objectSize === 'large') && topObjectForm === 'pyramid') {
             return null;
         }
-
 
         // Determine 'rel' part of the new predicate
         if (topObjectForm === 'box') {
@@ -547,30 +526,8 @@ module Planner {
         var newWorld: PddlLiteral[] = world.rels; 
         var foundObject : any = false;
 
-        // Error hunting
-        // Doesn't catch anything. :(
-        // Can be removed?
-        /*
-        var attops = [];
-        for (var i = 0; i < NUM_STACKS; i++) {
-            var attops2 = _.filter(newWorld, function(pddl) {
-                return pddl.rel === 'attop' && pddl.args[1] === 'floor-'+i;
-            });
-            if (attops2.length>1) {
-                attops = attops.concat(attops2);
-            }
-        }
-        if (attops.length>1) {
-            console.warn("several attops!");
-        }
-        */
-        
         for(var i:number = 0; i<newWorld.length; i++){
             if(newWorld[i].rel === "attop" && newWorld[i].args[1] === "floor-"+floor) {
-                if (foundObject) {
-                    //console.warn("Found several 'attop' for floor-"+floor+"!");
-                    //newWorld.push({pol: true, rel: 'dbg-several-attop', args: [""+foundObject, newWorld[i]['args'][0], JSON.stringify(newWorld)]});
-                }
 
                 var object = newWorld[i].args[0];
                 newWorld.splice(i, 1);
@@ -588,23 +545,6 @@ module Planner {
             }
         }
 
-
-        //Can be removed?
-        /*
-        if (!foundObject) {
-            return null;
-        } else {
-            if (floor === 4) {
-                //console.log("lifting from floor-4", object, newWorld);
-                //newWorld.push({pol:true, rel:"itsalie", args: [object]}); // try to find the faulty lift
-                if (object === "m") {
-                    //console.log("lifting blue ball from floor-4", object, newWorld);
-                    newWorld.push({pol:true, rel:"itsalie", args: [object, JSON.stringify(newWorld)]}); // try to find the faulty lift
-
-                }
-            }
-            return newWorld;
-        }*/
         if(!foundObject) {
             return null;
         }
@@ -626,29 +566,7 @@ module Planner {
         
         return world;
     }
-/*
-    //Takes a PDDL-world and returns an array of all the objects that are on top
-    function getObjectsOnTop(world : ExtendedWorldState):string[] {
-        var objects: collections.Set<string> = new collections.Set<string>(),
-            pddlWorld: PddlLiteral[] = world.pddlWorld.rels;
 
-        // Get every object in the world and add it to a set
-        for(var id in world.objectsWithId){
-            if(id.indexOf("floor") === -1) {
-                objects.add(id);
-            }
-        }
-
-        for(var i in pddlWorld){
-            var rel = pddlWorld[i].rel;
-            if(rel === "ontop" || rel === "inside") {
-                objects.remove(pddlWorld[i].args[1]);
-            }
-        }
-
-        return objects.toArray();
-    }
-*/
     function removeLiteral(pddlWorld: PddlWorld, literal:PddlLiteral) {
         var world = pddlWorld.rels;
         for(var i in world) {
