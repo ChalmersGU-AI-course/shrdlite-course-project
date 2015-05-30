@@ -151,9 +151,16 @@ module Planner {
         return false;
     }
 
-    function checkWhichSide(stacks, left, right) {
+    function checkWhichSide(world, left, right) {
         
         var leftP=[], rightP=[];
+        var stacks = world.stacks;
+        
+        if(world.holding === left) {
+            leftP[0] = world.arm;
+        } else if(world.holding === right) {
+            rightP[0] = world.arm;
+        }
         
         for(var i in stacks) {
             for(var j in stacks[i]) {
