@@ -64,9 +64,11 @@ relation --> ("left"  "of" | "to" "the" "left"  "of")  {% R("leftof") %}
 relation --> ("right" "of" | "to" "the" "right" "of")  {% R("rightof") %}
 relation --> ("inside" | "in" | "into")  {% R("inside") %}
 relation --> ("on" | "on" "top" "of")    {% R("ontop") %}
-relation --> ("under" | "below")         {% R("under") %}
+relation --> ("under")                   {% R("under") %}
+relation --> ("below")                   {% R("below") %}
 relation --> ("beside")                  {% R("beside") %}
 relation --> ("above")                   {% R("above") %}
+relation --> ("containing")              {% R("containing") %}
 
 size --> ("small" | "tiny")  {% R("small") %}
 size --> ("large" | "big")   {% R("large") %}

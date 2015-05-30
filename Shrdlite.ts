@@ -2,6 +2,8 @@
 ///<reference path="Parser.ts"/>
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Planner.ts"/>
+///<reference path="Planalyzer.ts"/>
+///<reference path="AmbiguityResolve.ts"/>
 
 module Shrdlite {
 
@@ -63,6 +65,12 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
         });
 
+        if (interpretations.length > 1) {
+            var clarifications = AmbiguityResolve.getClarifications(parses);
+            world.printError("Ambiguous statement", clarifications);
+            return;
+        }
+
         try {
             var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
         } catch(err) {
@@ -76,6 +84,11 @@ module Shrdlite {
         world.printDebugInfo("Found " + plans.length + " plans");
         plans.forEach((res, n) => {
             world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
+        });
+
+        //sort the plans ascending
+        plans.sort(function(a, b) {
+            return a.plan.length - b.plan.length;
         });
 
         var plan : string[] = plans[0].plan;
