@@ -140,7 +140,7 @@ ExampleWorlds["impossible"] = {
     rowLength: 5
 };
 
-ExampleWorlds["3D"] = {
+ExampleWorlds["3D-Small"] = {
     "stacks": [["e"], ["g"], ["b"], ["k", "f"], [], ["c", "a", "h"], ["l", "j"], ["m"], []],
     //"stacks": [[], ["g"], [], [], [], [], ["j"], ["m"], []],
     "holding": "a",
@@ -167,4 +167,41 @@ ExampleWorlds["3D"] = {
         "stack all blue objects"
     ],
     rowLength: 3
+};
+
+ExampleWorlds["3D-Medium"] = {
+    "stacks": [["e"], ["g"], ["b"], ["k", "f"], ["i"], ["c", "a", "h"], ["l", "j"], ["m"], ["n", "t"], ["o"], ["p"], ["q"], ["r"], ["d"], ["s"], ["u"]],
+    //"stacks": [[], ["g"], [], [], [], [], ["j"], ["m"], []],
+    "holding": "a",
+    "arm": 0,
+    "objects": {
+        "floor": { "form": "floor", "size": "", "color": "" },
+        "a": { "form": "pyramid", "size": "large", "color": "green" },
+        "b": { "form": "brick", "size": "small", "color": "white" },
+        "c": { "form": "plank", "size": "large", "color": "red" },
+        "d": { "form": "plank", "size": "small", "color": "green" },
+        "e": { "form": "ball", "size": "large", "color": "white" },
+        "f": { "form": "ball", "size": "small", "color": "black" },
+        "g": { "form": "table", "size": "large", "color": "blue" },
+        "h": { "form": "table", "size": "small", "color": "red" },
+        "i": { "form": "pyramid", "size": "large", "color": "yellow" },
+        "j": { "form": "brick", "size": "small", "color": "blue" },
+        "k": { "form": "box", "size": "large", "color": "yellow" },
+        "l": { "form": "box", "size": "large", "color": "red" },
+        "m": { "form": "box", "size": "small", "color": "blue" },
+        "n": { "form": "box", "size": "large", "color": "blue" },
+        "o": { "form": "table", "size": "large", "color": "yellow" },
+        "p": { "form": "table", "size": "small", "color": "blue" },
+        "q": { "form": "box", "size": "small", "color": "blue" },
+        "r": { "form": "pyramid", "size": "small", "color": "blue" },
+        "s": { "form": "pyramid", "size": "large", "color": "black" },
+        "t": { "form": "box", "size": "small", "color": "black" },
+        "u": { "form": "ball", "size": "large", "color": "yellow" }
+    },
+    "examples": [
+        "stack up all black objects",
+        "put the yellow box on the table",
+        "stack all blue objects"
+    ],
+    rowLength: 4
 };
