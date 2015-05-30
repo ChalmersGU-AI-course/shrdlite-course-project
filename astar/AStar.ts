@@ -116,7 +116,7 @@ module AStar {
 
         while (!frontier.isEmpty()) {
             nbrIterations++;
-            if(new Date().getTime() - startTime > 2000) {
+            if(new Date().getTime() - startTime > 20000) {
                 console.log('A* canceled after ' + nbrIterations + ' iterations');
                 return [];
             }

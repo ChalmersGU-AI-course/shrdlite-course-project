@@ -226,7 +226,7 @@ module Interpreter {
         var obj1 = state.objectsWithId[literal.args[0]];
         // Holding floor
         if(literal.rel === 'holding'){
-            return obj1.form === 'floor';
+            return obj1.form !== 'floor';
         }
         // Can not have a binary relation to itself
         if(literal.args[0] === literal.args[1]){
