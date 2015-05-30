@@ -8,12 +8,12 @@ class GLWorld {
     protected gl: WebGLRenderingContext;
     protected cam: Camera;
 
-    private scene: Array<RenderItem>;
-    private arm: RenderItem;
-    private objects: collections.Dictionary<string, RenderItem>;
+    protected scene: Array<RenderItem>;
+    protected arm: RenderItem;
+    protected objects: collections.Dictionary<string, RenderItem>;
 
     constructor(
-        public currentState: WorldState,
+        private currentState: WorldState,
         canvas: HTMLCanvasElement
         ) {
         this.objects = new collections.Dictionary<string, RenderItem>();
@@ -38,6 +38,8 @@ class GLWorld {
         this.arm = new RenderItem(this.gl, Assets.Arm, Assets.woodTexture);
         this.scene.push(this.arm);
 
+        //Add all objects to scene
+        //TODO: make a LUT
         for (var i = 0; i < currentState.stacks.length; ++i) {
             for (var j = 0; j < currentState.stacks[i].length; ++j) {
                 var obj = currentState.objects[currentState.stacks[i][j]];
@@ -106,17 +108,14 @@ class GLWorld {
         
         this.initShader();
 
-
-
-        //this.test();
-        //this.test2();
-
-        //Now draw!
-        setInterval(() => this.drawScene(), 15);
+        //Start main loop
+        setInterval(() => this.mainLoop(), 15);
 
     }
 
     private initShader() {
+        //TODO: Should be in camera
+
         //Shader set-up
         this.cam.shaderProgram = this.gl.createProgram();
         var fragmentShader: WebGLShader = this.gl.createShader(this.gl.FRAGMENT_SHADER);
@@ -167,9 +166,8 @@ class GLWorld {
         this.gl.enableVertexAttribArray(this.cam.textureCoordAttribute);
     }
 
-    private drawScene(): void {
+    private mainLoop(): void {
         //Update logic
-
         for (var i = 0; i < this.currentState.stacks.length; ++i) {
             var h = Assets.Floor.stackHeight;
             for (var j = 0; j < this.currentState.stacks[i].length; ++j) {
@@ -183,7 +181,7 @@ class GLWorld {
                 }
             }
         }
-        //Holding
+        //Logic for arm and holding
         var x = this.currentState.arm % this.currentState.rowLength;
         var y = Math.floor(this.currentState.arm / this.currentState.rowLength);
         this.arm.setPosition(x * 1.1, 2.3, -y * 1.1);
@@ -200,6 +198,7 @@ class GLWorld {
         this.cam.Setup();
 
         //Draw scene
+        //TODO: Should have a scene object which handles this
         for (var i = 0; i < this.scene.length; ++i) {
             this.scene[i].draw(this.cam);
         }
