@@ -226,20 +226,20 @@ nextMoves = (state) ->
   cranePos = state.arm
   craneItem = state.holding
 
-  # Crane movement
+  # Crane movement is possible unless the crane is at the edge of the world
   if cranePos > 0
     moves.push("l")
   if cranePos < nbrOfStacks-1
     moves.push("r")
 
-  # Crane items
+  # Crane items can be picked up if stack below is not empty and crane does not hold already
   stack = state.stacks[cranePos]
   if craneItem is null
     if stack.length > 0
       moves.push("p")
   else
     craneItem = getItem(state, craneItem)
-    # Check if drop is legit
+    # Check if drop is legit, if it is and the crane holds an item add drop
     if stack.length > 0
       topItem = getItem(state, stack[stack.length-1])
       if isObjectDropValid(craneItem, topItem)
