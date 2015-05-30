@@ -170,12 +170,32 @@ module Planner {
                         }
 
                     }
+                    else if (literal.rel === 'beside') {
+                        var obj1 = literal.args[0]
+                          , obj2 = literal.args[1];
+                        var dist = xDistance(stacks, obj1, obj2);
+
+                    }
 
                 })
             });
 
             return val;
 
+        }
+        
+        function xDistance(stacks : string[][], obj1 : string, obj2 : string) {
+            var obj1Idx = _.findIndex(stacks, function (stack) {
+                return _.contains(stack, obj1);
+            });
+            var obj2Idx = _.findIndex(stacks, function (stack) {
+                return _.contains(stack, obj2);
+            });
+            if (obj1Idx === -1 || obj2Idx === -1) {
+                return -1;
+            } else {
+                return Math.abs(obj1Idx-obj2Idx);
+            }
         }
     }
     
