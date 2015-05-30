@@ -145,16 +145,8 @@ module Shrdlite {
                 throw err;
             }
         }
-        world.printSystemOutput("Found interpretations, count: "+interpretations.length);
 
-        // Ambiguity resolution
-        var interpretation : PddlLiteral[][] = null;
-        if (interpretations.length > 1) {
-            interpretation = resolveAmbiguity(interpretations);
-        } else {
-            interpretation = interpretations[0];
-        }
-
+        var interpretation : PddlLiteral[][] = interpretations[0];
 
         world.printDebugInfo("Found " + interpretations.length + " interpretations");
         interpretations.forEach((res, n) => {
@@ -198,28 +190,4 @@ module Shrdlite {
         }
         return plan;
     }
-
-
-    // DEPRECATED
-    // Given several interpretations, prompts the user to select one of them
-    function resolveAmbiguity(interpretations : PddlLiteral[][][]) : PddlLiteral[][] {
-        var interpretation : PddlLiteral[][] = null;
-        // Loop until user has chosen one
-        while (!interpretation) {
-            // TODO: pretty-print here
-            // implement function which takes a list of objects, and pretty-prints them
-            // with as much detail as needed to distinguish them
-            var intpStrings = _.map(interpretations, (int,i) => {return i+". "+Interpreter.interpretationToString(int);})
-              , intpString  = _.reduce(intpStrings, (total, s) => {return total+"\n"+s;});
-            var i = Number(prompt("Multiple interpretations found:\n"+intpString+"\nWhich one did you mean?"));
-            if (i >= 0 && i < interpretations.length) {
-                interpretation = interpretations[i];
-            } else {
-                alert("Unfortunately, I didn't quite grasp that. Try again.");
-            }
-        }
-        return interpretation;
-
-    }
-
 }
