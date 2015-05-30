@@ -75,7 +75,7 @@ module Planner {
 
     function makeHeurFunc(intprt : Interpreter.Literal[][]) {
 	return (s : State) => {
-	    var hVal : number = 999999999999999;
+	    var hVal : number = 999999999;
 	    intprt.forEach((i) => {
 		var hi : number = h(s, i[0]);
 		if(hi < hVal)
