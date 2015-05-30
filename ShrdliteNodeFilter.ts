@@ -31,9 +31,9 @@ class ShrdliteNodeFilter implements GraphFilter {
                         return 0;
 
                     if (below != -1)
-                        noOfObjectsAbove += node.state.stacks.length - below - 1; //-1 because last index is not equally to length (this will not be called if below is the floor)
+                        noOfObjectsAbove += node.state.stacks[i].length - below - 1; //-1 because last index is not equally to length (this will not be called if below is the floor)
                     if (onTop != -1)
-                        noOfObjectsAbove += node.state.stacks.length - onTop - 1; //Now we want one more for the cost
+                        noOfObjectsAbove += node.state.stacks[i].length - onTop - 1; //Now we want one more for the cost
                 }
                 return noOfObjectsAbove;
                 break;
@@ -46,7 +46,7 @@ class ShrdliteNodeFilter implements GraphFilter {
                     if ((below != -1 || this.intptr.args[1] == 'floor') && onTop != -1 && below < onTop)
                         return 0;
                     else if (onTop != -1) {
-                        noOfObjectsAboveTarget += node.state.stacks.length - onTop - 1;
+                        noOfObjectsAboveTarget += node.state.stacks[i].length - onTop - 1;
                     }
                 }
                 return noOfObjectsAboveTarget;
@@ -70,24 +70,42 @@ class ShrdliteNodeFilter implements GraphFilter {
                 }
                 break;
             case 'leftof':
+                var noOfObjectsAboveLeft = 1;
+                var noOfObjectsAboveRight = 1;
+
                 for (var i = 1; i < node.state.stacks.length; ++i) {
                     if (i % node.state.rowLength == 0)
                         continue;
-                    var leftObject: boolean = node.state.stacks[i - 1].indexOf(this.intptr.args[0]) != -1;
-                    var rightObject: boolean = node.state.stacks[i].indexOf(this.intptr.args[1]) != -1;
-                    if (leftObject && rightObject)
+                    var leftObject: number = node.state.stacks[i - 1].indexOf(this.intptr.args[0]);
+                    var rightObject: number = node.state.stacks[i].indexOf(this.intptr.args[1]);
+                    if (leftObject != -1 && rightObject != -1)
                         return 0;
+
+                    if (leftObject != -1)
+                        noOfObjectsAboveLeft += node.state.stacks[i - 1].length - leftObject - 1;
+                    if (rightObject != -1)
+                        noOfObjectsAboveRight += node.state.stacks[i].length - rightObject - 1;
                 }
+                return Math.min(noOfObjectsAboveLeft, noOfObjectsAboveRight);
                 break;
             case 'rightof':
+                var noOfObjectsAboveLeft = 1;
+                var noOfObjectsAboveRight = 1;
+
                 for (var i = 1; i < node.state.stacks.length; ++i) {
                     if (i % node.state.rowLength == 0)
                         continue;
-                    var leftObject: boolean = node.state.stacks[i - 1].indexOf(this.intptr.args[1]) != -1;
-                    var rightObject: boolean = node.state.stacks[i].indexOf(this.intptr.args[0]) != -1;
-                    if (leftObject && rightObject)
+                    var leftObject: number = node.state.stacks[i - 1].indexOf(this.intptr.args[1]);
+                    var rightObject: number = node.state.stacks[i].indexOf(this.intptr.args[0]);
+                    if (leftObject != -1 && rightObject != -1)
                         return 0;
+
+                    if (leftObject != -1)
+                        noOfObjectsAboveLeft += node.state.stacks[i - 1].length - leftObject - 1;
+                    if (rightObject != -1)
+                        noOfObjectsAboveRight += node.state.stacks[i].length - rightObject - 1;
                 }
+                return Math.min(noOfObjectsAboveLeft, noOfObjectsAboveRight);
                 break;
             case 'under':
                 var noOfObjectsAboveTarget = 1; //Must be one
@@ -98,7 +116,7 @@ class ShrdliteNodeFilter implements GraphFilter {
                     if ((below != -1 || this.intptr.args[0] == 'floor') && onTop != -1 && below < onTop)
                         return 0;
                     else if (onTop != -1)
-                        noOfObjectsAboveTarget += node.state.stacks.length - onTop - 1;
+                        noOfObjectsAboveTarget += node.state.stacks[i].length - onTop - 1;
                 }
                 return noOfObjectsAboveTarget;
                 break;
