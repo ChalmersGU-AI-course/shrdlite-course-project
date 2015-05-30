@@ -38,7 +38,7 @@ The following document is supposed to explain the final submission of the ShrdLi
  * the logic for that can mainly be found in _Interpreter.ShrdLiteInterpretation.buildLiteral(...)_ in _Interpreter.ts_
 * it can process a new command called **stack/stack up** that can be used like e.g. _stack up all blue objects_
  * the logic for that can mainly be found in _Interpreter.ShrdLiteInterpretation.buildLiteral(...)_ and _Interpreter.ShrdliteInterpretation.getInterpretation(...) in _Interpreter.ts_
-
+* Infront of / behind of an object (needs to be in a 3D world)
 ### Stuff to be aware of
 
 * the ambiguity check in the current form is a bit overambitious and will try to give suggestions solely based on the objects found in the Interpreter without regarding the original quantifiers, a potentially ambiguous example like _move all red objects above a yellow object on the floor_ will therefore spawn choices based on all the objects that fit the pattern without keeping the original **all** quantifier intact
