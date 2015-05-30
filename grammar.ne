@@ -38,7 +38,7 @@ function R(obj) {
 main --> will_you:? please:? command please:?  {% R(2) %}  
 
 command --> take entity           {% R({cmd:"take", ent:1}) %}
-command --> move  it    location  {% R({cmd:"put", loc:2}) %}
+command --> move  it    location  {% R({cmd:"put", what:1, loc:2}) %}
 command --> move entity location  {% R({cmd:"move", ent:1, loc:2}) %}
 
 location --> relation entity  {% R({rel:0, ent:1}) %}
@@ -97,7 +97,7 @@ form --> "floor"    {% R("floor") %}
 
 take --> "take" | "grasp" | "pick" "up"
 move --> "move" | "put" | "drop"
-it --> "it"
+it --> "it" {% R("it") %} | "the" "left" {% R("left") %} | "the" "right" {% R("right") %} | "both" {% R("both") %} | "them" {% R("both") %}
 
 that_is  --> "that" "is"
 that_are --> "that" "are"

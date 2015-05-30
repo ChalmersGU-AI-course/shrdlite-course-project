@@ -8,8 +8,14 @@ class SVGWorld implements World {
         public currentState: WorldState,
         public useSpeech = false
     ) {
-        if (!this.currentState.arm) this.currentState.arm = 0;
-        if (this.currentState.holding) this.currentState.holding = null;
+        if (!this.currentState.arm1) this.currentState.arm1 = 0;
+        if (!this.currentState.arm2) this.currentState.arm2 = 0;
+        if (this.currentState.holding1) this.currentState.holding1 = null;
+        if (this.currentState.holding2) this.currentState.holding2 = null;
+
+        console.log(this.currentState.arm1);
+        console.log(this.currentState.arm2);
+
         this.canvasWidth = this.containers.world.width() - 2 * this.wallSeparation;
         this.canvasHeight = this.containers.world.height() - this.floorThickness;
 
@@ -127,9 +133,9 @@ class SVGWorld implements World {
             fill: 'black',
         }).appendTo(svg);
 
-        // The arm:
+        // The arm1:
         $(this.SVG('line')).attr({
-            id:'arm',
+            id:'arm1',
             x1: this.stackWidth() / 2,
             y1: this.armSize * this.stackWidth() - this.canvasHeight, 
             x2: this.stackWidth() / 2, 
@@ -137,6 +143,21 @@ class SVGWorld implements World {
             stroke: 'black', 
             'stroke-width': this.armSize * this.stackWidth(),
         }).appendTo(svg);
+
+        // The arm2:
+        $(this.SVG('line')).attr({
+            id:'arm2',
+            x1: this.stackWidth() / 2,
+            y1: this.armSize * this.stackWidth() - this.canvasHeight, 
+            x2: this.stackWidth() / 2, 
+            y2: this.armSize * this.stackWidth(), 
+            stroke: 'black', 
+            'stroke-width': this.armSize * this.stackWidth(),
+        }).appendTo(svg);
+
+        // Move arms to initial positions
+        this.animateMotion($('#arm1'), ["M", 0, 0, "H", this.currentState.arm1 * this.stackWidth() + this.wallSeparation], 0, 1);
+        this.animateMotion($('#arm2'), ["M", 0, 0, "H", this.currentState.arm2 * this.stackWidth() + this.wallSeparation], 0, 1);
 
         var timeout = 0;
         for (var stacknr=0; stacknr < this.currentState.stacks.length; stacknr++) {
@@ -160,9 +181,11 @@ class SVGWorld implements World {
         var performNextAction = () => {
             planctr++;
             if (plan && plan.length) {
-                var item = plan.shift().trim();
-                var action = this.getAction(item);
-                if (action) {
+                var item = plan.shift()
+                if (item.length == 2) { //Two actions
+                    var action = this.getAction([item[0].trim(),item[1].trim()+"2"]);//the actions for the right arm end with 2
+                }
+                if (item.length == 2 && action) {
                     try {
                         action.call(this, performNextAction);
                     } catch(err) {
@@ -175,7 +198,7 @@ class SVGWorld implements World {
                             plan.unshift(item);
                             setTimeout(performNextAction, this.animationPause * 1000);
                         } else {
-                            this.printSystemOutput(item);
+                            this.printSystemOutput(item[0]);
                             performNextAction();
                         }
                     } else {
@@ -242,78 +265,128 @@ class SVGWorld implements World {
     }
 
     //////////////////////////////////////////////////////////////////////
-    // The basic actions: left, right, pick, drop
+    // The basic actions: left, right, pick, drop for both arms
 
     private getAction(act) {
-        var actions = {p:this.pick, d:this.drop, l:this.left, r:this.right};
-        return actions[act.toLowerCase()];
-    }
+        var actions = {n:this.doNothing,p:this.pick, d:this.drop, l:this.left, r:this.right, n2:this.doNothing,p2:this.pick2, d2:this.drop2, l2:this.left2, r2:this.right2};
+        var a1 = actions[act[0].toLowerCase()].bind(this);
+        var a2 = actions[act[1].toLowerCase()].bind(this);
+        return function (callback?) {
+            var duration2 = a2.call();
+            var duration1 = a1.call();
+            if (callback) setTimeout(callback.bind(this), (duration1 + duration2) * 1000);
+        }
+    } 
 
+    private doNothing(callback?) {
+        return 0; //doNothing
+    }
     private left(callback?) {
-        if (this.currentState.arm <= 0) {
+        //Move arm1 left
+        if (this.currentState.arm1 <= 0) {
             throw "Already at left edge!";
         }
-        this.horizontalMove(this.currentState.arm - 1, callback);
+        return this.horizontalMove(this.currentState.arm1 - 1, callback);
     }
 
     private right(callback?) {
-        if (this.currentState.arm >= this.currentState.stacks.length - 1) {
+        //Move arm1 right
+        if (this.currentState.arm1 >= this.currentState.stacks.length - 1) {
             throw "Already at right edge!";
         }
-        this.horizontalMove(this.currentState.arm + 1, callback);
+        return this.horizontalMove(this.currentState.arm1 + 1, callback);
     }
 
     private drop(callback?) {
-        if (!this.currentState.holding) {
+        //Drop items from arm1
+        if (!this.currentState.holding1) {
             throw "Not holding anything!";
         }
-        this.verticalMove('drop', callback);
-        this.currentState.stacks[this.currentState.arm].push(this.currentState.holding);
-        this.currentState.holding = null;
+        var duration = this.verticalMove('drop', callback);
+        this.currentState.stacks[this.currentState.arm1].push(this.currentState.holding1);
+        this.currentState.holding1 = null;
+        return duration;
     }
 
     private pick(callback?) {
-        if (this.currentState.holding) {
+        //Pick up items with arm1
+        if (this.currentState.holding1) {
             throw "Already holding something!";
         }
-        this.currentState.holding = this.currentState.stacks[this.currentState.arm].pop();
-        this.verticalMove('pick', callback);
+        this.currentState.holding1 = this.currentState.stacks[this.currentState.arm1].pop();
+        return this.verticalMove('pick', callback);
+    }
+
+    private left2(callback?) {
+        //Move arm2 left
+        if (this.currentState.arm2 <= 0) {
+            throw "Already at left edge!";
+        }
+        return this.horizontalMove2(this.currentState.arm2 - 1, callback);
+    }
+
+    private right2(callback?) {
+        //Move arm2 right
+        if (this.currentState.arm2 >= this.currentState.stacks.length - 1) {
+            throw "Already at right edge!";
+        }
+        return this.horizontalMove2(this.currentState.arm2 + 1, callback);
+    }
+
+    private drop2(callback?) {
+        //Drop items from arm2
+        if (!this.currentState.holding2) {
+            throw "Not holding anything!";
+        }
+        var duration = this.verticalMove2('drop', callback);
+        this.currentState.stacks[this.currentState.arm2].push(this.currentState.holding2);
+        this.currentState.holding2 = null;
+        return duration;
+    }
+
+    private pick2(callback?) {
+        //Pick up items with arm2
+        if (this.currentState.holding2) {
+            throw "Already holding something!";
+        }
+        this.currentState.holding2 = this.currentState.stacks[this.currentState.arm2].pop();
+        return this.verticalMove2('pick', callback);
     }
 
     //////////////////////////////////////////////////////////////////////
     // Moving around
 
     private horizontalMove(newArm, callback?) {
-        var xArm = this.currentState.arm * this.stackWidth() + this.wallSeparation;
+        var xArm = this.currentState.arm1 * this.stackWidth() + this.wallSeparation;
         var xNewArm = newArm * this.stackWidth() + this.wallSeparation;
         var path1 = ["M", xArm, 0, "H", xNewArm];
         var duration = Math.abs(xNewArm - xArm) / this.armSpeed;
-        var arm = $('#arm');
+        var arm = $('#arm1');
         this.animateMotion(arm, path1, 0, duration);
-        if (this.currentState.holding) {
-            var objectHeight = this.getObjectDimensions(this.currentState.holding).heightadd;
+        if (this.currentState.holding1) {
+            var objectHeight = this.getObjectDimensions(this.currentState.holding1).heightadd;
             var yArm = -(this.canvasHeight - this.armSize * this.stackWidth() - objectHeight);
             var path2 = ["M", xArm, yArm, "H", xNewArm];
-            var object = $("#" + this.currentState.holding)
+            var object = $("#" + this.currentState.holding1)
             this.animateMotion(object, path2, 0, duration);
         }
-        this.currentState.arm = newArm;
+        this.currentState.arm1 = newArm;
         if (callback) setTimeout(callback, (duration + this.animationPause) * 1000);
-        return 
+        return (duration + this.animationPause);
     }
 
     private verticalMove(action, callback?) {
-        var altitude = this.getAltitude(this.currentState.arm);
-        var objectHeight = this.getObjectDimensions(this.currentState.holding).heightadd;
+        var altitude = this.getAltitude(this.currentState.arm1);
+        var objectHeight = this.getObjectDimensions(this.currentState.holding1).heightadd;
         var yArm = this.canvasHeight - altitude - this.armSize * this.stackWidth() - objectHeight;
         var yStack = -altitude;
-        var xArm = this.currentState.arm * this.stackWidth() + this.wallSeparation;
+        var xArm = this.currentState.arm1 * this.stackWidth() + this.wallSeparation;
 
         var path1 = ["M", xArm, 0, "V", yArm];
         var path2 = ["M", xArm, yArm, "V", 0];
         var duration = (Math.abs(yArm)) / this.armSpeed;
-        var arm = $('#arm');
-        var object = $("#" + this.currentState.holding)
+        var arm = $('#arm1');
+        var object = $("#" + this.currentState.holding1)
 
         this.animateMotion(arm, path1, 0, duration);
         this.animateMotion(arm, path2, duration + this.animationPause, duration);
@@ -325,6 +398,52 @@ class SVGWorld implements World {
             this.animateMotion(object, path3, 0, duration)
         }
         if (callback) setTimeout(callback, 2*(duration + this.animationPause) * 1000);
+        return 2*(duration + this.animationPause);
+    }
+
+private horizontalMove2(newArm, callback?) {
+        var xArm = this.currentState.arm2 * this.stackWidth() + this.wallSeparation;
+        var xNewArm = newArm * this.stackWidth() + this.wallSeparation;
+        var path1 = ["M", xArm, 0, "H", xNewArm];
+        var duration = Math.abs(xNewArm - xArm) / this.armSpeed;
+        var arm = $('#arm2');
+        this.animateMotion(arm, path1, 0, duration);
+        if (this.currentState.holding2) {
+            var objectHeight = this.getObjectDimensions(this.currentState.holding2).heightadd;
+            var yArm = -(this.canvasHeight - this.armSize * this.stackWidth() - objectHeight);
+            var path2 = ["M", xArm, yArm, "H", xNewArm];
+            var object = $("#" + this.currentState.holding2)
+            this.animateMotion(object, path2, 0, duration);
+        }
+        this.currentState.arm2 = newArm;
+        if (callback) setTimeout(callback, (duration + this.animationPause) * 1000);
+        return (duration + this.animationPause);
+    }
+
+    private verticalMove2(action, callback?) {
+        var altitude = this.getAltitude(this.currentState.arm2);
+        var objectHeight = this.getObjectDimensions(this.currentState.holding2).heightadd;
+        var yArm = this.canvasHeight - altitude - this.armSize * this.stackWidth() - objectHeight;
+        var yStack = -altitude;
+        var xArm = this.currentState.arm2 * this.stackWidth() + this.wallSeparation;
+
+        var path1 = ["M", xArm, 0, "V", yArm];
+        var path2 = ["M", xArm, yArm, "V", 0];
+        var duration = (Math.abs(yArm)) / this.armSpeed;
+        var arm = $('#arm2');
+        var object = $("#" + this.currentState.holding2)
+
+        this.animateMotion(arm, path1, 0, duration);
+        this.animateMotion(arm, path2, duration + this.animationPause, duration);
+        if (action == 'pick') {
+            var path3 = ["M", xArm, yStack, "V", yStack-yArm];
+            this.animateMotion(object, path3, duration + this.animationPause, duration)
+        } else {
+            var path3 = ["M", xArm, yStack-yArm, "V", yStack];
+            this.animateMotion(object, path3, 0, duration)
+        }
+        if (callback) setTimeout(callback, 2*(duration + this.animationPause) * 1000);
+        return 2*(duration + this.animationPause);
     }
 
     //////////////////////////////////////////////////////////////////////

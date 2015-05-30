@@ -5,8 +5,10 @@ var ExampleWorlds : {[s:string]: WorldState} = {};
 
 ExampleWorlds["complex"] = {
     "stacks": [["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]],
-    "holding": null,
-    "arm": 0,
+    "holding1": null,
+    "arm1": 0,
+    "holding2": null,
+    "arm2": 4,
     "objects": {
         "a": { "form":"brick",   "size":"large",  "color":"yellow" },
         "b": { "form":"brick",   "size":"small",  "color":"white" },
@@ -23,7 +25,7 @@ ExampleWorlds["complex"] = {
         "m": { "form":"box",     "size":"small",  "color":"blue"  }
     },
     "examples": [
-        "put a box in a box",
+/*        "put a box in a box",
         "put all balls on the floor",
         "take the yellow box",
         "put any object under all tables",
@@ -35,15 +37,24 @@ ExampleWorlds["complex"] = {
         "put all balls beside every ball",
         "put a box beside all objects",
         "put all red objects above a yellow object on the floor",
-        "put all yellow objects under a red object under an object"
+        "put all yellow objects under a red object under an object"*/
+        "pick up the yellow pyramid",
+"take all balls",
+"take all objects",
+"take all blue objects",
+"put them on the floor",
+"move all balls left of all red objects",
+"move all red objects to the left of all blue objects"
     ]
 };
 
 
 ExampleWorlds["medium"] = {
     "stacks": [["e"],["a","l"],[],[],["i","h","j"],[],[],["k","g","c","b"],[],["d","m","f"]],
-    "holding": null,
-    "arm": 0,
+    "holding1": null,
+    "arm1": 0,
+    "holding2": null,
+    "arm2": 9,
     "objects": {
         "a": { "form":"brick",   "size":"large",  "color":"green" },
         "b": { "form":"brick",   "size":"small",  "color":"white" },
@@ -76,8 +87,10 @@ ExampleWorlds["medium"] = {
 
 ExampleWorlds["small"] = { 
     "stacks": [["e"],["g","l"],[],["k","m","f"],[]],
-    "holding": "a",
-    "arm": 0,
+    "holding1": "a",
+    "arm1": 0,
+    "holding2": null,
+    "arm2": 4,
     "objects": {
         "a": { "form":"brick",   "size":"large",  "color":"green" },
         "b": { "form":"brick",   "size":"small",  "color":"white" },
@@ -94,12 +107,24 @@ ExampleWorlds["small"] = {
         "m": { "form":"box",     "size":"small",  "color":"blue"  }
     },
     "examples": [
-        "put the white ball in a box on the floor",
+        /*"put the white ball in a box on the floor",
         "put the black ball in a box on the floor",
         "take a blue object",
         "take the white ball",
         "put all boxes on the floor",
-        "move all balls inside a large box"
+        "move all balls inside a large box"*/
+        "put the white ball in a box on the floor",
+"put the white ball in a box on the floor (to create the interpretation error)",
+"move all balls inside a large box",
+"take all blue objects",
+"put it on the floor",
+"put the left on the floor",
+"pick up the table",
+"put both right of all balls",
+"put a table above a ball",
+"put a box inside a table",
+"pick up the ball",
+"move all large boxes to the left of all blue objects"
     ]
 };
 
@@ -108,8 +133,10 @@ ExampleWorlds["impossible"] = {
     "stacks": [["lbrick1","lball1","sbrick1"], [],
                ["lpyr1","lbox1","lplank2","sball2"], [],
                ["sbrick2","sbox1","spyr1","ltable1","sball1"]],
-    "holding": null,
-    "arm": 0,
+    "holding1": null,
+    "arm1": 0,
+    "holding2": null,
+    "arm2": 4,
     "objects": {
         "lbrick1": { "form":"brick",   "size":"large",  "color":"green" },
         "sbrick1": { "form":"brick",   "size":"small",  "color":"yellow" },

@@ -1,0 +1,55 @@
+* Planner
+	- Improve Heuristic
+
+* Interpreter
+	x Check world rules 
+		x Done, question about "on a box"
+    - Add error messages
+	x Put it down: what if both arms hold something?
+        x Extend grammar with “put left/right object on the floor”
+        x Extend grammar with “put both/them objects on the floor”
+
+* UI
+	x Animate right arm
+
+* Maybe???
+	- Implement polarity
+
+
+
+* Presentation
+
+- Simple world
+
+put the white ball in a box on the floor
+put the white ball in a box on the floor (to create the interpretation error)
+
+move all balls inside a large box
+take all blue objects
+put it on the floor
+put the left on the floor
+pick up the table
+put both right of all balls
+
+put a table above a ball
+put a box inside a table
+pick up the ball
+
+move all large boxes to the left of all blue objects
+
+
+//move the white ball left of all blue objects
+//move the white ball right of all blue objects
+//move all large boxes to the left of all blue objects
+//put a table above a ball
+//put a box inside a table
+
+- Complex
+
+pick up the yellow pyramid
+take all balls
+take all objects
+take all blue objects
+put them on the floor
+move all balls left of all red objects
+move all red objects to the left of all blue objects

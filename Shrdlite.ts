@@ -10,10 +10,11 @@ module Shrdlite {
             var inputPrompt = "What can I do for you today? ";
             var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
             if (utterance.trim()) {
-                var plan : string[] = splitStringIntoPlan(utterance);
-                if (!plan) {
-                    plan = parseUtteranceIntoPlan(world, utterance);
-                }
+                // var plan : string[] = splitStringIntoPlan(utterance);
+                // if (!plan) {
+                //     plan = parseUtteranceIntoPlan(world, utterance);
+                // }
+                var plan: string[][] = parseUtteranceIntoPlan(world, utterance);
                 if (plan) {
                     world.printDebugInfo("Plan: " + plan.join(", "));
                     world.performPlan(plan, nextInput);
@@ -31,7 +32,7 @@ module Shrdlite {
     // - then it interprets the parse(s)
     // - then it creates plan(s) for the interpretation(s)
 
-    export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
+    export function parseUtteranceIntoPlan(world : World, utterance : string) : string[][] {
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
             var parses : Parser.Result[] = Parser.parse(utterance);
@@ -78,7 +79,7 @@ module Shrdlite {
             world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
         });
 
-        var plan : string[] = plans[0].plan;
+        var plan : string[][] = plans[0].plan;
         world.printDebugInfo("Final plan: " + plan.join(", "));
         return plan;
     }
