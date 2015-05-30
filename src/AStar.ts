@@ -10,21 +10,19 @@ module AStar {
      * @returns Node[] or null
      */
     export function astar(start: Node, goalConditions: Interpreter.Literal[], heuristic: THeuristicF) : Planner.Move[] {
-        var closedset = new collections.PriorityQueue<Node>(fScoreCompare); // The set of nodes already evaluated. It contains the hash of the states.
-        var openset = new collections.Dictionary<string, Node>(); // The set of tentative nodes to be evaluated, initially containing the start node. It maps hash of states to the best corresponding Node.
+        //var closedset = new collections.PriorityQueue<Node>(fScoreCompare); // The set of nodes already evaluated. It contains the hash of the states.
+        //var openset = new collections.Dictionary<string, Node>(); // The set of tentative nodes to be evaluated, initially containing the start node. It maps hash of states to the best corresponding Node.
+        var closedset = new collections.Heap<string>(); // The set of nodes already evaluated. It contains the hash of the states.
+        var openset = new collections.PriorityQueue<Node>(fScoreCompare); // The set of tentative nodes to be evaluated, initially containing the start node. It maps hash of states to the best corresponding Node.
 
         start.setScores(0,heuristic(start.content.stacks,goalConditions));
-        openset.setValue(start.content.hash, start);
+        openset.enqueue(start);
         
         console.dir(openset);
         while (!openset.isEmpty()) { // openset is not empty
-            var current: Node = lowestFScoreNode(openset);
+            var current: Node = openset.dequeue();
             if (current.f_score==current.g_score) { // <=> heuristic(current.content, goalConditions)==0 : SUCCESS !!
                 // In the case of holding objects.
-                openset.forEach((s,n)=> {
-                    if((n.f_score-n.g_score)<4)
-                    console.log("Score: f="+n.f_score+" h="+(n.f_score-n.g_score)+" state: "+n.content.hash);
-                });
                 var hold: string = null;
                 goalConditions.forEach((goal) => {
                     if(goal.rel=="holding") {hold=goal.args[0];}
@@ -35,19 +33,17 @@ module AStar {
                 }
                 return current.content.moves;
             }
-            openset.remove(current.content.hash); // remove current from openset
-            closedset.add(current); // add current to closedset
-            current.computeNeighbors();
-            current.neighbors.forEach((arc) => {
-                var neighbor = arc.destination;
-                var weight = arc.weight;
-                if (closedset.containsSetFunction(neighbor, hasSameState)) return; // continue
-                if (!openset.containsKey(neighbor.content.hash) ||
-                    current.g_score+weight < openset.getValue(neighbor.content.hash).g_score) {
+            if(!closedset.contains(current.content.hash)) { // Because several same states (with different paths) can be in the openset.
+                closedset.add(current.content.hash);
+                current.computeNeighbors();
+                current.neighbors.forEach((arc) => {
+                    var neighbor = arc.destination;
+                    var weight = arc.weight;
+                    if (closedset.contains(neighbor.content.hash)) return; // continue
                     neighbor.setScores(current.g_score+weight, heuristic(neighbor.content.stacks, goalConditions));
-                    openset.setValue(neighbor.content.hash, neighbor);
-                }
-            });
+                    openset.enqueue(neighbor);
+                });
+            }
         }
         return null;
     }
@@ -102,7 +98,7 @@ module AStar {
         return node1.content.hash == node2.content.hash;
     }
 
-    function lowestFScoreNode(set: collections.Dictionary<string, Node>) : Node {
+    /*function lowestFScoreNode(set: collections.Dictionary<string, Node>) : Node {
         // the node in openset having the lowest f_score value
         var min_f = Number.POSITIVE_INFINITY;
         var min_node: Node = null;
@@ -114,9 +110,9 @@ module AStar {
             }
         });
         return min_node;
-    }
+    }*/
 
     function fScoreCompare(node1: Node, node2: Node): number {
-        return node1.f_score - node2.f_score;
+        return node2.f_score - node1.f_score;
     }
 }
