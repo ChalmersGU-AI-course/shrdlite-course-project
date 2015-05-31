@@ -6,7 +6,7 @@ module Searcher {
         getMneumonicFromCurrentState(): number;
         setCurrentStateFromMneumonic(mne:number);
 
-        getCostOfCurrentState(): number;
+        getHeuristicCostOfCurrentState(): number;
         isGoalCurrentState(): Boolean;
 
         nextChildAndMakeCurrent(): Boolean;
@@ -32,7 +32,7 @@ module Searcher {
         var lastMne : number = -1;
         var currentMne : number = -1;
         frontier.pushFrontierElement(1,
-                                     space.getCostOfCurrentState(),
+                                     space.getHeuristicCostOfCurrentState(),
                                      lastMne = space.getMneumonicFromCurrentState());
         do {
             var mi = frontier.getSmallestCost();
@@ -45,7 +45,7 @@ module Searcher {
                 currentMne = space.getMneumonicFromCurrentState();
                 if(currentMne > lastMne) {
                     frontier.pushFrontierElement(currentCost,
-                                                 space.getCostOfCurrentState(),
+                                                 space.getHeuristicCostOfCurrentState(),
                                                  currentMne);
                     lastMne = currentMne;
                 }
@@ -53,7 +53,7 @@ module Searcher {
                     currentMne = space.getMneumonicFromCurrentState();
                     if(currentMne > lastMne) {
                         frontier.pushFrontierElement(currentCost,
-                                                     space.getCostOfCurrentState(),
+                                                     space.getHeuristicCostOfCurrentState(),
                                                      currentMne);
                         lastMne = currentMne;
                     }
