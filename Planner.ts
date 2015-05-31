@@ -91,7 +91,7 @@ module Planner {
     ///  State follow up
 
     interface mneumonicMeaning {plan : InnerWorld.Step[];
-                                state : Interpreter.Literal[];
+                                state : InnerWorld.Representation;
                                 todo : Interpreter.Literal[];
                                 goalNumber : number;}
 
@@ -102,7 +102,7 @@ module Planner {
     class plannerViaSearch implements Searcher.searchInterface {
         constructor(
             public intprt : Interpreter.Literal[],
-            public aState : Interpreter.Literal[]
+            public aState : InnerWorld.Representation
         ) {this.todo = this.withoutPasiveVerbs(intprt);
            this.currentState = aState;
            this.currentPlan  = [];
@@ -122,8 +122,7 @@ module Planner {
         }
 
         private currentPlan : InnerWorld.Step[];
-
-        private currentState : Interpreter.Literal[];
+        private currentState : InnerWorld.Representation;
         private todo : Interpreter.Literal[];
 
         private goalNumber: number;
@@ -150,34 +149,45 @@ module Planner {
         }
 
         getHeuristicCostOfCurrentState(): number {
-            var cost:number = 10000;
+            var cost:number = 0;
             var symbols : collections.Set<string> = new collections.Set<string>();
             this.todo.forEach((op) => {
-                if(op.rel == 'ontop')
-                    symbols.add(op.args[0]);
-            });
-            var goalCost : number = 0;
-            do {
-                for(var j = 0; j < this.currentState.length; ++j) {
-                    var obj : Interpreter.Literal = this.currentState[j];
-                    if((obj.rel == 'in') && (symbols.contains(obj.args[2]))) {
-                        symbols.remove(obj.args[2]);
-                        goalCost += +obj.args[1]; // col
+                if(op.rel == 'ontop') {
+                    var over : string = op.args[0];
+                    var under : string = op.args[1];
+                    if(over == 'floor') {
+                        var floor : number = InnerWorld.findClear('floor', [], this.currentState);
+                        if(floor == -1)
+                            over = 'floor0';
+                        else
+                            over = this.currentState.kb[floor].args[0];
                     }
+                    if(under == 'floor') {
+                        var floor : number = InnerWorld.findClear('floor', [], this.currentState);
+                        if(floor == -1)
+                            under = 'floor0';
+                        else
+                            under = this.currentState.kb[floor].args[0];
+                    }
+                    var i1 : InnerWorld.coor = InnerWorld.findPos(over, this.currentState);
+                    var i2 : InnerWorld.coor = InnerWorld.findPos(under, this.currentState);
+                    var stepPlan : Interpreter.Literal[] = [];
+                    stepPlan.push({pol: true, rel: 'move', args: [over, i1.row.toString() ,i2.row.toString()]});
+                    stepPlan.push({pol: true, rel: 'move', args: [under, i2.row.toString() ,i1.row.toString()]});
+                    cost += InnerWorld.estimatePlanCost(stepPlan, this.currentState);
                 }
-            } while(symbols.size() > 0);
-            cost = Math.min(cost, goalCost);
+            });
             return cost;
         }
 
         isGoalCurrentState(): Boolean {
             if(this.todo.length == 0)
                 return true;
-            if(this.equalGoalStates(this.todo, this.currentState))
+            if(this.equalGoalStates(this.todo, this.currentState)) // TODO
                 return true;
             return false;
         }
-        equalGoalStates(A : Interpreter.Literal[], B : Interpreter.Literal[]) : boolean {
+        equalGoalStates(A : Interpreter.Literal[], B : InnerWorld.Representation) : boolean {
             var tests = {ontop: InnerWorld.ontop};
             for(var j:number = 0; j < A.length; ++j) {
                 var a = tests[A[j].rel.trim()];
@@ -187,9 +197,9 @@ module Planner {
             return true;
         }
 
-        equalStates(A : Interpreter.Literal[], B : Interpreter.Literal[]) : boolean {
-            for(var j:number = 0; j < A.length; ++j)
-                if(!this.in(A[j], B))
+        equalStates(A : InnerWorld.Representation, B : InnerWorld.Representation) : boolean {
+            for(var j:number = 0; j < A.kb.length; ++j)
+                if(!this.in(A.kb[j], B.kb))
                     return false;
             return true;
         }
@@ -215,12 +225,13 @@ module Planner {
         nextSiblingAndMakeCurrent(): Boolean {
             var a : InnerWorld.Step;
             if(this.todo.length>0)
-                for(var n:number = 0; n<4; ++n) {
+                for(var n:number = 0; n<5; ++n) {
                     switch(n) {
-                        case 0:a = new InnerWorld.basicStep1(); break;
-                        case 1:a = new InnerWorld.basicStep2(); break;
-                        case 2:a = new InnerWorld.basicStep3(); break;
-                        case 3:a = new InnerWorld.basicStep4(); break;
+                        case 0:a = new InnerWorld.basicStep0(); break;
+                        case 1:a = new InnerWorld.basicStep1(); break;
+                        case 2:a = new InnerWorld.basicStep2(); break;
+                        case 3:a = new InnerWorld.basicStep3(); break;
+                        case 4:a = new InnerWorld.basicStep4(); break;
                     }
                     if(a.isPreRequisitesOk(this.todo, this.currentState, 0)) {
                         a.performStep(this.todo, this.currentState);
@@ -241,26 +252,6 @@ module Planner {
               return true;
             });
             return plan;
-        }
-
-        findVerb(rel:string, n:number) {
-            for(var i:number = 0; i<this.currentState.length ; ++i)
-                if(this.currentState[i].rel == rel) {
-                    if(n<=0)
-                        return i;
-                    --n
-                }
-            return -1;
-        }
-        findNextObject(n:number) :number {
-            do {
-                var i : number = this.findVerb('clear', n);
-                if(i == -1)
-                    return -1;
-                if(this.currentState[i].args[0] != 'floor')
-                    return n;
-                ++n;
-            } while(true);
         }
 
         printDebugInfo(info : string) : void {console.log(info);}
