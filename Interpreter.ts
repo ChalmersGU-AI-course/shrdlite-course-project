@@ -1,5 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
+///<reference path="Constrains.ts"/>
 
 module Interpreter {
 
@@ -11,7 +12,8 @@ module Interpreter {
         parses.forEach((parseresult) => {
             var intprt : Result = <Result>parseresult;
             intprt.intp = interpretCommand(intprt.prs, currentState);
-            interpretations.push(intprt);
+            if(intprt.intp != null)
+                interpretations.push(intprt);
         });
         if (interpretations.length) {
             return interpretations;
@@ -47,17 +49,64 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
-        // This returns a dummy interpretation involving two random objects in the world
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
-        var a = objs[getRandomInt(objs.length)];
-        var b = objs[getRandomInt(objs.length)];
-        var intprt : Literal[][] = [[
-            {pol: true, rel: "ontop", args: [a, "floor"]},
-            {pol: true, rel: "holding", args: [b]}
-        ]];
+        var fullDomain : collections.Set<string> = new collections.Set<string>();
+        objs.forEach((obj) => {
+            fullDomain.add(obj);
+        });
+        fullDomain.add('floor');
+        var constrained : Constrains.Result<string> = Constrains.constrain<string>(fullDomain, cmd, state);
+
+        if(constrained.what.size() == 0)
+            return null;
+
+        //cmd.ent.quant
+        //cmd.loc.ent.quant
+
+        var intprt : Literal[][] = [];
+
+        if((cmd.cmd == 'take') && (constrained.whereTo == null)) {
+            constrained.what.forEach((ele) => {
+                var finalGoal : Literal[] = [{pol: true, rel: 'ontop', args: [ele, 'floor']}];
+                intprt.push(finalGoal);
+                return true;
+            });
+            return intprt;
+        }
+
+        var m_typ : string = cmd.loc.rel;
+        if(m_typ == 'inside')
+            m_typ = 'ontop';
+
+        if((constrained.whereTo == null) || (constrained.whereTo.size() == 0))
+            return null;
+
+        constrained.what.forEach((ele) => {
+          constrained.whereTo.first().variable1.domain.forEach((v) => {
+            var finalGoal : Literal[];
+            if(m_typ == 'under')
+                finalGoal = [{pol: true, rel: 'ontop', args: [v, ele]}];
+            else
+                finalGoal = [{pol: true, rel: m_typ, args: [ele, v]}];
+            constrained.whereTo.forEach((arc) => {
+              var typ : string = arc.constrain.type;
+              if(typ == 'inside')
+                 typ = 'ontop';
+              if(arc.variable2 != null)
+                  arc.variable2.domain.forEach((obj) => {
+                      if(v != obj)
+                        finalGoal.push({pol: true, rel: typ, args: [v, obj]});
+                      return true;
+                  });
+              return true;
+            });
+            intprt.push(finalGoal);
+            return true;
+          });
+          return true;
+        });
         return intprt;
     }
-
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
