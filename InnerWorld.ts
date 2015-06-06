@@ -6,8 +6,8 @@ module InnerWorld {
         export interface Step {
             stepPlan : Interpreter.Literal[];
             cost : number;
-            isPreRequisitesOk(goals : Interpreter.Literal, state:Representation) : boolean;
-            performStep(goals:Interpreter.Literal, state:Representation) : number;
+            isPreRequisitesOk(goals : Interpreter.Literal, state:Representation, world : WorldState) : boolean;
+            performStep(goals:Interpreter.Literal, state:Representation, world : WorldState) : number;
         }
 
         export interface Representation {kb : Interpreter.Literal[];}
@@ -53,17 +53,23 @@ module InnerWorld {
             return ret;
         }
 
-        export function playPlan(stepPlan : Interpreter.Literal[], state:Representation):number {
+        export function playPlan(stepPlan : Interpreter.Literal[], state:Representation, world : WorldState):number {
             var ret : number = 0;
             stepPlan.forEach((step) => {
                 if(step.rel == 'move') {
                     var from : number = +step.args[1];
                     var to : number = +step.args[2];
                     var what : string = step.args[0];       // To double checks
+                    var toObject : ObjectDefinition =  world.objects[state.kb[findTop(to, state)].args[0]];
+                    if(toObject != null) {
+                      if (toObject.form == 'ball')
+                        throw new InnerWorld.Error('Cant put an object on top of a Ball');
+                      if ((toObject.form == 'box') && (!Constrains.CanBeInside(world.objects[what], toObject)))
+                            throw new InnerWorld.Error('Cant put that object inside this box');
+                    }
                     var i1 : coor = open(from, state);      // Open Both
                     var i2 : coor = open(to, state);        // Open Both
                     setPos(what, state, {row:i2.row, col:i2.col+1});
-
                     close(from, findObjAt({row:i1.row, col:i1.col-1}, state), state);
                     close(to, what, state);                 // Close Both
                     if(from != to)
@@ -226,7 +232,7 @@ module InnerWorld {
             stepPlan : Interpreter.Literal[];
             cost : number = 0;
 
-            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation) : boolean {
+            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation, world : WorldState) : boolean {
                 if(!hasFloor(goal))
                     return false;
                 var clearObj1 : boolean = findClear(goal.args[0], [], state) != -1;
@@ -235,14 +241,14 @@ module InnerWorld {
                     return false;
                 return true;
             }
-            performStep(goal : Interpreter.Literal, state:Representation) : number {
+            performStep(goal : Interpreter.Literal, state:Representation, world : WorldState) : number {
                 var i1 : coor = findPos(goal.args[0], state);
                 var floor : number = findClear(goal.args[1], [], state);
                 var floorName : string = state.kb[floor].args[0];
                 var i2 : coor = findPos(floorName, state);
                 this.stepPlan = [];
                 this.stepPlan.push({pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]});
-                this.cost = playPlan(this.stepPlan, state);
+                this.cost = playPlan(this.stepPlan, state, world);
                 return this.cost;
             }
         }
@@ -254,7 +260,7 @@ module InnerWorld {
             floorName : string;
             tempName : string;
 
-            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation) : boolean {
+            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation, world : WorldState) : boolean {
                 if(!hasFloor(goal))
                     return false;
                 var floor : number = findClear(goal.args[1], [], state);
@@ -267,7 +273,7 @@ module InnerWorld {
                 this.tempName = state.kb[tempFloor].args[0];
                 return true;
             }
-            performStep(goal : Interpreter.Literal, state:Representation) : number {
+            performStep(goal : Interpreter.Literal, state:Representation, world : WorldState) : number {
                 var objsOntop : string[] = reverseObjsOnTop(goal.args[0], state);
                 var itemp : coor = findPos(this.tempName, state);
                 var prev : string;
@@ -278,12 +284,12 @@ module InnerWorld {
                     this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.row.toString() ,itemp.row.toString()]});
                 });
 
-                this.cost = playPlan(this.stepPlan, state);
+                this.cost = playPlan(this.stepPlan, state, world);
 
                 var chainedStep : Step = new basicStep1();
-                var tst : boolean = chainedStep.isPreRequisitesOk(goal, state);
+                var tst : boolean = chainedStep.isPreRequisitesOk(goal, state, world);
 
-                this.cost += chainedStep.performStep(goal, state);
+                this.cost += chainedStep.performStep(goal, state, world);
                 chainedStep.stepPlan.forEach((step) => {
                     this.stepPlan.push(step);
                 });
@@ -297,7 +303,7 @@ module InnerWorld {
 
             tempName : string = null;
 
-            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation) : boolean {
+            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation, world : WorldState) : boolean {
                 var clearObj2 : boolean = findClear(goal.args[1], [], state) != -1;
                 if(!clearObj2)
                     return false;
@@ -311,7 +317,7 @@ module InnerWorld {
                 } else this.tempName = null;
                 return true;
             }
-            performStep(goal : Interpreter.Literal, state:Representation) : number {
+            performStep(goal : Interpreter.Literal, state:Representation, world : WorldState) : number {
                 this.stepPlan = [];
                 this.cost = 0;
                 if(this.tempName != null) {
@@ -323,7 +329,7 @@ module InnerWorld {
                         var i1 : coor = findPos(obj, state);
                         this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.row.toString() ,itemp.row.toString()]});
                     });
-                    this.cost += playPlan(this.stepPlan, state);
+                    this.cost += playPlan(this.stepPlan, state, world);
                 }
                 var i1 : coor = findPos(goal.args[0], state);
                 var support : number = findClear(goal.args[1], [], state);
@@ -331,7 +337,7 @@ module InnerWorld {
                 var i2 : coor = findPos(supportName, state);
                 this.stepPlan.push({pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]});
                 this.cost += playPlan([{pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]}],
-                                    state);
+                                    state, world);
                 return this.cost;
             }
         }
@@ -342,7 +348,7 @@ module InnerWorld {
 
             tempName : string = null;
 
-            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation) : boolean {
+            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation, world : WorldState) : boolean {
                 if(goal.args[1] == 'floor')
                     return false;
                 {// need a floor
@@ -353,7 +359,7 @@ module InnerWorld {
                 }
                 return true;
             }
-            performStep(goal : Interpreter.Literal, state:Representation) : number {
+            performStep(goal : Interpreter.Literal, state:Representation, world : WorldState) : number {
                 this.stepPlan = [];
                 this.cost = 0;
                 {
@@ -365,15 +371,98 @@ module InnerWorld {
                         var i1 : coor = findPos(obj, state);
                         this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.row.toString() ,itemp.row.toString()]});
                     });
-                    this.cost += playPlan(this.stepPlan, state);
+                    this.cost += playPlan(this.stepPlan, state, world);
                 }
                 var chainedStep : Step = new basicStep3();
-                var tst : boolean = chainedStep.isPreRequisitesOk(goal, state);
+                var tst : boolean = chainedStep.isPreRequisitesOk(goal, state, world);
 
-                this.cost += chainedStep.performStep(goal, state);
+                this.cost += chainedStep.performStep(goal, state, world);
                 chainedStep.stepPlan.forEach((step) => {
                     this.stepPlan.push(step);
                 });
+                return this.cost;
+            }
+        }
+
+        export class basicStep5 implements Step {
+            stepPlan : Interpreter.Literal[];
+            cost : number = 0;
+
+            tempName : string = null;
+            notPossibleStacks : number[];
+            maxStack : number = -1;
+
+            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation, world : WorldState) : boolean {
+                this.notPossibleStacks = [findPos(goal.args[0], state).row];// not on top of yourself
+                if(goal.args[1] != 'floor')
+                    this.notPossibleStacks.push(findPos(goal.args[1], state).row);// or ontop of the destination
+                for(var i:number = 0; i < state.kb.length; ++i)
+                    if('clear' == state.kb[i].rel) {
+                        var row : number = +state.kb[i].args[1];
+                        if((world.objects[state.kb[i].args[0]] != null) &&
+                           (world.objects[state.kb[i].args[0]].form == 'ball')) {
+                            this.notPossibleStacks.push(row);
+                            continue;
+                        }
+                        if(row>this.maxStack)
+                            this.maxStack = row;
+                    }
+                var i : number = this.getNonProblematicSpot();
+                if(i != -1) {
+                        this.tempName =  state.kb[findTop(i, state)].args[0];
+                        this.notPossibleStacks.push(i);
+                        return true;
+                }
+                return false;
+            }
+            getNonProblematicSpot() : number {
+                for(var i:number = 0; i < this.maxStack; ++i) {
+                    var found : boolean = false;
+                    for(var j:number = 0; j< this.notPossibleStacks.length; ++j)
+                        if(i == this.notPossibleStacks[j]) {
+                            found = true;
+                            break;
+                        }
+                    if(!found)
+                        return i;
+                }
+                return -1;
+            }
+            performStep(goal : Interpreter.Literal, state:Representation, world : WorldState) : number {
+                this.stepPlan = [];
+
+                var prev : string;
+                var itemp : coor = findPos(this.tempName, state);
+                var spotToClear : string = goal.args[1];
+                if(spotToClear == 'floor') {// ok but what floor?
+                    var i : number = this.getNonProblematicSpot();
+                    if (i == -1)
+                        throw new InnerWorld.Error('No space');
+                    this.notPossibleStacks.push(i);
+                    spotToClear = 'floor'+i;
+                }
+                var clearObj2 : boolean = findClear(spotToClear, [], state) != -1;
+                if(!clearObj2) {// Clear destination
+                    var objsOntop : string[] = reverseObjsOnTop(spotToClear, state);
+                    objsOntop.forEach((obj) => {
+                        prev = obj;
+                        var i1 : coor = findPos(obj, state);
+                        this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.row.toString() ,itemp.row.toString()]});
+                    });
+                }
+                var clearObj1 : boolean = findClear(goal.args[0], [], state) != -1;
+                if(!clearObj1) {// Clear source
+                    var objsOntop : string[] = reverseObjsOnTop(goal.args[0], state);
+                    objsOntop.forEach((obj) => {
+                        prev = obj;
+                        var i1 : coor = findPos(obj, state);
+                        this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.row.toString() ,itemp.row.toString()]});
+                    });
+                }
+                var i1 : coor = findPos(goal.args[0], state);
+                var i2 : coor = findPos(spotToClear, state);
+                this.stepPlan.push({pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]});
+                this.cost = playPlan(this.stepPlan, state, world);
                 return this.cost;
             }
         }

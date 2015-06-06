@@ -41,7 +41,7 @@ module Planner {
     function planInterpretation(interpretations : Interpreter.Result[], state : WorldState) : Result {
         var plan : string[] = [];
         var planner : plannerViaSearch =
-                        new plannerViaSearch(interpretations, InnerWorld.flatten(state.stacks));
+                        new plannerViaSearch(interpretations, InnerWorld.flatten(state.stacks), state);
         if(Searcher.search(planner)) {
             var statearm = state.arm;
             var res : Interpreter.Literal[] = planner.getResult();
@@ -114,8 +114,10 @@ module Planner {
     class plannerViaSearch implements Searcher.searchInterface {
         constructor(
             public interpretations : Interpreter.Result[],
-            public aState : InnerWorld.Representation
+            public aState : InnerWorld.Representation,
+            public aWorld : WorldState
         ) {this.currentState = aState;
+           this.world = aWorld;
            this.currentPlan  = [];
            this.subGoalNumber = -1;
            this.interpretationNumber = -1;
@@ -143,6 +145,8 @@ module Planner {
             })
             return ret;
         }
+
+        private world : WorldState;
 
         private currentPlan : InnerWorld.Step[];
         private currentState : InnerWorld.Representation;
@@ -291,21 +295,28 @@ module Planner {
                 var goal : Interpreter.Literal = goals[++this.subGoalNumber];
                 var a = this.tests[goal.rel.trim()];
                 if((a != null) && (!a(goal.args, this.currentState)))
-                    for(var n:number = 0; n<5; ++n) {
+                    for(var n:number = 0; n<6; ++n) {
                         switch(n) {
                             case 0:s = new InnerWorld.basicStep0(); break;
                             case 1:s = new InnerWorld.basicStep1(); break;
                             case 2:s = new InnerWorld.basicStep2(); break;
                             case 3:s = new InnerWorld.basicStep3(); break;
                             case 4:s = new InnerWorld.basicStep4(); break;
+                            case 5:s = new InnerWorld.basicStep5(); break;
                         }
-                        if(s.isPreRequisitesOk(goal, this.currentState)) {
-                            this.currentCost += s.performStep(goal, this.currentState);
-                            this.currentPlan.push(s);
-                            if(!a(goal.args, this.currentState))
-                                throw new Planner.Error('Done wrong '
-                                    +' '+goal.rel+' '+Array.prototype.concat.apply([], goal.args)+' via '+n.toString());
-                            return true;
+                        if(s.isPreRequisitesOk(goal, this.currentState, this.world)) {
+                            try {
+                                this.currentCost += s.performStep(goal, this.currentState, this.world);
+                                this.currentPlan.push(s);
+                                if(!a(goal.args, this.currentState))
+                                    throw new Planner.Error('Done wrong '
+                                        +' '+goal.rel+' '+Array.prototype.concat.apply([], goal.args)+' via '+n.toString());
+                                return true;
+                            } catch(ex) {
+                                var tmp : number = this.subGoalNumber;
+                                this.setCurrentStateFromMneumonic(this.currentMneumonic);
+                                this.subGoalNumber = tmp;
+                            }
                         }
                     }
             }

@@ -355,7 +355,7 @@ module Constrains {
         return objPos.row > 0;
     }
 
-    function CanBeInside(lhs : ObjectDefinition,
+    export function CanBeInside(lhs : ObjectDefinition,
                          rhs : ObjectDefinition) : boolean {
         if((lhs == null) || (rhs == null))
             return false; // floor
@@ -367,6 +367,8 @@ module Constrains {
                 return true; // a ball or a table can be but in a same size box
             if(rhs.size == 'large')
                 return true; // large box can carry anything else
+            if(rhs.size == 'small')
+                return false; // cant put something bigger in a small boxelse
         }
         if(rhs.form == 'ball')
             return false;
