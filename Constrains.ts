@@ -1,5 +1,16 @@
 /// <reference path="lib/collections.ts" />
 
+//////////////////////////////////////////////////////////////////////
+// This handles constrins
+// Basically we have a list of arcs which are re/evaluated until
+// no further elements from the variables domains can be taken out
+//
+// This is not general, it is tied to the block world from
+//  function reduceVoice under.
+//
+// Could be Abstracted : TODO
+//
+
 module Constrains {
     export interface ConstrainNode<T> {type : string;
                                        stringParameter : string;

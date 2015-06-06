@@ -1,16 +1,25 @@
 /// <reference path="lib/collections.ts" />
 
+//////////////////////////////////////
+// This implements the A*
+//  algorithm found in the text book
+//
+
+
 module Searcher {
 
     export interface searchInterface {
         getMneumonicFromCurrentState(): number;
         setCurrentStateFromMneumonic(mne:number);
 
-        getHeuristicCostOfCurrentState(): number;
+        getHeuristicGoalDistanceFromCurrentState(): number;
+        getCostOfCurrentState(): number;
         isGoalCurrentState(): Boolean;
 
         nextChildAndMakeCurrent(): Boolean;
         nextSiblingAndMakeCurrent(): Boolean;
+
+        nextInterprtationAndMakeCurrent(n : number): Boolean;
 
         printDebugInfo(info : string) : void;
     }
@@ -31,36 +40,42 @@ module Searcher {
         var frontier : frontierInterface = new frontierQueue();
         var lastMne : number = -1;
         var currentMne : number = -1;
-        frontier.pushFrontierElement(1,
-                                     space.getHeuristicCostOfCurrentState(),
-                                     lastMne = space.getMneumonicFromCurrentState());
+var maxLoop : number = 10;
+        var intNumber : number = 0;
+        do {
+            frontier.pushFrontierElement(1,
+                                         space.getHeuristicGoalDistanceFromCurrentState(),
+                                         lastMne = space.getMneumonicFromCurrentState());
+            space.setCurrentStateFromMneumonic(0);
+        } while(space.nextInterprtationAndMakeCurrent(++intNumber));
         do {
             var mi = frontier.getSmallestCost();
             space.setCurrentStateFromMneumonic(mi.mneumonic);
             if(space.isGoalCurrentState())
                 return true;
-            var currentCost = mi.initialCost;
             if(space.nextChildAndMakeCurrent()) {
-                ++currentCost;
                 currentMne = space.getMneumonicFromCurrentState();
                 if(currentMne > lastMne) {
-                    frontier.pushFrontierElement(currentCost,
-                                                 space.getHeuristicCostOfCurrentState(),
+                    frontier.pushFrontierElement(space.getCostOfCurrentState(),
+                                                 space.getHeuristicGoalDistanceFromCurrentState(),
                                                  currentMne);
                     lastMne = currentMne;
                 }
+var maxSiblings : number = 10;
                 while(space.nextSiblingAndMakeCurrent()) {
+if(--maxSiblings <0)
+throw new Searcher.Error('just looping');
                     currentMne = space.getMneumonicFromCurrentState();
                     if(currentMne > lastMne) {
-                        frontier.pushFrontierElement(currentCost,
-                                                     space.getHeuristicCostOfCurrentState(),
+                        frontier.pushFrontierElement(space.getCostOfCurrentState(),
+                                                     space.getHeuristicGoalDistanceFromCurrentState(),
                                                      currentMne);
                         lastMne = currentMne;
                     }
                 }
             } else
                 space.printDebugInfo('no children');
-        } while(frontier.frontierSize() > 0);
+        } while((frontier.frontierSize() > 0) && (--maxLoop>0));
         if(space.isGoalCurrentState())
            return true;
         space.printDebugInfo('No more frontier to traverse');

@@ -10,13 +10,9 @@ module Planner {
 
     export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
         var plans : Result[] = [];
-        interpretations.forEach((intprt) => {
-            var plan : Result = <Result>intprt;
-            plan.plan = planInterpretation(plan.intp, currentState);
-            if(plan.plan != null)
-                plans.push(plan);
-        });
-        if (plans.length) {
+        var plan : Result = planInterpretation(interpretations, currentState);
+        if(plan != null) {
+            plans.push(plan);
             return plans;
         } else {
             throw new Planner.Error("Found no plans");
@@ -42,30 +38,29 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(intprts : Interpreter.Literal[][], state : WorldState) : string[] {
-        for(var i:number = 0; i < intprts.length; ++i) {
-            var intprt = intprts[i];
-            var plan : string[] = [];
-            var planner : plannerViaSearch =
-                            new plannerViaSearch(intprt, InnerWorld.flatten(state.stacks));
-            if(Searcher.search(planner)) {
-                var statearm = state.arm;
-                var res : Interpreter.Literal[] = planner.getResult();
-                if(((res.length == 1) && (res[0].rel == 'nop')) || (res.length == 0))
-                    plan.push("Already solved");
-                else res.forEach((instr) => {
-                    var pickstack = +instr.args[1];
-                    var obj = instr.args[0];
-                    statearm = armMove(plan,pickstack,statearm);
-                    plan.push("Picking up the " + state.objects[obj].form,
-                              "p");
-                    pickstack = +instr.args[2];
-                    statearm = armMove(plan,pickstack,statearm);
-                    plan.push("Dropping the " + state.objects[obj].form,
-                              "d");
-                });
-                return plan;
-            }
+    function planInterpretation(interpretations : Interpreter.Result[], state : WorldState) : Result {
+        var plan : string[] = [];
+        var planner : plannerViaSearch =
+                        new plannerViaSearch(interpretations, InnerWorld.flatten(state.stacks));
+        if(Searcher.search(planner)) {
+            var statearm = state.arm;
+            var res : Interpreter.Literal[] = planner.getResult();
+            if(((res.length == 1) && (res[0].rel == 'nop')) || (res.length == 0))
+                plan.push("Already solved");
+            else res.forEach((instr) => {
+                var pickstack = +instr.args[1];
+                var obj = instr.args[0];
+                statearm = armMove(plan,pickstack,statearm);
+                plan.push("Picking up the " + state.objects[obj].form,
+                          "p");
+                pickstack = +instr.args[2];
+                statearm = armMove(plan,pickstack,statearm);
+                plan.push("Dropping the " + state.objects[obj].form,
+                          "d");
+            });
+            var ret : Result = <Result>planner.getWinningInterpretation();
+            ret.plan = plan;
+            return ret;
         }
         return null;
     }
@@ -92,25 +87,53 @@ module Planner {
 
     interface mneumonicMeaning {plan : InnerWorld.Step[];
                                 state : InnerWorld.Representation;
-                                todo : Interpreter.Literal[];
-                                goalNumber : number;}
+                                interpretationNumber : number;
+                                subGoalNumber : number;
+                                currentCost : number;
+                                }
 
     //////////////////////////////////////
     ///
-    ///  Class
+    ///  This decides what is the search space
+    ///   Although I wanted to do a recursive version
+    ///   it is more practial to do a search using the
+    ///   different interpretations as different branches
+    ///   and let the issue of getting the most efficient
+    ///   move to the a* algorithm
+    ///
+    ///  This work because the rules are much more powerful than
+    ///   what I wanted. also there are no restriction of
+    ///   height for example which took out the need for a floor
+    ///
+    ///  There are many issues left untouched like learning etc
+    ///   that Winograd had in his thesis
+    ///   I took a shotjust at the present vs future issue he detailed
+    ///   but his implementation is much more interesant
+    ///
 
     class plannerViaSearch implements Searcher.searchInterface {
         constructor(
-            public intprt : Interpreter.Literal[],
+            public interpretations : Interpreter.Result[],
             public aState : InnerWorld.Representation
-        ) {this.todo = this.withoutPasiveVerbs(intprt);
-           this.currentState = aState;
+        ) {this.currentState = aState;
            this.currentPlan  = [];
-           this.goalNumber = -1;
+           this.subGoalNumber = -1;
+           this.interpretationNumber = -1;
+           this.currentCost = 0;
+           this.validGoals = [];
+           this.interpretationXRef = [];
+           interpretations.forEach((interpretation) => {
+              interpretation.intp.forEach((possibleGoalState) => {
+                 this.validGoals.push(this.withoutPasiveVerbs(possibleGoalState));
+                 this.interpretationXRef.push(interpretation);
+              });
+           });
+           this.nextInterprtationAndMakeCurrent(0);
           }
         withoutPasiveVerbs(goals : Interpreter.Literal[]) : Interpreter.Literal[] {
             var facts = {hasSize:false, hasColor:false, isA:false, CanBeInside:false,
-                         Reverse_hasSize:false, Reverse_hasColor:false, Reverse_isA:false, Reverse_CanBeInside:false};
+                         Reverse_hasSize:false, Reverse_hasColor:false, Reverse_isA:false,
+                         Reverse_CanBeInside:false};
             var ret : Interpreter.Literal[] = [];
             goals.forEach((goal) => {
                 var a = facts[goal.rel.trim()];
@@ -123,35 +146,54 @@ module Planner {
 
         private currentPlan : InnerWorld.Step[];
         private currentState : InnerWorld.Representation;
-        private todo : Interpreter.Literal[];
+        private currentCost : number;
 
-        private goalNumber: number;
+        private validGoals : Interpreter.Literal[][];
+
+        private subGoalNumber: number;
+        private interpretationNumber: number;
 
         private mneumonicCollection : mneumonicMeaning[] = [];
 
         getMneumonicFromCurrentState(): number {
             for(var i:number = 0; i < this.mneumonicCollection.length; ++i)
                 if(this.equalStates(this.mneumonicCollection[i].state, this.currentState) &&
-                   (this.mneumonicCollection[i].todo == this.todo) &&
-                   (this.mneumonicCollection[i].goalNumber == this.goalNumber))
+                   (this.mneumonicCollection[i].subGoalNumber == this.subGoalNumber) &&
+                   (this.mneumonicCollection[i].interpretationNumber == this.interpretationNumber))
                     return i;
-            this.mneumonicCollection.push({plan:this.currentPlan,
-                                            state:this.currentState,
-                                            todo:this.todo,
-                                            goalNumber:this.goalNumber});
+            var ele : mneumonicMeaning = {plan:[],
+                                            state:clone(this.currentState),
+                                            interpretationNumber:this.interpretationNumber,
+                                            subGoalNumber:this.subGoalNumber,
+                                            currentCost:this.currentCost};
+            this.currentPlan.forEach((step)=>{
+                var simple : InnerWorld.emptyStep = new InnerWorld.emptyStep(step.stepPlan, step.cost);
+                ele.plan.push(simple);
+            })
+            this.mneumonicCollection.push(ele);
             return i;
         }
         setCurrentStateFromMneumonic(mne:number) {
-            this.currentPlan = this.mneumonicCollection[mne].plan;
-            this.currentState = this.mneumonicCollection[mne].state;
-            this.todo = this.mneumonicCollection[mne].todo;
-            this.goalNumber = this.mneumonicCollection[mne].goalNumber;
+            this.currentPlan = [];
+            this.mneumonicCollection[mne].plan.forEach((step)=>{
+                var simple : InnerWorld.emptyStep = new InnerWorld.emptyStep(step.stepPlan, step.cost);
+                this.currentPlan.push(simple);
+            })
+            this.currentState = clone(this.mneumonicCollection[mne].state);
+            this.subGoalNumber = this.mneumonicCollection[mne].subGoalNumber;
+            this.interpretationNumber = this.mneumonicCollection[mne].interpretationNumber;
+            this.currentCost = this.mneumonicCollection[mne].currentCost;
         }
 
-        getHeuristicCostOfCurrentState(): number {
+
+        getCostOfCurrentState(): number {
+            return this.currentCost;
+        }
+
+        getHeuristicGoalDistanceFromCurrentState(): number {
             var cost:number = 0;
             var symbols : collections.Set<string> = new collections.Set<string>();
-            this.todo.forEach((op) => {
+            this.validGoals[this.interpretationNumber].forEach((op) => {
                 if(op.rel == 'ontop') {
                     var over : string = op.args[0];
                     var under : string = op.args[1];
@@ -181,16 +223,18 @@ module Planner {
         }
 
         isGoalCurrentState(): Boolean {
-            if(this.todo.length == 0)
+            if(this.validGoals.length == 0)
                 return true;
-            if(this.equalGoalStates(this.todo, this.currentState)) // TODO
-                return true;
+            if(this.equalGoalStates(this.validGoals[this.interpretationNumber],
+                                    this.currentState))
+                    return true;
             return false;
         }
+
+        private tests = {ontop: InnerWorld.ontop};
         equalGoalStates(A : Interpreter.Literal[], B : InnerWorld.Representation) : boolean {
-            var tests = {ontop: InnerWorld.ontop};
             for(var j:number = 0; j < A.length; ++j) {
-                var a = tests[A[j].rel.trim()];
+                var a = this.tests[A[j].rel.trim()];
                 if((a != null) && (!a(A[j].args, B)))
                     return false;
             }
@@ -219,27 +263,58 @@ module Planner {
             return false;
         }
 
+        private currentMneumonic : number;
+        nextInterprtationAndMakeCurrent(n : number): Boolean {
+            this.interpretationNumber = n;
+            if(this.interpretationNumber >= this.validGoals.length)
+                return false;
+            this.currentMneumonic = this.getMneumonicFromCurrentState();
+            this.subGoalNumber = -1;
+            return this.nextChildAndMakeCurrent();
+        }
         nextChildAndMakeCurrent(): Boolean {
+            if(this.interpretationNumber >= this.validGoals.length)
+                return false;
+            this.currentMneumonic = this.getMneumonicFromCurrentState();
+            this.subGoalNumber = -1;
             return this.nextSiblingAndMakeCurrent();
         }
         nextSiblingAndMakeCurrent(): Boolean {
-            var a : InnerWorld.Step;
-            if(this.todo.length>0)
-                for(var n:number = 0; n<5; ++n) {
-                    switch(n) {
-                        case 0:a = new InnerWorld.basicStep0(); break;
-                        case 1:a = new InnerWorld.basicStep1(); break;
-                        case 2:a = new InnerWorld.basicStep2(); break;
-                        case 3:a = new InnerWorld.basicStep3(); break;
-                        case 4:a = new InnerWorld.basicStep4(); break;
+            var s : InnerWorld.Step;
+
+            var g : number = this.subGoalNumber;
+            this.setCurrentStateFromMneumonic(this.currentMneumonic);
+            this.subGoalNumber = g;
+
+            var goals : Interpreter.Literal[] = this.validGoals[this.interpretationNumber];
+            while(this.subGoalNumber < goals.length-1) {
+                var goal : Interpreter.Literal = goals[++this.subGoalNumber];
+                var a = this.tests[goal.rel.trim()];
+                if((a != null) && (!a(goal.args, this.currentState)))
+                    for(var n:number = 0; n<5; ++n) {
+                        switch(n) {
+                            case 0:s = new InnerWorld.basicStep0(); break;
+                            case 1:s = new InnerWorld.basicStep1(); break;
+                            case 2:s = new InnerWorld.basicStep2(); break;
+                            case 3:s = new InnerWorld.basicStep3(); break;
+                            case 4:s = new InnerWorld.basicStep4(); break;
+                        }
+                        if(s.isPreRequisitesOk(goal, this.currentState)) {
+                            this.currentCost += s.performStep(goal, this.currentState);
+                            this.currentPlan.push(s);
+                            if(!a(goal.args, this.currentState))
+                                throw new Planner.Error('Done wrong '
+                                    +' '+goal.rel+' '+Array.prototype.concat.apply([], goal.args)+' via '+n.toString());
+                            return true;
+                        }
                     }
-                    if(a.isPreRequisitesOk(this.todo, this.currentState, 0)) {
-                        a.performStep(this.todo, this.currentState);
-                        this.currentPlan.push(a);
-                        return true;
-                    }
-                }
+            }
             return false;
+        }
+
+        private interpretationXRef : Interpreter.Result[];
+        getWinningInterpretation():Interpreter.Result {
+            return this.interpretationXRef[this.interpretationNumber];
         }
 
         getResult() : Interpreter.Literal[] {
@@ -257,8 +332,25 @@ module Planner {
         printDebugInfo(info : string) : void {console.log(info);}
     }
 
+    //////////////////////////////////////////////////////////////////////
+    // Utilities
+
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
+    }
+
+    function clone<T>(obj: T): T {
+        if (obj != null && typeof obj == "object") {
+            var result : T = obj.constructor();
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    result[key] = clone(obj[key]);
+                }
+            }
+            return result;
+        } else {
+            return obj;
+        }
     }
 
 }

@@ -5,19 +5,31 @@ module InnerWorld {
 
         export interface Step {
             stepPlan : Interpreter.Literal[];
-            isPreRequisitesOk(goals : Interpreter.Literal[], state:Representation, suggest:number) : boolean;
-            performStep(goals:Interpreter.Literal[], state:Representation) : void;
+            cost : number;
+            isPreRequisitesOk(goals : Interpreter.Literal, state:Representation) : boolean;
+            performStep(goals:Interpreter.Literal, state:Representation) : number;
         }
 
         export interface Representation {kb : Interpreter.Literal[];}
         export interface coor {row:number; col:number;}
 
+        export class Error implements Error {
+            public name = "InnerWorld.Error";
+            constructor(public message? : string) {}
+            public toString() {return this.name + ": " + this.message}
+        }
+
+
         export function ontop(args:string[], state : Representation): boolean {
+            if(args[0] == 'floor')
+                return false;
             var pos1 : coor = findPos(args[0], state);
+            if(args[1] == 'floor')
+                return pos1.col==1;
             var pos2 : coor = findPos(args[1], state);
             if((pos1 == null) || (pos2 == null))
-                return false;
-            if((pos1.row == pos2.row) && (pos1.col - 1 == pos2.col))
+                throw new InnerWorld.Error('Everything has positions '+Array.prototype.concat.apply([], state.kb));
+            if((pos1.row == pos2.row) && (pos1.col == pos2.col + 1))
                 return true;
             return false;
         }
@@ -41,7 +53,8 @@ module InnerWorld {
             return ret;
         }
 
-        export function playPlan(stepPlan : Interpreter.Literal[], state:Representation):void {
+        export function playPlan(stepPlan : Interpreter.Literal[], state:Representation):number {
+            var ret : number = 0;
             stepPlan.forEach((step) => {
                 if(step.rel == 'move') {
                     var from : number = +step.args[1];
@@ -50,12 +63,14 @@ module InnerWorld {
                     var i1 : coor = open(from, state);      // Open Both
                     var i2 : coor = open(to, state);        // Open Both
                     setPos(what, state, {row:i2.row, col:i2.col+1});
-                    state.kb.push({pol: true, rel: 'clear', args: [findObjAt({row:i1.row, col:i1.col-1}, state),
-                                                                i1.row.toString()]}); // Close it
-                    state.kb.push({pol: true, rel: 'clear', args: [what,
-                                                                i2.row.toString()]}); // Close it
+
+                    close(from, findObjAt({row:i1.row, col:i1.col-1}, state), state);
+                    close(to, what, state);                 // Close Both
+                    if(from != to)
+                        ret += Math.abs(from-to) + 2;
                 }
             });
+            return ret;
         }
 
         function open(row : number, state:Representation) : coor {
@@ -63,6 +78,10 @@ module InnerWorld {
             var i : coor = findPos(state.kb[kbNum].args[0], state);
             state.kb.splice(kbNum,1);
             return i;
+        }
+
+        function close(row : number, what : string, state : Representation) : void {
+            state.kb.push({pol: true, rel: 'clear', args: [what, row.toString()]}); // Close it
         }
 
         export function flatten(stacks: string[][]) : Representation {
@@ -123,10 +142,6 @@ module InnerWorld {
 
         function reverseObjsOnTop(arg : string, state : Representation) : string[] {
             var pos : coor = findPos(arg, state);
-
-if(pos==null)
-console.log('pos is null');
-
             var res : string[] = [];
             var n : number = 0;
             do {
@@ -167,84 +182,81 @@ console.log('pos is null');
             return -1;
         }
 
-        function hasFloor(goals : Interpreter.Literal[]) : number {
-            for(var j = 0; j < goals.length; ++j)
-                if((goals[j].rel == 'ontop') && (goals[j].args[1] == 'floor'))
-                    return j;
-            return -1;
+       function hasFloor(goal : Interpreter.Literal) : boolean {
+            if((goal.rel == 'ontop') && (goal.args[1] == 'floor'))
+                    return true;
+            return false;
         }
 
         //////////////////////////////////////
         ///
         ///  Strategic Steps. Too simple right now
 
+        export class emptyStep implements Step {
+            constructor(aStepPlan : Interpreter.Literal[], aCost : number) {
+                this.stepPlan = clone(aStepPlan);
+                this.cost = aCost;
+            }
+            stepPlan : Interpreter.Literal[] = [];
+            cost : number = 0;
+
+            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation) : boolean {
+                return false;
+            }
+            performStep(goal : Interpreter.Literal, state:Representation) : number {
+                return this.cost;
+            }
+        }
+
         export class basicStep0 implements Step {
             stepPlan : Interpreter.Literal[];
+            cost : number = 0;
 
-            goalToDo : number = -1;
-
-            isPreRequisitesOk(goals : Interpreter.Literal[], state:Representation, suggest:number) : boolean {
-                this.goalToDo = hasFloor(goals);
-                if(this.goalToDo == -1)
-                    return false;
-                var goal : Interpreter.Literal = goals[this.goalToDo];
-                var i1 : coor = findPos(goal.args[0], state);
-                return i1.col == 1;
+            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation) : boolean {
+                return false;
             }
-            performStep(goals : Interpreter.Literal[], state:Representation) : void {
-                var goal : Interpreter.Literal = goals[this.goalToDo];
-                goals.splice(this.goalToDo,1);
+            performStep(goal : Interpreter.Literal, state:Representation) : number {
                 this.stepPlan = [];
+                this.cost = 0;
+                return this.cost;
             }
         }
 
         export class basicStep1 implements Step {
             stepPlan : Interpreter.Literal[];
+            cost : number = 0;
 
-            floorNumber : number = -1;
-            goalToDo : number = -1;
-
-            isPreRequisitesOk(goals : Interpreter.Literal[], state:Representation, suggest:number) : boolean {
-                var floorsNeeded : number = 0;
-                this.floorNumber = hasFloor(goals);
-                if(this.floorNumber == -1)
+            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation) : boolean {
+                if(!hasFloor(goal))
                     return false;
-                var goal : Interpreter.Literal = goals[this.floorNumber];
                 var clearObj1 : boolean = findClear(goal.args[0], [], state) != -1;
                 var clearObj2 : boolean = findClear(goal.args[1], [], state) != -1;
                 if((!clearObj1) || (!clearObj2))
                     return false;
-                this.goalToDo = this.floorNumber;
                 return true;
             }
-            performStep(goals : Interpreter.Literal[], state:Representation) : void {
-                var goal : Interpreter.Literal = goals[this.goalToDo];
-                goals.splice(this.goalToDo,1);
+            performStep(goal : Interpreter.Literal, state:Representation) : number {
                 var i1 : coor = findPos(goal.args[0], state);
                 var floor : number = findClear(goal.args[1], [], state);
                 var floorName : string = state.kb[floor].args[0];
                 var i2 : coor = findPos(floorName, state);
                 this.stepPlan = [];
                 this.stepPlan.push({pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]});
-                playPlan(this.stepPlan, state);
+                this.cost = playPlan(this.stepPlan, state);
+                return this.cost;
             }
         }
 
         export class basicStep2 implements Step {
             stepPlan : Interpreter.Literal[];
-
-            floorNumber : number = -1;
-            goalToDo : number = -1;
+            cost : number = 0;
 
             floorName : string;
             tempName : string;
 
-            isPreRequisitesOk(goals : Interpreter.Literal[], state:Representation, suggest:number) : boolean {
-                var floorsNeeded : number = 0;
-                this.floorNumber = hasFloor(goals);
-                if(this.floorNumber == -1)
+            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation) : boolean {
+                if(!hasFloor(goal))
                     return false;
-                var goal : Interpreter.Literal = goals[this.floorNumber];
                 var floor : number = findClear(goal.args[1], [], state);
                 if(floor == -1)
                     return false;
@@ -253,11 +265,9 @@ console.log('pos is null');
                 if(tempFloor == -1)
                     return false;
                 this.tempName = state.kb[tempFloor].args[0];
-                this.goalToDo = this.floorNumber;
                 return true;
             }
-            performStep(goals : Interpreter.Literal[], state:Representation) : void {
-                var goal : Interpreter.Literal = goals[this.goalToDo];
+            performStep(goal : Interpreter.Literal, state:Representation) : number {
                 var objsOntop : string[] = reverseObjsOnTop(goal.args[0], state);
                 var itemp : coor = findPos(this.tempName, state);
                 var prev : string;
@@ -268,26 +278,26 @@ console.log('pos is null');
                     this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.row.toString() ,itemp.row.toString()]});
                 });
 
-                playPlan(this.stepPlan, state);
+                this.cost = playPlan(this.stepPlan, state);
 
                 var chainedStep : Step = new basicStep1();
-                var tst : boolean = chainedStep.isPreRequisitesOk(goals, state, this.goalToDo);
+                var tst : boolean = chainedStep.isPreRequisitesOk(goal, state);
 
-                chainedStep.performStep(goals, state);
+                this.cost += chainedStep.performStep(goal, state);
                 chainedStep.stepPlan.forEach((step) => {
                     this.stepPlan.push(step);
                 });
+                return this.cost;
             }
         }
 
         export class basicStep3 implements Step {
             stepPlan : Interpreter.Literal[];
+            cost : number = 0;
 
             tempName : string = null;
-            goalToDo : number = -1;
 
-            isPreRequisitesOk(goals : Interpreter.Literal[], state:Representation, suggest:number) : boolean {
-                var goal : Interpreter.Literal = goals[suggest];
+            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation) : boolean {
                 var clearObj2 : boolean = findClear(goal.args[1], [], state) != -1;
                 if(!clearObj2)
                     return false;
@@ -299,13 +309,11 @@ console.log('pos is null');
                         return false;
                     this.tempName = state.kb[floor].args[0];
                 } else this.tempName = null;
-                this.goalToDo = suggest;
                 return true;
             }
-            performStep(goals : Interpreter.Literal[], state:Representation) : void {
-                var goal : Interpreter.Literal = goals[this.goalToDo];
-                goals.splice(this.goalToDo,1);
+            performStep(goal : Interpreter.Literal, state:Representation) : number {
                 this.stepPlan = [];
+                this.cost = 0;
                 if(this.tempName != null) {
                     var prev : string;
                     var itemp : coor = findPos(this.tempName, state);
@@ -315,26 +323,26 @@ console.log('pos is null');
                         var i1 : coor = findPos(obj, state);
                         this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.row.toString() ,itemp.row.toString()]});
                     });
-                    playPlan(this.stepPlan, state);
+                    this.cost += playPlan(this.stepPlan, state);
                 }
                 var i1 : coor = findPos(goal.args[0], state);
                 var support : number = findClear(goal.args[1], [], state);
                 var supportName : string = state.kb[support].args[0];
                 var i2 : coor = findPos(supportName, state);
                 this.stepPlan.push({pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]});
-                playPlan([{pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]}],
+                this.cost += playPlan([{pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]}],
                                     state);
+                return this.cost;
             }
         }
 
         export class basicStep4 implements Step {
             stepPlan : Interpreter.Literal[];
+            cost : number = 0;
 
             tempName : string = null;
-            goalToDo : number = -1;
 
-            isPreRequisitesOk(goals : Interpreter.Literal[], state:Representation, suggest:number) : boolean {
-                var goal : Interpreter.Literal = goals[suggest];
+            isPreRequisitesOk(goal : Interpreter.Literal, state:Representation) : boolean {
                 if(goal.args[1] == 'floor')
                     return false;
                 {// need a floor
@@ -343,12 +351,11 @@ console.log('pos is null');
                         return false;
                     this.tempName = state.kb[floor].args[0];
                 }
-                this.goalToDo = suggest;
                 return true;
             }
-            performStep(goals : Interpreter.Literal[], state:Representation) : void {
-                var goal : Interpreter.Literal = goals[this.goalToDo];
+            performStep(goal : Interpreter.Literal, state:Representation) : number {
                 this.stepPlan = [];
+                this.cost = 0;
                 {
                     var prev : string;
                     var itemp : coor = findPos(this.tempName, state);
@@ -358,16 +365,30 @@ console.log('pos is null');
                         var i1 : coor = findPos(obj, state);
                         this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.row.toString() ,itemp.row.toString()]});
                     });
-                    playPlan(this.stepPlan, state);
+                    this.cost += playPlan(this.stepPlan, state);
                 }
                 var chainedStep : Step = new basicStep3();
-                var tst : boolean = chainedStep.isPreRequisitesOk(goals, state, this.goalToDo);
+                var tst : boolean = chainedStep.isPreRequisitesOk(goal, state);
 
-                chainedStep.performStep(goals, state);
+                this.cost += chainedStep.performStep(goal, state);
                 chainedStep.stepPlan.forEach((step) => {
                     this.stepPlan.push(step);
                 });
+                return this.cost;
             }
         }
 
+    function clone<T>(obj: T): T {
+        if (obj != null && typeof obj == "object") {
+            var result : T = obj.constructor();
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    result[key] = clone(obj[key]);
+                }
+            }
+            return result;
+        } else {
+            return obj;
+        }
+    }
 }
