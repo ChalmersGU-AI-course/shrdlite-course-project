@@ -278,7 +278,8 @@ module Planner {
                 return false;
             this.currentMneumonic = this.getMneumonicFromCurrentState();
             this.subGoalNumber = -1;
-            return this.nextChildAndMakeCurrent();
+            this.nextChildAndMakeCurrent();
+            return true;
         }
         nextChildAndMakeCurrent(): Boolean {
             if(this.interpretationNumber >= this.validGoals.length)

@@ -45,13 +45,25 @@ module Searcher {
             frontier.pushFrontierElement(1,
                                          space.getHeuristicGoalDistanceFromCurrentState(),
                                          lastMne = space.getMneumonicFromCurrentState());
+
+            currentMne = space.getMneumonicFromCurrentState();
+            frontier.pushFrontierElement(space.getCostOfCurrentState(),
+                                             space.getHeuristicGoalDistanceFromCurrentState(),
+                                             currentMne);
+            lastMne = currentMne;
+
             space.setCurrentStateFromMneumonic(0);
         } while(space.nextInterprtationAndMakeCurrent(++intNumber));
         do {
-            var mi = frontier.getSmallestCost();
-            space.setCurrentStateFromMneumonic(mi.mneumonic);
-            if(space.isGoalCurrentState())
-                return true;
+            var mi : FrontierEntry = frontier.getSmallestCost();
+            space.setCurrentStateFromMneumonic(currentMne = mi.mneumonic);
+            if(space.isGoalCurrentState()) {
+                frontier.pushFrontierElement(space.getCostOfCurrentState(),
+                                             0,
+                                             currentMne);
+                if(mi.mneumonic == frontier.getSmallestCost().mneumonic)
+                    return true;
+            }
             if(space.nextChildAndMakeCurrent()) {
                 currentMne = space.getMneumonicFromCurrentState();
                 if(currentMne > lastMne) {
