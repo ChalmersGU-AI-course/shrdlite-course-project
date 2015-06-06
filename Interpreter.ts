@@ -2,6 +2,9 @@
 ///<reference path="Parser.ts"/>
 ///<reference path="Constrains.ts"/>
 
+// under was done as negation of ontop. bad results but good to try :)
+
+
 module Interpreter {
 
     //////////////////////////////////////////////////////////////////////

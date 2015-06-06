@@ -3,6 +3,19 @@
 ///<reference path="Searcher.ts"/>
 ///<reference path="InnerWorld.ts"/>
 
+
+// The planner is very different
+// as  would do it in a non - academic environ
+// I wanted to test multiple rules etc but That was done only for
+// the ontop rule.
+//
+// The left, right and besides was done in just one rule as ontop was enough
+// to test the implications
+//
+// Under was done as negation of ontop with bad results although strictly correct
+// I left that as a way to show different approaches
+//
+
 module Planner {
 
     //////////////////////////////////////////////////////////////////////
@@ -159,6 +172,9 @@ module Planner {
 
         private mneumonicCollection  : mneumonicMeaning[] = [];
 
+        // NOTE ALL THE CLONNING ETC
+        // Should have done t like the strip representation but I was focusing in other aspects
+
         getMneumonicFromCurrentState(): number {
             for(var i:number = 0; i < this.mneumonicCollection.length; ++i)
                 if(this.equalStates(this.mneumonicCollection[i].state, this.currentState) &&
@@ -240,6 +256,7 @@ module Planner {
                          leftof: InnerWorld.leftof,
                          beside: InnerWorld.beside
                          };
+
         equalGoalStates(A : Interpreter.Literal[], B : InnerWorld.Representation) : boolean {
             for(var j:number = 0; j < A.length; ++j) {
                 var a = this.tests[A[j].rel.trim()];

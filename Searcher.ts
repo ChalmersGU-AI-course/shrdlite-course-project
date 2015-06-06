@@ -4,11 +4,15 @@
 // This implements the A*
 //  algorithm found in the text book
 //
-
+//  It is a little bit tainted As I added all the interpretations
+//  in the frontier. That makes the program work as a general optimizer
+//  for all the plans,
+//
+//  kind of worked except I have seen it prefer a worst plan. Maybe its the hieuristic or maybe the bug is here
 
 module Searcher {
 
-    export interface searchInterface {
+    export interface searchInterface { // Inteface... This is a general solver exept for the interpretations
         getMneumonicFromCurrentState(): number;
         setCurrentStateFromMneumonic(mne:number);
 
@@ -26,7 +30,7 @@ module Searcher {
 
     export interface FrontierEntry {initialCost:number; cost:number; mneumonic:number;}
 
-    export interface frontierInterface {
+    export interface frontierInterface { // Prio Queue
         getSmallestCost(): FrontierEntry;
         pushFrontierElement(initialCost:number, cost:number, mne:number): void;
 
@@ -53,10 +57,13 @@ module Searcher {
             lastMne = currentMne;
 
             space.setCurrentStateFromMneumonic(0);
-        } while(space.nextInterprtationAndMakeCurrent(++intNumber));
+        } while(space.nextInterprtationAndMakeCurrent(++intNumber)); // ALL THE INTERPRETATIONS ARE ADDED IN THE FRONTIER
+
         do {
             var mi : FrontierEntry = frontier.getSmallestCost();
             space.setCurrentStateFromMneumonic(currentMne = mi.mneumonic);
+
+            // RECHECKING IF SOME OTHER STATE HAS STILL A SHOT AT BEATING THIS SOLUTION
             if(space.isGoalCurrentState()) {
                 frontier.pushFrontierElement(space.getCostOfCurrentState(),
                                              0,
@@ -64,6 +71,8 @@ module Searcher {
                 if(mi.mneumonic == frontier.getSmallestCost().mneumonic)
                     return true;
             }
+
+            // CHILDREN AND ONE LEVEL OF SIBLINGS
             if(space.nextChildAndMakeCurrent()) {
                 currentMne = space.getMneumonicFromCurrentState();
                 if(currentMne > lastMne) {
@@ -81,9 +90,10 @@ module Searcher {
                         lastMne = currentMne;
                     }
                 }
-            } else
-                space.printDebugInfo('no children');
+            }
         } while(frontier.frontierSize() > 0);
+
+        // PRETTY MUCH GAME OVER
         if(space.isGoalCurrentState())
            return true;
         space.printDebugInfo('No more frontier to traverse');

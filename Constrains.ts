@@ -10,6 +10,7 @@
 //
 // Could be Abstracted : TODO
 //
+// All in all the most clean of my code in this project
 
 module Constrains {
     export interface ConstrainNode<T> {type : string;

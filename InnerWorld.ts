@@ -1,6 +1,20 @@
 ///<reference path="World.ts"/>
 ///<reference path="Interpreter.ts"/>
 
+// For me, this was the most interesting part
+// it was strange as the idea is that to see prerequisites or plans
+// you could just plan and let the mini interpreter playPlan
+// except or give costs or change the state.
+//
+// before I was doing manually what dis did very automatically
+// This wasa precursor to do some kind of earning or modifying rules etc
+// probabaly I should try with lisp or forth which I like the self modifying nature
+// for just this
+
+/// Still it inherited too much manual coordinates and the representation fromthe interpreter
+//  the fact is, I was focusing in using the interpreter literal structure from the refactorying I did
+//  for the queen problem. I never grew out of that...
+
 module InnerWorld {
 
         export interface Step {
