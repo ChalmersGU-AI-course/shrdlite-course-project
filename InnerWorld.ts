@@ -28,11 +28,48 @@ module InnerWorld {
                 return pos1.col==1;
             var pos2 : coor = findPos(args[1], state);
             if((pos1 == null) || (pos2 == null))
-                throw new InnerWorld.Error('Everything has positions '+Array.prototype.concat.apply([], state.kb));
+                throw new InnerWorld.Error('ontop Not Everything has positions '+Array.prototype.concat.apply([], state.kb));
             if((pos1.row == pos2.row) && (pos1.col == pos2.col + 1))
                 return true;
             return false;
         }
+
+        export function leftof(args:string[], state : Representation): boolean {
+            if((args[0] == 'floor') || (args[1] == 'floor'))
+                return false;
+            var pos1 : coor = findPos(args[0], state);
+            var pos2 : coor = findPos(args[1], state);
+            if((pos1 == null) || (pos2 == null))
+                throw new InnerWorld.Error('leftof Not Everything has positions '+Array.prototype.concat.apply([], state.kb));
+            if(pos1.row < pos2.row)
+                return true;
+            return false;
+        }
+
+        export function rightof(args:string[], state : Representation): boolean {
+            if((args[0] == 'floor') || (args[1] == 'floor'))
+                return false;
+            var pos1 : coor = findPos(args[0], state);
+            var pos2 : coor = findPos(args[1], state);
+            if((pos1 == null) || (pos2 == null))
+                throw new InnerWorld.Error('leftof Not Everything has positions '+Array.prototype.concat.apply([], state.kb));
+            if(pos1.row > pos2.row)
+                return true;
+            return false;
+        }
+
+        export function beside(args:string[], state : Representation): boolean {
+            if((args[0] == 'floor') || (args[1] == 'floor'))
+                return false;
+            var pos1 : coor = findPos(args[0], state);
+            var pos2 : coor = findPos(args[1], state);
+            if((pos1 == null) || (pos2 == null))
+                throw new InnerWorld.Error('leftof Not Everything has positions '+Array.prototype.concat.apply([], state.kb));
+            if(Math.abs(pos1.row - pos2.row) == 1)
+                return true;
+            return false;
+        }
+
 
         export function estimatePlanCost(stepPlan : Interpreter.Literal[], state:Representation):number {
             var ret : number = 0;
@@ -391,11 +428,44 @@ module InnerWorld {
             tempName : string = null;
             notPossibleStacks : number[];
             maxStack : number = -1;
+            rel : string;
+            dest : number = -1;
 
             isPreRequisitesOk(goal : Interpreter.Literal, state:Representation, world : WorldState) : boolean {
+                var i2 : coor;
                 this.notPossibleStacks = [findPos(goal.args[0], state).row];// not on top of yourself
-                if(goal.args[1] != 'floor')
-                    this.notPossibleStacks.push(findPos(goal.args[1], state).row);// or ontop of the destination
+                switch(this.rel) {
+                case 'ontop':
+                        if(goal.args[1] != 'floor')
+                            this.notPossibleStacks.push(findPos(goal.args[1], state).row);// or ontop of the destination
+                        this.dest = + 1;
+                        break;
+                case 'leftof':
+                        if((goal.args[0] == 'floor') || (goal.args[1] == 'floor'))
+                            return false;
+                        i2 = findPos(goal.args[1], state);
+                        if(i2.row == 0)
+                            return false;
+                        this.dest = - 1;
+                        break;
+                case 'rightof':
+                        if((goal.args[0] == 'floor') || (goal.args[1] == 'floor'))
+                            return false;
+                        i2 = findPos(goal.args[1], state);
+                        this.dest = + 1;
+                        break;
+                case 'beside':
+                        if((goal.args[0] == 'floor') || (goal.args[1] == 'floor'))
+                            return false;
+                        i2 = findPos(goal.args[1], state);
+                        if(i2.row == 0)
+                            this.dest = + 1;
+                        else
+                            this.dest = - 1;
+                        break;
+                otherwise:
+                    throw new InnerWorld.Error('wrong relationship '+this.rel);
+                }
                 for(var i:number = 0; i < state.kb.length; ++i)
                     if('clear' == state.kb[i].rel) {
                         var row : number = +state.kb[i].args[1];
@@ -407,7 +477,11 @@ module InnerWorld {
                         if(row>this.maxStack)
                             this.maxStack = row;
                     }
-                var i : number = this.getNonProblematicSpot();
+                var i : number;
+                if(this.dest >0)
+                    i = this.getNonProblematicSpot();
+                else
+                    i = this.getNonProblematicSpotReverse();
                 if(i != -1) {
                         this.tempName =  state.kb[findTop(i, state)].args[0];
                         this.notPossibleStacks.push(i);
@@ -416,7 +490,20 @@ module InnerWorld {
                 return false;
             }
             getNonProblematicSpot() : number {
-                for(var i:number = 0; i < this.maxStack; ++i) {
+                for(var i:number = 0; i <= this.maxStack; ++i) {
+                    var found : boolean = false;
+                    for(var j:number = 0; j< this.notPossibleStacks.length; ++j)
+                        if(i == this.notPossibleStacks[j]) {
+                            found = true;
+                            break;
+                        }
+                    if(!found)
+                        return i;
+                }
+                return -1;
+            }
+            getNonProblematicSpotReverse() : number {
+                for(var i:number = this.maxStack; i >=0; --i) {
                     var found : boolean = false;
                     for(var j:number = 0; j< this.notPossibleStacks.length; ++j)
                         if(i == this.notPossibleStacks[j]) {
@@ -434,21 +521,23 @@ module InnerWorld {
                 var prev : string;
                 var itemp : coor = findPos(this.tempName, state);
                 var spotToClear : string = goal.args[1];
-                if(spotToClear == 'floor') {// ok but what floor?
-                    var i : number = this.getNonProblematicSpot();
-                    if (i == -1)
-                        throw new InnerWorld.Error('No space');
-                    this.notPossibleStacks.push(i);
-                    spotToClear = 'floor'+i;
-                }
-                var clearObj2 : boolean = findClear(spotToClear, [], state) != -1;
-                if(!clearObj2) {// Clear destination
-                    var objsOntop : string[] = reverseObjsOnTop(spotToClear, state);
-                    objsOntop.forEach((obj) => {
-                        prev = obj;
-                        var i1 : coor = findPos(obj, state);
-                        this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.row.toString() ,itemp.row.toString()]});
-                    });
+                if(this.rel == 'ontop') {
+                    if(spotToClear == 'floor') {// ok but what floor?
+                        var i : number = this.getNonProblematicSpot();
+                        if (i == -1)
+                            throw new InnerWorld.Error('No space');
+                        this.notPossibleStacks.push(i);
+                        spotToClear = 'floor'+i;
+                    }
+                    var clearObj2 : boolean = findClear(spotToClear, [], state) != -1;
+                    if(!clearObj2) {// Clear destination
+                        var objsOntop : string[] = reverseObjsOnTop(spotToClear, state);
+                        objsOntop.forEach((obj) => {
+                            prev = obj;
+                            var i1 : coor = findPos(obj, state);
+                            this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.row.toString() ,itemp.row.toString()]});
+                        });
+                    }
                 }
                 var clearObj1 : boolean = findClear(goal.args[0], [], state) != -1;
                 if(!clearObj1) {// Clear source
@@ -461,7 +550,22 @@ module InnerWorld {
                 }
                 var i1 : coor = findPos(goal.args[0], state);
                 var i2 : coor = findPos(spotToClear, state);
-                this.stepPlan.push({pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]});
+                if(this.rel == 'ontop')
+                    this.stepPlan.push({pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]});
+                else {
+                    for(var i = i2.row + this.dest; (i>=0) && (i<=this.maxStack); i+=this.dest) {
+                        var found : boolean = false;
+                        for(var j:number = 0; j< this.notPossibleStacks.length; ++j)
+                            if(i == this.notPossibleStacks[j]) {
+                                found = true;
+                                break;
+                            }
+                        if(!found) {
+                            this.stepPlan.push({pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i.toString()]});
+                            break;
+                        }
+                    }
+                }
                 this.cost = playPlan(this.stepPlan, state, world);
                 return this.cost;
             }

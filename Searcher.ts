@@ -40,7 +40,6 @@ module Searcher {
         var frontier : frontierInterface = new frontierQueue();
         var lastMne : number = -1;
         var currentMne : number = -1;
-var maxLoop : number = 10;
         var intNumber : number = 0;
         do {
             frontier.pushFrontierElement(1,
@@ -61,10 +60,7 @@ var maxLoop : number = 10;
                                                  currentMne);
                     lastMne = currentMne;
                 }
-var maxSiblings : number = 10;
                 while(space.nextSiblingAndMakeCurrent()) {
-if(--maxSiblings <0)
-throw new Searcher.Error('just looping');
                     currentMne = space.getMneumonicFromCurrentState();
                     if(currentMne > lastMne) {
                         frontier.pushFrontierElement(space.getCostOfCurrentState(),
@@ -75,7 +71,7 @@ throw new Searcher.Error('just looping');
                 }
             } else
                 space.printDebugInfo('no children');
-        } while((frontier.frontierSize() > 0) && (--maxLoop>0));
+        } while(frontier.frontierSize() > 0);
         if(space.isGoalCurrentState())
            return true;
         space.printDebugInfo('No more frontier to traverse');

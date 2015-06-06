@@ -356,7 +356,7 @@ module Constrains {
     }
 
     export function CanBeInside(lhs : ObjectDefinition,
-                         rhs : ObjectDefinition) : boolean {
+                                rhs : ObjectDefinition) : boolean {
         if((lhs == null) || (rhs == null))
             return false; // floor
 

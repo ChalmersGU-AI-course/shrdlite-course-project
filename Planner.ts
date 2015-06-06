@@ -148,16 +148,16 @@ module Planner {
 
         private world : WorldState;
 
-        private currentPlan : InnerWorld.Step[];
+        private currentPlan  : InnerWorld.Step[];
         private currentState : InnerWorld.Representation;
-        private currentCost : number;
+        private currentCost  : number;
 
-        private validGoals : Interpreter.Literal[][];
+        private validGoals   : Interpreter.Literal[][];
 
-        private subGoalNumber: number;
-        private interpretationNumber: number;
+        private subGoalNumber : number;
+        private interpretationNumber : number;
 
-        private mneumonicCollection : mneumonicMeaning[] = [];
+        private mneumonicCollection  : mneumonicMeaning[] = [];
 
         getMneumonicFromCurrentState(): number {
             for(var i:number = 0; i < this.mneumonicCollection.length; ++i)
@@ -235,7 +235,11 @@ module Planner {
             return false;
         }
 
-        private tests = {ontop: InnerWorld.ontop};
+        private tests = {ontop: InnerWorld.ontop,
+                         rightof: InnerWorld.rightof,
+                         leftof: InnerWorld.leftof,
+                         beside: InnerWorld.beside
+                         };
         equalGoalStates(A : Interpreter.Literal[], B : InnerWorld.Representation) : boolean {
             for(var j:number = 0; j < A.length; ++j) {
                 var a = this.tests[A[j].rel.trim()];
@@ -295,6 +299,7 @@ module Planner {
                 var goal : Interpreter.Literal = goals[++this.subGoalNumber];
                 var a = this.tests[goal.rel.trim()];
                 if((a != null) && (!a(goal.args, this.currentState)))
+                  if(goal.rel.trim() == 'ontop') // just ontop is fully investigated
                     for(var n:number = 0; n<6; ++n) {
                         switch(n) {
                             case 0:s = new InnerWorld.basicStep0(); break;
@@ -302,7 +307,9 @@ module Planner {
                             case 2:s = new InnerWorld.basicStep2(); break;
                             case 3:s = new InnerWorld.basicStep3(); break;
                             case 4:s = new InnerWorld.basicStep4(); break;
-                            case 5:s = new InnerWorld.basicStep5(); break;
+                            case 5:s = new InnerWorld.basicStep5();
+                                   (<InnerWorld.basicStep5>s).rel = goal.rel.trim();
+                                   break;
                         }
                         if(s.isPreRequisitesOk(goal, this.currentState, this.world)) {
                             try {
@@ -319,6 +326,24 @@ module Planner {
                             }
                         }
                     }
+                  else {
+                    var step : InnerWorld.basicStep5 = new InnerWorld.basicStep5();
+                    step.rel = goal.rel.trim();
+                    if(step.isPreRequisitesOk(goal, this.currentState, this.world)) {
+                        try {
+                            this.currentCost += step.performStep(goal, this.currentState, this.world);
+                            this.currentPlan.push(step);
+                            if(!a(goal.args, this.currentState))
+                                throw new Planner.Error('Done wrong '
+                                    +' '+goal.rel+' '+Array.prototype.concat.apply([], goal.args)+' via basicStep5()');
+                            return true;
+                        } catch(ex) {
+                            var tmp : number = this.subGoalNumber;
+                            this.setCurrentStateFromMneumonic(this.currentMneumonic);
+                            this.subGoalNumber = tmp;
+                        }
+                    }
+                  }
             }
             return false;
         }
