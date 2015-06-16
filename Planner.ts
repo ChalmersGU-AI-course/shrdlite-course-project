@@ -27,9 +27,8 @@ module Planner {
         if(plan != null) {
             plans.push(plan);
             return plans;
-        } else {
+        } else
             throw new Planner.Error("Found no plans");
-        }
     }
 
 
@@ -54,23 +53,30 @@ module Planner {
     function planInterpretation(interpretations : Interpreter.Result[], state : WorldState) : Result {
         var plan : string[] = [];
         var planner : plannerViaSearch =
-                        new plannerViaSearch(interpretations, InnerWorld.flatten(state.stacks), state);
+                        new plannerViaSearch(interpretations, InnerWorld.flatten(state.stacks, state.holding, state.arm), state);
         if(Searcher.search(planner)) {
             var statearm = state.arm;
             var res : Interpreter.Literal[] = planner.getResult();
             if(((res.length == 1) && (res[0].rel == 'nop')) || (res.length == 0))
                 plan.push("Already solved");
-            else res.forEach((instr) => {
-                var pickstack = +instr.args[1];
-                var obj = instr.args[0];
-                statearm = armMove(plan,pickstack,statearm);
-                plan.push("Picking up the " + state.objects[obj].form,
-                          "p");
-                pickstack = +instr.args[2];
-                statearm = armMove(plan,pickstack,statearm);
-                plan.push("Dropping the " + state.objects[obj].form,
-                          "d");
-            });
+            else {
+                if((state.holding != null) && (state.holding != ''))
+                    plan.push("Dropping the " + state.objects[state.holding].form,
+                              "d");
+                res.forEach((instr) => {
+                    var pickstack = +instr.args[1];
+                    var obj = instr.args[0];
+                    statearm = armMove(plan,pickstack,statearm);
+                    plan.push("Picking up the " + state.objects[obj].form,
+                              "p");
+                    if(instr.rel != 'take') {
+                        pickstack = +instr.args[2];
+                        statearm = armMove(plan,pickstack,statearm);
+                        plan.push("Dropping the " + state.objects[obj].form,
+                                  "d");
+                    }
+                });
+            }
             var ret : Result = <Result>planner.getWinningInterpretation();
             ret.plan = plan;
             return ret;
@@ -237,6 +243,11 @@ module Planner {
                     stepPlan.push({pol: true, rel: 'move', args: [over, i1.row.toString() ,i2.row.toString()]});
                     stepPlan.push({pol: true, rel: 'move', args: [under, i2.row.toString() ,i1.row.toString()]});
                     cost += InnerWorld.estimatePlanCost(stepPlan, this.currentState);
+                } else if(op.rel == 'take') {
+                    var over : string = op.args[0];
+                    var stepPlan : Interpreter.Literal[] = [];
+                    stepPlan.push({pol: true, rel: 'take', args: [over]});
+                    cost += InnerWorld.estimatePlanCost(stepPlan, this.currentState);
                 }
             });
             return cost;
@@ -254,7 +265,8 @@ module Planner {
         private tests = {ontop: InnerWorld.ontop,
                          rightof: InnerWorld.rightof,
                          leftof: InnerWorld.leftof,
-                         beside: InnerWorld.beside
+                         beside: InnerWorld.beside,
+                         take: InnerWorld.take,
                          };
 
         equalGoalStates(A : Interpreter.Literal[], B : InnerWorld.Representation) : boolean {

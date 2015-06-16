@@ -52,6 +52,10 @@ module Interpreter {
     // private functions
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
+        if((state.holding != null) && (state.holding != '')) {
+            state = clone(state);
+            state.stacks[state.arm].push(state.holding);
+        }
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var fullDomain : collections.Set<string> = new collections.Set<string>();
         objs.forEach((obj) => {
@@ -70,7 +74,7 @@ module Interpreter {
 
         if((cmd.cmd == 'take') && (constrained.whereTo == null)) {
             constrained.what.forEach((ele) => {
-                var finalGoal : Literal[] = [{pol: true, rel: 'ontop', args: [ele, 'floor']}];
+                var finalGoal : Literal[] = [{pol: true, rel: cmd.cmd, args: [ele]}];
                 intprt.push(finalGoal);
                 return true;
             });
@@ -115,5 +119,18 @@ module Interpreter {
         return Math.floor(Math.random() * max);
     }
 
+    function clone<T>(obj: T): T {
+        if (obj != null && typeof obj == "object") {
+            var result : T = obj.constructor();
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    result[key] = clone(obj[key]);
+                }
+            }
+            return result;
+        } else {
+            return obj;
+        }
+    }
 }
 

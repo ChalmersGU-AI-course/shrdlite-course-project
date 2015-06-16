@@ -84,6 +84,20 @@ module InnerWorld {
             return false;
         }
 
+        export function take(args:string[], state : Representation): boolean {
+            if((args[0] == 'floor'))
+                return false;
+            var pos1 : coor = findPos(args[0], state);
+            if(pos1 == null)
+                throw new InnerWorld.Error('leftof Not Everything has positions '+Array.prototype.concat.apply([], state.kb));
+            var fromObject : string =  state.kb[findTop(pos1.row, state)].args[0];
+            if(fromObject != args[0])
+                return false;
+            for(var i:number = 0; i < state.kb.length; ++i)
+                if(('take' == state.kb[i].rel) && (args[0] == state.kb[i].args[0]))
+                    return true;
+            return false;
+        }
 
         export function estimatePlanCost(stepPlan : Interpreter.Literal[], state:Representation):number {
             var ret : number = 0;
@@ -98,6 +112,14 @@ module InnerWorld {
                         var i1 : coor = findPos(fromObject, state);
                         var i2 : coor = findPos(what, state);
                         ret +=  (i1.row - i2.row) * 2;
+                    }
+                } else if(step.rel == 'take') {
+                    var what : string = step.args[0];
+                    var i2 : coor = findPos(what, state);
+                    var fromObject : string =  state.kb[findTop(i2.row, state)].args[0];
+                    if(fromObject != what) {
+                        var i1 : coor = findPos(fromObject, state);
+                        ret += (i1.col - i2.col);
                     }
                 }
             });
@@ -125,6 +147,12 @@ module InnerWorld {
                     close(to, what, state);                 // Close Both
                     if(from != to)
                         ret += Math.abs(from-to) + 2;
+                } else if(step.rel == 'take') {
+                    var from : number = +step.args[1];
+                    var what : string = step.args[0];
+                    if(what != state.kb[findTop(from, state)].args[0])
+                        throw new InnerWorld.Error('Cant take object');
+                    state.kb.push({pol: true, rel: 'take', args: [what]});
                 }
             });
             return ret;
@@ -141,7 +169,7 @@ module InnerWorld {
             state.kb.push({pol: true, rel: 'clear', args: [what, row.toString()]}); // Close it
         }
 
-        export function flatten(stacks: string[][]) : Representation {
+        export function flatten(stacks: string[][], holding: string, arm: number) : Representation {
             var oneIntprt : Interpreter.Literal[] = [];
             var row : number = 0;
             stacks.forEach((stack) => {
@@ -152,6 +180,13 @@ module InnerWorld {
                     col++;
                     prev = ele;
                 });
+
+                if((holding != null) && (holding != '') && (arm == row)) {
+                    oneIntprt.push({pol: true, rel: 'in', args: [row.toString(), col.toString(), prev]});
+                    col++;
+                    prev = holding;
+                }
+
                 oneIntprt.push({pol: true, rel: 'in', args: [row.toString(), col.toString(), prev]});
                 oneIntprt.push({pol: true, rel: 'clear', args: [prev, row.toString()]});
                 ++row;
@@ -477,6 +512,8 @@ module InnerWorld {
                         else
                             this.dest = - 1;
                         break;
+                case 'ontop':
+                        break;
                 otherwise:
                     throw new InnerWorld.Error('wrong relationship '+this.rel);
                 }
@@ -565,43 +602,53 @@ module InnerWorld {
                 this.stepPlan = [];
                 this.cost = 0;
 
-                var spotToClear : string = goal.args[1];
-                if(this.rel == 'ontop') {
-                    if(spotToClear == 'floor') {// ok but what floor?
-                        var i : number = this.getNonProblematicSpot();
-                        if (i == -1)
-                            throw new InnerWorld.Error('No space');
-                        this.notPossibleStacks.push(i);
-                        spotToClear = 'floor'+i;
+                if(this.rel != 'take') {
+                    var spotToClear : string = goal.args[1];
+                    if(this.rel == 'ontop') {
+                        if(spotToClear == 'floor') {// ok but what floor?
+                            var i : number = this.getNonProblematicSpot();
+                            if (i == -1)
+                                throw new InnerWorld.Error('No space');
+                            this.notPossibleStacks.push(i);
+                            spotToClear = 'floor'+i;
+                        }
+                        var clearObj2 : boolean = findClear(spotToClear, [], state) != -1;
+                        if(!clearObj2) // Clear destination
+                            this.doEachStep(reverseObjsOnTop(spotToClear, state), state, world);
                     }
-                    var clearObj2 : boolean = findClear(spotToClear, [], state) != -1;
-                    if(!clearObj2) // Clear destination
-                        this.doEachStep(reverseObjsOnTop(spotToClear, state), state, world);
-                }
-                var clearObj1 : boolean = findClear(goal.args[0], [], state) != -1;
-                if(!clearObj1) // Clear source
-                    this.doEachStep(reverseObjsOnTop(goal.args[0], state), state, world);
-                var i1 : coor = findPos(goal.args[0], state);
-                var i2 : coor = findPos(spotToClear, state);
-                if(this.rel == 'ontop') {
-                    var ele = {pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]};
-                    this.stepPlan.push(ele);
-                    this.cost += playPlan([ele], state, world);
-                } else {
-                    for(var i = i2.row + this.dest; (i>=0) && (i<=this.maxStack); i+=this.dest) {
-                        var found : boolean = false;
-                        for(var j:number = 0; j< this.notPossibleStacks.length; ++j)
-                            if(i == this.notPossibleStacks[j]) {
-                                found = true;
+                    var clearObj1 : boolean = findClear(goal.args[0], [], state) != -1;
+                    if(!clearObj1) // Clear source
+                        this.doEachStep(reverseObjsOnTop(goal.args[0], state), state, world);
+                    var i1 : coor = findPos(goal.args[0], state);
+                    var i2 : coor = findPos(spotToClear, state);
+                    if(this.rel == 'ontop') {
+                        var ele = {pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]};
+                        this.stepPlan.push(ele);
+                        this.cost += playPlan([ele], state, world);
+                    } else {
+                        for(var i = i2.row + this.dest; (i>=0) && (i<=this.maxStack); i+=this.dest) {
+                            var found : boolean = false;
+                            for(var j:number = 0; j< this.notPossibleStacks.length; ++j)
+                                if(i == this.notPossibleStacks[j]) {
+                                    found = true;
+                                    break;
+                                }
+                            if(!found) {
+                                var ele = {pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i.toString()]};
+                                this.stepPlan.push(ele);
+                                this.cost += playPlan([ele], state, world);
                                 break;
                             }
-                        if(!found) {
-                            var ele = {pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i.toString()]};
-                            this.stepPlan.push(ele);
-                            this.cost += playPlan([ele], state, world);
-                            break;
                         }
                     }
+                } else {
+                    var clearObj1 : boolean = findClear(goal.args[0], [], state) != -1;
+                    if(!clearObj1) // Clear source
+                        this.doEachStep(reverseObjsOnTop(goal.args[0], state), state, world);
+                    var i1 : coor = findPos(goal.args[0], state);
+                    var ele = {pol: true, rel: 'take', args: [goal.args[0], i1.row.toString()]};
+                    this.stepPlan.push(ele);
+                    this.cost += playPlan([ele], state, world);
                 }
                 return this.cost;
             }
