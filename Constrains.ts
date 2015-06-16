@@ -361,11 +361,17 @@ module Constrains {
         if((lhs == null) || (rhs == null))
             return false; // floor
 
+        if((rhs.size == 'small') && (lhs.size == 'large'))
+            return false;
+
         if(rhs.form == 'box') {
             if((lhs.form == 'box') && (lhs.size == rhs.size))
                 return false; // cant put a same size box in a box
             if(lhs.size == rhs.size)
-                return true; // a ball or a table can be but in a same size box
+                return (lhs.form != 'pyramid') &&
+                       (lhs.form != 'plank') &&
+                       (lhs.form != 'box')
+                       ;
             if(rhs.size == 'large')
                 return true; // large box can carry anything else
             if(rhs.size == 'small')
@@ -373,6 +379,19 @@ module Constrains {
         }
         if(rhs.form == 'ball')
             return false;
+        if((lhs.form == 'ball') && (rhs.form != 'box'))
+            return false;
+
+        if(lhs.form == 'box') {
+            if((lhs.size == rhs.size) && (rhs.size == 'small'))
+                return (rhs.form != 'pyramid') &&
+                       (rhs.form != 'brick')
+                       ;
+            if((lhs.size == rhs.size) && (rhs.size == 'large'))
+                return (rhs.form != 'pyramid')
+                       ;
+        }
+
         return true;
     }
 
