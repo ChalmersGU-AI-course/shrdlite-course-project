@@ -51,20 +51,22 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+    // get the goals to the limited domain using the constrain class
     function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
+        // include the holded object in the stack under the arm
         if((state.holding != null) && (state.holding != '')) {
             state = clone(state);
             state.stacks[state.arm].push(state.holding);
         }
         var objs : string[] = Array.prototype.concat.apply([], state.stacks);
         var fullDomain : collections.Set<string> = new collections.Set<string>();
-        objs.forEach((obj) => {
+        objs.forEach((obj) => { // defne the full domain of objects
             fullDomain.add(obj);
         });
-        fullDomain.add('floor');
+        fullDomain.add('floor'); // include the floor as an object
         var constrained : Constrains.Result<string> = Constrains.constrain<string>(fullDomain, cmd, state);
 
-        if(constrained.what.size() == 0)
+        if(constrained.what.size() == 0) // no abject satisfies the restrictions
             return null;
 
         //cmd.ent.quant
@@ -73,6 +75,7 @@ module Interpreter {
         var intprt : Literal[][] = [];
 
         if((cmd.cmd == 'take') && (constrained.whereTo == null)) {
+            // take has no whereto
             constrained.what.forEach((ele) => {
                 var finalGoal : Literal[] = [{pol: true, rel: cmd.cmd, args: [ele]}];
                 intprt.push(finalGoal);
@@ -82,12 +85,13 @@ module Interpreter {
         }
 
         var m_typ : string = cmd.loc.rel;
-        if(m_typ == 'inside')
+        if(m_typ == 'inside') // inside and ontop are the same thing
             m_typ = 'ontop';
 
         if((constrained.whereTo == null) || (constrained.whereTo.size() == 0))
-            return null;
+            return null; // except for take, we do need to say whereto
 
+        // create all the goals that satifies the user desires
         constrained.what.forEach((ele) => {
           constrained.whereTo.first().variable1.domain.forEach((v) => {
             var finalGoal : Literal[];
@@ -115,10 +119,7 @@ module Interpreter {
         return intprt;
     }
 
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
-    }
-
+    // utility function
     function clone<T>(obj: T): T {
         if (obj != null && typeof obj == "object") {
             var result : T = obj.constructor();

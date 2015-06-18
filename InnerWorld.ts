@@ -6,44 +6,56 @@
 // you could just plan and let the mini interpreter playPlan
 // except or give costs or change the state.
 //
-// before I was doing manually what dis did very automatically
-// This wasa precursor to do some kind of earning or modifying rules etc
-// probabaly I should try with lisp or forth which I like the self modifying nature
+// before I was doing manually what this did very automatically
+// This was a precursor to do some kind of learning or modifying rules etc
+// probabaly I should try this with lisp or forth which I like the self modifying nature
 // for just this
 
-/// Still it inherited too much manual coordinates and the representation fromthe interpreter
+/// Still it inherited too much manual coordinates and the representation from the interpreter
 //  the fact is, I was focusing in using the interpreter literal structure from the refactorying I did
 //  for the queen problem. I never grew out of that...
 
+//  The representation is incomplete, it doesnt count the position of the arm or if its holding
+//  something. The simple tweek is that its not. That arm movement is not as important, at least
+//  in the same way that we account for our own main forces but disregard other as friction.
+//  The assumption is that the object being hold is dropped where the arm is always. As te only
+//  way to hold an object is by taking it from a valid position, dropping it, is also a valid position.
+//  Works ok for me, change is trivial but reveals nothing new.
+
 module InnerWorld {
 
+        // A step is a procedure that soves one constrain like onTop or besides
         export interface Step {
             stepPlan : Interpreter.Literal[];
             cost : number;
-            isPreRequisitesOk(goals : Interpreter.Literal, state:Representation, world : WorldState) : boolean;
-            performStep(goals:Interpreter.Literal, state:Representation, world : WorldState) : number;
+            isPreRequisitesOk(goals : Interpreter.Literal, state:Representation, world : WorldState) : boolean; // Applicable?
+            performStep(goals:Interpreter.Literal, state:Representation, world : WorldState) : number;          // modify state
         }
 
         export interface Representation {kb : Interpreter.Literal[];}
-        export interface coor {row:number; col:number;}
+        export interface coor {pile:number; level:number;} // not surprising
 
+        //just used during debugging
         export class Error implements Error {
             public name = "InnerWorld.Error";
             constructor(public message? : string) {}
             public toString() {return this.name + ": " + this.message}
         }
 
+        ////////////////////////////////////////////////////////////////////////
+        // These were used to check if the goal was achieved
+        ///////////////////////////////////////////////////////////////////////
 
         export function ontop(args:string[], state : Representation): boolean {
             if(args[0] == 'floor')
                 return false;
             var pos1 : coor = findPos(args[0], state);
             if(args[1] == 'floor')
-                return pos1.col==1;
+                return pos1.level==1;
             var pos2 : coor = findPos(args[1], state);
             if((pos1 == null) || (pos2 == null))
                 throw new InnerWorld.Error('ontop Not Everything has positions '+Array.prototype.concat.apply([], state.kb));
-            if((pos1.row == pos2.row) && (pos1.col == pos2.col + 1))
+            if((pos1.pile == pos2.pile) && (pos1.level == pos2.level + 1))
                 return true;
             return false;
         }
@@ -55,7 +67,7 @@ module InnerWorld {
             var pos2 : coor = findPos(args[1], state);
             if((pos1 == null) || (pos2 == null))
                 throw new InnerWorld.Error('leftof Not Everything has positions '+Array.prototype.concat.apply([], state.kb));
-            if(pos1.row < pos2.row)
+            if(pos1.pile < pos2.pile)
                 return true;
             return false;
         }
@@ -67,7 +79,7 @@ module InnerWorld {
             var pos2 : coor = findPos(args[1], state);
             if((pos1 == null) || (pos2 == null))
                 throw new InnerWorld.Error('leftof Not Everything has positions '+Array.prototype.concat.apply([], state.kb));
-            if(pos1.row > pos2.row)
+            if(pos1.pile > pos2.pile)
                 return true;
             return false;
         }
@@ -79,7 +91,7 @@ module InnerWorld {
             var pos2 : coor = findPos(args[1], state);
             if((pos1 == null) || (pos2 == null))
                 throw new InnerWorld.Error('leftof Not Everything has positions '+Array.prototype.concat.apply([], state.kb));
-            if(Math.abs(pos1.row - pos2.row) == 1)
+            if(Math.abs(pos1.pile - pos2.pile) == 1)
                 return true;
             return false;
         }
@@ -90,7 +102,7 @@ module InnerWorld {
             var pos1 : coor = findPos(args[0], state);
             if(pos1 == null)
                 throw new InnerWorld.Error('leftof Not Everything has positions '+Array.prototype.concat.apply([], state.kb));
-            var fromObject : string =  state.kb[findTop(pos1.row, state)].args[0];
+            var fromObject : string =  state.kb[findTop(pos1.pile, state)].args[0];
             if(fromObject != args[0])
                 return false;
             for(var i:number = 0; i < state.kb.length; ++i)
@@ -99,6 +111,9 @@ module InnerWorld {
             return false;
         }
 
+        /////////////////////////////////////////////////////////////////////////////////////////////////7
+        /// This helps estimating the heuristic cost
+        ///
         export function estimatePlanCost(stepPlan : Interpreter.Literal[], state:Representation):number {
             var ret : number = 0;
             stepPlan.forEach((step) => {
@@ -106,30 +121,49 @@ module InnerWorld {
                     var from : number = +step.args[1];
                     var to : number = +step.args[2];
                     var what : string = step.args[0];
-                    ret += Math.abs(from - to);
+                    ret += Math.abs(from - to); // you need to move this distance
                     var fromObject : string =  state.kb[findTop(from, state)].args[0];
                     if(fromObject != what) {
                         var i1 : coor = findPos(fromObject, state);
                         var i2 : coor = findPos(what, state);
-                        ret +=  (i1.row - i2.row) * 2;
+                        ret +=  (i1.level - i2.level); // because you need to clear all this objects
                     }
                 } else if(step.rel == 'take') {
                     var what : string = step.args[0];
                     var i2 : coor = findPos(what, state);
-                    var fromObject : string =  state.kb[findTop(i2.row, state)].args[0];
+                    var fromObject : string =  state.kb[findTop(i2.pile, state)].args[0];
                     if(fromObject != what) {
                         var i1 : coor = findPos(fromObject, state);
-                        ret += (i1.col - i2.col);
+                        ret += (i1.level - i2.level); // because you need to clear all this objects
                     }
                 }
             });
             return ret;
         }
 
+        //////////////////////////////////////////////////////////
+        // This will be used with the estimation function to get
+        //  an estimation of the distance in robot based motion
+        //  it created a plan which will then be estimated by
+        //  the above function estimatePlanCost
+        export function simplestFromToNorm_Plan(from : string, to : string, state : Representation) : Interpreter.Literal[] {
+            var i1 : InnerWorld.coor = InnerWorld.findPos(from, state);
+            var i2 : InnerWorld.coor = InnerWorld.findPos(to, state);
+            var stepPlan : Interpreter.Literal[] = [];
+            stepPlan.push({pol: true, rel: 'move', args: [from, i1.pile.toString() ,i2.pile.toString()]});
+            stepPlan.push({pol: true, rel: 'move', args: [to, i2.pile.toString() ,i1.pile.toString()]});
+            return stepPlan;
+        }
+
+        ///////////////////////////////////////////////////////////////////////////
+        // I hate to use the word immagination
+        // but this function changes the knowledge base and detects if something
+        // would not be possible. It throws an exeption if it cant do something
+        //
         export function playPlan(stepPlan : Interpreter.Literal[], state:Representation, world : WorldState):number {
             var ret : number = 0;
             stepPlan.forEach((step) => {
-                if(step.rel == 'move') {
+                if(step.rel == 'move') { // only move and take actions
                     var from : number = +step.args[1];
                     var to : number = +step.args[2];
                     var what : string = step.args[0];       // To double checks
@@ -142,8 +176,8 @@ module InnerWorld {
                     }
                     var i1 : coor = open(from, state);      // Open Both
                     var i2 : coor = open(to, state);        // Open Both
-                    setPos(what, state, {row:i2.row, col:i2.col+1});
-                    close(from, findObjAt({row:i1.row, col:i1.col-1}, state), state);
+                    setPos(what, state, {pile:i2.pile, level:i2.level+1});
+                    close(from, findObjAt({pile:i1.pile, level:i1.level-1}, state), state);
                     close(to, what, state);                 // Close Both
                     if(from != to)
                         ret += Math.abs(from-to) + 2;
@@ -158,46 +192,58 @@ module InnerWorld {
             return ret;
         }
 
-        function open(row : number, state:Representation) : coor {
-            var kbNum : number = findTop(row, state);
+        // The knowledge base has a convenient verb taken from Winograd called clear
+        //  that says that you are the top object in a pile.
+        //  but it has to be mantained as we move objects from pile to pile
+        function open(pile : number, state:Representation) : coor {
+            var kbNum : number = findTop(pile, state);
             var i : coor = findPos(state.kb[kbNum].args[0], state);
             state.kb.splice(kbNum,1);
             return i;
         }
 
-        function close(row : number, what : string, state : Representation) : void {
-            state.kb.push({pol: true, rel: 'clear', args: [what, row.toString()]}); // Close it
+        function close(pile : number, what : string, state : Representation) : void {
+            state.kb.push({pol: true, rel: 'clear', args: [what, pile.toString()]}); // Close it
         }
 
+        //////////////////////////////////////////////////////////7
+        // We use our own innerworld representation
+        // so we have to translate from the stack representation
         export function flatten(stacks: string[][], holding: string, arm: number) : Representation {
             var oneIntprt : Interpreter.Literal[] = [];
-            var row : number = 0;
+            var pile : number = 0;
             stacks.forEach((stack) => {
-                var prev : string = 'floor'+row;
-                var col : number = 0;
+                var prev : string = 'floor'+ pile;
+                var level : number = 0;
                 stack.forEach((ele) => {
-                    oneIntprt.push({pol: true, rel: 'in', args: [row.toString(), col.toString(), prev]});
-                    col++;
+                    oneIntprt.push({pol: true, rel: 'in', args: [pile.toString(), level.toString(), prev]});
+                    level++;
                     prev = ele;
                 });
 
-                if((holding != null) && (holding != '') && (arm == row)) {
-                    oneIntprt.push({pol: true, rel: 'in', args: [row.toString(), col.toString(), prev]});
-                    col++;
+                if((holding != null) && (holding != '') && (arm == pile)) {
+                    oneIntprt.push({pol: true, rel: 'in', args: [pile.toString(), level.toString(), prev]});
+                    level++;
                     prev = holding;
                 }
 
-                oneIntprt.push({pol: true, rel: 'in', args: [row.toString(), col.toString(), prev]});
-                oneIntprt.push({pol: true, rel: 'clear', args: [prev, row.toString()]});
-                ++row;
+                oneIntprt.push({pol: true, rel: 'in', args: [pile.toString(), level.toString(), prev]});
+                oneIntprt.push({pol: true, rel: 'clear', args: [prev, pile.toString()]});
+                ++pile;
             });
+
+            if((holding != null) && (holding != ''))
+                oneIntprt.push({pol: true, rel: 'take', args: [holding]});
+
             this.state = {kb:oneIntprt};
             return this.state;
         }
 
-        function findTop(row : number, state : Representation) : number {
+        //////////////// Miscelaneous find functions ///////////////////////////
+
+        function findTop(pile : number, state : Representation) : number {
             for(var i:number = 0; i < state.kb.length; ++i)
-                if(('clear' == state.kb[i].rel) && (row == +state.kb[i].args[1]))
+                if(('clear' == state.kb[i].rel) && (pile == +state.kb[i].args[1]))
                     return i;
             return -1;
         }
@@ -213,48 +259,23 @@ module InnerWorld {
             var i : number = findIn(arg, state);
             if(i==-1)
                 return null;
-            return {row : +state.kb[i].args[0], col : +state.kb[i].args[1]};
+            return {pile : +state.kb[i].args[0], level : +state.kb[i].args[1]};
         }
         function setPos(arg : string, state : Representation, newCoor : coor) {
             var i : number = findIn(arg, state);
             if(i==-1)
                 return;
-            state.kb[i].args[0] = newCoor.row.toString();
-            state.kb[i].args[1] = newCoor.col.toString();
+            state.kb[i].args[0] = newCoor.pile.toString();
+            state.kb[i].args[1] = newCoor.level.toString();
         }
 
         function findObjAt(newCoor : coor, state : Representation) : string {
             for(var i:number = 0; i < state.kb.length; ++i)
                 if(('in' == state.kb[i].rel)
-                    && (newCoor.row == +state.kb[i].args[0])
-                    && (newCoor.col == +state.kb[i].args[1]))
+                    && (newCoor.pile == +state.kb[i].args[0])
+                    && (newCoor.level == +state.kb[i].args[1]))
                     return state.kb[i].args[2];
             return null;
-        }
-
-        function reverseObjsOnTop(arg : string, state : Representation) : string[] {
-            var pos : coor = findPos(arg, state);
-            var res : string[] = [];
-            var n : number = 0;
-            do {
-                ++n;
-                var chg : boolean = false;
-                for(var i:number = 0; i < state.kb.length; ++i)
-                    if(('in' == state.kb[i].rel)
-                       && (pos.row == +state.kb[i].args[0])
-                       && (pos.col + n == +state.kb[i].args[1]) ) {
-                       var obj = state.kb[i].args[2];
-                       res = Array.prototype.concat.apply([obj], res);
-                       if(findClear(obj, [], state) != -1)
-                            return res;
-                       chg = true;
-                       break;
-                    }
-                if(!chg) {
-                    this.printDebugInfo('Error');
-                    return res;
-                }
-            } while(true);
         }
 
         export function findClear(arg : string, used : string[], state : Representation) : number {
@@ -278,6 +299,32 @@ module InnerWorld {
             if((goal.rel == 'ontop') && (goal.args[1] == 'floor'))
                     return true;
             return false;
+        }
+
+        // We are stack so we need to get the objects from the facts in the Knowledgebase reversed
+        function reverseObjsOnTop(arg : string, state : Representation) : string[] {
+            var pos : coor = findPos(arg, state);
+            var res : string[] = [];
+            var n : number = 0;
+            do {
+                ++n;
+                var chg : boolean = false;
+                for(var i:number = 0; i < state.kb.length; ++i)
+                    if(('in' == state.kb[i].rel)
+                       && (pos.pile == +state.kb[i].args[0])
+                       && (pos.level + n == +state.kb[i].args[1]) ) {
+                       var obj = state.kb[i].args[2];
+                       res = Array.prototype.concat.apply([obj], res);
+                       if(findClear(obj, [], state) != -1)
+                            return res;
+                       chg = true;
+                       break;
+                    }
+                if(!chg) {
+                    this.printDebugInfo('Error');
+                    return res;
+                }
+            } while(true);
         }
 
         //////////////////////////////////////
@@ -314,6 +361,8 @@ module InnerWorld {
             }
         }
 
+        // this was the second option I would do if I think how to use the world
+        // Im using the floor a lot
         export class basicStep1 implements Step {
             stepPlan : Interpreter.Literal[];
             cost : number = 0;
@@ -333,12 +382,14 @@ module InnerWorld {
                 var floorName : string = state.kb[floor].args[0];
                 var i2 : coor = findPos(floorName, state);
                 this.stepPlan = [];
-                this.stepPlan.push({pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]});
+                this.stepPlan.push({pol: true, rel: 'move', args: [goal.args[0], i1.pile.toString() ,i2.pile.toString()]});
                 this.cost = playPlan(this.stepPlan, state, world);
                 return this.cost;
             }
         }
 
+        // this was the third option I would do if I think how to use the world
+        // Im using the floor a lot
         export class basicStep2 implements Step {
             stepPlan : Interpreter.Literal[];
             cost : number = 0;
@@ -367,7 +418,7 @@ module InnerWorld {
                 objsOntop.forEach((obj) => {
                     prev = obj;
                     var i1 : coor = findPos(obj, state);
-                    this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.row.toString() ,itemp.row.toString()]});
+                    this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.pile.toString() ,itemp.pile.toString()]});
                 });
 
                 this.cost = playPlan(this.stepPlan, state, world);
@@ -383,6 +434,8 @@ module InnerWorld {
             }
         }
 
+        // this became more generic, obviously just one rule would be needed
+        // but I wanted to test this multi rule thing to the limit
         export class basicStep3 implements Step {
             stepPlan : Interpreter.Literal[];
             cost : number = 0;
@@ -413,7 +466,7 @@ module InnerWorld {
                     objsOntop.forEach((obj) => {
                         prev = obj;
                         var i1 : coor = findPos(obj, state);
-                        this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.row.toString() ,itemp.row.toString()]});
+                        this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.pile.toString() ,itemp.pile.toString()]});
                     });
                     this.cost += playPlan(this.stepPlan, state, world);
                 }
@@ -421,13 +474,14 @@ module InnerWorld {
                 var support : number = findClear(goal.args[1], [], state);
                 var supportName : string = state.kb[support].args[0];
                 var i2 : coor = findPos(supportName, state);
-                this.stepPlan.push({pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]});
-                this.cost += playPlan([{pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]}],
+                this.stepPlan.push({pol: true, rel: 'move', args: [goal.args[0], i1.pile.toString() ,i2.pile.toString()]});
+                this.cost += playPlan([{pol: true, rel: 'move', args: [goal.args[0], i1.pile.toString() ,i2.pile.toString()]}],
                                     state, world);
                 return this.cost;
             }
         }
 
+        // this is the generic rule, But doesnt catch exeptions
         export class basicStep4 implements Step {
             stepPlan : Interpreter.Literal[];
             cost : number = 0;
@@ -455,7 +509,7 @@ module InnerWorld {
                     objsOntop.forEach((obj) => {
                         prev = obj;
                         var i1 : coor = findPos(obj, state);
-                        this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.row.toString() ,itemp.row.toString()]});
+                        this.stepPlan.push({pol: true, rel: 'move', args: [obj, i1.pile.toString() ,itemp.pile.toString()]});
                     });
                     this.cost += playPlan(this.stepPlan, state, world);
                 }
@@ -470,6 +524,11 @@ module InnerWorld {
             }
         }
 
+        // This is the only rule needed, it is very stubborn, itself this could be a A* search or anything
+        // depending in the implementation it could be better torun the a* generic o optimize this to
+        // the particular world physics
+        // The main a* procedure is just trying to get rid of unfulfiled constrains.
+        // My rationale here is that moving the robot arm is nice, I dont want to find the smallest smalles route
         export class basicStep5 implements Step {
             stepPlan : Interpreter.Literal[];
             cost : number = 0;
@@ -482,18 +541,18 @@ module InnerWorld {
 
             isPreRequisitesOk(goal : Interpreter.Literal, state:Representation, world : WorldState) : boolean {
                 var i2 : coor;
-                this.notPossibleStacks = [findPos(goal.args[0], state).row];// not on top of yourself
+                this.notPossibleStacks = [findPos(goal.args[0], state).pile];// not on top of yourself
                 switch(this.rel) {
                 case 'ontop':
                         if(goal.args[1] != 'floor')
-                            this.notPossibleStacks.push(findPos(goal.args[1], state).row);// or ontop of the destination
+                            this.notPossibleStacks.push(findPos(goal.args[1], state).pile);// or ontop of the destination
                         this.dest = + 1;
                         break;
                 case 'leftof':
                         if((goal.args[0] == 'floor') || (goal.args[1] == 'floor'))
                             return false;
                         i2 = findPos(goal.args[1], state);
-                        if(i2.row == 0)
+                        if(i2.pile == 0)
                             return false;
                         this.dest = - 1;
                         break;
@@ -507,7 +566,7 @@ module InnerWorld {
                         if((goal.args[0] == 'floor') || (goal.args[1] == 'floor'))
                             return false;
                         i2 = findPos(goal.args[1], state);
-                        if(i2.row == 0)
+                        if(i2.pile == 0)
                             this.dest = + 1;
                         else
                             this.dest = - 1;
@@ -519,14 +578,14 @@ module InnerWorld {
                 }
                 for(var i:number = 0; i < state.kb.length; ++i)
                     if('clear' == state.kb[i].rel) {
-                        var row : number = +state.kb[i].args[1];
+                        var pile : number = +state.kb[i].args[1];
                         if((world.objects[state.kb[i].args[0]] != null) &&
                            (world.objects[state.kb[i].args[0]].form == 'ball')) {
-                            this.notPossibleStacks.push(row);
+                            this.notPossibleStacks.push(pile);
                             continue;
                         }
-                        if(row>this.maxStack)
-                            this.maxStack = row;
+                        if(pile > this.maxStack)
+                            this.maxStack = pile;
                     }
                 var i : number;
                 if(this.dest >0)
@@ -589,7 +648,7 @@ module InnerWorld {
                 var itemp : coor = findPos(this.tempName, state);
                 objsOntop.forEach((obj) => {
                     var i1 : coor = findPos(obj, state);
-                    var ele = {pol: true, rel: 'move', args: [obj, i1.row.toString() ,itemp.row.toString()]};
+                    var ele = {pol: true, rel: 'move', args: [obj, i1.pile.toString() ,itemp.pile.toString()]};
                     try {
                         this.cost += playPlan([ele], state, world);
                         this.stepPlan.push(ele);
@@ -622,11 +681,11 @@ module InnerWorld {
                     var i1 : coor = findPos(goal.args[0], state);
                     var i2 : coor = findPos(spotToClear, state);
                     if(this.rel == 'ontop') {
-                        var ele = {pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i2.row.toString()]};
+                        var ele = {pol: true, rel: 'move', args: [goal.args[0], i1.pile.toString() ,i2.pile.toString()]};
                         this.stepPlan.push(ele);
                         this.cost += playPlan([ele], state, world);
                     } else {
-                        for(var i = i2.row + this.dest; (i>=0) && (i<=this.maxStack); i+=this.dest) {
+                        for(var i = i2.pile + this.dest; (i>=0) && (i<=this.maxStack); i+=this.dest) {
                             var found : boolean = false;
                             for(var j:number = 0; j< this.notPossibleStacks.length; ++j)
                                 if(i == this.notPossibleStacks[j]) {
@@ -634,7 +693,7 @@ module InnerWorld {
                                     break;
                                 }
                             if(!found) {
-                                var ele = {pol: true, rel: 'move', args: [goal.args[0], i1.row.toString() ,i.toString()]};
+                                var ele = {pol: true, rel: 'move', args: [goal.args[0], i1.pile.toString() ,i.toString()]};
                                 this.stepPlan.push(ele);
                                 this.cost += playPlan([ele], state, world);
                                 break;
@@ -646,7 +705,7 @@ module InnerWorld {
                     if(!clearObj1) // Clear source
                         this.doEachStep(reverseObjsOnTop(goal.args[0], state), state, world);
                     var i1 : coor = findPos(goal.args[0], state);
-                    var ele = {pol: true, rel: 'take', args: [goal.args[0], i1.row.toString()]};
+                    var ele = {pol: true, rel: 'take', args: [goal.args[0], i1.pile.toString()]};
                     this.stepPlan.push(ele);
                     this.cost += playPlan([ele], state, world);
                 }
@@ -654,6 +713,7 @@ module InnerWorld {
             }
         }
 
+    // I dont not now this language enough to know when to clone or not. I just clone everything...
     function clone<T>(obj: T): T {
         if (obj != null && typeof obj == "object") {
             var result : T = obj.constructor();

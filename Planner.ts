@@ -50,6 +50,7 @@ module Planner {
     //////////////////////////////////////////////////////////////////////
     // private functions
 
+    // if finds a Plan, just execute it
     function planInterpretation(interpretations : Interpreter.Result[], state : WorldState) : Result {
         var plan : string[] = [];
         var planner : plannerViaSearch =
@@ -84,6 +85,7 @@ module Planner {
         return null;
     }
 
+    // utility function to move the arm with the primitive commands
     function armMove(plan : string[],pickstack : number, statearm : number) : number {
         if (pickstack < statearm) {
             for (var i = statearm; i > pickstack; i--)
@@ -95,6 +97,7 @@ module Planner {
         return pickstack;
     }
 
+    // used only for debugging
     function printStates(state:Interpreter.Literal[]) : void {
         state.forEach((literal) => {
         });
@@ -104,6 +107,7 @@ module Planner {
     ///
     ///  State follow up
 
+    // this is what is saved in the frontier
     interface mneumonicMeaning {plan : InnerWorld.Step[];
                                 state : InnerWorld.Representation;
                                 interpretationNumber : number;
@@ -151,6 +155,9 @@ module Planner {
            });
            this.nextInterprtationAndMakeCurrent(0);
           }
+
+        // I dont think the non changing properties are passed
+        // but they were passed at some time, as they dont change they are of no value for the planner
         withoutPasiveVerbs(goals : Interpreter.Literal[]) : Interpreter.Literal[] {
             var facts = {hasSize:false, hasColor:false, isA:false, CanBeInside:false,
                          Reverse_hasSize:false, Reverse_hasColor:false, Reverse_isA:false,
@@ -176,6 +183,8 @@ module Planner {
         private subGoalNumber : number;
         private interpretationNumber : number;
 
+        // old States are saved in a collection to avoid cycles and to be able to refer to the
+        // frontier by mneumenic, without saving states in the search class
         private mneumonicCollection  : mneumonicMeaning[] = [];
 
         // NOTE ALL THE CLONNING ETC
@@ -216,6 +225,7 @@ module Planner {
             return this.currentCost;
         }
 
+        // many  heurisic functions would have worked...
         getHeuristicGoalDistanceFromCurrentState(): number {
             var cost:number = 0;
             var symbols : collections.Set<string> = new collections.Set<string>();
@@ -237,11 +247,7 @@ module Planner {
                         else
                             under = this.currentState.kb[floor].args[0];
                     }
-                    var i1 : InnerWorld.coor = InnerWorld.findPos(over, this.currentState);
-                    var i2 : InnerWorld.coor = InnerWorld.findPos(under, this.currentState);
-                    var stepPlan : Interpreter.Literal[] = [];
-                    stepPlan.push({pol: true, rel: 'move', args: [over, i1.row.toString() ,i2.row.toString()]});
-                    stepPlan.push({pol: true, rel: 'move', args: [under, i2.row.toString() ,i1.row.toString()]});
+                    var stepPlan : Interpreter.Literal[] = InnerWorld.simplestFromToNorm_Plan(over, under, this.currentState);
                     cost += InnerWorld.estimatePlanCost(stepPlan, this.currentState);
                 } else if(op.rel == 'take') {
                     var over : string = op.args[0];
@@ -253,6 +259,7 @@ module Planner {
             return cost;
         }
 
+        // stop condition
         isGoalCurrentState(): Boolean {
             if(this.validGoals.length == 0)
                 return true;
@@ -269,6 +276,7 @@ module Planner {
                          take: InnerWorld.take,
                          };
 
+        // goal state is a tree so we need to traverse
         equalGoalStates(A : Interpreter.Literal[], B : InnerWorld.Representation) : boolean {
             for(var j:number = 0; j < A.length; ++j) {
                 var a = this.tests[A[j].rel.trim()];
@@ -278,12 +286,16 @@ module Planner {
             return true;
         }
 
+        // this is used not for goals but for double checking that the rule didnt failed
+        // but is the same thing as checking the goal
         equalStates(A : InnerWorld.Representation, B : InnerWorld.Representation) : boolean {
             for(var j:number = 0; j < A.kb.length; ++j)
                 if(!this.in(A.kb[j], B.kb))
                     return false;
             return true;
         }
+
+        // the traverse part of the above function
         in(literal: Interpreter.Literal, literals : Interpreter.Literal[]): boolean {
             for(var i:number = 0; i < literals.length; ++i)
                 if(literal.rel == literals[i].rel) {
@@ -300,6 +312,7 @@ module Planner {
             return false;
         }
 
+        // moving in the search space
         private currentMneumonic : number;
         nextInterprtationAndMakeCurrent(n : number): Boolean {
             this.interpretationNumber = n;
@@ -378,6 +391,9 @@ module Planner {
             return false;
         }
 
+        //
+        // to Retrieve the results later
+        //
         private interpretationXRef : Interpreter.Result[];
         getWinningInterpretation():Interpreter.Result {
             return this.interpretationXRef[this.interpretationNumber];

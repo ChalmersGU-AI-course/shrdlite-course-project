@@ -1,26 +1,34 @@
 /// <reference path="lib/collections.ts" />
 
 //////////////////////////////////////////////////////////////////////
-// This handles constrins
+// This handles constrains
 // Basically we have a list of arcs which are re/evaluated until
 // no further elements from the variables domains can be taken out
 //
-// This is not general, it is tied to the block world from
-//  function reduceVoice under.
+// This is not general, it is tied to the block world from the
+//  function reduceVoice and beyond.
 //
 // Could be Abstracted : TODO
 //
-// All in all the most clean of my code in this project
+// All in all, its the most clean changes in this project
 
 module Constrains {
+// The constrains and Variable nodes as per the class explanation
     export interface ConstrainNode<T> {type : string;
                                        stringParameter : string;
                                        futureTense : boolean;}
     export interface VariableNode<T> {domain : collections.Set<T>;
                                       name : string;}
+
+// The arcs may have a variable2. Constrain like isA need not
     export interface ArcNode<T> {variable1 : VariableNode<T>;
                                  variable2 : VariableNode<T>;
                                  constrain : ConstrainNode<T>;}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// language wise, I always returned to what to move as something concrete, and where to as a set of constrains
+// the what is restricted as in the present, the whereto is a desired state in the future.
+// some properties like isA cannot change in the future, but location certainly can (that is the robots purpose)
 
     export interface Result<T> {what : collections.Set<T>; whereTo : collections.LinkedList<ArcNode<T>>;}
 
@@ -35,17 +43,19 @@ module Constrains {
         var arcs : collections.LinkedList<ArcNode<T>> = new collections.LinkedList<ArcNode<T>>();
         var what : VariableNode<T> = constructGraph<T>(fullDomain, head.ent, arcs, false, 'what');
 
-        if((head.loc == null) || (head.loc.ent.obj == null)) {
+        if((head.loc == null) || (head.loc.ent.obj == null)) { // the verb take doesnt have a whereto
             arcReduction<T>(arcs, state);
             return {what : what.domain, whereTo : null};
         }
 
         var whereTo : VariableNode<T> = constructGraph<T>(fullDomain, head.loc.ent, arcs, true, 'whereTo');
-        var actions = {inside:'CanBeInside',
-                       under :'CanBeUnder'
+        var actions = {inside:'CanBeInside', // left and right are in the present only
+                       under :'CanBeUnder'   // I guess I could also let that be in the future
+                                             // but more than consistency I played with different options
+                                             // and either way sounds plausible in a real person interpretation
         };
         var verb = actions[head.loc.rel];
-        if(verb != null) {
+        if(verb != null) { // these is where the future type constrains are appended.
             var constrain : ConstrainNode<T> = {type: verb,
                                                 stringParameter: null,
                                                 futureTense : true};
@@ -55,7 +65,7 @@ module Constrains {
                                    futureTense : true},
                       variable2 : whereTo});
             arcs.add({variable1 : whereTo,
-                      constrain : {type: "Reverse_" + verb,
+                      constrain : {type: "Reverse_" + verb, // reverse nodes are just renamed verbs
                                    stringParameter: null,
                                    futureTense : true},
                       variable2 : what});
@@ -64,6 +74,7 @@ module Constrains {
         return {what : what.domain, whereTo : relatedArcs<T>(whereTo, notActiveArcs, true)};
     }
 
+    // this is the arc reduction algorithm in the book
     function arcReduction<T>(arcs : collections.LinkedList<ArcNode<T>>,
                              state : WorldState):collections.LinkedList<ArcNode<T>> {
         var notActiveArcs : collections.LinkedList<ArcNode<T>> = new collections.LinkedList<ArcNode<T>>();
@@ -77,12 +88,14 @@ module Constrains {
         return notActiveArcs;
     }
 
+    // just used this when debugging
     export class Error implements Error {
         public name = "Constrainer.Error";
         constructor(public message? : string) {}
         public toString() {return this.name + ": " + this.message}
     }
 
+    // just used this when debugging
     function printArcs<T>(str: string, arcs : collections.LinkedList<ArcNode<T>>) {
         arcs.forEach((obj) => {
             var s : string = '<null>';
@@ -97,6 +110,10 @@ module Constrains {
 
     //////////////////////////////////////////////////////////////////////
     // private functions and classes
+
+    // Future constrains dont need things like size or isA as they cannot possibly change
+    // The program can handle the extra superflous constrains but debugging becomes HELL
+    // with this extra things in the knowledge base. Thus this function
     function relatedArcs<T>(variable : VariableNode<T>,
                             arcs : collections.LinkedList<ArcNode<T>>,
                             withFixProperties : boolean) : collections.LinkedList<ArcNode<T>> {
@@ -117,6 +134,8 @@ module Constrains {
         return res;
     }
 
+    ///////////////////////////////////////////////////////
+    // This construct the arcs from the parse tree entities
     function constructGraph<T>(fullDomain : collections.Set<T>,
                                node : Parser.Entity,
                                arcs : collections.LinkedList<ArcNode<T>>,
@@ -140,6 +159,8 @@ module Constrains {
         return variable;
     }
 
+    ///////////////////////////////////////////////////////
+    // This construct the arcs from the parse tree locations
     function constructRelation<T>(fullDomain : collections.Set<T>,
                                   variable : VariableNode<T>,
                                   node : Parser.Location,
@@ -154,6 +175,7 @@ module Constrains {
                 constrain : constrain};
     }
 
+    // adds the property restrictions like color or form
     function isAConstrains<T>(variable : VariableNode<T>,
                               obj : Parser.Object,
                               arcs : collections.LinkedList<ArcNode<T>>,
@@ -175,6 +197,7 @@ module Constrains {
                                   arcs);
     }
 
+    // needed while I didnt decide what the arc representation was... hopefully compiled away
     function addArcAndConstrain<T>(variable1 : VariableNode<T>,
                                    variable2 : VariableNode<T>,
                                    constrain : ConstrainNode<T>,
@@ -182,8 +205,11 @@ module Constrains {
         arcs.add({variable1 : variable1, constrain : constrain, variable2 : variable2});
     }
 
+    ///////////////////////////////////////////////////////////////////////////////
+    // this flags if the domain changed. and take out the elements from the domain.
+    // The verbs callback functions depende if we are in the present or future
     function reduceVoice<T>(arc : ArcNode<T>,
-                            state : WorldState) {
+                            state : WorldState) : boolean {
         var a = getVoiceAction<T>(arc.constrain.type, arc.constrain.futureTense);
         if(a == null) {
             console.log(' DEBUG / no support for ' + arc.constrain.type+ ' future '+arc.constrain.futureTense);
@@ -205,6 +231,7 @@ module Constrains {
         return ret;
     }
 
+    // arcs that where not active can become relevant if we did change a domain
     function reSheduleArcs<T>(arcs : collections.LinkedList<ArcNode<T>>, variable : ArcNode<T>, notActiveArcs : collections.LinkedList<ArcNode<T>>) {
         var rep : boolean;
         do {
@@ -222,7 +249,8 @@ module Constrains {
 
 
     //////////////////////////////////////////////////////////////////////
-    // Constrains
+    // Constrains WORLD SPECIFIC
+
     function getVoiceAction<T>(act : string, futureTense : boolean) {
         var actions = {hasSize:hasSize, hasColor:hasColor, isA:isA, inside:isInside, ontop:isOntop,
                        under:isUnder, above:isAbove, beside:isBeside, leftof:isLeftof, rightof:isRightof,

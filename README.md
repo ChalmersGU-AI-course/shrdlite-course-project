@@ -1,7 +1,7 @@
 The Shrdlite course project
 ============================
 
-Shrdlite is a programming project in Artificial Intelligence, a course given 
+Shrdlite is a programming project in Artificial Intelligence, a course given
 at the University of Gothenburg and Chalmers University of Technology.
 For more information, see the course webpages:
 
@@ -11,7 +11,7 @@ The goal of the project is to create an interpreter and a planner so that
 a person can control a robot in a blocks world to move around objects,
 by giving commands in natural language.
 
-To make the project more interesting, there is a web-based graphical 
+To make the project more interesting, there is a web-based graphical
 interface from which the user can interact with the blocks world.
 
 The interface is written in TypeScript (which compiles into Javascript),
@@ -32,26 +32,22 @@ Do that. Now.
 What is already implemented and what is missing
 ------------------------------------------------
 
-The natural language parser is already implemented using the 
+The natural language parser is already implemented using the
 [Nearley parsing library] (https://github.com/Hardmath123/nearley).
 
 Furthermore, there are three different implementations of the blocks
 world: the SVGWorld, the ANSIWorld and the simple TextWorld.
 
-What is not implemented correctly is the natural language interpreter
-and the robot planner. What you are given are stubs that return
-a dummy interpretation resp. a dummy plan. Your goal is to implement
-the interpreter and the planner so that the robot behaves as it should.
-
+The interpreter was implemented as well as the planner so that the robot behaves as it should.
 
 Compiling to Javascript or using Ajax CGI
 ------------------------------------------
 
-The preferred way to implement this is to write your programs in a 
+The preferred way to implement this is to write your programs in a
 language that can be compiled directly into Javascript, such as
 TypeScript. The advantage with this is that you can use
 all three ways of interacting (web, text and offline), and that there's
-much less overhead when running. The (possible) disadvantage is that 
+much less overhead when running. The (possible) disadvantage is that
 you cannot use any programming language.
 
 
@@ -72,10 +68,10 @@ The surrounding code for the Shrdlite project is all written in TypeScript,
 which is an argument for continuing with that language. But there are other
 alternatives that should be possible to use, such as:
 
-- [CoffeeScript](http://coffeescript.org) is like a more readable version 
+- [CoffeeScript](http://coffeescript.org) is like a more readable version
   of Javascript, with a very simple one-to-one translation into Javascript.
 
-- [PureScript](http://www.purescript.org) is very inspired from Haskell, with 
+- [PureScript](http://www.purescript.org) is very inspired from Haskell, with
   static types, higher-order functions and Haskell-like syntax.
 
 Using Ajax CGI and a local web server
@@ -83,21 +79,21 @@ Using Ajax CGI and a local web server
 
 (Note: you don't need this if you don't use the CGI approach)
 
-If you really don't want to implement in TypeScript (or JavaScript or CoffeeScript or ...), 
+If you really don't want to implement in TypeScript (or JavaScript or CoffeeScript or ...),
 you can create a CGI script that the HTML file communicates with.
 To be able to use this, and to make the following minor change to the file `shrdlite.html`:
 
 - comment the line importing the file `shrdlite-html.js`, and
   instead uncomment the line importing the file `shrdlite-ajax.js`
 
-To be able to run the graphical interface you need a web server. 
+To be able to run the graphical interface you need a web server.
 There are several options (a very common one is Apache), but for this
-project it is enough to use Python's built-in server. 
+project it is enough to use Python's built-in server.
 
 ### Using the Python 3 web server
 
-For this you need to have Python 3 installed. To start the server, 
-just run this from the command line, from the same directory as the 
+For this you need to have Python 3 installed. To start the server,
+just run this from the command line, from the same directory as the
 file `shrdlite.html`:
 
     python3 -m http.server --cgi 8000
@@ -114,10 +110,10 @@ There is an example dummy CGI Python 3 script in the file `shrdlite_cgi.py`.
 ### Using another programming language via CGI
 
 If you want to use another language that Python, you can either call the other
-language from within Python, or use another web server. E.g., if you want to 
+language from within Python, or use another web server. E.g., if you want to
 use Haskell, there are lots of opportunities (such as Happstack or Snap).
 
-Note that if you choose to use another web server, you have to do some changes 
+Note that if you choose to use another web server, you have to do some changes
 in the file `shrdlite-ajax.ts`, depending on your choice of server.
 
 
@@ -140,13 +136,13 @@ and/or priority queue), so here are two possible TypeScript libraries:
 - [TypeScript-STL] (https://github.com/vovazolotoy/TypeScript-STL)
 - [typescript-collections] (https://github.com/basarat/typescript-collections)
 
-If you're using another language (such as Haskell or Java), please see the 
+If you're using another language (such as Haskell or Java), please see the
 public libraries of that language.
 
 ### Using JavaScript modules in TypeScript
 
 If you want to use standard JavaScript libraries in TypeScript, you have to
-have a TypeScript declaration file for that library. 
+have a TypeScript declaration file for that library.
 The [DefinitelyTyped library] (https://github.com/borisyankov/DefinitelyTyped)
 contains declaration files for several libraries, such as the following two:
 
@@ -156,8 +152,8 @@ contains declaration files for several libraries, such as the following two:
 ### JavaScript chart parser
 
 The parser is generated by [Nearley] (http://github.com/Hardmath123/nearley).
-The grammar is in the file `grammar.ne`, and it is compiled into the 
-Javascript file `grammar.js`. You don't have to install Nearley if you 
+The grammar is in the file `grammar.ne`, and it is compiled into the
+Javascript file `grammar.js`. You don't have to install Nearley if you
 don't plan to make any changes in the grammar.
 
 
@@ -184,6 +180,9 @@ TypeScript interfaces and classes for the different implementations of the block
 
 TypeScript modules for parsing, interpretation and planning:
 - `Parser.ts`, `Interpreter.ts`, `Planner.ts`
+
+TypeScript modules for Constrain reduction, A* search and a Planning playground or inner world:
+- `Constrains.ts`, `Seacher.ts`, `InnerWorld.ts`
 
 Grammar files used by the Nearley chartparser:
 - `grammar.js`, `grammar.ne`

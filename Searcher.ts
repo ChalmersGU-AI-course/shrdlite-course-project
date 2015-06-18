@@ -8,7 +8,8 @@
 //  in the frontier. That makes the program work as a general optimizer
 //  for all the plans,
 //
-//  kind of worked except I have seen it prefer a worst plan. Maybe its the hieuristic or maybe the bug is here
+//  kind of worked exept I have seen it prefer a worst plan. Maybe its the hieuristic or maybe the bug is here
+//  it was the hiuristic
 
 module Searcher {
 
