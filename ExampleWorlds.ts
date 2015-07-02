@@ -67,14 +67,29 @@ ExampleWorlds["medium"] = {
         "take a red object",
         "take the white ball",
         "put all boxes on the floor",
-        "put the large plank under the blue brick",
+        "put the large plank under the green brick",
         "move all bricks on a table",
         "move all balls inside a large box"
     ]
 };
 
+ExampleWorlds["debug"] = {
+    "stacks": [[],[],[],["k","m","f"],[]],
+    "holding": "a",
+    "arm": 0,
+    "objects": {
+        "a": { "form":"brick",   "size":"large",  "color":"green" },
+        "f": { "form":"ball",    "size":"small",  "color":"black" },
+        "k": { "form":"box",     "size":"large",  "color":"yellow"},
+        "m": { "form":"box",     "size":"small",  "color":"blue"  }
+    },
+    "examples": [
+        "put the black ball in a box on the floor",
+    ]
+};
 
-ExampleWorlds["small"] = { 
+
+ExampleWorlds["small"] = {
     "stacks": [["e"],["g","l"],[],["k","m","f"],[]],
     "holding": "a",
     "arm": 0,
@@ -104,7 +119,7 @@ ExampleWorlds["small"] = {
 };
 
 
-ExampleWorlds["impossible"] = { 
+ExampleWorlds["impossible"] = {
     "stacks": [["lbrick1","lball1","sbrick1"], [],
                ["lpyr1","lbox1","lplank2","sball2"], [],
                ["sbrick2","sbox1","spyr1","ltable1","sball1"]],

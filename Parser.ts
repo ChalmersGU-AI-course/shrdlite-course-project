@@ -1,4 +1,4 @@
-///<reference path="World.ts"/>
+//<reference path="World.ts"/>
 ///<reference path="lib/node.d.ts"/>
 
 module Parser {
@@ -14,14 +14,14 @@ module Parser {
         } catch(err) {
             if ('offset' in err) {
                 throw new Parser.Error(
-                    'Parsing failed after ' + err.offset + ' characters', err.offset);
-                // parsestr.slice(0, err.offset) + '<HERE>' + parsestr.slice(err.offset);
+                    'Parsing failed (at position ' + err.offset + ': "' +
+                        parsestr.slice(0, err.offset) + '<HERE>' + parsestr.slice(err.offset) + '")');
             } else {
                 throw err;
             }
         }
         if (!results.length) {
-            throw new Parser.Error('Incomplete input', parsestr.length);
+            throw new Parser.Error('Parsing failed (incomplete input: "' + parsestr + '<HERE>")');
         }
         return results.map((c) => {
             return {input: input, prs: clone(c)};
@@ -34,7 +34,7 @@ module Parser {
     export interface Entity {quant:string; obj:Object;}
     export interface Location {rel:string; ent:Entity;}
     // The following should really be a union type, but TypeScript doesn't support that:
-    export interface Object {obj?:Object; loc?:Location; 
+    export interface Object {obj?:Object; loc?:Location;
                              size?:string; color?:string; form?:string;}
 
 
@@ -94,5 +94,3 @@ if (typeof require !== 'undefined') {
     var nearley = require('./lib/nearley.js');
     var grammar = require('./grammar.js');
 }
-
-
