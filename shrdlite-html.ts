@@ -7,12 +7,12 @@ var defaultWorld = 'small';
 var defaultSpeech = false;
 
 $(function(){
-    var current = getURLParameter('world');
+    var current : string = getURLParameter('world');
     if (!(current in ExampleWorlds)) {
         current = defaultWorld;
     }
-    var speech = (getURLParameter('speech') || "").toLowerCase();
-    var useSpeech = (speech == 'true' || speech == '1' || defaultSpeech);
+    var speech : string = (getURLParameter('speech') || "").toLowerCase();
+    var useSpeech : boolean = (speech == 'true' || speech == '1' || defaultSpeech);
 
     $('#currentworld').text(current);
     $('<a>').text('reset')
@@ -31,13 +31,16 @@ $(function(){
         .attr('href', '?world=' + current + '&speech=' + (!useSpeech))
         .appendTo($('#togglespeech'));
 
-    var world = new SVGWorld(ExampleWorlds[current], useSpeech);
+    var world : World = new SVGWorld(ExampleWorlds[current], useSpeech);
     Shrdlite.interactive(world);
 });
 
 
 // Adapted from: http://www.openjs.com/scripts/events/exit_confirmation.php
-function goodbye(e) {
+function goodbye(e : any) {
+    // Note: the type of 'e' is really 'Event', but its interface says that
+    // 'e.returnValue' is a boolean, which is not the case, so we set the type to 'any'
+
 	if(!e) e = window.event;
 	// e.cancelBubble is supported by IE - this will kill the bubbling process.
 	e.cancelBubble = true;
@@ -55,7 +58,7 @@ window.onbeforeunload = goodbye;
 
 
 // Adapted from: http://www.jquerybyexample.net/2012/06/get-url-parameters-using-jquery.html
-function getURLParameter(sParam) : string {
+function getURLParameter(sParam : string) : string {
     var sPageURL = window.location.search.slice(1);
     var sURLVariables = sPageURL.split('&');
     for (var i = 0; i < sURLVariables.length; i++) {
@@ -64,4 +67,5 @@ function getURLParameter(sParam) : string {
             return sParameterName[1];
         }
     }
+    return "";
 }​

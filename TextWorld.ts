@@ -3,38 +3,38 @@
 
 class TextWorld implements World {
 
-    constructor(public currentState: WorldState) {
+    constructor(public currentState : WorldState) {
         if (!this.currentState.arm) this.currentState.arm = 0;
         if (this.currentState.holding) this.currentState.holding = null;
     }
 
-    public readUserInput(prompt, callback) {
+    public readUserInput(prompt : string, callback : (input:string) => void) : void {
         throw "Not implemented!";
     }
 
-    public printSystemOutput(output, participant?) {
+    public printSystemOutput(output : string, participant? : string) : void {
         if (participant == "user") {
             output = '"' + output + '"';
         }
         console.log(output);
     }
 
-    public printDebugInfo(info) {
+    public printDebugInfo(info : string) : void {
         console.log(info);
     }
 
-    public printError(error, message?) {
+    public printError(error : string, message? : string) : void {
         console.error(error, message);
     }
 
-    public printWorld(callback? : ()=>void) {
+    public printWorld(callback? : () => void) {
         console.log();
-        var stacks = this.currentState.stacks;
-        var maxHeight = Math.max.apply(null, stacks.map((s) => {return s.length}));
-        var stackWidth = 3 + Math.max.apply(null, stacks.map((s) => {
+        var stacks : string[][] = this.currentState.stacks;
+        var maxHeight : number = Math.max.apply(null, stacks.map((s) => {return s.length}));
+        var stackWidth : number = 3 + Math.max.apply(null, stacks.map((s) => {
             return Math.max.apply(null, s.map((o) => {return o.length}))
         }));
-        var line = Array(this.currentState.arm * stackWidth).join(" ");
+        var line : string = Array(this.currentState.arm * stackWidth).join(" ");
         console.log(line + this.centerString("\\_/", stackWidth));
         if (this.currentState.holding) {
             console.log(line + this.centerString(this.currentState.holding, stackWidth));
@@ -54,18 +54,20 @@ class TextWorld implements World {
         }
         console.log(line);
         console.log();
-        var printObject = (obj) => {
-            var props = world.currentState.objects[obj];
+        var printObject = (obj : string) => {
+            var props : ObjectDefinition = world.currentState.objects[obj];
             console.log(this.centerString(obj, stackWidth) + ": " +
-                        Object.keys(props).map((k) => {return props[k]}).join(", "));
+                        props.form + ", " + props.size + ", " + props.color
+                       );
+                        // Object.keys(props).map((k) => {return props[k]}).join(", "));
         };
         if (this.currentState.holding) printObject(this.currentState.holding);
-        stacks.forEach((stack) => stack.forEach(printObject));
+        stacks.forEach((stack : string[]) => stack.forEach(printObject));
         console.log();
         if (callback) callback();
     }
 
-    public performPlan(plan, callback?) {
+    public performPlan(plan : string[], callback? : () => void) : void {
         var planctr = 0;
         var world = this;
         function performNextAction() {
@@ -96,12 +98,13 @@ class TextWorld implements World {
     //////////////////////////////////////////////////////////////////////
     // The basic actions: left, right, pick, drop
 
-    private getAction(act) {
-        var actions = {p:this.pick, d:this.drop, l:this.left, r:this.right};
+    private getAction(act : string) : (callback:()=>void) => void {
+        var actions : {[act:string] : (callback:()=>void) => void}
+            = {p:this.pick, d:this.drop, l:this.left, r:this.right};
         return actions[act.toLowerCase()];
     }
 
-    private left(callback: ()=>void) {
+    private left(callback : () => void) : void {
         if (this.currentState.arm <= 0) {
             throw "Already at left edge!";
         }
@@ -109,7 +112,7 @@ class TextWorld implements World {
         callback();
     }
 
-    private right(callback: ()=>void) {
+    private right(callback : () => void) : void {
         if (this.currentState.arm >= this.currentState.stacks.length - 1) {
             throw "Already at right edge!";
         }
@@ -117,7 +120,7 @@ class TextWorld implements World {
         callback();
     }
 
-    private pick(callback: ()=>void) {
+    private pick(callback: () => void) : void {
         if (this.currentState.holding) {
             throw "Already holding something!";
         }
@@ -130,7 +133,7 @@ class TextWorld implements World {
         callback();
     }
 
-    private drop(callback: ()=>void) {
+    private drop(callback: () => void) : void {
         if (!this.currentState.holding) {
             throw "Not holding anything!";
         }
@@ -143,7 +146,7 @@ class TextWorld implements World {
     //////////////////////////////////////////////////////////////////////
     // Utilities
 
-    private centerString(str, width) {
+    private centerString(str : string, width : number) : string {
 		var padlen = width - str.length;
 	    if (padlen > 0) {
             str = Array(Math.floor((padlen+3)/2)).join(" ") + str + Array(Math.floor((padlen+2)/2)).join(" ");
