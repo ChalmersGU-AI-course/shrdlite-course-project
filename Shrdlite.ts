@@ -32,55 +32,65 @@ module Shrdlite {
     // - then it creates plan(s) for the interpretation(s)
 
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
+        // Parsing
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
             var parses : Parser.Result[] = Parser.parse(utterance);
-        } catch(err) {
-            if (err instanceof Parser.Error) {
-                world.printError("Parsing error", err.message);
-                return;
-            } else {
-                throw err;
-            }
+            world.printDebugInfo("Found " + parses.length + " parses");
+            parses.forEach((result, n) => {
+                world.printDebugInfo("  (" + n + ") " + Parser.stringify(result));
+            });
         }
-        world.printDebugInfo("Found " + parses.length + " parses");
-        parses.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Parser.parseToString(res));
-        });
+        catch(err) {
+            world.printError("Parsing error", err);
+            return;
+        }
 
+        // Interpretation
         try {
             var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
-        } catch(err) {
-            if (err instanceof Interpreter.Error) {
-                world.printError("Interpretation error", err.message);
-                return;
-            } else {
-                throw err;
+            world.printDebugInfo("Found " + interpretations.length + " interpretations");
+            interpretations.forEach((result, n) => {
+                world.printDebugInfo("  (" + n + ") " + Interpreter.stringify(result));
+            });
+
+            if (interpretations.length > 1) {
+                // several interpretations were found -- how should this be handled?
+                // should we throw an ambiguity error?
+                // ... throw new Error("Ambiguous utterance");
+                // or should we let the planner decide?
             }
         }
-        world.printDebugInfo("Found " + interpretations.length + " interpretations");
-        interpretations.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Interpreter.interpretationToString(res));
-        });
+        catch(err) {
+            world.printError("Interpretation error", err);
+            return;
+        }
 
+        // Planning
         try {
             var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
-        } catch(err) {
-            if (err instanceof Planner.Error) {
-                world.printError("Planning error", err.message);
-                return;
-            } else {
-                throw err;
+            world.printDebugInfo("Found " + plans.length + " plans");
+            plans.forEach((result, n) => {
+                world.printDebugInfo("  (" + n + ") " + Planner.stringify(result));
+            });
+
+            if (plans.length > 1) {
+                // several plans were found -- how should this be handled?
+                // this means that we have several interpretations,
+                // should we throw an ambiguity error?
+                // ... throw new Error("Ambiguous utterance");
+                // or should we select the interpretation with the shortest plan?
+                // ... plans.sort((a, b) => {return a.length - b.length});
             }
         }
-        world.printDebugInfo("Found " + plans.length + " plans");
-        plans.forEach((res, n) => {
-            world.printDebugInfo("  (" + n + ") " + Planner.planToString(res));
-        });
+        catch(err) {
+            world.printError("Planning error", err);
+            return;
+        }
 
-        var plan : string[] = plans[0].plan;
-        world.printDebugInfo("Final plan: " + plan.join(", "));
-        return plan;
+        var finalPlan : string[] = plans[0].plan;
+        world.printDebugInfo("Final plan: " + finalPlan.join(", "));
+        return finalPlan;
     }
 
 
@@ -89,7 +99,8 @@ module Shrdlite {
 
     export function splitStringIntoPlan(planstring : string) : string[] {
         var plan : string[] = planstring.trim().split(/\s+/);
-        var actions = {p:"pick", d:"drop", l:"left", r:"right"};
+        var actions : {[act:string] : string}
+            = {p:"Picking", d:"Dropping", l:"Going left", r:"Going right"};
         for (var i = plan.length-1; i >= 0; i--) {
             if (!actions[plan[i]]) {
                 return;

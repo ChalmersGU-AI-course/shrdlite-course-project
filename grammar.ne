@@ -37,17 +37,17 @@ function R(obj) {
 
 main --> will_you:? please:? command please:?  {% R(2) %}  
 
-command --> take entity           {% R({cmd:"take", ent:1}) %}
-command --> move  it    location  {% R({cmd:"put", loc:2}) %}
-command --> move entity location  {% R({cmd:"move", ent:1, loc:2}) %}
+command --> take entity           {% R({command:"take", entity:1}) %}
+command --> move  it    location  {% R({command:"put", location:2}) %}
+command --> move entity location  {% R({command:"move", entity:1, location:2}) %}
 
-location --> relation entity  {% R({rel:0, ent:1}) %}
+location --> relation entity  {% R({relation:0, entity:1}) %}
 
-entity --> quantifierSG objectSG  {% R({quant:0, obj:1}) %}
-entity --> quantifierPL objectPL  {% R({quant:0, obj:1}) %}
+entity --> quantifierSG objectSG  {% R({quantifier:0, object:1}) %}
+entity --> quantifierPL objectPL  {% R({quantifier:0, object:1}) %}
 
-objectSG --> objectSG that_is:?  location  {% R({obj:0, loc:2}) %}
-objectPL --> objectPL that_are:? location  {% R({obj:0, loc:2}) %}
+objectSG --> objectSG that_is:?  location  {% R({object:0, location:2}) %}
+objectPL --> objectPL that_are:? location  {% R({object:0, location:2}) %}
 
 objectSG --> size:? color:? formSG  {% R({size:0, color:1, form:2}) %}
 objectPL --> size:? color:? formPL  {% R({size:0, color:1, form:2}) %}

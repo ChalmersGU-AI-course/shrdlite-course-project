@@ -13,57 +13,60 @@ module Parser {
             var results : Command[] = nearleyParser.feed(parsestr).results;
         } catch(err) {
             if ('offset' in err) {
-                throw new Parser.Error(
-                    'Parsing failed after ' + err.offset + ' characters', err.offset);
-                // parsestr.slice(0, err.offset) + '<HERE>' + parsestr.slice(err.offset);
+                throw new Error('Parsing failed after ' + err.offset + ' characters');
             } else {
                 throw err;
             }
         }
         if (!results.length) {
-            throw new Parser.Error('Incomplete input', parsestr.length);
+            throw new Error('Parsing failed, incomplete input');
         }
-        return results.map((c) => {
-            return {input: input, prs: clone(c)};
+        return results.map((res) => {
+            // We need to clone the parse result, because parts of it is shared with other parses
+            return {input: input, parse: clone(res)};
         });
     }
 
-
-    export interface Result {input:string; prs:Command;}
-    export interface Command {cmd:string; ent?:Entity; loc?:Location;}
-    export interface Entity {quant:string; obj:Object;}
-    export interface Location {rel:string; ent:Entity;}
-    // The following should really be a union type, but TypeScript doesn't support that:
-    export interface Object {obj?:Object; loc?:Location; 
-                             size?:string; color?:string; form?:string;}
-
-
-    export function parseToString(res : Result) : string {
-        return JSON.stringify(res.prs);
+    export interface Result {
+        input : string;
+        parse : Command;
     }
 
+    export interface Command {
+        command : string;
+        entity? : Entity;
+        location? : Location;
+    }
 
-    export class Error implements Error {
-        public name = "Parser.Error";
-        constructor(public message? : string, public offset? : number) {}
-        public toString() {return this.name + ": " + this.message}
+    export interface Entity {
+        quantifier : string;
+        object : Object;
+    }
+
+    export interface Location {
+        relation : string;
+        entity : Entity;
+    }
+
+    // The following should really be a union type, but TypeScript doesn't support that:
+    export interface Object {
+        object? : Object;
+        location? : Location;
+        // Here is the union type divisor
+        size? : string;
+        color? : string;
+        form? : string;
+    }
+
+    export function stringify(result : Result) : string {
+        return JSON.stringify(result.parse);
     }
 
     //////////////////////////////////////////////////////////////////////
     // Utilities
 
     function clone<T>(obj: T): T {
-        if (obj != null && typeof obj == "object") {
-            var result : T = obj.constructor();
-            for (var key in obj) {
-                if (obj.hasOwnProperty(key)) {
-                    result[key] = clone(obj[key]);
-                }
-            }
-            return result;
-        } else {
-            return obj;
-        }
+        return JSON.parse(JSON.stringify(obj));
     }
 
 }

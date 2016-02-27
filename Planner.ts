@@ -7,42 +7,43 @@ module Planner {
     // exported functions, classes and interfaces/types
 
     export function plan(interpretations : Interpreter.Result[], currentState : WorldState) : Result[] {
+        var errors : Error[] = [];
         var plans : Result[] = [];
-        interpretations.forEach((intprt) => {
-            var plan : Result = <Result>intprt;
-            plan.plan = planInterpretation(plan.intp, currentState);
-            plans.push(plan);
+        interpretations.forEach((interpretation) => {
+            try {
+                var result : Result = <Result>interpretation;
+                result.plan = planInterpretation(result.interpretation, currentState);
+                if (result.plan.length == 0) {
+                    result.plan.push("That is already true!");
+                }
+                plans.push(result);
+            } catch(err) {
+                errors.push(err);
+            }
         });
         if (plans.length) {
             return plans;
         } else {
-            throw new Planner.Error("Found no plans");
+            // only throw the first error found
+            throw errors[0];
         }
     }
 
-
-    export interface Result extends Interpreter.Result {plan:string[];}
-
-
-    export function planToString(res : Result) : string {
-        return res.plan.join(", ");
+    export interface Result extends Interpreter.Result {
+        plan : string[];
     }
 
-
-    export class Error implements Error {
-        public name = "Planner.Error";
-        constructor(public message? : string) {}
-        public toString() {return this.name + ": " + this.message}
+    export function stringify(result : Result) : string {
+        return result.plan.join(", ");
     }
-
 
     //////////////////////////////////////////////////////////////////////
     // private functions
 
-    function planInterpretation(intprt : Interpreter.Literal[][], state : WorldState) : string[] {
+    function planInterpretation(interpretation : Interpreter.Literal[][], state : WorldState) : string[] {
         // This function returns a dummy plan involving a random stack
         do {
-            var pickstack = getRandomInt(state.stacks.length);
+            var pickstack = Math.floor(Math.random() * state.stacks.length);
         } while (state.stacks[pickstack].length == 0);
         var plan : string[] = [];
 
@@ -83,11 +84,6 @@ module Planner {
                   "d");
 
         return plan;
-    }
-
-
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
     }
 
 }
