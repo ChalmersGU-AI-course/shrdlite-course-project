@@ -8,7 +8,7 @@ TARGETS = html ajax ansi offline
 TSFILES = $(wildcard *.ts)
 
 help:
-	@echo "make help | clean | all | shrdlite-html.js | shrdlite-offline.js | ..."
+	@echo "make help | clean | all | shrdlite-html.js | shrdlite-offline.js"
 
 clean:
 	rm -f $(TSFILES:%.ts=%.js) *.map
