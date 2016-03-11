@@ -35,7 +35,7 @@ the SVGWorld and the TextWorld.
 
 What is not implemented correctly is the natural language interpreter
 and the robot planner. What you are given are stubs that return
-a dummy interpretation resp. a dummy plan. Your goal is to implement
+a dummy interpretation and a dummy plan respectively. Your goal is to implement
 the interpreter and the planner so that the robot behaves as it should.
 
 Furthermore, there is an initial implementation of weighted graphs in `Graph.ts`.
@@ -64,11 +64,11 @@ There is a Makefile if you want to use the GNU Make system. Here's what it can d
 
 You probably want to use some kind of collection datatype (such as a heap
 and/or priority queue), and we suggest the following library:
-here are two possible TypeScript libraries:
 
 - [typescript-collections] (https://github.com/basarat/typescript-collections)
 
-In fact, it's already included in the `lib` directory.
+In fact, you have to use this library anyway (in Graph.ts) and it's
+already included in the `lib` directory.
 
 ### Using JavaScript modules in TypeScript
 

@@ -26,11 +26,29 @@ module Shrdlite {
     }
 
 
-    // Generic function that takes an utterance and returns a plan:
-    // - first it parses the utterance
-    // - then it interprets the parse(s)
-    // - then it creates plan(s) for the interpretation(s)
-
+    /**
+     * Generic function that takes an utterance and returns a plan. It works according to the following pipeline:
+     * - first it parses the utterance (Parser.ts)
+     * - then it interprets the parse(s) (Interpreter.ts)
+     * - then it creates plan(s) for the interpretation(s) (Planner.ts)
+     *
+     * Each of the modules Parser.ts, Interpreter.ts and Planner.ts
+     * defines its own version of interface Result, which in the case
+     * of Interpreter.ts and Planner.ts extends the Result interface
+     * from the previous module in the pipeline. In essence, starting
+     * from Parser.Result, each module that it passes through adds its
+     * own result to this structure, since each Result is fed
+     * (directly or indirectly) into the next module.
+     *
+     * There are two sources of ambiguity: a parse might have several
+     * possible interpretations, and there might be more than one plan
+     * for each interpretation. In the code there are placeholders
+     * that you can fill in to decide what to do in each case.
+     *
+     * @param world The current world.
+     * @param utterance The string that represents the command.
+     * @returns A plan in the form of a stack of strings, where each element is either a robot action, like "p" (for pick up) or "r" (for going right), or a system utterance in English that describes what the robot is doing.
+     */
     export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
         // Parsing
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
@@ -94,9 +112,9 @@ module Shrdlite {
     }
 
 
-    // This is a convenience function that recognizes strings
-    // of the form "p r r d l p r d"
-
+    /** This is a convenience function that recognizes strings
+     * of the form "p r r d l p r d"
+     */
     export function splitStringIntoPlan(planstring : string) : string[] {
         var plan : string[] = planstring.trim().split(/\s+/);
         var actions : {[act:string] : string}

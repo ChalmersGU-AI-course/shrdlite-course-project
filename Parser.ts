@@ -1,6 +1,14 @@
 ///<reference path="World.ts"/>
 ///<reference path="lib/node.d.ts"/>
 
+/**
+* Parser module
+*
+* This module parses a command given as a string by the user into a
+* list of possible parses, each of which contains an object of type
+* `Command`.
+*
+*/
 module Parser {
 
     //////////////////////////////////////////////////////////////////////
@@ -27,30 +35,59 @@ module Parser {
         });
     }
 
+    /** The output type of the parser
+    */
     export interface Result {
+	/** The input string given by the user. */
         input : string;
+	/** The `Command` structure that the parser built from `input`. */
         parse : Command;
     }
 
+    /** The type of a command for the robot. */
     export interface Command {
+	/** The verb itself, for example "move", "take", "drop" */
         command : string;
+	/** The object in the world, i.e. the `Entity`, which is the patient/direct object of `command`. */
         entity? : Entity;
+	/** For verbs of motion, this specifies the destination of the action. */
         location? : Location;
     }
 
+    /** A quantified reference (as yet uninterpreted) to an object in the world. */
     export interface Entity {
+	/** Specifies a determiner (e.g. "the", "a/an", "any", "all"). */
         quantifier : string;
         object : Object;
     }
 
+    /** A location in the world. */
     export interface Location {
+	/** A preposition such as "beside", "above", etc. */
         relation : string;
+	/** The entity relative to which the preposition should be interpreted. */
         entity : Entity;
     }
 
-    // The following should really be a union type, but TypeScript doesn't support that:
+    /** 
+     * A user's description of an object in the world. A basic object
+     * is described by its size ("small", "large", etc.), color
+     * ("black", "white", etc.) and form ("object", "ball", "box",
+     * etc.), all of which are optional. An object can also be
+     * described using a relative clause (e.g. "the ball inside the
+     * box"), which is given as an object (field `object?`) and a
+     * location (field `location?`).
+     *
+     * This type should really be a union type, but TypeScript doesn't
+     * support that. Instead, we include all possible fields and
+     * assume that if `object?` and `location?` are set, the others
+     * will be undefined and vice versa.
+     * 
+     */
     export interface Object {
+	/** Recursive reference to an object using a relative clause. */
         object? : Object;
+	/** Location of the object in the relative clause. */
         location? : Location;
         // Here is the union type divisor
         size? : string;
