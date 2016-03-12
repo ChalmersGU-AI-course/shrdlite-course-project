@@ -3,7 +3,7 @@ TARGETS = html ajax ansi offline
 
 .DELETE_ON_ERROR:
 
-.PHONY: help clean all 
+.PHONY: help clean all doc
 
 TSFILES = $(wildcard *.ts)
 
@@ -12,6 +12,10 @@ help:
 
 clean:
 	rm -f $(TSFILES:%.ts=%.js) *.map
+	rm -rf doc
+
+doc:
+	typedoc --name Shrdlite --out doc .
 
 all: shrdlite-html.js shrdlite-offline.js
 
