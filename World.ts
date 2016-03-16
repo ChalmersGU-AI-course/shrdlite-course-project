@@ -21,7 +21,7 @@ interface WorldState {
     /** The stack of objects in each column, given as a list of
      * stacks. Each stack is a list of strings. The strings themselves
      * are keys into the `objects` map, i.e. identifiers. */
-    stacks: string[][];
+    stacks: Stack[];
     /** Which object the robot is currently holding. */
     holding: string;
     /** The column position of the robot arm. */
@@ -31,6 +31,8 @@ interface WorldState {
     /** List of predefined example sentences/utterances that the user can choose from in the UI. */
     examples: string[];
 }
+
+type Stack = string[];
 
 /**
 * Interface for a world. Abstracts over the I/O required to read user

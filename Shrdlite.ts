@@ -36,7 +36,7 @@ module Shrdlite {
      * defines its own version of interface Result, which in the case
      * of Interpreter.ts and Planner.ts extends the Result interface
      * from the previous module in the pipeline. In essence, starting
-     * from Parser.Result, each module that it passes through adds its
+     * from ParseResult, each module that it passes through adds its
      * own result to this structure, since each Result is fed
      * (directly or indirectly) into the next module.
      *
@@ -53,7 +53,7 @@ module Shrdlite {
         // Parsing
         world.printDebugInfo('Parsing utterance: "' + utterance + '"');
         try {
-            var parses : Parser.Result[] = Parser.parse(utterance);
+            var parses : Parser.ParseResult[] = Parser.parse(utterance);
             world.printDebugInfo("Found " + parses.length + " parses");
             parses.forEach((result, n) => {
                 world.printDebugInfo("  (" + n + ") " + Parser.stringify(result));
@@ -66,7 +66,7 @@ module Shrdlite {
 
         // Interpretation
         try {
-            var interpretations : Interpreter.Result[] = Interpreter.interpret(parses, world.currentState);
+            var interpretations : Interpreter.InterpretationResult[] = Interpreter.interpret(parses, world.currentState);
             world.printDebugInfo("Found " + interpretations.length + " interpretations");
             interpretations.forEach((result, n) => {
                 world.printDebugInfo("  (" + n + ") " + Interpreter.stringify(result));
@@ -86,7 +86,7 @@ module Shrdlite {
 
         // Planning
         try {
-            var plans : Planner.Result[] = Planner.plan(interpretations, world.currentState);
+            var plans : Planner.PlannerResult[] = Planner.plan(interpretations, world.currentState);
             world.printDebugInfo("Found " + plans.length + " plans");
             plans.forEach((result, n) => {
                 world.printDebugInfo("  (" + n + ") " + Planner.stringify(result));

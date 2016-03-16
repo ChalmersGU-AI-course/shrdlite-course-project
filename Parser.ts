@@ -14,7 +14,7 @@ module Parser {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
-    export function parse(input:string) : Result[] {
+    export function parse(input:string) : ParseResult[] {
         var nearleyParser = new nearley.Parser(grammar.ParserRules, grammar.ParserStart);
         var parsestr = input.toLowerCase().replace(/\W/g, "");
         try {
@@ -37,7 +37,7 @@ module Parser {
 
     /** The output type of the parser
     */
-    export interface Result {
+    export interface ParseResult {
 	/** The input string given by the user. */
         input : string;
 	/** The `Command` structure that the parser built from `input`. */
@@ -95,7 +95,7 @@ module Parser {
         form? : string;
     }
 
-    export function stringify(result : Result) : string {
+    export function stringify(result : ParseResult) : string {
         return JSON.stringify(result.parse);
     }
 

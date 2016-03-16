@@ -50,8 +50,8 @@ class SearchResult<Node> {
 function aStarSearch<Node> (
     graph : Graph<Node>,
     start : Node,
-    goal : (Node) => boolean,
-    heuristics : (Node) => number,
+    goal : (n:Node) => boolean,
+    heuristics : (n:Node) => number,
     timeout : number
 ) : SearchResult<Node> {
     // A dummy search result: it just picks the first possible neighbour

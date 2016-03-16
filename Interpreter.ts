@@ -33,14 +33,14 @@ module Interpreter {
 Top-level function for the Interpreter. It calls `interpretCommand` for each possible parse of the command. No need to change this one.
 * @param parses List of parses produced by the Parser.
 * @param currentState The current state of the world.
-* @returns Augments Parser.Result with a list of interpretations. Each interpretation is represented by a list of Literals.
+* @returns Augments ParseResult with a list of interpretations. Each interpretation is represented by a list of Literals.
 */    
-    export function interpret(parses : Parser.Result[], currentState : WorldState) : Result[] {
+    export function interpret(parses : Parser.ParseResult[], currentState : WorldState) : InterpretationResult[] {
         var errors : Error[] = [];
-        var interpretations : Result[] = [];
+        var interpretations : InterpretationResult[] = [];
         parses.forEach((parseresult) => {
             try {
-                var result : Result = <Result>parseresult;
+                var result : InterpretationResult = <InterpretationResult>parseresult;
                 result.interpretation = interpretCommand(result.parse, currentState);
                 interpretations.push(result);
             } catch(err) {
@@ -55,9 +55,12 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
         }
     }
 
-    export interface Result extends Parser.Result {
-        interpretation : Literal[][];
+    export interface InterpretationResult extends Parser.ParseResult {
+        interpretation : DNFFormula;
     }
+
+    export type DNFFormula = Conjunction[];
+    type Conjunction = Literal[];
 
     /**
     * A Literal represents a relation that is intended to
@@ -80,7 +83,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
         args : string[];
     }
 
-    export function stringify(result : Result) : string {
+    export function stringify(result : InterpretationResult) : string {
         return result.interpretation.map((literals) => {
             return literals.map((lit) => stringifyLiteral(lit)).join(" & ");
             // return literals.map(stringifyLiteral).join(" & ");
@@ -104,12 +107,12 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
      * @param state The current state of the world. Useful to look up objects in the world.
      * @returns A list of list of Literal, representing a formula in disjunctive normal form (disjunction of conjunctions). See the dummy interpetation returned in the code for an example, which means ontop(a,floor) AND holding(b).
      */
-    function interpretCommand(cmd : Parser.Command, state : WorldState) : Literal[][] {
+    function interpretCommand(cmd : Parser.Command, state : WorldState) : DNFFormula {
         // This returns a dummy interpretation involving two random objects in the world
         var objects : string[] = Array.prototype.concat.apply([], state.stacks);
         var a : string = objects[Math.floor(Math.random() * objects.length)];
         var b : string = objects[Math.floor(Math.random() * objects.length)];
-        var interpretation : Literal[][] = [[
+        var interpretation : DNFFormula = [[
             {polarity: true, relation: "ontop", args: [a, "floor"]},
             {polarity: true, relation: "holding", args: [b]}
         ]];
