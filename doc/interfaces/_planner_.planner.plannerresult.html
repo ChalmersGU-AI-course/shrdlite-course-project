@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Result | Shrdlite</title>
+	<title>PlannerResult | Shrdlite</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -57,16 +57,16 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/_interpreter_.html">&quot;Interpreter&quot;</a>
+					<a href="../modules/_planner_.html">&quot;Planner&quot;</a>
 				</li>
 				<li>
-					<a href="../modules/_interpreter_.interpreter.html">Interpreter</a>
+					<a href="../modules/_planner_.planner.html">Planner</a>
 				</li>
 				<li>
-					<a href="_interpreter_.interpreter.result.html">Result</a>
+					<a href="_planner_.planner.plannerresult.html">PlannerResult</a>
 				</li>
 			</ul>
-			<h1>Interface Result</h1>
+			<h1>Interface PlannerResult</h1>
 		</div>
 	</div>
 </header>
@@ -77,15 +77,10 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<a href="_parser_.parser.result.html" class="tsd-signature-type">Result</a>
+						<a href="_interpreter_.interpreter.interpretationresult.html" class="tsd-signature-type">InterpretationResult</a>
 						<ul class="tsd-hierarchy">
 							<li>
-								<span class="target">Result</span>
-								<ul class="tsd-hierarchy">
-									<li>
-										<a href="_planner_.planner.result.html" class="tsd-signature-type">Result</a>
-									</li>
-								</ul>
+								<span class="target">PlannerResult</span>
 							</li>
 						</ul>
 					</li>
@@ -98,9 +93,10 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited"><a href="_interpreter_.interpreter.result.html#input" class="tsd-kind-icon">input</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interpreter_.interpreter.result.html#interpretation" class="tsd-kind-icon">interpretation</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited"><a href="_interpreter_.interpreter.result.html#parse" class="tsd-kind-icon">parse</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited"><a href="_planner_.planner.plannerresult.html#input" class="tsd-kind-icon">input</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited"><a href="_planner_.planner.plannerresult.html#interpretation" class="tsd-kind-icon">interpretation</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited"><a href="_planner_.planner.plannerresult.html#parse" class="tsd-kind-icon">parse</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_planner_.planner.plannerresult.html#plan" class="tsd-kind-icon">plan</a></li>
 							</ul>
 						</section>
 					</div>
@@ -113,7 +109,7 @@
 					<h3>input</h3>
 					<div class="tsd-signature tsd-kind-icon">input<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
-						<p>Inherited from <a href="_parser_.parser.result.html">Result</a>.<a href="_parser_.parser.result.html#input">input</a></p>
+						<p>Inherited from <a href="_parser_.parser.parseresult.html">ParseResult</a>.<a href="_parser_.parser.parseresult.html#input">input</a></p>
 						<ul>
 							<li>Defined in <a href="https://github.com/ChalmersGU-AI-course/shrdlite-course-project/blob/master/Parser.ts#L42">Parser.ts:42</a></li>
 						</ul>
@@ -124,11 +120,12 @@
 						</div>
 					</div>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-inherited">
 					<a name="interpretation" class="tsd-anchor"></a>
 					<h3>interpretation</h3>
-					<div class="tsd-signature tsd-kind-icon">interpretation<span class="tsd-signature-symbol">:</span> <a href="_interpreter_.interpreter.literal.html" class="tsd-signature-type">Literal</a><span class="tsd-signature-symbol">[]</span></div>
+					<div class="tsd-signature tsd-kind-icon">interpretation<span class="tsd-signature-symbol">:</span> <a href="../modules/_interpreter_.interpreter.html#dnfformula" class="tsd-signature-type">DNFFormula</a></div>
 					<aside class="tsd-sources">
+						<p>Inherited from <a href="_interpreter_.interpreter.interpretationresult.html">InterpretationResult</a>.<a href="_interpreter_.interpreter.interpretationresult.html#interpretation">interpretation</a></p>
 						<ul>
 							<li>Defined in <a href="https://github.com/ChalmersGU-AI-course/shrdlite-course-project/blob/master/Interpreter.ts#L59">Interpreter.ts:59</a></li>
 						</ul>
@@ -139,7 +136,7 @@
 					<h3>parse</h3>
 					<div class="tsd-signature tsd-kind-icon">parse<span class="tsd-signature-symbol">:</span> <a href="_parser_.parser.command.html" class="tsd-signature-type">Command</a></div>
 					<aside class="tsd-sources">
-						<p>Inherited from <a href="_parser_.parser.result.html">Result</a>.<a href="_parser_.parser.result.html#parse">parse</a></p>
+						<p>Inherited from <a href="_parser_.parser.parseresult.html">ParseResult</a>.<a href="_parser_.parser.parseresult.html#parse">parse</a></p>
 						<ul>
 							<li>Defined in <a href="https://github.com/ChalmersGU-AI-course/shrdlite-course-project/blob/master/Parser.ts#L44">Parser.ts:44</a></li>
 						</ul>
@@ -149,6 +146,16 @@
 							<p>The <code>Command</code> structure that the parser built from <code>input</code>.</p>
 						</div>
 					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="plan" class="tsd-anchor"></a>
+					<h3>plan</h3>
+					<div class="tsd-signature tsd-kind-icon">plan<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ChalmersGU-AI-course/shrdlite-course-project/blob/master/Planner.ts#L49">Planner.ts:49</a></li>
+						</ul>
+					</aside>
 				</section>
 			</section>
 		</div>
@@ -164,19 +171,19 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_graph_.html">"<wbr>Graph"</a>
 					</li>
-					<li class="current tsd-kind-external-module">
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/_interpreter_.html">"<wbr>Interpreter"</a>
-						<ul>
-							<li class="current tsd-kind-module tsd-parent-kind-external-module tsd-is-not-exported">
-								<a href="../modules/_interpreter_.interpreter.html">Interpreter</a>
-							</li>
-						</ul>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_parser_.html">"<wbr>Parser"</a>
 					</li>
-					<li class=" tsd-kind-external-module">
+					<li class="current tsd-kind-external-module">
 						<a href="../modules/_planner_.html">"<wbr>Planner"</a>
+						<ul>
+							<li class="current tsd-kind-module tsd-parent-kind-external-module tsd-is-not-exported">
+								<a href="../modules/_planner_.planner.html">Planner</a>
+							</li>
+						</ul>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_svgworld_.html">"SVGWorld"</a>
@@ -203,38 +210,35 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="_interpreter_.interpreter.literal.html" class="tsd-kind-icon">Literal</a>
-					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface tsd-parent-kind-module">
-						<a href="_interpreter_.interpreter.result.html" class="tsd-kind-icon">Result</a>
+						<a href="_planner_.planner.plannerresult.html" class="tsd-kind-icon">Planner<wbr>Result</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-inherited">
-								<a href="_interpreter_.interpreter.result.html#input" class="tsd-kind-icon">input</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_interpreter_.interpreter.result.html#interpretation" class="tsd-kind-icon">interpretation</a>
+								<a href="_planner_.planner.plannerresult.html#input" class="tsd-kind-icon">input</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-inherited">
-								<a href="_interpreter_.interpreter.result.html#parse" class="tsd-kind-icon">parse</a>
+								<a href="_planner_.planner.plannerresult.html#interpretation" class="tsd-kind-icon">interpretation</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-inherited">
+								<a href="_planner_.planner.plannerresult.html#parse" class="tsd-kind-icon">parse</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="_planner_.planner.plannerresult.html#plan" class="tsd-kind-icon">plan</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="../modules/_interpreter_.interpreter.html#interpret" class="tsd-kind-icon">interpret</a>
+						<a href="../modules/_planner_.planner.html#plan" class="tsd-kind-icon">plan</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_interpreter_.interpreter.html#interpretcommand" class="tsd-kind-icon">interpret<wbr>Command</a>
+						<a href="../modules/_planner_.planner.html#planinterpretation" class="tsd-kind-icon">plan<wbr>Interpretation</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="../modules/_interpreter_.interpreter.html#stringify" class="tsd-kind-icon">stringify</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="../modules/_interpreter_.interpreter.html#stringifyliteral" class="tsd-kind-icon">stringify<wbr>Literal</a>
+						<a href="../modules/_planner_.planner.html#stringify" class="tsd-kind-icon">stringify</a>
 					</li>
 				</ul>
 			</nav>

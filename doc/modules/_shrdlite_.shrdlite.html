@@ -136,7 +136,7 @@
 									defines its own version of interface Result, which in the case
 									of Interpreter.ts and Planner.ts extends the Result interface
 									from the previous module in the pipeline. In essence, starting
-									from Parser.Result, each module that it passes through adds its
+									from ParseResult, each module that it passes through adds its
 									own result to this structure, since each Result is fed
 								(directly or indirectly) into the next module.</p>
 								<p>There are two sources of ambiguity: a parse might have several
