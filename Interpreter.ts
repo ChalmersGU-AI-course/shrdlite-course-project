@@ -78,7 +78,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
         relation : string;
 	/** The arguments to the relation. Usually these will be
 	 * either objects or the special strings "floor-N" for N from
-	 * 0 to 7, which can be used to represent the floor at column
+	 * 0 to the number of columns-1, which can be used to represent the floor at column
 	 * N of the world. */
         args : string[];
     }
