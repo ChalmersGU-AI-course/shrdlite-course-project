@@ -1,6 +1,16 @@
 The Shrdlite course project
 ============================
 
+Roadmap
+--------------------------
+- [ ] A* planner (due **30. April**)
+
+- [ ] Natural language interpreter (due **14. May**)
+
+- [ ] Extensions (due ?)
+
+- [ ] Final hand in (due **28. May**)
+
 Todo-List
 --------------------------
 
