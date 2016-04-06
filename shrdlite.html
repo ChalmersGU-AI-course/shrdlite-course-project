@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> 
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Shrdlite</title>
+  <link rel="stylesheet" href="shrdlite.css" type="text/css" />
+  <script type="text/javascript" src="lib/jquery-1.11.0.min.js"></script>
+  <script type="text/javascript" src="lib/nearley.js"></script>
+  <script type="text/javascript" src="grammar.js"></script>
+  <script type="text/javascript" src="shrdlite-html.js"></script>
+</head>
+<body>
+<table id="maincontent">
+  <tr>
+    <th><h1>Shrdlite – the colourful block robot</h1>
+    <th><strong>Current world:</strong>
+      <em><span id="currentworld"></span></em> (<span id="resetworld"></span>)<br>
+      <strong>Speech synthesis:</strong> <span id="togglespeech"></span><br>
+      <strong>Other worlds:</strong> <span id="otherworlds"></span>
+  </tr><tr>
+    <td id="theworld"></td>
+    <td>
+      <div id="dialogue">
+        <form id="inputform">
+          <p><select id="inputexamples"><option value=""></option></select>
+            <br><input type="text" id="userinput">
+          </p>
+        </form>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<div id="footer">
+  <hr>
+  <div id="license">
+    <strong>shrdlite.html</strong> <br>
+    Copyright &copy; 2013-15, Peter Ljungl&ouml;f. <br>
+    This program comes with <em>absolutely no warranty</em>. <br>
+    This is free software, and you are welcome to redistribute it under certain conditions; 
+    read <a href="http://www.gnu.org/licenses/gpl.html" target="__blank"><em>the license</em></a> for details.
+  </div>
+</div>
+</body> 
+</html>
