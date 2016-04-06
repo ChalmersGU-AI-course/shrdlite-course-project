@@ -7,12 +7,12 @@
     height: 500px;
 }
 
-h1 { 
+h1 {
     margin: 0;
 }
 
 body {
-    background-color: #edf;
+    background-color: #dee;
     font-family: Palatino, 'Palatino Linotype', 'Palatino LT STD',
     'Book Antiqua', 'URW Palladio L', Georgia, serif;
     margin: 0 20px;
@@ -26,12 +26,12 @@ th {
 }
 
 #theworld {
-    background-color: #cbe;
+    background-color: #aee;
 }
 
 #maincontent td {
     border: 4px solid black;
-    padding: 0; 
+    padding: 0;
 }
 
 #maincontent {
@@ -94,4 +94,3 @@ th {
     text-align: left;
     margin: 10px 20px;
 }
-
