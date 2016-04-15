@@ -25,20 +25,34 @@ and it can be run in two different modes:
 To be able to run the system you need to install Node.JS and TypeScript.
 Do that. Now.
 
-### What is already implemented and what is missing
+### What is already implemented
 
 The natural language parser is already implemented using the 
 [Nearley parsing library](https://github.com/Hardmath123/nearley).
 
 Furthermore, there are two different implementations of the blocks world:
-the SVGWorld and the TextWorld.
+the SVGWorld and the TextWorld, as well as some example worlds.
+
+Additionally there are lots of other glue code already implemented, including 
+an initial implementation of weighted graphs in `Graph.ts`. 
+
+### What is missing
 
 What is not implemented correctly is the natural language interpreter
 and the robot planner. What you are given are stubs that return
 a dummy interpretation and a dummy plan respectively. Your goal is to implement
 the interpreter and the planner so that the robot behaves as it should.
 
-Furthermore, there is an initial implementation of weighted graphs in `Graph.ts`.
+The following functions are only templates that you have to fill with 
+intelligent code to get the project to work correctly:
+
+- the function `aStarSearch(...)` in the file `Graph.ts`. 
+- the function `interpretCommand(...)` in the file `Interpreter.ts`.
+- the function `planInterpretation(...)` in the file `Planner.ts`.
+- possibly you will also want to modify the function `parseUtteranceIntoPlan(...)` in the file `Shrdlite.ts`.
+
+Depending on which extension you want to implement, there might of course be several 
+other places in the code that need modification.
 
 ### About TypeScript
 
