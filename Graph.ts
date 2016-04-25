@@ -1,4 +1,6 @@
 ///<reference path="lib/collections.ts"/>
+///<reference path="lib/node.d.ts"/>
+
 /** Graph module
 *
 *  Types for generic A\* implementation.
@@ -7,7 +9,6 @@
 *  that you should change is the `aStarSearch` function. Everything
 *  else should be used as-is.
 */
-
 
 /** An edge in a graph. */
 class Edge<Node> {
@@ -161,4 +162,3 @@ class GridGraph implements Graph<GridNode> {
         return str;
     }
 }
-
