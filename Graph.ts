@@ -1,12 +1,18 @@
 ///<reference path="lib/collections.ts"/>
 /** Graph module
-*
-*  Types for generic A\* implementation.
-*
-*  *NB.* The only part of this module
-*  that you should change is the `aStarSearch` function. Everything
-*  else should be used as-is.
-*/
+ *
+ *  Types for generic A\* implementation.
+ *
+ *  *NB.* The only part of this module
+ *  that you should change is the `aStarSearch` function. Everything
+ *  else should be used as-is.
+ */
+
+
+import PriorityQueue = collections.PriorityQueue;
+import Set = collections.Set;
+import Dictionary = collections.Dictionary;
+import LinkedList = collections.LinkedList;
 
 
 /** An edge in a graph. */
@@ -33,20 +39,20 @@ class SearchResult<Node> {
 }
 
 /**
-* A\* search implementation, parameterised by a `Node` type. The code
-* here is just a template; you should rewrite this function
-* entirely. In this template, the code produces a dummy search result
-* which just picks the first possible neighbour.
-*
-* Note that you should not change the API (type) of this function,
-* only its body.
-* @param graph The graph on which to perform A\* search.
-* @param start The initial node.
-* @param goal A function that returns true when given a goal node. Used to determine if the algorithm has reached the goal.
-* @param heuristics The heuristic function. Used to estimate the cost of reaching the goal from a given Node.
-* @param timeout Maximum time to spend performing A\* search.
-* @returns A search result, which contains the path from `start` to a node satisfying `goal` and the cost of this path.
-*/
+ * A\* search implementation, parameterised by a `Node` type. The code
+ * here is just a template; you should rewrite this function
+ * entirely. In this template, the code produces a dummy search result
+ * which just picks the first possible neighbour.
+ *
+ * Note that you should not change the API (type) of this function,
+ * only its body.
+ * @param graph The graph on which to perform A\* search.
+ * @param start The initial node.
+ * @param goal A function that returns true when given a goal node. Used to determine if the algorithm has reached the goal.
+ * @param heuristics The heuristic function. Used to estimate the cost of reaching the goal from a given Node.
+ * @param timeout Maximum time to spend performing A\* search.
+ * @returns A search result, which contains the path from `start` to a node satisfying `goal` and the cost of this path.
+ */
 function aStarSearch<Node> (
     graph : Graph<Node>,
     start : Node,
@@ -54,18 +60,64 @@ function aStarSearch<Node> (
     heuristics : (n:Node) => number,
     timeout : number
 ) : SearchResult<Node> {
-    // A dummy search result: it just picks the first possible neighbour
-    var result : SearchResult<Node> = {
-        path: [start],
-        cost: 0
-    };
-    while (result.path.length < 3) {
-        var edge : Edge<Node> = graph.outgoingEdges(start) [0];
-        if (! edge) break;
-        start = edge.to;
-        result.path.push(start);
-        result.cost += edge.cost;
+
+    var frontier = new Dictionary<Node, number>();
+    frontier.setValue(start, 0)
+    var closed = new Dictionary<Node, Node>();
+    var gCosts = new Dictionary<Node, number>();
+    var numIterations = 0;
+
+    var goalState = undefined;
+
+    while (!frontier.isEmpty() && numIterations <= timeout) {
+        // Retrieve node with lowest fCost
+        var currentNode = undefined;
+        frontier.forEach(function (node) {
+            if (!currentNode) {
+                currentNode = node;
+            } else {
+                if (frontier.getValue(node) < frontier.getValue(currentNode)) {
+                    currentNode = node;
+                }
+            }
+        });
+
+        // Break when goal node is reached
+        if (goal(currentNode)) {
+            goalState = currentNode;
+        }
+
+        // Add potential neighbours to queue
+        graph.outgoingEdges(currentNode).forEach(function (edge) {
+            // Only consider new node of it has not been explored or its cost has lowered
+            if (!closed.containsKey(edge.to) || gCosts.getValue(edge.from) + edge.cost < gCosts.getValue(edge.to)) {
+                gCosts.setValue(edge.to, gCosts.getValue(edge.from) + edge.cost)
+
+                // fCost = gCost + hCost
+                var fCost = gCosts.getValue(edge.to) + heuristics(edge.to);
+                frontier.setValue(edge.to, fCost);
+
+                closed.setValue(edge.to, edge.from)
+            }
+        });
+
+        numIterations += 1;
     }
+
+    // Reconstruct path and cost
+    currentNode = closed.getValue(goalState);
+    var visitedPath = new LinkedList<Node>();
+    while (currentNode !== start) {
+        visitedPath.add(currentNode);
+        currentNode = closed.getValue(currentNode);
+    }
+    visitedPath.add(currentNode);
+    visitedPath.reverse();
+
+    var result : SearchResult<Node> = {
+        path: visitedPath.toArray(),
+        cost: gCosts.getValue(goalState)
+    };
     return result;
 }
 
