@@ -62,7 +62,7 @@ function aStarSearch<Node> (
 ) : SearchResult<Node> {
 
     var frontier = new Dictionary<Node, number>();
-    frontier.setValue(start, 0)
+    frontier.setValue(start, heuristics(start));
     var closed = new Dictionary<Node, Node>();
     var gCosts = new Dictionary<Node, number>();
     var numIterations = 0;
@@ -85,6 +85,7 @@ function aStarSearch<Node> (
         // Break when goal node is reached
         if (goal(currentNode)) {
             goalState = currentNode;
+            break;
         }
 
         // Add potential neighbours to queue
