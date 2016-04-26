@@ -1,4 +1,7 @@
 ///<reference path="lib/collections.ts"/>
+import Dictionary = collections.Dictionary;
+import LinkedList = collections.LinkedList;
+
 /** Graph module
  *
  *  Types for generic A\* implementation.
@@ -7,12 +10,6 @@
  *  that you should change is the `aStarSearch` function. Everything
  *  else should be used as-is.
  */
-
-
-import PriorityQueue = collections.PriorityQueue;
-import Set = collections.Set;
-import Dictionary = collections.Dictionary;
-import LinkedList = collections.LinkedList;
 
 
 /** An edge in a graph. */
