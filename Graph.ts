@@ -10,6 +10,7 @@
 *  else should be used as-is.
 */
 
+import forEach = collections.arrays.forEach;
 /** An edge in a graph. */
 class Edge<Node> {
     from : Node;
@@ -48,6 +49,7 @@ class SearchResult<Node> {
 * @param timeout Maximum time to spend performing A\* search.
 * @returns A search result, which contains the path from `start` to a node satisfying `goal` and the cost of this path.
 */
+
 function aStarSearch<Node> (
     graph : Graph<Node>,
     start : Node,
@@ -55,21 +57,130 @@ function aStarSearch<Node> (
     heuristics : (n:Node) => number,
     timeout : number
 ) : SearchResult<Node> {
-    // A dummy search result: it just picks the first possible neighbour
-    var result : SearchResult<Node> = {
-        path: [start],
-        cost: 0
-    };
-    while (result.path.length < 3) {
-        var edge : Edge<Node> = graph.outgoingEdges(start) [0];
-        if (! edge) break;
-        start = edge.to;
-        result.path.push(start);
-        result.cost += edge.cost;
+
+    var startTime = Date.now();
+
+    var closedSet = new collections.Set<Node>();
+    var openSet = new collections.Set<Node>();
+    openSet.add(start);
+    var cameFrom : NodeMap<Node>  = {};
+    var gScore : NumberMap = {};
+    gScore[start.toString()] = 0;
+    var fScore: NumberMap = {};
+    fScore[start.toString()] = heuristics(start);
+
+    while (openSet.size() > 0){
+        var current = findLowestScore(openSet, fScore);
+
+        if(goal(current)){
+            return {
+                path: reconstructPath(cameFrom, current).reverse(),
+                cost: gScore[current.toString()]
+            };
+        }
+
+        openSet.remove(current);
+        closedSet.add(current);
+
+        var outgoing = graph.outgoingEdges(current);
+
+        for (var ei in outgoing){
+            var e = outgoing[ei];
+            //console.log(e.to.toString() + " " + e.from.toString());
+            var neighbor = e.to;
+            if(closedSet.contains(neighbor)){
+                continue;
+            }
+
+            var tentativeScore = lookupWithDefaultInfinity(current.toString(), gScore) + e.cost;
+            //console.log("Current: ", current);
+            //console.log("Tscore: ", tentativeScore);
+            //console.log("e.cost: ", e.cost);
+            if (!openSet.contains(neighbor)){
+                openSet.add(neighbor);
+            } else if (tentativeScore >= lookupWithDefaultInfinity(neighbor.toString(), gScore)){
+                continue;
+            }
+
+            cameFrom[neighbor.toString()] = current;
+            gScore[neighbor.toString()] = tentativeScore;
+            fScore[neighbor.toString()] = gScore[neighbor.toString()] + heuristics(neighbor);
+
+        }
+
+        //console.log(gScore);
+
+        var now = Date.now();
+
+        if(now - startTime > timeout){
+            throw "Timeout reached";
+        }
+
+
     }
-    return result;
+
+    throw "No path found";
 }
 
+
+
+function reconstructPath<Node>(cameFrom: NodeMap<Node>, current: Node) : Node[] {
+    var totalPath = [current];
+    while(Object.keys(cameFrom).some(key => key == current.toString()) ){
+        current = cameFrom[current.toString()];
+        totalPath.push(current);
+    }
+    return totalPath;
+}
+
+function findLowestScore<Node>(
+    nodes: collections.Set<Node>,
+    map: NumberMap
+) : Node {
+
+    var startAcc : NodeValueAcc<Node> = {
+        value: Infinity,
+        node: undefined
+    };
+    var nodeArray = nodes.toArray();
+    var res = nodeArray.reduce(function(acc, curr) {
+        var currVal = lookupWithDefaultInfinity(curr.toString(), map);
+        if(!acc.node || currVal < acc.value){
+            acc.node = curr;
+            acc.value = currVal;
+        }
+        return acc;
+    }, startAcc);
+
+    return res.node;
+
+}
+
+function lookupWithDefault(
+    key: string,
+    map: NumberMap,
+    def: number
+): number {
+    var res = map[key];
+    //console.log("Map: ", map, "Key: ", key, "res: ", res);
+    if (res !== undefined) {
+        return res;
+    } else {
+        return def;
+    }
+}
+
+function lookupWithDefaultInfinity(key: string, map: NumberMap) : number {
+    return lookupWithDefault(key, map, Infinity)
+}
+
+interface NumberMap { [s: string]: number; }
+interface NodeMap<Node> { [s: string]: Node }
+
+interface NodeValueAcc<Node> {
+    value: number; 
+    node: Node;
+}
 
 //////////////////////////////////////////////////////////////////////
 // here is an example graph
@@ -161,4 +272,30 @@ class GridGraph implements Graph<GridNode> {
         str += borderRow + "\n";
         return str;
     }
+
+    drawPath(start : GridNode, goal : GridNode, path : GridNode[]) : string {
+    function pathContains(path : GridNode[], n : GridNode) : boolean {
+        for (var p of path) {
+            if (p.pos.x == n.pos.x && p.pos.y == n.pos.y)
+                return true;
+        }
+        return false;
+    }
+    var borderRow = "+" + new Array(this.size.x + 1).join("--+");
+    var betweenRow = "+" + new Array(this.size.x + 1).join("  +");
+    var str = "\n" + borderRow + "\n";
+    for (var y = this.size.y-1; y >= 0; y--) {
+        str += "|";
+        for (var x = 0; x < this.size.x; x++) {
+            str += this.walls.contains(new GridNode({x:x,y:y})) ? "## " :
+                (x == start.pos.x && y == start.pos.y ? " S " :
+                    (x == goal.pos.x && y == goal.pos.y ? " G " :
+                        ((pathContains(path, new GridNode({x:x,y:y})) ? ' * ' : "   "))));
+        }
+        str += "|\n";
+        if (y > 0) str += betweenRow + "\n";
+    }
+    str += borderRow + "\n";
+    return str;
+}
 }
