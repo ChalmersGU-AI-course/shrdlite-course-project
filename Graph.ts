@@ -55,6 +55,12 @@ function aStarSearch<Node> (
     heuristics : (n:Node) => number,
     timeout : number
 ) : SearchResult<Node> {
+    var hasTimedOut = false;
+
+    var timer = setTimeout(function() {
+        hasTimedOut = true;
+    }, timeout);
+
     var openSet = new collections.Set<Node>();
     var closedSet = new collections.Set<Node>();
 
@@ -69,6 +75,11 @@ function aStarSearch<Node> (
     var parent = new collections.Dictionary<Node, Node>();
 
     while (!openSet.isEmpty()) {
+        if (hasTimedOut) {
+          clearTimeout(timer);
+          break;
+        }
+
         var minFScore = Infinity;
         var current : Node;
 
@@ -80,6 +91,8 @@ function aStarSearch<Node> (
         });
 
         if (goal(current)) {
+            clearTimeout(timer);
+
             var result : SearchResult<Node> = {
                 path: [current],
                 cost: gScore.getValue(current)
