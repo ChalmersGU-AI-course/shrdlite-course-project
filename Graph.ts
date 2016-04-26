@@ -55,18 +55,92 @@ function aStarSearch<Node> (
     heuristics : (n:Node) => number,
     timeout : number
 ) : SearchResult<Node> {
-    // A dummy search result: it just picks the first possible neighbour
     var result : SearchResult<Node> = {
-        path: [start],
+        path: [],
         cost: 0
     };
-    while (result.path.length < 3) {
-        var edge : Edge<Node> = graph.outgoingEdges(start) [0];
-        if (! edge) break;
-        start = edge.to;
-        result.path.push(start);
-        result.cost += edge.cost;
+
+    //Compares priority of 2 nodes; highest prio is the one with lowest cost.
+    //Gives <0 if b has prio, >0 if a has prio, =0 if they're equal
+    function nodePriorityComparer( a : Node, b : Node){
+      var aCost : number = toNodeCost.getValue(a) + nodeToGoalEstCost.getValue(a);
+      var bCost : number = toNodeCost.getValue(b) + nodeToGoalEstCost.getValue(b);
+      return bCost - aCost
     }
+    function nodeEquals(a:Node , b:Node){
+      return a.toString()===b.toString();
+    }
+    var startTime = new Date().getTime();
+    //PriorityQueue that holds nodes with lowest cost as highest prio
+    var pQueue = new collections.PriorityQueue<Node>(nodePriorityComparer);
+    //Maps a node to it's calculated travel cost. Will eventually be lowest travel cost to that node
+    var toNodeCost = new collections.Dictionary<Node,number>();
+    //Maps a node to it's calculated travel cost + estimated cost to goal (according to heuristic)
+    var nodeToGoalEstCost = new collections.Dictionary<Node,number>();
+    //Maps a node to the previously visited node. Eventually according to the cheapest path. Used
+    //at the end to find best path recursivly from the goal node.
+    var previousNode = new collections.Dictionary<Node,Node>();
+    //List of visited/evaluated nodes
+    var visitedNodes = new collections.LinkedList<Node>();
+    //List of discovered nodes
+    var discoveredNodes = new collections.LinkedList<Node>();
+
+    //initialising stuff
+    toNodeCost.setValue(start,0);
+    nodeToGoalEstCost.setValue(start,heuristics(start));
+    pQueue.add(start);
+    discoveredNodes.add(start);
+
+    while(!pQueue.isEmpty()){
+      if(new Date().getTime() - startTime > timeout){
+        //Stop if we go over the given timeout timeout
+        return null
+      }
+      //take highest priority node to expand
+      var currentNode : Node = pQueue.dequeue();
+      visitedNodes.add(currentNode);
+      if(goal(currentNode)){
+        //goal in fronteir
+        break
+      }
+      //neighbours of highest prio node
+      var currentNeighbourEdges : Edge<Node>[] = graph.outgoingEdges(currentNode);
+      for(var i=0 ; i < currentNeighbourEdges.length ; i++){
+        var iNeighbour : Node = currentNeighbourEdges[i].to;
+        if(visitedNodes.contains(iNeighbour,nodeEquals)){
+          //console.log("already VISITED " + iNeighbour.toString())
+          //this neighbour is already in the frontier and evaluated
+          continue
+        }
+        var thisPathCost : number = toNodeCost.getValue(currentNode) + currentNeighbourEdges[i].cost;
+        if(discoveredNodes.contains(iNeighbour,nodeEquals)){
+          //Previously discovered node, only update stuff if this is a better path
+          //console.log("already DISCOVERED " + iNeighbour.toString())
+          var oldPathCost : number = toNodeCost.getValue(iNeighbour);
+          if(thisPathCost < oldPathCost){
+            toNodeCost.setValue(iNeighbour,thisPathCost);
+            previousNode.setValue(iNeighbour,currentNode);
+          }
+          continue
+        }
+        //console.log("NEW NODE:" + iNeighbour.toString());
+        //this neighbour is a previously undiscovered node, update stuff
+        toNodeCost.setValue(iNeighbour,thisPathCost);
+        nodeToGoalEstCost.setValue(iNeighbour,heuristics(iNeighbour));
+        previousNode.setValue(iNeighbour,currentNode);
+        pQueue.add(iNeighbour)
+        discoveredNodes.add(iNeighbour);
+      }
+    }
+    // If all went well currentNode should be the goal node, and we can recursivly
+    // rebuild the best path using previousNode
+    result.cost = toNodeCost.getValue(currentNode);
+    var recursiveNode : Node = currentNode;
+    while(recursiveNode!=start){
+      result.path.push(recursiveNode);
+      recursiveNode = previousNode.getValue(recursiveNode);
+    }
+    result.path = result.path.reverse();
     return result;
 }
 
