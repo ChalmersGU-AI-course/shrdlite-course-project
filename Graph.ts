@@ -1,4 +1,5 @@
-///<reference path="lib/collections.ts"/>
+///<reference path="lib/node.d.ts"/>
+// /<reference path="lib/collections.ts"/>
 import Dictionary = collections.Dictionary;
 import LinkedList = collections.LinkedList;
 
@@ -10,7 +11,6 @@ import LinkedList = collections.LinkedList;
  *  that you should change is the `aStarSearch` function. Everything
  *  else should be used as-is.
  */
-
 
 /** An edge in a graph. */
 class Edge<Node> {
@@ -211,4 +211,3 @@ class GridGraph implements Graph<GridNode> {
         return str;
     }
 }
-
