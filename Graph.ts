@@ -110,6 +110,8 @@ function aStarSearch<Node> (
         openSet.remove(current);
         closedSet.add(current);
 
+        var currentGScore = gScore.getValue(current);
+
         for (var edge of graph.outgoingEdges(current)) {
             var neighbor = edge.to;
 
@@ -117,7 +119,7 @@ function aStarSearch<Node> (
                 continue;
             }
 
-            var _gScore = gScore.getValue(current) + edge.cost;
+            var _gScore = currentGScore + edge.cost;
 
             if (!openSet.contains(neighbor)) {
                 openSet.add(neighbor);
@@ -138,5 +140,3 @@ function aStarSearch<Node> (
 
     return result;
 }
-
-
