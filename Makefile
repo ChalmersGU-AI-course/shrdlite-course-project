@@ -19,12 +19,11 @@ doc:
 
 all: shrdlite-html.js shrdlite-offline.js
 
+aStarTests: TestAStar.js
+	node $< all
+
 # Make TypeScript as strict as possible:
 TSC = tsc --noFallthroughCasesInSwitch --noImplicitReturns --noImplicitAny
-
-aStarTests: Graph.ts Test.ts
-	$(TSC) --out Test.js Graph.ts Test.ts
-	node Test.js
 
 %.js: %.ts $(TSFILES)
 	$(TSC) --out $@ $<

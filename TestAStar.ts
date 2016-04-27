@@ -1,214 +1,150 @@
 ///<reference path="lib/collections.ts"/>
 ///<reference path="lib/node.d.ts"/>
 ///<reference path="Graph.ts"/>
+///<reference path="GridGraph.ts"/>
 
 var fs = require('fs');
-
-
-class TestNode {
-    constructor(public pos : Coordinate) {}
-
-    add(delta : Coordinate) : TestNode {
-        return new TestNode({
-            x: this.pos.x + delta.x,
-            y: this.pos.y + delta.y
-        });
-    }
-
-
-    compareTo(other : TestNode) : number {
-        return (this.pos.x - other.pos.x) || (this.pos.y - other.pos.y);
-    }
-    
-    toString() : string {
-        return "(" + this.pos.x + "," + this.pos.y + ")";
-    }
-}
-
-
-class TestGrid implements Graph<TestNode> {
-    private walls : collections.Set<TestNode>;
-
-    constructor(
-        public size : Coordinate,
-        public obstacles : Coordinate[]
-    ) {
-        this.walls = new collections.Set<TestNode>();
-        for (var pos of obstacles) {
-            this.walls.add(new TestNode(pos));
-	    //console.log(pos);
-        }
-        for (var x = -1; x <= size.x; x++) {
-            this.walls.add(new TestNode({x:x, y:-1}));
-            this.walls.add(new TestNode({x:x, y:size.y}));
-        }
-        for (var y = -1; y <= size.y; y++) {
-            this.walls.add(new TestNode({x:-1, y:y}));
-            this.walls.add(new TestNode({x:size.x, y:y}));
-        }
-    }
-
-    outgoingEdges(node : TestNode) : Edge<TestNode>[] {
-        var outgoing : Edge<TestNode>[] = [];
-        for (var dx = -1; dx <= 1; dx++){ 
-            for (var dy = -1; dy <= 1; dy++) {
-	    if (! (dx*dx == dy*dy)) {
-                    var next = node.add({x:dx, y:dy});
-                    if (! this.walls.contains(next)) {
-                        outgoing.push({
-                            from: node,
-                            to: next,
-                            cost: 1 //Math.sqrt(dx*dx + dy*dy)
-                        });
-                    }
-             }
-            }
-        }
-        return outgoing;
-    }
-
-    compareNodes(a : TestNode, b : TestNode) : number {
-        return a.compareTo(b);
-    }
-
-    toString(start : TestNode, goal : TestNode) : string {
-        var borderRow = "+" + new Array(this.size.x + 1).join("--+");
-        var betweenRow = "+" + new Array(this.size.x + 1).join("  +");
-        var str = "\n" + borderRow + "\n";
-        for (var y = this.size.y-1; y >= 0; y--) {
-            str += "|";
-            for (var x = 0; x < this.size.x; x++) {
-                str += this.walls.contains(new TestNode({x:x,y:y})) ? "## " :
-		    (x == start.pos.x && y == start.pos.y ? " S " :
-		     (x == goal.pos.x && y == goal.pos.y ? " G " : "   "));
-            }
-            str += "|\n";
-            if (y > 0) str += betweenRow + "\n";
-        }
-        str += borderRow + "\n";
-        return str;
-    }
-
-    drawPath(start : TestNode, goal : TestNode, path : TestNode[]) : string {
-	function pathContains(path : TestNode[], n : TestNode) : boolean {
-	    for (var p of path) {
-		if (p.pos.x == n.pos.x && p.pos.y == n.pos.y)
-		    return true;
-	    }
-	    return false;
-	}
-	var borderRow = "+" + new Array(this.size.x + 1).join("--+");
-        var betweenRow = "+" + new Array(this.size.x + 1).join("  +");
-        var str = "\n" + borderRow + "\n";
-        for (var y = this.size.y-1; y >= 0; y--) {
-            str += "|";
-            for (var x = 0; x < this.size.x; x++) {
-                str += this.walls.contains(new TestNode({x:x,y:y})) ? "## " :
-		    (x == start.pos.x && y == start.pos.y ? " S " :
-		     (x == goal.pos.x && y == goal.pos.y ? " G " :
-		      ((pathContains(path, new TestNode({x:x,y:y})) ? ' * ' : "   "))));
-            }
-            str += "|\n";
-            if (y > 0) str += betweenRow + "\n";
-        }
-        str += borderRow + "\n";
-        return str;
-    }    
-}
 
 interface TestCase {
     grid_size : number;
     walls : Coordinate[];
-    path : TestNode[];
+    path : GridNode[];
     cost : number
 }
 
-function isPath<Node>(g: Graph<Node>,
-		      start: Node,
-		      goalf: (n:Node) => boolean,
-		      ns : Node[]) : boolean
-{
-//    console.log("isPath " + start + " : " + ns);
-    if (ns === [])
-	return false;
-    if (ns.length == 1)
-	return (goalf(start) && g.compareNodes(ns[0],start) == 0);
-    var found = false;
-    for (var edge of g.outgoingEdges(ns[0])) {
 
-	if (g.compareNodes(ns[1],edge.to) == 0) {
-	    found = true;
-	    break;
-	}
+function checkPath<Node>(graph: Graph<Node>, startnode: Node, path: Node[]) : number
+{
+    function getNeighbor(node: Node, next: Node) : Edge<Node> {
+        for (var edge of graph.outgoingEdges(node)) {
+            if (graph.compareNodes(next, edge.to) == 0)
+                return edge;
+        }
+        return;
     }
-    if (!found)
-	return false;
-    else
-	return isPath(g, ns[1], goalf, ns.slice(1,ns.length));
+    if (path.length == 0)
+        return;
+    if (graph.compareNodes(path[0], startnode) !== 0)
+        path = [startnode].concat(path);
+    var cost = 0;
+    for (var i = 1; i < path.length; i++) {
+        var edge = getNeighbor(path[i-1], path[i]);
+        if (!edge) return undefined;
+        cost += edge.cost;
+    }
+    return cost;
 }
 
-function test(c: TestCase) : boolean {
-    var g = new TestGrid({x:c.grid_size, y:c.grid_size}, c.walls);
-    var start = new TestNode({x: 0, y: 0});
-    var goal = new TestNode({x: g.size.x-1, y: g.size.y-1});
-    var goalf = (n: TestNode) => n.compareTo(goal) == 0;
-    var h = (n: TestNode) => 0; //Math.abs(n.pos.x - goal.pos.x) + Math.abs(n.pos.y - goal.pos.y);
 
-//    console.log(g.toString(start,goal))
+function runTest(c: TestCase, useHeuristics: boolean) : boolean {
+    var graph = new GridGraph({x:c.grid_size, y:c.grid_size}, c.walls);
+    var startnode = new GridNode({x: 0, y: 0});
+    var goalnode = new GridNode({x: graph.size.x-1, y: graph.size.y-1});
+    var isgoal = (n: GridNode) => graph.compareNodes(n, goalnode) == 0;
+    var h = (n: GridNode) => 0;
+    if (useHeuristics) {
+        h = (n: GridNode) => Math.abs(n.pos.x - goalnode.pos.x) + Math.abs(n.pos.y - goalnode.pos.y);
+    }
 
     try {
-	var result  = aStarSearch(g, start, goalf, h, 1000);
+        var result = aStarSearch(graph, startnode, isgoal, h, 10);
+        var cost = checkPath(graph, startnode, result.path);
+        if (!cost) {
+            console.log("The result is not a correct path!");
+            console.log("Result: " + result.path);
+            console.log(graph.toString(startnode, isgoal, result.path));
+            return false;
+        }
+        if (cost !== result.cost) {
+            console.log("The returned cost is not the correct cost of the path!");
+            console.log("Result: " + result.path);
+            console.log("Returned cost: " + result.cost + ", Correct cost: " + cost);
+            console.log(graph.toString(startnode, isgoal, result.path));
+            return false
+        }
+        if (!isgoal(result.path[result.path.length-1])) {
+            console.log("The result is not a path to the goal!");
+            console.log("Result: " + result.path);
+            console.log(graph.toString(startnode, isgoal, result.path));
+            return false
+        }
+        if (result.cost !== c.cost) {
+            console.log("The result is not a path of optimal length from " + startnode + " to " + goalnode + "!");
+            console.log("Result: " + result.path);
+            console.log("Cost:   " + result.cost);
+            console.log(graph.toString(startnode, isgoal, result.path));
+            var goalpath : GridNode[] = c.path.map((i) => new GridNode(i.pos));
+            console.log("Expected path: " + goalpath);
+            console.log("Expected cost: " + c.cost);
+            console.log(graph.toString(startnode, isgoal, goalpath));
+            return false;
+        }
 
-	if (JSON.stringify(c.path) === JSON.stringify(result.path))
-	    return true;
-	else {
-	    // may be a different path to the goal node of the same length
-	    if (isPath(g, start, goalf, result.path) && result.cost == c.cost)
-		return true;
-	    else
-		console.log("The result is not a path of optimal length from " + start + " to the goal!");
-	    
-	    console.log("Test failed!");
-	    
-	    console.log("Start: " + start.toString());
-	    console.log("Goal: " + goal.toString());
-	    console.log(g.drawPath(start, goal, result.path));
-	    console.log("Result: " + result.path);
-	    console.log("Cost: " + result.cost);
-	    
-	    console.log("Expected path: ")
-	    var s = "";
-	    for (var i of c.path) {
-		s = s + (new TestNode(i.pos)).toString();
-	    }
-	    console.log(s);
-	    console.log("Expected cost: " + c.cost);
-	    return false;
-	}
     } catch (e) {
-	console.log("Test failed! No path found");
-	
-	console.log("Start: " + start.toString());
-	console.log("Goal: " + goal.toString());
-	console.log(g.toString(start, goal));
-	
-	console.log("Expected path: " + c.path);
-	console.log("Expected cost: " + c.cost);
+        console.log("Test failed! No path found from " + startnode + " to " + goalnode + "!");
+        var goalpath : GridNode[] = c.path.map((i) => new GridNode(i.pos));
+        console.log("Expected path: " + goalpath);
+        console.log("Expected cost: " + c.cost);
+        console.log(graph.toString(startnode, isgoal, goalpath));
+        return false;
     }
-    return false;
+
+    return true;
 }
 
-function runTests() : void {
-    var cs = <TestCase[]>JSON.parse(fs.readFileSync('aStarTestCases.json','utf8'));
-    var n = 0;
-    var total = cs.length;
-    for (var c of cs) {
-	if (test(c))
-	    n++;
-	else
-	    continue;
+
+function runAllTests(argv : string[]) : void {
+    var cases : TestCase[] = <TestCase[]>JSON.parse(fs.readFileSync('aStarTestCases.json','utf8'));
+    var tests : number[] = [];
+    if (argv[0] == "all") {
+        for (var n = 0; n < cases.length; n++) tests.push(n);
+    } else {
+        tests = argv.map((n) => parseInt(n));
     }
-    console.log("Summary: " + n + " tests passed out of " + total);
+    var manhattanTime = 0, noHeuristicsTime = 0;
+    for (var manhattan of [true, false]) {
+        console.log("===================================================================================");
+        console.log("===== Running " + tests.length + " tests with " + (manhattan ? "Manhattan" : "no") + " heuristics");
+        console.log();
+        var totalTime = 0;
+        var failed = 0;
+        for (var n of tests) {
+            var c : TestCase = cases[n];
+            console.log("Test " + n + ": size " + c.grid_size + ", walls " + c.walls.length + ", cost " + c.cost);
+            var time = -Date.now();
+            var success = runTest(c, manhattan);
+            time += Date.now();
+            totalTime += time;
+            if (success) {
+                console.log("    OK ---> Time: " + time + " ms");
+            } else {
+                failed++;
+                console.log("    FAILURE ---> Time: " + time + " ms");
+                console.log("\n===================================================================================\n");
+            }
+        }
+        console.log("\nSummary: " + failed + " tests failed out of " + tests.length);
+        console.log("Total time: " + (totalTime/1000) + " s");
+        console.log();
+        if (failed)
+            return;
+        if (manhattan) manhattanTime = totalTime
+        else noHeuristicsTime = totalTime;
+    }
+    console.log("===================================================================================");
+    var faster = Math.round(100.0 * (noHeuristicsTime - manhattanTime) / noHeuristicsTime);
+    console.log("Manhattan is " + faster + "% faster than using no heuristics");
+    if (faster < 10) {
+        console.log("\n    HEURISTICS PROBLEM! Manhattan should be much faster than using no heuristics");
+    }
+    console.log();
 }
 
-runTests();
+
+if (process.argv.length > 2) {
+    runAllTests(process.argv.slice(2));
+} else {
+    console.log("Please give at least one argument:");
+    console.log("- either a number>=0 for each test you want to run,");
+    console.log("- or 'all' for running all tests.");
+} 
