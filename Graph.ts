@@ -63,19 +63,21 @@ function aStarSearch<Node> (
     var closedSet = new collections.Set<Node>();
     var openSet = new collections.Set<Node>();
     openSet.add(start);
-    var cameFrom : NodeMap<Node>  = {};
-    var gScore : NumberMap = {};
-    gScore[start.toString()] = 0;
-    var fScore: NumberMap = {};
-    fScore[start.toString()] = heuristics(start);
-
+    var cameFrom = new collections.Dictionary<Node,Node>();
+    var gScore = new collections.Dictionary<Node, number>();
+    gScore.setValue(start, 0);
+    var fScore = new collections.Dictionary<Node, number>();
+    fScore.setValue(start, heuristics(start));
+    var count = 0;
     while (openSet.size() > 0){
+        count++;
         var current = findLowestScore(openSet, fScore);
 
         if(goal(current)){
+            console.log("Number of iterations: ", count);
             return {
                 path: reconstructPath(cameFrom, current).reverse(),
-                cost: gScore[current.toString()]
+                cost: gScore.getValue(current)
             };
         }
 
@@ -92,20 +94,19 @@ function aStarSearch<Node> (
                 continue;
             }
 
-            var tentativeScore = lookupWithDefaultInfinity(current.toString(), gScore) + e.cost;
+            var tentativeScore = lookupWithDefaultInfinity(current, gScore) + e.cost;
             //console.log("Current: ", current);
             //console.log("Tscore: ", tentativeScore);
             //console.log("e.cost: ", e.cost);
             if (!openSet.contains(neighbor)){
                 openSet.add(neighbor);
-            } else if (tentativeScore >= lookupWithDefaultInfinity(neighbor.toString(), gScore)){
+            } else if (tentativeScore >= lookupWithDefaultInfinity(neighbor, gScore)){
                 continue;
             }
 
-            cameFrom[neighbor.toString()] = current;
-            gScore[neighbor.toString()] = tentativeScore;
-            fScore[neighbor.toString()] = gScore[neighbor.toString()] + heuristics(neighbor);
-
+            cameFrom.setValue(neighbor, current);
+            gScore.setValue(neighbor, tentativeScore);
+            fScore.setValue(neighbor, gScore.getValue(neighbor) + heuristics(neighbor));
         }
 
         //console.log(gScore);
@@ -124,10 +125,10 @@ function aStarSearch<Node> (
 
 
 
-function reconstructPath<Node>(cameFrom: NodeMap<Node>, current: Node) : Node[] {
+function reconstructPath<Node>(cameFrom: collections.Dictionary<Node, Node>, current: Node) : Node[] {
     var totalPath = [current];
-    while(Object.keys(cameFrom).some(key => key == current.toString()) ){
-        current = cameFrom[current.toString()];
+    while(cameFrom.containsKey(current)){
+        current = cameFrom.getValue(current);
         totalPath.push(current);
     }
     return totalPath;
@@ -135,7 +136,7 @@ function reconstructPath<Node>(cameFrom: NodeMap<Node>, current: Node) : Node[] 
 
 function findLowestScore<Node>(
     nodes: collections.Set<Node>,
-    map: NumberMap
+    map: collections.Dictionary<Node, number>
 ) : Node {
 
     var startAcc : NodeValueAcc<Node> = {
@@ -144,7 +145,7 @@ function findLowestScore<Node>(
     };
     var nodeArray = nodes.toArray();
     var res = nodeArray.reduce(function(acc, curr) {
-        var currVal = lookupWithDefaultInfinity(curr.toString(), map);
+        var currVal = lookupWithDefaultInfinity(curr, map);
         if(!acc.node || currVal < acc.value){
             acc.node = curr;
             acc.value = currVal;
@@ -156,12 +157,12 @@ function findLowestScore<Node>(
 
 }
 
-function lookupWithDefault(
-    key: string,
-    map: NumberMap,
+function lookupWithDefault<Node>(
+    key: Node,
+    map: collections.Dictionary<Node, number>,
     def: number
 ): number {
-    var res = map[key];
+    var res = map.getValue(key);
     //console.log("Map: ", map, "Key: ", key, "res: ", res);
     if (res !== undefined) {
         return res;
@@ -170,12 +171,9 @@ function lookupWithDefault(
     }
 }
 
-function lookupWithDefaultInfinity(key: string, map: NumberMap) : number {
+function lookupWithDefaultInfinity<Node>(key: Node, map: collections.Dictionary<Node, number>) : number {
     return lookupWithDefault(key, map, Infinity)
 }
-
-interface NumberMap { [s: string]: number; }
-interface NodeMap<Node> { [s: string]: Node }
 
 interface NodeValueAcc<Node> {
     value: number; 
