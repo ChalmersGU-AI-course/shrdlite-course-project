@@ -88,16 +88,28 @@
 				</ul>
 				<p>To be able to run the system you need to install Node.JS and TypeScript.
 				Do that. Now.</p>
-				<h3 id="what-is-already-implemented-and-what-is-missing">What is already implemented and what is missing</h3>
+				<h3 id="what-is-already-implemented">What is already implemented</h3>
 				<p>The natural language parser is already implemented using the
 				<a href="https://github.com/Hardmath123/nearley">Nearley parsing library</a>.</p>
 				<p>Furthermore, there are two different implementations of the blocks world:
-				the SVGWorld and the TextWorld.</p>
+				the SVGWorld and the TextWorld, as well as some example worlds.</p>
+				<p>Additionally there are lots of other glue code already implemented, including
+				an initial implementation of weighted graphs in <code>Graph.ts</code>. </p>
+				<h3 id="what-is-missing">What is missing</h3>
 				<p>What is not implemented correctly is the natural language interpreter
 					and the robot planner. What you are given are stubs that return
 					a dummy interpretation and a dummy plan respectively. Your goal is to implement
 				the interpreter and the planner so that the robot behaves as it should.</p>
-				<p>Furthermore, there is an initial implementation of weighted graphs in <code>Graph.ts</code>.</p>
+				<p>The following functions are only templates that you have to fill with
+				intelligent code to get the project to work correctly:</p>
+				<ul>
+					<li>the function <code>aStarSearch(...)</code> in the file <code>Graph.ts</code>. </li>
+					<li>the function <code>interpretCommand(...)</code> in the file <code>Interpreter.ts</code>.</li>
+					<li>the function <code>planInterpretation(...)</code> in the file <code>Planner.ts</code>.</li>
+					<li>possibly you will also want to modify the function <code>parseUtteranceIntoPlan(...)</code> in the file <code>Shrdlite.ts</code>.</li>
+				</ul>
+				<p>Depending on which extension you want to implement, there might of course be several
+				other places in the code that need modification.</p>
 				<h3 id="about-typescript">About TypeScript</h3>
 				<p>TypeScript is a typed superset of Javascript that compiles to plain Javascript.
 				It is open-source and not specific to any browser or operating system.</p>
