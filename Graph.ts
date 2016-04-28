@@ -57,16 +57,79 @@ function aStarSearch<Node> (
 ) : SearchResult<Node> {
     // A dummy search result: it just picks the first possible neighbour
     var result : SearchResult<Node> = {
-        path: [start],
+        path: [],
         cost: 0
     };
+
     // Set up data structures
     var visited = new collections.Set<Node>();
     var cost = new collections.Dictionary<Node, number>();
     var predecessor = new collections.Dictionary<Node, Node>();
     var frontier = new collections.Heap<Node>(
+        function(n1: Node, n2: Node): number {
+            var cost1 = cost.getValue(n1) + heuristics(n1);
+            var cost2 = cost.getValue(n2) + heuristics(n2);
+            if (cost1 < cost2) return -1;
+            if (cost1 == cost2) return 0;
+            return 1;
+        }
+    );
+
+    // Add start node to frontier
+    cost.setValue(start, 0);
+    frontier.add(start);
+
+    while(!frontier.isEmpty()){
+        var current = frontier.removeRoot();
+        //frontier might contain nodes already visited since it cannot be updated once a shorter path has been found
+        if(visited.contains(current)){
+            continue;
+        }
+        visited.add(current);
+
+        if(goal(current)){
+            //console.log("Met goal");
+            // reconstruct path
+            var cr : Node;
+            cr = current;
+            while(cr != start){
+                result.path.unshift(cr);
+                cr = predecessor.getValue(cr);
+            }
+            result.path.unshift(start);
+            for(var i = 0; i < result.path.length - 1; i++){
+                var n1 = result.path[i];
+                var n2 = result.path[i+1];
+                console.log(n1.toString(), n2.toString());
+                for(var e of graph.outgoingEdges(n1)){
+                    console.log(e.toString());
+                    if(e.to == n2){
+                        result.cost += e.cost;
+                    }
+                }
+            }
+        }
+
+        var costOfCurrent = cost.getValue(current);
+        for(var edge of graph.outgoingEdges(current)){
+            var neighbour = edge.to;
+            if(visited.contains(neighbour)){
+                continue;
+            }
+
+            var costTillNeighbour = costOfCurrent + edge.cost;
+            // TODO: continue here.
+            if(!cost.containsKey(neighbour)){
+                // This is a new node
+                //console.log("adding " + neighbour.toString());
+                frontier.add(neighbour);
+            } else if(costTillNeighbour >= cost.getValue(neighbour)) {
+                continue;
+            }
+            predecessor.setValue(neighbour, current);
+            cost.setValue(neighbour, costTillNeighbour);
+        }
+
     }
     return result;
 }
-
-
