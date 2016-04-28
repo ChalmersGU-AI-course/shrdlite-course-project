@@ -86,7 +86,7 @@ function aStarSearch<Node> (
         if(Date.now() >= endTime){
             break;
         }
-        
+
         var current = frontier.removeRoot();
         //frontier might contain nodes already visited since it cannot be updated once a shorter path has been found
         if(visited.contains(current)){
@@ -115,19 +115,19 @@ function aStarSearch<Node> (
             }
 
             var costTillNeighbour = costOfCurrent + edge.cost;
-            // TODO: continue here.
             if(!cost.containsKey(neighbour)){
                 // This is a new node
                 //console.log("adding " + neighbour.toString());
+                cost.setValue(neighbour, costTillNeighbour);
                 frontier.add(neighbour);
             } else if(costTillNeighbour >= cost.getValue(neighbour)) {
                 continue;
+            } else {
+                cost.setValue(neighbour, costTillNeighbour);
             }
             predecessor.setValue(neighbour, current);
             costFromPre.setValue(neighbour, edge.cost);
-            cost.setValue(neighbour, costTillNeighbour);
         }
-
     }
     return result;
 }
