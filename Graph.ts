@@ -67,9 +67,6 @@ function aStarSearch<Node> (
       var bCost : number = toNodeCost.getValue(b) + nodeToGoalEstCost.getValue(b);
       return bCost - aCost
     }
-    function nodeEquals(a:Node , b:Node){
-      return a.toString()===b.toString();
-    }
     var startTime = new Date().getTime();
     //PriorityQueue that holds nodes with lowest cost as highest prio
     var pQueue = new collections.PriorityQueue<Node>(nodePriorityComparer);
@@ -80,10 +77,10 @@ function aStarSearch<Node> (
     //Maps a node to the previously visited node. Eventually according to the cheapest path. Used
     //at the end to find best path recursivly from the goal node.
     var previousNode = new collections.Dictionary<Node,Node>();
-    //List of visited/evaluated nodes
-    var visitedNodes = new collections.LinkedList<Node>();
-    //List of discovered nodes
-    var discoveredNodes = new collections.LinkedList<Node>();
+    //List of visited/evaluated nodes. Set uses .toString() to check equality
+    var visitedNodes = new collections.Set<Node>();
+    //List of discovered nodes. Set uses .toString() to check equality
+    var discoveredNodes = new collections.Set<Node>();
 
     //initialising stuff
     toNodeCost.setValue(start,0);
@@ -107,15 +104,13 @@ function aStarSearch<Node> (
       var currentNeighbourEdges : Edge<Node>[] = graph.outgoingEdges(currentNode);
       for(var i=0 ; i < currentNeighbourEdges.length ; i++){
         var iNeighbour : Node = currentNeighbourEdges[i].to;
-        if(visitedNodes.contains(iNeighbour,nodeEquals)){
-          //console.log("already VISITED " + iNeighbour.toString())
+        if(visitedNodes.contains(iNeighbour)){
           //this neighbour is already in the frontier and evaluated
           continue
         }
         var thisPathCost : number = toNodeCost.getValue(currentNode) + currentNeighbourEdges[i].cost;
-        if(discoveredNodes.contains(iNeighbour,nodeEquals)){
+        if(discoveredNodes.contains(iNeighbour)){
           //Previously discovered node, only update stuff if this is a better path
-          //console.log("already DISCOVERED " + iNeighbour.toString())
           var oldPathCost : number = toNodeCost.getValue(iNeighbour);
           if(thisPathCost < oldPathCost){
             toNodeCost.setValue(iNeighbour,thisPathCost);
@@ -123,7 +118,6 @@ function aStarSearch<Node> (
           }
           continue
         }
-        //console.log("NEW NODE:" + iNeighbour.toString());
         //this neighbour is a previously undiscovered node, update stuff
         toNodeCost.setValue(iNeighbour,thisPathCost);
         nodeToGoalEstCost.setValue(iNeighbour,heuristics(iNeighbour));
@@ -133,6 +127,9 @@ function aStarSearch<Node> (
       }
     }
     // If all went well currentNode should be the goal node, and we can recursivly
+    if(!goal(currentNode)){
+      throw "No route found!";
+    }
     // rebuild the best path using previousNode
     result.cost = toNodeCost.getValue(currentNode);
     var recursiveNode : Node = currentNode;
