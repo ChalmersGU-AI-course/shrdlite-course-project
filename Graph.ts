@@ -95,6 +95,10 @@ function aStarSearch<Node> (
       }
       //take highest priority node to expand
       var currentNode : Node = pQueue.dequeue();
+      //get new node if it is already visited
+      while(visitedNodes.contains(currentNode)){
+        currentNode = pQueue.dequeue();
+      }
       visitedNodes.add(currentNode);
       if(goal(currentNode)){
         //goal in fronteir
@@ -115,6 +119,9 @@ function aStarSearch<Node> (
           if(thisPathCost < oldPathCost){
             toNodeCost.setValue(iNeighbour,thisPathCost);
             previousNode.setValue(iNeighbour,currentNode);
+            // adds an updated instance of this node to the prioQueue. The old will be ignored
+            //if it is ever dequeued (this implementation of prioQueue does not support updating elements)
+            pQueue.add(iNeighbour)
           }
           continue
         }
