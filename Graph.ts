@@ -65,6 +65,7 @@ function aStarSearch<Node> (
     var visited = new collections.Set<Node>();
     var cost = new collections.Dictionary<Node, number>();
     var predecessor = new collections.Dictionary<Node, Node>();
+    var costFromPre = new collections.Dictionary<Node, number>();
     var frontier = new collections.Heap<Node>(
         function(n1: Node, n2: Node): number {
             var cost1 = cost.getValue(n1) + heuristics(n1);
@@ -94,20 +95,10 @@ function aStarSearch<Node> (
             cr = current;
             while(cr != start){
                 result.path.unshift(cr);
+                result.cost += costFromPre.getValue(cr);
                 cr = predecessor.getValue(cr);
             }
             result.path.unshift(start);
-            for(var i = 0; i < result.path.length - 1; i++){
-                var n1 = result.path[i];
-                var n2 = result.path[i+1];
-                console.log(n1.toString(), n2.toString());
-                for(var e of graph.outgoingEdges(n1)){
-                    console.log(e.toString());
-                    if(e.to == n2){
-                        result.cost += e.cost;
-                    }
-                }
-            }
         }
 
         var costOfCurrent = cost.getValue(current);
@@ -127,6 +118,7 @@ function aStarSearch<Node> (
                 continue;
             }
             predecessor.setValue(neighbour, current);
+            costFromPre.setValue(neighbour, edge.cost);
             cost.setValue(neighbour, costTillNeighbour);
         }
 
