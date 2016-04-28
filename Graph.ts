@@ -32,6 +32,7 @@ class SearchResult<Node> {
     path : Node[];
     /** The total cost of the path. */
     cost : number;
+    iterations: number;
 }
 
 /**
@@ -60,14 +61,28 @@ function aStarSearch<Node> (
 
     var startTime = Date.now();
 
+    var mheuristicMap = new collections.Dictionary<Node,number>();
+
+    var mheuristics = function(n:Node) {
+        var res = mheuristicMap.getValue(n);
+        if(res !== undefined){
+            return res;
+        } else {
+            res = heuristics(n);
+            mheuristicMap.setValue(n, res);
+            return res;
+        }
+    };
+
     var closedSet = new collections.Set<Node>();
     var openSet = new collections.Set<Node>();
+    
     openSet.add(start);
     var cameFrom = new collections.Dictionary<Node,Node>();
     var gScore = new collections.Dictionary<Node, number>();
     gScore.setValue(start, 0);
     var fScore = new collections.Dictionary<Node, number>();
-    fScore.setValue(start, heuristics(start));
+    fScore.setValue(start, mheuristics(start));
     var count = 0;
     while (openSet.size() > 0){
         count++;
@@ -77,7 +92,8 @@ function aStarSearch<Node> (
             console.log("Number of iterations: ", count);
             return {
                 path: reconstructPath(cameFrom, current).reverse(),
-                cost: gScore.getValue(current)
+                cost: gScore.getValue(current),
+                iterations: count,
             };
         }
 
@@ -106,14 +122,14 @@ function aStarSearch<Node> (
 
             cameFrom.setValue(neighbor, current);
             gScore.setValue(neighbor, tentativeScore);
-            fScore.setValue(neighbor, gScore.getValue(neighbor) + heuristics(neighbor));
+            fScore.setValue(neighbor, gScore.getValue(neighbor) + mheuristics(neighbor));
         }
 
         //console.log(gScore);
 
         var now = Date.now();
 
-        if(now - startTime > timeout){
+        if(now - startTime > (timeout*1000)){
             throw "Timeout reached";
         }
 

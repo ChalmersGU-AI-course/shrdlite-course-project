@@ -4,6 +4,8 @@
 ///<reference path="GridGraph.ts"/>
 
 var fs = require('fs');
+var noHeuristicsIterations = 0;
+var heuristicsIterations = 0;
 
 interface TestCase {
     grid_size : number;
@@ -11,7 +13,6 @@ interface TestCase {
     path : GridNode[];
     cost : number
 }
-
 
 function checkPath<Node>(graph: Graph<Node>, startnode: Node, path: Node[]) : number
 {
@@ -80,6 +81,12 @@ function runTest(c: TestCase, useHeuristics: boolean) : boolean {
             return false;
         }
 
+        if(useHeuristics){
+            heuristicsIterations += result.iterations;
+        } else {
+            noHeuristicsIterations += result.iterations;
+        }
+
     } catch (e) {
         console.log("Test failed! No path found from " + startnode + " to " + goalnode + "!");
         var goalpath : GridNode[] = c.path.map((i) => new GridNode(i.pos));
@@ -138,6 +145,7 @@ function runAllTests(argv : string[]) : void {
         console.log("\n    HEURISTICS PROBLEM! Manhattan should be much faster than using no heuristics");
     }
     console.log();
+    console.log("Iterations: With hueristics", heuristicsIterations, " Without hueristic ", noHeuristicsIterations, " ratio: ", heuristicsIterations/noHeuristicsIterations);
 }
 
 
