@@ -80,7 +80,13 @@ function aStarSearch<Node> (
     cost.setValue(start, 0);
     frontier.add(start);
 
+    var endTime = Date.now() + timeout * 1000;
+
     while(!frontier.isEmpty()){
+        if(Date.now() >= endTime){
+            break;
+        }
+        
         var current = frontier.removeRoot();
         //frontier might contain nodes already visited since it cannot be updated once a shorter path has been found
         if(visited.contains(current)){
