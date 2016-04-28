@@ -117,14 +117,14 @@ function aStarSearch<Node> (
             var costTillNeighbour = costOfCurrent + edge.cost;
             if(!cost.containsKey(neighbour)){
                 // This is a new node
-                //console.log("adding " + neighbour.toString());
+                // console.log("adding " + neighbour.toString());
                 cost.setValue(neighbour, costTillNeighbour);
-                frontier.add(neighbour);
             } else if(costTillNeighbour >= cost.getValue(neighbour)) {
                 continue;
             } else {
                 cost.setValue(neighbour, costTillNeighbour);
             }
+            frontier.add(neighbour);
             predecessor.setValue(neighbour, current);
             costFromPre.setValue(neighbour, edge.cost);
         }
