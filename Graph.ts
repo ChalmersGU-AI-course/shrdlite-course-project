@@ -60,12 +60,11 @@ function aStarSearch<Node> (
         path: [start],
         cost: 0
     };
-    while (result.path.length < 3) {
-        var edge : Edge<Node> = graph.outgoingEdges(start) [0];
-        if (! edge) break;
-        start = edge.to;
-        result.path.push(start);
-        result.cost += edge.cost;
+    // Set up data structures
+    var visited = new collections.Set<Node>();
+    var cost = new collections.Dictionary<Node, number>();
+    var predecessor = new collections.Dictionary<Node, Node>();
+    var frontier = new collections.Heap<Node>(
     }
     return result;
 }
