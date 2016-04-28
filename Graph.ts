@@ -61,10 +61,13 @@ function aStarSearch<Node> (
 ) : SearchResult<Node> {
 
     var startTime = Date.now();
+
+    // count variable to help us keep track of number of iterations in the main loop
     var count = 0;
 
     var mHeuristicMap = new collections.Dictionary<Node,number>();
     var mHeuristics = memoizeHeuristics.bind(this, mHeuristicMap, heuristics);
+
     var closedSet = new collections.Set<Node>();
     var nodeCompare = (n1:Node, n2:Node) => {
         return lookupWithDefaultInfinity(n2, fScore) - lookupWithDefaultInfinity(n1, fScore);
@@ -99,8 +102,7 @@ function aStarSearch<Node> (
 
         var outgoing = graph.outgoingEdges(current);
 
-        for (var ei in outgoing){
-            var e = outgoing[ei];
+        for (var e of outgoing){
             var neighbor = e.to;
             if(closedSet.contains(neighbor)){
                 continue;
@@ -114,6 +116,9 @@ function aStarSearch<Node> (
                 continue;
             } else {
                 updateScores(neighbor, tentativeScore);
+
+                // We haven't found any way to update a value in the PriorityQueue
+                // so when necessary we refresh the queue to make sure items are correctly ordered.
                 var newQueue = new PriorityQueue(nodeCompare);
                 openSetP.forEach(n => newQueue.add(n));
                 openSetP = newQueue;
@@ -124,7 +129,10 @@ function aStarSearch<Node> (
 
         var now = Date.now();
 
-        if(now - startTime > (timeout*1000)){
+        // While this solution for timeout isn't optimal:
+        // (if an iteration takes 5 minutes the timout will trigger too late if set to less then 5 minutes)
+        // we still believe it good enough for now at least.
+        if(now - startTime > (timeout*1000)) {
             throw "Timeout reached";
         }
 
