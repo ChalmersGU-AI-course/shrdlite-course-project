@@ -3,6 +3,8 @@
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Planner.ts"/>
 
+
+//This is a comment by CI.
 module Shrdlite {
 
     export function interactive(world : World) : void {

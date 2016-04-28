@@ -1,0 +1,47 @@
+- 0.0 Introduction
+
+    - Entice the audience with rethorical questions
+    - Convey the feeling of urgency @ 50% opacity?
+    - Tone it down a bit? (maybe further down the line...)
+
+- 1.0 @Christopher,Henrik,Florian: Expose possible types of Ais
+
+    - Benevolent (WANTS to help us; )
+    - Aggressive (WANTS to harm us, perhaps intelligence comes with reasons to be hostile; e.g. the smartest species in the world are the only ones who exhibit traits of hostility against their own kind)
+    - "pacifist AI": WANTS to not harm us
+    - Neutral (does not really WANT anything) (more probable because it has less assumptions, we cite the join prob. fallacy?)
+    
+    - Slightly smarter (the fallacy of the g-factor)
+    - Unconceivably smarter (self-improvement -> explosion in intelligence, try not to antropomorphize it)
+
+- 2.0 @Christopher,Florian: Ways to not be harmed by this new technology
+
+    - Not creating it at all (global, coordinated effort. not likely to come about)
+    - Ensure superiority in face of it (ok, if slightly smarter, very unlikely if the AI is unconceivably smarter)
+    - Friendliness module
+    
+- 3.0 @Christopher,Henrik: Explain a bit that the only way to be sure that an AI wouldnt hurt us is to implement a "friendliness module"in it
+ 
+     - Benevolence is not likely
+     - Aggressivenes obviously needs it (the friendliness module)
+     - Neutrality could be regarded as hostility: exhausting oxygen, stepping on ants example (try not to antropomorphize it; we shouldn't expect it to have human values)     
+     * present the other side of the discussion; present our argument against this (here?)
+          
+- 4.0 @Juliano: To be able to implement that (friendliness module), we should thoroughly understand the processes of the mind, and the concept of intelligence
+    
+    - If we want to tackle this with brute-force, it's necessary to create several AIs and test the module in them to evaluate performance. However, if we fail once, and construct a harmful one, we're                                    screwed.
+    - Discuss a bit about development in this area: Artificial intelligence intuition... (Monica Anderson, supposing not a nutjob)
+
+
+- 5.0 @Juliano,Henrik,Florian: Because of hardware advancements (and optimization advancements) and following moore's law on that pattern, we'll have by 2029 enough power to "brute force" the simulation of a sentient being, and therefore 
+
+- 6.0 @Juliano: Conclusions, 
+
+    - summarize the arguments to the reader
+    - we need to allocate resources to solve this
+
+
+TO-DOs
+- find articles with counter-arguments    
+    - Find articles that think AI won't be created at all
+    - find articles that think AI will be benevolent
