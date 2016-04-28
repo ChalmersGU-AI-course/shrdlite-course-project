@@ -1,6 +1,9 @@
 ///<reference path="lib/collections.ts"/>
 ///<reference path="lib/node.d.ts"/>
 
+var Dictionary = collections.Dictionary;
+var LinkedList = collections.LinkedList;
+
 /** Graph module
 *
 *  Types for generic A\* implementation.
@@ -55,19 +58,92 @@ function aStarSearch<Node> (
     heuristics : (n:Node) => number,
     timeout : number
 ) : SearchResult<Node> {
-    // A dummy search result: it just picks the first possible neighbour
-    var result : SearchResult<Node> = {
-        path: [start],
-        cost: 0
-    };
-    while (result.path.length < 3) {
-        var edge : Edge<Node> = graph.outgoingEdges(start) [0];
-        if (! edge) break;
-        start = edge.to;
-        result.path.push(start);
-        result.cost += edge.cost;
+    // Print detailed script behaviour only if desired
+    var VERBOSE = 0;
+    var verbosePrint = function (s : string) {
+        if (VERBOSE) {
+            console.log(s);
+        }
     }
+    
+    // Null value for initializing node variables
+    var nullNode = function() : Node { return undefined; }();
+
+    // "Hashing" function to identify nodes based on their toString() function
+    var pseudoHashingFn = function (key : Node) : string {
+        return key.toString();
+    };
+
+    // Initialize data structures
+    var frontier = new Dictionary<Node, number>(pseudoHashingFn);
+    frontier.setValue(start, heuristics(start));
+    var closed = new Dictionary<Node, Node>();
+    closed.setValue(start, start);
+    var gCosts = new Dictionary<Node, number>(pseudoHashingFn);
+    gCosts.setValue(start, 0);
+
+    // Sneakily start time keeping here to not track set up time ;)
+    var startTime = new Date();
+    var timeoutHasNotPassed = function (currentTime : Date) : boolean {
+        return currentTime.getSeconds() - startTime.getSeconds() < timeout;
+    }
+
+    // Initialize empty goal state
+    var goalState = nullNode;
+
+    while (!frontier.isEmpty() && timeoutHasNotPassed(new Date())) {
+        // Retrieve node with lowest fCost and remove from frontier
+        var currentNode = nullNode;
+        frontier.forEach(function (n) {
+            if (!currentNode || frontier.getValue(n) < frontier.getValue(currentNode)) {
+                currentNode = n;
+            }
+        });
+        frontier.remove(currentNode);
+        verbosePrint('Currently exploring: ' + currentNode.toString() + ' from ' + closed.getValue(currentNode));
+
+        // Break when goal node is reached
+        if (goal(currentNode)) {
+            goalState = currentNode;
+            break;
+        }
+
+        // Add potential neighbours to queue
+        graph.outgoingEdges(currentNode).forEach(function (edge) {
+            // Calculate fCost of neighbour node as traveling cost so far plus ?
+            var newCost = gCosts.getValue(edge.from) + edge.cost;
+            
+            // Only consider new node of it has not been explored or its cost has lowered
+            if (!closed.containsKey(edge.to) || newCost < gCosts.getValue(edge.to)) {
+                verbosePrint('\tExpanding ' + edge.to.toString() + ' with cost ' + newCost + '. Earlier cost: ' + gCosts.getValue(edge.to));
+                
+                // Set or update traveling cost so far to the current node
+                gCosts.setValue(edge.to, newCost)
+
+                // Add node to frontier with fCost (cost so far + heuristic) as priority
+                frontier.setValue(edge.to, newCost + heuristics(edge.to));
+
+                // Add to closed nodes with currentNode as origin
+                closed.setValue(edge.to, edge.from)
+            }
+        });
+    }
+
+
+    // Reconstruct path and cost
+    currentNode = goalState;
+    var visitedPath = new LinkedList<Node>();
+    while (currentNode != start) {
+        visitedPath.add(currentNode);
+        currentNode = closed.getValue(currentNode);
+    }
+    visitedPath.add(currentNode);
+    visitedPath.reverse();
+
+    // Pack into specified SearchResult data structure and return
+    var result : SearchResult<Node> = {
+        path: visitedPath.toArray(),
+        cost: gCosts.getValue(goalState)
+    };
     return result;
 }
-
-
