@@ -11,6 +11,7 @@
 */
 
 import forEach = collections.arrays.forEach;
+import PriorityQueue = collections.PriorityQueue;
 /** An edge in a graph. */
 class Edge<Node> {
     from : Node;
@@ -60,46 +61,35 @@ function aStarSearch<Node> (
 ) : SearchResult<Node> {
 
     var startTime = Date.now();
+    var count = 0;
 
-    var mheuristicMap = new collections.Dictionary<Node,number>();
-
-    var mheuristics = function(n:Node) {
-        var res = mheuristicMap.getValue(n);
-        if(res !== undefined){
-            return res;
-        } else {
-            res = heuristics(n);
-            mheuristicMap.setValue(n, res);
-            return res;
-        }
-    };
-
+    var mHeuristicMap = new collections.Dictionary<Node,number>();
+    var mHeuristics = memoizeHeuristics.bind(this, mHeuristicMap, heuristics);
     var closedSet = new collections.Set<Node>();
-
-    var openSetP = new collections.PriorityQueue((n1:Node, n2:Node) => {
+    var nodeCompare = (n1:Node, n2:Node) => {
         return lookupWithDefaultInfinity(n2, fScore) - lookupWithDefaultInfinity(n1, fScore);
-    });
+    };
+    var openSetP = new collections.PriorityQueue(nodeCompare);
+    var gScore = new collections.Dictionary<Node, number>();
+    var cameFrom = new collections.Dictionary<Node,Node>();
+    var fScore = new collections.Dictionary<Node, number>();
 
     openSetP.add(start);
-    var cameFrom = new collections.Dictionary<Node,Node>();
-    var gScore = new collections.Dictionary<Node, number>();
     gScore.setValue(start, 0);
-    var fScore = new collections.Dictionary<Node, number>();
-    fScore.setValue(start, mheuristics(start));
-    var count = 0;
+    fScore.setValue(start, mHeuristics(start));
 
     function updateScores(neighbor:Node, tentativeScore:number) : void {
         gScore.setValue(neighbor, tentativeScore);
-        fScore.setValue(neighbor, gScore.getValue(neighbor) + mheuristics(neighbor));
+        fScore.setValue(neighbor, gScore.getValue(neighbor) + mHeuristics(neighbor));
     }
 
     while (!openSetP.isEmpty()){
         count++;
-        var current = openSetP.dequeue();
 
+        var current = openSetP.dequeue();
         if(goal(current)){
             return {
-                path: reconstructPath(cameFrom, current).reverse(),
+                path: reconstructPath(cameFrom, current),
                 cost: gScore.getValue(current),
                 iterations: count,
             };
@@ -124,6 +114,9 @@ function aStarSearch<Node> (
                 continue;
             } else {
                 updateScores(neighbor, tentativeScore);
+                var newQueue = new PriorityQueue(nodeCompare);
+                openSetP.forEach(n => newQueue.add(n));
+                openSetP = newQueue;
             }
 
             cameFrom.setValue(neighbor, current);
@@ -140,60 +133,37 @@ function aStarSearch<Node> (
     throw "No path found";
 }
 
-
-
-function reconstructPath<Node>(cameFrom: collections.Dictionary<Node, Node>, current: Node) : Node[] {
+function reconstructPath<Node>(
+    cameFrom: collections.Dictionary<Node, Node>,
+    current: Node
+) : Node[] {
     var totalPath = [current];
     while(cameFrom.containsKey(current)){
         current = cameFrom.getValue(current);
-        totalPath.push(current);
+        totalPath.unshift(current);
     }
     return totalPath;
 }
 
-function findLowestScore<Node>(
-    nodes: collections.Set<Node>,
+function lookupWithDefaultInfinity<Node>(
+    key: Node,
     map: collections.Dictionary<Node, number>
-) : Node {
-
-    var startAcc : NodeValueAcc<Node> = {
-        value: Infinity,
-        node: undefined
-    };
-    var nodeArray = nodes.toArray();
-    var res = nodeArray.reduce(function(acc, curr) {
-        var currVal = lookupWithDefaultInfinity(curr, map);
-        if(!acc.node || currVal < acc.value){
-            acc.node = curr;
-            acc.value = currVal;
-        }
-        return acc;
-    }, startAcc);
-
-    return res.node;
-
+) : number {
+    var res = map.getValue(key);
+    return res !== undefined ? res : Infinity;
 }
 
-function lookupWithDefault<Node>(
-    key: Node,
-    map: collections.Dictionary<Node, number>,
-    def: number
-): number {
-    var res = map.getValue(key);
-    //console.log("Map: ", map, "Key: ", key, "res: ", res);
-    if (res !== undefined) {
+function memoizeHeuristics(
+    map:collections.Dictionary<Node, number>,
+    heuristics : (n:Node) => number,
+    n:Node) {
+    var res = map.getValue(n);
+    if(res !== undefined){
         return res;
     } else {
-        return def;
+        res = heuristics(n);
+        map.setValue(n, res);
+        return res;
     }
-}
-
-function lookupWithDefaultInfinity<Node>(key: Node, map: collections.Dictionary<Node, number>) : number {
-    return lookupWithDefault(key, map, Infinity)
-}
-
-interface NodeValueAcc<Node> {
-    value: number; 
-    node: Node;
 }
 
