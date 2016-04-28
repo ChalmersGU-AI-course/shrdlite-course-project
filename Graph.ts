@@ -75,21 +75,29 @@ function aStarSearch<Node> (
     };
 
     var closedSet = new collections.Set<Node>();
-    var openSet = new collections.Set<Node>();
-    
-    openSet.add(start);
+
+    var openSetP = new collections.PriorityQueue((n1:Node, n2:Node) => {
+        return lookupWithDefaultInfinity(n2, fScore) - lookupWithDefaultInfinity(n1, fScore);
+    });
+
+    openSetP.add(start);
     var cameFrom = new collections.Dictionary<Node,Node>();
     var gScore = new collections.Dictionary<Node, number>();
     gScore.setValue(start, 0);
     var fScore = new collections.Dictionary<Node, number>();
     fScore.setValue(start, mheuristics(start));
     var count = 0;
-    while (openSet.size() > 0){
+
+    function updateScores(neighbor:Node, tentativeScore:number) : void {
+        gScore.setValue(neighbor, tentativeScore);
+        fScore.setValue(neighbor, gScore.getValue(neighbor) + mheuristics(neighbor));
+    }
+
+    while (!openSetP.isEmpty()){
         count++;
-        var current = findLowestScore(openSet, fScore);
+        var current = openSetP.dequeue();
 
         if(goal(current)){
-            console.log("Number of iterations: ", count);
             return {
                 path: reconstructPath(cameFrom, current).reverse(),
                 cost: gScore.getValue(current),
@@ -97,42 +105,35 @@ function aStarSearch<Node> (
             };
         }
 
-        openSet.remove(current);
         closedSet.add(current);
 
         var outgoing = graph.outgoingEdges(current);
 
         for (var ei in outgoing){
             var e = outgoing[ei];
-            //console.log(e.to.toString() + " " + e.from.toString());
             var neighbor = e.to;
             if(closedSet.contains(neighbor)){
                 continue;
             }
 
             var tentativeScore = lookupWithDefaultInfinity(current, gScore) + e.cost;
-            //console.log("Current: ", current);
-            //console.log("Tscore: ", tentativeScore);
-            //console.log("e.cost: ", e.cost);
-            if (!openSet.contains(neighbor)){
-                openSet.add(neighbor);
+            if (!openSetP.contains(neighbor)){
+                updateScores(neighbor, tentativeScore);
+                openSetP.add(neighbor);
             } else if (tentativeScore >= lookupWithDefaultInfinity(neighbor, gScore)){
                 continue;
+            } else {
+                updateScores(neighbor, tentativeScore);
             }
 
             cameFrom.setValue(neighbor, current);
-            gScore.setValue(neighbor, tentativeScore);
-            fScore.setValue(neighbor, gScore.getValue(neighbor) + mheuristics(neighbor));
         }
-
-        //console.log(gScore);
 
         var now = Date.now();
 
         if(now - startTime > (timeout*1000)){
             throw "Timeout reached";
         }
-
 
     }
 
