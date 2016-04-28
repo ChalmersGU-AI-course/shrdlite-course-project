@@ -1,7 +1,8 @@
 ///<reference path="lib/node.d.ts"/>
-// /<reference path="lib/collections.ts"/>
-import Dictionary = collections.Dictionary;
-import LinkedList = collections.LinkedList;
+///<reference path="lib/collections.ts"/>
+import collections = require('./lib/collections.collections')
+var Dictionary = collections.Dictionary;
+var LinkedList = collections.LinkedList;
 
 /** Graph module
  *
