@@ -105,6 +105,7 @@ function aStarSearch<Node> (
                 cr = predecessor.getValue(cr);
             }
             result.path.unshift(start);
+            break;
         }
 
         var costOfCurrent = cost.getValue(current);
