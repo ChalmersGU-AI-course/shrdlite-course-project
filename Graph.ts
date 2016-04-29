@@ -82,6 +82,7 @@ function aStarSearch<Node> (
       var current = getOpenSetLowestfScore(openSet);
       if (goal(current.my_node)) {
         console.log("We found shortest way!");
+        // TODO: We need to resolve the closed path here from this node.
         break;
       }
       // remove nodewitpath from openSet
@@ -97,7 +98,7 @@ function aStarSearch<Node> (
       for (let neighbor_edge of neigboors) {
         var neighboor_nwp: NodeWithPath<Node> = new NodeWithPath(neighbor_edge.to);
         console.log("Looking in closed list");
-        if (isNodeInList(graph, closedSet, neighbor_edge.to)) {
+        if (isNodeInList(graph, closedSet, neighbor_edge.to)) { // TODO: We think the problem is here. We don't detect the nodes in the list.
           console.log("Node was already visited");
           continue;
         }
@@ -112,8 +113,7 @@ function aStarSearch<Node> (
         neighboor_nwp.gScore = tentative_gScore;
         neighboor_nwp.fScore = tentative_gScore + heuristics(neighboor_nwp.my_node);
       }
-      console.log("sa");
-      x++;
+      x++; // Helper
     }
 
     return result;
@@ -143,7 +143,7 @@ function isNodeInList<Node>(graph: Graph<Node>, list: NodeWithPath<Node>[], elem
   for(let nwp of list) {
     //if (nwp.my_node.pos.x  == element.pos.x &&
     //nwp.my_node.pos.y  == element.pos.y) {
-    if (nwp.my_node == element) {
+    if (nwp.my_node == element) { // TODO: We think the problem is here. This does not compare correctly.
       console.log("Was in list");
       return true;
     }
@@ -174,15 +174,3 @@ function changeNode<Node>(camefrom: NodeWithPath<Node>[], _key: Node, _value: No
     }
   }
 }
-/*
-function changeNode(camefrom: Edge<Node>[], key: Node, value: Node) {
-  for(var edge in camefrom) {
-  //  if (edge.from === _key) {
-      console.log(edge);
-      //edge.to = _value;
-      break;
-    //}
-  }
-
-}
-*/
