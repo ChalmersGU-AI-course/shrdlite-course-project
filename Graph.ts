@@ -59,7 +59,7 @@ function aStarSearch<Node> (
 
     var timer = setTimeout(function() {
         hasTimedOut = true;
-    }, timeout);
+    }, timeout * 1000);
 
     var openSet = new collections.Set<Node>();
     var closedSet = new collections.Set<Node>();
