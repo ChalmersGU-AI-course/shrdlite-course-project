@@ -8,7 +8,7 @@ TARGETS = html ajax ansi offline
 TSFILES = $(wildcard *.ts)
 
 help:
-	@echo "make help | clean | all | shrdlite-html.js | shrdlite-offline.js"
+	@echo "make help | clean | all | aStarTests | shrdlite-html.js | shrdlite-offline.js"
 
 clean:
 	rm -f $(TSFILES:%.ts=%.js) *.map
@@ -18,6 +18,9 @@ doc:
 	typedoc --name Shrdlite --out doc .
 
 all: shrdlite-html.js shrdlite-offline.js
+
+aStarTests: TestAStar.js
+	node $< all
 
 # Make TypeScript as strict as possible:
 TSC = tsc --noFallthroughCasesInSwitch --noImplicitReturns --noImplicitAny
