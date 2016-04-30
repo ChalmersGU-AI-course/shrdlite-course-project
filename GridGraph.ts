@@ -1,4 +1,4 @@
-///<reference path="Graph2.ts"/>
+///<reference path="Graph.ts"/>
 
 // This is an example graph
 // consisting of a 2-dimensional grid

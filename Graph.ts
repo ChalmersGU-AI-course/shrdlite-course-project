@@ -34,13 +34,8 @@ class SearchResult<Node> {
 }
 
 /**
-* A\* search implementation, parameterised by a `Node` type. The code
-* here is just a template; you should rewrite this function
-* entirely. In this template, the code produces a dummy search result
-* which just picks the first possible neighbour.
+* A\* search implementation, parameterised by a `Node` type.
 *
-* Note that you should not change the API (type) of this function,
-* only its body.
 * @param graph The graph on which to perform A\* search.
 * @param start The initial node.
 * @param goal A function that returns true when given a goal node. Used to determine if the algorithm has reached the goal.
@@ -49,130 +44,139 @@ class SearchResult<Node> {
 * @returns A search result, which contains the path from `start` to a node satisfying `goal` and the cost of this path.
 */
 function aStarSearch<Node> (
-    graph : Graph<Node>,
-    start : Node,
-    goal : (n:Node) => boolean,
+    graph      : Graph<Node>,
+    start      : Node,
+    goal       : (n:Node) => boolean,
     heuristics : (n:Node) => number,
-    timeout : number
+    timeout    : number
 ) : SearchResult<Node> {
-    // A dummy search result: it just picks the first possible neighbour
-    let result : SearchResult<Node> = {
-        path: [start],
+    const perfStart = Date.now();
+
+    const eqFun = collections.compareToEquals( graph.compareNodes );
+
+    const cameFrom : collections.Dictionary<Node, Edge<Node>> =
+        new collections.Dictionary<Node, Edge<Node>>();
+
+    const gScore : collections.Dictionary<Node, number> =
+        new collections.Dictionary<Node, number>();
+    gScore.setValue( start, 0 );
+
+    const fScore : collections.Dictionary<Node, number> =
+        new collections.Dictionary<Node, number>();
+    fScore.setValue( start, heuristics( start ) );
+
+    const getGScore = (n: Node) : number => {
+        return gScore.getValue( n ) || 100000000;
+    }
+    const getFScore = (n: Node) : number => {
+        return fScore.getValue( n );
+    }
+
+    // Ordered by lowest fScore first.
+    const lowestFScore = (a: Node, b: Node) : number => {
+        return getFScore( b ) - getFScore( a );
+    };
+
+    let visited : Set<Node> = new Set<Node>( eqFun );
+
+    let toVisit   : collections.PriorityQueue<Node> =
+        new collections.PriorityQueue<Node>( lowestFScore );
+    toVisit.add( start );
+
+    while ( !toVisit.isEmpty() ) {
+        const perfEnd = Date.now();
+        if ( (perfEnd - perfStart) / 1000 > timeout ) return null;
+
+        const current = toVisit.dequeue();
+
+        if ( goal( current ) ) return createResult( current, cameFrom );
+
+        const neigboors: Edge<Node>[] = graph.outgoingEdges( current );
+        for ( let ne of neigboors ) {
+            const {to, cost} = ne;
+            if ( visited.contains( to ) ) continue;
+
+            const tentative_gScore = getGScore( current ) + cost;
+            const ne_gScore = getGScore( to );
+
+            if ( !toVisit.contains( to ) ) toVisit.add( to );
+            else if ( tentative_gScore >= ne_gScore ) continue
+
+            cameFrom.setValue( to, ne );
+            gScore.setValue( to, tentative_gScore );
+            fScore.setValue( to, tentative_gScore + heuristics( to ) )
+        }
+
+        visited.add( current );
+    }
+
+    return null;
+}
+
+function createResult<Node>(
+    current: Node,
+    cameFrom: collections.Dictionary<Node, Edge<Node>> )
+    : SearchResult<Node> {
+    const result = {
+        path: [current],
         cost: 0
     };
 
-    let start_nwp: NodeWithPath<Node> = new NodeWithPath(start);
-
-    // The nodes already evaluated
-    let closedSet:NodeWithPath<Node>[] = [];
-
-    // Discovered node still not evaluated
-    let openSet:NodeWithPath<Node>[] = [];
-    openSet.push(start_nwp);
-
-    let cameFrom:NodeWithPath<Node>[] = [];
-
-    start_nwp.gScore = 0;
-    //console.log(heuristics);
-    start_nwp.fScore = heuristics(start_nwp.my_node);
-    //console.log(nwp.fScore);
-    let x = 0;
-    while (openSet.length > 0 && x < 4) {
-        //openSet
-        let current = getOpenSetLowestfScore(openSet);
-        if (goal(current.my_node)) {
-            console.log("We found shortest way!");
-            // TODO: We need to resolve the closed path here from this node.
-            break;
-        }
-
-        // remove nodewitpath from openSet
-        let index = openSet.indexOf(current, 0);
-        if (index > -1) {
-            openSet.splice(index, 1);
-        }
-        closedSet.push(current);
-        console.log(current.my_node);
-        console.log(closedSet.length);
-
-        let neigboors: Edge<Node>[] = graph.outgoingEdges(current.my_node);
-        for (let neighbor_edge of neigboors) {
-            let neighboor_nwp: NodeWithPath<Node> = new NodeWithPath(neighbor_edge.to);
-
-            console.log("Looking in closed list");
-            if (isNodeInList(graph, closedSet, neighbor_edge.to)) { // TODO: We think the problem is here. We don't detect the nodes in the list.
-                console.log("Node was already visited");
-                continue;
-            }
-        
-            const tentative_gScore:number = current.gScore + neighbor_edge.cost; // only one step to neighbor
-            console.log("Looking in open list");
-            if (!isNodeInList(graph, openSet, neighbor_edge.to)) {
-                openSet.push(new NodeWithPath(neighbor_edge.to));
-            } else if (tentative_gScore >= getGScoreForNode(openSet, neighbor_edge.to)) {
-                continue;
-            }
-            neighboor_nwp.my_parent_node = current;
-            neighboor_nwp.gScore = tentative_gScore;
-            neighboor_nwp.fScore = tentative_gScore + heuristics(neighboor_nwp.my_node);
-        }
-
-        x++; // Helper
+    let curr = current;
+    while ( cameFrom.containsKey( curr ) ) {
+        const edge = cameFrom.getValue( curr );
+        curr = edge.from;
+        result.cost += edge.cost;
+        result.path.unshift( curr );
     }
+
+    result.path.shift();
+
+    console.log( "=============================================" );
+    console.log( "reached goal!" );
+    console.log( "result path is:" + result.path );
+    console.log( "result cost is:" + result.cost );
+    console.log( "=============================================" );
 
     return result;
 }
 
+// Naive set implementation:
+class Set<T>{
+    private elems : T[] = [];
+    private eqFun : collections.IEqualsFunction<T>;
 
-class NodeWithPath<Node> {
-  //public my_node: Node;
-    public my_parent_node: NodeWithPath<Node>;
-    public gScore: number = 10000000;
-    public fScore: number = 10000000;
-
-    constructor(public my_node : Node) {}
-}
-
-function getGScoreForNode<Node>(list: NodeWithPath<Node>[], element: Node) {
-    for(let nwp of list)
-        if(nwp.my_node  == element)
-            return nwp.gScore;
-
-    return -1;
-}
-
-function isNodeInList<Node>(graph: Graph<Node>, list: NodeWithPath<Node>[], element: Node) {
-    for(let nwp of list) {
-        //if (nwp.my_node.pos.x  == element.pos.x &&
-        //nwp.my_node.pos.y  == element.pos.y) {
-        if (nwp.my_node == element) { // TODO: We think the problem is here. This does not compare correctly.
-            console.log("Was in list");
-            return true;
-        }
+    constructor(eqFun: collections.IEqualsFunction<T>) {
+        this.eqFun = eqFun
     }
-    console.log("Was not in list");
-    return false;
-}
 
-function getOpenSetLowestfScore<Node>(openSet: NodeWithPath<Node>[]): NodeWithPath<Node> {
-    var lowest_nwp: NodeWithPath<Node> = null;
-    for(let nwp of openSet) {
-        if (lowest_nwp == null) {
-            lowest_nwp = nwp;
-            continue;
-        }
-
-        if (lowest_nwp.fScore > nwp.fScore)
-            lowest_nwp = nwp;
+    contains(elem: T): boolean {
+        return collections.arrays.contains( this.elems, elem, this.eqFun );
     }
-    return lowest_nwp;
-}
 
-function changeNode<Node>(camefrom: NodeWithPath<Node>[], _key: Node, _value: NodeWithPath<Node>) {
-    for(let nwp of camefrom) {
-        if (nwp.my_node == _key) {
-            nwp.my_parent_node = _value;
-            break;
-        }
+    add(elem: T): boolean {
+        if (this.contains(elem)) return false;
+        this.elems.push(elem);
+        return true;
+    }
+
+    remove(elem: T): boolean {
+        return collections.arrays.remove(this.elems, elem, this.eqFun);
+    }
+
+    forEach(callback: collections.ILoopFunction<T>): void {
+        collections.arrays.forEach(this.elems, callback);
+    }
+
+    toArray(): T[] { return this.elems; }
+
+    isEmpty(): boolean { return this.size() === 0; }
+
+    size(): number { return this.elems.length; }
+
+    clear(): void { this.elems = []; }
+
+    toString(): string {
+        return collections.arrays.toString(this.elems);
     }
 }
