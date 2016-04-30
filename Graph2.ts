@@ -50,6 +50,8 @@ function aStarSearch<Node> (
     heuristics : (n:Node) => number,
     timeout    : number
 ) : SearchResult<Node> {
+    const perfStart = Date.now();
+
     const eqFun = collections.compareToEquals( graph.compareNodes );
 
     const cameFrom : collections.Dictionary<Node, Edge<Node>> =
@@ -75,34 +77,37 @@ function aStarSearch<Node> (
         return getFScore( b ) - getFScore( a );
     };
 
-    let closedSet : collections.Set<Node> = new collections.Set<Node>();
+    let visited : Set<Node> = new Set<Node>( eqFun );
 
-    let openSet   : collections.PriorityQueue<Node> =
+    let toVisit   : collections.PriorityQueue<Node> =
         new collections.PriorityQueue<Node>( lowestFScore );
-    openSet.add( start );
+    toVisit.add( start );
 
-    while ( !openSet.isEmpty() ) {
-        const current = openSet.dequeue();
+    while ( !toVisit.isEmpty() ) {
+        const perfEnd = Date.now();
+        if ( (perfEnd - perfStart) / 1000 > timeout ) return null;
+
+        const current = toVisit.dequeue();
 
         if ( goal( current ) ) return createResult( current, cameFrom );
 
-        closedSet.add( current );
-
         const neigboors: Edge<Node>[] = graph.outgoingEdges( current );
         for ( let ne of neigboors ) {
-            const to = ne.to;
-            if ( closedSet.contains( to ) ) continue;
+            const {to, cost} = ne;
+            if ( visited.contains( to ) ) continue;
 
-            const tentative_gScore = getGScore( current ) + ne.cost;
+            const tentative_gScore = getGScore( current ) + cost;
             const ne_gScore = getGScore( to );
 
-            if ( !openSet.contains( to ) ) openSet.add( to );
+            if ( !toVisit.contains( to ) ) toVisit.add( to );
             else if ( tentative_gScore >= ne_gScore ) continue
 
             cameFrom.setValue( to, ne );
             gScore.setValue( to, tentative_gScore );
-            fScore.setValue( to, ne_gScore + heuristics( to ) )
+            fScore.setValue( to, tentative_gScore + heuristics( to ) )
         }
+
+        visited.add( current );
     }
 
     return null;
@@ -125,9 +130,13 @@ function createResult<Node>(
         result.path.unshift( curr );
     }
 
+    result.path.shift();
+
+    console.log( "=============================================" );
     console.log( "reached goal!" );
     console.log( "result path is:" + result.path );
     console.log( "result cost is:" + result.cost );
+    console.log( "=============================================" );
 
     return result;
 }
@@ -152,7 +161,7 @@ class Map<K, V>{
 
     getValue(k: K): V {
         const i = this.indexOf( k );
-        return i === -1 ? undefined : this.entries[i].val;
+        return i == -1 ? undefined : this.entries[i].val;
     }
 
     containsKey(k: K): boolean {
@@ -161,7 +170,7 @@ class Map<K, V>{
 
     setValue(k: K, v: V): V {
         const i = this.indexOf( k );
-        if ( i === undefined ) {
+        if ( collections.isUndefined( i ) ) {
             this.entries.push( new Entry( k, v ) );
             return undefined;
         } else {
@@ -172,7 +181,7 @@ class Map<K, V>{
     }
 
     indexOf(k: K): number {
-        for (let i = this.entries.length - 1; i >= 0; i--)
+        for (let i = 0; i < this.entries.length; i++ )
             if ( this.eqFun( k, this.entries[i].key ) ) return i;
 
         return -1;
