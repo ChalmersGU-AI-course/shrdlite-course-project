@@ -117,10 +117,7 @@ function createResult<Node>(
     current: Node,
     cameFrom: collections.Dictionary<Node, Edge<Node>> )
     : SearchResult<Node> {
-    const result = {
-        path: [current],
-        cost: 0
-    };
+    const result = { path: [current], cost: 0 };
 
     let curr = current;
     while ( cameFrom.containsKey( curr ) ) {
@@ -129,8 +126,6 @@ function createResult<Node>(
         result.cost += edge.cost;
         result.path.unshift( curr );
     }
-
-    result.path.shift();
 
     console.log( "=============================================" );
     console.log( "reached goal!" );
