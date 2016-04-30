@@ -1,6 +1,6 @@
 ///<reference path="lib/collections.ts"/>
 ///<reference path="lib/node.d.ts"/>
-///<reference path="Graph.ts"/>
+///<reference path="Graph2.ts"/>
 ///<reference path="GridGraph.ts"/>
 
 var fs = require('fs');
