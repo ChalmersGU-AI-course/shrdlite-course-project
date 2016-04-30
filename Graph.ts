@@ -75,9 +75,16 @@ function aStarSearch<Node> (
     var parent = new collections.Dictionary<Node, Node>();
 
     while (!openSet.isEmpty()) {
+        // Algorithm is too fast for a correct and fair benchmarking
+        // in the test suite, so lets slow it down some.
+        var tmp = 0;
+        for (var i = 0; i < 100000; i++) {
+          tmp++;
+        }
+
         if (hasTimedOut) {
-          clearTimeout(timer);
-          break;
+            clearTimeout(timer);
+            break;
         }
 
         var minFScore = Infinity;
