@@ -4,7 +4,7 @@ The Shrdlite course project
 Roadmap
 --------------------------
 #### A* planner (due **30. April**)
-- [ ] The planner should at least be an A* search forward planner, using some kind of heuristics.
+- [x] The planner should at least be an A* search forward planner, using some kind of heuristics.
 
 #### Natural language interpreter (due **14. May**)
 - [ ] It must obey all requirements of the world, in particular the [physical laws](http://chalmersgu-ai-course.github.io/shrdlite.html#physical-laws) and the [spatial relations](http://chalmersgu-ai-course.github.io/shrdlite.html#spatial-relations).
