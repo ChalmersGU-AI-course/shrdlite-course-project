@@ -1,1 +1,8 @@
 shrdlite-*.js
+
+*.js
+*.map
+*.idea/*
+*/.idea/*
+*~
+.DS_Store
