@@ -55,95 +55,63 @@ function aStarSearch<Node> (
     heuristics : (n:Node) => number,
     timeout : number
 ) : SearchResult<Node> {
-    var hasTimedOut = false;
+    var initTime = new Date().getTime();
+    var frontier = new collections.PriorityQueue<SearchResult<Node>>(compareSearchResults);
+    var visited : collections.Set<Node> = new collections.Set<Node>();
 
-    var timer = setTimeout(function() {
-        hasTimedOut = true;
-    }, timeout * 1000);
+    frontier.enqueue({path: [start], cost: heuristics(start)});
 
-    var openSet = new collections.Set<Node>();
-    var closedSet = new collections.Set<Node>();
-
-    openSet.add(start);
-
-    var gScore = new collections.Dictionary<Node, number>();
-    gScore.setValue(start, 0);
-
-    var fScore = new collections.Dictionary<Node, number>();
-    fScore.setValue(start, heuristics(start));
-
-    var parent = new collections.Dictionary<Node, Node>();
-
-    while (!openSet.isEmpty()) {
-        // Algorithm is too fast for a correct and fair benchmarking
-        // in the test suite, so lets slow it down some.
-        var tmp = 0;
-        for (var i = 0; i < 100000; i++) {
-          tmp++;
+    while (!frontier.isEmpty()) {
+        if (new Date().getTime() - initTime > timeout * 1000) {
+            throw new Error("Timeout");
         }
 
-        if (hasTimedOut) {
-            clearTimeout(timer);
-            break;
-        }
+        var shortestPath = frontier.dequeue();
+        var endNode : Node = shortestPath.path[shortestPath.path.length - 1];
 
-        var minFScore = Infinity;
-        var current : Node;
+        if (!visited.contains(endNode)) {
 
-        openSet.forEach(function(node) {
-            if (fScore.getValue(node) < minFScore) {
-                minFScore = fScore.getValue(node);
-                current = node;
+            if (goal(endNode))
+                return shortestPath;
+
+            visited.add(endNode);
+
+            for (var edge of graph.outgoingEdges(endNode)) {
+                if (!visited.contains(edge.to)){
+                    var extendedPath : Array<Node> = extendPath(shortestPath, edge);
+                    var extendedCost = shortestPath.cost - heuristics(endNode) + heuristics(edge.to) + edge.cost;
+                    var extendedSearchResult : SearchResult<Node> = {path: extendedPath, cost: extendedCost};
+                    frontier.enqueue(extendedSearchResult);
+                }
             }
-        });
-
-        if (goal(current)) {
-            clearTimeout(timer);
-
-            var result : SearchResult<Node> = {
-                path: [current],
-                cost: gScore.getValue(current)
-            };
-
-            while (parent.containsKey(current)) {
-                current = parent.getValue(current);
-                result.path.push(current);
-            }
-
-            result.path.reverse();
-            return result;
-        }
-
-        openSet.remove(current);
-        closedSet.add(current);
-
-        var currentGScore = gScore.getValue(current);
-
-        for (var edge of graph.outgoingEdges(current)) {
-            var neighbor = edge.to;
-
-            if (closedSet.contains(neighbor)) {
-                continue;
-            }
-
-            var _gScore = currentGScore + edge.cost;
-
-            if (!openSet.contains(neighbor)) {
-                openSet.add(neighbor);
-            } else if (_gScore >= gScore.getValue(neighbor)) {
-                continue;
-            }
-
-            parent.setValue(neighbor, current);
-            gScore.setValue(neighbor, _gScore);
-            fScore.setValue(neighbor, _gScore + heuristics(neighbor));
         }
     }
+    return null;
+}
 
-    var result : SearchResult<Node> = {
-        path: [],
-        cost: Infinity
-    };
+/**
+* Creates a combined path from the path of given searchResult and edge.
+* @param path Search result path..
+* @param edge Edge to add to that path.
+* @returns The combined path.
+*/
+function extendPath<Node>(path : SearchResult<Node>, edge: Edge<Node>) {
+    var resultPath : Array<Node> = new Array<Node>(path.path.length);
+    for (var i : number = 0; i < path.path.length; i++) {
+        resultPath[i] = path.path[i];
+    }
+    resultPath[path.path.length] = edge.to;
+    return resultPath;
+}
 
-    return result;
+/**
+* Compares the cost of two searchResults.
+* @param a SearchResult to compare
+* @param b SearchResult to compare
+* @returns Value less then 0 if cost of a is greater then cost of b, a value
+* grater then 0 if cost of b is greater then cost of a
+* and 0 if they're equal.
+*/
+function compareSearchResults<Node>(a : SearchResult<Node>, b : SearchResult<Node>) {
+    return b.cost - a.cost
 }
