@@ -70,7 +70,6 @@ function aStarSearch<Node> (
         var endNode : Node = shortestPath.path[shortestPath.path.length - 1];
 
         if (!visited.contains(endNode)) {
-
             if (goal(endNode))
                 return shortestPath;
 
@@ -86,6 +85,7 @@ function aStarSearch<Node> (
             }
         }
     }
+    
     return null;
 }
 
