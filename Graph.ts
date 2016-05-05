@@ -55,10 +55,16 @@ function aStarSearch<Node>(
     heuristics: (n: Node) => number,
     timeout: number
 ): SearchResult<Node> {
+
+
     var result: SearchResult<Node> = {
         path: [],
         cost: 0
     };
+
+    var timer = setTimeout(function(){
+      throw new Error("Something went badly wrong!");
+    }, 1);
     // The set containing nodes that have been evaluated (i.e dequeued from the priority queue)
     var closedNodesSet: collections.Set<Node> = new collections.Set<Node>();
     // Set up a dictionary keeping track of minimum gScore for each node discovered
@@ -102,10 +108,13 @@ function aStarSearch<Node>(
                 var gScore: number = gScoreDict.getValue(currentNode) + edges[j].cost;
                 // Record/Store the gScore from start to the neighbor node if it hasn't been recorded in the dictionary,
                 // or if the current gScore is better (less) than the already recorded gScore
-                if (collections.isUndefined(gScoreDict.getValue(toNode)) || gScore < gScoreDict.getValue(toNode)) {
+                if(collections.isUndefined(gScoreDict.getValue(toNode))){
+                  gScoreDict.setValue(toNode, gScore);
+                  parentDict.setValue(toNode, currentNode);
+                  openNodesPQ.enqueue(toNode);
+                } else if (gScore < gScoreDict.getValue(toNode)) {
                     gScoreDict.setValue(toNode, gScore);
                     parentDict.setValue(toNode, currentNode);
-                    openNodesPQ.enqueue(toNode);
                 }
             }
         }
@@ -120,6 +129,6 @@ function aStarSearch<Node>(
         currentNode = parentDict.getValue(currentNode);
     }
     result.path.reverse();
+    clearTimeout(timer);
     return result;
 }
-
