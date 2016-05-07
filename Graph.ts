@@ -1,5 +1,9 @@
-///<reference path="lib/collections.ts"/>
 ///<reference path="lib/node.d.ts"/>
+
+import Dict = collections.Dictionary;
+import Set  = collections.BSTree;
+import PQ   = collections.PriorityQueue;
+
 
 /** Graph module
 *
@@ -50,128 +54,49 @@ function aStarSearch<Node> (
     heuristics : (n:Node) => number,
     timeout    : number
 ) : SearchResult<Node> {
+    const cameFrom: Dict<Node, [Node, number]> = new Dict<Node, [Node, number]>(),
+          gScore  : Dict<Node, number> = new Dict<Node, number>(),
+          fScore  : Dict<Node, number> = new Dict<Node, number>(),
+          lowestFScore = (a: Node, b: Node) : number => {
+              return fScore.getValue(b) - fScore.getValue(a);
+          };
+
+    let visited: Set<Node> = new Set<Node>(graph.compareNodes),
+        toVisit: PQ<Node>  = new PQ<Node>(lowestFScore);
+
+    gScore.setValue(start, 0);
+    fScore.setValue(start, heuristics(start));
+    toVisit.add(start);
+
     const perfStart = Date.now();
-
-    const eqFun = collections.compareToEquals( graph.compareNodes );
-
-    const cameFrom : collections.Dictionary<Node, Edge<Node>> =
-        new collections.Dictionary<Node, Edge<Node>>();
-
-    const gScore : collections.Dictionary<Node, number> =
-        new collections.Dictionary<Node, number>();
-    gScore.setValue( start, 0 );
-
-    const fScore : collections.Dictionary<Node, number> =
-        new collections.Dictionary<Node, number>();
-    fScore.setValue( start, heuristics( start ) );
-
-    const getGScore = (n: Node) : number => {
-        return gScore.getValue( n ) || 100000000;
-    }
-    const getFScore = (n: Node) : number => {
-        return fScore.getValue( n );
-    }
-
-    // Ordered by lowest fScore first.
-    const lowestFScore = (a: Node, b: Node) : number => {
-        return getFScore( b ) - getFScore( a );
-    };
-
-    let visited : Set<Node> = new Set<Node>( eqFun );
-
-    let toVisit   : collections.PriorityQueue<Node> =
-        new collections.PriorityQueue<Node>( lowestFScore );
-    toVisit.add( start );
-
     while ( !toVisit.isEmpty() ) {
-        const perfEnd = Date.now();
-        if ( (perfEnd - perfStart) / 1000 > timeout ) return null;
+        if ((Date.now() - perfStart) / 1000 > timeout) return null;
 
         const current = toVisit.dequeue();
-
-        if ( goal( current ) ) return createResult( current, cameFrom );
-
-        const neigboors: Edge<Node>[] = graph.outgoingEdges( current );
-        for ( let ne of neigboors ) {
-            const {to, cost} = ne;
-            if ( visited.contains( to ) ) continue;
-
-            const tentative_gScore = getGScore( current ) + cost;
-            const ne_gScore = getGScore( to );
-
-            if ( !toVisit.contains( to ) ) toVisit.add( to );
-            else if ( tentative_gScore >= ne_gScore ) continue
-
-            cameFrom.setValue( to, ne );
-            gScore.setValue( to, tentative_gScore );
-            fScore.setValue( to, tentative_gScore + heuristics( to ) )
+        if ( goal( current ) ) {
+            let path = [current], cost = 0, curr = current;
+            while (cameFrom.containsKey(curr)) {
+                const [from, ecost] = cameFrom.getValue(curr);
+                cost += ecost;
+                path.unshift(curr = from);
+            }
+            return { path, cost };
         }
 
-        visited.add( current );
+        for (let {to, cost} of graph.outgoingEdges(current)) {
+            const tvc = toVisit.contains(to), currG = gScore.getValue(current);
+            if (tvc && (currG + cost < gScore.getValue(to))
+            || !tvc && !visited.contains(to)) {
+                const toG = gScore.getValue(current) + cost;
+                cameFrom.setValue(to, [current, cost]);
+                gScore.setValue(to, toG);
+                fScore.setValue(to, toG + heuristics(to));
+                toVisit.add(to);
+            }
+        }
+
+        visited.add(current);
     }
 
     return null;
-}
-
-function createResult<Node>(
-    current: Node,
-    cameFrom: collections.Dictionary<Node, Edge<Node>> )
-    : SearchResult<Node> {
-    const result = { path: [current], cost: 0 };
-
-    let curr = current;
-    while ( cameFrom.containsKey( curr ) ) {
-        const edge = cameFrom.getValue( curr );
-        curr = edge.from;
-        result.cost += edge.cost;
-        result.path.unshift( curr );
-    }
-
-    console.log( "=============================================" );
-    console.log( "reached goal!" );
-    console.log( "result path is:" + result.path );
-    console.log( "result cost is:" + result.cost );
-    console.log( "=============================================" );
-
-    return result;
-}
-
-// Naive set implementation:
-class Set<T>{
-    private elems : T[] = [];
-    private eqFun : collections.IEqualsFunction<T>;
-
-    constructor(eqFun: collections.IEqualsFunction<T>) {
-        this.eqFun = eqFun
-    }
-
-    contains(elem: T): boolean {
-        return collections.arrays.contains( this.elems, elem, this.eqFun );
-    }
-
-    add(elem: T): boolean {
-        if (this.contains(elem)) return false;
-        this.elems.push(elem);
-        return true;
-    }
-
-    remove(elem: T): boolean {
-        return collections.arrays.remove(this.elems, elem, this.eqFun);
-    }
-
-    forEach(callback: collections.ILoopFunction<T>): void {
-        collections.arrays.forEach(this.elems, callback);
-    }
-
-    toArray(): T[] { return this.elems; }
-
-    isEmpty(): boolean { return this.size() === 0; }
-
-    size(): number { return this.elems.length; }
-
-    clear(): void { this.elems = []; }
-
-    toString(): string {
-        return collections.arrays.toString(this.elems);
-    }
 }
