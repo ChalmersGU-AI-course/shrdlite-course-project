@@ -1,69 +1,41 @@
 The Shrdlite course project
 ============================
 
-Shrdlite is a programming project in Artificial Intelligence, a course given 
-at the University of Gothenburg and Chalmers University of Technology.
-For more information, see the course webpages:
+Roadmap
+--------------------------
+#### A* planner (due **30. April**)
+- [x] The planner should at least be an A* search forward planner, using some kind of heuristics.
 
-- <http://ChalmersGU-AI-course.github.io/>
+#### Natural language interpreter (due **14. May**)
+- [ ] It must obey all requirements of the world, in particular the [physical laws](http://chalmersgu-ai-course.github.io/shrdlite.html#physical-laws) and the [spatial relations](http://chalmersgu-ai-course.github.io/shrdlite.html#spatial-relations).
 
-The goal of the project is to create an interpreter and a planner so that
-a person can control a robot in a blocks world to move around objects,
-by giving commands in natural language.
+- [ ] It must try to disambiguate ambiguous utterances by interpreting each parse tree in the current world. If there are several possible meaningful parse trees, it must at least fail by saying that the utterance is ambiguous.
 
-To make the project more interesting, there is a web-based graphical 
-interface from which the user can interact with the blocks world.
+- [ ] It must translate a meaningful parse tree into a goal in a logical representation.
 
-The interface is written in TypeScript (which compiles into Javascript),
-and it can be run in two different modes:
+- [ ] It does not have to handle the plural all quantifier, and it may use the same meaning for the as the singular any.
 
-- as a HTML web application, using SVG animations for displaying the world
+- [ ] It must be able to plan a command sequence that solves a goal in a small world (such as the one described [here](http://chalmersgu-ai-course.github.io/shrdlite.html#interpreting-the-parse-results)), still obeying the physical laws.
 
-- as an offline text application, where input is provided at the command line
-  (requires that Node.JS is installed, but nothing of the terminal)
+#### Extensions and final tweaks (due **28. May**)
+Possible extensions:
 
-To be able to run the system you need to install Node.JS and TypeScript.
-Do that. Now.
+- To be able to handle all quantifiers in a sensible manner.
 
-### What is already implemented
+- To ask the user clarification questions when the utterance is ambiguous, e.g. “do you mean the large red pyramid or the small green?”
 
-The natural language parser is already implemented using the 
-[Nearley parsing library](https://github.com/Hardmath123/nearley).
+- To implement another planning algorithm than A*, e.g., a planner that handle larger worlds and more complicated goals.
 
-Furthermore, there are two different implementations of the blocks world:
-the SVGWorld and the TextWorld, as well as some example worlds.
+- To make the planner describe what it is doing, in a way that is understandable to humans. One important part of this will be to know how to describe the different objects in concise way. (E.g., if there is only one ball, then you don’t have to say that it is white.)
+- To add new linguistic structures to the grammar, such as:
+  - user questions (e.g., “where is the white ball?”)
+  - complex commands (e.g., “stack up all red bricks”)
+  - anaphoric references (e.g., “put the red brick under the green one”)
+- Or something else, but talk to the supervisor first!
 
-Additionally there are lots of other glue code already implemented, including 
-an initial implementation of weighted graphs in `Graph.ts`. 
 
-### What is missing
 
-What is not implemented correctly is the natural language interpreter
-and the robot planner. What you are given are stubs that return
-a dummy interpretation and a dummy plan respectively. Your goal is to implement
-the interpreter and the planner so that the robot behaves as it should.
-
-The following functions are only templates that you have to fill with 
-intelligent code to get the project to work correctly:
-
-- the function `aStarSearch(...)` in the file `Graph.ts`. 
-- the function `interpretCommand(...)` in the file `Interpreter.ts`.
-- the function `planInterpretation(...)` in the file `Planner.ts`.
-- possibly you will also want to modify the function `parseUtteranceIntoPlan(...)` in the file `Shrdlite.ts`.
-
-Depending on which extension you want to implement, there might of course be several 
-other places in the code that need modification.
-
-### About TypeScript
-
-TypeScript is a typed superset of Javascript that compiles to plain Javascript.
-It is open-source and not specific to any browser or operating system.
-
-For information about the language, please visit the official site:
-
-- <http://www.typescriptlang.org/>
-
-More detailed information
+Build Info
 --------------------------
 
 There is a Makefile if you want to use the GNU Make system. Here's what it can do:
@@ -73,73 +45,3 @@ There is a Makefile if you want to use the GNU Make system. Here's what it can d
 - `make shrdlite-html.js | shrdlite-offline.js`:
   Calls TypeScript for the given target,
   i.e., it compiles the file `shrdlite-X.ts` into `shrdlite-X.js`
-
-### Data structures
-
-You probably want to use some kind of collection datatype (such as a heap
-and/or priority queue), and we suggest the following library:
-
-- [typescript-collections](https://github.com/basarat/typescript-collections)
-
-In fact, you have to use this library anyway (in Graph.ts) and it's
-already included in the `lib` directory.
-
-### Using JavaScript modules in TypeScript
-
-If you want to use standard JavaScript libraries in TypeScript, you have to
-add a TypeScript declaration file for that library. 
-The [DefinitelyTyped library](https://github.com/borisyankov/DefinitelyTyped)
-contains declaration files for several libraries, such as the following two:
-
-- `node.d.ts`
-- `jquery.d.ts`
-
-In fact, they are already included in the `lib` directory.
-
-### JavaScript chart parser
-
-The parser is generated by [Nearley](http://github.com/Hardmath123/nearley).
-The grammar is in the file `grammar.ne`, and it is compiled into the 
-Javascript file `grammar.js`. You don't have to install Nearley if you 
-don't plan to make any changes in the grammar.
-
-
-List of files
---------------
-
-BSD Makefile for automatically creating `.js` files from `.ts` files:
-- `Makefile`
-
-Main browser files:
-- `shrdlite.html`, `shrdlite.css`
-
-Wrapper file for the browser-based interface:
-- `shrdlite-html.ts`
-
-Wrapper file for the Node.JS-based interface:
-- `shrdlite-offline.ts`
-
-Main TypeScript module:
-- `Shrdlite.ts`
-
-TypeScript interfaces and classes for the different implementations of the blocks world:
-- `World.ts`, `SVGWorld.ts`, `TextWorld.ts`, `ExampleWorlds.ts`
-
-TypeScript modules for parsing, interpretation and planning:
-- `Parser.ts`, `Interpreter.ts`, `Planner.ts`
-
-TypeScript module for weighted graphs:
-- `Graph.ts`
-
-Grammar files used by the Nearley chartparser:
-- `grammar.js`, `grammar.ne`
-
-External TypeScript libraries:
-- `lib/collections.ts`
-
-TypeScript declaration files for non-TypeScript libraries:
-- `lib/jquery.d.ts`, `lib/node.d.ts`
-
-External Javascript libraries:
-- `lib/jquery-1.11.0.min.js`, `lib/nearley.js`
-

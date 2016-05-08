@@ -36,27 +36,6 @@ $(function(){
 });
 
 
-// Adapted from: http://www.openjs.com/scripts/events/exit_confirmation.php
-function goodbye(e : any) {
-    // Note: the type of 'e' is really 'Event', but its interface says that
-    // 'e.returnValue' is a boolean, which is not the case, so we set the type to 'any'
-
-	if(!e) e = window.event;
-	// e.cancelBubble is supported by IE - this will kill the bubbling process.
-	e.cancelBubble = true;
-
-    // This is displayed in the dialog:
-	e.returnValue = 'Are you certain?\nYou cannot undo this, you know.'; 
-
-	// e.stopPropagation works in Firefox.
-	if (e.stopPropagation) {
-		e.stopPropagation();
-		e.preventDefault();
-	}
-}
-window.onbeforeunload = goodbye;
-
-
 // Adapted from: http://www.jquerybyexample.net/2012/06/get-url-parameters-using-jquery.html
 function getURLParameter(sParam : string) : string {
     var sPageURL = window.location.search.slice(1);
