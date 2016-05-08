@@ -3,12 +3,12 @@
 
 /**
 * Interpreter module
-* 
+*
 * The goal of the Interpreter module is to interpret a sentence
 * written by the user in the context of the current world state. In
 * particular, it must figure out which objects in the world,
 * i.e. which elements in the `objects` field of WorldState, correspond
-* to the ones referred to in the sentence. 
+* to the ones referred to in the sentence.
 *
 * Moreover, it has to derive what the intended goal state is and
 * return it as a logical formula described in terms of literals, where
@@ -34,7 +34,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
 * @param parses List of parses produced by the Parser.
 * @param currentState The current state of the world.
 * @returns Augments ParseResult with a list of interpretations. Each interpretation is represented by a list of Literals.
-*/    
+*/
     export function interpret(parses : Parser.ParseResult[], currentState : WorldState) : InterpretationResult[] {
         var errors : Error[] = [];
         var interpretations : InterpretationResult[] = [];
@@ -76,7 +76,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
         polarity : boolean;
 	/** The name of the relation in question. */
         relation : string;
-	/** The arguments to the relation. Usually these will be either objects 
+	/** The arguments to the relation. Usually these will be either objects
      * or special strings such as "floor" or "floor-N" (where N is a column) */
         args : string[];
     }
@@ -92,7 +92,32 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
         return (lit.polarity ? "" : "-") + lit.relation + "(" + lit.args.join(",") + ")";
     }
 
-    //////////////////////////////////////////////////////////////////////
+    // private functions
+    ///**
+    // * The core interpretation function. The code here is just a
+    // * template; you should rewrite this function entirely. In this
+    // * template, the code produces a dummy interpretation which is not
+    // * connected to `cmd`, but your version of the function should
+    // * analyse cmd in order to figure out what interpretation to
+    // * return.
+    // * @param cmd The actual command. Note that it is *not* a string, but rather an object of type `Command` (as it has been parsed by the parser).
+    //* @param state The current state of the world. Useful to look up objects in the world.
+    // * @returns A list of list of Literal, representing a formula in disjunctive normal form (disjunction of conjunctions). See the dummy interpetation returned in the code for an example, which means ontop(a,floor) AND holding(b).
+    // */
+    // function interpretCommand(cmd : Parser.Command, state : WorldState) : DNFFormula {
+    //     // This returns a dummy interpretation involving two random objects in the world
+    //     var objects : string[] = Array.prototype.concat.apply([], state.stacks);
+    //     var a : string = objects[Math.floor(Math.random() * objects.length)];
+    //     var b : string = objects[Math.floor(Math.random() * objects.length)];
+    //     var interpretation : DNFFormula = [[
+    //         {polarity: true, relation: "ontop", args: [a, "floor"]},
+    //         {polarity: true, relation: "holding", args: [b]}
+    //     ]];
+    //     return interpretation;
+    // }
+
+
+//---------------- New Code ----------- New Code -------------- New Code -------------------------//
     // private functions
     /**
      * The core interpretation function. The code here is just a
@@ -100,22 +125,167 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
      * template, the code produces a dummy interpretation which is not
      * connected to `cmd`, but your version of the function should
      * analyse cmd in order to figure out what interpretation to
-     * return.
+     * return. Returns an empty 2D array [[]] if no interpretation is found.
      * @param cmd The actual command. Note that it is *not* a string, but rather an object of type `Command` (as it has been parsed by the parser).
      * @param state The current state of the world. Useful to look up objects in the world.
      * @returns A list of list of Literal, representing a formula in disjunctive normal form (disjunction of conjunctions). See the dummy interpetation returned in the code for an example, which means ontop(a,floor) AND holding(b).
      */
+
     function interpretCommand(cmd : Parser.Command, state : WorldState) : DNFFormula {
         // This returns a dummy interpretation involving two random objects in the world
         var objects : string[] = Array.prototype.concat.apply([], state.stacks);
-        var a : string = objects[Math.floor(Math.random() * objects.length)];
-        var b : string = objects[Math.floor(Math.random() * objects.length)];
-        var interpretation : DNFFormula = [[
-            {polarity: true, relation: "ontop", args: [a, "floor"]},
-            {polarity: true, relation: "holding", args: [b]}
-        ]];
+        var interpretation : DNFFormula = [[]];
+        if(cmd.command === "take" || cmd.command === "grasp" || cmd.command === "pick up"){
+          var possibleEntities : string[] = findEntity(cmd.entity,state);
+          possibleEntities.forEach((possibleEnt,index) => {
+            if(possibleEnt !=="floor"){
+              interpretation[index] = [ {polarity : true, relation : "holding", args: [possibleEnt] }]
+            }
+          })
+          return interpretation
+        }
+        if(cmd.command === "move" || cmd.command === "put" || cmd.command === "drop"){
+            // if it is a move/put/drop 'it' to a location command (i.e. robot already holding an object)
+            if(cmd.entity == null){
+              var possibleEntities : string[] = findEntity(cmd.location.entity,state);
+              possibleEntities.forEach((possibleEnt,index) => {
+                interpretation[index] = [{polarity : true, relation : cmd.location.relation, args: [state.holding,possibleEnt]}]
+              })
+            }
+            // else it is a move/put/drop 'an entity' to a location command
+            else{
+              var possibleEntities : string[] = findEntity(cmd.entity,state);
+              possibleEntities.forEach((possibleEnt,index1) => {
+                if(possibleEnt !== "floor" ){
+                  var possibleLocationEntities : string[] = findEntity(cmd.location.entity,state);
+                  possibleLocationEntities.forEach((possibleLocationEnt,index2) => {
+                    interpretation[index1*possibleLocationEntities.length+index2] = [{polarity : true, relation : cmd.location.relation, args: [possibleEnt,possibleLocationEnt]}]
+                  })
+                }
+              })
+            }
+        }
         return interpretation;
     }
 
-}
+    /**
+    * Finds the possible object-key-strings corresponding to an arbitrary entity
+    * @param ent The entity being searched for
+    * @param state The current world state
+    * @returns A list of the string keys correspoding to entities in the world
+    */
+    function findEntity(ent : Parser.Entity , state : WorldState) : string[] {
+      // Qunatifier assumed to be "the/any". Support for "all" extended later
+      return findObject(ent.object , state)
+    }
+    function findObject(obj : Parser.Object , state : WorldState) : string[] {
+      var str : string[] = [];
+      var objects : string[] = Array.prototype.concat.apply([], state.stacks);
+      //If it is a (color,form,size) object
+      if(obj.location == null){
+        //special case for floor
+        if(obj.size == null && obj.color == null && obj.form == "floor"){
+              return ["floor"]
+        }
+        objects.forEach((eachWorldObj) => {
+          if(obj.size == null || obj.size === state.objects[eachWorldObj].size){
+            if(obj.color == null || obj.color === state.objects[eachWorldObj].color){
+              if(obj.form === state.objects[eachWorldObj].form){
+                str.push(eachWorldObj)
+              }
+            }
+          }
+        })
+        return str
+      }
+      // Then we are searching for a (object,location) based object:
+      //find all objects that fullfill location.relation
+      var aList : string[] = findObject( obj.object , state )
+      for(var i = 0 ; i < aList.length ; i++){
+        var coordinatesA : number[] = getCoords(aList[i],state)
+        if(checkLocation(coordinatesA,obj.location,state)){
+          str.push(aList[i])
+        }
+      }
+      return str
+    }
+    /** Checks if an object A, with coordinatesA and formA
+    * fullfills LOCATION requirements in relation to an entity B.
+    * @returns true if requirements are fullfilled
+    */
 
+    function checkLocation(coordinatesA : number[],location : Parser.Location, state : WorldState) : boolean{
+        var bList : string[] = findEntity( location.entity , state )
+        for(var j = 0 ; j < bList.length ; j++){
+          // special case: in relation to floor
+          if(bList[j]==="floor"){
+            if(location.relation==="above"){
+              return true
+            }
+            if(location.relation==="ontop"){
+              if(coordinatesA[1] === 0){
+                return true
+              }
+            }
+            continue
+          }
+          var coordinatesB : number[] = getCoords(bList[j],state)
+          if(location.relation === "leftof"){
+            if(coordinatesA[0]<coordinatesB[0]){
+              return true
+            }
+          }
+          else {if(location.relation === "rightof"){
+            if(coordinatesA[0]>coordinatesB[0]){
+              return true
+            }
+          }
+          else {if(location.relation === "ontop"){
+            if(state.objects[bList[j]].form !== "box"){
+              if(coordinatesA[0]===coordinatesB[0] && coordinatesA[1] === coordinatesB[1]+1){
+                return true
+              }
+            }
+          }
+          else {if(location.relation === "inside"){
+            if(state.objects[bList[j]].form === "box"){
+              if(coordinatesA[0]===coordinatesB[0] && coordinatesA[1] === coordinatesB[1]+1){
+                return true
+              }
+            }
+          }
+          else {if(location.relation === "under"){
+            if(coordinatesA[0]===coordinatesB[0] && coordinatesA[1]<coordinatesB[1]){
+              return true
+            }
+          }
+          else {if(location.relation === "beside"){
+            if(Math.abs(coordinatesA[0]-coordinatesB[0])===1){
+              return true
+            }
+          }
+          else {if(location.relation === "above"){
+            if(coordinatesA[0]===coordinatesB[0] && coordinatesA[1]>coordinatesB[1]){
+              return true
+            }
+          }}}}}}}
+        }
+        return false
+    }
+    /** Finds coordinates of an object given a key. Assending coordinate system to the right and upwards
+    * @param strKey string key of object being searched for
+    * @param state current world state
+    * @returns [x,y] coordinates
+    */
+    function getCoords(strKey : string, state : WorldState) : number[]{
+      var x : number;
+      var y : number;
+      state.stacks.forEach((stack,index) => {
+        if(stack.indexOf(strKey) !=-1){
+          x = index;
+          y = stack.indexOf(strKey)
+        }
+      })
+      return [x,y]
+    }
+}
