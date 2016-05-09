@@ -26,8 +26,6 @@ function testInterpreter(testcase : TestCase) : boolean {
     }
     catch(err) {
         interpretations = [];
-        // console.log("ERROR: Interpretation error!", err);
-        // return false;
     }
 
     console.log("Correct interpretations:");
