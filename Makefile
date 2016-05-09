@@ -22,6 +22,9 @@ all: shrdlite-html.js shrdlite-offline.js
 aStarTests: TestAStar.js
 	node $< all
 
+interpretationTests: TestInterpreter.js
+	node $< all
+
 # Make TypeScript as strict as possible:
 TSC = tsc --noFallthroughCasesInSwitch --noImplicitReturns --noImplicitAny
 
