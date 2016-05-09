@@ -33,20 +33,6 @@ class SearchResult<Node> {
     cost : number;
 }
 
-class QueueElement<Node> {
-    parent : QueueElement<Node>;
-    node : Node;
-    g : number;
-    f : number;
-
-    constructor(parent: QueueElement<Node>, node: Node, g: number, h: number) {
-        this.parent = parent;
-        this.node = node;
-        this.g = g;
-        this.f = g + h;
-    }
-}
-
 /**
 * A\* search implementation, parameterised by a `Node` type. The code
 * here is just a template; you should rewrite this function
@@ -69,57 +55,63 @@ function aStarSearch<Node> (
     heuristics : (n:Node) => number,
     timeout : number
 ) : SearchResult<Node> {
-    var hasTimedOut = false;
+    var initTime = new Date().getTime();
+    var frontier = new collections.PriorityQueue<SearchResult<Node>>(compareSearchResults);
+    var visited : collections.Set<Node> = new collections.Set<Node>();
 
-    var timer = setTimeout(function() {
-        hasTimedOut = true;
-    }, timeout * 1000);
-
-    var frontier = new collections.PriorityQueue<QueueElement<Node>>(function(a: QueueElement<Node>, b: QueueElement<Node>) {
-        return b.f - a.f;
-    });
-    var visited = new collections.Set<Node>();
-
-    frontier.add(new QueueElement(null, start, 0, heuristics(start)));
+    frontier.enqueue({path: [start], cost: heuristics(start)});
 
     while (!frontier.isEmpty()) {
-        if (hasTimedOut) {
-            clearTimeout(timer);
-            break;
+        if (new Date().getTime() - initTime > timeout * 1000) {
+            throw new Error("Timeout");
         }
 
-        var current = frontier.dequeue();
+        var shortestPath = frontier.dequeue();
+        var endNode : Node = shortestPath.path[shortestPath.path.length - 1];
 
-        if (goal(current.node)) {
-            clearTimeout(timer);
+        if (!visited.contains(endNode)) {
+            if (goal(endNode))
+                return shortestPath;
 
-            var result : SearchResult<Node> = {
-                path: [],
-                cost: current.g
-            };
+            visited.add(endNode);
 
-            while (current) {
-                result.path.push(current.node);
-                current = current.parent;
-            }
-
-            result.path.reverse();
-            return result;
-        }
-
-        visited.add(current.node);
-
-        for (var edge of graph.outgoingEdges(current.node)) {
-            if (!visited.contains(edge.to)) {
-                frontier.add(new QueueElement(current, edge.to, current.g + edge.cost, heuristics(edge.to)));
+            for (var edge of graph.outgoingEdges(endNode)) {
+                if (!visited.contains(edge.to)){
+                    var extendedPath : Array<Node> = extendPath(shortestPath, edge);
+                    var extendedCost = shortestPath.cost - heuristics(endNode) + heuristics(edge.to) + edge.cost;
+                    var extendedSearchResult : SearchResult<Node> = {path: extendedPath, cost: extendedCost};
+                    frontier.enqueue(extendedSearchResult);
+                }
             }
         }
     }
+    
+    return null;
+}
 
-    var result : SearchResult<Node> = {
-        path: [],
-        cost: Infinity
-    };
+/**
+* Creates a combined path from the path of given searchResult and edge.
+* @param path Search result path..
+* @param edge Edge to add to that path.
+* @returns The combined path.
+*/
+function extendPath<Node>(path : SearchResult<Node>, edge: Edge<Node>) {
+    var resultPath : Array<Node> = new Array<Node>(path.path.length);
+    for (var i : number = 0; i < path.path.length; i++) {
+        resultPath[i] = path.path[i];
+    }
+    resultPath[path.path.length] = edge.to;
+    return resultPath;
+}
 
-    return result;
+/**
+* Compares the cost of two searchResults.
+* @param a SearchResult to compare
+* @param b SearchResult to compare
+* @returns Value less then 0 if cost of a is greater then cost of b, a value
+* grater then 0 if cost of b is greater then cost of a
+* and 0 if they're equal.
+*/
+function compareSearchResults<Node>(a : SearchResult<Node>, b : SearchResult<Node>) {
+    return b.cost - a.cost
 }
