@@ -38,7 +38,7 @@ var allTestCases : TestCase[] = [
 
     {world: "small",
      utterance: "put a big ball in a small box",
-     interpretations: [[]]
+     interpretations: []
     },
 
     {world: "small",
