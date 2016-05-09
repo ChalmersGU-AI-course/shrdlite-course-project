@@ -84,13 +84,13 @@ function aStarSearch<Node> (
         }
 
         for (let {to, cost} of graph.outgoingEdges(current)) {
-            const tvc = toVisit.contains(to), currG = gScore.getValue(current);
-            if (tvc && (currG + cost < gScore.getValue(to))
+            const tvc = toVisit.contains(to),
+                  newG = gScore.getValue(current) + cost;
+            if (tvc && (newG < gScore.getValue(to))
             || !tvc && !visited.contains(to)) {
-                const toG = gScore.getValue(current) + cost;
                 cameFrom.setValue(to, [current, cost]);
-                gScore.setValue(to, toG);
-                fScore.setValue(to, toG + heuristics(to));
+                gScore.setValue(to, newG);
+                fScore.setValue(to, newG + heuristics(to));
                 toVisit.add(to);
             }
         }
