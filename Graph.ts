@@ -69,11 +69,7 @@ function aStarSearch<Node> (
     heuristics : (n:Node) => number,
     timeout : number
 ) : SearchResult<Node> {
-    var hasTimedOut = false;
-
-    var timer = setTimeout(function() {
-        hasTimedOut = true;
-    }, timeout * 1000);
+    var startTime = new Date().getTime();
 
     var frontier = new collections.PriorityQueue<QueueElement<Node>>(function(a: QueueElement<Node>, b: QueueElement<Node>) {
         return b.f - a.f;
@@ -83,17 +79,14 @@ function aStarSearch<Node> (
     frontier.add(new QueueElement(null, start, 0, heuristics(start)));
 
     while (!frontier.isEmpty()) {
-        if (hasTimedOut) {
-            clearTimeout(timer);
-            break;
+        if (new Date().getTime() - startTime > timeout * 1000) {
+            throw new Error("Reached timeout before finding a path");
         }
 
         var current = frontier.dequeue();
 
         if (!visited.contains(current.node)) {
             if (goal(current.node)) {
-                clearTimeout(timer);
-
                 var result : SearchResult<Node> = {
                     path: [],
                     cost: current.g
@@ -118,10 +111,5 @@ function aStarSearch<Node> (
         }
     }
 
-    var result : SearchResult<Node> = {
-        path: [],
-        cost: Infinity
-    };
-
-    return result;
+    throw new Error("Could not find a path");
 }
