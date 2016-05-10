@@ -28,6 +28,7 @@ class TextWorld implements World {
     }
 
     public printWorld(callback? : () => void) {
+        var world = this;
         console.log();
         var stacks : Stack[] = this.currentState.stacks;
         var maxHeight : number = Math.max.apply(null, stacks.map((s) => {return s.length}));
