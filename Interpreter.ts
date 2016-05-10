@@ -132,11 +132,12 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
      */
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : DNFFormula {
-        // This returns a dummy interpretation involving two random objects in the world
-        var objects : string[] = Array.prototype.concat.apply([], state.stacks);
         var interpretation : DNFFormula = [[]];
+        //if it is a [take entity] command:
         if(cmd.command === "take" || cmd.command === "grasp" || cmd.command === "pick up"){
+          //find all entities matching the given discription
           var possibleEntities : string[] = findEntity(cmd.entity,state);
+          //add them to the interpetation list (with the exception of floor which cannot be grasped)
           possibleEntities.forEach((possibleEnt,index) => {
             if(possibleEnt !=="floor"){
               interpretation[index] = [ {polarity : true, relation : "holding", args: [possibleEnt] }]
@@ -145,18 +146,20 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
           return interpretation
         }
         if(cmd.command === "move" || cmd.command === "put" || cmd.command === "drop"){
-            // if it is a move/put/drop 'it' to a location command (i.e. robot already holding an object)
+            // if it is a [move/put/drop 'it' to a location] command (robot already holding an object)
             if(cmd.entity == null){
               var possibleEntities : string[] = findEntity(cmd.location.entity,state);
               possibleEntities.forEach((possibleEnt,index) => {
                 interpretation[index] = [{polarity : true, relation : cmd.location.relation, args: [state.holding,possibleEnt]}]
               })
             }
-            // else it is a move/put/drop 'an entity' to a location command
+            // else it is a [move/put/drop 'an entity' to a location] command
             else{
+              //find all entities matching description to be moved: put THIS_ENTITY in relation to something
               var possibleEntities : string[] = findEntity(cmd.entity,state);
               possibleEntities.forEach((possibleEnt,index1) => {
                 if(possibleEnt !== "floor" ){
+                  //find all entities matching the description of which the location is in relation to: put something in relation to THIS_ENTITY
                   var possibleLocationEntities : string[] = findEntity(cmd.location.entity,state);
                   possibleLocationEntities.forEach((possibleLocationEnt,index2) => {
                     interpretation[index1*possibleLocationEntities.length+index2] = [{polarity : true, relation : cmd.location.relation, args: [possibleEnt,possibleLocationEnt]}]
@@ -172,7 +175,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
     * Finds the possible object-key-strings corresponding to an arbitrary entity
     * @param ent The entity being searched for
     * @param state The current world state
-    * @returns A list of the string keys correspoding to entities in the world
+    * @returns A list of the string keys correspoding to objects in the world matching given entity description
     */
     function findEntity(ent : Parser.Entity , state : WorldState) : string[] {
       // Qunatifier assumed to be "the/any". Support for "all" extended later
@@ -209,8 +212,8 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
       }
       return str
     }
-    /** Checks if an object A, with coordinatesA and formA
-    * fullfills LOCATION requirements in relation to an entity B.
+    /** Checks if CoordinatesA fullfills LOCATION requirements in relation to
+    * an entity B (the location.entity).
     * @returns true if requirements are fullfilled
     */
 
