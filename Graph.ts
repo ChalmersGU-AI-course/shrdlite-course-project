@@ -1,5 +1,9 @@
-///<reference path="lib/collections.ts"/>
 ///<reference path="lib/node.d.ts"/>
+
+import Dict = collections.Dictionary;
+import Set  = collections.BSTree;
+import PQ   = collections.PriorityQueue;
+
 
 /** Graph module
 *
@@ -34,13 +38,8 @@ class SearchResult<Node> {
 }
 
 /**
-* A\* search implementation, parameterised by a `Node` type. The code
-* here is just a template; you should rewrite this function
-* entirely. In this template, the code produces a dummy search result
-* which just picks the first possible neighbour.
+* A\* search implementation, parameterised by a `Node` type.
 *
-* Note that you should not change the API (type) of this function,
-* only its body.
 * @param graph The graph on which to perform A\* search.
 * @param start The initial node.
 * @param goal A function that returns true when given a goal node. Used to determine if the algorithm has reached the goal.
@@ -49,25 +48,55 @@ class SearchResult<Node> {
 * @returns A search result, which contains the path from `start` to a node satisfying `goal` and the cost of this path.
 */
 function aStarSearch<Node> (
-    graph : Graph<Node>,
-    start : Node,
-    goal : (n:Node) => boolean,
+    graph      : Graph<Node>,
+    start      : Node,
+    goal       : (n:Node) => boolean,
     heuristics : (n:Node) => number,
-    timeout : number
+    timeout    : number
 ) : SearchResult<Node> {
-    // A dummy search result: it just picks the first possible neighbour
-    var result : SearchResult<Node> = {
-        path: [start],
-        cost: 0
-    };
-    while (result.path.length < 3) {
-        var edge : Edge<Node> = graph.outgoingEdges(start) [0];
-        if (! edge) break;
-        start = edge.to;
-        result.path.push(start);
-        result.cost += edge.cost;
+    const cameFrom: Dict<Node, [Node, number]> = new Dict<Node, [Node, number]>(),
+          gScore  : Dict<Node, number> = new Dict<Node, number>(),
+          fScore  : Dict<Node, number> = new Dict<Node, number>(),
+          lowestFScore = (a: Node, b: Node) : number => {
+              return fScore.getValue(b) - fScore.getValue(a);
+          };
+
+    let visited: Set<Node> = new Set<Node>(graph.compareNodes),
+        toVisit: PQ<Node>  = new PQ<Node>(lowestFScore);
+
+    gScore.setValue(start, 0);
+    fScore.setValue(start, heuristics(start));
+    toVisit.add(start);
+
+    const perfStart = Date.now();
+    while ( !toVisit.isEmpty() ) {
+        if ((Date.now() - perfStart) / 1000 > timeout) return null;
+
+        const current = toVisit.dequeue();
+        if ( goal( current ) ) {
+            let path = [current], cost = 0, curr = current;
+            while (cameFrom.containsKey(curr)) {
+                const [from, ecost] = cameFrom.getValue(curr);
+                cost += ecost;
+                path.unshift(curr = from);
+            }
+            return { path, cost };
+        }
+
+        for (let {to, cost} of graph.outgoingEdges(current)) {
+            const tvc = toVisit.contains(to),
+                  newG = gScore.getValue(current) + cost;
+            if (tvc && (newG < gScore.getValue(to))
+            || !tvc && !visited.contains(to)) {
+                cameFrom.setValue(to, [current, cost]);
+                gScore.setValue(to, newG);
+                fScore.setValue(to, newG + heuristics(to));
+                toVisit.add(to);
+            }
+        }
+
+        visited.add(current);
     }
-    return result;
+
+    return null;
 }
-
-
