@@ -125,7 +125,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
      * template, the code produces a dummy interpretation which is not
      * connected to `cmd`, but your version of the function should
      * analyse cmd in order to figure out what interpretation to
-     * return.
+     * return. Throws "No valid interpretation" if that is the case.
      * @param cmd The actual command. Note that it is *not* a string, but rather an object of type `Command` (as it has been parsed by the parser).
      * @param state The current state of the world. Useful to look up objects in the world.
      * @returns A list of list of Literal, representing a formula in disjunctive normal form (disjunction of conjunctions). See the dummy interpetation returned in the code for an example, which means ontop(a,floor) AND holding(b).
@@ -150,10 +150,12 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
         if(cmd.command === "move" || cmd.command === "put" || cmd.command === "drop"){
             // if it is a [move/put/drop 'it' to a location] command (robot already holding an object)
             if(cmd.entity == null){
+              //find all entities the location relation is in regards to
               var possibleEntities : string[] = findEntity(cmd.location.entity,state);
               possibleEntities.forEach((possibleEnt) => {
                 var objectA = state.objects[state.holding]
                 var objectB = state.objects[possibleEnt]
+                // if the interpretation does not break any physic laws it gets added to the interpretation list
                 if(checkPhysicLaws(objectA,objectB,cmd.location.relation)){
                   interpretation[interpCount] = [{polarity : true, relation : cmd.location.relation, args: [state.holding,possibleEnt]}]
                   interpCount++;
@@ -169,11 +171,12 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                   //find all entities matching the description of which the location is in relation to: put something in relation to THIS_ENTITY
                   var possibleLocationEntities : string[] = findEntity(cmd.location.entity,state);
                     possibleLocationEntities.forEach((possibleLocationEnt) => {
-                    //dont check physics if the floor is the placement
+                    //dont need to check physics if the floor is the placement
                     if(possibleLocationEnt === "floor"){
                       interpretation[interpCount] = [{polarity : true, relation : cmd.location.relation, args: [possibleEnt,possibleLocationEnt]}]
                       interpCount++;
                     }else{
+                      //else check physic laws
                       var objectA = state.objects[possibleEnt]
                       var objectB = state.objects[possibleLocationEnt]
                       if(checkPhysicLaws(objectA,objectB,cmd.location.relation)){
@@ -187,6 +190,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
             }
           }
         }
+        //throw error if no valid interpretation was found
         if(interpCount === 0){
           throw "No valid interpretation"
         }
@@ -243,44 +247,56 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
       // Qunatifier assumed to be "the/any". Support for "all" extended later
       return findObject(ent.object , state)
     }
+    /**
+    * Finds the possible object-key-strings corresponding to an arbitrary object
+    * @param obj The object being searched for
+    * @param state The current world state
+    * @returns A list of the string keys correspoding to objects in the world matching given object description
+    */
     function findObject(obj : Parser.Object , state : WorldState) : string[] {
-      var str : string[] = [];
+      //stores string keys to all found objects matching what we are looking for. Returned by the function
+      var foundObjects : string[] = [];
+      // string keys to all world objects
       var objects : string[] = Array.prototype.concat.apply([], state.stacks);
-      //If it is a (color,form,size) object
+      //If we are looking for a (color,form,size) object
       if(obj.location == null){
         //special case for floor
         if(obj.size == null && obj.color == null && obj.form == "floor"){
               return ["floor"]
         }
+        //look through all world objects and add to the found-list if {size,color,form} match
         objects.forEach((eachWorldObj) => {
           if(obj.size == null || obj.size === state.objects[eachWorldObj].size){
             if(obj.color == null || obj.color === state.objects[eachWorldObj].color){
               if(obj.form === state.objects[eachWorldObj].form || obj.form === "anyform"){
-                str.push(eachWorldObj)
+                foundObjects.push(eachWorldObj)
               }
             }
           }
         })
-        return str
+        return foundObjects
       }
       // Then we are searching for a (object,location) based object:
-      //find all objects that fullfill location.relation
-      var aList : string[] = findObject( obj.object , state )
-      for(var i = 0 ; i < aList.length ; i++){
-        var coordinatesA : number[] = getCoords(aList[i],state)
-        if(checkLocation(coordinatesA,obj.location,state)){
-          str.push(aList[i])
+      // loop through all the possible objects which are to fullfill the location relation
+      var objList : string[] = findObject( obj.object , state )
+      for(var i = 0 ; i < objList.length ; i++){
+        var coordinates : number[] = getCoords(objList[i],state)
+        //if location relation is fullfilled add object to the found-list
+        if(checkLocation(coordinates,obj.location,state)){
+          foundObjects.push(objList[i])
         }
       }
-      return str
+      return foundObjects
     }
     /** Checks if CoordinatesA fullfills LOCATION requirements in relation to
-    * an entity B (the location.entity).
+    * some entity B (the location.entity, which could correspond to multiple objects).
     * @returns true if requirements are fullfilled
     */
 
     function checkLocation(coordinatesA : number[],location : Parser.Location, state : WorldState) : boolean{
         var bList : string[] = findEntity( location.entity , state )
+        //if the location.relation is fullfilled with respect to ANY other object
+        //matching the entity description: return true
         for(var j = 0 ; j < bList.length ; j++){
           // special case: in relation to floor
           if(bList[j]==="floor"){
