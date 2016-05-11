@@ -125,7 +125,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
      * template, the code produces a dummy interpretation which is not
      * connected to `cmd`, but your version of the function should
      * analyse cmd in order to figure out what interpretation to
-     * return. Returns an empty 2D array [[]] if no interpretation is found.
+     * return.
      * @param cmd The actual command. Note that it is *not* a string, but rather an object of type `Command` (as it has been parsed by the parser).
      * @param state The current state of the world. Useful to look up objects in the world.
      * @returns A list of list of Literal, representing a formula in disjunctive normal form (disjunction of conjunctions). See the dummy interpetation returned in the code for an example, which means ontop(a,floor) AND holding(b).
@@ -133,24 +133,31 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
 
     function interpretCommand(cmd : Parser.Command, state : WorldState) : DNFFormula {
         var interpretation : DNFFormula = [[]];
+        // a count of the number of interpretations we've added
+        var interpCount : number = 0;
         //if it is a [take entity] command:
         if(cmd.command === "take" || cmd.command === "grasp" || cmd.command === "pick up"){
           //find all entities matching the given discription
           var possibleEntities : string[] = findEntity(cmd.entity,state);
           //add them to the interpetation list (with the exception of floor which cannot be grasped)
-          possibleEntities.forEach((possibleEnt,index) => {
+          possibleEntities.forEach((possibleEnt) => {
             if(possibleEnt !=="floor"){
-              interpretation[index] = [ {polarity : true, relation : "holding", args: [possibleEnt] }]
+              interpretation[interpCount] = [ {polarity : true, relation : "holding", args: [possibleEnt] }]
+              interpCount++
             }
           })
-          return interpretation
-        }
+        } else {
         if(cmd.command === "move" || cmd.command === "put" || cmd.command === "drop"){
             // if it is a [move/put/drop 'it' to a location] command (robot already holding an object)
             if(cmd.entity == null){
               var possibleEntities : string[] = findEntity(cmd.location.entity,state);
-              possibleEntities.forEach((possibleEnt,index) => {
-                interpretation[index] = [{polarity : true, relation : cmd.location.relation, args: [state.holding,possibleEnt]}]
+              possibleEntities.forEach((possibleEnt) => {
+                var objectA = state.objects[state.holding]
+                var objectB = state.objects[possibleEnt]
+                if(checkPhysicLaws(objectA,objectB,cmd.location.relation)){
+                  interpretation[interpCount] = [{polarity : true, relation : cmd.location.relation, args: [state.holding,possibleEnt]}]
+                  interpCount++;
+                }
               })
             }
             // else it is a [move/put/drop 'an entity' to a location] command
@@ -161,14 +168,69 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                 if(possibleEnt !== "floor" ){
                   //find all entities matching the description of which the location is in relation to: put something in relation to THIS_ENTITY
                   var possibleLocationEntities : string[] = findEntity(cmd.location.entity,state);
-                  possibleLocationEntities.forEach((possibleLocationEnt,index2) => {
-                    interpretation[index1*possibleLocationEntities.length+index2] = [{polarity : true, relation : cmd.location.relation, args: [possibleEnt,possibleLocationEnt]}]
+                    possibleLocationEntities.forEach((possibleLocationEnt) => {
+                    //dont check physics if the floor is the placement
+                    if(possibleLocationEnt === "floor"){
+                      interpretation[interpCount] = [{polarity : true, relation : cmd.location.relation, args: [possibleEnt,possibleLocationEnt]}]
+                      interpCount++;
+                    }else{
+                      var objectA = state.objects[possibleEnt]
+                      var objectB = state.objects[possibleLocationEnt]
+                      if(checkPhysicLaws(objectA,objectB,cmd.location.relation)){
+                        interpretation[interpCount] = [{polarity : true, relation : cmd.location.relation, args: [possibleEnt,possibleLocationEnt]}]
+                        interpCount++;
+                      }
+                    }
                   })
                 }
               })
             }
+          }
+        }
+        if(interpCount === 0){
+          throw "No valid interpretation"
         }
         return interpretation;
+    }
+    //returns true if 'a relation b' fullfills the physic laws of the world
+    function checkPhysicLaws( a : ObjectDefinition, b : ObjectDefinition, relation : string){
+      //cannot be in relation to itself
+      if(a === b){
+        return false
+      }
+      //can only be inside a box
+      if(relation === "inside" && b.form !== "box"){
+        return false
+      }
+      //cannot be ontop of a box
+      if(relation === "ontop" && b.form === "box"){
+        return false
+      }
+      // Balls must be in boxes or on the floor
+      if(a.form === "ball" && relation === "ontop" && b.form !== "floor" ){
+        return false
+      }
+      // Balls cannot support anything.
+      if((a.form === "ball" && relation === "under") || b.form === "ball" && (relation ==="ontop" || relation === "above")){
+        return false
+      }
+      // Small objects cannot support large objects.
+      if((a.size === "small" && b.size === "large" && relation === "under") || (b.size === "small" && a.size==="large" && (relation ==="ontop" || relation === "inside" || relation ==="above"))){
+        return false
+      }
+      // Boxes cannot contain pyramids, planks or boxes of the same size.
+      if(relation === "inside" && b.form ==="box" && a.size === b.size && (a.form === "pyramids" || a.form === "planks" || a.form === "box")){
+        return false
+      }
+      // Small boxes cannot be supported by small bricks or pyramids.
+      if(relation === "ontop" && a.form === "box" && a.size === "small" && (b.form==="pyramid" || (b.form ==="brick" && b.size ==="small"))){
+        return false
+      }
+      // Large boxes cannot be supported by large pyramids.
+      if(relation === "ontop" && a.form==="box" && b.form === "pyramid" && a.size === "large" && b.size === "large"){
+        return false
+      }
+      return true
     }
 
     /**
@@ -193,7 +255,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
         objects.forEach((eachWorldObj) => {
           if(obj.size == null || obj.size === state.objects[eachWorldObj].size){
             if(obj.color == null || obj.color === state.objects[eachWorldObj].color){
-              if(obj.form === state.objects[eachWorldObj].form){
+              if(obj.form === state.objects[eachWorldObj].form || obj.form === "anyform"){
                 str.push(eachWorldObj)
               }
             }
