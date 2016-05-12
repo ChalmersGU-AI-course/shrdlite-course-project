@@ -125,9 +125,9 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
 
                     if (_from === _to) continue;
 
-                    var sameStackCheck = ['inside', 'optop', 'above'].indexOf(cmd.location.relation) > -1 ? (state.objects[_from].size !== 'large' || state.objects[_from].size === state.objects[_to].size) : true;
+                    var sameStackCheck = ['inside', 'ontop', 'above'].indexOf(cmd.location.relation) > -1 ? (state.objects[_from].size !== 'large' || state.objects[_from].size === state.objects[_to].size) : true;
                     var besideStackCheck = true;
-                    var ontopStackCheck = !(cmd.location.relation === 'ontop' && state.objects[_to] !== null);
+                    var ontopStackCheck = cmd.location.relation === 'ontop' ? state.stacks[getStackIndex(_to)].indexOf(_to) === state.stacks[getStackIndex(_to)].length - 1 : true;
 
                     if (sameStackCheck && besideStackCheck && ontopStackCheck) {
                         interpretation.push([{polarity: true, relation: cmd.location.relation, args: [_from, _to]}]);
@@ -138,6 +138,18 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
 
         return interpretation.length > 0 ? interpretation : null;
 
+        function getStackIndex(entity : string) : number {
+            var stackIndex : number;
+            for (var i = 0; i < state.stacks.length; i++) {
+                if (state.stacks[i].indexOf(entity) > -1) {
+                    stackIndex = i;
+                    break;
+                }
+            }
+
+            return stackIndex;
+        }
+
         function getEntities(state : WorldState, condition : Parser.Object) : string[] {
             var existing : string[] = Array.prototype.concat.apply([], state.stacks);
             var result : Array<string> = new Array<string>();
@@ -147,13 +159,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                 var second : string[] = getEntities(state, condition.location.entity.object);
 
                 first.forEach(function(entity : string) {
-                    var stackIndex : number;
-                    for (var i = 0; i < state.stacks.length; i++) {
-                        if (state.stacks[i].indexOf(entity) > -1) {
-                            stackIndex = i;
-                            break;
-                        }
-                    }
+                    var stackIndex : number = getStackIndex(entity);
 
                     if (condition.location.relation === 'leftof') {
                         var neighbours : Array<string> = new Array<string>();
