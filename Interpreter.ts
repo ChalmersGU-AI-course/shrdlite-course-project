@@ -176,7 +176,15 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                         second.some(function(e : string) {
                             return neighbours.indexOf(e) ? result.push(entity) && true : false;
                         });
-                    } else if (['inside', 'ontop', 'above'].indexOf(condition.location.relation) > -1) {
+                    } else if (condition.location.relation === 'inside') {
+                        second.some(function(e : string) {
+                            return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) + 1 === state.stacks[stackIndex].indexOf(e) && state.objects[e].form === 'box' ? result.push(entity) && true : false;
+                        });
+                    } else if (condition.location.relation === 'ontop') {
+                        second.some(function(e : string) {
+                            return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) + 1 === state.stacks[stackIndex].indexOf(e) && state.objects[e].form !== 'box' ? result.push(entity) && true : false;
+                        });
+                    } else if (condition.location.relation === 'above') {
                         second.some(function(e : string) {
                             return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) > state.stacks[stackIndex].indexOf(e) ? result.push(entity) && true : false;
                         });
