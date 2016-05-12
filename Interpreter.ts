@@ -107,9 +107,14 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
      */
     function interpretCommand(cmd : Parser.Command, state : WorldState) : DNFFormula {
         var objects : string[] = Array.prototype.concat.apply([], state.stacks);
-        var interpretation : DNFFormula = [[]];
+        var interpretation : DNFFormula = [];
 
-        console.log(getEntities(state, cmd.entity));
+        if (cmd.command === 'take') {
+            getEntities(state, cmd.entity).forEach(function(entity : string) {
+                interpretation.push([{polarity: true, relation: 'holding', args: [entity]}]);
+            });
+        }
+
         return interpretation;
 
         function getEntities(state : WorldState, entity : Parser.Entity) : string[] {
