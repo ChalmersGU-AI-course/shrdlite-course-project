@@ -123,6 +123,8 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                 for (var tKey in to) {
                     var _to = to[tKey];
 
+                    if (_from === _to) continue;
+
                     if (cmd.location.relation === 'beside' || (state.objects[_from].size !== 'large' || state.objects[_from].size === state.objects[_to].size)) {
                         interpretation.push([{polarity: true, relation: cmd.location.relation, args: [_from, _to]}]);
                     }
