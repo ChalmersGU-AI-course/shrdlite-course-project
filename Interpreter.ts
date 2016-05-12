@@ -141,6 +141,9 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
             }
         }
 
+        // WHAAAAAAT, WHY IS THIS NEEDED?
+        interpretation[0][0].args;
+
         return interpretation.length > 0 ? interpretation : null;
 
         function getStackIndex(entity : string) : number {
