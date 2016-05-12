@@ -115,7 +115,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
             });
         }
 
-        return interpretation;
+        return interpretation.length > 0 ? interpretation : null;
 
         function getEntities(state : WorldState, condition : Parser.Object) : string[] {
             var existing : string[] = Array.prototype.concat.apply([], state.stacks);
@@ -134,7 +134,23 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                         }
                     }
 
-                    if (condition.location.relation === 'beside') {
+                    if (condition.location.relation === 'leftof') {
+                        var neighbours : Array<string> = new Array<string>();
+
+                        if (stackIndex > 0) neighbours = neighbours.concat(state.stacks[stackIndex - 1]);
+
+                        second.some(function(e : string) {
+                            return neighbours.indexOf(e) ? result.push(entity) && true : false;
+                        });
+                    } else if (condition.location.relation === 'rightof') {
+                        var neighbours : Array<string> = new Array<string>();
+
+                        if (stackIndex < state.stacks.length - 1) neighbours = neighbours.concat(state.stacks[stackIndex + 1]);
+
+                        second.some(function(e : string) {
+                            return neighbours.indexOf(e) ? result.push(entity) && true : false;
+                        });
+                    } else if (condition.location.relation === 'beside') {
                         var neighbours : Array<string> = new Array<string>();
 
                         if (stackIndex > 0) neighbours = neighbours.concat(state.stacks[stackIndex - 1]);
@@ -142,6 +158,14 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
 
                         second.some(function(e : string) {
                             return neighbours.indexOf(e) ? result.push(entity) && true : false;
+                        });
+                    } else if (['inside', 'ontop', 'above'].indexOf(condition.location.relation) > -1) {
+                        second.some(function(e : string) {
+                            return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) > state.stacks[stackIndex].indexOf(e) ? result.push(entity) && true : false;
+                        });
+                    } else if (condition.location.relation === 'under') {
+                        second.some(function(e : string) {
+                            return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) < state.stacks[stackIndex].indexOf(e) ? result.push(entity) && true : false;
                         });
                     }
                 });
