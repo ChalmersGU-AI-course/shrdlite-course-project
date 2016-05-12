@@ -67,16 +67,16 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
     * hold among some objects.
     */
     export interface Literal {
-	/** Whether this literal asserts the relation should hold
-	 * (true polarity) or not (false polarity). For example, we
-	 * can specify that "a" should *not* be on top of "b" by the
-	 * literal {polarity: false, relation: "ontop", args:
-	 * ["a","b"]}.
-	 */
+    /** Whether this literal asserts the relation should hold
+     * (true polarity) or not (false polarity). For example, we
+     * can specify that "a" should *not* be on top of "b" by the
+     * literal {polarity: false, relation: "ontop", args:
+     * ["a","b"]}.
+     */
         polarity : boolean;
-	/** The name of the relation in question. */
+    /** The name of the relation in question. */
         relation : string;
-	/** The arguments to the relation. Usually these will be either objects
+    /** The arguments to the relation. Usually these will be either objects
      * or special strings such as "floor" or "floor-N" (where N is a column) */
         args : string[];
     }
@@ -113,7 +113,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
             getEntities(state, cmd.entity.object).forEach(function(entity : string) {
                 interpretation.push([{polarity: true, relation: 'holding', args: [entity]}]);
             });
-        }else if {
+        } else if (cmd.command === 'move') {
             var from : string[] = getEntities(state, cmd.entity.object);
             var to : string[] = getEntities(state, cmd.location.entity.object);
 
@@ -129,8 +129,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
             }
         }
 
-
-        return interpretation;
+        return interpretation.length > 0 ? interpretation : null;
 
         function getEntities(state : WorldState, condition : Parser.Object) : string[] {
             var existing : string[] = Array.prototype.concat.apply([], state.stacks);
@@ -175,9 +174,13 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                             return neighbours.indexOf(e) ? result.push(entity) && true : false;
                         });
                     } else if (['inside', 'ontop', 'above'].indexOf(condition.location.relation) > -1) {
-                        
+                        second.some(function(e : string) {
+                            return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) > state.stacks[stackIndex].indexOf(e) ? result.push(entity) && true : false;
+                        });
                     } else if (condition.location.relation === 'under') {
-
+                        second.some(function(e : string) {
+                            return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) < state.stacks[stackIndex].indexOf(e) ? result.push(entity) && true : false;
+                        });
                     }
                 });
             } else {
@@ -196,7 +199,6 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
 
             return result;
         }
-
-
     }
 }
+
