@@ -190,13 +190,21 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                             return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) + 1 === state.stacks[stackIndex].indexOf(e) && state.objects[e].form === 'box' ? result.push(entity) && true : false;
                         });
                     } else if (condition.location.relation === 'ontop') {
-                        second.some(function(e : string) {
-                            return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) + 1 === state.stacks[stackIndex].indexOf(e) && state.objects[e].form !== 'box' ? result.push(entity) && true : false;
-                        });
+                        if (condition.location.entity.object.form === 'floor') {
+                            if (state.stacks[stackIndex].indexOf(entity) === 0) result.push(entity);
+                        } else {
+                            second.some(function(e : string) {
+                                return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) + 1 === state.stacks[stackIndex].indexOf(e) && state.objects[e].form !== 'box' ? result.push(entity) && true : false;
+                            });
+                        }
                     } else if (condition.location.relation === 'above') {
-                        second.some(function(e : string) {
-                            return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) > state.stacks[stackIndex].indexOf(e) ? result.push(entity) && true : false;
-                        });
+                        if (condition.location.entity.object.form === 'floor') {
+                            result.push(entity);
+                        } else {
+                          second.some(function(e : string) {
+                              return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) > state.stacks[stackIndex].indexOf(e) ? result.push(entity) && true : false;
+                          });
+                        }
                     } else if (condition.location.relation === 'under') {
                         second.some(function(e : string) {
                             return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) < state.stacks[stackIndex].indexOf(e) ? result.push(entity) && true : false;
