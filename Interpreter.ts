@@ -125,10 +125,16 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
 
                     if (_from === _to) continue;
 
-                    var sameStackCheck = ['inside', 'ontop', 'above'].indexOf(cmd.location.relation) > -1 ? (state.objects[_from].size !== 'large' || state.objects[_from].size === state.objects[_to].size) : true;
-                    var ontopStackCheck = cmd.location.relation === 'ontop' ? state.stacks[getStackIndex(_to)].indexOf(_to) === state.stacks[getStackIndex(_to)].length - 1 : true;
+                    var sameStackCheck = true, ontopStackCheck = true, floorCheck = true;
 
-                    if (sameStackCheck && ontopStackCheck) {
+                    if (_to !== 'floor') {
+                        sameStackCheck = ['inside', 'ontop', 'above'].indexOf(cmd.location.relation) > -1 ? (state.objects[_from].size !== 'large' || state.objects[_from].size === state.objects[_to].size) : true;
+                        ontopStackCheck = cmd.location.relation === 'ontop' ? state.stacks[getStackIndex(_to)].indexOf(_to) === state.stacks[getStackIndex(_to)].length - 1 : true;
+                    } else {
+                        floorCheck = state.stacks.some(function(stack) {return stack.length === 0});
+                    }
+
+                    if (sameStackCheck && ontopStackCheck && floorCheck) {
                         interpretation.push([{polarity: true, relation: cmd.location.relation, args: [_from, _to]}]);
                     }
                 }
@@ -152,6 +158,11 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
         function getEntities(state : WorldState, condition : Parser.Object) : string[] {
             var existing : string[] = Array.prototype.concat.apply([], state.stacks);
             var result : Array<string> = new Array<string>();
+
+            if (condition.form === 'floor') {
+                result.push('floor');
+                return result;
+            }
 
             if ('location' in condition) {
                 var first : string[] = getEntities(state, condition.object);
@@ -187,14 +198,14 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                         });
                     } else if (condition.location.relation === 'inside') {
                         second.some(function(e : string) {
-                            return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) + 1 === state.stacks[stackIndex].indexOf(e) && state.objects[e].form === 'box' ? result.push(entity) && true : false;
+                            return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) === state.stacks[stackIndex].indexOf(e) + 1 && state.objects[e].form === 'box' ? result.push(entity) && true : false;
                         });
                     } else if (condition.location.relation === 'ontop') {
                         if (condition.location.entity.object.form === 'floor') {
                             if (state.stacks[stackIndex].indexOf(entity) === 0) result.push(entity);
                         } else {
                             second.some(function(e : string) {
-                                return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) + 1 === state.stacks[stackIndex].indexOf(e) && state.objects[e].form !== 'box' ? result.push(entity) && true : false;
+                                return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) === state.stacks[stackIndex].indexOf(e) + 1 && state.objects[e].form !== 'box' ? result.push(entity) && true : false;
                             });
                         }
                     } else if (condition.location.relation === 'above') {
