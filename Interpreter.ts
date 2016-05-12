@@ -114,7 +114,6 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                 interpretation.push([{polarity: true, relation: 'holding', args: [entity]}]);
             });
         } else if (cmd.command === 'move') {
-            console.log(cmd);
             var from : string[] = getEntities(state, cmd.entity.object);
             var to : string[] = getEntities(state, cmd.location.entity.object);
 
@@ -125,9 +124,12 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                     var _to = to[tKey];
 
                     if (_from === _to) continue;
-                    if (cmd.location.relation === 'ontop' && state.objects[_to]!== null) {
-                        break;
-                    }else if (cmd.location.relation === 'beside' || (state.objects[_from].size !== 'large' || state.objects[_from].size === state.objects[_to].size)) {
+
+                    var sameStackCheck = ['inside', 'optop', 'above'].indexOf(cmd.location.relation) > -1 ? (state.objects[_from].size !== 'large' || state.objects[_from].size === state.objects[_to].size) : true;
+                    var besideStackCheck = true;
+                    var ontopStackCheck = !(cmd.location.relation === 'ontop' && state.objects[_to] !== null);
+
+                    if (sameStackCheck && besideStackCheck && ontopStackCheck) {
                         interpretation.push([{polarity: true, relation: cmd.location.relation, args: [_from, _to]}]);
                     }
                 }
