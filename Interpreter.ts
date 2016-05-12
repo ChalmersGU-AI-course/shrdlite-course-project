@@ -126,10 +126,9 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                     if (_from === _to) continue;
 
                     var sameStackCheck = ['inside', 'ontop', 'above'].indexOf(cmd.location.relation) > -1 ? (state.objects[_from].size !== 'large' || state.objects[_from].size === state.objects[_to].size) : true;
-                    var besideStackCheck = true;
                     var ontopStackCheck = cmd.location.relation === 'ontop' ? state.stacks[getStackIndex(_to)].indexOf(_to) === state.stacks[getStackIndex(_to)].length - 1 : true;
 
-                    if (sameStackCheck && besideStackCheck && ontopStackCheck) {
+                    if (sameStackCheck && ontopStackCheck) {
                         interpretation.push([{polarity: true, relation: cmd.location.relation, args: [_from, _to]}]);
                     }
                 }
