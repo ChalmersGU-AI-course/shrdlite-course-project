@@ -67,16 +67,16 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
     * hold among some objects.
     */
     export interface Literal {
-    /** Whether this literal asserts the relation should hold
-     * (true polarity) or not (false polarity). For example, we
-     * can specify that "a" should *not* be on top of "b" by the
-     * literal {polarity: false, relation: "ontop", args:
-     * ["a","b"]}.
-     */
+	/** Whether this literal asserts the relation should hold
+	 * (true polarity) or not (false polarity). For example, we
+	 * can specify that "a" should *not* be on top of "b" by the
+	 * literal {polarity: false, relation: "ontop", args:
+	 * ["a","b"]}.
+	 */
         polarity : boolean;
-    /** The name of the relation in question. */
+	/** The name of the relation in question. */
         relation : string;
-    /** The arguments to the relation. Usually these will be either objects
+	/** The arguments to the relation. Usually these will be either objects
      * or special strings such as "floor" or "floor-N" (where N is a column) */
         args : string[];
     }
@@ -123,8 +123,9 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                 for (var tKey in to) {
                     var _to = to[tKey];
 
-                    if (state.objects[_from].size !== 'large' || state.objects[_from].size === state.objects[_to].size)
+                    if (cmd.location.relation === 'beside' || (state.objects[_from].size !== 'large' || state.objects[_from].size === state.objects[_to].size)) {
                         interpretation.push([{polarity: true, relation: cmd.location.relation, args: [_from, _to]}]);
+                    }
                 }
             }
         }
@@ -201,4 +202,3 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
         }
     }
 }
-
