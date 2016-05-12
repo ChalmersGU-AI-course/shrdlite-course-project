@@ -110,30 +110,93 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
         var interpretation : DNFFormula = [];
 
         if (cmd.command === 'take') {
-            getEntities(state, cmd.entity).forEach(function(entity : string) {
+            getEntities(state, cmd.entity.object).forEach(function(entity : string) {
                 interpretation.push([{polarity: true, relation: 'holding', args: [entity]}]);
             });
+        }else if {
+            var from : string[] = getEntities(state, cmd.entity.object);
+            var to : string[] = getEntities(state, cmd.location.entity.object);
+
+            for (var fKey in from) {
+                var _from = from[fKey];
+
+                for (var tKey in to) {
+                    var _to = to[tKey];
+
+                    if (state.objects[_from].size !== 'large' || state.objects[_from].size === state.objects[_to].size)
+                        interpretation.push([{polarity: true, relation: cmd.location.relation, args: [_from, _to]}]);
+                }
+            }
         }
+
 
         return interpretation;
 
-        function getEntities(state : WorldState, entity : Parser.Entity) : string[] {
+        function getEntities(state : WorldState, condition : Parser.Object) : string[] {
             var existing : string[] = Array.prototype.concat.apply([], state.stacks);
             var result : Array<string> = new Array<string>();
 
-            for (var key in existing) {
-                var value = existing[key];
+            if ('location' in condition) {
+                var first : string[] = getEntities(state, condition.object);
+                var second : string[] = getEntities(state, condition.location.entity.object);
 
-                if (
-                  (entity.object.size === null || entity.object.size === state.objects[value].size) &&
-                  (entity.object.color === null || entity.object.color === state.objects[value].color) &&
-                  (entity.object.form === 'anyform' || entity.object.form === state.objects[value].form)
-                ) {
-                  result.push(value);
+                first.forEach(function(entity : string) {
+                    var stackIndex : number;
+                    for (var i = 0; i < state.stacks.length; i++) {
+                        if (state.stacks[i].indexOf(entity) > -1) {
+                            stackIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (condition.location.relation === 'leftof') {
+                        var neighbours : Array<string> = new Array<string>();
+
+                        if (stackIndex > 0) neighbours = neighbours.concat(state.stacks[stackIndex - 1]);
+
+                        second.some(function(e : string) {
+                            return neighbours.indexOf(e) ? result.push(entity) && true : false;
+                        });
+                    } else if (condition.location.relation === 'rightof') {
+                        var neighbours : Array<string> = new Array<string>();
+
+                        if (stackIndex < state.stacks.length - 1) neighbours = neighbours.concat(state.stacks[stackIndex + 1]);
+
+                        second.some(function(e : string) {
+                            return neighbours.indexOf(e) ? result.push(entity) && true : false;
+                        });
+                    } else if (condition.location.relation === 'beside') {
+                        var neighbours : Array<string> = new Array<string>();
+
+                        if (stackIndex > 0) neighbours = neighbours.concat(state.stacks[stackIndex - 1]);
+                        if (stackIndex < state.stacks.length - 1) neighbours = neighbours.concat(state.stacks[stackIndex + 1]);
+
+                        second.some(function(e : string) {
+                            return neighbours.indexOf(e) ? result.push(entity) && true : false;
+                        });
+                    } else if (['inside', 'ontop', 'above'].indexOf(condition.location.relation) > -1) {
+                        
+                    } else if (condition.location.relation === 'under') {
+
+                    }
+                });
+            } else {
+                for (var key in existing) {
+                    var value = existing[key];
+
+                    if (
+                      (condition.size === null || condition.size === state.objects[value].size) &&
+                      (condition.color === null || condition.color === state.objects[value].color) &&
+                      (condition.form === 'anyform' || condition.form === state.objects[value].form)
+                    ) {
+                      result.push(value);
+                    }
                 }
             }
 
             return result;
         }
+
+
     }
 }
