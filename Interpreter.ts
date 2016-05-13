@@ -29,12 +29,12 @@ module Interpreter {
     //////////////////////////////////////////////////////////////////////
     // exported functions, classes and interfaces/types
 
-/**
-Top-level function for the Interpreter. It calls `interpretCommand` for each possible parse of the command. No need to change this one.
-* @param parses List of parses produced by the Parser.
-* @param currentState The current state of the world.
-* @returns Augments ParseResult with a list of interpretations. Each interpretation is represented by a list of Literals.
-*/
+    /**
+    Top-level function for the Interpreter. It calls `interpretCommand` for each possible parse of the command. No need to change this one.
+    * @param parses List of parses produced by the Parser.
+    * @param currentState The current state of the world.
+    * @returns Augments ParseResult with a list of interpretations. Each interpretation is represented by a list of Literals.
+    */
     export function interpret(parses : Parser.ParseResult[], currentState : WorldState) : InterpretationResult[] {
         var errors : Error[] = [];
         var interpretations : InterpretationResult[] = [];
@@ -67,17 +67,17 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
     * hold among some objects.
     */
     export interface Literal {
-	/** Whether this literal asserts the relation should hold
-	 * (true polarity) or not (false polarity). For example, we
-	 * can specify that "a" should *not* be on top of "b" by the
-	 * literal {polarity: false, relation: "ontop", args:
-	 * ["a","b"]}.
-	 */
+        /** Whether this literal asserts the relation should hold
+         * (true polarity) or not (false polarity). For example, we
+         * can specify that "a" should *not* be on top of "b" by the
+         * literal {polarity: false, relation: "ontop", args:
+         * ["a","b"]}.
+         */
         polarity : boolean;
-	/** The name of the relation in question. */
+        /** The name of the relation in question. */
         relation : string;
-	/** The arguments to the relation. Usually these will be either objects
-     * or special strings such as "floor" or "floor-N" (where N is a column) */
+        /** The arguments to the relation. Usually these will be either objects
+         * or special strings such as "floor" or "floor-N" (where N is a column) */
         args : string[];
     }
 
