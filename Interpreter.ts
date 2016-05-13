@@ -139,6 +139,10 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                     }
                 }
             }
+
+            if (cmd.entity.quantifier === 'all') {
+                interpretation = [Array.prototype.concat.apply([], interpretation)];
+            }
         }
 
         // WHAAAAAAT, WHY IS THIS NEEDED?
@@ -177,27 +181,27 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
                     if (condition.location.relation === 'leftof') {
                         var neighbours : Array<string> = new Array<string>();
 
-                        if (stackIndex > 0) neighbours = neighbours.concat(state.stacks[stackIndex - 1]);
+                        if (stackIndex < state.stacks.length - 1) neighbours = state.stacks[stackIndex + 1];
 
                         second.some(function(e : string) {
-                            return neighbours.indexOf(e) ? result.push(entity) && true : false;
+                            return neighbours.indexOf(e) > -1 ? result.push(entity) && true : false;
                         });
                     } else if (condition.location.relation === 'rightof') {
                         var neighbours : Array<string> = new Array<string>();
 
-                        if (stackIndex < state.stacks.length - 1) neighbours = neighbours.concat(state.stacks[stackIndex + 1]);
+                        if (stackIndex > 0) neighbours = state.stacks[stackIndex - 1];
 
                         second.some(function(e : string) {
-                            return neighbours.indexOf(e) ? result.push(entity) && true : false;
+                            return neighbours.indexOf(e) > -1 ? result.push(entity) && true : false;
                         });
                     } else if (condition.location.relation === 'beside') {
                         var neighbours : Array<string> = new Array<string>();
 
-                        if (stackIndex > 0) neighbours = neighbours.concat(state.stacks[stackIndex - 1]);
                         if (stackIndex < state.stacks.length - 1) neighbours = neighbours.concat(state.stacks[stackIndex + 1]);
+                        if (stackIndex > 0) neighbours = neighbours.concat(state.stacks[stackIndex - 1]);
 
                         second.some(function(e : string) {
-                            return neighbours.indexOf(e) ? result.push(entity) && true : false;
+                            return neighbours.indexOf(e) > -1 ? result.push(entity) && true : false;
                         });
                     } else if (condition.location.relation === 'inside') {
                         second.some(function(e : string) {
