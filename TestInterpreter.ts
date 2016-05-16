@@ -4,7 +4,7 @@
 ///<reference path="InterpreterTestCases.ts"/>
 
 
-function testInterpreter(testcase : TestCase) : boolean {
+function testInterpreter(testcase : Interpreter.TestCase) : boolean {
     var world : World = new TextWorld(ExampleWorlds[testcase.world]);
     var utterance : string = testcase.utterance;
 
@@ -69,12 +69,12 @@ function testInterpreter(testcase : TestCase) : boolean {
 
 
 function runTests(argv : string[]) {
-    var testcases : TestCase[] = [];
+    var testcases : Interpreter.TestCase[] = [];
     if (argv.length == 0 || argv[0] == "all") {
-        testcases = allTestCases;
+        testcases = Interpreter.allTestCases;
     } else {
         for (var n of argv) {
-            testcases.push(allTestCases[parseInt(n)-1]);
+            testcases.push(Interpreter.allTestCases[parseInt(n)-1]);
         }
     }
 
@@ -98,6 +98,6 @@ try {
     console.log("ERROR: " + err);
     console.log();
     console.log("Please give at least one argument:");
-    console.log("- either a number (1.." + allTestCases.length + ") for each test you want to run,");
+    console.log("- either a number (1.." + Interpreter.allTestCases.length + ") for each test you want to run,");
     console.log("- or 'all' for running all tests.");
-} 
+}
