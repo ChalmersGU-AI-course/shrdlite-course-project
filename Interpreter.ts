@@ -156,7 +156,10 @@ module Interpreter {
             *Small objects cannot support large objects.
             Boxes cannot contain pyramids, planks or boxes of the same size.
             Small boxes cannot be supported by small bricks or pyramids.
-            Large boxes cannot be supported by large pyramids. */
+            Large boxes cannot be supported by large pyramids.
+            An object can only be ontop or above the floor
+            The floor can only be the "second"
+            */
 
             if ((second !== 'floor' && ['inside', 'ontop', 'above'].indexOf(relation) > -1 && !(state.objects[first].size !== 'large' || state.objects[second].size === 'large')) ||    // Small objects cannot support large objects.
                 (state.objects[first].form === 'ball' && !(relation === 'inside' || (relation === 'ontop' ? second === 'floor' : true))) ||                                             // Balls must be in boxes or on the floor, otherwise they roll away.
