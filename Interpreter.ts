@@ -145,10 +145,13 @@ module Interpreter {
             }
         }
 
-        // WHAAAAAAT, WHY IS THIS NEEDED?
-        interpretation[0][0].args;
+        if (interpretation.length > 0) {
+            return interpretation;
+        } else {
+            throw "No interpretations possible";
+        }
 
-        return interpretation.length > 0 ? interpretation : null;
+        // Inner helper functions below
 
         function getStackIndex(entity : string) : number {
             var stackIndex : number;
