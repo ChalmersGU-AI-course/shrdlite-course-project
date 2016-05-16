@@ -79,7 +79,7 @@ module Planner {
         var graph = new PlannerGraph();
         var startnode = new PlannerNode(state.stacks, state.holding, state.arm);
         var isgoal = (n: PlannerNode) => isGoal(interpretations, n);
-        var h = (n: PlannerNode) => 0;
+        var h = (n: PlannerNode) => 0; // TODO: Implement a heuristics
 
         var result = aStarSearch(graph, startnode, isgoal, h, 10);
         result.path.shift();
@@ -127,13 +127,13 @@ module Planner {
                     } else if (condition.relation === 'beside') {
                         if (Math.abs(secondStackIndex - firstStackIndex) !== 1) conditionFulfilled = false;
                     } else if (condition.relation === 'inside') {
-
+                        // TODO
                     } else if (condition.relation === 'ontop') {
-
+                        // TODO
                     } else if (condition.relation === 'above') {
-
+                        // TODO
                     } else if (condition.relation === 'under') {
-
+                        // TODO
                     }
                 }
             }
@@ -166,7 +166,7 @@ module Planner {
 
                     holding = stacks[arm].pop();
                 } else if (command === 'd') {
-                    if (holding === null) return; // More checks if possible to drop here, physics laws
+                    if (holding === null) return; // TODO: A better check if it is possible to drop here => physics laws
 
                     stacks[arm].push(holding);
                     holding = null;
