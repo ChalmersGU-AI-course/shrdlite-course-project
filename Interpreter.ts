@@ -104,6 +104,7 @@ module Interpreter {
      * @param cmd The actual command. Note that it is *not* a string, but rather an object of type `Command` (as it has been parsed by the parser).
      * @param state The current state of the world. Useful to look up objects in the world.
      * @returns A list of list of Literal, representing a formula in disjunctive normal form (disjunction of conjunctions). See the dummy interpetation returned in the code for an example, which means ontop(a,floor) AND holding(b).
+     * @throws An error when no valid interpretations can be found
      */
     function interpretCommand(cmd : Parser.Command, state : WorldState) : DNFFormula {
         var objects : string[] = Array.prototype.concat.apply([], state.stacks);
