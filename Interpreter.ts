@@ -115,44 +115,54 @@ module Interpreter {
                 interpretation.push([{polarity: true, relation: 'holding', args: [entity]}]);
             });
         } else if (cmd.command === 'move') {
-            var from : string[] = getEntities(state, cmd.entity.object);
-            var to : string[] = getEntities(state, cmd.location.entity.object);
+            var first : string[] = getEntities(state, cmd.entity.object);
+            var second : string[] = getEntities(state, cmd.location.entity.object);
 
-            for (var fKey in from) {
-                var _from = from[fKey];
-
-                for (var tKey in to) {
-                    var _to = to[tKey];
-
-                    if (_from === _to) continue;
-
-                    var sameStackCheck = true, ontopStackCheck = true, floorCheck = true;
-
-                    if (_to !== 'floor') {
-                        sameStackCheck = ['inside', 'ontop', 'above'].indexOf(cmd.location.relation) > -1 ? (state.objects[_from].size !== 'large' || state.objects[_from].size === state.objects[_to].size) : true;
-                        ontopStackCheck = cmd.location.relation === 'ontop' ? state.stacks[getStackIndex(_to)].indexOf(_to) === state.stacks[getStackIndex(_to)].length - 1 : true;
-                    } else {
-                        floorCheck = state.stacks.some(function(stack) {return stack.length === 0});
-                    }
-
-                    if (sameStackCheck && ontopStackCheck && floorCheck) {
-                        interpretation.push([{polarity: true, relation: cmd.location.relation, args: [_from, _to]}]);
-                    }
-                }
-            }
+            first.forEach(function(_first) {
+                second.forEach(function(_second) {
+                    if (_first !== _second && isValid(state.stacks, cmd.location.relation, _first, _second))
+                        interpretation.push([{polarity: true, relation: cmd.location.relation, args: [_first, _second]}]);
+                });
+            });
 
             if (cmd.entity.quantifier === 'all') {
                 interpretation = [Array.prototype.concat.apply([], interpretation)];
             }
         }
 
-        if (interpretation.length > 0) {
+        if (interpretation.length > 0)
             return interpretation;
-        } else {
+        else
             throw "No interpretations possible";
-        }
 
         // Inner helper functions below
+
+        function isValid(stacks : Stack[], relation : string, first : string, second : string) {
+            var firstStackIndex : number = getStackIndex(first);
+            var secondStackIndex : number = getStackIndex(second);
+
+            /* TO CHECK
+
+            The floor can support at most N objects (beside each other).
+            All objects must be supported by something.
+            The arm can only hold one object at the time.
+            The arm can only pick up free objects.
+            Objects are “inside” boxes, but “ontop” of other objects.
+            Balls must be in boxes or on the floor, otherwise they roll away.
+            Balls cannot support anything.
+            Small objects cannot support large objects.
+            Boxes cannot contain pyramids, planks or boxes of the same size.
+            Small boxes cannot be supported by small bricks or pyramids.
+            Large boxes cannot be supported by large pyramids. */
+
+            if ((second !== 'floor' && ['inside', 'ontop', 'above'].indexOf(relation) > -1 && state.objects[first].size === 'large' && state.objects[second].size !== 'large') ||   // Small objects cannot support large objects.
+                (second !== 'floor' && relation === 'ontop' && state.stacks[secondStackIndex].indexOf(second) !== state.stacks[secondStackIndex].length - 1) ||                     // On top means on top. TODO: Do we have to have this?
+                (state.objects[first].form === 'ball' && !(relation === 'inside' || (relation === 'ontop' ? second === 'floor' : true)))) {                                         // Balls must be in boxes or on the floor, otherwise they roll away.
+                return false;
+            }
+
+            return true;
+        }
 
         function getStackIndex(entity : string) : number {
             var stackIndex : number;
@@ -170,81 +180,52 @@ module Interpreter {
             var existing : string[] = Array.prototype.concat.apply([], state.stacks);
             var result : Array<string> = new Array<string>();
 
-            if (condition.form === 'floor') {
-                result.push('floor');
-                return result;
-            }
+            if (condition.form === 'floor')
+                return ['floor'];
 
             if ('location' in condition) {
                 var first : string[] = getEntities(state, condition.object);
                 var second : string[] = getEntities(state, condition.location.entity.object);
 
-                first.forEach(function(entity : string) {
-                    var stackIndex : number = getStackIndex(entity);
+                first.forEach(function(_first : string) {
+                    var firstStackIndex : number = getStackIndex(_first);
 
-                    if (condition.location.relation === 'leftof') {
-                        var neighbours : Array<string> = new Array<string>();
+                    second.some(function(_second : string) {
+                        var secondStackIndex : number = getStackIndex(_second);
 
-                        if (stackIndex < state.stacks.length - 1) neighbours = state.stacks[stackIndex + 1];
-
-                        second.some(function(e : string) {
-                            return neighbours.indexOf(e) > -1 ? result.push(entity) && true : false;
-                        });
-                    } else if (condition.location.relation === 'rightof') {
-                        var neighbours : Array<string> = new Array<string>();
-
-                        if (stackIndex > 0) neighbours = state.stacks[stackIndex - 1];
-
-                        second.some(function(e : string) {
-                            return neighbours.indexOf(e) > -1 ? result.push(entity) && true : false;
-                        });
-                    } else if (condition.location.relation === 'beside') {
-                        var neighbours : Array<string> = new Array<string>();
-
-                        if (stackIndex < state.stacks.length - 1) neighbours = neighbours.concat(state.stacks[stackIndex + 1]);
-                        if (stackIndex > 0) neighbours = neighbours.concat(state.stacks[stackIndex - 1]);
-
-                        second.some(function(e : string) {
-                            return neighbours.indexOf(e) > -1 ? result.push(entity) && true : false;
-                        });
-                    } else if (condition.location.relation === 'inside') {
-                        second.some(function(e : string) {
-                            return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) === state.stacks[stackIndex].indexOf(e) + 1 && state.objects[e].form === 'box' ? result.push(entity) && true : false;
-                        });
-                    } else if (condition.location.relation === 'ontop') {
-                        if (condition.location.entity.object.form === 'floor') {
-                            if (state.stacks[stackIndex].indexOf(entity) === 0) result.push(entity);
+                        if (condition.location.relation === 'leftof') {
+                            return firstStackIndex < secondStackIndex ? result.push(_first) && true : false;
+                        } else if (condition.location.relation === 'rightof') {
+                            return firstStackIndex > secondStackIndex ? result.push(_first) && true : false;
+                        } else if (condition.location.relation === 'beside') {
+                            return Math.abs(firstStackIndex - secondStackIndex) === 1 ? result.push(_first) && true : false;
+                        } else if (condition.location.relation === 'inside') {
+                            return state.objects[_second].form === 'box' && firstStackIndex === secondStackIndex && state.stacks[firstStackIndex].indexOf(_first) === state.stacks[secondStackIndex].indexOf(_second) + 1 ? result.push(_first) && true : false;
+                        } else if (condition.location.relation === 'ontop') {
+                            if (condition.location.entity.object.form === 'floor')
+                                return state.stacks[firstStackIndex].indexOf(_first) === 0 ? result.push(_first) && true : false;
+                            else
+                                return state.objects[_second].form === 'box' && firstStackIndex === secondStackIndex && state.stacks[firstStackIndex].indexOf(_first) === state.stacks[secondStackIndex].indexOf(_second) + 1 ? result.push(_first) && true : false;
+                        } else if (condition.location.relation === 'above') {
+                            if (condition.location.entity.object.form === 'floor')
+                                return result.push(_first) && true;
+                            else
+                                return firstStackIndex === secondStackIndex && state.stacks[firstStackIndex].indexOf(_first) > state.stacks[secondStackIndex].indexOf(_second) ? result.push(_first) && true : false;
+                        } else if (condition.location.relation === 'under') {
+                            return firstStackIndex === secondStackIndex && state.stacks[firstStackIndex].indexOf(_first) < state.stacks[secondStackIndex].indexOf(_second) ? result.push(_first) && true : false;
                         } else {
-                            second.some(function(e : string) {
-                                return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) === state.stacks[stackIndex].indexOf(e) + 1 && state.objects[e].form !== 'box' ? result.push(entity) && true : false;
-                            });
+                            return false;
                         }
-                    } else if (condition.location.relation === 'above') {
-                        if (condition.location.entity.object.form === 'floor') {
-                            result.push(entity);
-                        } else {
-                          second.some(function(e : string) {
-                              return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) > state.stacks[stackIndex].indexOf(e) ? result.push(entity) && true : false;
-                          });
-                        }
-                    } else if (condition.location.relation === 'under') {
-                        second.some(function(e : string) {
-                            return state.stacks[stackIndex].indexOf(e) > -1 && state.stacks[stackIndex].indexOf(entity) < state.stacks[stackIndex].indexOf(e) ? result.push(entity) && true : false;
-                        });
-                    }
+                    });
                 });
             } else {
-                for (var key in existing) {
-                    var value = existing[key];
-
-                    if (
-                      (condition.size === null || condition.size === state.objects[value].size) &&
-                      (condition.color === null || condition.color === state.objects[value].color) &&
-                      (condition.form === 'anyform' || condition.form === state.objects[value].form)
-                    ) {
-                      result.push(value);
+                existing.forEach(function(entity) {
+                    if ((condition.size === null || condition.size === state.objects[entity].size) &&
+                        (condition.color === null || condition.color === state.objects[entity].color) &&
+                        (condition.form === 'anyform' || condition.form === state.objects[entity].form)) {
+                        result.push(entity);
                     }
-                }
+                });
             }
 
             return result;
