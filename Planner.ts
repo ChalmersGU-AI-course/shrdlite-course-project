@@ -127,6 +127,11 @@ module Planner {
                     var firstStackIndex = getStackIndex(n.stacks, first);
                     var secondStackIndex = getStackIndex(n.stacks, second);
 
+                    if (firstStackIndex === null || secondStackIndex === null) {
+                        conditionFulfilled = false;
+                        continue;
+                    }
+
                     if (condition.relation === 'leftof') {
                         if (!(firstStackIndex < secondStackIndex)) conditionFulfilled = false;
                     } else if (condition.relation === 'rightof') {
