@@ -106,7 +106,7 @@ module Planner {
     }
 
     function heuristics(interpretations : Interpreter.DNFFormula, n: PlannerNode) : number {
-        return 0; /* TODO: Implement a heuristics */
+        return 0; /* TODO: Implement a *smart* heuristics */
     }
 
     function goal(interpretations : Interpreter.DNFFormula, n: PlannerNode) : boolean {
@@ -175,7 +175,6 @@ module Planner {
                 } else if (command === 'd') {
                     if (holding === null) return; /* TODO:  A better check if it is possible to drop here (physics laws),
                                                             look at the Interpreter and copy */
-
                     stacks[arm].push(holding);
                     holding = null;
                 }
