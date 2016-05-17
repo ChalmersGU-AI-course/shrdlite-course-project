@@ -121,8 +121,15 @@ module Interpreter {
             } else if (entities.length === 1) {
                 interpretations.push([{polarity: true, relation: 'holding', args: [entities[0]]}]);
             }
-        } else if (cmd.command === 'move') {
-            var first : string[] = getEntities(state, cmd.entity.object);
+        } else if (['move', 'put'].indexOf(cmd.command) > -1) {
+            var first : string[];
+
+            if (cmd.command === 'move') {
+                first = getEntities(state, cmd.entity.object);
+            } else {
+                first = state.holding !== null ? [state.holding] : [];
+            }
+
             var second : string[] = getEntities(state, cmd.location.entity.object);
 
             first.forEach(function(_first) {
@@ -132,7 +139,7 @@ module Interpreter {
                 });
             });
 
-            if (cmd.entity.quantifier === 'all') {
+            if (cmd.command === 'move' && cmd.entity.quantifier === 'all') {
                 interpretations = [Array.prototype.concat.apply([], interpretations)];
 
                 // The floor can support at most N objects (beside each other)
@@ -153,9 +160,6 @@ module Interpreter {
         // Inner helper functions below
 
         function isValid(stacks : Stack[], relation : string, first : string, second : string) {
-            var firstStackIndex : number = getStackIndex(first);
-            var secondStackIndex : number = getStackIndex(second);
-
             /* TO CHECK
 
             -   = Skip check, no need of it
@@ -177,7 +181,7 @@ module Interpreter {
             **The floor cannot be moved
             */
 
-            if ((second !== 'floor' && ['inside', 'ontop', 'above'].indexOf(relation) > -1 && !(state.objects[first].size !== 'large' || state.objects[second].size === 'large')) ||                                                  // Small objects cannot support large objects
+            if ((second !== 'floor' && ['inside', 'ontop', 'above'].indexOf(relation) > -1 && state.objects[first].size === 'large' && state.objects[second].size === 'small') ||                                                  // Small objects cannot support large objects
                 (state.objects[first].form === 'ball' && !(relation === 'inside' || (relation === 'ontop' ? second === 'floor' : true))) ||                                                                                           // Balls must be in boxes or on the floor, otherwise they roll away
                 (second !== 'floor' && ['ontop', 'above'].indexOf(relation) > -1 && state.objects[second].form === 'ball') ||                                                                                                         // Balls cannot support anything
                 !(relation === 'inside' ? state.objects[second].form === 'box' : (relation === 'ontop' ? (second === 'floor' || state.objects[second].form !== 'box') : true)) ||                                                     // Objects are “inside” boxes, but “ontop” of other objects
@@ -192,19 +196,19 @@ module Interpreter {
             return true;
         }
 
-        function getStackIndex(entity : string) : number {
-            var stackIndex : number;
-            for (var i = 0; i < state.stacks.length; i++) {
-                if (state.stacks[i].indexOf(entity) > -1) {
-                    stackIndex = i;
-                    break;
+        function getEntities(state : WorldState, condition : Parser.Object) : string[] {
+            function getStackIndex(entity : string) : number {
+                var stackIndex : number;
+                for (var i = 0; i < state.stacks.length; i++) {
+                    if (state.stacks[i].indexOf(entity) > -1) {
+                        stackIndex = i;
+                        break;
+                    }
                 }
+
+                return stackIndex;
             }
 
-            return stackIndex;
-        }
-
-        function getEntities(state : WorldState, condition : Parser.Object) : string[] {
             var existing : string[] = Array.prototype.concat.apply([], state.stacks);
             if (state.holding !== null) existing.push(state.holding);
 
