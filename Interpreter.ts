@@ -181,7 +181,7 @@ module Interpreter {
             **The floor cannot be moved
             */
 
-            if ((second !== 'floor' && ['inside', 'ontop', 'above'].indexOf(relation) > -1 && !(state.objects[first].size !== 'large' || state.objects[second].size === 'large')) ||                                                  // Small objects cannot support large objects
+            if ((second !== 'floor' && ['inside', 'ontop', 'above'].indexOf(relation) > -1 && state.objects[first].size === 'large' && state.objects[second].size === 'small') ||                                                  // Small objects cannot support large objects
                 (state.objects[first].form === 'ball' && !(relation === 'inside' || (relation === 'ontop' ? second === 'floor' : true))) ||                                                                                           // Balls must be in boxes or on the floor, otherwise they roll away
                 (second !== 'floor' && ['ontop', 'above'].indexOf(relation) > -1 && state.objects[second].form === 'ball') ||                                                                                                         // Balls cannot support anything
                 !(relation === 'inside' ? state.objects[second].form === 'box' : (relation === 'ontop' ? (second === 'floor' || state.objects[second].form !== 'box') : true)) ||                                                     // Objects are “inside” boxes, but “ontop” of other objects
@@ -208,7 +208,7 @@ module Interpreter {
 
                 return stackIndex;
             }
-            
+
             var existing : string[] = Array.prototype.concat.apply([], state.stacks);
             if (state.holding !== null) existing.push(state.holding);
 
