@@ -108,11 +108,12 @@ module Interpreter {
      */
     function interpretCommand(cmd : Parser.Command, state : WorldState) : DNFFormula {
         var objects : string[] = Array.prototype.concat.apply([], state.stacks);
-        var interpretation : DNFFormula = [];
+        var interpretations : DNFFormula = [];
 
-        if (cmd.command === 'take') {
+        // The arm can only hold one object at the time
+        if (cmd.command === 'take' && cmd.entity.quantifier !== 'all') {
             getEntities(state, cmd.entity.object).forEach(function(entity : string) {
-                interpretation.push([{polarity: true, relation: 'holding', args: [entity]}]);
+                interpretations.push([{polarity: true, relation: 'holding', args: [entity]}]);
             });
         } else if (cmd.command === 'move') {
             var first : string[] = getEntities(state, cmd.entity.object);
@@ -121,17 +122,25 @@ module Interpreter {
             first.forEach(function(_first) {
                 second.forEach(function(_second) {
                     if (_first !== _second && isValid(state.stacks, cmd.location.relation, _first, _second))
-                        interpretation.push([{polarity: true, relation: cmd.location.relation, args: [_first, _second]}]);
+                        interpretations.push([{polarity: true, relation: cmd.location.relation, args: [_first, _second]}]);
                 });
             });
 
             if (cmd.entity.quantifier === 'all') {
-                interpretation = [Array.prototype.concat.apply([], interpretation)];
+                interpretations = [Array.prototype.concat.apply([], interpretations)];
+
+                // The floor can support at most N objects (beside each other)
+                var nbrEntitiesOnTopOfFloor = 0;
+                interpretations[0].forEach(function(condition) {
+                    if (condition.relation === 'ontop' && condition.args[1] === 'floor') nbrEntitiesOnTopOfFloor++;
+                });
+
+                if (nbrEntitiesOnTopOfFloor > state.stacks.length) interpretations = [];
             }
         }
 
-        if (interpretation.length > 0)
-            return interpretation;
+        if (interpretations.length > 0)
+            return interpretations;
         else
             throw "No interpretations possible";
 
@@ -143,28 +152,34 @@ module Interpreter {
 
             /* TO CHECK
 
-            - = Skip
-            * = Done
+            -   = Skip check, no need of a it
+            *   = Checked in interpretCommand
+            **  = Checked
 
-            The floor can support at most N objects (beside each other).
-            -All objects must be supported by something.
-            -The arm can only hold one object at the time.
-            -The arm can only pick up free objects.
-            *Objects are “inside” boxes, but “ontop” of other objects.
-            *Balls must be in boxes or on the floor, otherwise they roll away.
-            *Balls cannot support anything.
-            *Small objects cannot support large objects.
-            Boxes cannot contain pyramids, planks or boxes of the same size.
-            Small boxes cannot be supported by small bricks or pyramids.
-            Large boxes cannot be supported by large pyramids.
-            An object can only be ontop or above the floor
-            The floor can only be the "second"
+            -All objects must be supported by something
+            -The arm can only pick up free objects
+            *The arm can only hold one object at the time
+            *The floor can support at most N objects (beside each other)
+            **Small objects cannot support large objects
+            **Balls must be in boxes or on the floor, otherwise they roll away
+            **Balls cannot support anything
+            **Objects are “inside” boxes, but “ontop” of other objects
+            **Boxes cannot contain pyramids, planks or boxes of the same size
+            **Small boxes cannot be supported by small bricks or pyramids
+            **Large boxes cannot be supported by large pyramids
+            **An object can only be ontop or above the floor
+            **The floor cannot be moved
             */
 
-            if ((second !== 'floor' && ['inside', 'ontop', 'above'].indexOf(relation) > -1 && !(state.objects[first].size !== 'large' || state.objects[second].size === 'large')) ||    // Small objects cannot support large objects.
-                (state.objects[first].form === 'ball' && !(relation === 'inside' || (relation === 'ontop' ? second === 'floor' : true))) ||                                             // Balls must be in boxes or on the floor, otherwise they roll away.
-                (second !== 'floor' && ['ontop', 'above'].indexOf(relation) > -1 && !(state.objects[second].form !== 'ball')) ||                                                        // Balls cannot support anything.
-                !(relation === 'inside' ? state.objects[second].form === 'box' : (relation === 'ontop' ? (second === 'floor' || state.objects[second].form !== 'box') : true))) {       // Objects are “inside” boxes, but “ontop” of other objects.
+            if ((second !== 'floor' && ['inside', 'ontop', 'above'].indexOf(relation) > -1 && !(state.objects[first].size !== 'large' || state.objects[second].size === 'large')) ||                                                  // Small objects cannot support large objects
+                (state.objects[first].form === 'ball' && !(relation === 'inside' || (relation === 'ontop' ? second === 'floor' : true))) ||                                                                                           // Balls must be in boxes or on the floor, otherwise they roll away
+                (second !== 'floor' && ['ontop', 'above'].indexOf(relation) > -1 && state.objects[second].form === 'ball') ||                                                                                                         // Balls cannot support anything
+                !(relation === 'inside' ? state.objects[second].form === 'box' : (relation === 'ontop' ? (second === 'floor' || state.objects[second].form !== 'box') : true)) ||                                                     // Objects are “inside” boxes, but “ontop” of other objects
+                (state.objects[first].form === 'box' && relation === 'inside' && ['pyramid', 'plank', 'box'].indexOf(state.objects[second].form) > -1 && state.objects[first].size === state.objects[second].size) ||                 // Boxes cannot contain pyramids, planks or boxes of the same size
+                (state.objects[first].size === 'small' && state.objects[first].form === 'box' && relation === 'ontop' && state.objects[second].size === 'small' && ['brick', 'pyramid'].indexOf(state.objects[second].form) > -1) ||  // Small boxes cannot be supported by small bricks or pyramids
+                (state.objects[first].size === 'large' && state.objects[first].form === 'box' && relation === 'ontop' && state.objects[second].size === 'large' && state.objects[second].form === 'pyramid') ||                       // Large boxes cannot be supported by large pyramids
+                (second === 'floor' && ['ontop', 'above'].indexOf(relation) === -1) ||                                                                                                                                                // An object can only be ontop or above the floor
+                (first === 'floor')) {                                                                                                                                                                                                // The floor cannot be moved
                 return false;
             }
 
@@ -209,12 +224,12 @@ module Interpreter {
                         } else if (condition.location.relation === 'inside') {
                             return state.objects[_second].form === 'box' && firstStackIndex === secondStackIndex && state.stacks[firstStackIndex].indexOf(_first) === state.stacks[secondStackIndex].indexOf(_second) + 1 ? result.push(_first) && true : false;
                         } else if (condition.location.relation === 'ontop') {
-                            if (condition.location.entity.object.form === 'floor')
+                            if (_second === 'floor')
                                 return state.stacks[firstStackIndex].indexOf(_first) === 0 ? result.push(_first) && true : false;
                             else
                                 return state.objects[_second].form === 'box' && firstStackIndex === secondStackIndex && state.stacks[firstStackIndex].indexOf(_first) === state.stacks[secondStackIndex].indexOf(_second) + 1 ? result.push(_first) && true : false;
                         } else if (condition.location.relation === 'above') {
-                            if (condition.location.entity.object.form === 'floor')
+                            if (_second === 'floor')
                                 return result.push(_first) && true;
                             else
                                 return firstStackIndex === secondStackIndex && state.stacks[firstStackIndex].indexOf(_first) > state.stacks[secondStackIndex].indexOf(_second) ? result.push(_first) && true : false;
