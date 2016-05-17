@@ -78,7 +78,7 @@ module Planner {
     function planInterpretation(interpretations : Interpreter.DNFFormula, state : WorldState) : string[] {
         var graph = new PlannerGraph();
         var start = new PlannerNode(state.stacks, state.holding, state.arm);
-        var _goal = (n: PlannerNode) => goal(interpretations, n);
+        var _goal = (n: PlannerNode) => goal(interpretations, state.objects, n);
         var _heuristics = (n: PlannerNode) => heuristics(interpretations, n);
 
         var result = aStarSearch(graph, start, _goal, _heuristics, 10);
@@ -109,7 +109,7 @@ module Planner {
         return 0; /* TODO: Implement a *smart* heuristics */
     }
 
-    function goal(interpretations : Interpreter.DNFFormula, n: PlannerNode) : boolean {
+    function goal(interpretations : Interpreter.DNFFormula, stateObjects: { [s:string]: ObjectDefinition; }, n: PlannerNode) : boolean {
         var _goal = false;
 
         for (var i = 0; i < interpretations.length && !_goal; i++) {
@@ -127,6 +127,16 @@ module Planner {
                     var firstStackIndex = getStackIndex(n.stacks, first);
                     var secondStackIndex = getStackIndex(n.stacks, second);
 
+                    if (firstStackIndex == null || secondStackIndex == null) {
+                        conditionFulfilled = false;
+                        continue;
+                    }
+
+                    var firstStackPos = n.stacks[firstStackIndex].indexOf(first);
+                    var secondStackPos = n.stacks[secondStackIndex].indexOf(second);
+
+                    var secondType = stateObjects[second].form;
+
                     if (condition.relation === 'leftof') {
                         if (!(firstStackIndex < secondStackIndex)) conditionFulfilled = false;
                     } else if (condition.relation === 'rightof') {
@@ -134,13 +144,13 @@ module Planner {
                     } else if (condition.relation === 'beside') {
                         if (Math.abs(firstStackIndex - secondStackIndex) !== 1) conditionFulfilled = false;
                     } else if (condition.relation === 'inside') {
-                        /* TODO */
+                        if(!(firstStackPos - secondStackPos === 1) || firstStackIndex !== secondStackIndex || secondType !== 'box') conditionFulfilled = false;
                     } else if (condition.relation === 'ontop') {
-                        /* TODO */
+                        if(!(firstStackPos - secondStackPos === 1) || firstStackIndex !== secondStackIndex || secondType === 'box') conditionFulfilled = false;
                     } else if (condition.relation === 'above') {
-                        /* TODO */
+                        if (!(firstStackPos > secondStackPos) || firstStackIndex !== secondStackIndex) conditionFulfilled = false;
                     } else if (condition.relation === 'under') {
-                        /* TODO */
+                        if (!(firstStackPos < secondStackPos) || firstStackIndex !== secondStackIndex) conditionFulfilled = false;
                     }
                 }
             }
