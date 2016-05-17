@@ -110,11 +110,17 @@ module Interpreter {
         var objects : string[] = Array.prototype.concat.apply([], state.stacks);
         var interpretations : DNFFormula = [];
 
-        // The arm can only hold one object at the time
-        if (cmd.command === 'take' && cmd.entity.quantifier !== 'all') {
-            getEntities(state, cmd.entity.object).forEach(function(entity : string) {
-                interpretations.push([{polarity: true, relation: 'holding', args: [entity]}]);
-            });
+        if (cmd.command === 'take') {
+            var entities = getEntities(state, cmd.entity.object);
+
+            // The arm can only hold one object at the time
+            if (cmd.entity.quantifier !== 'all') {
+                entities.forEach(function(entity) {
+                    interpretations.push([{polarity: true, relation: 'holding', args: [entity]}]);
+                });
+            } else if (entities.length === 1) {
+                interpretations.push([{polarity: true, relation: 'holding', args: [entities[0]]}]);
+            }
         } else if (cmd.command === 'move') {
             var first : string[] = getEntities(state, cmd.entity.object);
             var second : string[] = getEntities(state, cmd.location.entity.object);
@@ -152,7 +158,7 @@ module Interpreter {
 
             /* TO CHECK
 
-            -   = Skip check, no need of a it
+            -   = Skip check, no need of it
             *   = Checked in interpretCommand
             **  = Checked
 
@@ -200,6 +206,8 @@ module Interpreter {
 
         function getEntities(state : WorldState, condition : Parser.Object) : string[] {
             var existing : string[] = Array.prototype.concat.apply([], state.stacks);
+            if (state.holding !== null) existing.push(state.holding);
+
             var result : Array<string> = new Array<string>();
 
             if (condition.form === 'floor')
