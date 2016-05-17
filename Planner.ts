@@ -128,11 +128,11 @@ module Planner {
                     var secondStackIndex = getStackIndex(n.stacks, second);
 
                     if (condition.relation === 'leftof') {
-                        if (secondStackIndex - firstStackIndex !== 1) conditionFulfilled = false;
+                        if (!(firstStackIndex < secondStackIndex)) conditionFulfilled = false;
                     } else if (condition.relation === 'rightof') {
-                        if (secondStackIndex - firstStackIndex !== -1) conditionFulfilled = false;
+                        if (!(firstStackIndex > secondStackIndex)) conditionFulfilled = false;
                     } else if (condition.relation === 'beside') {
-                        if (Math.abs(secondStackIndex - firstStackIndex) !== 1) conditionFulfilled = false;
+                        if (Math.abs(firstStackIndex - secondStackIndex) !== 1) conditionFulfilled = false;
                     } else if (condition.relation === 'inside') {
                         /* TODO */
                     } else if (condition.relation === 'ontop') {
