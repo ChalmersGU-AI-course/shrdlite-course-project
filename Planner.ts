@@ -76,7 +76,7 @@ module Planner {
      * be added using the `push` method.
      */
     function planInterpretation(interpretations : Interpreter.DNFFormula, state : WorldState) : string[] {
-        var graph = new PlannerGraph();
+        var graph = new PlannerGraph(state.objects);
         var start = new PlannerNode(state.stacks, state.holding, state.arm);
         var _goal = (n: PlannerNode) => goal(interpretations, state.objects, n);
         var _heuristics = (n: PlannerNode) => heuristics(interpretations, n);
@@ -162,8 +162,11 @@ module Planner {
     }
 
     class PlannerGraph implements Graph<PlannerNode> {
+        constructor(public stateObjects : { [s:string]: ObjectDefinition; }) {}
+
         outgoingEdges(node : PlannerNode) : Edge<PlannerNode>[] {
             var outgoing : Edge<PlannerNode>[] = [];
+            var self = this;
 
             ['l', 'r', 'p', 'd'].forEach(function(command) {
                 var stacks = node.stacks;
