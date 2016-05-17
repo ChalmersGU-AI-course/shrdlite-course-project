@@ -160,9 +160,6 @@ module Interpreter {
         // Inner helper functions below
 
         function isValid(stacks : Stack[], relation : string, first : string, second : string) {
-            var firstStackIndex : number = getStackIndex(first);
-            var secondStackIndex : number = getStackIndex(second);
-
             /* TO CHECK
 
             -   = Skip check, no need of it
@@ -199,19 +196,19 @@ module Interpreter {
             return true;
         }
 
-        function getStackIndex(entity : string) : number {
-            var stackIndex : number;
-            for (var i = 0; i < state.stacks.length; i++) {
-                if (state.stacks[i].indexOf(entity) > -1) {
-                    stackIndex = i;
-                    break;
-                }
-            }
-
-            return stackIndex;
-        }
-
         function getEntities(state : WorldState, condition : Parser.Object) : string[] {
+            function getStackIndex(entity : string) : number {
+                var stackIndex : number;
+                for (var i = 0; i < state.stacks.length; i++) {
+                    if (state.stacks[i].indexOf(entity) > -1) {
+                        stackIndex = i;
+                        break;
+                    }
+                }
+
+                return stackIndex;
+            }
+            
             var existing : string[] = Array.prototype.concat.apply([], state.stacks);
             if (state.holding !== null) existing.push(state.holding);
 
