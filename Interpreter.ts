@@ -121,8 +121,15 @@ module Interpreter {
             } else if (entities.length === 1) {
                 interpretations.push([{polarity: true, relation: 'holding', args: [entities[0]]}]);
             }
-        } else if (cmd.command === 'move') {
-            var first : string[] = getEntities(state, cmd.entity.object);
+        } else if (['move', 'put'].indexOf(cmd.command) > -1) {
+            var first : string[];
+
+            if (cmd.command === 'move') {
+                first = getEntities(state, cmd.entity.object);
+            } else {
+                first = state.holding !== null ? [state.holding] : [];
+            }
+
             var second : string[] = getEntities(state, cmd.location.entity.object);
 
             first.forEach(function(_first) {
@@ -132,7 +139,7 @@ module Interpreter {
                 });
             });
 
-            if (cmd.entity.quantifier === 'all') {
+            if (cmd.command === 'move' && cmd.entity.quantifier === 'all') {
                 interpretations = [Array.prototype.concat.apply([], interpretations)];
 
                 // The floor can support at most N objects (beside each other)
