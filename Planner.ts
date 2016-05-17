@@ -77,11 +77,11 @@ module Planner {
      */
     function planInterpretation(interpretations : Interpreter.DNFFormula, state : WorldState) : string[] {
         var graph = new PlannerGraph();
-        var startnode = new PlannerNode(state.stacks, state.holding, state.arm);
-        var isgoal = (n: PlannerNode) => isGoal(interpretations, n);
-        var h = (n: PlannerNode) => 0; // TODO: Implement a heuristics
+        var start = new PlannerNode(state.stacks, state.holding, state.arm);
+        var _goal = (n: PlannerNode) => goal(interpretations, n);
+        var _heuristics = (n: PlannerNode) => heuristics(interpretations, n);
 
-        var result = aStarSearch(graph, startnode, isgoal, h, 10);
+        var result = aStarSearch(graph, start, _goal, _heuristics, 10);
         result.path.shift();
 
         var plan : string[] = [];
@@ -93,22 +93,26 @@ module Planner {
         return plan;
     }
 
-    function isGoal(interpretations : Interpreter.DNFFormula, n: PlannerNode) : boolean {
-        function getStackIndex(entity : string) : number {
-            var stackIndex : number;
-            for (var i = 0; i < n.stacks.length; i++) {
-                if (n.stacks[i].indexOf(entity) > -1) {
-                    stackIndex = i;
-                    break;
-                }
+    function getStackIndex(stacks : Stack[], entity : string) : number {
+        var stackIndex : number;
+        for (var i = 0; i < stacks.length; i++) {
+            if (stacks[i].indexOf(entity) > -1) {
+                stackIndex = i;
+                break;
             }
-
-            return stackIndex;
         }
 
-        var _isGoal = false;
+        return stackIndex;
+    }
 
-        for (var i = 0; i < interpretations.length && !_isGoal; i++) {
+    function heuristics(interpretations : Interpreter.DNFFormula, n: PlannerNode) : number {
+        return 0; /* TODO: Implement a heuristics */
+    }
+
+    function goal(interpretations : Interpreter.DNFFormula, n: PlannerNode) : boolean {
+        var _goal = false;
+
+        for (var i = 0; i < interpretations.length && !_goal; i++) {
             var conditionFulfilled = true;
 
             for (var j = 0; j < interpretations[i].length && conditionFulfilled; j++) {
@@ -117,8 +121,11 @@ module Planner {
                 if (condition.relation === 'holding') {
                     if (n.holding !== condition.args[0]) conditionFulfilled = false;
                 } else {
-                    var firstStackIndex = getStackIndex(condition.args[0]);
-                    var secondStackIndex = getStackIndex(condition.args[1]);
+                    var first = condition.args[0];
+                    var second = condition.args[1];
+
+                    var firstStackIndex = getStackIndex(n.stacks, first);
+                    var secondStackIndex = getStackIndex(n.stacks, second);
 
                     if (condition.relation === 'leftof') {
                         if (secondStackIndex - firstStackIndex !== 1) conditionFulfilled = false;
@@ -127,21 +134,21 @@ module Planner {
                     } else if (condition.relation === 'beside') {
                         if (Math.abs(secondStackIndex - firstStackIndex) !== 1) conditionFulfilled = false;
                     } else if (condition.relation === 'inside') {
-                        // TODO
+                        /* TODO */
                     } else if (condition.relation === 'ontop') {
-                        // TODO
+                        /* TODO */
                     } else if (condition.relation === 'above') {
-                        // TODO
+                        /* TODO */
                     } else if (condition.relation === 'under') {
-                        // TODO
+                        /* TODO */
                     }
                 }
             }
 
-            if (conditionFulfilled) _isGoal = true;
+            if (conditionFulfilled) _goal = true;
         }
 
-        return _isGoal;
+        return _goal;
     }
 
     class PlannerGraph implements Graph<PlannerNode> {
@@ -166,7 +173,8 @@ module Planner {
 
                     holding = stacks[arm].pop();
                 } else if (command === 'd') {
-                    if (holding === null) return; // TODO: A better check if it is possible to drop here => physics laws
+                    if (holding === null) return; /* TODO:  A better check if it is possible to drop here (physics laws),
+                                                            look at the Interpreter and copy */
 
                     stacks[arm].push(holding);
                     holding = null;
