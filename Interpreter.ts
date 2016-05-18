@@ -197,7 +197,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
         return interpretation;
     }
     //returns true if 'a relation b' fullfills the physic laws of the world
-    function checkPhysicLaws( a : ObjectDefinition, b : ObjectDefinition, relation : string){
+    export function checkPhysicLaws( a : ObjectDefinition, b : ObjectDefinition, relation : string){
       //cannot be in relation to itself
       if(a === b){
         return false
