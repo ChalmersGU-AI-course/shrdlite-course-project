@@ -196,18 +196,18 @@ module Planner {
 
                     holding = stacks[arm].pop();
                 } else if (command === 'd') {
-                    var holdType = holding ? self.stateObjects[holding].form : undefined;
-                    var holdSize = holding ? self.stateObjects[holding].size : undefined;
-                    var topType = stacks[arm][0] ? self.stateObjects[stacks[arm][stacks[arm].length - 1]].form : undefined;
-                    var topSize = stacks[arm][0] ? self.stateObjects[stacks[arm][stacks[arm].length - 1]].size : undefined;
+                    var holdForm = holding ? self.stateObjects[holding].form : null;
+                    var holdSize = holding ? self.stateObjects[holding].size : null;
+                    var topForm = stacks[arm][0] ? self.stateObjects[stacks[arm][stacks[arm].length - 1]].form : null;
+                    var topSize = stacks[arm][0] ? self.stateObjects[stacks[arm][stacks[arm].length - 1]].size : null;
 
                     if ((holding === null) ||
                         (topSize && topSize === 'small' && holdSize === 'large') ||                                                       // Small objects cannot support large objects
-                        (topType && topType !== 'box' && holdType === 'ball') ||                                                          // Balls must be in boxes or on the floor, otherwise they roll away
-                        (topType && topType === 'ball') ||                                                                                // Balls cannot support anything
-                        (topType && topType === 'box' && ['pyramid', 'plank', 'box'].indexOf(holdType) !== -1 && topSize === holdSize) || // Boxes cannot contain pyramids, planks or boxes of the same size
-                        (topType && ['brick', 'pyramid'].indexOf(topType) !== -1 && topType === 'small' && holdType === 'box') ||         // Small boxes cannot be supported by small bricks or pyramids
-                        (topType && topType === 'pyramid' && holdType === 'box' && holdSize === topSize)) {                               // Large boxes cannot be supported by large pyramids
+                        (topForm && topForm !== 'box' && holdForm === 'ball') ||                                                          // Balls must be in boxes or on the floor, otherwise they roll away
+                        (topForm && topForm === 'ball') ||                                                                                // Balls cannot support anything
+                        (topForm && topForm === 'box' && ['pyramid', 'plank', 'box'].indexOf(holdForm) !== -1 && topSize === holdSize) || // Boxes cannot contain pyramids, planks or boxes of the same size
+                        (topForm && ['brick', 'pyramid'].indexOf(topForm) !== -1 && topForm === 'small' && holdForm === 'box') ||         // Small boxes cannot be supported by small bricks or pyramids
+                        (topForm && topForm === 'pyramid' && holdForm === 'box' && holdSize === topSize)) {                               // Large boxes cannot be supported by large pyramids
                         return;
                     }
 
