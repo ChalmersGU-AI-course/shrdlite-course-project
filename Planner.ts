@@ -202,11 +202,11 @@ module Planner {
                     var topSize = stacks[arm][0] ? self.stateObjects[stacks[arm][stacks[arm].length - 1]].size : null;
 
                     if ((holding === null) ||
-                        (topSize && topSize === 'small' && holdSize === 'large') ||                                                       // Small objects cannot support large objects
+                        (topSize === 'small' && holdSize === 'large') ||                                                       // Small objects cannot support large objects
                         (topForm && topForm !== 'box' && holdForm === 'ball') ||                                                          // Balls must be in boxes or on the floor, otherwise they roll away
-                        (topForm && topForm === 'ball') ||                                                                                // Balls cannot support anything
-                        (topForm && topForm === 'box' && ['pyramid', 'plank', 'box'].indexOf(holdForm) !== -1 && topSize === holdSize) || // Boxes cannot contain pyramids, planks or boxes of the same size
-                        (topForm && ['brick', 'pyramid'].indexOf(topForm) !== -1 && topForm === 'small' && holdForm === 'box') ||         // Small boxes cannot be supported by small bricks or pyramids
+                        (topForm === 'ball') ||                                                                                // Balls cannot support anything
+                        (topForm === 'box' && ['pyramid', 'plank', 'box'].indexOf(holdForm) !== -1 && topSize === holdSize) || // Boxes cannot contain pyramids, planks or boxes of the same size
+                        (topSize === 'small' && ['brick', 'pyramid'].indexOf(topForm) !== -1 && holdForm === 'box') ||         // Small boxes cannot be supported by small bricks or pyramids
                         (topForm && topForm === 'pyramid' && holdForm === 'box' && holdSize === topSize)) {                               // Large boxes cannot be supported by large pyramids
                         return;
                     }
