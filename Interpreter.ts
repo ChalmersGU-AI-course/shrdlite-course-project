@@ -160,36 +160,20 @@ module Interpreter {
         // Inner helper functions below
 
         function isValid(stacks : Stack[], relation : string, first : string, second : string) {
-            /* TO CHECK
+            var firstSize = first !== 'floor' ? state.objects[first].size : null;
+            var firstForm = first !== 'floor' ? state.objects[first].form : null;
+            var secondSize = second !== 'floor' ? state.objects[second].size : null;
+            var secondForm = second !== 'floor' ? state.objects[second].form : null;
 
-            -   = Skip check, no need of it
-            *   = Checked in interpretCommand
-            **  = Checked
-
-            -All objects must be supported by something
-            -The arm can only pick up free objects
-            *The arm can only hold one object at the time
-            *The floor can support at most N objects (beside each other)
-            **Small objects cannot support large objects
-            **Balls must be in boxes or on the floor, otherwise they roll away
-            **Balls cannot support anything
-            **Objects are “inside” boxes, but “ontop” of other objects
-            **Boxes cannot contain pyramids, planks or boxes of the same size
-            **Small boxes cannot be supported by small bricks or pyramids
-            **Large boxes cannot be supported by large pyramids
-            **An object can only be ontop or above the floor
-            **The floor cannot be moved
-            */
-
-            if ((second !== 'floor' && ['inside', 'ontop', 'above'].indexOf(relation) > -1 && state.objects[first].size === 'large' && state.objects[second].size === 'small') ||                                                  // Small objects cannot support large objects
-                (state.objects[first].form === 'ball' && !(relation === 'inside' || (relation === 'ontop' ? second === 'floor' : true))) ||                                                                                           // Balls must be in boxes or on the floor, otherwise they roll away
-                (second !== 'floor' && ['ontop', 'above'].indexOf(relation) > -1 && state.objects[second].form === 'ball') ||                                                                                                         // Balls cannot support anything
-                !(relation === 'inside' ? state.objects[second].form === 'box' : (relation === 'ontop' ? (second === 'floor' || state.objects[second].form !== 'box') : true)) ||                                                     // Objects are “inside” boxes, but “ontop” of other objects
-                (state.objects[first].form === 'box' && relation === 'inside' && ['pyramid', 'plank', 'box'].indexOf(state.objects[second].form) > -1 && state.objects[first].size === state.objects[second].size) ||                 // Boxes cannot contain pyramids, planks or boxes of the same size
-                (state.objects[first].size === 'small' && state.objects[first].form === 'box' && relation === 'ontop' && state.objects[second].size === 'small' && ['brick', 'pyramid'].indexOf(state.objects[second].form) > -1) ||  // Small boxes cannot be supported by small bricks or pyramids
-                (state.objects[first].size === 'large' && state.objects[first].form === 'box' && relation === 'ontop' && state.objects[second].size === 'large' && state.objects[second].form === 'pyramid') ||                       // Large boxes cannot be supported by large pyramids
-                (second === 'floor' && ['ontop', 'above'].indexOf(relation) === -1) ||                                                                                                                                                // An object can only be ontop or above the floor
-                (first === 'floor')) {                                                                                                                                                                                                // The floor cannot be moved
+            if ((second !== 'floor' && ['inside', 'ontop', 'above'].indexOf(relation) > -1 && firstSize === 'large' && secondSize === 'small') ||                     // Small objects cannot support large objects
+                (firstForm === 'ball' && !(relation === 'inside' || (relation === 'ontop' ? second === 'floor' : true))) ||                                           // Balls must be in boxes or on the floor, otherwise they roll away
+                (second !== 'floor' && ['ontop', 'above'].indexOf(relation) > -1 && secondForm === 'ball') ||                                                         // Balls cannot support anything
+                !(relation === 'inside' ? secondForm === 'box' : (relation === 'ontop' ? (second === 'floor' || secondForm !== 'box') : true)) ||                     // Objects are “inside” boxes, but “ontop” of other objects
+                (firstForm === 'box' && relation === 'inside' && ['pyramid', 'plank', 'box'].indexOf(secondForm) > -1 && firstSize === secondSize) ||                 // Boxes cannot contain pyramids, planks or boxes of the same size
+                (firstSize === 'small' && firstForm === 'box' && relation === 'ontop' && secondSize === 'small' && ['brick', 'pyramid'].indexOf(secondForm) > -1) ||  // Small boxes cannot be supported by small bricks or pyramids
+                (firstSize === 'large' && firstForm === 'box' && relation === 'ontop' && secondSize === 'large' && secondForm === 'pyramid') ||                       // Large boxes cannot be supported by large pyramids
+                (second === 'floor' && ['ontop', 'above'].indexOf(relation) === -1) ||                                                                                // An object can only be ontop or above the floor
+                (first === 'floor')) {                                                                                                                                // The floor cannot be moved
                 return false;
             }
 
