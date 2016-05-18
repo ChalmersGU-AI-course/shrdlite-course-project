@@ -106,7 +106,39 @@ module Planner {
     }
 
     function heuristics(interpretations : Interpreter.DNFFormula, n: PlannerNode) : number {
-        return 0; /* TODO: Implement a *smart* heuristics */
+        var _heuristics = 0;
+
+        interpretations.forEach(function(conditions) {
+            conditions.forEach(function(condition) {
+                var firstStackIndex = getStackIndex(n.stacks, condition.args[0]);
+
+                if (condition.relation === 'holding' && n.holding !== condition.args[0]) {
+                    _heuristics += n.holding ? 2 : 1;
+                    _heuristics += Math.abs(n.arm - firstStackIndex);
+                    _heuristics += (n.stacks[firstStackIndex].length - n.stacks[firstStackIndex].indexOf(condition.args[0]) - 1) * 4; // 4: pick, leave, drop, back
+                } else {
+                    var secondStackIndex = getStackIndex(n.stacks, condition.args[1]);
+
+                    if (condition.relation === 'leftof') {
+                        /* TODO: Make work */
+                    } else if (condition.relation === 'rightof') {
+                        /* TODO: Make work */
+                    } else if (condition.relation === 'beside') {
+                        /* TODO: Make work */
+                    } else if (condition.relation === 'inside') {
+                        /* TODO: Make work */
+                    } else if (condition.relation === 'ontop') {
+                        /* TODO: Make work */
+                    } else if (condition.relation === 'above') {
+                        /* TODO: Make work */
+                    } else if (condition.relation === 'under') {
+                        /* TODO: Make work */
+                    }
+                }
+            });
+        });
+
+        return _heuristics;
     }
 
     function goal(interpretations : Interpreter.DNFFormula, stateObjects: { [s:string]: ObjectDefinition; }, n: PlannerNode) : boolean {
@@ -117,13 +149,12 @@ module Planner {
 
             for (var j = 0; j < interpretations[i].length && conditionFulfilled; j++) {
                 var condition = interpretations[i][j];
+                var first = condition.args[0];
 
                 if (condition.relation === 'holding') {
-                    if (n.holding !== condition.args[0]) conditionFulfilled = false;
+                    if (n.holding !== first) conditionFulfilled = false;
                 } else {
-                    var first = condition.args[0];
                     var second = condition.args[1];
-
                     var firstStackIndex = getStackIndex(n.stacks, first);
 
                     if (firstStackIndex == null) {
