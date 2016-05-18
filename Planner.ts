@@ -125,32 +125,42 @@ module Planner {
                     var second = condition.args[1];
 
                     var firstStackIndex = getStackIndex(n.stacks, first);
-                    var secondStackIndex = getStackIndex(n.stacks, second);
 
-                    if (firstStackIndex == null || secondStackIndex == null) {
+                    if (firstStackIndex == null) {
                         conditionFulfilled = false;
                         continue;
                     }
 
                     var firstStackPos = n.stacks[firstStackIndex].indexOf(first);
-                    var secondStackPos = n.stacks[secondStackIndex].indexOf(second);
 
-                    var secondType = stateObjects[second].form;
+                    if (second !== 'floor') {
+                        var secondStackIndex = getStackIndex(n.stacks, second);
 
-                    if (condition.relation === 'leftof') {
-                        if (!(firstStackIndex < secondStackIndex)) conditionFulfilled = false;
-                    } else if (condition.relation === 'rightof') {
-                        if (!(firstStackIndex > secondStackIndex)) conditionFulfilled = false;
-                    } else if (condition.relation === 'beside') {
-                        if (Math.abs(firstStackIndex - secondStackIndex) !== 1) conditionFulfilled = false;
-                    } else if (condition.relation === 'inside') {
-                        if(!(firstStackPos - secondStackPos === 1) || firstStackIndex !== secondStackIndex || secondType !== 'box') conditionFulfilled = false;
-                    } else if (condition.relation === 'ontop') {
-                        if(!(firstStackPos - secondStackPos === 1) || firstStackIndex !== secondStackIndex || secondType === 'box') conditionFulfilled = false;
-                    } else if (condition.relation === 'above') {
-                        if (!(firstStackPos > secondStackPos) || firstStackIndex !== secondStackIndex) conditionFulfilled = false;
-                    } else if (condition.relation === 'under') {
-                        if (!(firstStackPos < secondStackPos) || firstStackIndex !== secondStackIndex) conditionFulfilled = false;
+                        if (secondStackIndex == null) {
+                            conditionFulfilled = false;
+                            continue;
+                        }
+
+                        var secondStackPos = n.stacks[secondStackIndex].indexOf(second);
+                        var secondType = stateObjects[second].form;
+
+                        if (condition.relation === 'leftof') {
+                            if (!(firstStackIndex < secondStackIndex)) conditionFulfilled = false;
+                        } else if (condition.relation === 'rightof') {
+                            if (!(firstStackIndex > secondStackIndex)) conditionFulfilled = false;
+                        } else if (condition.relation === 'beside') {
+                            if (Math.abs(firstStackIndex - secondStackIndex) !== 1) conditionFulfilled = false;
+                        } else if (condition.relation === 'inside') {
+                            if (!(firstStackPos - secondStackPos === 1) || firstStackIndex !== secondStackIndex || secondType !== 'box') conditionFulfilled = false;
+                        } else if (condition.relation === 'ontop') {
+                            if (!(firstStackPos - secondStackPos === 1) || firstStackIndex !== secondStackIndex || secondType === 'box') conditionFulfilled = false;
+                        } else if (condition.relation === 'above') {
+                            if (!(firstStackPos > secondStackPos) || firstStackIndex !== secondStackIndex) conditionFulfilled = false;
+                        } else if (condition.relation === 'under') {
+                            if (!(firstStackPos < secondStackPos) || firstStackIndex !== secondStackIndex) conditionFulfilled = false;
+                        }
+                    } else if (condition.relation === 'ontop' && firstStackPos !== 0) {
+                        conditionFulfilled = false;
                     }
                 }
             }
@@ -191,14 +201,14 @@ module Planner {
                     var topType = stacks[arm][0] ? self.stateObjects[stacks[arm][stacks[arm].length - 1]].form : undefined;
                     var topSize = stacks[arm][0] ? self.stateObjects[stacks[arm][stacks[arm].length - 1]].size : undefined;
 
-                    if((holding === null) ||
-                      (topSize && topSize === 'small' && holdSize === 'large') ||                                                       // Small objects cannot support large objects
-                      (topType && topType !== 'box' && holdType === 'ball') ||                                                          // Balls must be in boxes or on the floor, otherwise they roll away
-                      (topType && topType === 'ball') ||                                                                                // Balls cannot support anything
-                      (topType && topType === 'box' && ['pyramid', 'plank', 'box'].indexOf(holdType) !== -1 && topSize === holdSize) || // Boxes cannot contain pyramids, planks or boxes of the same size
-                      (topType && ['brick', 'pyramid'].indexOf(topType) !== -1 && topType === 'small' && holdType === 'box') ||         // Small boxes cannot be supported by small bricks or pyramids
-                      (topType && topType === 'pyramid' && holdType === 'box' && holdSize === topSize)) {                               // Large boxes cannot be supported by large pyramids
-                      return;
+                    if ((holding === null) ||
+                        (topSize && topSize === 'small' && holdSize === 'large') ||                                                       // Small objects cannot support large objects
+                        (topType && topType !== 'box' && holdType === 'ball') ||                                                          // Balls must be in boxes or on the floor, otherwise they roll away
+                        (topType && topType === 'ball') ||                                                                                // Balls cannot support anything
+                        (topType && topType === 'box' && ['pyramid', 'plank', 'box'].indexOf(holdType) !== -1 && topSize === holdSize) || // Boxes cannot contain pyramids, planks or boxes of the same size
+                        (topType && ['brick', 'pyramid'].indexOf(topType) !== -1 && topType === 'small' && holdType === 'box') ||         // Small boxes cannot be supported by small bricks or pyramids
+                        (topType && topType === 'pyramid' && holdType === 'box' && holdSize === topSize)) {                               // Large boxes cannot be supported by large pyramids
+                        return;
                     }
 
                     stacks[arm].push(holding);
