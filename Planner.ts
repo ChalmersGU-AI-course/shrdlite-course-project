@@ -81,7 +81,7 @@ module Planner {
         var _goal = (n: PlannerNode) => goal(interpretations, state.objects, n);
         var _heuristics = (n: PlannerNode) => heuristics(interpretations, n);
 
-        var result = aStarSearch(graph, start, _goal, _heuristics, 100);
+        var result = aStarSearch(graph, start, _goal, _heuristics, 10);
         result.path.shift();
 
         var plan : string[] = [];
@@ -166,9 +166,7 @@ module Planner {
         return Math.min.apply(null, result);
     }
 
-    function goal(interpretations : Interpreter.DNFFormula, stateObjects: { [s:string]: ObjectDefinition; }, n: PlannerNode) : boolean {
-        console.log("#");
-
+    function goal(interpretations : Interpreter.DNFFormula, objects: { [s:string]: ObjectDefinition; }, n: PlannerNode) : boolean {
         var _goal = false;
 
         for (var i = 0; i < interpretations.length && !_goal; i++) {
@@ -200,7 +198,7 @@ module Planner {
                         }
 
                         var secondStackPos = n.stacks[secondStackIndex].indexOf(second);
-                        var secondType = stateObjects[second].form;
+                        var secondType = objects[second].form;
 
                         if (condition.relation === 'leftof') {
                             if (!(firstStackIndex < secondStackIndex)) conditionFulfilled = false;
@@ -228,7 +226,7 @@ module Planner {
     }
 
     class PlannerGraph implements Graph<PlannerNode> {
-        constructor(public stateObjects : { [s:string]: ObjectDefinition; }) {}
+        constructor(public objects : { [s:string]: ObjectDefinition; }) {}
 
         outgoingEdges(node : PlannerNode) : Edge<PlannerNode>[] {
             var outgoing : Edge<PlannerNode>[] = [];
@@ -249,10 +247,10 @@ module Planner {
                     if (holding !== null || stacks[arm].length <= 0) return;
                     holding = stacks[arm].pop();
                 } else if (command === 'd') {
-                    var holdForm = holding ? self.stateObjects[holding].form : null;
-                    var holdSize = holding ? self.stateObjects[holding].size : null;
-                    var topForm = stacks[arm][0] ? self.stateObjects[stacks[arm][stacks[arm].length - 1]].form : null;
-                    var topSize = stacks[arm][0] ? self.stateObjects[stacks[arm][stacks[arm].length - 1]].size : null;
+                    var holdForm = holding ? self.objects[holding].form : null;
+                    var holdSize = holding ? self.objects[holding].size : null;
+                    var topForm = stacks[arm][0] ? self.objects[stacks[arm][stacks[arm].length - 1]].form : null;
+                    var topSize = stacks[arm][0] ? self.objects[stacks[arm][stacks[arm].length - 1]].size : null;
 
                     if ((holding === null) ||
                         (topSize === 'small' && holdSize === 'large') ||                                                        // Small objects cannot support large objects
