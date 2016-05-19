@@ -148,9 +148,10 @@ module Planner {
   */
   function planInterpretation(interpretation : Interpreter.DNFFormula, state : WorldState) : string[] {
     var plan : string[] = [];
-    var graph : Graph<WorldState>;
-    graph.outgoingEdges = getWorldStateEdges
+    //compare function defined seperatly in Graph.ts
+    var graph : Graph<WorldState> = {outgoingEdges : getWorldStateEdges , compareNodes : null}
     var start : WorldState = state;
+
     function goal(testState : WorldState) : boolean {
       for(var i=0; i< interpretation.length ; i++){
         for(var j=0; j< interpretation[i].length ; j++){
@@ -169,19 +170,19 @@ module Planner {
       }
       return false
     }
-    function heuristic(testState : WorldState) : number {
-      return 0
-    }
     // max alocated time for a search in seconds
     var timeout : number = 5;
-
     var result : SearchResult<WorldState> = aStarSearch<WorldState>(graph,start,goal,heuristic,timeout);
-
     //result.path is the resulting series of worldStates we want to traverse to reach the goal
     var previousState : WorldState;
     var currentState : WorldState;
-    for(var i=1;i<result.path.length;i++){
-      previousState = result.path[i-1];
+    for(var i=0;i<result.path.length;i++){
+      if(i===0){
+        previousState = start;
+      }
+      else{
+        previousState = result.path[i-1];
+      }
       currentState = result.path[i];
       //if the arm has moved right
       if(currentState.arm > previousState.arm){
@@ -195,7 +196,7 @@ module Planner {
       }
       //otherwise what is held has changed
       //if something was picked up
-      if(currentState.holding.length > previousState.holding.length){
+      if(previousState.holding == null){
         plan.push("p")
         continue
       }
@@ -206,50 +207,135 @@ module Planner {
   }
 
   function checkLiteral( literal : Interpreter.Literal, state : WorldState) : boolean {
+    var bool: boolean = false
+    if(literal.relation ==="holding"){
+      bool = (state.holding === literal.args[0]);
+    }
+    else{
+      if(checkRelation(literal.args[0],literal.args[1],literal.relation,state)){
+        bool = true;
+      }
+    }
+
+    //return opposite if polarity is false
+    if(literal.polarity === false){
+      if(bool===false){
+        return true
+      }
+      else{
+        return false
+      }
+    }
+    return bool
+  }
+  /**
+  checks if two objects fullfill a relation in a given world state
+  */
+  function checkRelation(objA : string, objB : string, relation : string, state : WorldState) : boolean{
+    var coordinatesA = Interpreter.getCoords(objA,state);
+    // special case: in relation to floor
+    if(objB ==="floor"){
+      if(relation==="above"){
+        return true
+      }
+      if(relation==="ontop"){
+        if(coordinatesA[1] === 0){
+          return true
+        }
+      }
+      return false
+    }
+    var coordinatesB : number[] = Interpreter.getCoords(objB,state)
+    if(relation === "leftof"){
+      if(coordinatesA[0]<coordinatesB[0]){
+        return true
+      }
+    }
+    else {if(relation === "rightof"){
+      if(coordinatesA[0]>coordinatesB[0]){
+        return true
+      }
+    }
+    else {if(relation === "ontop"){
+      if(state.objects[objB].form !== "box"){
+        if(coordinatesA[0]===coordinatesB[0] && coordinatesA[1] === coordinatesB[1]+1){
+          return true
+        }
+      }
+    }
+    else {if(relation === "inside"){
+      if(state.objects[objB].form === "box"){
+        if(coordinatesA[0]===coordinatesB[0] && coordinatesA[1] === coordinatesB[1]+1){
+          return true
+        }
+      }
+    }
+    else {if(relation === "under"){
+      if(coordinatesA[0]===coordinatesB[0] && coordinatesA[1]<coordinatesB[1]){
+        return true
+      }
+    }
+    else {if(relation === "beside"){
+      if(Math.abs(coordinatesA[0]-coordinatesB[0])===1){
+        return true
+      }
+    }
+    else {if(relation === "above"){
+      if(coordinatesA[0]===coordinatesB[0] && coordinatesA[1]>coordinatesB[1]){
+        return true
+      }
+    }}}}}}}
     return false
   }
-
+  function heuristic(testState : WorldState) : number {
+    return 0
+  }
   /** Returns the out going edges from a world state node. These are the world states that occur if the
   arm either goes left, right, picks up, or drops an object (if these are possible actions). All edges have
   cost 1.
   */
   function getWorldStateEdges(state : WorldState) : Edge<WorldState>[] {
-    var edges : Edge<WorldState>[];
+    var edges : Edge<WorldState>[] = [];
     //if it's not all the way to the left, then the arm can move left
     if(state.arm !== 0){
-      var newState : WorldState = deepCloneWorldState(state);
-      newState.arm = newState.arm - 1;
-      var newEdge : Edge<WorldState> = {from : state, cost : 1, to : newState}
-      edges.push(newEdge)
+      var newState1 : WorldState = deepCloneWorldState(state);
+      newState1.arm = newState1.arm - 1;
+      var newEdge1 : Edge<WorldState> = {from : state, cost : 1, to : newState1}
+      edges.push(newEdge1)
     }
     //if it's not all the way to the right, then the arm can move right
     if(state.arm !== state.stacks.length-1){
-      var newState : WorldState = deepCloneWorldState(state);
-      newState.arm = newState.arm + 1;
-      var newEdge : Edge<WorldState> = {from : state, cost : 1, to : newState}
-      edges.push(newEdge)
+      var newState2 : WorldState = deepCloneWorldState(state);
+      newState2.arm = newState2.arm + 1;
+      var newEdge2 : Edge<WorldState> = {from : state, cost : 1, to : newState2}
+      edges.push(newEdge2)
     }
     //if the arm is holding an object
-    if(state.holding.length){
+    if(state.holding != null){
       var grabbedObject = state.objects[state.holding];
       var topStackObject = state.objects[state.stacks[state.arm][state.stacks[state.arm].length-1]];
+      //if there was no top object, set it to "floor"
+      if(topStackObject == null){
+        topStackObject = {form : "floor", color : null , size : null}
+      }
       //check that grabbedObject can be put ontop or inside topObject
       if(Interpreter.checkPhysicLaws(grabbedObject,topStackObject,"ontop") || Interpreter.checkPhysicLaws(grabbedObject,topStackObject,"inside") ){
-        var newState : WorldState = deepCloneWorldState(state);
-        newState.stacks[newState.arm].push(newState.holding);
-        newState.holding = undefined;
-        var newEdge : Edge<WorldState> = {from : state, cost : 1, to : newState}
-        edges.push(newEdge)
+        var newState3 : WorldState = deepCloneWorldState(state);
+        newState3.stacks[newState3.arm].push(newState3.holding);
+        newState3.holding = null;
+        var newEdge3 : Edge<WorldState> = {from : state, cost : 1, to : newState3}
+        edges.push(newEdge3)
       }
     }
+
     //if the arm is not holding anything, and there is an object below it, it can pick it up
     else {
-      if(state.holding.length === 0 && (state.stacks[state.arm].length > 0)){
-        var newState : WorldState = deepCloneWorldState(state);
+      if(state.stacks[state.arm].length > 0){
+        var newState4 : WorldState = deepCloneWorldState(state);
         //remove top stack element and put it as held
-        newState.holding = newState.stacks[newState.arm].pop();
-        var newEdge : Edge<WorldState> = {from : state, cost : 1, to : newState}
-        edges.push(newEdge)
+        newState4.holding = newState4.stacks[newState4.arm].pop();
+        var newEdge4 : Edge<WorldState> = {from : state, cost : 1, to : newState4}
+        edges.push(newEdge4)
       }
     }
     return edges
@@ -257,7 +343,22 @@ module Planner {
   }
 
   function deepCloneWorldState(state : WorldState) : WorldState{
-    return state
+    var stacksCopy : string[][] = [[]];
+    for(var i =0;i<state.stacks.length;i++){
+      stacksCopy[i] = [];
+      for(var j =0;j<state.stacks[i].length;j++){
+        stacksCopy[i][j] = state.stacks[i][j]
+      }
+    }
+    var newState : WorldState = {
+      arm : state.arm,
+      holding : state.holding,
+      stacks : stacksCopy,
+      objects : state.objects,
+      examples : state.examples
+    }
+
+    return newState
   }
 
 }

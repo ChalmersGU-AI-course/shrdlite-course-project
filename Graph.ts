@@ -71,16 +71,16 @@ function aStarSearch<Node> (
     //PriorityQueue that holds nodes with lowest cost as highest prio
     var pQueue = new collections.PriorityQueue<Node>(nodePriorityComparer);
     //Maps a node to it's calculated travel cost. Will eventually be lowest travel cost to that node
-    var toNodeCost = new collections.Dictionary<Node,number>();
+    var toNodeCost = new collections.Dictionary<Node,number>(JSON.stringify);
     //Maps a node to it's calculated travel cost + estimated cost to goal (according to heuristic)
-    var nodeToGoalEstCost = new collections.Dictionary<Node,number>();
+    var nodeToGoalEstCost = new collections.Dictionary<Node,number>(JSON.stringify);
     //Maps a node to the previously visited node. Eventually according to the cheapest path. Used
     //at the end to find best path recursivly from the goal node.
-    var previousNode = new collections.Dictionary<Node,Node>();
+    var previousNode = new collections.Dictionary<Node,Node>(JSON.stringify);
     //List of visited/evaluated nodes. Set uses .toString() to check equality
-    var visitedNodes = new collections.Set<Node>();
+    var visitedNodes = new collections.Set<Node>(JSON.stringify);
     //List of discovered nodes. Set uses .toString() to check equality
-    var discoveredNodes = new collections.Set<Node>();
+    var discoveredNodes = new collections.Set<Node>(JSON.stringify);
 
     //initialising stuff
     toNodeCost.setValue(start,0);

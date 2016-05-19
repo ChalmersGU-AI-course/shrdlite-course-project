@@ -154,7 +154,12 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
               var possibleEntities : string[] = findEntity(cmd.location.entity,state);
               possibleEntities.forEach((possibleEnt) => {
                 var objectA = state.objects[state.holding]
-                var objectB = state.objects[possibleEnt]
+                if(possibleEnt === "floor"){
+                  objectB = {size : null, color : null, form : "floor"}
+                }
+                else{
+                  var objectB = state.objects[possibleEnt]
+                }
                 // if the interpretation does not break any physic laws it gets added to the interpretation list
                 if(checkPhysicLaws(objectA,objectB,cmd.location.relation)){
                   interpretation[interpCount] = [{polarity : true, relation : cmd.location.relation, args: [state.holding,possibleEnt]}]
@@ -258,6 +263,10 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
       var foundObjects : string[] = [];
       // string keys to all world objects
       var objects : string[] = Array.prototype.concat.apply([], state.stacks);
+      // add the grasped object if it exists
+      if(state.holding != null){
+        objects.push(state.holding)
+      }
       //If we are looking for a (color,form,size) object
       if(obj.location == null){
         //special case for floor
@@ -358,7 +367,7 @@ Top-level function for the Interpreter. It calls `interpretCommand` for each pos
     * @param state current world state
     * @returns [x,y] coordinates
     */
-    function getCoords(strKey : string, state : WorldState) : number[]{
+    export function getCoords(strKey : string, state : WorldState) : number[]{
       var x : number;
       var y : number;
       state.stacks.forEach((stack,index) => {
