@@ -121,6 +121,15 @@ module Planner {
                     _heuristics += (n.stacks[firstStackIndex].length - n.stacks[firstStackIndex].indexOf(first) - 1) * 4; // 4: pick, leave, drop, back
                 } else {
                     var second = condition.args[1];
+
+                    // Because left- & rightof and above & under have sort of commutative properties
+                    if (['rightof', 'under'].indexOf(condition.relation) > -1) {
+                        var tmp = first;
+                        first = second;
+                        second = tmp;
+                        firstStackIndex = getStackIndex(n.stacks, first) || n.arm;
+                    }
+
                     var secondStackIndex = getStackIndex(n.stacks, second) || n.arm;
                     var stackDifference = Math.abs(firstStackIndex - secondStackIndex);
                     var firstStackPos = n.stacks[firstStackIndex].indexOf(first);
@@ -129,15 +138,10 @@ module Planner {
                     var numAboveSecond = secondStackPos === -1 ? 0 : (n.stacks[secondStackIndex].length - secondStackPos - 1);
                     var holdingOneOfThem = firstStackPos === -1 || secondStackPos === -1;
 
-                    if (condition.relation === 'leftof' && !(firstStackIndex < secondStackIndex && !holdingOneOfThem)) {
+                    if (['leftof', 'rightof'].indexOf(condition.relation) > -1 && !(firstStackIndex < secondStackIndex && !holdingOneOfThem)) {
                         var numToMove = secondStackIndex === 0 ? numAboveSecond : (firstStackIndex === n.stacks.length - 1 ? numAboveFirst : Math.min(numAboveFirst, numAboveSecond));
                         _heuristics += numToMove * 4;
                         _heuristics += firstStackIndex >= secondStackIndex ? firstStackIndex - secondStackIndex + 1 : 0;
-                        _heuristics += [first, second].indexOf(n.holding) > -1 ? 1 : 2;
-                    } else if (condition.relation === 'rightof' && !(secondStackIndex < firstStackIndex && !holdingOneOfThem)) {
-                        var numToMove = firstStackIndex === 0 ? numAboveFirst : (secondStackIndex === n.stacks.length - 1 ? numAboveSecond : Math.min(numAboveFirst, numAboveSecond));
-                        _heuristics += numToMove * 4;
-                        _heuristics += secondStackIndex >= firstStackIndex ? secondStackIndex - firstStackIndex + 1 : 0;
                         _heuristics += [first, second].indexOf(n.holding) > -1 ? 1 : 2;
                     } else if (condition.relation === 'beside' && !(stackDifference === 1 && !holdingOneOfThem)) {
                         _heuristics += Math.min(numAboveFirst, numAboveSecond) * 4;
@@ -148,14 +152,10 @@ module Planner {
                         _heuristics += numAboveFirst * 4;
                         _heuristics += Math.abs(firstStackIndex - secondStackIndex);
                         _heuristics += n.holding === first ? 1 : 2;
-                    } else if (condition.relation === 'above' && !(stackDifference === 0 && firstStackPos > secondStackPos && !holdingOneOfThem)) {
+                    } else if (['above', 'under'].indexOf(condition.relation) > -1 && !(stackDifference === 0 && firstStackPos > secondStackPos && !holdingOneOfThem)) {
                         _heuristics += numAboveFirst * 4;
                         _heuristics += Math.abs(firstStackIndex - secondStackIndex);
                         _heuristics += n.holding === first ? 1 : 2;
-                    } else if (condition.relation === 'under' && !(stackDifference === 0 && firstStackPos < secondStackPos && !holdingOneOfThem)) {
-                        _heuristics += numAboveSecond * 4;
-                        _heuristics += Math.abs(firstStackIndex - secondStackIndex);
-                        _heuristics += n.holding === second ? 1 : 2;
                     }
                 }
 
