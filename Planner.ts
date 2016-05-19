@@ -87,8 +87,8 @@ module Planner {
         var plan : string[] = [];
 
         result.path.forEach(function(node) {
-            plan.push(node.command);
             if (node.description) plan.push(node.description);
+            plan.push(node.command);
         });
 
         return plan;
@@ -234,7 +234,7 @@ module Planner {
             var self = this;
 
             ['l', 'r', 'p', 'd'].forEach(function(command) {
-                var stacks = node.stacks;
+                var stacks = JSON.parse(JSON.stringify(node.stacks));
                 var holding = node.holding;
                 var arm = node.arm;
 
@@ -249,8 +249,8 @@ module Planner {
                 } else if (command === 'p') {
                     if (holding !== null || stacks[arm].length <= 0) return;
                     holding = stacks[arm].pop();
-                    
-                    description = getDescription();
+
+                    description = getDescription('p', holding);
                 } else if (command === 'd') {
                     var holdForm = holding ? self.objects[holding].form : null;
                     var holdSize = holding ? self.objects[holding].size : null;
@@ -270,7 +270,7 @@ module Planner {
                     stacks[arm].push(holding);
                     holding = null;
 
-                    description = getDescription();
+                    description = getDescription('d', stacks[arm][stacks[arm].length - 2]);
                 }
 
                 outgoing.push({
@@ -279,6 +279,39 @@ module Planner {
                     cost: 1
                 });
             });
+
+            function getDescription(action : string, entity : string) : string {
+                var result = action === 'p' ? 'Picking up ' : 'Putting it ';
+
+                if (entity) {
+                    if (action === 'd') result += self.objects[entity].form === 'box' ? 'inside ' : 'on ';
+
+                    var existing : string[] = Array.prototype.concat.apply([], node.stacks);
+                    if (node.holding !== null) existing.push(node.holding);
+                    existing.splice(existing.indexOf(entity), 1);
+
+                    var numSameForm = existing.reduce((sum, e) => sum + (self.objects[e].form === self.objects[entity].form ? 1 : 0), 0);
+                    var numSameFormColor = existing.reduce((sum, e) => sum + (self.objects[e].form === self.objects[entity].form && self.objects[e].color === self.objects[entity].color ? 1 : 0), 0);
+                    var numSameFormSize = existing.reduce((sum, e) => sum + (self.objects[e].form === self.objects[entity].form && self.objects[e].size === self.objects[entity].size ? 1 : 0), 0);
+                    var numSameFormColorSize = existing.reduce((sum, e) => sum + (self.objects[e].form === self.objects[entity].form && self.objects[e].color === self.objects[entity].color && self.objects[e].size === self.objects[entity].size ? 1 : 0), 0);
+
+                    if (numSameForm === 0) {
+                        result += 'the ' + self.objects[entity].form;
+                    } else if (numSameFormColor === 0) {
+                        result += 'the ' + self.objects[entity].color + ' ' + self.objects[entity].form;
+                    } else if (numSameFormSize === 0) {
+                        result += 'the ' + self.objects[entity].size + ' ' + self.objects[entity].form;
+                    } else if (numSameFormColorSize === 0) {
+                        result += 'the ' + self.objects[entity].color + ' ' + self.objects[entity].size + ' ' + self.objects[entity].form;
+                    } else {
+                        result += 'a ' + self.objects[entity].color + ' ' + self.objects[entity].size + ' ' + self.objects[entity].form;
+                    }
+                } else {
+                    result += 'on the floor';
+                }
+
+                return result + '.';
+            }
 
             return outgoing;
         }
