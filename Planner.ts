@@ -118,7 +118,7 @@ module Planner {
                 if (condition.relation === 'holding' && n.holding !== first) {
                     _heuristics += n.holding ? 2 : 1;
                     _heuristics += Math.abs(n.arm - firstStackIndex);
-                    _heuristics += (n.stacks[firstStackIndex].length - n.stacks[firstStackIndex].indexOf(first) - 1) * 4; // 4: pick, leave, drop, back
+                    _heuristics += (n.stacks[firstStackIndex].length - n.stacks[firstStackIndex].indexOf(first) - 1) * 4;
                 } else {
                     var second = condition.args[1];
 
