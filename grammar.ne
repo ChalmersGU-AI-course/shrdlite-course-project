@@ -35,11 +35,12 @@ function R(obj) {
 
 ## Grammar rules
 
-main --> will_you:? please:? command please:?  {% R(2) %}  
+main --> will_you:? please:? command please:?  {% R(2) %}
 
 command --> take entity           {% R({command:"take", entity:1}) %}
 command --> move  it    location  {% R({command:"put", location:2}) %}
 command --> move entity location  {% R({command:"move", entity:1, location:2}) %}
+command --> where_is entity       {% R({command:"where", entity:1}) %}
 
 location --> relation entity  {% R({relation:0, entity:1}) %}
 
@@ -105,3 +106,5 @@ that_are --> "that" "are"
 will_you --> ("will" | "can" | "could") "you"
 
 please --> "please"
+
+where_is --> "where" "is"

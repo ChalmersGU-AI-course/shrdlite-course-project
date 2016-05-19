@@ -76,20 +76,46 @@ module Planner {
      * be added using the `push` method.
      */
     function planInterpretation(interpretations : Interpreter.DNFFormula, state : WorldState) : string[] {
-        var graph = new PlannerGraph(state.objects);
-        var start = new PlannerNode(state.stacks, state.holding, state.arm);
-        var _goal = (n: PlannerNode) => goal(interpretations, state.objects, n);
-        var _heuristics = (n: PlannerNode) => heuristics(interpretations, n);
-
-        var result = aStarSearch(graph, start, _goal, _heuristics, 10);
-        result.path.shift();
-
         var plan : string[] = [];
 
-        result.path.forEach(function(node) {
-            if (node.description) plan.push(node.description);
-            plan.push(node.command);
-        });
+        if (interpretations[0][0].relation === 'where') {
+            var locations : string[] = [];
+
+            function mapNumberToText(num : number) : string {
+                if (num > 2) {
+                    return (num + 1) + 'th';
+                } else {
+                    return ['first', 'second', 'third'][num];
+                }
+            }
+
+            interpretations.forEach(function(matches) {
+                var stackIndex = getStackIndex(state.stacks, matches[0].args[0]);
+
+                if (stackIndex > -1) {
+                    var stackPos = state.stacks[stackIndex].indexOf(matches[0].args[0]);
+                    locations.push('in the ' + mapNumberToText(stackIndex) + ' stack at the ' + mapNumberToText(stackPos) + ' position');
+                } else {
+                    locations.push('in the claw');
+                }
+            });
+
+            var locationString = (locations.length > 1 ? 'There are many. The first one is ' : 'It is ') + locations.join(" and another ") + '.';
+            plan.push(locationString);
+        } else {
+            var graph = new PlannerGraph(state.objects);
+            var start = new PlannerNode(state.stacks, state.holding, state.arm);
+            var _goal = (n: PlannerNode) => goal(interpretations, state.objects, n);
+            var _heuristics = (n: PlannerNode) => heuristics(interpretations, n);
+
+            var result = aStarSearch(graph, start, _goal, _heuristics, 10);
+            result.path.shift();
+
+            result.path.forEach(function(node) {
+                if (node.description) plan.push(node.description);
+                plan.push(node.command);
+            });
+        }
 
         return plan;
     }
