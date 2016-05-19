@@ -106,10 +106,11 @@ module Planner {
     }
 
     function heuristics(interpretations : Interpreter.DNFFormula, n: PlannerNode) : number {
-        var _heuristics = 0;
+        var result : number[] = [];
 
-        interpretations.forEach(function(conditions) {
-            conditions.forEach(function(condition) {
+        interpretations.forEach(function(interpretation) {
+            interpretation.forEach(function(condition) {
+                var _heuristics = 0;
                 var firstStackIndex = getStackIndex(n.stacks, condition.args[0]);
 
                 if (condition.relation === 'holding' && n.holding !== condition.args[0]) {
@@ -135,10 +136,12 @@ module Planner {
                         /* TODO: Make work */
                     }
                 }
+
+                result.push(_heuristics);
             });
         });
 
-        return _heuristics;
+        return Math.min.apply(null, result);
     }
 
     function goal(interpretations : Interpreter.DNFFormula, stateObjects: { [s:string]: ObjectDefinition; }, n: PlannerNode) : boolean {
