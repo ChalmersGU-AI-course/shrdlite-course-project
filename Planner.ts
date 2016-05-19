@@ -88,6 +88,7 @@ module Planner {
 
         result.path.forEach(function(node) {
             plan.push(node.command);
+            if (node.description) plan.push(node.description);
         });
 
         return plan;
@@ -237,6 +238,8 @@ module Planner {
                 var holding = node.holding;
                 var arm = node.arm;
 
+                var description : string;
+
                 if (command === 'l') {
                     if (arm <= 0) return;
                     arm--;
@@ -246,6 +249,8 @@ module Planner {
                 } else if (command === 'p') {
                     if (holding !== null || stacks[arm].length <= 0) return;
                     holding = stacks[arm].pop();
+                    
+                    description = getDescription();
                 } else if (command === 'd') {
                     var holdForm = holding ? self.objects[holding].form : null;
                     var holdSize = holding ? self.objects[holding].size : null;
@@ -264,11 +269,13 @@ module Planner {
 
                     stacks[arm].push(holding);
                     holding = null;
+
+                    description = getDescription();
                 }
 
                 outgoing.push({
                     from: node,
-                    to: new PlannerNode(stacks, holding, arm, command),
+                    to: new PlannerNode(stacks, holding, arm, command, description),
                     cost: 1
                 });
             });
@@ -288,7 +295,8 @@ module Planner {
             stacks : Stack[],
             public holding : string,
             public arm : number,
-            public command? : string
+            public command? : string,
+            public description? : string
         ) {
             this.stacks = JSON.parse(JSON.stringify(stacks));
         }
