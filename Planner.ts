@@ -143,15 +143,19 @@ module Planner {
                         _heuristics += Math.min(numAboveFirst, numAboveSecond) * 4;
                         _heuristics += Math.abs(Math.abs(firstStackIndex - secondStackIndex) - 1);
                         _heuristics += [first, second].indexOf(n.holding) > -1 ? 1 : 2;
-                    } else if (['inside', 'ontop'].indexOf(condition.relation) && !(stackDifference === 0 && firstStackPos === secondStackPos + 1 && !holdingOneOfThem)) {
+                    } else if (['inside', 'ontop'].indexOf(condition.relation) > -1 && !(stackDifference === 0 && firstStackPos === secondStackPos + 1 && !holdingOneOfThem)) {
                         _heuristics += numAboveSecond * 4;
                         _heuristics += numAboveFirst * 4;
-                        _heuristics += n.holding === first ? 1 : 2;
                         _heuristics += Math.abs(firstStackIndex - secondStackIndex);
+                        _heuristics += n.holding === first ? 1 : 2;
                     } else if (condition.relation === 'above' && !(stackDifference === 0 && firstStackPos > secondStackPos && !holdingOneOfThem)) {
-
+                        _heuristics += numAboveFirst * 4;
+                        _heuristics += Math.abs(firstStackIndex - secondStackIndex);
+                        _heuristics += n.holding === first ? 1 : 2;
                     } else if (condition.relation === 'under' && !(stackDifference === 0 && firstStackPos < secondStackPos && !holdingOneOfThem)) {
-
+                        _heuristics += numAboveSecond * 4;
+                        _heuristics += Math.abs(firstStackIndex - secondStackIndex);
+                        _heuristics += n.holding === second ? 1 : 2;
                     }
                 }
 
