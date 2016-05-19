@@ -111,29 +111,42 @@ module Planner {
         interpretations.forEach(function(interpretation) {
             interpretation.forEach(function(condition) {
                 var _heuristics = 0;
-                var firstStackIndex = getStackIndex(n.stacks, condition.args[0]);
 
-                if (condition.relation === 'holding' && n.holding !== condition.args[0]) {
+                var first = condition.args[0];
+                var firstStackIndex = getStackIndex(n.stacks, first) || n.arm;
+
+                if (condition.relation === 'holding' && n.holding !== first) {
                     _heuristics += n.holding ? 2 : 1;
                     _heuristics += Math.abs(n.arm - firstStackIndex);
-                    _heuristics += (n.stacks[firstStackIndex].length - n.stacks[firstStackIndex].indexOf(condition.args[0]) - 1) * 4; // 4: pick, leave, drop, back
+                    _heuristics += (n.stacks[firstStackIndex].length - n.stacks[firstStackIndex].indexOf(first) - 1) * 4; // 4: pick, leave, drop, back
                 } else {
-                    var secondStackIndex = getStackIndex(n.stacks, condition.args[1]);
+                    var second = condition.args[1];
+                    var secondStackIndex = getStackIndex(n.stacks, second) || n.arm;
+                    var stackDifference = Math.abs(firstStackIndex - secondStackIndex);
+                    var firstStackPos = n.stacks[firstStackIndex].indexOf(first);
+                    var secondStackPos = n.stacks[secondStackIndex].indexOf(second);
+                    var numAboveFirst = firstStackPos === -1 ? 0 : (n.stacks[firstStackIndex].length - firstStackPos - 1);
+                    var numAboveSecond = secondStackPos === -1 ? 0 : (n.stacks[secondStackIndex].length - secondStackPos - 1);
+                    var holdingOneOfThem = firstStackPos === -1 || secondStackPos === -1;
 
-                    if (condition.relation === 'leftof') {
-                        /* TODO: Make work */
-                    } else if (condition.relation === 'rightof') {
-                        /* TODO: Make work */
-                    } else if (condition.relation === 'beside') {
-                        /* TODO: Make work */
-                    } else if (condition.relation === 'inside') {
-                        /* TODO: Make work */
-                    } else if (condition.relation === 'ontop') {
-                        /* TODO: Make work */
-                    } else if (condition.relation === 'above') {
-                        /* TODO: Make work */
-                    } else if (condition.relation === 'under') {
-                        /* TODO: Make work */
+                    if (condition.relation === 'leftof' && !(firstStackIndex < secondStackIndex && !holdingOneOfThem)) {
+                        var numToMove = secondStackIndex === 0 ? numAboveSecond : (firstStackIndex === n.stacks.length - 1 ? numAboveFirst : Math.min(numAboveFirst, numAboveSecond));
+                        _heuristics += numToMove * 4;
+                        _heuristics += firstStackIndex >= secondStackIndex ? firstStackIndex - secondStackIndex + 1 : 0;
+                        _heuristics += [first, second].indexOf(n.holding) > -1 ? 1 : 2;
+                    } else if (condition.relation === 'rightof' && !(secondStackIndex < firstStackIndex && !holdingOneOfThem)) {
+                        var numToMove = firstStackIndex === 0 ? numAboveFirst : (secondStackIndex === n.stacks.length - 1 ? numAboveSecond : Math.min(numAboveFirst, numAboveSecond));
+                        _heuristics += numToMove * 4;
+                        _heuristics += secondStackIndex >= firstStackIndex ? secondStackIndex - firstStackIndex + 1 : 0;
+                        _heuristics += [first, second].indexOf(n.holding) > -1 ? 1 : 2;
+                    } else if (condition.relation === 'beside' && !(stackDifference === 1 && !holdingOneOfThem)) {
+
+                    } else if (['inside', 'ontop'].indexOf(condition.relation) && !(stackDifference === 0 && firstStackPos === secondStackPos + 1 && !holdingOneOfThem)) {
+
+                    } else if (condition.relation === 'above' && !(stackDifference === 0 && firstStackPos > secondStackPos && !holdingOneOfThem)) {
+
+                    } else if (condition.relation === 'under' && !(stackDifference === 0 && firstStackPos < secondStackPos && !holdingOneOfThem)) {
+
                     }
                 }
 
@@ -145,6 +158,8 @@ module Planner {
     }
 
     function goal(interpretations : Interpreter.DNFFormula, stateObjects: { [s:string]: ObjectDefinition; }, n: PlannerNode) : boolean {
+        console.log("#");
+
         var _goal = false;
 
         for (var i = 0; i < interpretations.length && !_goal; i++) {
@@ -184,10 +199,8 @@ module Planner {
                             if (!(firstStackIndex > secondStackIndex)) conditionFulfilled = false;
                         } else if (condition.relation === 'beside') {
                             if (Math.abs(firstStackIndex - secondStackIndex) !== 1) conditionFulfilled = false;
-                        } else if (condition.relation === 'inside') {
-                            if (!(firstStackPos - secondStackPos === 1) || firstStackIndex !== secondStackIndex || secondType !== 'box') conditionFulfilled = false;
-                        } else if (condition.relation === 'ontop') {
-                            if (!(firstStackPos - secondStackPos === 1) || firstStackIndex !== secondStackIndex || secondType === 'box') conditionFulfilled = false;
+                        } else if (['inside', 'ontop'].indexOf(condition.relation) > -1) {
+                            if (!(firstStackPos - secondStackPos === 1) || firstStackIndex !== secondStackIndex) conditionFulfilled = false;
                         } else if (condition.relation === 'above') {
                             if (!(firstStackPos > secondStackPos) || firstStackIndex !== secondStackIndex) conditionFulfilled = false;
                         } else if (condition.relation === 'under') {
@@ -219,15 +232,12 @@ module Planner {
 
                 if (command === 'l') {
                     if (arm <= 0) return;
-
                     arm--;
                 } else if (command === 'r') {
                     if (arm >= stacks.length - 1) return;
-
                     arm++;
                 } else if (command === 'p') {
                     if (holding !== null || stacks[arm].length <= 0) return;
-
                     holding = stacks[arm].pop();
                 } else if (command === 'd') {
                     var holdForm = holding ? self.stateObjects[holding].form : null;
@@ -241,7 +251,7 @@ module Planner {
                         (topForm === 'ball') ||                                                                                 // Balls cannot support anything
                         (topForm === 'box' && ['pyramid', 'plank', 'box'].indexOf(holdForm) !== -1 && topSize === holdSize) ||  // Boxes cannot contain pyramids, planks or boxes of the same size
                         (topSize === 'small' && ['brick', 'pyramid'].indexOf(topForm) !== -1 && holdForm === 'box') ||          // Small boxes cannot be supported by small bricks or pyramids
-                        (topForm && topForm === 'pyramid' && holdForm === 'box' && holdSize === topSize)) {                     // Large boxes cannot be supported by large pyramids
+                        (topForm === 'pyramid' && holdForm === 'box' && holdSize === topSize)) {                                // Large boxes cannot be supported by large pyramids
                         return;
                     }
 
