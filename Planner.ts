@@ -81,7 +81,7 @@ module Planner {
         var _goal = (n: PlannerNode) => goal(interpretations, state.objects, n);
         var _heuristics = (n: PlannerNode) => heuristics(interpretations, n);
 
-        var result = aStarSearch(graph, start, _goal, _heuristics, 10);
+        var result = aStarSearch(graph, start, _goal, _heuristics, 100);
         result.path.shift();
 
         var plan : string[] = [];
@@ -140,9 +140,14 @@ module Planner {
                         _heuristics += secondStackIndex >= firstStackIndex ? secondStackIndex - firstStackIndex + 1 : 0;
                         _heuristics += [first, second].indexOf(n.holding) > -1 ? 1 : 2;
                     } else if (condition.relation === 'beside' && !(stackDifference === 1 && !holdingOneOfThem)) {
-
+                        _heuristics += Math.min(numAboveFirst, numAboveSecond) * 4;
+                        _heuristics += Math.abs(Math.abs(firstStackIndex - secondStackIndex) - 1);
+                        _heuristics += [first, second].indexOf(n.holding) > -1 ? 1 : 2;
                     } else if (['inside', 'ontop'].indexOf(condition.relation) && !(stackDifference === 0 && firstStackPos === secondStackPos + 1 && !holdingOneOfThem)) {
-
+                        _heuristics += numAboveSecond * 4;
+                        _heuristics += numAboveFirst * 4;
+                        _heuristics += n.holding === first ? 1 : 2;
+                        _heuristics += Math.abs(firstStackIndex - secondStackIndex);
                     } else if (condition.relation === 'above' && !(stackDifference === 0 && firstStackPos > secondStackPos && !holdingOneOfThem)) {
 
                     } else if (condition.relation === 'under' && !(stackDifference === 0 && firstStackPos < secondStackPos && !holdingOneOfThem)) {
