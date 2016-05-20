@@ -234,13 +234,15 @@ module Planner {
   function checkRelation(objA : string, objB : string, relation : string, state : WorldState) : boolean{
     var coordinatesA = Interpreter.getCoords(objA,state);
     // special case: in relation to floor
-    if(objB ==="floor"){
-      if(relation==="above"){
-        return true
-      }
-      if(relation==="ontop"){
-        if(coordinatesA[1] === 0){
+    if(objB.substring(0,6) ==="floor-"){
+      if(coordinatesA[0] === Number(objB.substring(6))){
+        if(relation==="above"){
           return true
+        }
+        if(relation==="ontop"){
+          if(coordinatesA[1] === 0){
+            return true
+          }
         }
       }
       return false
