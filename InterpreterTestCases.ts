@@ -76,25 +76,23 @@ module Interpreter {
       }
   );
 
+  /* Simple test cases for the ALL quantifier, uncomment if you want */
+  allTestCases.push(
+      {world: "small",
+       utterance: "put all balls on the floor",
+       interpretations: [["ontop(e,floor) & ontop(f,floor)"]]
+      },
 
-  // /* Simple test cases for the ALL quantifier, uncomment if you want */
-  // allTestCases.push(
-  //     {world: "small",
-  //      utterance: "put all balls on the floor",
-  //      interpretations: [["ontop(e,floor) & ontop(f,floor)"]]
-  //     },
+      {world: "small",
+       utterance: "put every ball to the right of all blue things",
+       interpretations: [["rightof(e,g) & rightof(e,m) & rightof(f,g) & rightof(f,m)"]]
+      },
 
-  //     {world: "small",
-  //      utterance: "put every ball to the right of all blue things",
-  //      interpretations: [["rightof(e,g) & rightof(e,m) & rightof(f,g) & rightof(f,m)"]]
-  //     },
-
-  //     {world: "small",
-  //      utterance: "put all balls left of a box on the floor",
-  //      interpretations: [["leftof(e,k) & leftof(f,k)"], ["ontop(e,floor)"]]
-  //     }
-  // );
-
+      {world: "small",
+       utterance: "put all balls left of a box on the floor",
+       interpretations: [["leftof(e,k) & leftof(f,k)"], ["ontop(e,floor)"]]
+      }
+  );
 
   // /* More dubious examples for the ALL quantifier */
   // /* (i.e., it's not clear that these interpretations are the best) */
@@ -112,5 +110,4 @@ module Interpreter {
   //                         "inside(e,k) & inside(f,m)", "inside(e,l) & inside(f,m)"]]
   //     }
   // );
-
 }

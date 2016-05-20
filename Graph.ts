@@ -33,6 +33,20 @@ class SearchResult<Node> {
     cost : number;
 }
 
+class QueueElement<Node> {
+    parent : QueueElement<Node>;
+    node : Node;
+    g : number;
+    f : number;
+
+    constructor(parent: QueueElement<Node>, node: Node, g: number, h: number) {
+        this.parent = parent;
+        this.node = node;
+        this.g = g;
+        this.f = g + h;
+    }
+}
+
 /**
 * A\* search implementation, parameterised by a `Node` type. The code
 * here is just a template; you should rewrite this function
@@ -55,19 +69,47 @@ function aStarSearch<Node> (
     heuristics : (n:Node) => number,
     timeout : number
 ) : SearchResult<Node> {
-    // A dummy search result: it just picks the first possible neighbour
-    var result : SearchResult<Node> = {
-        path: [start],
-        cost: 0
-    };
-    while (result.path.length < 3) {
-        var edge : Edge<Node> = graph.outgoingEdges(start) [0];
-        if (! edge) break;
-        start = edge.to;
-        result.path.push(start);
-        result.cost += edge.cost;
+    var startTime = new Date().getTime();
+
+    var frontier = new collections.PriorityQueue<QueueElement<Node>>(function(a: QueueElement<Node>, b: QueueElement<Node>) {
+        return b.f - a.f;
+    });
+    var visited = new collections.Set<Node>();
+
+    frontier.add(new QueueElement(null, start, 0, heuristics(start)));
+
+    while (!frontier.isEmpty()) {
+        if (new Date().getTime() - startTime > timeout * 1000) {
+            throw new Error("Reached timeout before finding a path");
+        }
+
+        var current = frontier.dequeue();
+
+        if (!visited.contains(current.node)) {
+            if (goal(current.node)) {
+                var result : SearchResult<Node> = {
+                    path: [],
+                    cost: current.g
+                };
+
+                while (current) {
+                    result.path.push(current.node);
+                    current = current.parent;
+                }
+
+                result.path.reverse();
+                return result;
+            }
+
+            visited.add(current.node);
+
+            for (var edge of graph.outgoingEdges(current.node)) {
+                if (!visited.contains(edge.to)) {
+                    frontier.add(new QueueElement(current, edge.to, current.g + edge.cost, heuristics(edge.to)));
+                }
+            }
+        }
     }
-    return result;
+
+    throw new Error("Could not find a path");
 }
-
-
