@@ -315,10 +315,10 @@ module Interpreter {
     for(var j = 0 ; j < bList.length ; j++){
       // special case: in relation to floor
       if(bList[j].substring(0,6)==="floor-"){
-        if(location.relation==="above"){
+        if(location.relation === "above"  && coordinatesA[0] === Number(bList[j].substring(6,7))){
           return true
         }
-        if(location.relation==="ontop"){
+        if(location.relation==="ontop" && coordinatesA[0] === Number(bList[j].substring(6,7))){
           if(coordinatesA[1] === 0){
             return true
           }
