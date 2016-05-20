@@ -152,6 +152,9 @@ module Planner {
     var graph : Graph<WorldState> = {outgoingEdges : getWorldStateEdges , compareNodes : null}
     var start : WorldState = state;
 
+    /**
+    Tests if a world state is equal to the goal state, i.e. if the DNF-'interpretation' is fullfilled
+    */
     function goal(testState : WorldState) : boolean {
       for(var i=0; i< interpretation.length ; i++){
         for(var j=0; j< interpretation[i].length ; j++){
@@ -169,6 +172,12 @@ module Planner {
         }
       }
       return false
+    }
+    /**
+    The heuristic given a world state
+    */
+    function heuristic(testState : WorldState) : number {
+      return 0
     }
     // max alocated time for a search in seconds
     var timeout : number = 5;
@@ -205,7 +214,9 @@ module Planner {
     }
     return plan;
   }
-
+  /**
+  checks whether a litteral is fullfilled
+  */
   function checkLiteral( literal : Interpreter.Literal, state : WorldState) : boolean {
     var bool: boolean = false
     if(literal.relation ==="holding"){
@@ -289,9 +300,7 @@ module Planner {
     }}}}}}}
     return false
   }
-  function heuristic(testState : WorldState) : number {
-    return 0
-  }
+
   /** Returns the out going edges from a world state node. These are the world states that occur if the
   arm either goes left, right, picks up, or drops an object (if these are possible actions). All edges have
   cost 1.
@@ -343,7 +352,9 @@ module Planner {
     return edges
 
   }
-
+  /**
+  Returns a deep clone of a world state (which can then be changed without affecting the original)
+  */
   function deepCloneWorldState(state : WorldState) : WorldState{
     var stacksCopy : string[][] = [[]];
     for(var i =0;i<state.stacks.length;i++){
@@ -359,7 +370,6 @@ module Planner {
       objects : state.objects,
       examples : state.examples
     }
-
     return newState
   }
 
