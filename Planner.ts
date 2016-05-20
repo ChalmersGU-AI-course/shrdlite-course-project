@@ -240,7 +240,7 @@ module Planner {
                     (node.command === 'd' && command === 'p'))
                     return;
 
-                var stacks = node.stacks;
+                var stacks = node.stacks.slice(0);
                 var holding = node.holding;
                 var arm = node.arm;
 
