@@ -307,18 +307,24 @@ module Planner {
   */
   function getWorldStateEdges(state : WorldState) : Edge<WorldState>[] {
     var edges : Edge<WorldState>[] = [];
+    // the cost of a move is 1 if the arm is holding nothing or a small object
+    var movementsCost : number =1;
+    // the cost is 2 for a large object
+    if(state.holding != null && state.objects[state.holding].size === "large"){
+      movementsCost = 2;
+    }
     //if it's not all the way to the left, then the arm can move left
     if(state.arm !== 0){
       var newState1 : WorldState = deepCloneWorldState(state);
       newState1.arm = newState1.arm - 1;
-      var newEdge1 : Edge<WorldState> = {from : state, cost : 1, to : newState1}
+      var newEdge1 : Edge<WorldState> = {from : state, cost : movementsCost, to : newState1}
       edges.push(newEdge1)
     }
     //if it's not all the way to the right, then the arm can move right
     if(state.arm !== state.stacks.length-1){
       var newState2 : WorldState = deepCloneWorldState(state);
       newState2.arm = newState2.arm + 1;
-      var newEdge2 : Edge<WorldState> = {from : state, cost : 1, to : newState2}
+      var newEdge2 : Edge<WorldState> = {from : state, cost : movementsCost, to : newState2}
       edges.push(newEdge2)
     }
     //if the arm is holding an object
@@ -334,7 +340,7 @@ module Planner {
         var newState3 : WorldState = deepCloneWorldState(state);
         newState3.stacks[newState3.arm].push(newState3.holding);
         newState3.holding = null;
-        var newEdge3 : Edge<WorldState> = {from : state, cost : 1, to : newState3}
+        var newEdge3 : Edge<WorldState> = {from : state, cost : movementsCost, to : newState3}
         edges.push(newEdge3)
       }
     }
@@ -345,7 +351,11 @@ module Planner {
         var newState4 : WorldState = deepCloneWorldState(state);
         //remove top stack element and put it as held
         newState4.holding = newState4.stacks[newState4.arm].pop();
-        var newEdge4 : Edge<WorldState> = {from : state, cost : 1, to : newState4}
+        // picking up a large object has cost 2
+        if(state.objects[newState4.holding].size === "large"){
+          movementsCost = 2;
+        }
+        var newEdge4 : Edge<WorldState> = {from : state, cost : movementsCost, to : newState4}
         edges.push(newEdge4)
       }
     }
