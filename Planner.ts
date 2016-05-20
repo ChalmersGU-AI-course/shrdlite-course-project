@@ -260,6 +260,13 @@ module Planner {
             var self = this;
 
             ['l', 'r', 'p', 'd'].forEach(function(command) {
+                // Not necessary for time complexity of search, but help with memory consumption
+                if ((node.command === 'l' && command === 'r') ||
+                    (node.command === 'r' && command === 'l') ||
+                    (node.command === 'p' && command === 'd') ||
+                    (node.command === 'd' && command === 'p'))
+                    return;
+
                 var stacks = node.stacks.slice(0);
                 var holding = node.holding;
                 var arm = node.arm;
@@ -361,7 +368,7 @@ module Planner {
         }
 
         toString() : string {
-            return JSON.stringify(this);
+            return JSON.stringify({stacks: this.stacks, holding: this.holding, arm: this.arm});
         }
     }
 }
