@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>GridNode | Shrdlite</title>
+	<title>TestCase | Shrdlite</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -57,13 +57,13 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/_graph_.html">&quot;Graph&quot;</a>
+					<a href="../modules/_testastar_.html">&quot;TestAStar&quot;</a>
 				</li>
 				<li>
-					<a href="_graph_.gridnode.html">GridNode</a>
+					<a href="_testastar_.testcase.html">TestCase</a>
 				</li>
 			</ul>
-			<h1>Class GridNode</h1>
+			<h1>Interface TestCase</h1>
 		</div>
 	</div>
 </header>
@@ -74,7 +74,7 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">GridNode</span>
+						<span class="target">TestCase</span>
 					</li>
 				</ul>
 			</section>
@@ -83,131 +83,58 @@
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section tsd-is-not-exported">
-							<h3>Constructors</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-not-exported"><a href="_graph_.gridnode.html#constructor" class="tsd-kind-icon">constructor</a></li>
-							</ul>
-						</section>
-						<section class="tsd-index-section tsd-is-not-exported">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-not-exported"><a href="_graph_.gridnode.html#pos" class="tsd-kind-icon">pos</a></li>
-							</ul>
-						</section>
-						<section class="tsd-index-section tsd-is-not-exported">
-							<h3>Methods</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="_graph_.gridnode.html#add" class="tsd-kind-icon">add</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="_graph_.gridnode.html#compareto" class="tsd-kind-icon">compare<wbr>To</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="_graph_.gridnode.html#tostring" class="tsd-kind-icon">to<wbr>String</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="_testastar_.testcase.html#cost" class="tsd-kind-icon">cost</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="_testastar_.testcase.html#grid_size" class="tsd-kind-icon">grid_<wbr>size</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="_testastar_.testcase.html#path" class="tsd-kind-icon">path</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="_testastar_.testcase.html#walls" class="tsd-kind-icon">walls</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
-				<h2>Constructors</h2>
-				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class tsd-is-not-exported">
-					<a name="constructor" class="tsd-anchor"></a>
-					<h3>constructor</h3>
-					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Grid<wbr>Node<span class="tsd-signature-symbol">(</span>pos<span class="tsd-signature-symbol">: </span><a href="../interfaces/_graph_.coordinate.html" class="tsd-signature-type">Coordinate</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_graph_.gridnode.html" class="tsd-signature-type">GridNode</a></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/ChalmersGU-AI-course/shrdlite-course-project/blob/master/Graph.ts#L82">Graph.ts:82</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>pos: <a href="../interfaces/_graph_.coordinate.html" class="tsd-signature-type">Coordinate</a></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_graph_.gridnode.html" class="tsd-signature-type">GridNode</a></h4>
-						</li>
-					</ul>
-				</section>
-			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
 				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-not-exported">
-					<a name="pos" class="tsd-anchor"></a>
-					<h3>pos</h3>
-					<div class="tsd-signature tsd-kind-icon">pos<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_graph_.coordinate.html" class="tsd-signature-type">Coordinate</a></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
+					<a name="cost" class="tsd-anchor"></a>
+					<h3>cost</h3>
+					<div class="tsd-signature tsd-kind-icon">cost<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/ChalmersGU-AI-course/shrdlite-course-project/blob/master/Graph.ts#L84">Graph.ts:84</a></li>
+							<li>Defined in <a href="https://github.com/ChalmersGU-AI-course/shrdlite-course-project/blob/master/TestAStar.ts#L12">TestAStar.ts:12</a></li>
 						</ul>
 					</aside>
 				</section>
-			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
-				<h2>Methods</h2>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-					<a name="add" class="tsd-anchor"></a>
-					<h3>add</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">add<span class="tsd-signature-symbol">(</span>delta<span class="tsd-signature-symbol">: </span><a href="../interfaces/_graph_.coordinate.html" class="tsd-signature-type">Coordinate</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_graph_.gridnode.html" class="tsd-signature-type">GridNode</a></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/ChalmersGU-AI-course/shrdlite-course-project/blob/master/Graph.ts#L87">Graph.ts:87</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>delta: <a href="../interfaces/_graph_.coordinate.html" class="tsd-signature-type">Coordinate</a></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_graph_.gridnode.html" class="tsd-signature-type">GridNode</a></h4>
-						</li>
-					</ul>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
+					<a name="grid_size" class="tsd-anchor"></a>
+					<h3>grid_<wbr>size</h3>
+					<div class="tsd-signature tsd-kind-icon">grid_<wbr>size<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ChalmersGU-AI-course/shrdlite-course-project/blob/master/TestAStar.ts#L9">TestAStar.ts:9</a></li>
+						</ul>
+					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-					<a name="compareto" class="tsd-anchor"></a>
-					<h3>compare<wbr>To</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">compare<wbr>To<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="_graph_.gridnode.html" class="tsd-signature-type">GridNode</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/ChalmersGU-AI-course/shrdlite-course-project/blob/master/Graph.ts#L94">Graph.ts:94</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>other: <a href="_graph_.gridnode.html" class="tsd-signature-type">GridNode</a></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
-						</li>
-					</ul>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
+					<a name="path" class="tsd-anchor"></a>
+					<h3>path</h3>
+					<div class="tsd-signature tsd-kind-icon">path<span class="tsd-signature-symbol">:</span> <a href="../classes/_gridgraph_.gridnode.html" class="tsd-signature-type">GridNode</a><span class="tsd-signature-symbol">[]</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ChalmersGU-AI-course/shrdlite-course-project/blob/master/TestAStar.ts#L11">TestAStar.ts:11</a></li>
+						</ul>
+					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-					<a name="tostring" class="tsd-anchor"></a>
-					<h3>to<wbr>String</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">to<wbr>String<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/ChalmersGU-AI-course/shrdlite-course-project/blob/master/Graph.ts#L98">Graph.ts:98</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
-						</li>
-					</ul>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
+					<a name="walls" class="tsd-anchor"></a>
+					<h3>walls</h3>
+					<div class="tsd-signature tsd-kind-icon">walls<span class="tsd-signature-symbol">:</span> <a href="_gridgraph_.coordinate.html" class="tsd-signature-type">Coordinate</a><span class="tsd-signature-symbol">[]</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ChalmersGU-AI-course/shrdlite-course-project/blob/master/TestAStar.ts#L10">TestAStar.ts:10</a></li>
+						</ul>
+					</aside>
 				</section>
 			</section>
 		</div>
@@ -220,11 +147,17 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_exampleworlds_.html">"<wbr>Example<wbr>Worlds"</a>
 					</li>
-					<li class="current tsd-kind-external-module">
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/_graph_.html">"<wbr>Graph"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/_gridgraph_.html">"<wbr>Grid<wbr>Graph"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/_interpreter_.html">"<wbr>Interpreter"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_interpretertestcases_.html">"<wbr>Interpreter<wbr>Test<wbr>Cases"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_parser_.html">"<wbr>Parser"</a>
@@ -237,6 +170,12 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_shrdlite_.html">"<wbr>Shrdlite"</a>
+					</li>
+					<li class="current tsd-kind-external-module">
+						<a href="../modules/_testastar_.html">"<wbr>TestAStar"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_testinterpreter_.html">"<wbr>Test<wbr>Interpreter"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_textworld_.html">"<wbr>Text<wbr>World"</a>
@@ -257,47 +196,38 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
-						<a href="_graph_.edge.html" class="tsd-kind-icon">Edge</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_graph_.gridgraph.html" class="tsd-kind-icon">Grid<wbr>Graph</a>
-					</li>
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_graph_.gridnode.html" class="tsd-kind-icon">Grid<wbr>Node</a>
+					<li class="current tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="_testastar_.testcase.html" class="tsd-kind-icon">Test<wbr>Case</a>
 						<ul>
-							<li class=" tsd-kind-constructor tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_graph_.gridnode.html#constructor" class="tsd-kind-icon">constructor</a>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
+								<a href="_testastar_.testcase.html#cost" class="tsd-kind-icon">cost</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_graph_.gridnode.html#pos" class="tsd-kind-icon">pos</a>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
+								<a href="_testastar_.testcase.html#grid_size" class="tsd-kind-icon">grid_<wbr>size</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_graph_.gridnode.html#add" class="tsd-kind-icon">add</a>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
+								<a href="_testastar_.testcase.html#path" class="tsd-kind-icon">path</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_graph_.gridnode.html#compareto" class="tsd-kind-icon">compare<wbr>To</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_graph_.gridnode.html#tostring" class="tsd-kind-icon">to<wbr>String</a>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
+								<a href="_testastar_.testcase.html#walls" class="tsd-kind-icon">walls</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
-						<a href="_graph_.searchresult.html" class="tsd-kind-icon">Search<wbr>Result</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../interfaces/_graph_.coordinate.html" class="tsd-kind-icon">Coordinate</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
-						<a href="../interfaces/_graph_.graph.html" class="tsd-kind-icon">Graph</a>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_testastar_.html#fs" class="tsd-kind-icon">fs</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
-						<a href="../modules/_graph_.html#astarsearch" class="tsd-kind-icon">a<wbr>Star<wbr>Search</a>
+						<a href="../modules/_testastar_.html#checkpath" class="tsd-kind-icon">check<wbr>Path</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_testastar_.html#runalltests" class="tsd-kind-icon">run<wbr>All<wbr>Tests</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_testastar_.html#runtest" class="tsd-kind-icon">run<wbr>Test</a>
 					</li>
 				</ul>
 			</nav>
