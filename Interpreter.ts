@@ -92,40 +92,9 @@ module Interpreter {
     return (lit.polarity ? "" : "-") + lit.relation + "(" + lit.args.join(",") + ")";
   }
 
-  // private functions
-  ///**
-  // * The core interpretation function. The code here is just a
-  // * template; you should rewrite this function entirely. In this
-  // * template, the code produces a dummy interpretation which is not
-  // * connected to `cmd`, but your version of the function should
-  // * analyse cmd in order to figure out what interpretation to
-  // * return.
-  // * @param cmd The actual command. Note that it is *not* a string, but rather an object of type `Command` (as it has been parsed by the parser).
-  //* @param state The current state of the world. Useful to look up objects in the world.
-  // * @returns A list of list of Literal, representing a formula in disjunctive normal form (disjunction of conjunctions). See the dummy interpetation returned in the code for an example, which means ontop(a,floor) AND holding(b).
-  // */
-  // function interpretCommand(cmd : Parser.Command, state : WorldState) : DNFFormula {
-  //     // This returns a dummy interpretation involving two random objects in the world
-  //     var objects : string[] = Array.prototype.concat.apply([], state.stacks);
-  //     var a : string = objects[Math.floor(Math.random() * objects.length)];
-  //     var b : string = objects[Math.floor(Math.random() * objects.length)];
-  //     var interpretation : DNFFormula = [[
-  //         {polarity: true, relation: "ontop", args: [a, "floor"]},
-  //         {polarity: true, relation: "holding", args: [b]}
-  //     ]];
-  //     return interpretation;
-  // }
 
-
-  //---------------- New Code ----------- New Code -------------- New Code -------------------------//
-  // private functions
   /**
-  * The core interpretation function. The code here is just a
-  * template; you should rewrite this function entirely. In this
-  * template, the code produces a dummy interpretation which is not
-  * connected to `cmd`, but your version of the function should
-  * analyse cmd in order to figure out what interpretation to
-  * return. Throws "No valid interpretation" if that is the case.
+  * The core interpretation function. Returns interpretations of a parse. Throws "No valid interpretation" if that is the case.
   * @param cmd The actual command. Note that it is *not* a string, but rather an object of type `Command` (as it has been parsed by the parser).
   * @param state The current state of the world. Useful to look up objects in the world.
   * @returns A list of list of Literal, representing a formula in disjunctive normal form (disjunction of conjunctions). See the dummy interpetation returned in the code for an example, which means ontop(a,floor) AND holding(b).
@@ -136,7 +105,7 @@ module Interpreter {
     // a count of the number of interpretations we've added
     var interpCount : number = 0;
     //if it is a [take entity] command:
-    if(cmd.command === "take" || cmd.command === "grasp" || cmd.command === "pick up"){
+    if(cmd.command === "take"){
       //find all entities matching the given discription
       var possibleEntities : string[] = findEntity(cmd.entity,state);
       //add them to the interpetation list (with the exception of floor which cannot be grasped)
@@ -147,7 +116,32 @@ module Interpreter {
         }
       })
     } else {
-      if(cmd.command === "move" || cmd.command === "put" || cmd.command === "drop"){
+      if(cmd.command === "stack"){
+        //all the entities to stack
+        var matchingEntities = findEntity(cmd.entity,state)
+        var permutations : string[][] = getPermutations(matchingEntities)
+        permutations.forEach((perm) =>{
+          var temp : Literal[] = []
+          var flag : boolean = false
+          for(var i=0;i<perm.length-1;i++){
+            if(checkPhysicLaws(state.objects[perm[i]],state.objects[perm[i+1]],"ontop")){
+              temp.push({polarity : true, relation : "ontop", args: [perm[i],perm[i+1]]})
+            }else{
+              if( checkPhysicLaws(state.objects[perm[i]],state.objects[perm[i+1]],"inside")){
+                temp.push({polarity : true, relation : "inside", args: [perm[i],perm[i+1]]})
+              }else{
+                flag = true
+                break
+              }
+            }
+          }
+          if(!flag && temp.length>0){
+            interpretation[interpCount] = temp
+            interpCount++
+          }
+        })
+      }
+      if(cmd.command === "move" || cmd.command === "put"){
         // if it is a [move/put/drop 'it' to a location] command (robot already holding an object)
         if(cmd.entity == null){
           //find all entities the location relation is in regards to
@@ -230,7 +224,7 @@ module Interpreter {
       return false
     }
     // Boxes cannot contain pyramids, planks or boxes of the same size.
-    if(relation === "inside" && b.form ==="box" && a.size === b.size && (a.form === "pyramids" || a.form === "planks" || a.form === "box")){
+    if(relation === "inside" && b.form ==="box" && a.size === b.size && (a.form === "pyramid" || a.form === "plank" || a.form === "box")){
       return false
     }
     // Small boxes cannot be supported by small bricks or pyramids.
@@ -388,5 +382,28 @@ module Interpreter {
       })
     }
     return [x,y]
+  }
+
+  // returns all permutations of an array
+  // tex getPermutations([1 2 3]) => [[1 2 3] [ 1 3 2] [2 1 3] [ 2 3 1] [3 1 2] [3 2 1]]
+  function getPermutations<T>( arr : T[]) : T[][]{
+    if(arr.length === 1){
+      return [[arr[0]]]
+    }
+    var pile : T[][] =[]
+    for (var i =0; i<arr.length;i++){
+      var front : T = arr[i];
+      var rest : T[] = []
+      for(var j =0;j<arr.length;j++){
+        if(i!==j){
+          rest.push(arr[j])
+        }
+      }
+      var restPerms : T[][] = getPermutations(rest)
+      for(var j =0;j<restPerms.length;j++){
+        pile.push( [].concat(front,restPerms[j]) )
+      }
+    }
+    return pile
   }
 }

@@ -35,9 +35,10 @@ function R(obj) {
 
 ## Grammar rules
 
-main --> will_you:? please:? command please:?  {% R(2) %}  
+main --> will_you:? please:? command please:?  {% R(2) %}
 
 command --> take entity           {% R({command:"take", entity:1}) %}
+command --> stack entity           {% R({command:"stack", entity:1}) %}
 command --> move  it    location  {% R({command:"put", location:2}) %}
 command --> move entity location  {% R({command:"move", entity:1, location:2}) %}
 
@@ -96,6 +97,7 @@ form --> "floor"    {% R("floor") %}
 ## Lexicon (without semantic content)
 
 take --> "take" | "grasp" | "pick" "up"
+stack --> "stack"
 move --> "move" | "put" | "drop"
 it --> "it"
 
