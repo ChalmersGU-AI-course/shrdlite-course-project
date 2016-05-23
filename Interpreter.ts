@@ -119,24 +119,28 @@ module Interpreter {
       if(cmd.command === "stack"){
         //all the entities to stack
         var matchingEntities = findEntity(cmd.entity,state)
+        //all the different orders they can be stacked in
         var permutations : string[][] = getPermutations(matchingEntities)
+        //if the physic laws allow for the objects to be stacked in a certain permutation it is
+        //added as an interpretation
         permutations.forEach((perm) =>{
-          var temp : Literal[] = []
+          var stackOrder : Literal[] = []
+          //flag if a physic law is broken
           var flag : boolean = false
           for(var i=0;i<perm.length-1;i++){
             if(checkPhysicLaws(state.objects[perm[i]],state.objects[perm[i+1]],"ontop")){
-              temp.push({polarity : true, relation : "ontop", args: [perm[i],perm[i+1]]})
+              stackOrder.push({polarity : true, relation : "ontop", args: [perm[i],perm[i+1]]})
             }else{
               if( checkPhysicLaws(state.objects[perm[i]],state.objects[perm[i+1]],"inside")){
-                temp.push({polarity : true, relation : "inside", args: [perm[i],perm[i+1]]})
+                stackOrder.push({polarity : true, relation : "inside", args: [perm[i],perm[i+1]]})
               }else{
                 flag = true
                 break
               }
             }
           }
-          if(!flag && temp.length>0){
-            interpretation[interpCount] = temp
+          if(!flag && stackOrder.length>0){
+            interpretation[interpCount] = stackOrder
             interpCount++
           }
         })
@@ -312,7 +316,7 @@ module Interpreter {
         if(location.relation === "above"  && coordinatesA[0] === Number(bList[j].substring(6,7))){
           return true
         }
-        if(location.relation==="ontop" && coordinatesA[0] === Number(bList[j].substring(6,7))){
+        if(location.relation === "ontop" && coordinatesA[0] === Number(bList[j].substring(6,7))){
           if(coordinatesA[1] === 0){
             return true
           }

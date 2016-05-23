@@ -54,97 +54,17 @@ module Planner {
   export function stringify(result : PlannerResult) : string {
     return result.plan.join(", ");
   }
-
-  //     //////////////////////////////////////////////////////////////////////
-  //     // private functions
-  //
-  //     /**
-  //      * The core planner function. The code here is just a template;
-  //      * you should rewrite this function entirely. In this template,
-  //      * the code produces a dummy plan which is not connected to the
-  //      * argument `interpretation`, but your version of the function
-  //      * should be such that the resulting plan depends on
-  //      * `interpretation`.
-  //      *
-  //      *
-  //      * @param interpretation The logical interpretation of the user's desired goal. The plan needs to be such that by executing it, the world is put into a state that satisfies this goal.
-  //      * @param state The current world state.
-  //      * @returns Basically, a plan is a
-  //      * stack of strings, which are either system utterances that
-  //      * explain what the robot is doing (e.g. "Moving left") or actual
-  //      * actions for the robot to perform, encoded as "l", "r", "p", or
-  //      * "d". The code shows how to build a plan. Each step of the plan can
-  //      * be added using the `push` method.
-  //      */
-  //     function planInterpretation(interpretation : Interpreter.DNFFormula, state : WorldState) : string[] {
-  //         // This function returns a dummy plan involving a random stack
-  //         do {
-  //             var pickstack = Math.floor(Math.random() * state.stacks.length);
-  //         } while (state.stacks[pickstack].length == 0);
-  //         var plan : string[] = [];
-  //
-  //         // First move the arm to the leftmost nonempty stack
-  //         if (pickstack < state.arm) {
-  //             plan.push("Moving left");
-  //             for (var i = state.arm; i > pickstack; i--) {
-  //                 plan.push("l");
-  //             }
-  //         } else if (pickstack > state.arm) {
-  //             plan.push("Moving right");
-  //             for (var i = state.arm; i < pickstack; i++) {
-  //                 plan.push("r");
-  //             }
-  //         }
-  //
-  //         // Then pick up the object
-  //         var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-  //         plan.push("Picking up the " + state.objects[obj].form,
-  //                   "p");
-  //
-  //         if (pickstack < state.stacks.length-1) {
-  //             // Then move to the rightmost stack
-  //             plan.push("Moving as far right as possible");
-  //             for (var i = pickstack; i < state.stacks.length-1; i++) {
-  //                 plan.push("r");
-  //             }
-  //
-  //             // Then move back
-  //             plan.push("Moving back");
-  //             for (var i = state.stacks.length-1; i > pickstack; i--) {
-  //                 plan.push("l");
-  //             }
-  //         }
-  //
-  //         // Finally put it down again
-  //         plan.push("Dropping the " + state.objects[obj].form,
-  //                   "d");
-  //
-  //         return plan;
-  //     }
-  //
-  // }
-  // ---------------- NEW CODE ----------------- NEW CODE --------------------- NEW CODE -------------------//
-
   //////////////////////////////////////////////////////////////////////
   // private functions
 
   /**
-  * The core planner function. The code here is just a template;
-  * you should rewrite this function entirely. In this template,
-  * the code produces a dummy plan which is not connected to the
-  * argument `interpretation`, but your version of the function
-  * should be such that the resulting plan depends on
-  * `interpretation`.
-  *
-  *
+  * The core planner function.
   * @param interpretation The logical interpretation of the user's desired goal. The plan needs to be such that by executing it, the world is put into a state that satisfies this goal.
   * @param state The current world state.
   * @returns Basically, a plan is a
   * stack of strings, which are either system utterances that
   * explain what the robot is doing (e.g. "Moving left") or actual
-  * actions for the robot to perform, encoded as "l", "r", "p", or
-  * "d". The code shows how to build a plan. Each step of the plan can
-  * be added using the `push` method.
+  * actions for the robot to perform, encoded as "l", "r", "p", or "d".
   */
   function planInterpretation(interpretation : Interpreter.DNFFormula, state : WorldState) : string[] {
     var plan : string[] = [];
@@ -153,7 +73,8 @@ module Planner {
     var start : WorldState = state;
 
     /**
-    Tests if a world state is equal to the goal state, i.e. if the DNF-'interpretation' is fullfilled
+    The goal function tests if a world state is equal to the goal state,
+     i.e. if the DNF-'interpretation' is fullfilled
     */
     function goal(testState : WorldState) : boolean {
       for(var i=0; i< interpretation.length ; i++){
@@ -179,14 +100,17 @@ module Planner {
     function heuristic(testState : WorldState) : number {
       return 0
     }
-    // max alocated time for a search in seconds
+    // max allocated time for a search in seconds
     var timeout : number = 5;
     var result : SearchResult<WorldState> = aStarSearch<WorldState>(graph,start,goal,heuristic,timeout);
-    //result.path is the resulting series of worldStates we want to traverse to reach the goal
+
+    //Result.path is the resulting series of worldStates we want to traverse to reach the goal.
+    //We find the commands (l,r,p,d) by checking how these world states change in order from start to finish
     var previousState : WorldState;
     var currentState : WorldState;
     for(var i=0;i<result.path.length;i++){
       if(i===0){
+        //the start node is not included in the result.path
         previousState = start;
       }
       else{
@@ -209,7 +133,7 @@ module Planner {
         plan.push("p")
         continue
       }
-      //then something was dropped
+      //else something was dropped
       plan.push("d")
     }
     return plan;
@@ -227,7 +151,6 @@ module Planner {
         bool = true;
       }
     }
-
     //return opposite if polarity is false
     if(literal.polarity === false){
       if(bool===false){
@@ -241,16 +164,17 @@ module Planner {
   }
   /**
   checks if two objects fullfill a relation in a given world state
+  Similar to Interpreter.checkRelation() but takes different arguments
   */
   function checkRelation(objA : string, objB : string, relation : string, state : WorldState) : boolean{
     var coordinatesA = Interpreter.getCoords(objA,state);
     // special case: in relation to floor
     if(objB.substring(0,6) ==="floor-"){
       if(coordinatesA[0] === Number(objB.substring(6))){
-        if(relation==="above"){
+        if(relation==="above" && coordinatesA[0] === Number(objB.substring(6,7))){
           return true
         }
-        if(relation==="ontop"){
+        if(relation==="ontop" && coordinatesA[0] === Number(objB.substring(6,7))){
           if(coordinatesA[1] === 0){
             return true
           }
@@ -301,9 +225,9 @@ module Planner {
     return false
   }
 
-  /** Returns the out going edges from a world state node. These are the world states that occur if the
-  arm either goes left, right, picks up, or drops an object (if these are possible actions). All edges have
-  cost 1.
+  /** Returns the outgoing edges from a world state node. These are the world states that occur if the
+  arm either goes left, right, picks up, or drops an object (if these are possible actions). If a large
+  object is moved/picked up the edge cost is 2 otherwise it is 1.
   */
   function getWorldStateEdges(state : WorldState) : Edge<WorldState>[] {
     var edges : Edge<WorldState>[] = [];
