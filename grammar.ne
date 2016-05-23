@@ -39,6 +39,8 @@ main --> will_you:? please:? command please:?  {% R(2) %}
 
 command --> take entity           {% R({command:"take", entity:1}) %}
 command --> stack entity           {% R({command:"stack", entity:1}) %}
+command --> Q_how_many objectPL are_there          {% R({command:"Q_how_many", entity:1}) %}
+command --> Q_where_is entity           {% R({command:"Q_where_is", entity:1}) %}
 command --> move  it    location  {% R({command:"put", location:2}) %}
 command --> move entity location  {% R({command:"move", entity:1, location:2}) %}
 
@@ -59,6 +61,7 @@ objectPL --> size:? color:? formPL  {% R({size:0, color:1, form:2}) %}
 quantifierSG --> ("any" | "an" | "a")  {% R("any") %}
 quantifierSG --> ("the")               {% R("the") %}
 quantifierSG --> ("every")             {% R("all") %}
+quantifierPL --> ("the")               {% R("all") %}
 quantifierPL --> ("all")               {% R("all") %}
 
 relation --> ("left"  "of" | "to" "the" "left"  "of")  {% R("leftof") %}
@@ -98,8 +101,12 @@ form --> "floor"    {% R("floor") %}
 
 take --> "take" | "grasp" | "pick" "up"
 stack --> "stack"
+Q_how_many --> "how" "many"
+Q_where_is --> "where" "is" | "where" "are"
 move --> "move" | "put" | "drop"
 it --> "it"
+
+are_there --> "are" "there"
 
 that_is  --> "that" "is"
 that_are --> "that" "are"

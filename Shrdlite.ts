@@ -2,6 +2,7 @@
 ///<reference path="Parser.ts"/>
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Planner.ts"/>
+///<reference path="UserQuestions.ts"/>
 
 module Shrdlite {
 
@@ -66,12 +67,16 @@ module Shrdlite {
 
         // Interpretation
         try {
+            //if a question is asked bypass the normal interpretation-planner sequence. If there are multiple
+            //parses we go with the first one.
+            if(parses[0].parse.command.substring(0,2) === "Q_"){
+              return [interpretQuestion(parses[0].parse)]
+            }
             var interpretations : Interpreter.InterpretationResult[] = Interpreter.interpret(parses, world.currentState);
             world.printDebugInfo("Found " + interpretations.length + " interpretations");
             interpretations.forEach((result, n) => {
                 world.printDebugInfo("  (" + n + ") " + Interpreter.stringify(result));
             });
-
             if (interpretations.length > 1) {
                 // several interpretations were found -- how should this be handled?
                 // should we throw an ambiguity error?
