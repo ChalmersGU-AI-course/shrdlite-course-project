@@ -95,15 +95,118 @@ module Planner {
       return false
     }
     /**
-    The heuristic given a world state
+    The heuristic given a world state. Is admissible.
     */
     function heuristic(testState : WorldState) : number {
-      return 0
+      //assign a heuristic to each literal in the DNFFormula interpretation depending on how close it is to being true
+      var h :number[][] = [];
+      for (let i = 0; i < interpretation.length; i++) {
+          h[i] = [];
+          for (let j = 0; j < interpretation[i].length; j++) {
+              h[i][j] = heuristicOfLiteral(testState,interpretation[i][j])
+          }
+      }
+      //the final heuristic for the world state is the
+      // i.e min( max( h of literals in DNF matrix) taken over rows ) taken over column
+      //               1 2 4
+      //  h of DNF =   5 3 9   =>   finalH = 4
+      //               7 6 3
+      var hMaxOfRows : number[]=[];
+      for(var i =0; i< h.length ; i++){
+        hMaxOfRows[i] = Math.max(...h[i])
+      }
+      return Math.min(...hMaxOfRows)
+    }
+    /** Gets an admissible heuristic for a signle literal depending on how
+    close it is to being fullfilled in a world state
+    */
+    function heuristicOfLiteral(testState : WorldState, literal : Interpreter.Literal) : number{
+      //if the literal is already fullfilled the heuristic is 0
+      if(checkLiteral(literal,testState)){
+        return 0
+      }
+      //else the heuristic is taken as a naive esitmate of the minimum cost
+      //required to complete the moves required to satisfy the literal
+      if(literal.polarity === true){
+        //get coordinates of the first argument: ObjectA (there is always atleast 1)
+        var objA : string = literal.args[0]
+        var xObjA : number
+        var yObjA : number
+        //if the arm holds one of the objects, this is its x-Coordinate
+        if(testState.holding === objA){
+          xObjA = testState.arm
+        }else{
+          var coordsA : number[] = Interpreter.getCoords(objA,testState)
+          xObjA = coordsA[0]
+          yObjA = coordsA[1]
+        }
+        if(literal.relation === "holding"){
+          var stackHeight = testState.stacks[xObjA].length
+          var xArm : number = testState.arm
+          // h = move arm to same column + pick + (minimum of 4 moves to remove another object from stack) * num of objects to move from stack
+          return Math.abs(xObjA-xArm) + 1 + 4 * (stackHeight-yObjA-1)
+        }
+        //then there is a second argument aswell : ObjectB
+        var objB :string = literal.args[1]
+        var xObjB : number;
+        var yObjB : number;
+        if(testState.holding === objB){
+          xObjB = testState.arm
+        }else{
+          var coordsB : number[] = Interpreter.getCoords(objB,testState)
+          xObjB = coordsB[0]
+          yObjB = coordsB[1]
+
+        }
+        if(literal.relation === "leftof"){
+          //we punish A being to the right of B
+          return Math.max(xObjA - xObjB,0)
+        }
+        if(literal.relation === "rightof"){
+          //we punish A being to the left of B
+          return Math.max(xObjB - xObjA,0)
+        }
+        if(literal.relation === "beside"){
+          //we punish the x-distance between A and B being different from 1
+          return Math.abs(Math.abs(xObjA-xObjB)-1)
+        }
+        if( literal.relation === "above"){
+          //we punish the objects being far apart in x-distance, objA being deep down in stacks, and the arm far away
+            var  depthOfA: number = testState.stacks[xObjA].length - yObjA - 1
+            if(testState.holding === objA || testState.holding === objB){
+            return Math.abs(xObjA-xObjB) + 3*depthOfA
+          }else{
+            return Math.abs(xObjA-xObjB) + 1 + 3*depthOfA + Math.min(Math.abs(testState.arm-xObjA),Math.abs(testState.arm-xObjB))
+          }
+        }
+        if(literal.relation === "under"){
+          //we punish the objects being far apart in x-distance, objB being deep down in stacks, and the arm far away
+          var  depthOfB: number = testState.stacks[xObjB].length - yObjB - 1
+          if(testState.holding === objA || testState.holding === objB){
+            return Math.abs(xObjA-xObjB) + 3*depthOfB
+          }else{
+            return Math.abs(xObjA-xObjB) + 1 + 3*depthOfB + Math.min(Math.abs(testState.arm-xObjA),Math.abs(testState.arm-xObjB))
+          }
+        }
+        if( literal.relation === "inside" || literal.relation === "ontop" ){
+          //we punish the objects being far apart in x-distance, being deep down in stacks, and the arm far away
+          if(testState.holding === objA || testState.holding === objB){
+            return Math.abs(xObjA-xObjB)
+          }else{
+            var  depthOfA: number = testState.stacks[xObjA].length - yObjA - 1
+            var  depthOfB: number = testState.stacks[xObjB].length - yObjB - 1
+            return Math.abs(xObjA-xObjB) + 1 + 3*Math.max(depthOfA,depthOfB) + Math.min(Math.abs(testState.arm-xObjA),Math.abs(testState.arm-xObjB))
+          }
+        }
+        throw "Unknown literal relation: "+literal.relation
+      }else{
+        //if literal.polarity === false, which it cannot become currently
+        throw "literal.polarity===false: Not implemented. How did you get here?"
+      }
     }
     // max allocated time for a search in seconds
-    var timeout : number = 5;
+    var timeout : number = 10;
     var result : SearchResult<WorldState> = aStarSearch<WorldState>(graph,start,goal,heuristic,timeout);
-
     //Result.path is the resulting series of worldStates we want to traverse to reach the goal.
     //We find the commands (l,r,p,d) by checking how these world states change in order from start to finish
     var previousState : WorldState;
