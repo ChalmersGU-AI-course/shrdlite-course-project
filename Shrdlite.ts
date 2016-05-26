@@ -78,6 +78,7 @@ module Shrdlite {
                 world.printDebugInfo("  (" + n + ") " + Interpreter.stringify(result));
             });
             if (interpretations.length > 1) {
+                  interpretations = Questions(interpretations);
                 // several interpretations were found -- how should this be handled?
                 // should we throw an ambiguity error?
                 // ... throw new Error("Ambiguous utterance");
@@ -133,4 +134,15 @@ module Shrdlite {
         return plan;
     }
 
+}
+
+
+function Questions(interpretations : Interpreter.InterpretationResult[]) : Interpreter.InterpretationResult[]
+{
+  var interpretation : Interpreter.InterpretationResult[];
+
+
+
+
+  return interpretation;
 }
