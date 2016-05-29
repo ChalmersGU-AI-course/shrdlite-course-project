@@ -240,24 +240,24 @@ function Questions(world : World,interpretations : Interpreter.InterpretationRes
   var iUserInterp : number = +userReading;
   world.printSystemOutput("User interpretation: " + iUserInterp);
 
-  // IT HAS TO BE CORRECTED FROM HERE....:  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- // the problem it is that I dont know how to initialize "result", if I initiliazie with interpretation it takes all, and if I do with [], is undefinec (error)
   var result : Interpreter.InterpretationResult[] = [];
-
+  result[0] = interpretations[interpCount[0][iUserInterp]]; //takes all the interpretations to the planner
   if (isFloor[iUserInterp])
   {
-    //world.printSystemOutput("nFloors: "+floorCount[iUserInterp]);
     for(var iFloor=0;iFloor<floorCount[iUserInterp];iFloor++) // it returns all the floors asociated with the user interpretation
     {
       result[0].interpretation[iFloor]= interpretations[interpCount[0][iUserInterp]].interpretation[interpCount[1][iUserInterp]+iFloor];
     }
+    result.splice(1,result.length-1);
+    result[0].interpretation.splice(floorCount[iUserInterp],result[0].interpretation.length-floorCount[iUserInterp]);
 
   }else{
-  result[0] = interpretations[interpCount[0][iUserInterp]]; //takes all the interpretations to the planner
-  //result[0].interpretation = [] ; // it returns undefined and then you cannot acces to .interpretation[0] in next line.
+
   result[0].interpretation[0] = interpretations[interpCount[0][iUserInterp]].interpretation[interpCount[1][iUserInterp]];
+  result.splice(1,result.length-1);
+  result[0].interpretation.splice(1,result[0].interpretation.length-1);
   }
-  world.printSystemOutput("result: "+result[0].interpretation[0][0].relation+ " "+result[0].interpretation[0][0].args)
+  //world.printSystemOutput("result: "+result[0].interpretation[0][0].relation+ " "+result[0].interpretation[0][0].args)
 
   return result;
 }
