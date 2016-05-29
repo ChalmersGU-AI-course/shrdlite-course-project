@@ -74,7 +74,7 @@ module Shrdlite {
 
             if ((interpretations.length > 1) || ( interpretations[0].interpretation.length > 1) )
             {
-              //interpretations = Questions(world,interpretations);
+              interpretations = Questions(world,interpretations);
             }
         }
         catch(err) {
@@ -128,7 +128,7 @@ module Shrdlite {
 
 }
 
-
+// avoid several floor, avoid a/the, already true? ...
 function Questions(world : World,interpretations : Interpreter.InterpretationResult[]) : Interpreter.InterpretationResult[]
 {
 
@@ -143,9 +143,14 @@ function Questions(world : World,interpretations : Interpreter.InterpretationRes
   for (var iParse= 0; iParse<nParses; iParse++)
   {
 
+
+    var floorAppear : boolean = false;
+    var floorCount : number[]=[];
+    var isFloor : boolean[] = [];
     var nInterpretations : number = interpretations[iParse].interpretation.length;
     for (var iInterp= 0; iInterp<nInterpretations ; iInterp++)
     {
+
 
       var nConj : number = interpretations[iParse].interpretation[iInterp].length;
       for (var iConj= 0; iConj< nConj; iConj++)
@@ -157,23 +162,57 @@ function Questions(world : World,interpretations : Interpreter.InterpretationRes
         var arg : string[];
         arg = interpretations[iParse].interpretation[iInterp][iConj].args;
 
-        if(nArgs > 1)
+        if(arg[1].substring(0,6) === "floor-") // we dont want to count all the floors for the interpretation
         {
-          thisInterp = thisInterp + objectInterpretation(arg[0]) + " " + rel + " "+objectInterpretation(arg[1]);
+          floorAppear = true;
+          floorCount[iInterpCount] = 0;
         }else{
-          thisInterp = thisInterp + rel + " " + objectInterpretation(arg[0]);
+          floorAppear = false;
         }
 
-        if ( (nConj>1) && (iConj<nConj-1) )
+        // just show one time per floor, and count how many floors...
+        if(floorAppear)
         {
-          thisInterp = thisInterp + " and ";
+          if(arg[1].substring(6,7) === "0")
+          {
+            // it creates the string output for the question
+            thisInterp = thisInterp + objectInterpretation(arg[0]) + rel + " the floor ";
+            if ( (nConj>1) && (iConj<nConj-1) )
+            {
+              thisInterp = thisInterp + " and ";
+            }
+            //print and count:
+            world.printSystemOutput(iInterpCount +".- " + thisInterp);
+            interpCount[0][iInterpCount]=iParse;
+            interpCount[1][iInterpCount]=iInterp;
+            isFloor[iInterpCount] = true;
+            iInterpCount++;
+            floorCount[iInterpCount] = 1;
+          }else{
+            floorCount[iInterpCount]++;
+          }
+
+        }else{
+          // it creates the string output for the question
+          if(nArgs > 1)
+          {
+            thisInterp = thisInterp + objectInterpretation(arg[0])+ rel + " "+objectInterpretation(arg[1]);
+          }else{
+            thisInterp = thisInterp + rel + " " + objectInterpretation(arg[0]);
+          }
+          if ( (nConj>1) && (iConj<nConj-1) )
+          {
+            thisInterp = thisInterp + " and ";
+          }
+          //print and count:
+          world.printSystemOutput(iInterpCount +".- " + thisInterp);
+          interpCount[0][iInterpCount]=iParse;
+          interpCount[1][iInterpCount]=iInterp;
+          isFloor[iInterpCount] = false;
+          iInterpCount++;
         }
 
       }
-      world.printSystemOutput(iInterpCount +".- " + thisInterp);
-      interpCount[0][iInterpCount]=iParse;
-      interpCount[1][iInterpCount]=iInterp;
-      iInterpCount++;
 
     }
 
@@ -183,10 +222,23 @@ function Questions(world : World,interpretations : Interpreter.InterpretationRes
   var iUserInterp : number = +userReading;
   world.printSystemOutput("User interpretation: " + iUserInterp);
 
-  var result : Interpreter.InterpretationResult[] = [];
-  result[0].interpretation[0] = interpretations[interpCount[0][iUserInterp]].interpretation[interpCount[1][iUserInterp]];
-  //interpretations[0].interpretation[0] = interpretations[interpCount[0][iUserInterp]].interpretation[interpCount[1][iUserInterp]];
+  // IT HAS TO BE CORRECTED....:
 
+  var result : Interpreter.InterpretationResult[] = [];
+
+  if (isFloor[iUserInterp])
+  {
+
+    for(var iFloor=0;iFloor<floorCount[iUserInterp];iFloor++) // it returns all the floors asociated with the user interpretation
+    {
+      result[0].interpretation[iFloor]= interpretations[interpCount[0][iUserInterp]].interpretation[interpCount[1][iUserInterp]+iFloor];
+    }
+
+  }else{
+  result[0] = interpretations[interpCount[0][iUserInterp]];
+  result[0].interpretation = [];
+  result[0].interpretation[0] = interpretations[interpCount[0][iUserInterp]].interpretation[interpCount[1][iUserInterp]];
+  }
 
   return result;
 }
@@ -208,7 +260,7 @@ function objectInterpretation(objectIN : string) :string
       objectOUT = "large red box ";
       break;
     case'i':
-      objectOUT = "large yellow pyramid";
+      objectOUT = "large yellow pyramid ";
       break;
     case'h':
       objectOUT = "small red table ";
