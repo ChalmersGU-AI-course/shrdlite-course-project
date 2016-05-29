@@ -162,10 +162,15 @@ function Questions(world : World,interpretations : Interpreter.InterpretationRes
         var arg : string[];
         arg = interpretations[iParse].interpretation[iInterp][iConj].args;
 
-        if(arg[1].substring(0,6) === "floor-") // we dont want to count all the floors for the interpretation
+        if(nArgs > 1)
         {
-          floorAppear = true;
-          floorCount[iInterpCount] = 0;
+          if(arg[1].substring(0,6) === "floor-") // we dont want to count all the floors for the interpretation
+          {
+            floorAppear = true;
+            floorCount[iInterpCount] = 0;
+          }else{
+            floorAppear = false;
+          }
         }else{
           floorAppear = false;
         }
@@ -222,7 +227,7 @@ function Questions(world : World,interpretations : Interpreter.InterpretationRes
   var iUserInterp : number = +userReading;
   world.printSystemOutput("User interpretation: " + iUserInterp);
 
-  // IT HAS TO BE CORRECTED....:
+  // IT HAS TO BE CORRECTED FROM HERE....:  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   var result : Interpreter.InterpretationResult[] = [];
 
@@ -242,6 +247,8 @@ function Questions(world : World,interpretations : Interpreter.InterpretationRes
 
   return result;
 }
+
+
 
 
 function objectInterpretation(objectIN : string) :string
