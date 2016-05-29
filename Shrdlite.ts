@@ -72,10 +72,22 @@ module Shrdlite {
                 world.printDebugInfo("  (" + n + ") " + Interpreter.stringify(result));
             });
 
-            if ((interpretations.length > 1) || ( interpretations[0].interpretation.length > 1) )
+          try{
+            // ambiguity questions if the quantifier of the parser is "the", or "a" with different parse intrepretations,
+            var quantifier : string = parses[0].parse.entity.quantifier
+            if ((quantifier == "the") || (interpretations.length > 1))
             {
-              interpretations = Questions(world,interpretations);
+              if ((interpretations.length > 1) || ( interpretations[0].interpretation.length > 1) )
+              {
+                interpretations = Questions(world,interpretations);
+              }
             }
+          }
+          catch(err) {
+              world.printError("Questions error", err);
+              return;
+          }
+
         }
         catch(err) {
             world.printError("Interpretation error", err);
@@ -180,7 +192,7 @@ function Questions(world : World,interpretations : Interpreter.InterpretationRes
         {
           if(arg[1].substring(6,7) === "0")
           {
-            // it creates the string output for the question
+            // it creates the string output for the question:
             thisInterp = thisInterp + objectInterpretation(arg[0]) + rel + " the floor ";
             if ( (nConj>1) && (iConj<nConj-1) )
             {
@@ -191,14 +203,15 @@ function Questions(world : World,interpretations : Interpreter.InterpretationRes
             interpCount[0][iInterpCount]=iParse;
             interpCount[1][iInterpCount]=iInterp;
             isFloor[iInterpCount] = true;
-            iInterpCount++;
             floorCount[iInterpCount] = 1;
+            iInterpCount++;
+
           }else{
-            floorCount[iInterpCount]++;
+            floorCount[iInterpCount-1]++;
           }
 
         }else{
-          // it creates the string output for the question
+          // it creates the string output for the question:
           if(nArgs > 1)
           {
             thisInterp = thisInterp + objectInterpretation(arg[0])+ rel + " "+objectInterpretation(arg[1]);
@@ -228,22 +241,23 @@ function Questions(world : World,interpretations : Interpreter.InterpretationRes
   world.printSystemOutput("User interpretation: " + iUserInterp);
 
   // IT HAS TO BE CORRECTED FROM HERE....:  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+ // the problem it is that I dont know how to initialize "result", if I initiliazie with interpretation it takes all, and if I do with [], is undefinec (error)
   var result : Interpreter.InterpretationResult[] = [];
 
   if (isFloor[iUserInterp])
   {
-
+    //world.printSystemOutput("nFloors: "+floorCount[iUserInterp]);
     for(var iFloor=0;iFloor<floorCount[iUserInterp];iFloor++) // it returns all the floors asociated with the user interpretation
     {
       result[0].interpretation[iFloor]= interpretations[interpCount[0][iUserInterp]].interpretation[interpCount[1][iUserInterp]+iFloor];
     }
 
   }else{
-  result[0] = interpretations[interpCount[0][iUserInterp]];
-  result[0].interpretation = [];
+  result[0] = interpretations[interpCount[0][iUserInterp]]; //takes all the interpretations to the planner
+  //result[0].interpretation = [] ; // it returns undefined and then you cannot acces to .interpretation[0] in next line.
   result[0].interpretation[0] = interpretations[interpCount[0][iUserInterp]].interpretation[interpCount[1][iUserInterp]];
   }
+  world.printSystemOutput("result: "+result[0].interpretation[0][0].relation+ " "+result[0].interpretation[0][0].args)
 
   return result;
 }
