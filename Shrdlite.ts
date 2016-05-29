@@ -72,21 +72,33 @@ module Shrdlite {
                 world.printDebugInfo("  (" + n + ") " + Interpreter.stringify(result));
             });
 
-          try{
-            // ambiguity questions if the quantifier of the parser is "the", or "a" with different parse intrepretations,
-            var quantifier : string = parses[0].parse.entity.quantifier
-            if ((quantifier == "the") || (interpretations.length > 1))
-            {
-              if ((interpretations.length > 1) || ( interpretations[0].interpretation.length > 1) )
+            try{
+              // ambiguity questions if the quantifier of the parser is "the", or "a" with different parse intrepretations,
+              var quantifier1 : string = parses[0].parse.entity.quantifier
+              if( (parses[0].parse.command != "pick up") && (parses[0].parse.command != "grasp") && (parses[0].parse.command != "take")  )
               {
-                interpretations = Questions(world,interpretations);
+                var quantifier2 : string = parses[0].parse.location.entity.quantifier;
+                if ((quantifier1 == "the") || (quantifier2 == "the")  || (interpretations.length > 1))
+                {
+                  if ((interpretations.length > 1) || ( interpretations[0].interpretation.length > 1) )
+                  {
+                    interpretations = Questions(world,interpretations);
+                  }
+                }
+              }else{
+                if ((quantifier1 == "the")  || (interpretations.length > 1))
+                {
+                  if ((interpretations.length > 1) || ( interpretations[0].interpretation.length > 1) )
+                  {
+                    interpretations = Questions(world,interpretations);
+                  }
+                }
               }
             }
-          }
-          catch(err) {
+            catch(err) {
               world.printError("Questions error", err);
               return;
-          }
+            }
 
         }
         catch(err) {
