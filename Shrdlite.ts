@@ -2,7 +2,6 @@
 ///<reference path="Parser.ts"/>
 ///<reference path="Interpreter.ts"/>
 ///<reference path="Planner.ts"/>
-///<reference path="UserQuestions.ts"/>
 
 module Shrdlite {
 
@@ -67,22 +66,15 @@ module Shrdlite {
 
         // Interpretation
         try {
-            //if a question is asked bypass the normal interpretation-planner sequence. If there are multiple
-            //parses we go with the first one.
-            if(parses[0].parse.command.substring(0,2) === "Q_"){
-              return [interpretQuestion(parses[0].parse)]
-            }
             var interpretations : Interpreter.InterpretationResult[] = Interpreter.interpret(parses, world.currentState);
             world.printDebugInfo("Found " + interpretations.length + " interpretations");
             interpretations.forEach((result, n) => {
                 world.printDebugInfo("  (" + n + ") " + Interpreter.stringify(result));
             });
-            if (interpretations.length > 1) {
-                  interpretations = Questions(interpretations);
-                // several interpretations were found -- how should this be handled?
-                // should we throw an ambiguity error?
-                // ... throw new Error("Ambiguous utterance");
-                // or should we let the planner decide?
+
+            if ((interpretations.length > 1) || ( interpretations[0].interpretation.length > 1) )
+            {
+              //interpretations = Questions(world,interpretations);
             }
         }
         catch(err) {
@@ -137,12 +129,118 @@ module Shrdlite {
 }
 
 
-function Questions(interpretations : Interpreter.InterpretationResult[]) : Interpreter.InterpretationResult[]
+function Questions(world : World,interpretations : Interpreter.InterpretationResult[]) : Interpreter.InterpretationResult[]
 {
-  var interpretation : Interpreter.InterpretationResult[];
+
+  world.printSystemOutput("There are several interpretations: ")
+
+  var iInterpCount : number = 0;
+  var interpCount = new Array();
+  interpCount[0] = new Array();  // count iParse
+  interpCount[1]= new Array(); // count iInterp
+
+  var nParses : number = interpretations.length;
+  for (var iParse= 0; iParse<nParses; iParse++)
+  {
+
+    var nInterpretations : number = interpretations[iParse].interpretation.length;
+    for (var iInterp= 0; iInterp<nInterpretations ; iInterp++)
+    {
+
+      var nConj : number = interpretations[iParse].interpretation[iInterp].length;
+      for (var iConj= 0; iConj< nConj; iConj++)
+      {
+
+        var thisInterp : string ="";
+        var rel : string = interpretations[iParse].interpretation[iInterp][iConj].relation;
+        var nArgs : number = interpretations[iParse].interpretation[iInterp][iConj].args.length
+        var arg : string[];
+        arg = interpretations[iParse].interpretation[iInterp][iConj].args;
+
+        if(nArgs > 1)
+        {
+          thisInterp = thisInterp + objectInterpretation(arg[0]) + " " + rel + " "+objectInterpretation(arg[1]);
+        }else{
+          thisInterp = thisInterp + rel + " " + objectInterpretation(arg[0]);
+        }
+
+        if ( (nConj>1) && (iConj<nConj-1) )
+        {
+          thisInterp = thisInterp + " and ";
+        }
+
+      }
+      world.printSystemOutput(iInterpCount +".- " + thisInterp);
+      interpCount[0][iInterpCount]=iParse;
+      interpCount[1][iInterpCount]=iInterp;
+      iInterpCount++;
+
+    }
+
+  }
+
+  var userReading = prompt("What interpretation do you mean? (Answer with a number)","0");
+  var iUserInterp : number = +userReading;
+  world.printSystemOutput("User interpretation: " + iUserInterp);
+
+  var result : Interpreter.InterpretationResult[] = [];
+  result[0].interpretation[0] = interpretations[interpCount[0][iUserInterp]].interpretation[interpCount[1][iUserInterp]];
+  //interpretations[0].interpretation[0] = interpretations[interpCount[0][iUserInterp]].interpretation[interpCount[1][iUserInterp]];
 
 
+  return result;
+}
 
 
-  return interpretation;
+function objectInterpretation(objectIN : string) :string
+{
+  var objectOUT : string;
+
+  switch (objectIN)
+    {
+    case'e':
+      objectOUT = "large white ball ";
+      break;
+    case'a':
+      objectOUT = "large green brick ";
+      break;
+    case'l':
+      objectOUT = "large red box ";
+      break;
+    case'i':
+      objectOUT = "large yellow pyramid";
+      break;
+    case'h':
+      objectOUT = "small red table ";
+      break;
+    case'j':
+      objectOUT = "small red pyramid ";
+      break;
+    case'k':
+      objectOUT = "large yellow box ";
+      break;
+    case'g':
+      objectOUT = "large blue table ";
+      break;
+    case'c':
+      objectOUT = "large red plank ";
+      break;
+    case'b':
+      objectOUT = "small white brick ";
+      break;
+    case'd':
+      objectOUT = "small green plank ";
+      break;
+    case'm':
+      objectOUT = "small blue box ";
+      break;
+    case'f':
+      objectOUT = "small black ball ";
+      break;
+    default:
+
+    }
+
+  return objectOUT;
+
 }
