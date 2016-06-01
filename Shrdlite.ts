@@ -72,34 +72,44 @@ module Shrdlite {
                 world.printDebugInfo("  (" + n + ") " + Interpreter.stringify(result));
             });
 
-            try{
-              // ambiguity questions if the quantifier of the parser is "the", or "a" with different parse intrepretations,
-              var quantifier1 : string = parses[0].parse.entity.quantifier
-              if( (parses[0].parse.command != "pick up") && (parses[0].parse.command != "grasp") && (parses[0].parse.command != "take")  )
-              {
-                var quantifier2 : string = parses[0].parse.location.entity.quantifier;
-                if ((quantifier1 == "the") || (quantifier2 == "the")  || (interpretations.length > 1))
+
+            // ambiguity questions if the quantifier of the parser is "the", or "a" with different parse intrepretations,
+            if( (parses[0].parse.entity != undefined) || (parses[0].parse.location.entity.quantifier == "the") )
+            {
+              try{
+
+                if( parses[0].parse.entity == undefined ) // some action with the already taken object to a unespecified position-->ask
                 {
-                  if ((interpretations.length > 1) || ( interpretations[0].interpretation.length > 1) )
-                  {
                     interpretations = Questions(world,interpretations);
-                  }
-                }
-              }else{
-                if ((quantifier1 == "the")  || (interpretations.length > 1))
-                {
-                  if ((interpretations.length > 1) || ( interpretations[0].interpretation.length > 1) )
+                }else{
+
+                  var quantifier1 : string = parses[0].parse.entity.quantifier
+                  if( (parses[0].parse.command != "pick up") && (parses[0].parse.command != "grasp") && (parses[0].parse.command != "take")  )
                   {
-                    interpretations = Questions(world,interpretations);
+                    var quantifier2 : string = parses[0].parse.location.entity.quantifier;
+                    if ((quantifier1 == "the") || (quantifier2 == "the")  || (interpretations.length > 1))
+                    {
+                      if ((interpretations.length > 1) || ( interpretations[0].interpretation.length > 1) )
+                      {
+                        interpretations = Questions(world,interpretations);
+                      }
+                    }
+                  }else{
+                    if ((quantifier1 == "the")  || (interpretations.length > 1))
+                    {
+                      if ((interpretations.length > 1) || ( interpretations[0].interpretation.length > 1) )
+                      {
+                        interpretations = Questions(world,interpretations);
+                      }
+                    }
                   }
                 }
               }
+              catch(err) {
+                world.printError("Questions error", err);
+                return;
+              }
             }
-            catch(err) {
-              world.printError("Questions error", err);
-              return;
-            }
-
         }
         catch(err) {
             world.printError("Interpretation error", err);
@@ -156,8 +166,8 @@ module Shrdlite {
 function Questions(world : World,interpretations : Interpreter.InterpretationResult[]) : Interpreter.InterpretationResult[]
 {
 
-  world.printSystemOutput("There are several interpretations: ")
-
+  var interp0 : string;
+  var firstInterp : number = 0;
   var iInterpCount : number = 0;
   var interpCount = new Array();
   interpCount[0] = new Array();  // count iParse
@@ -210,19 +220,47 @@ function Questions(world : World,interpretations : Interpreter.InterpretationRes
             {
               thisInterp = thisInterp + " and ";
             }
+            firstInterp++;
             //print and count:
-            world.printSystemOutput(iInterpCount +".- " + thisInterp);
-            interpCount[0][iInterpCount]=iParse;
-            interpCount[1][iInterpCount]=iInterp;
-            isFloor[iInterpCount] = true;
-            floorCount[iInterpCount] = 1;
-            iInterpCount++;
+            switch (firstInterp)
+            {
+              case 1:
+                interp0 = thisInterp;
+                interpCount[0][iInterpCount]=iParse;
+                interpCount[1][iInterpCount]=iInterp;
+                isFloor[iInterpCount] = true;
+                floorCount[iInterpCount] = 1;
+                break;
+
+              case 2:
+                world.printSystemOutput("There are several interpretations: ")
+                world.printSystemOutput(iInterpCount +".- " + interp0);
+                iInterpCount++;
+                world.printSystemOutput(iInterpCount +".- " + thisInterp);
+                interpCount[0][iInterpCount]=iParse;
+                interpCount[1][iInterpCount]=iInterp;
+                isFloor[iInterpCount] = true;
+                floorCount[iInterpCount] = 1;
+                iInterpCount++;
+                break;
+              default:
+             }
+
+             if(firstInterp > 2)
+             {
+               world.printSystemOutput(iInterpCount +".- " + thisInterp);
+               interpCount[0][iInterpCount]=iParse;
+               interpCount[1][iInterpCount]=iInterp;
+               isFloor[iInterpCount] = true;
+               floorCount[iInterpCount] = 1;
+               iInterpCount++;
+             }
 
           }else{
             floorCount[iInterpCount-1]++;
           }
 
-        }else{
+        }else{ //floor not appear
           // it creates the string output for the question:
           if(nArgs > 1)
           {
@@ -234,12 +272,41 @@ function Questions(world : World,interpretations : Interpreter.InterpretationRes
           {
             thisInterp = thisInterp + " and ";
           }
+          firstInterp++;
           //print and count:
-          world.printSystemOutput(iInterpCount +".- " + thisInterp);
-          interpCount[0][iInterpCount]=iParse;
-          interpCount[1][iInterpCount]=iInterp;
-          isFloor[iInterpCount] = false;
-          iInterpCount++;
+          switch (firstInterp)
+          {
+            case 1:
+              interp0 = thisInterp;
+              interpCount[0][iInterpCount]=iParse;
+              interpCount[1][iInterpCount]=iInterp;
+              isFloor[iInterpCount] = true;
+              floorCount[iInterpCount] = 1;
+              break;
+
+            case 2:
+              world.printSystemOutput("There are several interpretations: ")
+              world.printSystemOutput(iInterpCount +".- " + interp0);
+              iInterpCount++;
+              world.printSystemOutput(iInterpCount +".- " + thisInterp);
+              interpCount[0][iInterpCount]=iParse;
+              interpCount[1][iInterpCount]=iInterp;
+              isFloor[iInterpCount] = true;
+              floorCount[iInterpCount] = 1;
+              iInterpCount++;
+              break;
+
+            default:
+           }
+           if(firstInterp > 2)
+           {
+             world.printSystemOutput(iInterpCount +".- " + thisInterp);
+             interpCount[0][iInterpCount]=iParse;
+             interpCount[1][iInterpCount]=iInterp;
+             isFloor[iInterpCount] = true;
+             floorCount[iInterpCount] = 1;
+             iInterpCount++;
+           }
         }
 
       }
@@ -247,32 +314,38 @@ function Questions(world : World,interpretations : Interpreter.InterpretationRes
     }
 
   }
-
-  var userReading = prompt("What interpretation do you mean? (Answer with a number)","0");
-  var iUserInterp : number = +userReading;
-  world.printSystemOutput("User interpretation: " + iUserInterp);
-
-  var result : Interpreter.InterpretationResult[] = [];
-  result[0] = interpretations[interpCount[0][iUserInterp]]; //takes all the interpretations to the planner
-  if (isFloor[iUserInterp])
+  if(firstInterp>1)
   {
-    for(var iFloor=0;iFloor<floorCount[iUserInterp];iFloor++) // it returns all the floors asociated with the user interpretation
+    var userReading = prompt("What interpretation do you mean? (Answer with a number)","0");
+    var iUserInterp : number = +userReading;
+    world.printSystemOutput("User interpretation: " + iUserInterp);
+
+    var result : Interpreter.InterpretationResult[] = [];
+    result[0] = interpretations[interpCount[0][iUserInterp]]; //takes all the interpretations to the planner
+    if (isFloor[iUserInterp])
     {
-      result[0].interpretation[iFloor]= interpretations[interpCount[0][iUserInterp]].interpretation[interpCount[1][iUserInterp]+iFloor];
-    }
+      for(var iFloor=0;iFloor<floorCount[iUserInterp];iFloor++) // it returns all the floors asociated with the user interpretation
+      {
+        result[0].interpretation[iFloor]= interpretations[interpCount[0][iUserInterp]].interpretation[interpCount[1][iUserInterp]+iFloor];
+      }
+      result.splice(1,result.length-1);
+      result[0].interpretation.splice(floorCount[iUserInterp],result[0].interpretation.length-floorCount[iUserInterp]);
+
+    }else{
+
+    result[0].interpretation[0] = interpretations[interpCount[0][iUserInterp]].interpretation[interpCount[1][iUserInterp]];
     result.splice(1,result.length-1);
-    result[0].interpretation.splice(floorCount[iUserInterp],result[0].interpretation.length-floorCount[iUserInterp]);
+    result[0].interpretation.splice(1,result[0].interpretation.length-1);
+    }
+    //world.printSystemOutput("result: "+result[0].interpretation[0][0].relation+ " "+result[0].interpretation[0][0].args)
 
+    return result;
   }else{
-
-  result[0].interpretation[0] = interpretations[interpCount[0][iUserInterp]].interpretation[interpCount[1][iUserInterp]];
-  result.splice(1,result.length-1);
-  result[0].interpretation.splice(1,result[0].interpretation.length-1);
+    return interpretations;
   }
-  //world.printSystemOutput("result: "+result[0].interpretation[0][0].relation+ " "+result[0].interpretation[0][0].args)
 
-  return result;
 }
+
 
 
 
