@@ -184,7 +184,7 @@ module Planner {
         stackB = testState.stacks[xB]
         objectsAboveB = stackB.length -yB-1;
         tempCount =0;
-        for (var i = 0; i< objectsAboveB;i++){
+        for (var i = 0; i< objectsAboveB-2;i++){
           if (testState.objects[stackB[yB +i]].size == "large"){
             tempCount+=1;
           }
