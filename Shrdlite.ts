@@ -74,7 +74,7 @@ module Shrdlite {
 
 
             // ambiguity questions if the quantifier of the parser is "the", or "a" with different parse intrepretations,
-            if( (parses[0].parse.entity != undefined) || (parses[0].parse.location.entity.quantifier == "the") )
+            if( ((parses[0].parse.entity != undefined) || (parses[0].parse.location.entity.quantifier == "the"))  && (parses[0].parse.command !="stack"))
             {
               try{
 
