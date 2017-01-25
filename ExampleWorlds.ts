@@ -4,23 +4,27 @@ var ExampleWorlds : {[s:string]: WorldState} = {};
 
 
 ExampleWorlds["complex"] = {
-    "stacks": [["e"],["a","l"],["i","h","j"],["c","k","g","b"],["d","m","f"]],
+    "stacks": [["LargeWhiteBall"],
+               ["LargeYellowBrick", "LargeRedBox"],
+               ["LargeYellowPyramid", "SmallRedTable", "SmallRedPyramid"],
+               ["LargeRedPlank", "LargeYellowBox", "LargeBlueTable", "SmallWhiteBrick"],
+               ["SmallGreenPlank", "SmallBlueBox", "SmallBlackBall"]],
     "holding": null,
     "arm": 0,
     "objects": {
-        "a": { "form":"brick",   "size":"large",  "color":"yellow" },
-        "b": { "form":"brick",   "size":"small",  "color":"white" },
-        "c": { "form":"plank",   "size":"large",  "color":"red"   },
-        "d": { "form":"plank",   "size":"small",  "color":"green" },
-        "e": { "form":"ball",    "size":"large",  "color":"white" },
-        "f": { "form":"ball",    "size":"small",  "color":"black" },
-        "g": { "form":"table",   "size":"large",  "color":"blue"  },
-        "h": { "form":"table",   "size":"small",  "color":"red"   },
-        "i": { "form":"pyramid", "size":"large",  "color":"yellow"},
-        "j": { "form":"pyramid", "size":"small",  "color":"red"   },
-        "k": { "form":"box",     "size":"large",  "color":"yellow"},
-        "l": { "form":"box",     "size":"large",  "color":"red"   },
-        "m": { "form":"box",     "size":"small",  "color":"blue"  }
+        "LargeYellowBrick":   { "form":"brick",   "size":"large",  "color":"yellow"},
+        "SmallWhiteBrick":    { "form":"brick",   "size":"small",  "color":"white" },
+        "LargeRedPlank":      { "form":"plank",   "size":"large",  "color":"red"   },
+        "SmallGreenPlank":    { "form":"plank",   "size":"small",  "color":"green" },
+        "LargeWhiteBall":     { "form":"ball",    "size":"large",  "color":"white" },
+        "SmallBlackBall":     { "form":"ball",    "size":"small",  "color":"black" },
+        "LargeBlueTable":     { "form":"table",   "size":"large",  "color":"blue"  },
+        "SmallRedTable":      { "form":"table",   "size":"small",  "color":"red"   },
+        "LargeYellowPyramid": { "form":"pyramid", "size":"large",  "color":"yellow"},
+        "SmallRedPyramid":    { "form":"pyramid", "size":"small",  "color":"red"   },
+        "LargeYellowBox":     { "form":"box",     "size":"large",  "color":"yellow"},
+        "LargeRedBox":        { "form":"box",     "size":"large",  "color":"red"   },
+        "SmallBlueBox":       { "form":"box",     "size":"small",  "color":"blue"  }
     },
     "examples": [
         "put a box in a box",
@@ -41,23 +45,32 @@ ExampleWorlds["complex"] = {
 
 
 ExampleWorlds["medium"] = {
-    "stacks": [["e"],["a","l"],[],[],["i","h","j"],[],[],["k","g","c","b"],[],["d","m","f"]],
+    "stacks": [["LrgWhtBall"],
+               ["LrgGrnBrck", "LrgRedBox"],
+               [],
+               [],
+               ["LrgYlwPrmd", "SmlRedTble", "SmlRedPrmd"],
+               [],
+               [],
+               ["LrgYlwBox", "LrgBluTble", "LrgRedPlnk", "SmlWhtBrck"],
+               [],
+               ["SmlGrnPlnk", "SmlBluBox", "SmlBlkBall"]],
     "holding": null,
     "arm": 0,
     "objects": {
-        "a": { "form":"brick",   "size":"large",  "color":"green" },
-        "b": { "form":"brick",   "size":"small",  "color":"white" },
-        "c": { "form":"plank",   "size":"large",  "color":"red"   },
-        "d": { "form":"plank",   "size":"small",  "color":"green" },
-        "e": { "form":"ball",    "size":"large",  "color":"white" },
-        "f": { "form":"ball",    "size":"small",  "color":"black" },
-        "g": { "form":"table",   "size":"large",  "color":"blue"  },
-        "h": { "form":"table",   "size":"small",  "color":"red"   },
-        "i": { "form":"pyramid", "size":"large",  "color":"yellow"},
-        "j": { "form":"pyramid", "size":"small",  "color":"red"   },
-        "k": { "form":"box",     "size":"large",  "color":"yellow"},
-        "l": { "form":"box",     "size":"large",  "color":"red"   },
-        "m": { "form":"box",     "size":"small",  "color":"blue"  }
+        "LrgGrnBrck": { "form":"brick",   "size":"large",  "color":"green" },
+        "SmlWhtBrck": { "form":"brick",   "size":"small",  "color":"white" },
+        "LrgRedPlnk": { "form":"plank",   "size":"large",  "color":"red"   },
+        "SmlGrnPlnk": { "form":"plank",   "size":"small",  "color":"green" },
+        "LrgWhtBall": { "form":"ball",    "size":"large",  "color":"white" },
+        "SmlBlkBall": { "form":"ball",    "size":"small",  "color":"black" },
+        "LrgBluTble": { "form":"table",   "size":"large",  "color":"blue"  },
+        "SmlRedTble": { "form":"table",   "size":"small",  "color":"red"   },
+        "LrgYlwPrmd": { "form":"pyramid", "size":"large",  "color":"yellow"},
+        "SmlRedPrmd": { "form":"pyramid", "size":"small",  "color":"red"   },
+        "LrgYlwBox":  { "form":"box",     "size":"large",  "color":"yellow"},
+        "LrgRedBox":  { "form":"box",     "size":"large",  "color":"red"   },
+        "SmlBluBox":  { "form":"box",     "size":"small",  "color":"blue"  }
     },
     "examples": [
         "put the brick that is to the left of a pyramid in a box",
@@ -75,23 +88,27 @@ ExampleWorlds["medium"] = {
 
 
 ExampleWorlds["small"] = {
-    "stacks": [["e"],["g","l"],[],["k","m","f"],[]],
-    "holding": "a",
+    "stacks": [["LargeWhiteBall"],
+               ["LargeBlueTable", "LargeRedBox"],
+               [],
+               ["LargeYellowBox", "SmallBlueBox", "SmallBlackBall"],
+               []],
+    "holding": "LargeGreenBrick",
     "arm": 0,
     "objects": {
-        "a": { "form":"brick",   "size":"large",  "color":"green" },
-        "b": { "form":"brick",   "size":"small",  "color":"white" },
-        "c": { "form":"plank",   "size":"large",  "color":"red"   },
-        "d": { "form":"plank",   "size":"small",  "color":"green" },
-        "e": { "form":"ball",    "size":"large",  "color":"white" },
-        "f": { "form":"ball",    "size":"small",  "color":"black" },
-        "g": { "form":"table",   "size":"large",  "color":"blue"  },
-        "h": { "form":"table",   "size":"small",  "color":"red"   },
-        "i": { "form":"pyramid", "size":"large",  "color":"yellow"},
-        "j": { "form":"pyramid", "size":"small",  "color":"red"   },
-        "k": { "form":"box",     "size":"large",  "color":"yellow"},
-        "l": { "form":"box",     "size":"large",  "color":"red"   },
-        "m": { "form":"box",     "size":"small",  "color":"blue"  }
+        "LargeGreenBrick":    { "form":"brick",   "size":"large",  "color":"green" },
+        "SmallWhiteBrick":    { "form":"brick",   "size":"small",  "color":"white" },
+        "LargeRedPlank":      { "form":"plank",   "size":"large",  "color":"red"   },
+        "SmallGreenPlank":    { "form":"plank",   "size":"small",  "color":"green" },
+        "LargeWhiteBall":     { "form":"ball",    "size":"large",  "color":"white" },
+        "SmallBlackBall":     { "form":"ball",    "size":"small",  "color":"black" },
+        "LargeBlueTable":     { "form":"table",   "size":"large",  "color":"blue"  },
+        "SmallRedTable":      { "form":"table",   "size":"small",  "color":"red"   },
+        "LargeYellowPyramid": { "form":"pyramid", "size":"large",  "color":"yellow"},
+        "SmallRedPyramid":    { "form":"pyramid", "size":"small",  "color":"red"   },
+        "LargeYellowBox":     { "form":"box",     "size":"large",  "color":"yellow"},
+        "LargeRedBox":        { "form":"box",     "size":"large",  "color":"red"   },
+        "SmallBlueBox":       { "form":"box",     "size":"small",  "color":"blue"  }
     },
     "examples": [
         "put the white ball in a box on the floor",
@@ -105,50 +122,54 @@ ExampleWorlds["small"] = {
 
 
 ExampleWorlds["impossible"] = {
-    "stacks": [["lbrick1","lball1","sbrick1"], [],
-               ["lpyr1","lbox1","lplank2","sball2"], [],
-               ["sbrick2","sbox1","spyr1","ltable1","sball1"]],
+    "stacks": [["LrgGrnBrck", "LrgWhtBall", "SmlYlwBrck"],
+               [],
+               ["LrgWhtPrmd", "LrgYlwBox", "LrgBlkPlnk", "SmlRedBall"],
+               [],
+               ["SmlBluBrck", "SmlRedBox", "SmlBluPrmd", "LrgGrnTble", "SmlBlkBall"]],
     "holding": null,
     "arm": 0,
     "objects": {
-        "lbrick1": { "form":"brick",   "size":"large",  "color":"green" },
-        "sbrick1": { "form":"brick",   "size":"small",  "color":"yellow" },
-        "sbrick2": { "form":"brick",   "size":"small",  "color":"blue" },
-        "lplank1": { "form":"plank",   "size":"large",  "color":"red"   },
-        "lplank2": { "form":"plank",   "size":"large",  "color":"black"   },
-        "splank1": { "form":"plank",   "size":"small",  "color":"green" },
-        "lball1":  { "form":"ball",    "size":"large",  "color":"white" },
-        "sball1":  { "form":"ball",    "size":"small",  "color":"black" },
-        "sball2":  { "form":"ball",    "size":"small",  "color":"red" },
-        "ltable1": { "form":"table",   "size":"large",  "color":"green"  },
-        "stable1": { "form":"table",   "size":"small",  "color":"red"   },
-        "lpyr1":   { "form":"pyramid", "size":"large",  "color":"white"},
-        "spyr1":   { "form":"pyramid", "size":"small",  "color":"blue"   },
-        "lbox1":   { "form":"box",     "size":"large",  "color":"yellow"},
-        "sbox1":   { "form":"box",     "size":"small",  "color":"red"   },
-        "sbox2":   { "form":"box",     "size":"small",  "color":"blue"  }
+        "LrgGrnBrck": { "form":"brick",   "size":"large",  "color":"green" },
+        "SmlYlwBrck": { "form":"brick",   "size":"small",  "color":"yellow"},
+        "SmlBluBrck": { "form":"brick",   "size":"small",  "color":"blue"  },
+        "LrgRedPlnk": { "form":"plank",   "size":"large",  "color":"red"   },
+        "LrgBlkPlnk": { "form":"plank",   "size":"large",  "color":"black" },
+        "SmlGrnPlnk": { "form":"plank",   "size":"small",  "color":"green" },
+        "LrgWhtBall": { "form":"ball",    "size":"large",  "color":"white" },
+        "SmlBlkBall": { "form":"ball",    "size":"small",  "color":"black" },
+        "SmlRedBall": { "form":"ball",    "size":"small",  "color":"red"   },
+        "LrgGrnTble": { "form":"table",   "size":"large",  "color":"green" },
+        "SmlRedTble": { "form":"table",   "size":"small",  "color":"red"   },
+        "LrgWhtPrmd": { "form":"pyramid", "size":"large",  "color":"white" },
+        "SmlBluPrmd": { "form":"pyramid", "size":"small",  "color":"blue"  },
+        "LrgYlwBox":  { "form":"box",     "size":"large",  "color":"yellow"},
+        "SmlRedBox":  { "form":"box",     "size":"small",  "color":"red"   },
+        "SmlBluBox":  { "form":"box",     "size":"small",  "color":"blue"  }
     },
     "examples": [
         "this is just an impossible world"
     ]
 };
 
-/*
 // The world used in the example on the course webpage
 ExampleWorlds["example"] = {
-    "stacks": [["c1"],["t3","b4"],[],["b5","b6","c2"],[]],
+    "stacks": [["c1-SmallWhiteBall"],
+               ["t3-LargeRedTable", "b4-LargeGreenBox"],
+               [],
+               ["b5-LargeYellowBox", "b6-SmallBlueBox", "c2-SmallBlackBall"],
+               []],
     "holding": null,
     "arm": 0,
     "objects": {
-        "c1": { "form":"ball",   "size":"small",  "color":"white" },
-        "c2": { "form":"ball",   "size":"small",  "color":"black" },
-        "t3": { "form":"table",   "size":"large",  "color":"red" },
-        "b4": { "form":"box",   "size":"large",  "color":"green" },
-        "b5": { "form":"box",   "size":"large",  "color":"yellow" },
-        "b6": { "form":"box",   "size":"small",  "color":"blue" }
+        "c1-SmallWhiteBall": { "form":"ball",  "size":"small",  "color":"white" },
+        "c2-SmallBlackBall": { "form":"ball",  "size":"small",  "color":"black" },
+        "t3-LargeRedTable":  { "form":"table", "size":"large",  "color":"red" },
+        "b4-LargeGreenBox":  { "form":"box",   "size":"large",  "color":"green" },
+        "b5-LargeYellowBox": { "form":"box",   "size":"large",  "color":"yellow" },
+        "b6-SmallBlueBox":   { "form":"box",   "size":"small",  "color":"blue" }
     },
     "examples": [
         "put the white ball in a box on the floor"
     ]
 };
-*/
