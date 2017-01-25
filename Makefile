@@ -29,7 +29,7 @@ interpretationTests: TestInterpreter.js
 TSC = tsc --noFallthroughCasesInSwitch --noImplicitReturns --noImplicitAny
 
 %.js: %.ts $(TSFILES)
-	$(TSC) --out $@ $<
+	$(TSC) --outFile $@ $<
 
 grammar.js: grammar.ne
 	nearleyc $< > $@

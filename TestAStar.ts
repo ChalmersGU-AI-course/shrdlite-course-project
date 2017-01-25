@@ -20,10 +20,10 @@ function checkPath<Node>(graph: Graph<Node>, startnode: Node, path: Node[]) : nu
             if (graph.compareNodes(next, edge.to) == 0)
                 return edge;
         }
-        return;
+        return null;
     }
     if (path.length == 0)
-        return;
+        return null;
     if (graph.compareNodes(path[0], startnode) !== 0)
         path = [startnode].concat(path);
     var cost = 0;

@@ -61,7 +61,7 @@ module Shrdlite {
         }
         catch(err) {
             world.printError("Parsing error", err);
-            return;
+            return null;
         }
 
         // Interpretation
@@ -81,7 +81,7 @@ module Shrdlite {
         }
         catch(err) {
             world.printError("Interpretation error", err);
-            return;
+            return null;
         }
 
         // Planning
@@ -103,7 +103,7 @@ module Shrdlite {
         }
         catch(err) {
             world.printError("Planning error", err);
-            return;
+            return null;
         }
 
         var finalPlan : string[] = plans[0].plan;
@@ -121,7 +121,7 @@ module Shrdlite {
             = {p:"Picking", d:"Dropping", l:"Going left", r:"Going right"};
         for (var i = plan.length-1; i >= 0; i--) {
             if (!actions[plan[i]]) {
-                return;
+                return null;
             }
             plan.splice(i, 0, actions[plan[i]]);
         }
