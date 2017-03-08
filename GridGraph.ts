@@ -1,56 +1,63 @@
-///<reference path="Graph.ts"/>
 
-// This is an example graph
-// consisting of a 2-dimensional grid
-// where neighbors are vertical and horisontal
+import {Edge, Graph} from "./Graph";
+import Set from "./lib/typescript-collections/src/lib/Set";
+
+/********************************************************************************
+** GridGraph
+
+This is an example implementation of a Graph, consisting of a 2-dimensional grid.
+Neighbours are vertical and horisontal, so you can move in 4 different direction.
+This file is only used by 'test-astar.ts', and not by the Shrdlite system.
+
+You should not edit this file.
+********************************************************************************/
+
+export type Coordinate = [number, number];  // [x,y] coordinate
 
 
-interface Coordinate {
-    x : number;
-    y : number;
-}
+// An implementation of a Graph node.
 
-
-class GridNode {
+export class GridNode {
     constructor(
-        public pos : Coordinate
+        public x : number,
+        public y : number
     ) {}
 
-    add(delta : Coordinate) : GridNode {
-        return new GridNode({
-            x: this.pos.x + delta.x,
-            y: this.pos.y + delta.y
-        });
+    add(dx : number, dy : number) : GridNode {
+        return new GridNode(this.x + dx, this.y + dy);
     }
 
     compareTo(other : GridNode) : number {
-        return (this.pos.x - other.pos.x) || (this.pos.y - other.pos.y);
+        return (this.x - other.x) || (this.y - other.y);
     }
 
     toString() : string {
-        return "(" + this.pos.x + "," + this.pos.y + ")";
+        return "(" + this.x + "," + this.y + ")";
     }
 }
 
 
-class GridGraph implements Graph<GridNode> {
-    private walls : collections.Set<GridNode>;
+// An implementation of a 2d grid graph.
+
+export class GridGraph implements Graph<GridNode> {
+    private walls : Set<GridNode>;
 
     constructor(
-        public size : Coordinate,
+        public xsize : number,
+        public ysize : number,
         obstacles : Coordinate[]
     ) {
-        this.walls = new collections.Set<GridNode>();
-        for (var pos of obstacles) {
-            this.walls.add(new GridNode(pos));
+        this.walls = new Set<GridNode>();
+        for (var [x,y] of obstacles) {
+            this.walls.add(new GridNode(x, y));
         }
-        for (var x = -1; x <= size.x; x++) {
-            this.walls.add(new GridNode({x:x, y:-1}));
-            this.walls.add(new GridNode({x:x, y:size.y}));
+        for (var x = -1; x <= xsize; x++) {
+            this.walls.add(new GridNode(x, -1));
+            this.walls.add(new GridNode(x, ysize));
         }
-        for (var y = -1; y <= size.y; y++) {
-            this.walls.add(new GridNode({x:-1, y:y}));
-            this.walls.add(new GridNode({x:size.x, y:y}));
+        for (var y = -1; y <= ysize; y++) {
+            this.walls.add(new GridNode(-1, y));
+            this.walls.add(new GridNode(xsize, y));
         }
     }
 
@@ -59,7 +66,7 @@ class GridGraph implements Graph<GridNode> {
         for (var dx = -1; dx <= 1; dx++) {
             for (var dy = -1; dy <= 1; dy++) {
                 if (! (dx*dx == dy*dy)) {
-                    var next = node.add({x:dx, y:dy});
+                    var next = node.add(dx,dy);
                     if (! this.walls.contains(next)) {
                         outgoing.push({
                             from: node,
@@ -80,32 +87,32 @@ class GridGraph implements Graph<GridNode> {
     toString(start? : GridNode, goal? : (n:GridNode) => boolean, path? : GridNode[]) : string {
         function pathContains(path : GridNode[], n : GridNode) : boolean {
             for (var p of path) {
-                if (p.pos.x == n.pos.x && p.pos.y == n.pos.y)
+                if (p.x == n.x && p.y == n.y)
                     return true;
             }
             return false;
         }
         var str = "";
-        for (var y = this.size.y-1; y >= 0; y--) {
+        for (var y = this.ysize-1; y >= 0; y--) {
             // row of borders
-            for (var x = 0; x < this.size.x; x++) {
-                if (y == this.size.y || 
-                    this.walls.contains(new GridNode({x:x,y:y})) ||
-                    this.walls.contains(new GridNode({x:x,y:y+1}))
+            for (var x = 0; x < this.xsize; x++) {
+                if (y == this.ysize || 
+                    this.walls.contains(new GridNode(x, y)) ||
+                    this.walls.contains(new GridNode(x, y+1))
                    ) str += "+---"
                 else str += "+   ";
             }
             str += "+\n";
             // row of cells
-            for (var x = 0; x < this.size.x; x++) {
-                var xynode = new GridNode({x:x,y:y});
+            for (var x = 0; x < this.xsize; x++) {
+                var xynode = new GridNode(x, y);
                 // the wall between cells
                 if (x == 0 || this.walls.contains(xynode) ||
-                    this.walls.contains(new GridNode({x:x-1,y:y}))
+                    this.walls.contains(new GridNode(x-1, y))
                    ) str += "|"
                 else str += " ";
                 // the cell
-                if (start && x == start.pos.x && y == start.pos.y) str += " S "
+                if (start && x == start.x && y == start.y) str += " S "
                 else if (goal && goal(xynode)) str += " G "
                 else if (path && pathContains(path, xynode)) str += " O "
                 else if (this.walls.contains(xynode)) str += "###"
@@ -113,7 +120,7 @@ class GridGraph implements Graph<GridNode> {
             }
             str += "|\n";
         }
-        str += new Array(this.size.x + 1).join("+---") + "+\n";
+        str += new Array(this.xsize + 1).join("+---") + "+\n";
         return str;
     }    
 }

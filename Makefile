@@ -1,35 +1,23 @@
 
-TARGETS = html ajax ansi offline
-
 .DELETE_ON_ERROR:
 
-.PHONY: help clean all doc
+.PHONY: help clean
+
+# Make TypeScript as strict as possible, and compile to UMD modules:
+TSC = tsc --module umd --alwaysStrict --noFallthroughCasesInSwitch --noImplicitReturns --noImplicitAny --noImplicitThis
 
 TSFILES = $(wildcard *.ts)
 
 help:
-	@echo "make help | clean | all | aStarTests | interpretationTests | shrdlite-html.js | shrdlite-offline.js"
-
-clean:
-	rm -f $(TSFILES:%.ts=%.js) *.map
-	rm -rf doc
-
-doc:
-	typedoc --name Shrdlite --out doc .
-
-all: shrdlite-html.js shrdlite-offline.js
-
-aStarTests: TestAStar.js
-	node $< all
-
-interpretationTests: TestInterpreter.js
-	node $< all
-
-# Make TypeScript as strict as possible:
-TSC = tsc --noFallthroughCasesInSwitch --noImplicitReturns --noImplicitAny
+	@echo "Usage: make test-astar.js | test-interpreter.js | shrdlite-offline.js | shrdlite-html.js"
+	@echo "Usage: make clean | Grammar.ts"
 
 %.js: %.ts $(TSFILES)
-	$(TSC) --outFile $@ $<
+	$(TSC) $<
 
-grammar.js: grammar.ne
+Grammar.ts: Grammar.ne
 	nearleyc $< > $@
+
+# Only delete JS files that have a TS counterpart:
+clean:
+	rm -f $(TSFILES:%.ts=%.js) *.map

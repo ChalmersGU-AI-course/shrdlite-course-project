@@ -1,6 +1,92 @@
-///<reference path="World.ts"/>
 
-var ExampleWorlds : {[s:string]: WorldState} = {};
+import {SimpleObject} from "./Types";
+import {WorldState} from "./World";
+
+/********************************************************************************
+** ExampleWorlds
+
+Here you define the worlds that you can interact with.
+Feel free to add new worlds at will.
+********************************************************************************/
+
+export var ExampleWorlds : {[s:string]: WorldState} = {};
+
+
+ExampleWorlds["small"] = {
+    "stacks": [["LargeWhiteBall"],
+               ["LargeBlueTable", "LargeRedBox"],
+               [],
+               ["LargeYellowBox", "SmallBlueBox", "SmallBlackBall"],
+               []],
+    "holding": "LargeGreenBrick",
+    "arm": 0,
+    "objects": {
+        "LargeGreenBrick":    new SimpleObject("large",   "green",  "brick" ),
+        "SmallWhiteBrick":    new SimpleObject("small",   "white",  "brick" ),
+        "LargeRedPlank":      new SimpleObject("large",   "red",  "plank"   ),
+        "SmallGreenPlank":    new SimpleObject("small",   "green",  "plank" ),
+        "LargeWhiteBall":     new SimpleObject("large",    "white",  "ball" ),
+        "SmallBlackBall":     new SimpleObject("small",    "black",  "ball" ),
+        "LargeBlueTable":     new SimpleObject("large",   "blue",  "table"  ),
+        "SmallRedTable":      new SimpleObject("small",   "red",  "table"   ),
+        "LargeYellowPyramid": new SimpleObject("large", "yellow",  "pyramid"),
+        "SmallRedPyramid":    new SimpleObject("small", "red",  "pyramid"   ),
+        "LargeYellowBox":     new SimpleObject("large",     "yellow",  "box"),
+        "LargeRedBox":        new SimpleObject("large",     "red",  "box"   ),
+        "SmallBlueBox":       new SimpleObject("small",     "blue",  "box"  ),
+    },
+    "examples": [
+        "put the white ball in a box on the floor",
+        "put the black ball in a box on the floor",
+        "take a blue object",
+        "take the white ball",
+        "put all boxes on the floor",
+        "move all balls inside a large box"
+    ]
+};
+
+
+ExampleWorlds["medium"] = {
+    "stacks": [["LrgWhtBall"],
+               ["LrgGrnBrck", "LrgRedBox"],
+               [],
+               [],
+               ["LrgYlwPrmd", "SmlRedTble", "SmlRedPrmd"],
+               [],
+               [],
+               ["LrgYlwBox", "LrgBluTble", "LrgRedPlnk", "SmlWhtBrck"],
+               [],
+               ["SmlGrnPlnk", "SmlBluBox", "SmlBlkBall"]],
+    "holding": null,
+    "arm": 0,
+    "objects": {
+        "LrgGrnBrck": new SimpleObject("large",   "green",  "brick" ),
+        "SmlWhtBrck": new SimpleObject("small",   "white",  "brick" ),
+        "LrgRedPlnk": new SimpleObject("large",   "red",  "plank"   ),
+        "SmlGrnPlnk": new SimpleObject("small",   "green",  "plank" ),
+        "LrgWhtBall": new SimpleObject("large",    "white",  "ball" ),
+        "SmlBlkBall": new SimpleObject("small",    "black",  "ball" ),
+        "LrgBluTble": new SimpleObject("large",   "blue",  "table"  ),
+        "SmlRedTble": new SimpleObject("small",   "red",  "table"   ),
+        "LrgYlwPrmd": new SimpleObject("large", "yellow",  "pyramid"),
+        "SmlRedPrmd": new SimpleObject("small", "red",  "pyramid"   ),
+        "LrgYlwBox":  new SimpleObject("large",     "yellow",  "box"),
+        "LrgRedBox":  new SimpleObject("large",     "red",  "box"   ),
+        "SmlBluBox":  new SimpleObject("small",     "blue",  "box"  ),
+    },
+    "examples": [
+        "put the brick that is to the left of a pyramid in a box",
+        "put the white ball in a box on the floor",
+        "move the large ball inside a yellow box on the floor",
+        "move the large ball inside a red box on the floor",
+        "take a red object",
+        "take the white ball",
+        "put all boxes on the floor",
+        "put the large plank under the blue brick",
+        "move all bricks on a table",
+        "move all balls inside a large box"
+    ]
+};
 
 
 ExampleWorlds["complex"] = {
@@ -12,19 +98,19 @@ ExampleWorlds["complex"] = {
     "holding": null,
     "arm": 0,
     "objects": {
-        "LargeYellowBrick":   { "form":"brick",   "size":"large",  "color":"yellow"},
-        "SmallWhiteBrick":    { "form":"brick",   "size":"small",  "color":"white" },
-        "LargeRedPlank":      { "form":"plank",   "size":"large",  "color":"red"   },
-        "SmallGreenPlank":    { "form":"plank",   "size":"small",  "color":"green" },
-        "LargeWhiteBall":     { "form":"ball",    "size":"large",  "color":"white" },
-        "SmallBlackBall":     { "form":"ball",    "size":"small",  "color":"black" },
-        "LargeBlueTable":     { "form":"table",   "size":"large",  "color":"blue"  },
-        "SmallRedTable":      { "form":"table",   "size":"small",  "color":"red"   },
-        "LargeYellowPyramid": { "form":"pyramid", "size":"large",  "color":"yellow"},
-        "SmallRedPyramid":    { "form":"pyramid", "size":"small",  "color":"red"   },
-        "LargeYellowBox":     { "form":"box",     "size":"large",  "color":"yellow"},
-        "LargeRedBox":        { "form":"box",     "size":"large",  "color":"red"   },
-        "SmallBlueBox":       { "form":"box",     "size":"small",  "color":"blue"  }
+        "LargeYellowBrick":   new SimpleObject("large",   "yellow",  "brick"),
+        "SmallWhiteBrick":    new SimpleObject("small",   "white",  "brick" ),
+        "LargeRedPlank":      new SimpleObject("large",   "red",  "plank"   ),
+        "SmallGreenPlank":    new SimpleObject("small",   "green",  "plank" ),
+        "LargeWhiteBall":     new SimpleObject("large",    "white",  "ball" ),
+        "SmallBlackBall":     new SimpleObject("small",    "black",  "ball" ),
+        "LargeBlueTable":     new SimpleObject("large",   "blue",  "table"  ),
+        "SmallRedTable":      new SimpleObject("small",   "red",  "table"   ),
+        "LargeYellowPyramid": new SimpleObject("large", "yellow",  "pyramid"),
+        "SmallRedPyramid":    new SimpleObject("small", "red",  "pyramid"   ),
+        "LargeYellowBox":     new SimpleObject("large",     "yellow",  "box"),
+        "LargeRedBox":        new SimpleObject("large",     "red",  "box"   ),
+        "SmallBlueBox":       new SimpleObject("small",     "blue",  "box"  ),
     },
     "examples": [
         "put a box in a box",
@@ -44,83 +130,6 @@ ExampleWorlds["complex"] = {
 };
 
 
-ExampleWorlds["medium"] = {
-    "stacks": [["LrgWhtBall"],
-               ["LrgGrnBrck", "LrgRedBox"],
-               [],
-               [],
-               ["LrgYlwPrmd", "SmlRedTble", "SmlRedPrmd"],
-               [],
-               [],
-               ["LrgYlwBox", "LrgBluTble", "LrgRedPlnk", "SmlWhtBrck"],
-               [],
-               ["SmlGrnPlnk", "SmlBluBox", "SmlBlkBall"]],
-    "holding": null,
-    "arm": 0,
-    "objects": {
-        "LrgGrnBrck": { "form":"brick",   "size":"large",  "color":"green" },
-        "SmlWhtBrck": { "form":"brick",   "size":"small",  "color":"white" },
-        "LrgRedPlnk": { "form":"plank",   "size":"large",  "color":"red"   },
-        "SmlGrnPlnk": { "form":"plank",   "size":"small",  "color":"green" },
-        "LrgWhtBall": { "form":"ball",    "size":"large",  "color":"white" },
-        "SmlBlkBall": { "form":"ball",    "size":"small",  "color":"black" },
-        "LrgBluTble": { "form":"table",   "size":"large",  "color":"blue"  },
-        "SmlRedTble": { "form":"table",   "size":"small",  "color":"red"   },
-        "LrgYlwPrmd": { "form":"pyramid", "size":"large",  "color":"yellow"},
-        "SmlRedPrmd": { "form":"pyramid", "size":"small",  "color":"red"   },
-        "LrgYlwBox":  { "form":"box",     "size":"large",  "color":"yellow"},
-        "LrgRedBox":  { "form":"box",     "size":"large",  "color":"red"   },
-        "SmlBluBox":  { "form":"box",     "size":"small",  "color":"blue"  }
-    },
-    "examples": [
-        "put the brick that is to the left of a pyramid in a box",
-        "put the white ball in a box on the floor",
-        "move the large ball inside a yellow box on the floor",
-        "move the large ball inside a red box on the floor",
-        "take a red object",
-        "take the white ball",
-        "put all boxes on the floor",
-        "put the large plank under the blue brick",
-        "move all bricks on a table",
-        "move all balls inside a large box"
-    ]
-};
-
-
-ExampleWorlds["small"] = {
-    "stacks": [["LargeWhiteBall"],
-               ["LargeBlueTable", "LargeRedBox"],
-               [],
-               ["LargeYellowBox", "SmallBlueBox", "SmallBlackBall"],
-               []],
-    "holding": "LargeGreenBrick",
-    "arm": 0,
-    "objects": {
-        "LargeGreenBrick":    { "form":"brick",   "size":"large",  "color":"green" },
-        "SmallWhiteBrick":    { "form":"brick",   "size":"small",  "color":"white" },
-        "LargeRedPlank":      { "form":"plank",   "size":"large",  "color":"red"   },
-        "SmallGreenPlank":    { "form":"plank",   "size":"small",  "color":"green" },
-        "LargeWhiteBall":     { "form":"ball",    "size":"large",  "color":"white" },
-        "SmallBlackBall":     { "form":"ball",    "size":"small",  "color":"black" },
-        "LargeBlueTable":     { "form":"table",   "size":"large",  "color":"blue"  },
-        "SmallRedTable":      { "form":"table",   "size":"small",  "color":"red"   },
-        "LargeYellowPyramid": { "form":"pyramid", "size":"large",  "color":"yellow"},
-        "SmallRedPyramid":    { "form":"pyramid", "size":"small",  "color":"red"   },
-        "LargeYellowBox":     { "form":"box",     "size":"large",  "color":"yellow"},
-        "LargeRedBox":        { "form":"box",     "size":"large",  "color":"red"   },
-        "SmallBlueBox":       { "form":"box",     "size":"small",  "color":"blue"  }
-    },
-    "examples": [
-        "put the white ball in a box on the floor",
-        "put the black ball in a box on the floor",
-        "take a blue object",
-        "take the white ball",
-        "put all boxes on the floor",
-        "move all balls inside a large box"
-    ]
-};
-
-
 ExampleWorlds["impossible"] = {
     "stacks": [["LrgGrnBrck", "LrgWhtBall", "SmlYlwBrck"],
                [],
@@ -130,46 +139,24 @@ ExampleWorlds["impossible"] = {
     "holding": null,
     "arm": 0,
     "objects": {
-        "LrgGrnBrck": { "form":"brick",   "size":"large",  "color":"green" },
-        "SmlYlwBrck": { "form":"brick",   "size":"small",  "color":"yellow"},
-        "SmlBluBrck": { "form":"brick",   "size":"small",  "color":"blue"  },
-        "LrgRedPlnk": { "form":"plank",   "size":"large",  "color":"red"   },
-        "LrgBlkPlnk": { "form":"plank",   "size":"large",  "color":"black" },
-        "SmlGrnPlnk": { "form":"plank",   "size":"small",  "color":"green" },
-        "LrgWhtBall": { "form":"ball",    "size":"large",  "color":"white" },
-        "SmlBlkBall": { "form":"ball",    "size":"small",  "color":"black" },
-        "SmlRedBall": { "form":"ball",    "size":"small",  "color":"red"   },
-        "LrgGrnTble": { "form":"table",   "size":"large",  "color":"green" },
-        "SmlRedTble": { "form":"table",   "size":"small",  "color":"red"   },
-        "LrgWhtPrmd": { "form":"pyramid", "size":"large",  "color":"white" },
-        "SmlBluPrmd": { "form":"pyramid", "size":"small",  "color":"blue"  },
-        "LrgYlwBox":  { "form":"box",     "size":"large",  "color":"yellow"},
-        "SmlRedBox":  { "form":"box",     "size":"small",  "color":"red"   },
-        "SmlBluBox":  { "form":"box",     "size":"small",  "color":"blue"  }
+        "LrgGrnBrck": new SimpleObject("large",   "green",  "brick" ),
+        "SmlYlwBrck": new SimpleObject("small",   "yellow",  "brick"),
+        "SmlBluBrck": new SimpleObject("small",   "blue",  "brick"  ),
+        "LrgRedPlnk": new SimpleObject("large",   "red",  "plank"   ),
+        "LrgBlkPlnk": new SimpleObject("large",   "black",  "plank" ),
+        "SmlGrnPlnk": new SimpleObject("small",   "green",  "plank" ),
+        "LrgWhtBall": new SimpleObject("large",    "white",  "ball" ),
+        "SmlBlkBall": new SimpleObject("small",    "black",  "ball" ),
+        "SmlRedBall": new SimpleObject("small",    "red",  "ball"   ),
+        "LrgGrnTble": new SimpleObject("large",   "green",  "table" ),
+        "SmlRedTble": new SimpleObject("small",   "red",  "table"   ),
+        "LrgWhtPrmd": new SimpleObject("large", "white",  "pyramid" ),
+        "SmlBluPrmd": new SimpleObject("small", "blue",  "pyramid"  ),
+        "LrgYlwBox":  new SimpleObject("large",     "yellow",  "box"),
+        "SmlRedBox":  new SimpleObject("small",     "red",  "box"   ),
+        "SmlBluBox":  new SimpleObject("small",     "blue",  "box"  ),
     },
     "examples": [
         "this is just an impossible world"
-    ]
-};
-
-// The world used in the example on the course webpage
-ExampleWorlds["example"] = {
-    "stacks": [["c1-SmallWhiteBall"],
-               ["t3-LargeRedTable", "b4-LargeGreenBox"],
-               [],
-               ["b5-LargeYellowBox", "b6-SmallBlueBox", "c2-SmallBlackBall"],
-               []],
-    "holding": null,
-    "arm": 0,
-    "objects": {
-        "c1-SmallWhiteBall": { "form":"ball",  "size":"small",  "color":"white" },
-        "c2-SmallBlackBall": { "form":"ball",  "size":"small",  "color":"black" },
-        "t3-LargeRedTable":  { "form":"table", "size":"large",  "color":"red" },
-        "b4-LargeGreenBox":  { "form":"box",   "size":"large",  "color":"green" },
-        "b5-LargeYellowBox": { "form":"box",   "size":"large",  "color":"yellow" },
-        "b6-SmallBlueBox":   { "form":"box",   "size":"small",  "color":"blue" }
-    },
-    "examples": [
-        "put the white ball in a box on the floor"
     ]
 };

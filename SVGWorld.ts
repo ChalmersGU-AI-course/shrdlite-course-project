@@ -1,15 +1,24 @@
-///<reference path="World.ts"/>
-///<reference path="lib/jquery.d.ts" />
 
+import {World, WorldState} from "./World";
+import "./lib/jquery";
 
-class SVGWorld implements World {
+/********************************************************************************
+** SVGWorld
+
+This is the implementation of the World interface, for the browser version.
+It is used by 'shrdlite-html.ts'.
+
+You don't have to edit this file, but you might want to play around with 
+the public constants defined below.
+********************************************************************************/
+
+export class SVGWorld implements World {
 
     constructor(
         public currentState: WorldState,
         public useSpeech = false
     ) {
         if (!this.currentState.arm) this.currentState.arm = 0;
-        if (this.currentState.holding) this.currentState.holding = null;
         this.canvasWidth = this.containers.world.width() - 2 * this.wallSeparation;
         this.canvasHeight = this.containers.world.height() - this.floorThickness;
 
@@ -44,9 +53,9 @@ class SVGWorld implements World {
 
     // There is no way of setting male/female voice,
     // so this is one way of having different voices for user/system:
-    public voices : {[participant:string] : {[attr:string] : any}} = {
+    public voices : {[participant:string] : {lang:string, rate:number}} = {
         system: {lang: "en-GB", rate: 1.1}, // British English, slightly faster
-        user: {lang: "en-US"},  // American English
+        user: {lang: "en-US", rate: 1.0},  // American English
     };
 
     // HTML id's for different containers
@@ -83,10 +92,9 @@ class SVGWorld implements World {
         if (this.useSpeech && utterance && /^\w/.test(utterance)) {
             try {
                 // W3C Speech API (works in Chrome and Safari)
-                var speech : {[attr:string] : any} = new SpeechSynthesisUtterance(utterance);
-                for (var attr in this.voices[participant]) {
-                    speech[attr] = this.voices[participant][attr];
-                }
+                var speech = new SpeechSynthesisUtterance(utterance);
+                speech.lang = this.voices[participant].lang;
+                speech.rate = this.voices[participant].rate;
                 console.log("SPEAKING: " + utterance);
                 window.speechSynthesis.speak(speech);
             } catch(err) {
@@ -130,14 +138,20 @@ class SVGWorld implements World {
         // The arm:
         $(this.SVG('line')).attr({
             id:'arm',
-            x1: this.stackWidth() / 2,
+            x1: this.stackWidth() * this.currentState.arm + this.stackWidth() / 2,
             y1: this.armSize * this.stackWidth() - this.canvasHeight, 
-            x2: this.stackWidth() / 2, 
+            x2: this.stackWidth() * this.currentState.arm + this.stackWidth() / 2, 
             y2: this.armSize * this.stackWidth(), 
             stroke: 'black', 
             'stroke-width': this.armSize * this.stackWidth(),
         }).appendTo(svg);
 
+        // If the arm is holding an object:
+        if (this.currentState.holding) {
+            this.makeObject(svg, this.currentState.holding, this.currentState.arm, 0);
+        }
+
+        // The objects on the floor:
         var timeout = 0;
         for (var stacknr=0; stacknr < this.currentState.stacks.length; stacknr++) {
             for (var objectnr=0; objectnr < this.currentState.stacks[stacknr].length; objectnr++) {
@@ -146,6 +160,7 @@ class SVGWorld implements World {
                 timeout += this.animationPause;
             }
         }
+
         if (callback) {
             setTimeout(callback, (timeout + this.promptPause) * 1000);
         }
@@ -360,8 +375,12 @@ class SVGWorld implements World {
 
     private makeObject(svg : JQuery, objectid : string, stacknr : number, timeout : number) {
         var attrs = this.currentState.objects[objectid];
-        var altitude = this.getAltitude(stacknr, objectid);
         var dim = this.getObjectDimensions(objectid);
+        if (objectid == this.currentState.holding) {
+            var altitude = this.canvasHeight - this.armSize * this.stackWidth() - dim.heightadd;
+        } else {
+            var altitude = this.getAltitude(stacknr, objectid);
+        }
 
         var ybottom = this.canvasHeight - this.boxSpacing();
         var ytop = ybottom - dim.height;
@@ -426,8 +445,7 @@ class SVGWorld implements World {
         });
         object.appendTo(svg);
 
-        var path = ["M", stacknr * this.stackWidth() + this.wallSeparation, 
-                    -(this.canvasHeight + this.floorThickness)];
+        var path = ["M", stacknr * this.stackWidth() + this.wallSeparation, -(this.canvasHeight + this.floorThickness)];
         this.animateMotion(object, path, 0, 0);
         path.push("V", -altitude);
         this.animateMotion(object, path, timeout, 0.5);
@@ -471,17 +489,8 @@ class SVGWorld implements World {
 
 // Support for SVG animations
 
-interface Element {
-    beginElementAt(timeout: number) : void;
-}
-
-// Support for HTML5 speech synthesis
-
-interface Window { 
-    speechSynthesis: {speaking : boolean;
-                      speak(sputt: SpeechSynthesisUtterance) : void}; 
-}
-
-declare class SpeechSynthesisUtterance {
-    constructor(utterance: string); 
+declare global {
+    interface Element {
+        beginElementAt(timeout: number) : void;
+    }
 }

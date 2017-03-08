@@ -1,96 +1,81 @@
 
 ## This is a grammar for Shrdlite, written for the Nearley Javascript chartparser
-## To compile into a Javascript file:  nearleyc grammar.ne > grammar.js
-## For more information:  https://github.com/Hardmath123/nearley
+## To compile into a TypeScript file:  nearleyc Grammar.ne > Grammar.ts
+## More information about Nearley:  https://github.com/Hardmath123/nearley
+
+## Note that for simplicity this grammar does not recognise uppcase, whitespace or punctuation.
+## This means that it has to be called with a contracted lowercase string, i.e.,
+## the string "Take the blue ball!" is not recognised, but instead "taketheblueball"
+
+@preprocessor typescript
 
 @{%
-
-// Create a Javascript object by instantiating children
-// Example:
-// updateObject({a:2, b:{c:1, d:0}}, ['x', 'y', 'z'])
-// ==> {a:'z', b:{c:'y', d:'x'}}
-
-function updateObject(obj, children) {
-    if (typeof obj == "object") {
-        var result = obj.constructor();
-        for (var key in obj) {
-            result[key] = updateObject(obj[key], children);
-        }
-        return result;
-    } else if (typeof obj == "number") {
-        return children[obj];
-    } else {
-        return obj;
-    }
-}
-
-// Wrapper function for updating Nearley parse results
-
-function R(obj) {
-    return function(d){return updateObject(obj, d)}
-}
-
+import {
+    Command, TakeCommand, DropCommand, MoveCommand, WhereisCommand,
+    Location, Entity,
+    Object, RelativeObject, SimpleObject,
+} from "./Types";
 %}
-
 
 ## Grammar rules
 
-main --> will_you:? please:? command please:?  {% R(2) %}  
+main --> will_you:? please:? command please:?  {% (d) => d[2] %}  
 
-command --> take entity           {% R({command:"take", entity:1}) %}
-command --> move  it    location  {% R({command:"put", location:2}) %}
-command --> move entity location  {% R({command:"move", entity:1, location:2}) %}
+command --> take entity           {% (d) => new TakeCommand(d[1]) %}
+command --> move  it    location  {% (d) => new DropCommand(d[2]) %}
+command --> move entity location  {% (d) => new MoveCommand(d[1], d[2]) %}
+# command --> where_is entity       {% (d) => new WhereisCommand(d[1], d[2]) %}
 
-location --> relation entity  {% R({relation:0, entity:1}) %}
+location --> relation entity  {% (d) => new Location(d[0], d[1]) %}
 
-entity --> quantifierSG objectSG  {% R({quantifier:0, object:1}) %}
-entity --> quantifierPL objectPL  {% R({quantifier:0, object:1}) %}
+entity --> quantifierSG objectSG  {% (d) => new Entity(d[0], d[1]) %}
+entity --> quantifierPL objectPL  {% (d) => new Entity(d[0], d[1]) %}
 
-objectSG --> objectSG that_is:?  location  {% R({object:0, location:2}) %}
-objectPL --> objectPL that_are:? location  {% R({object:0, location:2}) %}
+objectSG --> objectSG that_is:?  location  {% (d) => new RelativeObject(d[0], d[2]) %}
+objectPL --> objectPL that_are:? location  {% (d) => new RelativeObject(d[0], d[2]) %}
 
-objectSG --> size:? color:? formSG  {% R({size:0, color:1, form:2}) %}
-objectPL --> size:? color:? formPL  {% R({size:0, color:1, form:2}) %}
+objectSG --> size:? color:? formSG  {% (d) => new SimpleObject(d[0], d[1], d[2]) %}
+objectPL --> size:? color:? formPL  {% (d) => new SimpleObject(d[0], d[1], d[2]) %}
 
 
 ## Lexical rules
 
-quantifierSG --> ("any" | "an" | "a")  {% R("any") %}
-quantifierSG --> ("the")               {% R("the") %}
-quantifierSG --> ("every")             {% R("all") %}
-quantifierPL --> ("all")               {% R("all") %}
+quantifierSG --> ("any" | "an" | "a")  {% (d) => "any" %}
+quantifierSG --> ("the")               {% (d) => "the" %}
+quantifierSG --> ("every")             {% (d) => "all" %}
+quantifierPL --> ("all")               {% (d) => "all" %}
 
-relation --> ("left"  "of" | "to" "the" "left"  "of")  {% R("leftof") %}
-relation --> ("right" "of" | "to" "the" "right" "of")  {% R("rightof") %}
-relation --> ("inside" | "in" | "into")  {% R("inside") %}
-relation --> ("on" | "on" "top" "of")    {% R("ontop") %}
-relation --> ("under" | "below")         {% R("under") %}
-relation --> ("beside")                  {% R("beside") %}
-relation --> ("above")                   {% R("above") %}
+relation --> ("left"  "of" | "to" "the" "left"  "of")  {% (d) => "leftof" %}
+relation --> ("right" "of" | "to" "the" "right" "of")  {% (d) => "rightof" %}
+relation --> ("inside" | "in" | "into")  {% (d) => "inside" %}
+relation --> ("on" | "on" "top" "of")    {% (d) => "ontop" %}
+relation --> ("under" | "below")         {% (d) => "under" %}
+relation --> ("beside")                  {% (d) => "beside" %}
+relation --> ("above")                   {% (d) => "above" %}
 
-size --> ("small" | "tiny")  {% R("small") %}
-size --> ("large" | "big")   {% R("large") %}
+size --> ("small" | "tiny")  {% (d) => "small" %}
+size --> ("large" | "big")   {% (d) => "large" %}
 
-color --> "black"   {% R("black") %}
-color --> "white"   {% R("white") %}
-color --> "blue"    {% R("blue") %}
-color --> "green"   {% R("green") %}
-color --> "yellow"  {% R("yellow") %}
-color --> "red"     {% R("red") %}
+color --> "black"   {% (d) => "black" %}
+color --> "white"   {% (d) => "white" %}
+color --> "blue"    {% (d) => "blue" %}
+color --> "green"   {% (d) => "green" %}
+color --> "yellow"  {% (d) => "yellow" %}
+color --> "red"     {% (d) => "red" %}
 
-formSG --> form      {% R(0) %}
-formPL --> form "s"  {% R(0) %}
+formSG --> form      {% (d) => d[0] %}
+formPL --> form "s"  {% (d) => d[0] %}
 
-formSG --> "box"    {% R("box") %}
-formPL --> "boxes"  {% R("box") %}
+formSG --> "box"    {% (d) => "box" %}
+formPL --> "boxes"  {% (d) => "box" %}
 
-form --> ("object" | "thing" | "form")  {% R("anyform") %}
-form --> "brick"    {% R("brick") %}
-form --> "plank"    {% R("plank") %}
-form --> "ball"     {% R("ball") %}
-form --> "pyramid"  {% R("pyramid") %}
-form --> "table"    {% R("table") %}
-form --> "floor"    {% R("floor") %}
+form --> ("object" | "thing" | "form")  {% (d) => "anyform" %}
+form --> "brick"    {% (d) => "brick" %}
+form --> "plank"    {% (d) => "plank" %}
+form --> "ball"     {% (d) => "ball" %}
+form --> "pyramid"  {% (d) => "pyramid" %}
+form --> "table"    {% (d) => "table" %}
+form --> "floor"    {% (d) => "floor" %}
 
 
 ## Lexicon (without semantic content)
