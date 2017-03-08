@@ -1,3 +1,15 @@
 shrdlite-*.js
-TestAStar.js
-TestInterpreter.js
+test-*.js
+*TestCases.js
+Grammar.js
+Graph.js
+GridGraph.js
+Types.js
+World.js
+ExampleWorlds.js
+SVGWorld.js
+TextWorld.js
+Parser.js
+Interpreter.js
+Planner.js
+Shrdlite.js
