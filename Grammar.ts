@@ -8,8 +8,8 @@ import {
     Object, RelativeObject, SimpleObject,
 } from "./Types";
 interface NearleyGrammar {ParserRules:NearleyRule[]; ParserStart:string};
-interface NearleyRule {name:string; symbols:NearleySymbol[]; postprocess?:(d:any[])=>any};
-type NearleySymbol = string | {literal:string};
+interface NearleyRule {name:string; symbols:NearleySymbol[]; postprocess?:(d:any[],loc?:number,reject?:{})=>any};
+type NearleySymbol = string | {literal:any} | {test:(token:any) => boolean};
 export var grammar : NearleyGrammar = {
     ParserRules: [
     {"name": "main$ebnf$1", "symbols": ["will_you"], "postprocess": id},
