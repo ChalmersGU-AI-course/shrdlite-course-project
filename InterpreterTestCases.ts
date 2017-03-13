@@ -271,6 +271,12 @@ testCases.push({
     interpretations: [["COME UP WITH YOUR OWN INTERPRETATION"]]
 });
 
+testCases.push({
+    world: "medium",
+    utterance: "put a brick on a brick on a brick on the floor",
+    interpretations: [["COME UP WITH YOUR OWN INTERPRETATION"]]
+});
+
 
 //////////////////////////////////////////////////////////////////////
 // Test cases for the ALL quantifier
@@ -303,5 +309,17 @@ testCases.push({
 testCases.push({
     world: "small",
     utterance: "put every ball in a box",
+    interpretations: [["COME UP WITH YOUR OWN INTERPRETATION"]]
+});
+
+testCases.push({
+    world: "medium",
+    utterance: "put all large green bricks beside a large green brick",
+    interpretations: [["COME UP WITH YOUR OWN INTERPRETATION"]]
+});
+
+testCases.push({
+    world: "medium",
+    utterance: "put all green objects left of all red objects",
     interpretations: [["COME UP WITH YOUR OWN INTERPRETATION"]]
 });
