@@ -96,7 +96,9 @@ testCases.push({
 testCases.push({
     world: "medium",
     utterance: "put a large box on a large brick",
-    interpretations: [["ontop(LrgRedBox,LrgGrnBrck)", "ontop(LrgYlwBox,LrgGrnBrck)"]]
+    interpretations: [["ontop(LrgRedBox,LrgGrnBrck1)", "ontop(LrgYlwBox,LrgGrnBrck1)",
+                       "ontop(LrgRedBox,LrgGrnBrck2)", "ontop(LrgYlwBox,LrgGrnBrck2)",
+                       "ontop(LrgRedBox,LrgGrnBrck3)", "ontop(LrgYlwBox,LrgGrnBrck3)"]]
 });
 
 testCases.push({
@@ -234,7 +236,7 @@ testCases.push({
 // "put it"
 
 testCases.push({
-    world: "small",
+    world: "medium",
     utterance: "put it on the floor",
     interpretations: [["COME UP WITH YOUR OWN INTERPRETATION"]]
 });
