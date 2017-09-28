@@ -1,5 +1,5 @@
 ///<reference path="World.ts"/>
-///<reference path="Interpreter.ts"/>"/>
+///<reference path="Interpreter.ts"/>
 ///<reference path="Searcher.ts"/>
 ///<reference path="InnerWorld.ts"/>
 

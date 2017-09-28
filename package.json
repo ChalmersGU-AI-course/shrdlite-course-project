@@ -1,0 +1,26 @@
+{
+  "name": "shrdlite",
+  "version": "1.0.0",
+  "description": "A minimal planner",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "make": "make"
+  },
+  "repository": "https://github.com/vc4543/shrdlite-course-project.git",
+  "keywords": [
+    "Electron",
+    "shrd",
+    "tutorial",
+    "demo"
+  ],
+  "author": "vc et alli",
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "electron": "~1.6.2",
+    "typescript": "^2.5.3"
+  },
+  "dependencies": {
+    "nearley": "^2.11.0"
+  }
+}
