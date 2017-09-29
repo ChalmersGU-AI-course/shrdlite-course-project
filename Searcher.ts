@@ -133,3 +133,7 @@ module Searcher {
     }
 
 }
+
+
+module.exports.Searcher = Searcher;
+

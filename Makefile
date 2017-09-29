@@ -1,3 +1,5 @@
+TSC = ./node_modules/.bin/tsc
+
 
 TARGETS = html ajax ansi offline
 
@@ -19,7 +21,7 @@ all: $(TARGETS)
 $(TARGETS): %: shrdlite-%.js
 
 %.js: %.ts $(TSFILES)
-	tsc --out $@ $<
+	TSC --out $@ $<
 
 grammar.js: grammar.ne
 	nearleyc $< > $@

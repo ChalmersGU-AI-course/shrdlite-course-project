@@ -1,7 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="lib/jquery.d.ts" />
 
-
 class SVGWorld implements World {
 
     constructor(
@@ -27,7 +26,7 @@ class SVGWorld implements World {
             }
         });
         this.containers.inputform.submit(() => this.handleUserInput.call(this));
-        this.disableInput();
+//        this.disableInput();
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -478,11 +477,13 @@ interface Element {
 
 // Support for HTML5 speech synthesis
 
-interface Window { 
-    speechSynthesis: {speaking : boolean;
-                      speak(sputt: SpeechSynthesisUtterance) : void}; 
-}
+//interface Window { 
+//    speechSynthesis: {speaking : boolean;
+//                      speak(sputt: SpeechSynthesisUtterance) : void}; 
+//}
 
-declare class SpeechSynthesisUtterance {
-    constructor(utterance: string); 
-}
+//declare class SpeechSynthesisUtterance {
+//    constructor(utterance: string); 
+//}
+
+module.exports.SVGWorld = SVGWorld;

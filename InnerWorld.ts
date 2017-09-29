@@ -728,3 +728,7 @@ module InnerWorld {
         }
     }
 }
+
+
+module.exports.InnerWorld = InnerWorld;
+

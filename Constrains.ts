@@ -14,6 +14,7 @@
 //
 // All in all, its the most clean changes in this project
 
+
 module Constrains {
 // The constrains and Variable nodes as per the class explanation
     export interface ConstrainNode<T> {type : string;
@@ -740,3 +741,6 @@ module Constrains {
         return domain;
     }
 }
+
+
+module.exports.Constrains = Constrains;

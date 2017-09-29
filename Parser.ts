@@ -94,3 +94,8 @@ if (typeof require !== 'undefined') {
     var nearley = require('./lib/nearley.js');
     var grammar = require('./grammar.js');
 }
+
+
+module.exports.Parser = Parser;
+module.exports.Parser.Error = Parser.Error;
+

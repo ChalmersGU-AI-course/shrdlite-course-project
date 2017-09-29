@@ -1,6 +1,7 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
 ///<reference path="Constrains.ts"/>
+///<reference path="lib/collections.ts"/>
 
 // under was done as negation of ontop. bad results but good to try :)
 
@@ -134,4 +135,8 @@ module Interpreter {
         }
     }
 }
+
+module.exports.Interpreter = Interpreter;
+module.exports.Interpreter.Error = Interpreter.Error;
+
 

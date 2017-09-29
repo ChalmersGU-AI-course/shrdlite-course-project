@@ -147,3 +147,5 @@ ExampleWorlds["impossible"] = {
         "this is just an impossible world"
     ]
 };
+
+module.exports.ExampleWorlds = ExampleWorlds;

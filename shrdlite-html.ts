@@ -3,23 +3,28 @@
 ///<reference path="ExampleWorlds.ts"/>
 ///<reference path="lib/jquery.d.ts" />
 
+const example = require('./ExampleWorlds.js')
+const svg = require('./SVGWorld.js')
+const shrd = require('./Shrdlite.js')
+
+
 var defaultWorld = 'small';
 var defaultSpeech = false;
 
-$(function(){
+function set_current_world() {
     var current = getURLParameter('world');
-    if (!(current in ExampleWorlds)) {
+    if (!(current in example.ExampleWorlds)) {
         current = defaultWorld;
     }
-    var speech = (getURLParameter('speech') || "").toLowerCase();
-    var useSpeech = (speech == 'true' || speech == '1' || defaultSpeech);
+    var speech;// = (getURLParameter('speech') || "").toLowerCase();
+    var useSpeech;// = (speech == 'true' || speech == '1' || defaultSpeech);
 
     $('#currentworld').text(current);
     $('<a>').text('reset')
         .attr('href', '?world=' + current + '&speech=' + useSpeech)
         .appendTo($('#resetworld'));
     $('#otherworlds').empty();
-    for (var wname in ExampleWorlds) {
+    for (var wname in example.ExampleWorlds) {
         if (wname !== current) {
             $('<a>').text(wname)
                 .attr('href', '?world=' + wname + '&speech=' + useSpeech)
@@ -31,27 +36,9 @@ $(function(){
         .attr('href', '?world=' + current + '&speech=' + (!useSpeech))
         .appendTo($('#togglespeech'));
 
-    var world = new SVGWorld(ExampleWorlds[current], useSpeech);
-    Shrdlite.interactive(world);
-});
-
-
-// Adapted from: http://www.openjs.com/scripts/events/exit_confirmation.php
-function goodbye(e) {
-	if(!e) e = window.event;
-	// e.cancelBubble is supported by IE - this will kill the bubbling process.
-	e.cancelBubble = true;
-
-    // This is displayed in the dialog:
-	e.returnValue = 'Are you certain?\nYou cannot undo this, you know.'; 
-
-	// e.stopPropagation works in Firefox.
-	if (e.stopPropagation) {
-		e.stopPropagation();
-		e.preventDefault();
-	}
+    var world = new svg.SVGWorld(example.ExampleWorlds[current], useSpeech);
+    shrd.Shrdlite.interactive(world);
 }
-window.onbeforeunload = goodbye;
 
 
 // Adapted from: http://www.jquerybyexample.net/2012/06/get-url-parameters-using-jquery.html
@@ -65,3 +52,5 @@ function getURLParameter(sParam) : string {
         }
     }
 }​
+
+module.exports.set_current_world = set_current_world;

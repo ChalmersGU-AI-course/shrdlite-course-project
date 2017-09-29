@@ -436,3 +436,7 @@ module Planner {
     }
 
 }
+
+
+module.exports.Planner = Planner;
+

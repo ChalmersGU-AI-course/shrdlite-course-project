@@ -2537,4 +2537,9 @@ module collections {
     } // end of BSTree
 
 
-}// End of module 
+}// End of module
+
+module.exports.collections = collections;
+module.exports.Set = collections.Set;
+
+
