@@ -1,1 +1,4 @@
 shrdlite-*.js
+package-lock.json
+node_modules
+generated_code

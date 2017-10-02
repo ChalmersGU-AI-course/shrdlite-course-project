@@ -91,8 +91,8 @@ declare module "nearley" {
 if (typeof require !== 'undefined') {
     // Node.JS way of importing external modules
     // In a browser, they must be included from the HTML file
-    var nearley = require('./lib/nearley.js');
-    var grammar = require('./grammar.js');
+    var nearley = require('../lib/nearley.js');
+    var grammar = require('../grammar.js');
 }
 
 

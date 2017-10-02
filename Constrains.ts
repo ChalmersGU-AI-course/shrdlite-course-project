@@ -1,6 +1,6 @@
 ///<reference path="World.ts"/>
 ///<reference path="Parser.ts"/>
-/// <reference path="lib/collections.ts" />
+///<reference path="lib/collections.ts" />
 
 //////////////////////////////////////////////////////////////////////
 // This handles constrains

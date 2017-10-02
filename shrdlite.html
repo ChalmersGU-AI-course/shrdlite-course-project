@@ -34,18 +34,27 @@
   <script>
     // You can also require other files to run in this process
     window.$ = window.jQuery = require('./lib/jquery-1.11.0.min.js');
-    collections = require('./lib/collections.js');
+    collections = require('./generated_code/collections.js');
     window.collections = collections.collections;
 console.log(window.collections);
-    constrains = require('./Constrains.js');
+    constrains = require('./generated_code/Constrains.js');
     window.Constrains = constrains.Constrains;
 console.log(window.Constrains);
-    innerWorld = require('./InnerWorld.js');
+    innerWorld = require('./generated_code/InnerWorld.js');
     window.InnerWorld = innerWorld.InnerWorld;
 console.log(window.InnerWorld);
-    searcher = require('./Searcher.js');
+    searcher = require('./generated_code/Searcher.js');
     window.Searcher = searcher.Searcher;
 console.log(window.Searcher);
+    parser = require('./generated_code/Parser.js');
+    window.Parser = parser.Parser;
+console.log(window.Parser);
+    interpreter = require('./generated_code/Interpreter.js');
+    window.Interpreter = interpreter.Interpreter;
+console.log(window.Interpreter);
+    planner = require('./generated_code/Planner.js');
+    window.Planner = planner.Planner;
+console.log(window.Interpreter);
 
     require('./renderer.js')
   </script>

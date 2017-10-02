@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "make": "make"
+    "make": "make html"
   },
   "repository": "https://github.com/vc4543/shrdlite-course-project.git",
   "keywords": [

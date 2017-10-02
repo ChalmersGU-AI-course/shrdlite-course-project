@@ -573,8 +573,8 @@ module InnerWorld {
                         break;
                 case 'ontop':
                         break;
-                otherwise:
-                    throw new InnerWorld.Error('wrong relationship '+this.rel);
+//                otherwise:
+//                    throw new InnerWorld.Error('wrong relationship '+this.rel);
                 }
                 for(var i:number = 0; i < state.kb.length; ++i)
                     if('clear' == state.kb[i].rel) {
