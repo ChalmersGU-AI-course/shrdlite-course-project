@@ -68,8 +68,12 @@ function runTest(testcase: TestCase, useHeuristics: boolean) : TestResult {
     var h = useHeuristics ? manhattanHeuristics : noHeuristics;
 
     function showResultPath(pathtitle : string, path : GridNode[]) {
-        console.log(pathtitle, path.join(" "));
-        if (graph.xsize > 100 || graph.ysize > 100) {
+        if (path.length > 30) {
+            console.log(pathtitle, path.slice(0,25).join(" ") + " ... " + path[path.length-1]);
+        } else {
+            console.log(pathtitle, path.join(" "));
+        }
+        if (graph.xsize > 30 || graph.ysize > 30) {
             console.log("Grid is too large to show!");
         } else {
             console.log(graph.toString(startnode, isgoal, path));
@@ -164,16 +168,18 @@ function runAllTests(argv : string[]) : void {
         }
         console.log();
 
-        var faster = Math.round(100.0 * (result[noHeuristics].time - result[manhattan].time) / result[noHeuristics].time);
-        var lessNodes = Math.round(100.0 * (result[noHeuristics].nodes - result[manhattan].nodes) / result[noHeuristics].nodes);
-        var lessCalls = Math.round(100.0 * (result[manhattan].nodes - result[manhattan].calls) / result[manhattan].nodes);
-        console.log(manhattan + ":  " +
-                    Math.abs(faster) + (faster >= 0 ? "% faster" : "% SLOWER") + ",  " +
-                    "creates " + Math.abs(lessNodes) + (lessNodes >= 0 ? "% less" : "% MORE") + " nodes,  " +
-                    "heuristic is called " + Math.abs(lessCalls) + (lessCalls >= 0 ? "% less" : "% MORE") +
-                    " than the number of nodes created"
-                   );
-        console.log();
+        if (result[noHeuristics] && result[manhattan]) {
+            var faster = Math.round(100.0 * (result[noHeuristics].time - result[manhattan].time) / result[noHeuristics].time);
+            var lessNodes = Math.round(100.0 * (result[noHeuristics].nodes - result[manhattan].nodes) / result[noHeuristics].nodes);
+            var lessCalls = Math.round(100.0 * (result[manhattan].nodes - result[manhattan].calls) / result[manhattan].nodes);
+            console.log(manhattan + ":  " +
+                        Math.abs(faster) + (faster >= 0 ? "% faster" : "% SLOWER") + ",  " +
+                        "creates " + Math.abs(lessNodes) + (lessNodes >= 0 ? "% less" : "% MORE") + " nodes,  " +
+                        "heuristic is called " + Math.abs(lessCalls) + (lessCalls >= 0 ? "% less" : "% MORE") +
+                        " than the number of nodes created"
+                       );
+            console.log();
+        }
     }
 
     console.log("===================================================================================");
@@ -187,32 +193,34 @@ function runAllTests(argv : string[]) : void {
     }
     console.log();
 
-    var faster = Math.round(100.0 * (total[noHeuristics].time - total[manhattan].time) / total[noHeuristics].time);
-    var lessNodes = Math.round(100.0 * (total[noHeuristics].nodes - total[manhattan].nodes) / total[noHeuristics].nodes);
-    var lessCalls = Math.round(100.0 * (total[manhattan].nodes - total[manhattan].calls) / total[manhattan].nodes);
-    console.log(manhattan + ":  " +
-                Math.abs(faster) + (faster >= 0 ? "% faster" : "% SLOWER") + ",  " +
-                "creates " + Math.abs(lessNodes) + (lessNodes >= 0 ? "% less" : "% MORE") + " nodes,  " +
-                "heuristic is called " + Math.abs(lessCalls) + (lessCalls >= 0 ? "% less" : "% MORE") +
-                " than the number of nodes created"
-               );
-    console.log();
+    if (total[noHeuristics] && total[manhattan]) {
+        var faster = Math.round(100.0 * (total[noHeuristics].time - total[manhattan].time) / total[noHeuristics].time);
+        var lessNodes = Math.round(100.0 * (total[noHeuristics].nodes - total[manhattan].nodes) / total[noHeuristics].nodes);
+        var lessCalls = Math.round(100.0 * (total[manhattan].nodes - total[manhattan].calls) / total[manhattan].nodes);
+        console.log(manhattan + ":  " +
+                    Math.abs(faster) + (faster >= 0 ? "% faster" : "% SLOWER") + ",  " +
+                    "creates " + Math.abs(lessNodes) + (lessNodes >= 0 ? "% less" : "% MORE") + " nodes,  " +
+                    "heuristic is called " + Math.abs(lessCalls) + (lessCalls >= 0 ? "% less" : "% MORE") +
+                    " than the number of nodes created"
+                   );
+        console.log();
 
-    if (total[manhattan].failed || total[noHeuristics].failed) {
-        console.log("==>  PROBLEM: A* does not find the optimal path in all cases");
+        if (total[manhattan].failed || total[noHeuristics].failed) {
+            console.log("==>  PROBLEM: A* does not find the optimal path in all cases");
+        }
+        if (faster < 0) {
+            console.log("==>  PROBLEM: Manhattan is " + (-faster) + "% slower");
+        } else if (faster < 15) {
+            console.log("==>  PROBLEM: Manhattan is only " + faster + "% faster");
+        }
+        if (lessNodes < 0) {
+            console.log("==>  PROBLEM: Manhattan creates " + (-lessNodes) + "% more nodes");
+        }
+        if (lessCalls < 0) {
+            console.log("==>  PROBLEM: The heuristic function is called " + (-lessCalls) + "% more than the number of nodes created");
+        }
+        console.log();
     }
-    if (faster < 0) {
-        console.log("==>  PROBLEM: Manhattan is " + (-faster) + "% slower");
-    } else if (faster < 15) {
-        console.log("==>  PROBLEM: Manhattan is only " + faster + "% faster");
-    }
-    if (lessNodes < 0) {
-        console.log("==>  PROBLEM: Manhattan creates " + (-lessNodes) + "% more nodes");
-    }
-    if (lessCalls < 0) {
-        console.log("==>  PROBLEM: The heuristic function is called " + (-lessCalls) + "% more than the number of nodes created");
-    }
-    console.log();
 }
 
 

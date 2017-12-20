@@ -7,17 +7,18 @@ import {
     Location, Entity,
     Object, RelativeObject, SimpleObject,
 } from "./Types";
-interface NearleyGrammar {ParserRules:NearleyRule[]; ParserStart:string};
-interface NearleyRule {name:string; symbols:NearleySymbol[]; postprocess?:(d:any[],loc?:number,reject?:{})=>any};
-type NearleySymbol = string | {literal:any} | {test:(token:any) => boolean};
-export var grammar : NearleyGrammar = {
-    ParserRules: [
+export interface Token {value:any; [key: string]:any};
+export interface Lexer {reset:(chunk:string, info:any) => void; next:() => Token | undefined; save:() => any; formatError:(token:Token) => string; has:(tokenType:string) => boolean};
+export interface NearleyRule {name:string; symbols:NearleySymbol[]; postprocess?:(d:any[],loc?:number,reject?:{})=>any};
+export type NearleySymbol = string | {literal:any} | {test:(token:any) => boolean};
+export var Lexer:Lexer|undefined = undefined;
+export var ParserRules:NearleyRule[] = [
     {"name": "main$ebnf$1", "symbols": ["will_you"], "postprocess": id},
-    {"name": "main$ebnf$1", "symbols": [], "postprocess": (d) => null},
+    {"name": "main$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "main$ebnf$2", "symbols": ["please"], "postprocess": id},
-    {"name": "main$ebnf$2", "symbols": [], "postprocess": (d) => null},
+    {"name": "main$ebnf$2", "symbols": [], "postprocess": () => null},
     {"name": "main$ebnf$3", "symbols": ["please"], "postprocess": id},
-    {"name": "main$ebnf$3", "symbols": [], "postprocess": (d) => null},
+    {"name": "main$ebnf$3", "symbols": [], "postprocess": () => null},
     {"name": "main", "symbols": ["main$ebnf$1", "main$ebnf$2", "command", "main$ebnf$3"], "postprocess": (d) => d[2]},
     {"name": "command", "symbols": ["take", "entity"], "postprocess": (d) => new TakeCommand(d[1])},
     {"name": "command", "symbols": ["move", "it", "location"], "postprocess": (d) => new DropCommand(d[2])},
@@ -26,20 +27,20 @@ export var grammar : NearleyGrammar = {
     {"name": "entity", "symbols": ["quantifierSG", "objectSG"], "postprocess": (d) => new Entity(d[0], d[1])},
     {"name": "entity", "symbols": ["quantifierPL", "objectPL"], "postprocess": (d) => new Entity(d[0], d[1])},
     {"name": "objectSG$ebnf$1", "symbols": ["that_is"], "postprocess": id},
-    {"name": "objectSG$ebnf$1", "symbols": [], "postprocess": (d) => null},
+    {"name": "objectSG$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "objectSG", "symbols": ["objectSG", "objectSG$ebnf$1", "location"], "postprocess": (d) => new RelativeObject(d[0], d[2])},
     {"name": "objectPL$ebnf$1", "symbols": ["that_are"], "postprocess": id},
-    {"name": "objectPL$ebnf$1", "symbols": [], "postprocess": (d) => null},
+    {"name": "objectPL$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "objectPL", "symbols": ["objectPL", "objectPL$ebnf$1", "location"], "postprocess": (d) => new RelativeObject(d[0], d[2])},
     {"name": "objectSG$ebnf$2", "symbols": ["size"], "postprocess": id},
-    {"name": "objectSG$ebnf$2", "symbols": [], "postprocess": (d) => null},
+    {"name": "objectSG$ebnf$2", "symbols": [], "postprocess": () => null},
     {"name": "objectSG$ebnf$3", "symbols": ["color"], "postprocess": id},
-    {"name": "objectSG$ebnf$3", "symbols": [], "postprocess": (d) => null},
+    {"name": "objectSG$ebnf$3", "symbols": [], "postprocess": () => null},
     {"name": "objectSG", "symbols": ["objectSG$ebnf$2", "objectSG$ebnf$3", "formSG"], "postprocess": (d) => new SimpleObject(d[0], d[1], d[2])},
     {"name": "objectPL$ebnf$2", "symbols": ["size"], "postprocess": id},
-    {"name": "objectPL$ebnf$2", "symbols": [], "postprocess": (d) => null},
+    {"name": "objectPL$ebnf$2", "symbols": [], "postprocess": () => null},
     {"name": "objectPL$ebnf$3", "symbols": ["color"], "postprocess": id},
-    {"name": "objectPL$ebnf$3", "symbols": [], "postprocess": (d) => null},
+    {"name": "objectPL$ebnf$3", "symbols": [], "postprocess": () => null},
     {"name": "objectPL", "symbols": ["objectPL$ebnf$2", "objectPL$ebnf$3", "formPL"], "postprocess": (d) => new SimpleObject(d[0], d[1], d[2])},
     {"name": "quantifierSG$subexpression$1$string$1", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"y"}], "postprocess": (d) => d.join('')},
     {"name": "quantifierSG$subexpression$1", "symbols": ["quantifierSG$subexpression$1$string$1"]},
@@ -175,8 +176,10 @@ export var grammar : NearleyGrammar = {
     {"name": "will_you$subexpression$1", "symbols": ["will_you$subexpression$1$string$3"]},
     {"name": "will_you$string$1", "symbols": [{"literal":"y"}, {"literal":"o"}, {"literal":"u"}], "postprocess": (d) => d.join('')},
     {"name": "will_you", "symbols": ["will_you$subexpression$1", "will_you$string$1"]},
+    {"name": "where_is$string$1", "symbols": [{"literal":"w"}, {"literal":"h"}, {"literal":"e"}, {"literal":"r"}, {"literal":"e"}], "postprocess": (d) => d.join('')},
+    {"name": "where_is$string$2", "symbols": [{"literal":"i"}, {"literal":"s"}], "postprocess": (d) => d.join('')},
+    {"name": "where_is", "symbols": ["where_is$string$1", "where_is$string$2"]},
     {"name": "please$string$1", "symbols": [{"literal":"p"}, {"literal":"l"}, {"literal":"e"}, {"literal":"a"}, {"literal":"s"}, {"literal":"e"}], "postprocess": (d) => d.join('')},
     {"name": "please", "symbols": ["please$string$1"]}
-]
-  , ParserStart: "main"
-}
+];
+export var ParserStart:string = "main";

@@ -24,7 +24,7 @@ main --> will_you:? please:? command please:?  {% (d) => d[2] %}
 command --> take entity           {% (d) => new TakeCommand(d[1]) %}
 command --> move  it    location  {% (d) => new DropCommand(d[2]) %}
 command --> move entity location  {% (d) => new MoveCommand(d[1], d[2]) %}
-# command --> where_is entity       {% (d) => new WhereisCommand(d[1], d[2]) %}
+# command --> where_is entity       {% (d) => new WhereisCommand(d[1]) %}
 
 location --> relation entity  {% (d) => new Location(d[0], d[1]) %}
 
@@ -88,5 +88,7 @@ that_is  --> "that" "is"
 that_are --> "that" "are"
 
 will_you --> ("will" | "can" | "could") "you"
+
+where_is --> "where" "is"
 
 please --> "please"

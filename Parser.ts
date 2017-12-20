@@ -1,7 +1,7 @@
 
 import {WorldState} from "./World";
 import {Command, ShrdliteResult} from "./Types";
-import {grammar} from "./Grammar";
+import {ParserRules, ParserStart} from "./Grammar";
 import * as nearley from "./lib/nearley";
 
 /********************************************************************************
@@ -29,7 +29,7 @@ export function parse(input:string) : string | ShrdliteResult[] {
     // so we make it lowercase and remove all whitespace and punctuation:
     var parsestr = input.toLowerCase().replace(/\W/g, "");
     try {
-        var results : Command[] = new NearleyParser(grammar.ParserRules, grammar.ParserStart).feed(parsestr).results;
+        var results : Command[] = new NearleyParser(ParserRules, ParserStart).feed(parsestr).results;
     } catch(err) {
         if ('offset' in err) {
             return `Parsing failed after ${err.offset} characters`;
