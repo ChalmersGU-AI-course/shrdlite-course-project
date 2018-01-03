@@ -3,7 +3,12 @@
 function id(d:any[]):any {return d[0];}
 
 import {
-    Command, TakeCommand, DropCommand, MoveCommand, WhereisCommand,
+    Command, TakeCommand, DropCommand, MoveCommand,
+    /*
+    // Here's an example of a new command
+    // Don't forget to add the corresponding grammar rules below
+    WhereisCommand,
+    */
     Location, Entity,
     Object, RelativeObject, SimpleObject,
 } from "./Types";
@@ -176,9 +181,6 @@ export var ParserRules:NearleyRule[] = [
     {"name": "will_you$subexpression$1", "symbols": ["will_you$subexpression$1$string$3"]},
     {"name": "will_you$string$1", "symbols": [{"literal":"y"}, {"literal":"o"}, {"literal":"u"}], "postprocess": (d) => d.join('')},
     {"name": "will_you", "symbols": ["will_you$subexpression$1", "will_you$string$1"]},
-    {"name": "where_is$string$1", "symbols": [{"literal":"w"}, {"literal":"h"}, {"literal":"e"}, {"literal":"r"}, {"literal":"e"}], "postprocess": (d) => d.join('')},
-    {"name": "where_is$string$2", "symbols": [{"literal":"i"}, {"literal":"s"}], "postprocess": (d) => d.join('')},
-    {"name": "where_is", "symbols": ["where_is$string$1", "where_is$string$2"]},
     {"name": "please$string$1", "symbols": [{"literal":"p"}, {"literal":"l"}, {"literal":"e"}, {"literal":"a"}, {"literal":"s"}, {"literal":"e"}], "postprocess": (d) => d.join('')},
     {"name": "please", "symbols": ["please$string$1"]}
 ];

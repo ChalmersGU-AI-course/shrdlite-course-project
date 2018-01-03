@@ -22,7 +22,17 @@ export class ShrdliteResult {
 //////////////////////////////////////////////////////////////////////
 // Parse results
 
-export type Command = TakeCommand | DropCommand | MoveCommand | WhereisCommand;
+export type Command =
+      TakeCommand
+    | DropCommand
+    | MoveCommand
+/*
+// Here's an example of a new command
+// Don't forget to add a class definition below
+// The corresponding grammar rule(s) must also be added to Grammar.ne
+    | WhereisCommand
+*/
+;
 
 export class TakeCommand {
     constructor(public entity : Entity) {}
@@ -43,11 +53,16 @@ export class MoveCommand {
     clone() : MoveCommand {return new MoveCommand(this.entity.clone(), this.location.clone())};
 }
 
+/*
+// Here's an example of a class definition for a new command
+// Don't forget to add it to the type definition of 'Command' above
+// The corresponding grammar rule(s) must also be added to Grammar.ne 
 export class WhereisCommand {
     constructor(public entity : Entity) {}
     toString() : string {return `WhereisCommand(${this.entity.toString()})`};
     clone() : WhereisCommand {return new WhereisCommand(this.entity.clone())};
 }
+*/
 
 
 export class Location {

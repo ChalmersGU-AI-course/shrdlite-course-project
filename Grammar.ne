@@ -11,7 +11,12 @@
 
 @{%
 import {
-    Command, TakeCommand, DropCommand, MoveCommand, WhereisCommand,
+    Command, TakeCommand, DropCommand, MoveCommand,
+    /*
+    // Here's an example of a new command
+    // Don't forget to add the corresponding grammar rules below
+    WhereisCommand,
+    */
     Location, Entity,
     Object, RelativeObject, SimpleObject,
 } from "./Types";
@@ -24,6 +29,10 @@ main --> will_you:? please:? command please:?  {% (d) => d[2] %}
 command --> take entity           {% (d) => new TakeCommand(d[1]) %}
 command --> move  it    location  {% (d) => new DropCommand(d[2]) %}
 command --> move entity location  {% (d) => new MoveCommand(d[1], d[2]) %}
+
+## Here's an example of a new command
+## Don't forget to add it in the import above, and uncomment the 'where_is' grammar rule below
+## The corresponding class (WhereisCommand) must also be added to Types.ts
 # command --> where_is entity       {% (d) => new WhereisCommand(d[1]) %}
 
 location --> relation entity  {% (d) => new Location(d[0], d[1]) %}
@@ -89,6 +98,7 @@ that_are --> "that" "are"
 
 will_you --> ("will" | "can" | "could") "you"
 
-where_is --> "where" "is"
-
 please --> "please"
+
+## Here's an example of a new grammar rule, which can be used in the WhereisCommand above
+# where_is --> "where" "is"

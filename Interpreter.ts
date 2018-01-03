@@ -3,7 +3,12 @@ import {WorldState} from "./World";
 
 import {
     ShrdliteResult,
-    Command, TakeCommand, DropCommand, MoveCommand, WhereisCommand,
+    Command, TakeCommand, DropCommand, MoveCommand,
+    /*
+    // Here's an example of a new command
+    // Don't forget to add it to Grammar.ne and Types.ts
+    WhereisCommand,
+    */
     Location, Entity,
     Object, RelativeObject, SimpleObject,
     DNFFormula, Conjunction, Literal,
