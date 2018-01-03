@@ -44,11 +44,11 @@ interface CompareFunction<T> {
 
 export class SearchResult<Node> {
     constructor(
-        public path : Node[],     // The path found by the search algorithm.
-        public cost : number,     // The total cost of the path.
-        public frontier : number, // The number of nodes in the frontier at return time
-        public visited : number,  // The number of nodes that have been removed from the frontier
-        public timeout : boolean, // True if the search fails because of timeout
+        public path : Node[] | null, // The path found by the search algorithm.
+        public cost : number | null, // The total cost of the path.
+        public frontier : number,    // The number of nodes in the frontier at return time
+        public visited  : number,    // The number of nodes that have been removed from the frontier
+        public timeout  : boolean,   // True if the search fails because of timeout
     ) {};
 }
 
@@ -75,18 +75,21 @@ export function aStarSearch<Node> (
     timeout : number
 ) : SearchResult<Node> {
     // A dummy search result: it returns a random walk
-    var result = new SearchResult<Node>([start], 0, 0, 0, false);
+    var cost = 0;
+    var visited = 0;
+    var frontier = 0;
+    var path : Node[] = [start];
     var currentnode : Node = start;
-    while (result.path.length < 10) {
+    while (path.length < 10) {
         var outgoing : Edge<Node>[] = graph.outgoingEdges(currentnode);
         if (outgoing.length == 0) break;
         var randomedge : Edge<Node> = outgoing[Math.floor(Math.random() * outgoing.length)];
         currentnode = randomedge.to;
-        result.path.push(currentnode);
-        result.cost += randomedge.cost;
-        result.visited += 1;
-        result.frontier = outgoing.length;
+        path.push(currentnode);
+        cost += randomedge.cost;
+        visited += 1;
+        frontier = outgoing.length;
     }
-    return result;
+    return new SearchResult<Node>(path, cost, frontier, visited, false);
 }
 

@@ -29,7 +29,7 @@ The planner should use your A* search implementation to find a plan.
  *           If there's a planning error, it returns a string with a description of the error.
  */
 
-export function plan(interpretations : ShrdliteResult[], currentState : WorldState) : string | ShrdliteResult[] {
+export function plan(interpretations : ShrdliteResult[], currentState : WorldState) : ShrdliteResult[] | string {
     var errors : string[] = [];
     var plans : ShrdliteResult[] = [];
     interpretations.forEach((result) => {
@@ -44,7 +44,7 @@ export function plan(interpretations : ShrdliteResult[], currentState : WorldSta
             plans.push(result);
         }
     });
-    if (plans.length) {
+    if (plans.length > 0) {
         return plans;
     } else {
         // merge all errors into one

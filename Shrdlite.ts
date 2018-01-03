@@ -42,7 +42,7 @@ Everything else can be leaved as they are.
  *           or a system utterance in English that describes what the robot is doing.
  */
 
-export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] {
+export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] | null {
     var parses, interpretations, plans : string | ShrdliteResult[];
 
     try {
@@ -105,6 +105,7 @@ export function parseUtteranceIntoPlan(world : World, utterance : string) : stri
         return null;
     }
 
+    var finalPlan : string[] = [];
     if (plans.length > 1) {
         // PLACEHOLDER:
         // several plans were found -- how should this be handled?
@@ -113,9 +114,12 @@ export function parseUtteranceIntoPlan(world : World, utterance : string) : stri
         // ... throw new Error("Ambiguous utterance");
         // or should we select the interpretation with the shortest plan?
         // ... plans.sort((a, b) => {return a.length - b.length});
+        finalPlan = plans[0].plan;
+    } else {
+        // if only one plan was found, it's the one we return
+        finalPlan = plans[0].plan;
     }
-
-    var finalPlan : string[] = plans[0].plan;
+    
     // Print the final plan
     world.printDebugInfo("Final plan: " + finalPlan.join(", "));
     return finalPlan;
@@ -125,7 +129,7 @@ export function parseUtteranceIntoPlan(world : World, utterance : string) : stri
 // A convenience function that recognizes strings of the form "p r r d l p r d".
 // You don't have to change this function.
 
-export function splitStringIntoPlan(planstring : string) : string[] {
+export function splitStringIntoPlan(planstring : string) : string[] | null {
     var theplan : string[] = planstring.trim().split(/\s+/);
     var actions : {[act:string] : string}
         = {p:"Picking", d:"Dropping", l:"Going left", r:"Going right"};

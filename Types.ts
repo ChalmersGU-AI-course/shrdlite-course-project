@@ -13,8 +13,8 @@ export class ShrdliteResult {
     constructor(
         public input : string,
         public parse : Command,
-        public interpretation? : DNFFormula,
-        public plan? : string[],
+        public interpretation : DNFFormula,
+        public plan : string[],
     ) {}
 }
 

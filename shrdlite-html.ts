@@ -53,7 +53,7 @@ function interactiveLoop(world : World) : void {
         var inputPrompt = "What can I do for you today? ";
         var nextInput = () => world.readUserInput(inputPrompt, endlessLoop);
         if (utterance.trim()) {
-            var theplan : string[] = splitStringIntoPlan(utterance);
+            var theplan : string[] | null = splitStringIntoPlan(utterance);
             if (!theplan) {
                 theplan = parseUtteranceIntoPlan(world, utterance);
             }

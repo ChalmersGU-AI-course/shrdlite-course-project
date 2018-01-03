@@ -1,6 +1,6 @@
 
 import {WorldState} from "./World";
-import {Command, ShrdliteResult} from "./Types";
+import {Command, ShrdliteResult, DNFFormula} from "./Types";
 import {ParserRules, ParserStart} from "./Grammar";
 import * as nearley from "./lib/nearley";
 
@@ -23,7 +23,7 @@ You don't have to edit this file.
  *           If there's a parsing error, it returns a string with a description of the error.
  */
 
-export function parse(input:string) : string | ShrdliteResult[] {
+export function parse(input : string) : ShrdliteResult[] | string {
     var NearleyParser = (typeof window !== "undefined") ? window.nearley.Parser : nearley.Parser;
     // The grammar does not recognise uppercase, whitespace or punctuation,
     // so we make it lowercase and remove all whitespace and punctuation:
@@ -37,11 +37,16 @@ export function parse(input:string) : string | ShrdliteResult[] {
             throw err;
         }
     }
-    if (!results.length) {
+    if (results.length == 0) {
         return 'Parsing failed, incomplete input';
     }
     // We need to clone the Nearley parse result, because some parts can be shared with other parses
-    return results.map((res) => new ShrdliteResult(input, res.clone()));
+    return results.map((res) => new ShrdliteResult(
+        input,            // input string
+        res.clone(),      // parse result
+        new DNFFormula(), // interpretation (placeholder -- will be replaced by the Interpreter)
+        []                // plan (placeholder -- will be replaced by the Planner)
+    ));
 }
 
 

@@ -4,7 +4,7 @@
 .PHONY: help clean
 
 # Make TypeScript as strict as possible, and compile to UMD modules:
-TSC = tsc --module umd --alwaysStrict --noFallthroughCasesInSwitch --noImplicitReturns --noImplicitAny --noImplicitThis
+TSC = tsc --module umd --strict --noFallthroughCasesInSwitch --noImplicitReturns
 
 TSFILES = $(wildcard *.ts)
 

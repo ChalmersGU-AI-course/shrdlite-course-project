@@ -54,7 +54,7 @@ You should implement the function 'interpretCommand'.
  *           If there's an interpretation error, it returns a string with a description of the error.
  */
 
-export function interpret(parses : ShrdliteResult[], currentState : WorldState) : string | ShrdliteResult[] {
+export function interpret(parses : ShrdliteResult[], currentState : WorldState) : ShrdliteResult[] | string {
     var errors : string[] = [];
     var interpretations : ShrdliteResult[] = [];
     parses.forEach((result) => {
@@ -66,7 +66,7 @@ export function interpret(parses : ShrdliteResult[], currentState : WorldState) 
             interpretations.push(result);
         }
     });
-    if (interpretations.length) {
+    if (interpretations.length > 0) {
         return interpretations;
     } else {
         // merge all errors into one

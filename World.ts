@@ -14,11 +14,11 @@ You don't have to edit this file.
 // The strings themselves are identifiers, i.e. keys into the `objects` map.
 
 export interface WorldState {
-    stacks  : string[][]; // Where the objects are located in the world.
-    holding : string;     // Which object the robot is currently holding.
-    arm     : number;     // The column position of the robot arm.
+    stacks  : string[][];    // Where the objects are located in the world.
+    holding : string | null; // Which object the robot is currently holding.
+    arm     : number;        // The column position of the robot arm.
     objects : {[s:string]: SimpleObject}; // A mapping from object id's to object definitions
-    examples: string[];   // List of predefined example utterances that the user can choose from in the UI.
+    examples: string[];     // List of predefined example utterances that the user can choose from in the UI.
 }
 
 

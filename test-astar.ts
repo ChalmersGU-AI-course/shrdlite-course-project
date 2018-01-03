@@ -20,9 +20,9 @@ const AStarTimeout = 10; // This is the timeout used when calling the AStar func
 
 // This function chekcs that a solution path is correct, and returns its cost.
 
-function checkPath<Node>(graph: Graph<Node>, startnode: Node, path: Node[]) : number
+function checkPath<Node>(graph: Graph<Node>, startnode: Node, path: Node[]) : number | null
 {
-    function getNeighbor(node: Node, next: Node) : Edge<Node> {
+    function getNeighbor(node: Node, next: Node) : Edge<Node> | null {
         for (var edge of graph.outgoingEdges(node)) {
             if (graph.compareNodes(next, edge.to) == 0)
                 return edge;
@@ -36,7 +36,7 @@ function checkPath<Node>(graph: Graph<Node>, startnode: Node, path: Node[]) : nu
     var cost = 0;
     for (var i = 1; i < path.length; i++) {
         var edge = getNeighbor(path[i-1], path[i]);
-        if (!edge) return undefined;
+        if (!edge) return null;
         cost += edge.cost;
     }
     return cost;

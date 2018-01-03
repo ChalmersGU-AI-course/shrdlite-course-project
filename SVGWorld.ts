@@ -175,7 +175,7 @@ export class SVGWorld implements World {
         var performNextAction = () => {
             planctr++;
             if (plan && plan.length) {
-                var item = plan.shift().trim();
+                var item = (<string>plan.shift()) .trim();
                 var action = this.getAction(item);
                 if (action) {
                     try {
@@ -291,7 +291,7 @@ export class SVGWorld implements World {
         if (this.currentState.holding) {
             throw "Already holding something!";
         }
-        this.currentState.holding = this.currentState.stacks[this.currentState.arm].pop();
+        this.currentState.holding = <string> this.currentState.stacks[this.currentState.arm].pop();
         this.verticalMove('pick', callback);
     }
 
@@ -318,8 +318,10 @@ export class SVGWorld implements World {
 
     private verticalMove(action : string, callback? : () => void) : void {
         var altitude = this.getAltitude(this.currentState.arm);
-        var objectHeight = this.getObjectDimensions(this.currentState.holding).heightadd;
-        var yArm = this.canvasHeight - altitude - this.armSize * this.stackWidth() - objectHeight;
+        var yArm = this.canvasHeight - altitude - this.armSize * this.stackWidth();
+        if (this.currentState.holding) {
+            yArm -= this.getObjectDimensions(this.currentState.holding).heightadd;
+        }
         var yStack = -altitude;
         var xArm = this.currentState.arm * this.stackWidth() + this.wallSeparation;
 
@@ -349,7 +351,7 @@ export class SVGWorld implements World {
         var size = this.objectData[attrs.form][attrs.size];
         var width = size.width * (this.stackWidth() - this.boxSpacing());
         var height = size.height * (this.stackWidth() - this.boxSpacing());
-        var thickness = size.thickness * (this.stackWidth() - this.boxSpacing());
+        var thickness = (size.thickness || 0) * (this.stackWidth() - this.boxSpacing());
         var heightadd = attrs.form == 'box' ? thickness : height;
         return {
             width: width,
@@ -436,6 +438,8 @@ export class SVGWorld implements World {
                 points: points.join(" ")
             });
             break;
+        default: 
+            throw "Unknown form: " + attrs.form;
         }
         object.attr({
             id: objectid,

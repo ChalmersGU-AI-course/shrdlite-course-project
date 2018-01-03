@@ -51,15 +51,16 @@ for (var utter of utterances) {
     console.log("############################################################" +
                 "############################################################");
     console.log();
-    var theplan : string[] = splitStringIntoPlan(utter);
+    var theplan : string[] | null = splitStringIntoPlan(utter);
     if (!theplan) {
         theplan = parseUtteranceIntoPlan(world, utter);
     }
     if (!theplan) {
         console.error("ERROR: Couldn't find a plan for utterance '" + utter + "'")
         process.exit(1);
+    } else {
+        console.log();
+        world.performPlan(theplan);
+        world.printWorld();
     }
-    console.log();
-    world.performPlan(theplan);
-    world.printWorld();
 }

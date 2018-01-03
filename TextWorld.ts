@@ -90,8 +90,8 @@ export class TextWorld implements World {
         var world = this;
         function performNextAction() {
             planctr++;
-            if (plan && plan.length) {
-                var item = plan.shift().trim();
+            if (plan && plan.length > 0) {
+                var item = (<string>plan.shift()) .trim();
                 var action = world.getAction(item);
                 if (action) {
                     try {
@@ -147,7 +147,7 @@ export class TextWorld implements World {
         if (pos < 0) {
             throw "Stack is empty!";
         }
-        this.currentState.holding = this.currentState.stacks[stack].pop();
+        this.currentState.holding = <string> this.currentState.stacks[stack].pop();
         callback();
     }
 
