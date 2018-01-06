@@ -33,7 +33,7 @@ export var ParserRules:NearleyRule[] = [
     {"name": "entity", "symbols": ["quantifierPL", "objectPL"], "postprocess": (d) => new Entity(d[0], d[1])},
     {"name": "entity$string$1", "symbols": [{"literal":"t"}, {"literal":"h"}, {"literal":"e"}], "postprocess": (d) => d.join('')},
     {"name": "entity$string$2", "symbols": [{"literal":"f"}, {"literal":"l"}, {"literal":"o"}, {"literal":"o"}, {"literal":"r"}], "postprocess": (d) => d.join('')},
-    {"name": "entity", "symbols": ["entity$string$1", "entity$string$2"], "postprocess": (d) => new Entity("the", new SimpleObject("floor"))},
+    {"name": "entity", "symbols": ["entity$string$1", "entity$string$2"], "postprocess": (d) => new Entity("the", new SimpleObject("floor", null, null))},
     {"name": "objectSG$ebnf$1", "symbols": ["that_is"], "postprocess": id},
     {"name": "objectSG$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "objectSG", "symbols": ["objectSG", "objectSG$ebnf$1", "location"], "postprocess": (d) => new RelativeObject(d[0], d[2])},

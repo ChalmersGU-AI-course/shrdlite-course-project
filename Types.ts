@@ -91,8 +91,8 @@ export class RelativeObject {
 
 export class SimpleObject {
     constructor(public form : Form,
-                public size? : Size,
-                public color? : Color) {}
+                public size : Size | null,
+                public color : Color | null) {}
     toString() : string {return `SimpleObject(${this.form}, ${this.size}, ${this.color})`};
     clone() : SimpleObject {return new SimpleObject(this.form, this.size, this.color)};
 }

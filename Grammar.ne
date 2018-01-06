@@ -39,7 +39,7 @@ location --> relation entity  {% (d) => new Location(d[0], d[1]) %}
 
 entity --> quantifierSG objectSG  {% (d) => new Entity(d[0], d[1]) %}
 entity --> quantifierPL objectPL  {% (d) => new Entity(d[0], d[1]) %}
-entity --> "the" "floor"          {% (d) => new Entity("the", new SimpleObject("floor")) %}
+entity --> "the" "floor"          {% (d) => new Entity("the", new SimpleObject("floor", null, null)) %}
 
 objectSG --> objectSG that_is:?  location  {% (d) => new RelativeObject(d[0], d[2]) %}
 objectPL --> objectPL that_are:? location  {% (d) => new RelativeObject(d[0], d[2]) %}
