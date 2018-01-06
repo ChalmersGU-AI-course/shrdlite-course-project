@@ -4,11 +4,6 @@ import {WorldState} from "./World";
 import {
     ShrdliteResult,
     Command, TakeCommand, DropCommand, MoveCommand,
-    /*
-    // Here's an example of a new command
-    // Don't forget to add it to Grammar.ne and Types.ts
-    WhereisCommand,
-    */
     Location, Entity,
     Object, RelativeObject, SimpleObject,
     DNFFormula, Conjunction, Literal,
@@ -48,59 +43,141 @@ You should implement the function 'interpretCommand'.
  * You don't have to change this function.
  *
  * @param parses: List of parses produced by the Parser.
- * @param currentState: The current state of the world.
+ * @param world: The current state of the world.
  * @returns: List of interpretation results, which are the parse results augmented 
  *           with interpretations. Each interpretation is represented by a DNFFormula.
- *           If there's an interpretation error, it returns a string with a description of the error.
+ *           If there's an interpretation error, it throws an error with a string description.
  */
 
-export function interpret(parses : ShrdliteResult[], currentState : WorldState) : ShrdliteResult[] | string {
+export function interpret(parses : ShrdliteResult[], world : WorldState) : ShrdliteResult[] {
     var errors : string[] = [];
     var interpretations : ShrdliteResult[] = [];
-    parses.forEach((result) => {
-        var intp : string | DNFFormula = interpretCommand(result.parse, currentState);
-        if (typeof(intp) === "string") {
-            errors.push(intp);
-        } else {
-            result.interpretation = intp;
-            interpretations.push(result);
+    var interpreter : Interpreter = new Interpreter(world);
+    for (var result of parses) {
+        try {
+            var intp : DNFFormula = interpreter.interpretCommand(result.parse);
+        } catch(err) {
+            errors.push(err);
+            continue;
         }
-    });
-    if (interpretations.length > 0) {
-        return interpretations;
-    } else {
+        result.interpretation = intp;
+        interpretations.push(result);
+    };
+    if (interpretations.length == 0) {
         // merge all errors into one
-        return errors.join(" ; ");
+        throw errors.join(" ; ");
     }
+    return interpretations;
 }
 
 
-/* The core interpretation function. 
- * The code here is just a template; you should rewrite this function entirely. 
+/* The core interpretation class. 
+ * The code here are just templates; you should rewrite this class entirely. 
  * In this template, the code produces a dummy interpretation which is 
- * not connected to the input 'cmd'. Your version of the function should
+ * not connected to the input 'cmd'. Your version of the class should
  * analyse 'cmd' in order to figure out what interpretation to return.
- * 
- * Note that you should not change the API (type) of this function, only its body.
- *
- * @param cmd: An object of type 'Command'.
- * @param state: The current state of the world.
- * @returns: A DNFFormula representing the interpretation of the user's command.
- *           If there's an interpretation error, it returns a string with a description of the error.
  */
 
-function interpretCommand(cmd : Command, state : WorldState) : string | DNFFormula {
-    // This returns a dummy interpretation involving two random objects in the world
-    var objects : string[] = Array.prototype.concat.apply([], state.stacks);
-    var a : string = objects[Math.floor(Math.random() * objects.length)];
-    var b : string = objects[Math.floor(Math.random() * objects.length)];
-    var interpretation = new DNFFormula([
-        new Conjunction([
-            // ontop(a, floor) & holding(b)
-            new Literal("ontop", [a,"floor"], true),
-            new Literal("holding", [b], true),
-        ])
-    ]);
-    return interpretation;
+class Interpreter {
+    constructor(
+        private world : WorldState
+    ) {}
+
+    /* The main interpretation method.
+     * Note that you should not change the API (type) of this method, only its body.
+     * This method should call the mutually recursive methods 
+     * 'interpretEntity', 'interpretLocation' and 'interpretObject'
+     *
+     * @param cmd: An object of type 'Command'.
+     * @returns: A DNFFormula representing the interpretation of the user's command.
+     *           If there's an interpretation error, it throws an error with a string description.
+     */
+
+    public interpretCommand(cmd : Command) : CommandSemantics {
+        // This currently returns a dummy interpretation involving one or two random objects in the world.
+        // Instead it should call the other interpretation methods for
+        // each of its arguments (cmd.entity and/or cmd.location).
+        var interpretation : CommandSemantics;
+
+        var all_objects : string[] = Array.prototype.concat.apply([], this.world.stacks);
+        if (this.world.holding) {
+            all_objects.push(this.world.holding);
+        }
+
+        if (cmd instanceof MoveCommand) {
+            var a = all_objects[Math.floor(Math.random() * all_objects.length)];
+            var b = all_objects[Math.floor(Math.random() * all_objects.length)];
+            if (a == b) {
+                throw "Cannot put an object ontop of itself";
+            }
+            interpretation = new DNFFormula([
+                new Conjunction([ // ontop(a, b) & ontop(b, floor)
+                    new Literal("ontop", [a, b]),
+                    new Literal("ontop", [b, "floor"])
+                ])
+            ]);
+        }
+
+        else if (cmd instanceof TakeCommand) {
+            var a = all_objects[Math.floor(Math.random() * all_objects.length)];
+            interpretation = new DNFFormula([
+                new Conjunction([ // holding(a)
+                    new Literal("holding", [a])
+                ])
+            ]);
+        }
+
+        else if (cmd instanceof DropCommand) {
+            if (!this.world.holding) {
+                throw "I'm not holding anything";
+            }
+            var a = this.world.holding;
+            var b = all_objects[Math.floor(Math.random() * all_objects.length)];
+            if (a == b) {
+                throw "Cannot put an object ontop of itself";
+            }
+            interpretation = new DNFFormula([
+                new Conjunction([ // ontop(a, b)
+                    new Literal("ontop", [a, b])
+                ])
+            ]);
+        }
+
+        else {
+            throw "Unknown command";
+        }
+
+        return interpretation;
+    }
+
+    interpretEntity(ent : Entity) : EntitySemantics {
+        throw "Not implemented";
+    }
+
+    interpretLocation(loc : Location) : LocationSemantics {
+        throw "Not implemented";
+    }
+
+    interpretObject(obj : Object) : ObjectSemantics {
+        throw "Not implemented";
+    }
+
 }
+
+
+//////////////////////////////////////////////////////////////////////
+// These are suggestions for semantic representations 
+// of the different parse result classes.
+
+// This is the main interpretation result, a DNF formula
+type CommandSemantics  = DNFFormula
+
+// The semantics of an object description is a collection of
+// the objects that match the description
+type ObjectSemantics   = string[]
+
+// The semantics of an Entity or a Location is just a wrapper
+// around the semantics of its children
+type EntitySemantics   = {quantifier : string; object : ObjectSemantics}
+type LocationSemantics = {relation : string; entity : EntitySemantics}
 

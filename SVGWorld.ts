@@ -348,7 +348,7 @@ export class SVGWorld implements World {
 
     private getObjectDimensions(objectid : string) {
         var attrs = this.currentState.objects[objectid];
-        var size = this.objectData[attrs.form][attrs.size];
+        var size = this.objectData[attrs.form][<string>attrs.size];
         var width = size.width * (this.stackWidth() - this.boxSpacing());
         var height = size.height * (this.stackWidth() - this.boxSpacing());
         var thickness = (size.thickness || 0) * (this.stackWidth() - this.boxSpacing());

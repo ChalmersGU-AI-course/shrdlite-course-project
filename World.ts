@@ -5,7 +5,7 @@ import {SimpleObject} from "./Types";
 ** World
 
 Interface definitions for worlds.
-You don't have to edit this file.
+You don't have to edit this file (unless you do some radical changes to the world).
 ********************************************************************************/
 
 
@@ -15,10 +15,10 @@ You don't have to edit this file.
 
 export interface WorldState {
     stacks  : string[][];    // Where the objects are located in the world.
-    holding : string | null; // Which object the robot is currently holding.
+    holding : string | null; // Which object the robot is currently holding, or null if not holding anything.
     arm     : number;        // The column position of the robot arm.
-    objects : {[s:string]: SimpleObject}; // A mapping from object id's to object definitions
     examples: string[];     // List of predefined example utterances that the user can choose from in the UI.
+    objects : {[s:string]: SimpleObject}; // A mapping from object id's to object definitions
 }
 
 

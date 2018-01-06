@@ -1,6 +1,7 @@
 ///<reference path="lib/node.d.ts"/>
 
-import {Edge, Graph, SearchResult, aStarSearch} from "./Graph";
+import {Successor, Graph, SearchResult} from "./Graph";
+import {aStarSearch} from "./AStarSearch";
 import {Coordinate, GridNode, GridGraph} from "./GridGraph";
 import {TestCase, testCases} from "./AStarTestCases";
 
@@ -20,24 +21,26 @@ const AStarTimeout = 10; // This is the timeout used when calling the AStar func
 
 // This function chekcs that a solution path is correct, and returns its cost.
 
-function checkPath<Node>(graph: Graph<Node>, startnode: Node, path: Node[]) : number | null
+function checkPath<Node>(graph: Graph<Node>, startnode: Node, path: Successor<Node>[]) : number | null
 {
-    function getNeighbor(node: Node, next: Node) : Edge<Node> | null {
-        for (var edge of graph.outgoingEdges(node)) {
-            if (graph.compareNodes(next, edge.to) == 0)
-                return edge;
+    function getNeighbor(node: Node, next: Node) : Successor<Node> | null {
+        for (var suc of graph.successors(node)) {
+            if (graph.compareNodes(next, suc.child) == 0)
+                return suc;
         }
         return null;
     }
     if (path.length == 0)
         return null;
-    if (graph.compareNodes(path[0], startnode) !== 0)
-        path = [startnode].concat(path);
+    // if (graph.compareNodes(path[0], startnode) !== 0)
+    //     path = [startnode].concat(path);
     var cost = 0;
-    for (var i = 1; i < path.length; i++) {
-        var edge = getNeighbor(path[i-1], path[i]);
-        if (!edge) return null;
-        cost += edge.cost;
+    var node = startnode;
+    for (var i = 0; i < path.length; i++) {
+        var suc = getNeighbor(node, path[i].child);
+        if (!suc) return null;
+        node = path[i].child;
+        cost += suc.cost;
     }
     return cost;
 }
@@ -57,7 +60,18 @@ function runTest(testcase: TestCase, useHeuristics: boolean) : TestResult {
     var graph = new GridGraph(testcase.xsize, testcase.ysize, testcase.walls);
     var startnode = new GridNode(0, 0);
     var goalnode = new GridNode(graph.xsize-1, graph.ysize-1);
-    var goalpath = testcase.path.map(([x,y]) => new GridNode(x,y));
+    var goalpath : Successor<GridNode>[] = [];
+    var n = startnode;
+    for (var p = 0; p < testcase.path.length; p++) {
+        var [x,y] = testcase.path[p];
+        var a = (x > n.x ? "R" :
+                 x < n.x ? "L" :
+                 y > n.y ? "U" :
+                 y < n.y ? "D" :
+                 "+");
+        n = new GridNode(x,y);
+        goalpath.push({action: a, child: n, cost: 1});
+    }
     var isgoal = (n: GridNode) => graph.compareNodes(n, goalnode) == 0;
     var heuristicsCtr : number;
     function manhattanHeuristics(n: GridNode) : number {
@@ -67,11 +81,13 @@ function runTest(testcase: TestCase, useHeuristics: boolean) : TestResult {
     var noHeuristics = (n: GridNode) => 0;
     var h = useHeuristics ? manhattanHeuristics : noHeuristics;
 
-    function showResultPath(pathtitle : string, path : GridNode[]) {
-        if (path.length > 30) {
-            console.log(pathtitle, path.slice(0,25).join(" ") + " ... " + path[path.length-1]);
+    function showResultPath(pathtitle : string, path : Successor<GridNode>[]) {
+        if (path.length > 150) {
+            console.log(pathtitle, path.slice(0,145).map((suc) => suc.action).join("") + "..." + path[path.length-1].action);
+        } else if (path.length > 30) {
+            console.log(pathtitle, path.map((suc) => suc.action).join(""));
         } else {
-            console.log(pathtitle, path.join(" "));
+            console.log(pathtitle, path.map((suc) => suc.action+suc.child).join(" "));
         }
         if (graph.xsize > 30 || graph.ysize > 30) {
             console.log("Grid is too large to show!");
@@ -84,14 +100,15 @@ function runTest(testcase: TestCase, useHeuristics: boolean) : TestResult {
     var startTime = Date.now();
     var result : SearchResult<GridNode> = aStarSearch(graph, startnode, isgoal, h, AStarTimeout);
     var returnvalue : TestResult =
-        {failed:1, time:Date.now()-startTime, nodes:result.frontier+result.visited, calls:heuristicsCtr};
-    if (!result.path) {
-        console.log((result.timeout ? "Timeout! " : "Test failed! ") +
+        {failed:1, time:Date.now()-startTime, nodes:result.visited, calls:heuristicsCtr};
+    if (result.status !== 'success') {
+        console.log((result.status === 'timeout' ? "Timeout! " : "Test failed! ") +
                     "No path found from " + startnode + " to " + goalnode + "!");
-        console.log("Expected cost:", testcase.cost);
-        showResultPath("Expected path:", goalpath);
+        console.log("Expect cost:", testcase.cost);
+        showResultPath("Expect path:", goalpath);
         return returnvalue;
     }
+    var resultpath = [startnode].concat(result.path.map((suc) => suc.child));
     var cost = checkPath(graph, startnode, result.path);
     if (!cost) {
         console.log("The result is not a correct path!");
@@ -104,7 +121,7 @@ function runTest(testcase: TestCase, useHeuristics: boolean) : TestResult {
         showResultPath("Result path:", result.path);
         return returnvalue;
     }
-    if (!isgoal(result.path[result.path.length-1])) {
+    if (!isgoal(result.path[result.path.length-1].child)) {
         console.log("The result is not a path to the goal!");
         showResultPath("Result path:", result.path);
         return returnvalue;
@@ -113,8 +130,8 @@ function runTest(testcase: TestCase, useHeuristics: boolean) : TestResult {
         console.log("The result is not a path of optimal length from " + startnode + " to " + goalnode + "!");
         console.log("Result cost:", result.cost);
         showResultPath("Result path:", result.path);
-        console.log("Expected cost:", testcase.cost);
-        showResultPath("Expected path:", goalpath);
+        console.log("Expect cost:", testcase.cost);
+        showResultPath("Expect path:", goalpath);
         return returnvalue;
     }
     if (result.visited < result.path.length) {
@@ -169,14 +186,21 @@ function runAllTests(argv : string[]) : void {
         console.log();
 
         if (result[noHeuristics] && result[manhattan]) {
-            var faster = Math.round(100.0 * (result[noHeuristics].time - result[manhattan].time) / result[noHeuristics].time);
-            var lessNodes = Math.round(100.0 * (result[noHeuristics].nodes - result[manhattan].nodes) / result[noHeuristics].nodes);
-            var lessCalls = Math.round(100.0 * (result[manhattan].nodes - result[manhattan].calls) / result[manhattan].nodes);
-            console.log(manhattan + ":  " +
-                        Math.abs(faster) + (faster >= 0 ? "% faster" : "% SLOWER") + ",  " +
-                        "creates " + Math.abs(lessNodes) + (lessNodes >= 0 ? "% less" : "% MORE") + " nodes,  " +
-                        "heuristic is called " + Math.abs(lessCalls) + (lessCalls >= 0 ? "% less" : "% MORE") +
-                        " than the number of nodes created"
+            var timesQ = result[manhattan].time  / result[noHeuristics].time;
+            var nodesQ = result[manhattan].nodes / result[noHeuristics].nodes;
+            var callsQ = result[manhattan].calls / result[manhattan].nodes;
+            console.log("Summary:  " + manhattan + " is " +
+                        (timesQ < 0.9 ? Math.round(10/timesQ)/10 + "x faster than " :
+                         timesQ > 1.1 ? Math.round(10*timesQ)/10 + "x SLOWER than " :
+                         "about as slow as ") + noHeuristics +
+                        ".  " + manhattan + " creates " +
+                        (nodesQ < 0.9 ? Math.round(10/nodesQ)/10 + "x less nodes than " :
+                         nodesQ > 1.1 ? Math.round(10*nodesQ)/10 + "x MORE nodes than " :
+                         "about the same number of nodes as ") + noHeuristics +
+                        ".  " + manhattan + " heuristic is called " + 
+                        (callsQ < 0.9 ? Math.round(10/callsQ)/10 + "x less than" :
+                         callsQ > 1.1 ? Math.round(10*callsQ)/10 + "x more than" : "about as often as") +
+                        " the number of nodes created."
                        );
             console.log();
         }
@@ -194,30 +218,38 @@ function runAllTests(argv : string[]) : void {
     console.log();
 
     if (total[noHeuristics] && total[manhattan]) {
-        var faster = Math.round(100.0 * (total[noHeuristics].time - total[manhattan].time) / total[noHeuristics].time);
-        var lessNodes = Math.round(100.0 * (total[noHeuristics].nodes - total[manhattan].nodes) / total[noHeuristics].nodes);
-        var lessCalls = Math.round(100.0 * (total[manhattan].nodes - total[manhattan].calls) / total[manhattan].nodes);
-        console.log(manhattan + ":  " +
-                    Math.abs(faster) + (faster >= 0 ? "% faster" : "% SLOWER") + ",  " +
-                    "creates " + Math.abs(lessNodes) + (lessNodes >= 0 ? "% less" : "% MORE") + " nodes,  " +
-                    "heuristic is called " + Math.abs(lessCalls) + (lessCalls >= 0 ? "% less" : "% MORE") +
-                    " than the number of nodes created"
-                   );
+        var timesQ = total[manhattan].time  / total[noHeuristics].time;
+        var nodesQ = total[manhattan].nodes / total[noHeuristics].nodes;
+        var callsQ = total[manhattan].calls / total[manhattan].nodes;
+        console.log(manhattan + " is " +
+                    (timesQ < 0.9 ? Math.round(10/timesQ)/10 + "x faster than " :
+                     timesQ > 1.1 ? Math.round(10*timesQ)/10 + "x SLOWER than " :
+                     "about as slow as ") + noHeuristics);
+        console.log(manhattan + " creates " +
+                    (nodesQ < 0.9 ? Math.round(10/nodesQ)/10 + "x less nodes than " :
+                     nodesQ > 1.1 ? Math.round(10*nodesQ)/10 + "x MORE nodes than " :
+                     "about the same number of nodes as ") + noHeuristics);
+        console.log(manhattan + " heuristic is called " + 
+                    (callsQ < 0.9 ? Math.round(10/callsQ)/10 + "x less than" :
+                     callsQ > 1.1 ? Math.round(10*callsQ)/10 + "x more than" : "about as often as") +
+                    " the number of nodes created.");
         console.log();
 
         if (total[manhattan].failed || total[noHeuristics].failed) {
             console.log("==>  PROBLEM: A* does not find the optimal path in all cases");
         }
-        if (faster < 0) {
-            console.log("==>  PROBLEM: Manhattan is " + (-faster) + "% slower");
-        } else if (faster < 15) {
-            console.log("==>  PROBLEM: Manhattan is only " + faster + "% faster");
+        if (timesQ > 1.1) {
+            console.log("==>  PROBLEM: " + manhattan + " is " + Math.round(10*timesQ)/10 + "x slower than " + noHeuristics);
+        } else if (timesQ >= 0.9) {
+            console.log("==>  PROBLEM: " + manhattan + " is not significantly faster than " + noHeuristics);
         }
-        if (lessNodes < 0) {
-            console.log("==>  PROBLEM: Manhattan creates " + (-lessNodes) + "% more nodes");
+        if (nodesQ > 1.1) {
+            console.log("==>  PROBLEM: " + manhattan + " creates " + Math.round(10*nodesQ)/10 + "x more nodes than " + noHeuristics);
+        } else if (nodesQ >= 0.9) {
+            console.log("==>  PROBLEM: " + manhattan + " does not create significantly less nodes than " + noHeuristics);
         }
-        if (lessCalls < 0) {
-            console.log("==>  PROBLEM: The heuristic function is called " + (-lessCalls) + "% more than the number of nodes created");
+        if (callsQ > 1.5) {
+            console.log("==>  PROBLEM: The " + manhattan + " heuristic function is called " + Math.round(10*callsQ)/10 + "x more than the number of nodes created");
         }
         console.log();
     }

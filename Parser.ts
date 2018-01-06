@@ -20,25 +20,26 @@ You don't have to edit this file.
  *
  * @param input: A string with the input from the user.
  * @returns: A list of parse results, each containing an object of type 'Command'.
- *           If there's a parsing error, it returns a string with a description of the error.
+ *           If there's a parsing error, it throws an error with a string description.
  */
 
-export function parse(input : string) : ShrdliteResult[] | string {
+export function parse(input : string) : ShrdliteResult[] {
     var NearleyParser = (typeof window !== "undefined") ? window.nearley.Parser : nearley.Parser;
+    var the_parser = new NearleyParser(ParserRules, ParserStart);
     // The grammar does not recognise uppercase, whitespace or punctuation,
     // so we make it lowercase and remove all whitespace and punctuation:
     var parsestr = input.toLowerCase().replace(/\W/g, "");
     try {
-        var results : Command[] = new NearleyParser(ParserRules, ParserStart).feed(parsestr).results;
+        var results : Command[] = the_parser.feed(parsestr).results;
     } catch(err) {
         if ('offset' in err) {
-            return `Parsing failed after ${err.offset} characters`;
+            throw `Parsing failed after ${err.offset} characters`;
         } else {
             throw err;
         }
     }
     if (results.length == 0) {
-        return 'Parsing failed, incomplete input';
+        throw 'Parsing failed, incomplete input';
     }
     // We need to clone the Nearley parse result, because some parts can be shared with other parses
     return results.map((res) => new ShrdliteResult(

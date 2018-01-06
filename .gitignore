@@ -4,6 +4,7 @@ test-*.js
 Grammar.js
 Graph.js
 GridGraph.js
+AStarSearch.js
 Types.js
 World.js
 ExampleWorlds.js

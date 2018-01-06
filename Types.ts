@@ -2,8 +2,7 @@
 /********************************************************************************
 ** Types
 
-This module contains type and class declarations for parse results 
-and interpretations.
+This module contains type and class declarations for parse results and interpretations.
 
 You don't have to edit this file (unless you add things to the grammar).
 ********************************************************************************/
@@ -41,14 +40,14 @@ export class TakeCommand {
 }
 
 export class DropCommand {
-    constructor(public location:Location) {}
+    constructor(public location : Location) {}
     toString() : string {return `DropCommand(${this.location.toString()})`};
     clone() : DropCommand {return new DropCommand(this.location.clone())};
 }
 
 export class MoveCommand {
-    constructor(public entity:Entity,
-                public location:Location) {}
+    constructor(public entity : Entity,
+                public location : Location) {}
     toString() : string {return `MoveCommand(${this.entity.toString()}, ${this.location.toString()})`};
     clone() : MoveCommand {return new MoveCommand(this.entity.clone(), this.location.clone())};
 }
@@ -66,16 +65,16 @@ export class WhereisCommand {
 
 
 export class Location {
-    constructor(public relation:string,
-                public entity:Entity) {}
+    constructor(public relation : string,
+                public entity : Entity) {}
     toString() : string {return `Location(${this.relation}, ${this.entity.toString()})`}
     clone() : Location {return new Location(this.relation, this.entity.clone())};
 }
 
 
 export class Entity {
-    constructor(public quantifier:string,
-                public object:Object) {}
+    constructor(public quantifier : string,
+                public object : Object) {}
     toString() : string {return `Entity(${this.quantifier}, ${this.object.toString()})`};
     clone() : Entity {return new Entity(this.quantifier, this.object.clone())};
 }
@@ -84,23 +83,23 @@ export class Entity {
 export type Object = RelativeObject | SimpleObject;
 
 export class RelativeObject {
-    constructor(public object:Object,
-                public location:Location) {}
+    constructor(public object : Object,
+                public location : Location) {}
     toString() : string {return `RelativeObject(${this.object.toString()}, ${this.location.toString()})`};
     clone() : RelativeObject {return new RelativeObject(this.object.clone(), this.location.clone())};
 }
 
 export class SimpleObject {
-    constructor(public size:Size,
-                public color:Color,
-                public form:Form) {}
-    toString() : string {return `SimpleObject(${this.size}, ${this.color}, ${this.form})`};
-    clone() : SimpleObject {return new SimpleObject(this.size, this.color, this.form)};
+    constructor(public form : Form,
+                public size? : Size,
+                public color? : Color) {}
+    toString() : string {return `SimpleObject(${this.form}, ${this.size}, ${this.color})`};
+    clone() : SimpleObject {return new SimpleObject(this.form, this.size, this.color)};
 }
 
-type Size = "small" | "large";
-type Color = "red" | "black" | "blue" | "green" | "yellow" | "white";
-type Form = "anyform" | "brick" | "plank" | "ball" | "pyramid" | "box" | "table";
+export type Size = "small" | "large";
+export type Color = "red" | "black" | "blue" | "green" | "yellow" | "white";
+export type Form = "anyform" | "brick" | "plank" | "ball" | "pyramid" | "box" | "table" | "floor";
 
 
 //////////////////////////////////////////////////////////////////////

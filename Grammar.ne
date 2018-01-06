@@ -39,13 +39,13 @@ location --> relation entity  {% (d) => new Location(d[0], d[1]) %}
 
 entity --> quantifierSG objectSG  {% (d) => new Entity(d[0], d[1]) %}
 entity --> quantifierPL objectPL  {% (d) => new Entity(d[0], d[1]) %}
+entity --> "the" "floor"          {% (d) => new Entity("the", new SimpleObject("floor")) %}
 
 objectSG --> objectSG that_is:?  location  {% (d) => new RelativeObject(d[0], d[2]) %}
 objectPL --> objectPL that_are:? location  {% (d) => new RelativeObject(d[0], d[2]) %}
 
-objectSG --> size:? color:? formSG  {% (d) => new SimpleObject(d[0], d[1], d[2]) %}
-objectPL --> size:? color:? formPL  {% (d) => new SimpleObject(d[0], d[1], d[2]) %}
-
+objectSG --> size:? color:? formSG  {% (d) => new SimpleObject(d[2], d[0], d[1]) %}
+objectPL --> size:? color:? formPL  {% (d) => new SimpleObject(d[2], d[0], d[1]) %}
 
 ## Lexical rules
 
@@ -84,7 +84,6 @@ form --> "plank"    {% (d) => "plank" %}
 form --> "ball"     {% (d) => "ball" %}
 form --> "pyramid"  {% (d) => "pyramid" %}
 form --> "table"    {% (d) => "table" %}
-form --> "floor"    {% (d) => "floor" %}
 
 
 ## Lexicon (without semantic content)

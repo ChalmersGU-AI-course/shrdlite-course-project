@@ -1,6 +1,7 @@
 
 import {WorldState} from "./World";
-import {Edge, Graph, SearchResult, aStarSearch} from "./Graph";
+import {Successor, Graph, SearchResult} from "./Graph";
+import {aStarSearch} from "./AStarSearch";
 import {ShrdliteResult, DNFFormula, Literal} from "./Types";
 
 /********************************************************************************
@@ -23,90 +24,163 @@ The planner should use your A* search implementation to find a plan.
  * You don't have to change this function.
  *
  * @param interpretations: List of possible interpretations.
- * @param currentState: The current state of the world.
+ * @param world: The current state of the world.
  * @returns: List of planner results, which are the interpretation results augmented with plans. 
  *           Each plan is represented by a list of strings.
- *           If there's a planning error, it returns a string with a description of the error.
+ *           If there's a planning error, it throws an error with a string description.
  */
 
-export function plan(interpretations : ShrdliteResult[], currentState : WorldState) : ShrdliteResult[] | string {
+export function plan(interpretations : ShrdliteResult[], world : WorldState) : ShrdliteResult[] {
     var errors : string[] = [];
     var plans : ShrdliteResult[] = [];
-    interpretations.forEach((result) => {
-        var theplan : string | string[] = makePlan(result.interpretation, currentState);
-        if (typeof(theplan) === "string") {
-            errors.push(theplan);
-        } else {
-            result.plan = theplan;
-            if (result.plan.length == 0) {
-                result.plan.push("That is already true!");
-            }
-            plans.push(result);
+    var planner : Planner = new Planner(world);
+    for (var result of interpretations) {
+        try {
+            var theplan : string[] = planner.makePlan(result.interpretation);
+        } catch(err) {
+            errors.push(err);
+            continue;
         }
-    });
-    if (plans.length > 0) {
-        return plans;
-    } else {
-        // merge all errors into one
-        return errors.join(" ; ");
+        result.plan = theplan;
+        if (result.plan.length == 0) {
+            result.plan.push("The interpretation is already true!");
+        }
+        plans.push(result);
     }
+    if (plans.length == 0) {
+        // merge all errors into one
+        throw errors.join(" ; ");
+    }
+    return plans;
 }
 
-/* The core planner function. 
- * The code here is just a template; you should rewrite this function entirely. 
+
+/* The core planner class. 
+ * The code here are just templates; you should rewrite this class entirely. 
  * In this template, the code produces a dummy plan which is not connected 
- * to the argument 'interpretation'. Your version of the function should
+ * to the argument 'interpretation'. Your version of the class should
  * analyse 'interpretation' in order to figure out what plan to return.
- *
- * @param interpretation: The logical interpretation of the user's desired goal. 
- * @param state: The current world state.
- * @returns: A plan, represented by a list of strings.
- *           If there's a planning error, it returns a string with a description of the error.
  */
 
-function makePlan(interpretation : DNFFormula, state : WorldState) : string | string[] {
-    // Select a random nonempty stack
-    do {
-        var pickstack = Math.floor(Math.random() * state.stacks.length);
-    } while (state.stacks[pickstack].length == 0);
-    var plan : string[] = [];
+class Planner {
+    constructor(
+        private world : WorldState
+    ) {}
 
-    // First move the arm to the selected stack
-    if (pickstack < state.arm) {
-        plan.push("Moving left");
-        for (var i = state.arm; i > pickstack; i--) {
-            plan.push("l");
+    /* The core planner method. 
+     * Note that you should not change the API (type) of this method, only its body.
+     * This method should call the A* search implementation with 
+     * your implementation of the ShrdliteGraph.
+     *
+     * @param interpretation: The logical interpretation of the user's desired goal. 
+     * @returns: A plan, represented by a list of strings.
+     *           If there's a planning error, it throws an error with a string description.
+     */
+
+    makePlan(interpretation : DNFFormula) : string[] {
+        // This currently returns a dummy plan which picks up a random object
+        // and moves it around before dropping it down.
+        var state = this.world;
+        var plan : string[] = [];
+
+        // Select a random nonempty stack
+        do {
+            var pickstack = Math.floor(Math.random() * state.stacks.length);
+        } while (state.stacks[pickstack].length == 0);
+
+        // First move the arm to the selected stack
+        if (pickstack < state.arm) {
+            plan.push("Moving left to stack " + pickstack);
+            for (var i = state.arm; i > pickstack; i--) {
+                plan.push("l");
+            }
+        } else if (pickstack > state.arm) {
+            plan.push("Moving right to stack " + pickstack);
+            for (var i = state.arm; i < pickstack; i++) {
+                plan.push("r");
+            }
         }
-    } else if (pickstack > state.arm) {
-        plan.push("Moving right");
-        for (var i = state.arm; i < pickstack; i++) {
-            plan.push("r");
+
+        // Then pick up the topmost object in the selected stack
+        var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
+        plan.push("Picking up the " + state.objects[obj].form,
+                  "p");
+
+        if (pickstack > 0) {
+            // Then move the arm to the leftmost stack
+            plan.push("Moving as far left as possible");
+            for (var i = pickstack; i > 0; i--) {
+                plan.push("l");
+            }
         }
+
+        // Select a random destination stack (either empty or the original pickup stack)
+        do {
+            var dropstack = Math.floor(Math.random() * state.stacks.length);
+        } while (!(state.stacks[dropstack].length == 0 || dropstack == pickstack));
+
+        if (dropstack > 0) {
+            // Then move the arm to the destination stack
+            plan.push("Moving right to the destination stack " + dropstack);
+            for (var i = 0; i < dropstack; i++) {
+                plan.push("r");
+            }
+        }
+
+        // Finally put the object down again
+        plan.push("Dropping the " + state.objects[obj].form,
+                  "d");
+
+        return plan;
     }
 
-    // Then pick up the topmost object in the selected stack
-    var obj = state.stacks[pickstack][state.stacks[pickstack].length-1];
-    plan.push("Picking up the " + state.objects[obj].form,
-              "p");
-
-    if (pickstack < state.stacks.length-1) {
-        // Then move the arm to the rightmost stack
-        plan.push("Moving as far right as possible");
-        for (var i = pickstack; i < state.stacks.length-1; i++) {
-            plan.push("r");
-        }
-
-        // Then move back to the original stack
-        plan.push("Moving back");
-        for (var i = state.stacks.length-1; i > pickstack; i--) {
-            plan.push("l");
-        }
-    }
-
-    // Finally put the object down again
-    plan.push("Dropping the " + state.objects[obj].form,
-              "d");
-
-    return plan;
 }
 
+
+//////////////////////////////////////////////////////////////////////
+// A* search nodes, to be implemented and cleaned
+
+class ShrdliteNode {
+    constructor(
+        public first_field : number,
+        public second_field : string,
+        public another_field : Literal // Note: you probably don't want any Literal here...
+    ) {
+        this.id = "TO BE IMPLEMENTED FROM THE FIELDS";
+    }
+
+    // These are for making the nodes possible to compare efficiently:
+    public id : string;
+    public toString() : string {
+        return this.id;
+    }
+    public compareTo(other : ShrdliteNode) {
+        return this.id.localeCompare(other.id);
+    }
+
+    // Possibly some additional private fields or methods:
+    private private_field : string;
+    private privateMethod(argument : string) : number {
+        throw "Not implemented";
+    }
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// A* search graph, to be implemented and cleaned
+
+class ShrdliteGraph implements Graph<ShrdliteNode> {
+    successors(current : ShrdliteNode) : Successor<ShrdliteNode>[] {
+        throw "Not implemented";
+    }
+
+    compareNodes(a : ShrdliteNode, b : ShrdliteNode) : number {
+        return a.compareTo(b);
+    }
+
+    // Possibly some additional private fields or methods:
+    private private_field : string;
+    private privateMethod(argument : string) : number {
+        throw "Not implemented";
+    }
+}

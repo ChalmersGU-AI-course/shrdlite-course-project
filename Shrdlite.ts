@@ -11,8 +11,9 @@ import {plan} from "./Planner";
 This module contains toplevel functions for the interaction loop, and
 the pipeline that calls the parser, the interpreter and the planner.
 
-You should do some minor changes to the function 'parseUtteranceIntoPlan'.
-Everything else can be leaved as they are.
+You should do some minor changes to the function 'parseUtteranceIntoPlan', 
+look for PLACEHOLDER below.
+Everything else can be left as they are.
 ********************************************************************************/
 
 
@@ -45,82 +46,69 @@ Everything else can be leaved as they are.
 export function parseUtteranceIntoPlan(world : World, utterance : string) : string[] | null {
     var parses, interpretations, plans : string | ShrdliteResult[];
 
+    // Call the parser with the utterance, and then log the parse results
+    world.printDebugInfo(`Parsing utterance: "${utterance}"`);
     try {
-        // Call the parser with the utterance
-        world.printDebugInfo(`Parsing utterance: "${utterance}"`);
         parses = parse(utterance);
-        if (typeof(parses) === "string") {
-            world.printError("[Parsing failure]", parses);
-            return null;
-        }
-        // Print the parse results
-        world.printDebugInfo(`Found ${parses.length} parses`);
-        parses.forEach((result, n) => {
-            world.printDebugInfo(`  (${n}) ${result.parse.toString()}`);
-        });
     } catch(err) {
-        world.printError("[ERROR during parsing] This should not happen", err);
+        world.printError("[Parsing failure]", err);
         return null;
     }
+    world.printDebugInfo(`Found ${parses.length} parses`);
+    parses.forEach((result, n) => {
+        world.printDebugInfo(`  (${n}) ${result.parse.toString()}`);
+    });
 
+    // Call the interpreter for all parses, and then log the interpretations
     try {
-        // Call the interpreter for all parses
         interpretations = interpret(parses, world.currentState);
-        if (typeof(interpretations) === "string") {
-            world.printError("[Interpretation failure]", interpretations);
-            return null;
-        }
-        // Print the interpretations
-        world.printDebugInfo(`Found ${interpretations.length} interpretations`);
-        interpretations.forEach((result, n) => {
-            world.printDebugInfo(`  (${n}) ${result.interpretation.toString()}`);
-        });
     } catch(err) {
-        world.printError("[ERROR during interpretation] This should not happen", err);
+        world.printError("[Interpretation failure]", err);
         return null;
     }
+    world.printDebugInfo(`Found ${interpretations.length} interpretations`);
+    interpretations.forEach((result, n) => {
+        world.printDebugInfo(`  (${n}) ${result.interpretation.toString()}`);
+    });
 
     if (interpretations.length > 1) {
         // PLACEHOLDER:
         // several interpretations were found -- how should this be handled?
         // should we throw an ambiguity error?
         // ... throw new Error("Ambiguous utterance");
-        // or should we let the planner decide?
+        // or should we ask the user?
+        // or should we defer the decision until after the planner (below)?
     }
 
+    // Call the planner for all interpretations, and then log the resulting plans
     try {
-        // Call the planner for all interpretations
         plans = plan(interpretations, world.currentState);
-        if (typeof(plans) === "string") {
-            world.printError("[Planning failure] This should not happen", plans);
-            return null;
-        }
-        // Print the resulting plans
-        world.printDebugInfo(`Found ${plans.length} plans`);
-        plans.forEach((result, n) => {
-            world.printDebugInfo(`  (${n}) ${result.plan.toString()}`);
-        });
     } catch(err) {
-        world.printError("[ERROR during planning]", err);
+        world.printError("[Planning failure]", err);
         return null;
     }
+    world.printDebugInfo(`Found ${plans.length} plans`);
+    plans.forEach((result, n) => {
+        world.printDebugInfo(`  (${n}) ${result.plan.toString()}`);
+    });
 
     var finalPlan : string[] = [];
-    if (plans.length > 1) {
-        // PLACEHOLDER:
-        // several plans were found -- how should this be handled?
-        // this means that we have several interpretations,
-        // should we throw an ambiguity error?
-        // ... throw new Error("Ambiguous utterance");
-        // or should we select the interpretation with the shortest plan?
-        // ... plans.sort((a, b) => {return a.length - b.length});
-        finalPlan = plans[0].plan;
-    } else {
+    if (plans.length == 1) {
         // if only one plan was found, it's the one we return
         finalPlan = plans[0].plan;
+    } else {
+        // PLACEHOLDER:
+        // several plans were found -- how should this be handled?
+        // this means that we have several interpretations and one plan for each of them,
+        // should we throw an ambiguity error?
+        // ... throw new Error("Ambiguous utterance");
+        // or should we ask the user?
+        // or should we select the interpretation with the shortest plan?
+        plans.sort((a, b) => a.plan.length - b.plan.length);
+        finalPlan = plans[0].plan;
     }
-    
-    // Print the final plan
+
+    // Log the final plan, and return it
     world.printDebugInfo("Final plan: " + finalPlan.join(", "));
     return finalPlan;
 }

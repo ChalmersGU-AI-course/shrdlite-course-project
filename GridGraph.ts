@@ -1,5 +1,5 @@
 
-import {Edge, Graph} from "./Graph";
+import {Successor, Graph} from "./Graph";
 import Set from "./lib/typescript-collections/src/lib/Set";
 
 /********************************************************************************
@@ -23,8 +23,8 @@ export class GridNode {
         public y : number
     ) {}
 
-    add(dx : number, dy : number) : GridNode {
-        return new GridNode(this.x + dx, this.y + dy);
+    neighbor(delta : [number, number]) : GridNode {
+        return new GridNode(this.x + delta[0], this.y + delta[1]);
     }
 
     compareTo(other : GridNode) : number {
@@ -40,6 +40,9 @@ export class GridNode {
 // An implementation of a 2d grid graph.
 
 export class GridGraph implements Graph<GridNode> {
+    static readonly actions : {[s:string]: [number, number]}
+        = {'L': [-1,0], 'R': [+1,0], 'D': [0,-1], 'U': [0,+1]};
+
     private walls : Set<GridNode>;
 
     constructor(
@@ -51,77 +54,79 @@ export class GridGraph implements Graph<GridNode> {
         for (var [x,y] of obstacles) {
             this.walls.add(new GridNode(x, y));
         }
-        for (var x = -1; x <= xsize; x++) {
-            this.walls.add(new GridNode(x, -1));
-            this.walls.add(new GridNode(x, ysize));
-        }
-        for (var y = -1; y <= ysize; y++) {
-            this.walls.add(new GridNode(-1, y));
-            this.walls.add(new GridNode(xsize, y));
-        }
     }
 
-    outgoingEdges(node : GridNode) : Edge<GridNode>[] {
-        var outgoing : Edge<GridNode>[] = [];
-        for (var dx = -1; dx <= 1; dx++) {
-            for (var dy = -1; dy <= 1; dy++) {
-                if (! (dx*dx == dy*dy)) {
-                    var next = node.add(dx,dy);
-                    if (! this.walls.contains(next)) {
-                        outgoing.push({
-                            from: node,
-                            to: next,
-                            cost: 1 
-                        });
-                    }
-                }
+    successors(node : GridNode) : Successor<GridNode>[] {
+        var successors : Successor<GridNode>[] = [];
+        for (var act in GridGraph.actions) {
+            var next = node.neighbor(GridGraph.actions[act]);
+            if (!this.walls.contains(next) && next.x >= 0 && next.y >= 0 && next.x < this.xsize && next.y < this.ysize) {
+                successors.push({
+                    action: act,
+                    child: next,
+                    cost: 1 
+                });
             }
         }
-        return outgoing;
+        return successors;
     }
 
     compareNodes(a : GridNode, b : GridNode) : number {
         return a.compareTo(b);
     }
 
-    toString(start? : GridNode, goal? : (n:GridNode) => boolean, path? : GridNode[]) : string {
-        function pathContains(path : GridNode[], n : GridNode) : boolean {
+    toString(start? : GridNode, goal? : (n:GridNode) => boolean, path? : Successor<GridNode>[]) : string {
+        function pathContains(path : Successor<GridNode>[], n : GridNode) : string | null {
             for (var p of path) {
-                if (p.x == n.x && p.y == n.y)
-                    return true;
+                if (p.child.x == n.x && p.child.y == n.y)
+                    return p.action;
             }
-            return false;
+            return null;
         }
-        var str = "";
-        for (var y = this.ysize-1; y >= 0; y--) {
-            // row of borders
+        var grid : string[][] = [new Array(4*this.xsize+1)];
+        for (var y = 0; y < this.ysize; y++) {
+            grid[2*y+2] = new Array(4*this.xsize+1);
+            grid[2*y+1] = new Array(4*this.xsize+1);
             for (var x = 0; x < this.xsize; x++) {
-                if (y == this.ysize || 
-                    this.walls.contains(new GridNode(x, y)) ||
-                    this.walls.contains(new GridNode(x, y+1))
-                   ) str += "+---"
-                else str += "+   ";
+                grid[2*y+2].splice(4*x, 5, "+", " ", " ", " ", "+");
+                grid[2*y+1].splice(4*x, 5, " ", " ", " ", " ", " ");
+                grid[2*y+0].splice(4*x, 5, "+", " ", " ", " ", "+");
+                if (goal && goal(new GridNode(x,y))) grid[2*y+1][4*x+2] = "G";
             }
-            str += "+\n";
-            // row of cells
-            for (var x = 0; x < this.xsize; x++) {
-                var xynode = new GridNode(x, y);
-                // the wall between cells
-                if (x == 0 || this.walls.contains(xynode) ||
-                    this.walls.contains(new GridNode(x-1, y))
-                   ) str += "|"
-                else str += " ";
-                // the cell
-                if (start && x == start.x && y == start.y) str += " S "
-                else if (goal && goal(xynode)) str += " G "
-                else if (path && pathContains(path, xynode)) str += " O "
-                else if (this.walls.contains(xynode)) str += "###"
-                else str += "   ";
-            }
-            str += "|\n";
+            grid[2*y+1][0] = grid[2*y+1][4*this.xsize] = "|";
         }
-        str += new Array(this.xsize + 1).join("+---") + "+\n";
-        return str;
+        for (var x = 0; x < this.xsize; x++) {
+            grid[2*this.ysize].splice(4*x, 5, "+", "-", "-", "-", "+");
+            grid[0].splice(4*x, 5, "+", "-", "-", "-", "+");
+        }
+        this.walls.forEach((node) => {
+            grid[2*node.y+2].splice(4*node.x, 5, "+", "-", "-", "-", "+");
+            grid[2*node.y+1].splice(4*node.x, 5, "|", "#", "#", "#", "|");
+            grid[2*node.y+0].splice(4*node.x, 5, "+", "-", "-", "-", "+");
+        });
+        if (start) {
+            grid[2*start.y+1][4*start.x+2] = "S";
+        }
+        if (path) {
+            path.forEach((suc) => {
+                grid[2*suc.child.y+1][4*suc.child.x+2] = (goal && goal(suc.child)) ? "G" : "O";
+                switch (suc.action) {
+                case "L":
+                    grid[2*suc.child.y+1].splice(4*suc.child.x+3, 3, "-", "-", "-");
+                    break;
+                case "R":
+                    grid[2*suc.child.y+1].splice(4*suc.child.x-1, 3, "-", "-", "-");
+                    break;
+                case "D":
+                    grid[2*suc.child.y+2][4*suc.child.x+2] = "|";
+                    break;
+                case "U":
+                    grid[2*suc.child.y+0][4*suc.child.x+2] = "|";
+                    break;
+                }
+            });
+        }
+        return grid.reverse().map((row) => row.join("")).join("\n") + "\n";
     }    
 }
 
