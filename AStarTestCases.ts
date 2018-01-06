@@ -118,3 +118,8 @@ testCases.push(doubleTest(testCases[testCases.length-1]));
 // size: 704 x 704
 testCases.push(doubleTest(testCases[testCases.length-1]));
 
+// size: 1408 x 1408
+// testCases.push(doubleTest(testCases[testCases.length-1]));
+
+// size: 2816 x 2816
+// testCases.push(doubleTest(testCases[testCases.length-1]));
