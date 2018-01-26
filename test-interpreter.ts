@@ -21,30 +21,33 @@ function runTest(testcase : TestCase) : boolean {
     var world = new TextWorld(ExampleWorlds[testcase.world]);
     var utterance = testcase.utterance;
 
-    var parses : string | ShrdliteResult[] = parse(utterance);
-    if (typeof(parses) === "string") {
-        console.log("ERROR: Parsing error!", parses);
+    try {
+        var parses : ShrdliteResult[] = parse(utterance);
+    }
+    catch(err) {
+        console.log("ERROR: Parsing error!", err);
         console.log();
         return false;
     }
     console.log("Found " + parses.length + " parses");
     console.log();
 
-    var correctints : string[] = testcase.interpretations.map((intp) => intp.sort().join(" | ")).sort();
+    function cleanup(intp : string) : string {
+        return intp.replace(/\s/g, "").replace(/\&/g, " & ").replace(/\|/g, " | ");
+    }
+
+    var correctints : string[] = testcase.interpretations.map(cleanup).sort();
     var interpretations : string[] = [];
-    var intps : string | ShrdliteResult[] = interpret(parses, world.currentState);
-    if (typeof(intps) === "string") {
-        console.log("ERROR: Interpretation error!", intps);
-        console.log();
-    } else {
+    try {
+        var intps : ShrdliteResult[] = interpret(parses, world.currentState);
         interpretations = intps.map(
-            (intp) => intp.interpretation.conjuncts.map(
-                (conj) => conj.literals.map(
-                    (lit) => lit.toString()
-                ).sort().join(" & ")
-            ).sort().join(" | ")
+            (intp) => cleanup(intp.interpretation.toString())
         ).sort()
             .filter((intp, n, sorted_intps) => intp !== sorted_intps[n-1]); // only keep unique interpretations
+    }
+    catch(err) {
+        console.log("ERROR: Interpretation error!", err);
+        console.log();
     }
 
     console.log("Correct interpretations:");
